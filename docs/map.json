@@ -732,8 +732,8 @@
       ]
     },
     {
-      "name": "Plugins",
-      "id": "plugins",
+      "name": "Extending Nx",
+      "id": "extending-nx",
       "description": "Learn more about creating your own plugin, extending Nx.",
       "itemList": [
         {
@@ -752,7 +752,7 @@
               "description": "Browse official and community plugins",
               "id": "registry",
               "file": "",
-              "path": "/plugins/registry",
+              "path": "/extending-nx/registry",
               "isExternal": false
             }
           ]

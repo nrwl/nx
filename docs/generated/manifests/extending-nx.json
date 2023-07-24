@@ -1,5 +1,5 @@
 {
-  "/plugins/intro": {
+  "/extending-nx/intro": {
     "id": "intro",
     "name": "Intro",
     "description": "Learn about plugins.",
@@ -12,7 +12,7 @@
         "file": "shared/plugins/intro",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/intro/getting-started",
+        "path": "/extending-nx/intro/getting-started",
         "tags": []
       },
       {
@@ -22,35 +22,35 @@
         "file": "",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/registry",
+        "path": "/extending-nx/registry",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/plugins/intro",
+    "path": "/extending-nx/intro",
     "tags": []
   },
-  "/plugins/intro/getting-started": {
+  "/extending-nx/intro/getting-started": {
     "id": "getting-started",
     "name": "Getting Started with Plugins",
     "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
     "file": "shared/plugins/intro",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/intro/getting-started",
+    "path": "/extending-nx/intro/getting-started",
     "tags": []
   },
-  "/plugins/registry": {
+  "/extending-nx/registry": {
     "id": "registry",
     "name": "Plugin Registry",
     "description": "Browse official and community plugins",
     "file": "",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/registry",
+    "path": "/extending-nx/registry",
     "tags": []
   },
-  "/plugins/tutorials": {
+  "/extending-nx/tutorials": {
     "id": "tutorials",
     "name": "5 Min Tutorials",
     "description": "Get started with plugins",
@@ -63,7 +63,7 @@
         "file": "shared/plugins/create-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/tutorials/create-plugin",
+        "path": "/extending-nx/tutorials/create-plugin",
         "tags": []
       },
       {
@@ -73,35 +73,35 @@
         "file": "shared/plugins/maintain-published-plugin",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/tutorials/publish-plugin",
+        "path": "/extending-nx/tutorials/publish-plugin",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/plugins/tutorials",
+    "path": "/extending-nx/tutorials",
     "tags": []
   },
-  "/plugins/tutorials/create-plugin": {
+  "/extending-nx/tutorials/create-plugin": {
     "id": "create-plugin",
     "name": "Create a Local Plugin",
     "description": "",
     "file": "shared/plugins/create-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/tutorials/create-plugin",
+    "path": "/extending-nx/tutorials/create-plugin",
     "tags": []
   },
-  "/plugins/tutorials/publish-plugin": {
+  "/extending-nx/tutorials/publish-plugin": {
     "id": "publish-plugin",
     "name": "Maintain a Published Plugin",
     "description": "",
     "file": "shared/plugins/maintain-published-plugin",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/tutorials/publish-plugin",
+    "path": "/extending-nx/tutorials/publish-plugin",
     "tags": []
   },
-  "/plugins/recipes": {
+  "/extending-nx/recipes": {
     "id": "recipes",
     "name": "Recipes",
     "description": "Focused instructions to complete a specific task",
@@ -114,7 +114,7 @@
         "file": "shared/recipes/plugins/local-executors",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/local-executors",
+        "path": "/extending-nx/recipes/local-executors",
         "tags": ["use-task-executors"]
       },
       {
@@ -124,7 +124,7 @@
         "file": "shared/recipes/plugins/compose-executors",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/compose-executors",
+        "path": "/extending-nx/recipes/compose-executors",
         "tags": ["use-task-executors"]
       },
       {
@@ -134,7 +134,7 @@
         "file": "shared/recipes/generators/local-generators",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/local-generators",
+        "path": "/extending-nx/recipes/local-generators",
         "tags": ["use-code-generators"]
       },
       {
@@ -144,7 +144,7 @@
         "file": "shared/recipes/generators/composing-generators",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/composing-generators",
+        "path": "/extending-nx/recipes/composing-generators",
         "tags": ["use-code-generators"]
       },
       {
@@ -154,7 +154,7 @@
         "file": "shared/recipes/generators/generator-options",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/generator-options",
+        "path": "/extending-nx/recipes/generator-options",
         "tags": ["use-code-generators"]
       },
       {
@@ -164,7 +164,7 @@
         "file": "shared/recipes/generators/creating-files",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/creating-files",
+        "path": "/extending-nx/recipes/creating-files",
         "tags": ["use-code-generators"]
       },
       {
@@ -174,7 +174,7 @@
         "file": "shared/recipes/generators/modifying-files",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/modifying-files",
+        "path": "/extending-nx/recipes/modifying-files",
         "tags": ["use-code-generators"]
       },
       {
@@ -184,7 +184,7 @@
         "file": "shared/recipes/plugins/migration-generators",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/migration-generators",
+        "path": "/extending-nx/recipes/migration-generators",
         "tags": ["create-your-own-plugin"]
       },
       {
@@ -194,7 +194,7 @@
         "file": "shared/recipes/plugins/create-preset",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/create-preset",
+        "path": "/extending-nx/recipes/create-preset",
         "tags": ["create-your-own-plugin"]
       },
       {
@@ -204,7 +204,7 @@
         "file": "shared/recipes/plugins/project-graph-plugins",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/project-graph-plugins",
+        "path": "/extending-nx/recipes/project-graph-plugins",
         "tags": ["create-your-own-plugin", "explore-graph"]
       },
       {
@@ -214,122 +214,122 @@
         "file": "shared/recipes/plugins/project-inference-plugins",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugins/recipes/project-inference-plugins",
+        "path": "/extending-nx/recipes/project-inference-plugins",
         "tags": ["create-your-own-plugin"]
       }
     ],
     "isExternal": false,
-    "path": "/plugins/recipes",
+    "path": "/extending-nx/recipes",
     "tags": []
   },
-  "/plugins/recipes/local-executors": {
+  "/extending-nx/recipes/local-executors": {
     "id": "local-executors",
     "name": "Write a Simple Executor",
     "description": "",
     "file": "shared/recipes/plugins/local-executors",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/local-executors",
+    "path": "/extending-nx/recipes/local-executors",
     "tags": ["use-task-executors"]
   },
-  "/plugins/recipes/compose-executors": {
+  "/extending-nx/recipes/compose-executors": {
     "id": "compose-executors",
     "name": "Compose Executors",
     "description": "",
     "file": "shared/recipes/plugins/compose-executors",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/compose-executors",
+    "path": "/extending-nx/recipes/compose-executors",
     "tags": ["use-task-executors"]
   },
-  "/plugins/recipes/local-generators": {
+  "/extending-nx/recipes/local-generators": {
     "id": "local-generators",
     "name": "Write a Simple Generator",
     "description": "",
     "file": "shared/recipes/generators/local-generators",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/local-generators",
+    "path": "/extending-nx/recipes/local-generators",
     "tags": ["use-code-generators"]
   },
-  "/plugins/recipes/composing-generators": {
+  "/extending-nx/recipes/composing-generators": {
     "id": "composing-generators",
     "name": "Compose Generators",
     "description": "",
     "file": "shared/recipes/generators/composing-generators",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/composing-generators",
+    "path": "/extending-nx/recipes/composing-generators",
     "tags": ["use-code-generators"]
   },
-  "/plugins/recipes/generator-options": {
+  "/extending-nx/recipes/generator-options": {
     "id": "generator-options",
     "name": "Provide Options for Generators",
     "description": "",
     "file": "shared/recipes/generators/generator-options",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/generator-options",
+    "path": "/extending-nx/recipes/generator-options",
     "tags": ["use-code-generators"]
   },
-  "/plugins/recipes/creating-files": {
+  "/extending-nx/recipes/creating-files": {
     "id": "creating-files",
     "name": "Create Files",
     "description": "",
     "file": "shared/recipes/generators/creating-files",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/creating-files",
+    "path": "/extending-nx/recipes/creating-files",
     "tags": ["use-code-generators"]
   },
-  "/plugins/recipes/modifying-files": {
+  "/extending-nx/recipes/modifying-files": {
     "id": "modifying-files",
     "name": "Modify Files",
     "description": "",
     "file": "shared/recipes/generators/modifying-files",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/modifying-files",
+    "path": "/extending-nx/recipes/modifying-files",
     "tags": ["use-code-generators"]
   },
-  "/plugins/recipes/migration-generators": {
+  "/extending-nx/recipes/migration-generators": {
     "id": "migration-generators",
     "name": "Write a Migration",
     "description": "",
     "file": "shared/recipes/plugins/migration-generators",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/migration-generators",
+    "path": "/extending-nx/recipes/migration-generators",
     "tags": ["create-your-own-plugin"]
   },
-  "/plugins/recipes/create-preset": {
+  "/extending-nx/recipes/create-preset": {
     "id": "create-preset",
     "name": "Create a Preset",
     "description": "",
     "file": "shared/recipes/plugins/create-preset",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/create-preset",
+    "path": "/extending-nx/recipes/create-preset",
     "tags": ["create-your-own-plugin"]
   },
-  "/plugins/recipes/project-graph-plugins": {
+  "/extending-nx/recipes/project-graph-plugins": {
     "id": "project-graph-plugins",
     "name": "Modify the Project Graph",
     "description": "",
     "file": "shared/recipes/plugins/project-graph-plugins",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/project-graph-plugins",
+    "path": "/extending-nx/recipes/project-graph-plugins",
     "tags": ["create-your-own-plugin", "explore-graph"]
   },
-  "/plugins/recipes/project-inference-plugins": {
+  "/extending-nx/recipes/project-inference-plugins": {
     "id": "project-inference-plugins",
     "name": "Identify Custom Projects",
     "description": "",
     "file": "shared/recipes/plugins/project-inference-plugins",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugins/recipes/project-inference-plugins",
+    "path": "/extending-nx/recipes/project-inference-plugins",
     "tags": ["create-your-own-plugin"]
   }
 }

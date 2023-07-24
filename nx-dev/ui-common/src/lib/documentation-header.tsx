@@ -40,7 +40,7 @@ export function DocumentationHeader({
   const router = useRouter();
   const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
   const isPackages: boolean = router.asPath.startsWith('/packages');
-  const isPlugins: boolean = router.asPath.startsWith('/plugins');
+  const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
   const isRecipes: boolean = router.asPath.startsWith('/recipes');
   const isChangelog: boolean = router.asPath.startsWith('/changelog');
   const isNx: boolean =
@@ -54,14 +54,14 @@ export function DocumentationHeader({
       current: isNxCloud,
     },
     {
+      name: 'Extending Nx',
+      href: '/extending-nx/intro/getting-started',
+      current: isPlugins,
+    },
+    {
       name: 'Packages',
       href: '/packages',
       current: isPackages,
-    },
-    {
-      name: 'Plugins',
-      href: '/plugins/intro/getting-started',
-      current: isPlugins,
     },
     {
       name: 'Recipes',

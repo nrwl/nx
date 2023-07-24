@@ -136,7 +136,7 @@ A repository using Nx without [plugins](#plugin) that prioritizes the independen
 
 A set of [executors](#executor), [generators](#generator) and other code that extends the functionality of Nx. May be installed from a package manager like NPM or developed directly in the repository.
 
-> See: [Create Your Own Plugin](/plugins/intro/getting-started)
+> See: [Create Your Own Plugin](/extending-nx/intro/getting-started)
 
 ### Polyrepo
 

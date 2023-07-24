@@ -3685,17 +3685,17 @@
     ]
   },
   {
-    "id": "plugins",
+    "id": "extending-nx",
     "menu": [
       {
         "name": "Intro",
-        "path": "/plugins/intro",
+        "path": "/extending-nx/intro",
         "id": "intro",
         "isExternal": false,
         "children": [
           {
             "name": "Getting Started with Plugins",
-            "path": "/plugins/intro/getting-started",
+            "path": "/extending-nx/intro/getting-started",
             "id": "getting-started",
             "isExternal": false,
             "children": [],
@@ -3703,7 +3703,7 @@
           },
           {
             "name": "Plugin Registry",
-            "path": "/plugins/registry",
+            "path": "/extending-nx/registry",
             "id": "registry",
             "isExternal": false,
             "children": [],
@@ -3714,7 +3714,7 @@
       },
       {
         "name": "Getting Started with Plugins",
-        "path": "/plugins/intro/getting-started",
+        "path": "/extending-nx/intro/getting-started",
         "id": "getting-started",
         "isExternal": false,
         "children": [],
@@ -3722,7 +3722,7 @@
       },
       {
         "name": "Plugin Registry",
-        "path": "/plugins/registry",
+        "path": "/extending-nx/registry",
         "id": "registry",
         "isExternal": false,
         "children": [],
@@ -3730,13 +3730,13 @@
       },
       {
         "name": "5 Min Tutorials",
-        "path": "/plugins/tutorials",
+        "path": "/extending-nx/tutorials",
         "id": "tutorials",
         "isExternal": false,
         "children": [
           {
             "name": "Create a Local Plugin",
-            "path": "/plugins/tutorials/create-plugin",
+            "path": "/extending-nx/tutorials/create-plugin",
             "id": "create-plugin",
             "isExternal": false,
             "children": [],
@@ -3744,7 +3744,7 @@
           },
           {
             "name": "Maintain a Published Plugin",
-            "path": "/plugins/tutorials/publish-plugin",
+            "path": "/extending-nx/tutorials/publish-plugin",
             "id": "publish-plugin",
             "isExternal": false,
             "children": [],
@@ -3755,7 +3755,7 @@
       },
       {
         "name": "Create a Local Plugin",
-        "path": "/plugins/tutorials/create-plugin",
+        "path": "/extending-nx/tutorials/create-plugin",
         "id": "create-plugin",
         "isExternal": false,
         "children": [],
@@ -3763,7 +3763,7 @@
       },
       {
         "name": "Maintain a Published Plugin",
-        "path": "/plugins/tutorials/publish-plugin",
+        "path": "/extending-nx/tutorials/publish-plugin",
         "id": "publish-plugin",
         "isExternal": false,
         "children": [],
@@ -3771,13 +3771,13 @@
       },
       {
         "name": "Recipes",
-        "path": "/plugins/recipes",
+        "path": "/extending-nx/recipes",
         "id": "recipes",
         "isExternal": false,
         "children": [
           {
             "name": "Write a Simple Executor",
-            "path": "/plugins/recipes/local-executors",
+            "path": "/extending-nx/recipes/local-executors",
             "id": "local-executors",
             "isExternal": false,
             "children": [],
@@ -3785,7 +3785,7 @@
           },
           {
             "name": "Compose Executors",
-            "path": "/plugins/recipes/compose-executors",
+            "path": "/extending-nx/recipes/compose-executors",
             "id": "compose-executors",
             "isExternal": false,
             "children": [],
@@ -3793,7 +3793,7 @@
           },
           {
             "name": "Write a Simple Generator",
-            "path": "/plugins/recipes/local-generators",
+            "path": "/extending-nx/recipes/local-generators",
             "id": "local-generators",
             "isExternal": false,
             "children": [],
@@ -3801,7 +3801,7 @@
           },
           {
             "name": "Compose Generators",
-            "path": "/plugins/recipes/composing-generators",
+            "path": "/extending-nx/recipes/composing-generators",
             "id": "composing-generators",
             "isExternal": false,
             "children": [],
@@ -3809,7 +3809,7 @@
           },
           {
             "name": "Provide Options for Generators",
-            "path": "/plugins/recipes/generator-options",
+            "path": "/extending-nx/recipes/generator-options",
             "id": "generator-options",
             "isExternal": false,
             "children": [],
@@ -3817,7 +3817,7 @@
           },
           {
             "name": "Create Files",
-            "path": "/plugins/recipes/creating-files",
+            "path": "/extending-nx/recipes/creating-files",
             "id": "creating-files",
             "isExternal": false,
             "children": [],
@@ -3825,7 +3825,7 @@
           },
           {
             "name": "Modify Files",
-            "path": "/plugins/recipes/modifying-files",
+            "path": "/extending-nx/recipes/modifying-files",
             "id": "modifying-files",
             "isExternal": false,
             "children": [],
@@ -3833,7 +3833,7 @@
           },
           {
             "name": "Write a Migration",
-            "path": "/plugins/recipes/migration-generators",
+            "path": "/extending-nx/recipes/migration-generators",
             "id": "migration-generators",
             "isExternal": false,
             "children": [],
@@ -3841,7 +3841,7 @@
           },
           {
             "name": "Create a Preset",
-            "path": "/plugins/recipes/create-preset",
+            "path": "/extending-nx/recipes/create-preset",
             "id": "create-preset",
             "isExternal": false,
             "children": [],
@@ -3849,7 +3849,7 @@
           },
           {
             "name": "Modify the Project Graph",
-            "path": "/plugins/recipes/project-graph-plugins",
+            "path": "/extending-nx/recipes/project-graph-plugins",
             "id": "project-graph-plugins",
             "isExternal": false,
             "children": [],
@@ -3857,7 +3857,7 @@
           },
           {
             "name": "Identify Custom Projects",
-            "path": "/plugins/recipes/project-inference-plugins",
+            "path": "/extending-nx/recipes/project-inference-plugins",
             "id": "project-inference-plugins",
             "isExternal": false,
             "children": [],
@@ -3868,7 +3868,7 @@
       },
       {
         "name": "Write a Simple Executor",
-        "path": "/plugins/recipes/local-executors",
+        "path": "/extending-nx/recipes/local-executors",
         "id": "local-executors",
         "isExternal": false,
         "children": [],
@@ -3876,7 +3876,7 @@
       },
       {
         "name": "Compose Executors",
-        "path": "/plugins/recipes/compose-executors",
+        "path": "/extending-nx/recipes/compose-executors",
         "id": "compose-executors",
         "isExternal": false,
         "children": [],
@@ -3884,7 +3884,7 @@
       },
       {
         "name": "Write a Simple Generator",
-        "path": "/plugins/recipes/local-generators",
+        "path": "/extending-nx/recipes/local-generators",
         "id": "local-generators",
         "isExternal": false,
         "children": [],
@@ -3892,7 +3892,7 @@
       },
       {
         "name": "Compose Generators",
-        "path": "/plugins/recipes/composing-generators",
+        "path": "/extending-nx/recipes/composing-generators",
         "id": "composing-generators",
         "isExternal": false,
         "children": [],
@@ -3900,7 +3900,7 @@
       },
       {
         "name": "Provide Options for Generators",
-        "path": "/plugins/recipes/generator-options",
+        "path": "/extending-nx/recipes/generator-options",
         "id": "generator-options",
         "isExternal": false,
         "children": [],
@@ -3908,7 +3908,7 @@
       },
       {
         "name": "Create Files",
-        "path": "/plugins/recipes/creating-files",
+        "path": "/extending-nx/recipes/creating-files",
         "id": "creating-files",
         "isExternal": false,
         "children": [],
@@ -3916,7 +3916,7 @@
       },
       {
         "name": "Modify Files",
-        "path": "/plugins/recipes/modifying-files",
+        "path": "/extending-nx/recipes/modifying-files",
         "id": "modifying-files",
         "isExternal": false,
         "children": [],
@@ -3924,7 +3924,7 @@
       },
       {
         "name": "Write a Migration",
-        "path": "/plugins/recipes/migration-generators",
+        "path": "/extending-nx/recipes/migration-generators",
         "id": "migration-generators",
         "isExternal": false,
         "children": [],
@@ -3932,7 +3932,7 @@
       },
       {
         "name": "Create a Preset",
-        "path": "/plugins/recipes/create-preset",
+        "path": "/extending-nx/recipes/create-preset",
         "id": "create-preset",
         "isExternal": false,
         "children": [],
@@ -3940,7 +3940,7 @@
       },
       {
         "name": "Modify the Project Graph",
-        "path": "/plugins/recipes/project-graph-plugins",
+        "path": "/extending-nx/recipes/project-graph-plugins",
         "id": "project-graph-plugins",
         "isExternal": false,
         "children": [],
@@ -3948,7 +3948,7 @@
       },
       {
         "name": "Identify Custom Projects",
-        "path": "/plugins/recipes/project-inference-plugins",
+        "path": "/extending-nx/recipes/project-inference-plugins",
         "id": "project-inference-plugins",
         "isExternal": false,
         "children": [],

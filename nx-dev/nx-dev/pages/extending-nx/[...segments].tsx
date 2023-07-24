@@ -83,7 +83,7 @@ export const getStaticPaths: GetStaticPaths = () => {
   return {
     paths: nxPluginsApi
       .getSlugsStaticDocumentPaths()
-      .filter((v) => v !== '/plugins/registry'),
+      .filter((v) => v !== '/extending-nx/registry'),
     fallback: 'blocking',
   };
 };
@@ -93,7 +93,7 @@ export const getStaticProps: GetStaticProps = async ({
   params: { segments: string[] };
 }) => {
   try {
-    const segments = ['plugins', ...params.segments];
+    const segments = ['extending-nx', ...params.segments];
     const document = nxPluginsApi.getDocument(segments);
     return {
       props: {
@@ -101,7 +101,7 @@ export const getStaticProps: GetStaticProps = async ({
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
-        menu: menusApi.getMenu('plugins', ''),
+        menu: menusApi.getMenu('extending-nx', ''),
       },
     };
   } catch (e) {

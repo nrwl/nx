@@ -186,7 +186,7 @@
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
-      "path": "/plugins/recipes/project-graph-plugins"
+      "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -504,14 +504,14 @@
       "file": "shared/recipes/plugins/local-executors",
       "id": "local-executors",
       "name": "Write a Simple Executor",
-      "path": "/plugins/recipes/local-executors"
+      "path": "/extending-nx/recipes/local-executors"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/compose-executors",
       "id": "compose-executors",
       "name": "Compose Executors",
-      "path": "/plugins/recipes/compose-executors"
+      "path": "/extending-nx/recipes/compose-executors"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -562,35 +562,35 @@
       "file": "shared/recipes/generators/local-generators",
       "id": "local-generators",
       "name": "Write a Simple Generator",
-      "path": "/plugins/recipes/local-generators"
+      "path": "/extending-nx/recipes/local-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/composing-generators",
       "id": "composing-generators",
       "name": "Compose Generators",
-      "path": "/plugins/recipes/composing-generators"
+      "path": "/extending-nx/recipes/composing-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/generator-options",
       "id": "generator-options",
       "name": "Provide Options for Generators",
-      "path": "/plugins/recipes/generator-options"
+      "path": "/extending-nx/recipes/generator-options"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/creating-files",
       "id": "creating-files",
       "name": "Create Files",
-      "path": "/plugins/recipes/creating-files"
+      "path": "/extending-nx/recipes/creating-files"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/modifying-files",
       "id": "modifying-files",
       "name": "Modify Files",
-      "path": "/plugins/recipes/modifying-files"
+      "path": "/extending-nx/recipes/modifying-files"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -645,28 +645,28 @@
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
       "name": "Write a Migration",
-      "path": "/plugins/recipes/migration-generators"
+      "path": "/extending-nx/recipes/migration-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/create-preset",
       "id": "create-preset",
       "name": "Create a Preset",
-      "path": "/plugins/recipes/create-preset"
+      "path": "/extending-nx/recipes/create-preset"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
-      "path": "/plugins/recipes/project-graph-plugins"
+      "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/project-inference-plugins",
       "id": "project-inference-plugins",
       "name": "Identify Custom Projects",
-      "path": "/plugins/recipes/project-inference-plugins"
+      "path": "/extending-nx/recipes/project-inference-plugins"
     }
   ],
   "environment-variables": [
