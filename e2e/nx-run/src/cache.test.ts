@@ -1,10 +1,12 @@
 import {
   cleanupProject,
+  directoryExists,
   listFiles,
   newProject,
   readFile,
   rmDist,
   runCLI,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
@@ -189,7 +191,7 @@ describe('cache', () => {
     expect(rerunWithUntouchedOutputs).toContain('local cache');
     const outputsWithUntouchedOutputs = [
       ...listFiles('dist'),
-      ...listFiles('dist/.next'),
+      ...listFiles('dist/.next').map((f) => `.next/${f}`),
     ];
     expect(outputsWithUntouchedOutputs).toContain('a.txt');
     expect(outputsWithUntouchedOutputs).toContain('b.txt');
@@ -210,7 +212,7 @@ describe('cache', () => {
     expect(rerunWithNewUnrelatedFile).toContain('local cache');
     const outputsAfterAddingUntouchedFileAndRerunning = [
       ...listFiles('dist'),
-      ...listFiles('dist/.next'),
+      ...listFiles('dist/.next').map((f) => `.next/${f}`),
     ];
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('a.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('b.txt');
@@ -232,10 +234,8 @@ describe('cache', () => {
     // Rerun
     const rerunWithoutOutputs = runCLI(`build ${mylib}`);
     expect(rerunWithoutOutputs).toContain('read the output from the cache');
-    const outputsWithoutOutputs = [
-      ...listFiles('dist'),
-      ...listFiles('dist/.next'),
-    ];
+    const outputsWithoutOutputs = listFiles('dist');
+    expect(directoryExists(`${tmpProjPath()}/dist/.next`)).toBe(false);
     expect(outputsWithoutOutputs).toContain('a.txt');
     expect(outputsWithoutOutputs).toContain('b.txt');
     expect(outputsWithoutOutputs).toContain('c.txt');
@@ -244,7 +244,6 @@ describe('cache', () => {
     expect(outputsWithoutOutputs).toContain('f.md');
     expect(outputsWithoutOutputs).not.toContain('c.ts');
     expect(outputsWithoutOutputs).not.toContain('g.html');
-    expect(outputsWithoutOutputs).not.toContain('.next/h.txt');
     expect(outputsWithoutOutputs).not.toContain('x.txt');
     expect(outputsWithoutOutputs).not.toContain('z.md');
   });
