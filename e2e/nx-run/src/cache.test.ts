@@ -164,17 +164,18 @@ describe('cache', () => {
           commands: [
             'rm -rf dist',
             'mkdir dist',
+            'mkdir dist/apps',
             'mkdir dist/.next',
-            'echo a > dist/a.txt',
-            'echo b > dist/b.txt',
-            'echo c > dist/c.txt',
-            'echo d > dist/d.txt',
-            'echo e > dist/e.txt',
-            'echo f > dist/f.md',
-            'echo g > dist/g.html',
+            'echo a > dist/apps/a.txt',
+            'echo b > dist/apps/b.txt',
+            'echo c > dist/apps/c.txt',
+            'echo d > dist/apps/d.txt',
+            'echo e > dist/apps/e.txt',
+            'echo f > dist/apps/f.md',
+            'echo g > dist/apps/g.html',
             'echo h > dist/.next/h.txt',
-            'echo x > dist/x.txt',
-            'echo z > dist/z.md',
+            'echo x > dist/apps/x.txt',
+            'echo z > dist/apps/z.md',
           ],
           parallel: false,
         },
@@ -190,7 +191,7 @@ describe('cache', () => {
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
     expect(rerunWithUntouchedOutputs).toContain('local cache');
     const outputsWithUntouchedOutputs = [
-      ...listFiles('dist'),
+      ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
     ];
     expect(outputsWithUntouchedOutputs).toContain('a.txt');
@@ -205,13 +206,13 @@ describe('cache', () => {
     expect(outputsWithUntouchedOutputs).toContain('z.md');
 
     // Create a file in the dist that does not match output glob
-    updateFile('dist/c.ts', '');
+    updateFile('dist/apps/c.ts', '');
 
     // Rerun
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
     expect(rerunWithNewUnrelatedFile).toContain('local cache');
     const outputsAfterAddingUntouchedFileAndRerunning = [
-      ...listFiles('dist'),
+      ...listFiles('dist/apps'),
       ...listFiles('dist/.next').map((f) => `.next/${f}`),
     ];
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('a.txt');
@@ -234,7 +235,7 @@ describe('cache', () => {
     // Rerun
     const rerunWithoutOutputs = runCLI(`build ${mylib}`);
     expect(rerunWithoutOutputs).toContain('read the output from the cache');
-    const outputsWithoutOutputs = listFiles('dist');
+    const outputsWithoutOutputs = listFiles('dist/apps');
     expect(directoryExists(`${tmpProjPath()}/dist/.next`)).toBe(false);
     expect(outputsWithoutOutputs).toContain('a.txt');
     expect(outputsWithoutOutputs).toContain('b.txt');
