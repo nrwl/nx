@@ -8,13 +8,13 @@ This is a short list of Nx-specific terms that will help you understand the rest
 
 A [project](#project) that can run on its own. Generally uses [libraries](#library).
 
-> See: [Applications and Libraries](/more-concepts/applications-and-libraries)
+> See: [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
 
 ### Buildable Library
 
 A [library](#library) that has a `build` [target](#target). Some libraries can be generated with a `build` target using the `--buildable` flag.
 
-> See: [Publishable and Buildable Nx Libraries](/more-concepts/buildable-and-publishable-libraries)
+> See: [Publishable and Buildable Nx Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
 
 ### Cache
 
@@ -32,7 +32,7 @@ When the [cache inputs](#cache-inputs) for a [task](#task) match an existing ent
 
 Everything that might change the output of a [task](#task). This may include source code, task options, environment variables and other settings determined at run time. These values are combined as a hash to serve as a key for an entry in the [cache](#cache).
 
-> See: [Customizing Inputs and Named Inputs](/more-concepts/customizing-inputs)
+> See: [Customizing Inputs and Named Inputs](/concepts/more-concepts/customizing-inputs)
 
 ### Cache Miss
 
@@ -98,13 +98,13 @@ A repository using Nx [plugins](#plugin) to boost efficiency and ease of mainten
 
 A [project](#project) that is used by [applications](#application) or other [libraries](#library).
 
-> See: [Applications and Libraries](/more-concepts/applications-and-libraries)
+> See: [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
 
 ### Monolith
 
 A large [application](#application) that is difficult to separate into smaller pieces.
 
-> See: [Applications and Libraries](/more-concepts/applications-and-libraries)
+> See: [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
 
 ### Monorepo
 
@@ -146,13 +146,13 @@ Related [projects](#project) spread across multiple repositories.
 
 The unit of code on which a [task](#task) can be run. A project can be an [application](#application) or a [library](#library).
 
-> See: [Applications and Libraries](/more-concepts/applications-and-libraries)
+> See: [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
 
 ### Publishable Library
 
 A [library](#library) that has a `publish` [target](#target). Some libraries can be generated with a `publish` target using the `--publishable` flag.
 
-> See: [Publishable and Buildable Nx Libraries](/more-concepts/buildable-and-publishable-libraries)
+> See: [Publishable and Buildable Nx Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
 
 ### Root-Level Project
 

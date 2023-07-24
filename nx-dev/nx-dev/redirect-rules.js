@@ -242,11 +242,11 @@ const diataxis = {
   '/generators/modifying-files': '/recipes/generators/modifying-files',
   '/structure/applications-and-libraries':
     'more-concepts/applications-and-libraries',
-  '/structure/creating-libraries': '/more-concepts/creating-libraries',
-  '/structure/library-types': '/more-concepts/library-types',
-  '/structure/grouping-libraries': '/more-concepts/grouping-libraries',
+  '/structure/creating-libraries': '/concepts/more-concepts/creating-libraries',
+  '/structure/library-types': '/concepts/more-concepts/library-types',
+  '/structure/grouping-libraries': '/concepts/more-concepts/grouping-libraries',
   '/structure/buildable-and-publishable-libraries':
-    '/more-concepts/buildable-and-publishable-libraries',
+    '/concepts/more-concepts/buildable-and-publishable-libraries',
   '/structure/monorepo-tags': '/core-features/enforce-project-boundaries',
   '/structure/dependency-graph': '/core-features/explore-graph',
   '/structure/project-graph-plugins':
@@ -259,19 +259,20 @@ const diataxis = {
   '/ci/monorepo-ci-bitbucket-pipelines':
     '/recipes/ci/monorepo-ci-bitbucket-pipelines',
   '/ci/distributed-builds': '/concepts/dte', // 👀
-  '/ci/incremental-builds': '/more-concepts/incremental-builds',
+  '/ci/incremental-builds': '/concepts/more-concepts/incremental-builds',
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
-  '/guides/turbo-and-nx': '/more-concepts/turbo-and-nx',
-  '/guides/why-monorepos': '/more-concepts/why-monorepos',
+  '/guides/turbo-and-nx': '/concepts/more-concepts/turbo-and-nx',
+  '/guides/why-monorepos': '/concepts/more-concepts/why-monorepos',
   '/guides/adding-assets-react': '/recipes/other/adding-assets-react',
   '/guides/environment-variables': '/reference/environment-variables',
-  '/guides/monorepo-nx-enterprise': '/more-concepts/monorepo-nx-enterprise',
+  '/guides/monorepo-nx-enterprise':
+    '/concepts/more-concepts/monorepo-nx-enterprise',
   '/guides/performance-profiling': '/recipes/other/performance-profiling',
   '/guides/eslint': '/recipes/other/eslint',
   '/guides/customize-webpack':
     '/packages/webpack/documents/webpack-config-setup',
-  '/guides/nx-daemon': '/more-concepts/nx-daemon',
+  '/guides/nx-daemon': '/concepts/more-concepts/nx-daemon',
   '/guides/js-and-ts': '/recipes/other/js-and-ts',
   '/guides/browser-support': '/recipes/other/browser-support',
   '/guides/react-native': '/recipes/other/react-native',
@@ -283,11 +284,12 @@ const diataxis = {
     '/recipes/other/using-tailwind-css-with-angular-projects',
   '/guides/misc-ngrx': '/recipes/other/misc-ngrx',
   '/guides/misc-data-persistence': '/recipes/other/misc-data-persistence',
-  '/guides/nx-devkit-angular-devkit': '/more-concepts/nx-devkit-angular-devkit',
+  '/guides/nx-devkit-angular-devkit':
+    '/concepts/more-concepts/nx-devkit-angular-devkit',
   '/module-federation/faster-builds':
     '/recipes/module-federation/faster-builds',
   '/module-federation/micro-frontend-architecture':
-    '/more-concepts/micro-frontend-architecture',
+    '/concepts/more-concepts/micro-frontend-architecture',
   '/module-federation/dynamic-module-federation-with-angular':
     '/recipes/module-federation/dynamic-module-federation-with-angular',
   '/examples/nx-examples': '/recipes/other/nx-examples',
@@ -626,7 +628,7 @@ const packagesDocuments = {
  * Concept documents Updates (updated 2023-03-31)
  */
 const conceptUrls = {
-  '/more-concepts/global-nx':
+  '/concepts/more-concepts/global-nx':
     '/getting-started/installation#installing-nx-globally',
   '/getting-started/package-based-repo-tutorial':
     '/getting-started/tutorials/package-based-repo-tutorial',
@@ -702,6 +704,11 @@ const movePluginFeaturesToCore = {
     '/core-features/plugin-features/use-code-generators',
 };
 
+const makeMoreConceptsSubmenu = {
+  '/more-concepts': '/concepts/more-concepts',
+  '/more-concepts/:path*': '/concepts/more-concepts/:path*',
+};
+
 /**
  * Public export API
  */
@@ -723,4 +730,5 @@ module.exports = {
   referenceUrls,
   missingAndCatchAllRedirects,
   movePluginFeaturesToCore,
+  makeMoreConceptsSubmenu,
 };

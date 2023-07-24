@@ -1021,11 +1021,180 @@
             "disableCollapsible": false
           },
           {
-            "name": "More Concept Guides »",
-            "path": "/more-concepts",
-            "id": "more-concept-guides",
+            "name": "More Concepts",
+            "path": "/concepts/more-concepts",
+            "id": "more-concepts",
             "isExternal": false,
-            "children": [],
+            "children": [
+              {
+                "name": "Customizing Inputs",
+                "path": "/concepts/more-concepts/customizing-inputs",
+                "id": "customizing-inputs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Incremental Builds",
+                "path": "/concepts/more-concepts/incremental-builds",
+                "id": "incremental-builds",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Illustrated Distributed Task Execution",
+                "path": "/concepts/more-concepts/illustrated-dte",
+                "id": "illustrated-dte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx and Turborepo",
+                "path": "/concepts/more-concepts/turbo-and-nx",
+                "id": "turbo-and-nx",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Monorepos",
+                "path": "/concepts/more-concepts/why-monorepos",
+                "id": "why-monorepos",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Dependency Management",
+                "path": "/concepts/more-concepts/dependency-management",
+                "id": "dependency-management",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Code Sharing",
+                "path": "/concepts/more-concepts/code-sharing",
+                "id": "code-sharing",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Using Nx at Enterprises",
+                "path": "/concepts/more-concepts/monorepo-nx-enterprise",
+                "id": "monorepo-nx-enterprise",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx Daemon",
+                "path": "/concepts/more-concepts/nx-daemon",
+                "id": "nx-daemon",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx and the Angular CLI",
+                "path": "/concepts/more-concepts/nx-and-angular",
+                "id": "nx-and-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Folder Structure",
+                "path": "/concepts/more-concepts/folder-structure",
+                "id": "folder-structure",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx Devkit and Angular Devkit",
+                "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
+                "id": "nx-devkit-angular-devkit",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Micro Frontend Architecture",
+                "path": "/concepts/more-concepts/micro-frontend-architecture",
+                "id": "micro-frontend-architecture",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Applications and Libraries",
+                "path": "/concepts/more-concepts/applications-and-libraries",
+                "id": "applications-and-libraries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Creating Libraries",
+                "path": "/concepts/more-concepts/creating-libraries",
+                "id": "creating-libraries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Library Types",
+                "path": "/concepts/more-concepts/library-types",
+                "id": "library-types",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Grouping Libraries",
+                "path": "/concepts/more-concepts/grouping-libraries",
+                "id": "grouping-libraries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Buildable and Publishable Libraries",
+                "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
+                "id": "buildable-and-publishable-libraries",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "How the Project Graph is Built",
+                "path": "/concepts/more-concepts/how-project-graph-is-built",
+                "id": "how-project-graph-is-built",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Nx and the Nx Wrapper",
+                "path": "/concepts/more-concepts/nx-and-the-wrapper",
+                "id": "nx-and-the-wrapper",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Managing your Global Nx Installation",
+                "path": "/concepts/more-concepts/global-nx",
+                "id": "global-nx",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
             "disableCollapsible": false
           }
         ],
@@ -1081,13 +1250,13 @@
       },
       {
         "name": "More Concepts",
-        "path": "/more-concepts",
+        "path": "/concepts/more-concepts",
         "id": "more-concepts",
         "isExternal": false,
         "children": [
           {
             "name": "Customizing Inputs",
-            "path": "/more-concepts/customizing-inputs",
+            "path": "/concepts/more-concepts/customizing-inputs",
             "id": "customizing-inputs",
             "isExternal": false,
             "children": [],
@@ -1095,7 +1264,7 @@
           },
           {
             "name": "Incremental Builds",
-            "path": "/more-concepts/incremental-builds",
+            "path": "/concepts/more-concepts/incremental-builds",
             "id": "incremental-builds",
             "isExternal": false,
             "children": [],
@@ -1103,7 +1272,7 @@
           },
           {
             "name": "Illustrated Distributed Task Execution",
-            "path": "/more-concepts/illustrated-dte",
+            "path": "/concepts/more-concepts/illustrated-dte",
             "id": "illustrated-dte",
             "isExternal": false,
             "children": [],
@@ -1111,7 +1280,7 @@
           },
           {
             "name": "Nx and Turborepo",
-            "path": "/more-concepts/turbo-and-nx",
+            "path": "/concepts/more-concepts/turbo-and-nx",
             "id": "turbo-and-nx",
             "isExternal": false,
             "children": [],
@@ -1119,7 +1288,7 @@
           },
           {
             "name": "Monorepos",
-            "path": "/more-concepts/why-monorepos",
+            "path": "/concepts/more-concepts/why-monorepos",
             "id": "why-monorepos",
             "isExternal": false,
             "children": [],
@@ -1127,7 +1296,7 @@
           },
           {
             "name": "Dependency Management",
-            "path": "/more-concepts/dependency-management",
+            "path": "/concepts/more-concepts/dependency-management",
             "id": "dependency-management",
             "isExternal": false,
             "children": [],
@@ -1135,7 +1304,7 @@
           },
           {
             "name": "Code Sharing",
-            "path": "/more-concepts/code-sharing",
+            "path": "/concepts/more-concepts/code-sharing",
             "id": "code-sharing",
             "isExternal": false,
             "children": [],
@@ -1143,7 +1312,7 @@
           },
           {
             "name": "Using Nx at Enterprises",
-            "path": "/more-concepts/monorepo-nx-enterprise",
+            "path": "/concepts/more-concepts/monorepo-nx-enterprise",
             "id": "monorepo-nx-enterprise",
             "isExternal": false,
             "children": [],
@@ -1151,7 +1320,7 @@
           },
           {
             "name": "Nx Daemon",
-            "path": "/more-concepts/nx-daemon",
+            "path": "/concepts/more-concepts/nx-daemon",
             "id": "nx-daemon",
             "isExternal": false,
             "children": [],
@@ -1159,7 +1328,7 @@
           },
           {
             "name": "Nx and the Angular CLI",
-            "path": "/more-concepts/nx-and-angular",
+            "path": "/concepts/more-concepts/nx-and-angular",
             "id": "nx-and-angular",
             "isExternal": false,
             "children": [],
@@ -1167,7 +1336,7 @@
           },
           {
             "name": "Folder Structure",
-            "path": "/more-concepts/folder-structure",
+            "path": "/concepts/more-concepts/folder-structure",
             "id": "folder-structure",
             "isExternal": false,
             "children": [],
@@ -1175,7 +1344,7 @@
           },
           {
             "name": "Nx Devkit and Angular Devkit",
-            "path": "/more-concepts/nx-devkit-angular-devkit",
+            "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
             "id": "nx-devkit-angular-devkit",
             "isExternal": false,
             "children": [],
@@ -1183,7 +1352,7 @@
           },
           {
             "name": "Micro Frontend Architecture",
-            "path": "/more-concepts/micro-frontend-architecture",
+            "path": "/concepts/more-concepts/micro-frontend-architecture",
             "id": "micro-frontend-architecture",
             "isExternal": false,
             "children": [],
@@ -1191,7 +1360,7 @@
           },
           {
             "name": "Applications and Libraries",
-            "path": "/more-concepts/applications-and-libraries",
+            "path": "/concepts/more-concepts/applications-and-libraries",
             "id": "applications-and-libraries",
             "isExternal": false,
             "children": [],
@@ -1199,7 +1368,7 @@
           },
           {
             "name": "Creating Libraries",
-            "path": "/more-concepts/creating-libraries",
+            "path": "/concepts/more-concepts/creating-libraries",
             "id": "creating-libraries",
             "isExternal": false,
             "children": [],
@@ -1207,7 +1376,7 @@
           },
           {
             "name": "Library Types",
-            "path": "/more-concepts/library-types",
+            "path": "/concepts/more-concepts/library-types",
             "id": "library-types",
             "isExternal": false,
             "children": [],
@@ -1215,7 +1384,7 @@
           },
           {
             "name": "Grouping Libraries",
-            "path": "/more-concepts/grouping-libraries",
+            "path": "/concepts/more-concepts/grouping-libraries",
             "id": "grouping-libraries",
             "isExternal": false,
             "children": [],
@@ -1223,7 +1392,7 @@
           },
           {
             "name": "Buildable and Publishable Libraries",
-            "path": "/more-concepts/buildable-and-publishable-libraries",
+            "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
             "id": "buildable-and-publishable-libraries",
             "isExternal": false,
             "children": [],
@@ -1231,7 +1400,7 @@
           },
           {
             "name": "How the Project Graph is Built",
-            "path": "/more-concepts/how-project-graph-is-built",
+            "path": "/concepts/more-concepts/how-project-graph-is-built",
             "id": "how-project-graph-is-built",
             "isExternal": false,
             "children": [],
@@ -1239,7 +1408,7 @@
           },
           {
             "name": "Nx and the Nx Wrapper",
-            "path": "/more-concepts/nx-and-the-wrapper",
+            "path": "/concepts/more-concepts/nx-and-the-wrapper",
             "id": "nx-and-the-wrapper",
             "isExternal": false,
             "children": [],
@@ -1247,7 +1416,7 @@
           },
           {
             "name": "Managing your Global Nx Installation",
-            "path": "/more-concepts/global-nx",
+            "path": "/concepts/more-concepts/global-nx",
             "id": "global-nx",
             "isExternal": false,
             "children": [],
@@ -1258,7 +1427,7 @@
       },
       {
         "name": "Customizing Inputs",
-        "path": "/more-concepts/customizing-inputs",
+        "path": "/concepts/more-concepts/customizing-inputs",
         "id": "customizing-inputs",
         "isExternal": false,
         "children": [],
@@ -1266,7 +1435,7 @@
       },
       {
         "name": "Incremental Builds",
-        "path": "/more-concepts/incremental-builds",
+        "path": "/concepts/more-concepts/incremental-builds",
         "id": "incremental-builds",
         "isExternal": false,
         "children": [],
@@ -1274,7 +1443,7 @@
       },
       {
         "name": "Illustrated Distributed Task Execution",
-        "path": "/more-concepts/illustrated-dte",
+        "path": "/concepts/more-concepts/illustrated-dte",
         "id": "illustrated-dte",
         "isExternal": false,
         "children": [],
@@ -1282,7 +1451,7 @@
       },
       {
         "name": "Nx and Turborepo",
-        "path": "/more-concepts/turbo-and-nx",
+        "path": "/concepts/more-concepts/turbo-and-nx",
         "id": "turbo-and-nx",
         "isExternal": false,
         "children": [],
@@ -1290,7 +1459,7 @@
       },
       {
         "name": "Monorepos",
-        "path": "/more-concepts/why-monorepos",
+        "path": "/concepts/more-concepts/why-monorepos",
         "id": "why-monorepos",
         "isExternal": false,
         "children": [],
@@ -1298,7 +1467,7 @@
       },
       {
         "name": "Dependency Management",
-        "path": "/more-concepts/dependency-management",
+        "path": "/concepts/more-concepts/dependency-management",
         "id": "dependency-management",
         "isExternal": false,
         "children": [],
@@ -1306,7 +1475,7 @@
       },
       {
         "name": "Code Sharing",
-        "path": "/more-concepts/code-sharing",
+        "path": "/concepts/more-concepts/code-sharing",
         "id": "code-sharing",
         "isExternal": false,
         "children": [],
@@ -1314,7 +1483,7 @@
       },
       {
         "name": "Using Nx at Enterprises",
-        "path": "/more-concepts/monorepo-nx-enterprise",
+        "path": "/concepts/more-concepts/monorepo-nx-enterprise",
         "id": "monorepo-nx-enterprise",
         "isExternal": false,
         "children": [],
@@ -1322,7 +1491,7 @@
       },
       {
         "name": "Nx Daemon",
-        "path": "/more-concepts/nx-daemon",
+        "path": "/concepts/more-concepts/nx-daemon",
         "id": "nx-daemon",
         "isExternal": false,
         "children": [],
@@ -1330,7 +1499,7 @@
       },
       {
         "name": "Nx and the Angular CLI",
-        "path": "/more-concepts/nx-and-angular",
+        "path": "/concepts/more-concepts/nx-and-angular",
         "id": "nx-and-angular",
         "isExternal": false,
         "children": [],
@@ -1338,7 +1507,7 @@
       },
       {
         "name": "Folder Structure",
-        "path": "/more-concepts/folder-structure",
+        "path": "/concepts/more-concepts/folder-structure",
         "id": "folder-structure",
         "isExternal": false,
         "children": [],
@@ -1346,7 +1515,7 @@
       },
       {
         "name": "Nx Devkit and Angular Devkit",
-        "path": "/more-concepts/nx-devkit-angular-devkit",
+        "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
         "id": "nx-devkit-angular-devkit",
         "isExternal": false,
         "children": [],
@@ -1354,7 +1523,7 @@
       },
       {
         "name": "Micro Frontend Architecture",
-        "path": "/more-concepts/micro-frontend-architecture",
+        "path": "/concepts/more-concepts/micro-frontend-architecture",
         "id": "micro-frontend-architecture",
         "isExternal": false,
         "children": [],
@@ -1362,7 +1531,7 @@
       },
       {
         "name": "Applications and Libraries",
-        "path": "/more-concepts/applications-and-libraries",
+        "path": "/concepts/more-concepts/applications-and-libraries",
         "id": "applications-and-libraries",
         "isExternal": false,
         "children": [],
@@ -1370,7 +1539,7 @@
       },
       {
         "name": "Creating Libraries",
-        "path": "/more-concepts/creating-libraries",
+        "path": "/concepts/more-concepts/creating-libraries",
         "id": "creating-libraries",
         "isExternal": false,
         "children": [],
@@ -1378,7 +1547,7 @@
       },
       {
         "name": "Library Types",
-        "path": "/more-concepts/library-types",
+        "path": "/concepts/more-concepts/library-types",
         "id": "library-types",
         "isExternal": false,
         "children": [],
@@ -1386,7 +1555,7 @@
       },
       {
         "name": "Grouping Libraries",
-        "path": "/more-concepts/grouping-libraries",
+        "path": "/concepts/more-concepts/grouping-libraries",
         "id": "grouping-libraries",
         "isExternal": false,
         "children": [],
@@ -1394,7 +1563,7 @@
       },
       {
         "name": "Buildable and Publishable Libraries",
-        "path": "/more-concepts/buildable-and-publishable-libraries",
+        "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
         "id": "buildable-and-publishable-libraries",
         "isExternal": false,
         "children": [],
@@ -1402,7 +1571,7 @@
       },
       {
         "name": "How the Project Graph is Built",
-        "path": "/more-concepts/how-project-graph-is-built",
+        "path": "/concepts/more-concepts/how-project-graph-is-built",
         "id": "how-project-graph-is-built",
         "isExternal": false,
         "children": [],
@@ -1410,7 +1579,7 @@
       },
       {
         "name": "Nx and the Nx Wrapper",
-        "path": "/more-concepts/nx-and-the-wrapper",
+        "path": "/concepts/more-concepts/nx-and-the-wrapper",
         "id": "nx-and-the-wrapper",
         "isExternal": false,
         "children": [],
@@ -1418,7 +1587,7 @@
       },
       {
         "name": "Managing your Global Nx Installation",
-        "path": "/more-concepts/global-nx",
+        "path": "/concepts/more-concepts/global-nx",
         "id": "global-nx",
         "isExternal": false,
         "children": [],
