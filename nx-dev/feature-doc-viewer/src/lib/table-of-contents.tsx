@@ -39,10 +39,12 @@ export function TableOfContents({
   elementRef,
   headings,
   path,
+  children,
 }: {
   elementRef: any;
   headings: Heading[];
   path: string;
+  children: React.ReactNode;
 }): JSX.Element {
   const headingLevelTargets: number[] = [1, 2, 3]; // matching to: H1, H2, H3...
   const items = headings.filter(
@@ -60,32 +62,35 @@ export function TableOfContents({
   );
 
   return (
-    <nav className="toc">
-      <span className="pl-4 font-medium">On this page</span>
-      {!!items.length ? (
-        <ul className="mt-4 flex-col">
-          {items.map((item) => {
-            const href = `${path}#${item.id}`;
-            return (
-              <li key={item.title}>
-                <Link
-                  href={href}
-                  className={cx(
-                    'block w-full border-l-4 border-slate-200 py-1 pl-3 transition hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700',
-                    {
-                      'border-slate-500 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60':
-                        activeId === item.id,
-                      'pl-6': item.level === 3,
-                    }
-                  )}
-                >
-                  {item.level === 1 ? 'Overview' : item.title}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      ) : null}
-    </nav>
+    <>
+      <nav className="toc">
+        <span className="pl-4 font-medium">On this page</span>
+        {!!items.length ? (
+          <ul className="flex-col mt-4">
+            {items.map((item) => {
+              const href = `${path}#${item.id}`;
+              return (
+                <li key={item.title}>
+                  <Link
+                    href={href}
+                    className={cx(
+                      'block w-full border-l-4 border-slate-200 py-1 pl-3 transition hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700',
+                      {
+                        'border-slate-500 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60':
+                          activeId === item.id,
+                        'pl-6': item.level === 3,
+                      }
+                    )}
+                  >
+                    {item.level === 1 ? 'Overview' : item.title}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        ) : null}
+      </nav>
+      <div className="p-4">{children}</div>
+    </>
   );
 }
