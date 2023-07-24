@@ -978,7 +978,14 @@
                   "file": "shared/recipes/rescope"
                 }
               ]
-            },
+            }
+          ]
+        },
+        {
+          "name": "Showcase",
+          "id": "showcase",
+          "description": "Discover our selection of examples and benchmarks.",
+          "itemList": [
             {
               "name": "Example Repos",
               "id": "example-repos",

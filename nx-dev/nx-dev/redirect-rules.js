@@ -361,10 +361,10 @@ const recipesUrls = {
     '/recipes/enforce-module-boundaries/ban-external-imports',
   '/recipes/other/tags-allow-list':
     '/recipes/enforce-module-boundaries/tags-allow-list',
-  '/recipes/other/react-nx': '/recipes/example-repos/react-nx',
-  '/recipes/other/apollo-react': '/recipes/example-repos/apollo-react',
-  '/recipes/other/caching': '/recipes/example-repos/caching',
-  '/recipes/other/dte': '/recipes/example-repos/dte',
+  '/recipes/other/react-nx': '/showcase/example-repos/react-nx',
+  '/recipes/other/apollo-react': '/showcase/example-repos/apollo-react',
+  '/recipes/other/caching': '/showcase/example-repos/caching',
+  '/recipes/other/dte': '/showcase/example-repos/dte',
   '/recipes/other/deploy-nextjs-to-vercel':
     '/recipes/deployment/deploy-nextjs-to-vercel',
   '/recipes/other/root-level-scripts':
@@ -771,14 +771,15 @@ const latestRecipesRefactoring = {
     '/recipes/node/node-serverless-functions-netlify',
   '/recipes/deployment/node-aws-lambda': '/recipes/node/node-aws-lambda',
   // examples
-  '/recipes/module-federation/nx-examples': '/recipes/example-repos/mfe',
-  '/recipes/database/nestjs-prisma': '/recipes/example-repos/nestjs-prisma',
-  '/recipes/database/mongo-fastify': '/recipes/example-repos/mongo-fastify',
-  '/recipes/database/redis-fastify': '/recipes/example-repos/redis-fastify',
+  '/recipes/module-federation/nx-examples': '/showcase/example-repos/mfe',
+  '/recipes/database/nestjs-prisma': '/showcase/example-repos/nestjs-prisma',
+  '/recipes/database/mongo-fastify': '/showcase/example-repos/mongo-fastify',
+  '/recipes/database/redis-fastify': '/showcase/example-repos/redis-fastify',
   '/recipes/database/postgres-fastify':
-    '/recipes/example-repos/postgres-fastify',
+    '/showcase/example-repos/postgres-fastify',
   '/recipes/database/serverless-fastify-planetscale':
-    '/recipes/example-repos/serverless-fastify-planetscale',
+    '/showcase/example-repos/serverless-fastify-planetscale',
+  '/recipes/example-repos/:path*': '/showcase/example-repos/:path*',
   // troubleshooting
   '/recipes/other/resolve-circular-dependencies':
     '/recipes/troubleshooting/resolve-circular-dependencies',

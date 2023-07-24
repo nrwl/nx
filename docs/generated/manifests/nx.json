@@ -2801,117 +2801,6 @@
         "isExternal": false,
         "path": "/recipes/other",
         "tags": []
-      },
-      {
-        "id": "example-repos",
-        "name": "Example Repos",
-        "description": "Examples of different ways to use Nx",
-        "file": "",
-        "itemList": [
-          {
-            "id": "react-nx",
-            "name": "Powering Up React Development With Nx",
-            "description": "",
-            "file": "shared/examples/react-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/react-nx",
-            "tags": []
-          },
-          {
-            "id": "apollo-react",
-            "name": "Using Apollo GraphQL",
-            "description": "",
-            "file": "shared/examples/apollo-react",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/apollo-react",
-            "tags": []
-          },
-          {
-            "id": "nestjs-prisma",
-            "name": "Using Prisma with NestJS",
-            "description": "",
-            "file": "shared/recipes/database/nestjs-prisma",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/nestjs-prisma",
-            "tags": ["database", "node"]
-          },
-          {
-            "id": "mongo-fastify",
-            "name": "Using Mongo with Fastify",
-            "description": "",
-            "file": "shared/recipes/database/mongo-fastify",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/mongo-fastify",
-            "tags": ["database", "node"]
-          },
-          {
-            "id": "redis-fastify",
-            "name": "Using Redis with Fastify",
-            "description": "",
-            "file": "shared/recipes/database/redis-fastify",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/redis-fastify",
-            "tags": ["database", "node"]
-          },
-          {
-            "id": "postgres-fastify",
-            "name": "Using Postgres with Fastify",
-            "description": "",
-            "file": "shared/recipes/database/postgres-fastify",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/postgres-fastify",
-            "tags": ["database", "node"]
-          },
-          {
-            "id": "serverless-fastify-planetscale",
-            "name": "Using PlanetScale with Serverless Fastify",
-            "description": "",
-            "file": "shared/recipes/database/serverless-fastify-planetscale",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/serverless-fastify-planetscale",
-            "tags": ["database", "node", "serverless"]
-          },
-          {
-            "id": "caching",
-            "name": "Large Repo and Caching",
-            "description": "",
-            "file": "shared/examples/caching",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/caching",
-            "tags": []
-          },
-          {
-            "id": "dte",
-            "name": "Large Repo and DTE",
-            "description": "",
-            "file": "shared/examples/dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/dte",
-            "tags": []
-          },
-          {
-            "id": "mfe",
-            "name": "Nx Micro-Frontend Example",
-            "description": "",
-            "file": "shared/examples/nx-examples",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/example-repos/mfe",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/example-repos",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -4461,7 +4350,129 @@
     "path": "/recipes/other/rescope",
     "tags": []
   },
-  "/recipes/example-repos": {
+  "/showcase": {
+    "id": "showcase",
+    "name": "Showcase",
+    "description": "Discover our selection of examples and benchmarks.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "example-repos",
+        "name": "Example Repos",
+        "description": "Examples of different ways to use Nx",
+        "file": "",
+        "itemList": [
+          {
+            "id": "react-nx",
+            "name": "Powering Up React Development With Nx",
+            "description": "",
+            "file": "shared/examples/react-nx",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/react-nx",
+            "tags": []
+          },
+          {
+            "id": "apollo-react",
+            "name": "Using Apollo GraphQL",
+            "description": "",
+            "file": "shared/examples/apollo-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/apollo-react",
+            "tags": []
+          },
+          {
+            "id": "nestjs-prisma",
+            "name": "Using Prisma with NestJS",
+            "description": "",
+            "file": "shared/recipes/database/nestjs-prisma",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/nestjs-prisma",
+            "tags": ["database", "node"]
+          },
+          {
+            "id": "mongo-fastify",
+            "name": "Using Mongo with Fastify",
+            "description": "",
+            "file": "shared/recipes/database/mongo-fastify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/mongo-fastify",
+            "tags": ["database", "node"]
+          },
+          {
+            "id": "redis-fastify",
+            "name": "Using Redis with Fastify",
+            "description": "",
+            "file": "shared/recipes/database/redis-fastify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/redis-fastify",
+            "tags": ["database", "node"]
+          },
+          {
+            "id": "postgres-fastify",
+            "name": "Using Postgres with Fastify",
+            "description": "",
+            "file": "shared/recipes/database/postgres-fastify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/postgres-fastify",
+            "tags": ["database", "node"]
+          },
+          {
+            "id": "serverless-fastify-planetscale",
+            "name": "Using PlanetScale with Serverless Fastify",
+            "description": "",
+            "file": "shared/recipes/database/serverless-fastify-planetscale",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/serverless-fastify-planetscale",
+            "tags": ["database", "node", "serverless"]
+          },
+          {
+            "id": "caching",
+            "name": "Large Repo and Caching",
+            "description": "",
+            "file": "shared/examples/caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/caching",
+            "tags": []
+          },
+          {
+            "id": "dte",
+            "name": "Large Repo and DTE",
+            "description": "",
+            "file": "shared/examples/dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/dte",
+            "tags": []
+          },
+          {
+            "id": "mfe",
+            "name": "Nx Micro-Frontend Example",
+            "description": "",
+            "file": "shared/examples/nx-examples",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/mfe",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/showcase/example-repos",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/showcase",
+    "tags": []
+  },
+  "/showcase/example-repos": {
     "id": "example-repos",
     "name": "Example Repos",
     "description": "Examples of different ways to use Nx",
@@ -4474,7 +4485,7 @@
         "file": "shared/examples/react-nx",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/react-nx",
+        "path": "/showcase/example-repos/react-nx",
         "tags": []
       },
       {
@@ -4484,7 +4495,7 @@
         "file": "shared/examples/apollo-react",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/apollo-react",
+        "path": "/showcase/example-repos/apollo-react",
         "tags": []
       },
       {
@@ -4494,7 +4505,7 @@
         "file": "shared/recipes/database/nestjs-prisma",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/nestjs-prisma",
+        "path": "/showcase/example-repos/nestjs-prisma",
         "tags": ["database", "node"]
       },
       {
@@ -4504,7 +4515,7 @@
         "file": "shared/recipes/database/mongo-fastify",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/mongo-fastify",
+        "path": "/showcase/example-repos/mongo-fastify",
         "tags": ["database", "node"]
       },
       {
@@ -4514,7 +4525,7 @@
         "file": "shared/recipes/database/redis-fastify",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/redis-fastify",
+        "path": "/showcase/example-repos/redis-fastify",
         "tags": ["database", "node"]
       },
       {
@@ -4524,7 +4535,7 @@
         "file": "shared/recipes/database/postgres-fastify",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/postgres-fastify",
+        "path": "/showcase/example-repos/postgres-fastify",
         "tags": ["database", "node"]
       },
       {
@@ -4534,7 +4545,7 @@
         "file": "shared/recipes/database/serverless-fastify-planetscale",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/serverless-fastify-planetscale",
+        "path": "/showcase/example-repos/serverless-fastify-planetscale",
         "tags": ["database", "node", "serverless"]
       },
       {
@@ -4544,7 +4555,7 @@
         "file": "shared/examples/caching",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/caching",
+        "path": "/showcase/example-repos/caching",
         "tags": []
       },
       {
@@ -4554,7 +4565,7 @@
         "file": "shared/examples/dte",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/dte",
+        "path": "/showcase/example-repos/dte",
         "tags": []
       },
       {
@@ -4564,112 +4575,112 @@
         "file": "shared/examples/nx-examples",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/example-repos/mfe",
+        "path": "/showcase/example-repos/mfe",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/recipes/example-repos",
+    "path": "/showcase/example-repos",
     "tags": []
   },
-  "/recipes/example-repos/react-nx": {
+  "/showcase/example-repos/react-nx": {
     "id": "react-nx",
     "name": "Powering Up React Development With Nx",
     "description": "",
     "file": "shared/examples/react-nx",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/react-nx",
+    "path": "/showcase/example-repos/react-nx",
     "tags": []
   },
-  "/recipes/example-repos/apollo-react": {
+  "/showcase/example-repos/apollo-react": {
     "id": "apollo-react",
     "name": "Using Apollo GraphQL",
     "description": "",
     "file": "shared/examples/apollo-react",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/apollo-react",
+    "path": "/showcase/example-repos/apollo-react",
     "tags": []
   },
-  "/recipes/example-repos/nestjs-prisma": {
+  "/showcase/example-repos/nestjs-prisma": {
     "id": "nestjs-prisma",
     "name": "Using Prisma with NestJS",
     "description": "",
     "file": "shared/recipes/database/nestjs-prisma",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/nestjs-prisma",
+    "path": "/showcase/example-repos/nestjs-prisma",
     "tags": ["database", "node"]
   },
-  "/recipes/example-repos/mongo-fastify": {
+  "/showcase/example-repos/mongo-fastify": {
     "id": "mongo-fastify",
     "name": "Using Mongo with Fastify",
     "description": "",
     "file": "shared/recipes/database/mongo-fastify",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/mongo-fastify",
+    "path": "/showcase/example-repos/mongo-fastify",
     "tags": ["database", "node"]
   },
-  "/recipes/example-repos/redis-fastify": {
+  "/showcase/example-repos/redis-fastify": {
     "id": "redis-fastify",
     "name": "Using Redis with Fastify",
     "description": "",
     "file": "shared/recipes/database/redis-fastify",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/redis-fastify",
+    "path": "/showcase/example-repos/redis-fastify",
     "tags": ["database", "node"]
   },
-  "/recipes/example-repos/postgres-fastify": {
+  "/showcase/example-repos/postgres-fastify": {
     "id": "postgres-fastify",
     "name": "Using Postgres with Fastify",
     "description": "",
     "file": "shared/recipes/database/postgres-fastify",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/postgres-fastify",
+    "path": "/showcase/example-repos/postgres-fastify",
     "tags": ["database", "node"]
   },
-  "/recipes/example-repos/serverless-fastify-planetscale": {
+  "/showcase/example-repos/serverless-fastify-planetscale": {
     "id": "serverless-fastify-planetscale",
     "name": "Using PlanetScale with Serverless Fastify",
     "description": "",
     "file": "shared/recipes/database/serverless-fastify-planetscale",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/serverless-fastify-planetscale",
+    "path": "/showcase/example-repos/serverless-fastify-planetscale",
     "tags": ["database", "node", "serverless"]
   },
-  "/recipes/example-repos/caching": {
+  "/showcase/example-repos/caching": {
     "id": "caching",
     "name": "Large Repo and Caching",
     "description": "",
     "file": "shared/examples/caching",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/caching",
+    "path": "/showcase/example-repos/caching",
     "tags": []
   },
-  "/recipes/example-repos/dte": {
+  "/showcase/example-repos/dte": {
     "id": "dte",
     "name": "Large Repo and DTE",
     "description": "",
     "file": "shared/examples/dte",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/dte",
+    "path": "/showcase/example-repos/dte",
     "tags": []
   },
-  "/recipes/example-repos/mfe": {
+  "/showcase/example-repos/mfe": {
     "id": "mfe",
     "name": "Nx Micro-Frontend Example",
     "description": "",
     "file": "shared/examples/nx-examples",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/example-repos/mfe",
+    "path": "/showcase/example-repos/mfe",
     "tags": []
   },
   "/reference": {
