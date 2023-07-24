@@ -362,12 +362,6 @@ function createDocumentSections(
       prefix: '',
     },
     {
-      name: 'recipes',
-      content: documents.find((x) => x.id === 'nx-recipes')!
-        .itemList as Partial<DocumentMetadata>[],
-      prefix: 'recipes',
-    },
-    {
       name: 'extending-nx',
       content: documents.find((x) => x.id === 'extending-nx')!
         .itemList as Partial<DocumentMetadata>[],

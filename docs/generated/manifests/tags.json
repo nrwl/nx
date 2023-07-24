@@ -81,6 +81,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/troubleshoot-cache-misses",
+      "id": "troubleshoot-cache-misses",
+      "name": "Troubleshoot Cache Misses",
+      "path": "/recipes/troubleshooting/troubleshoot-cache-misses"
+    },
+    {
+      "description": "",
       "file": "",
       "id": "nx-cloud-documentation",
       "name": "Nx Cloud Documentation",
@@ -113,13 +120,6 @@
       "id": "project-config-inputs",
       "name": "Project Configuration reference: inputs and namedInputs",
       "path": "/reference/project-configuration#inputs-&-namedinputs"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/troubleshoot-cache-misses",
-      "id": "troubleshoot-cache-misses",
-      "name": "Troubleshoot Cache Misses",
-      "path": "/recipes/troubleshooting/troubleshoot-cache-misses"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -213,17 +213,17 @@
     },
     {
       "description": "",
-      "file": "",
-      "id": "nx-cloud-documentation",
-      "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/what-is-nx-cloud"
-    },
-    {
-      "description": "",
       "file": "shared/ci-overview",
       "id": "ci-setup",
       "name": "CI Setup",
       "path": "/recipes/ci/ci-setup"
+    },
+    {
+      "description": "",
+      "file": "",
+      "id": "nx-cloud-documentation",
+      "name": "Nx Cloud Documentation",
+      "path": "/nx-cloud/intro/what-is-nx-cloud"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -352,20 +352,6 @@
     },
     {
       "description": "",
-      "file": "shared/reference/nxignore",
-      "id": "nxignore",
-      "name": ".nxignore",
-      "path": "/reference/nxignore"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "nxjson-workspaceLayout",
-      "name": "nx.json workspaceLayout property",
-      "path": "/reference/nx-json#workspace-layout"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/ban-dependencies-with-tags",
       "id": "ban-dependencies-with-tags",
       "name": "Ban Dependencies with Certain Tags",
@@ -391,6 +377,20 @@
       "id": "tags-allow-list",
       "name": "Tags Allow List",
       "path": "/recipes/enforce-module-boundaries/tags-allow-list"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/nxignore",
+      "id": "nxignore",
+      "name": ".nxignore",
+      "path": "/reference/nxignore"
+    },
+    {
+      "description": "",
+      "file": "",
+      "id": "nxjson-workspaceLayout",
+      "name": "nx.json workspaceLayout property",
+      "path": "/reference/nx-json#workspace-layout"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -438,13 +438,6 @@
     },
     {
       "description": "",
-      "file": "shared/reference/project-configuration",
-      "id": "project-configuration",
-      "name": "Project Configuration",
-      "path": "/reference/project-configuration"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/module-federation-with-ssr",
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for Angular",
@@ -477,6 +470,13 @@
       "id": "run-commands-executor",
       "name": "Running Custom Commands",
       "path": "/recipes/tips-n-tricks/run-commands-executor"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/project-configuration",
+      "id": "project-configuration",
+      "name": "Project Configuration",
+      "path": "/reference/project-configuration"
     },
     {
       "description": "",
@@ -651,13 +651,6 @@
   "environment-variables": [
     {
       "description": "",
-      "file": "shared/reference/environment-variables",
-      "id": "environment-variables",
-      "name": "Environment Variables",
-      "path": "/reference/environment-variables"
-    },
-    {
-      "description": "",
       "file": "shared/guides/use-environment-variables-in-angular",
       "id": "use-environment-variables-in-angular",
       "name": "Use Environment Variables in Angular",
@@ -683,6 +676,13 @@
       "id": "define-environment-variables",
       "name": "Define Environment Variables",
       "path": "/recipes/tips-n-tricks/define-environment-variables"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/environment-variables",
+      "id": "environment-variables",
+      "name": "Environment Variables",
+      "path": "/reference/environment-variables"
     }
   ],
   "module-federation": [

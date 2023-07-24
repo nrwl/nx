@@ -180,8 +180,7 @@ export function SidebarMobile({
   const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
   const isPackages: boolean = router.asPath.startsWith('/packages');
   const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
-  const isRecipes: boolean = router.asPath.startsWith('/recipes');
-  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isRecipes;
+  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins;
 
   const sections = [
     { name: 'Home', href: '/', current: false },
@@ -200,11 +199,6 @@ export function SidebarMobile({
       name: 'Extending Nx',
       href: '/extending-nx/intro/getting-started',
       current: isPlugins,
-    },
-    {
-      name: 'Recipes',
-      href: '/recipes',
-      current: isRecipes,
     },
   ];
   return (
