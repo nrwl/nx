@@ -56,7 +56,7 @@ Anything you run in the terminal. An example command that invokes a [task](#task
 
 A set of preconfigured options for a [target](#target) that should be enabled altogether. For example, a `production` configuration would set all the options needed for a build that could be deployed to production.
 
-> See: [Use Executor Configurations](/plugin-features/use-task-executors#use-executor-configurations)
+> See: [Use Executor Configurations](/core-features/plugin-features/use-task-executors#use-executor-configurations)
 
 ### Distributed Cache
 
