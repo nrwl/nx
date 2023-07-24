@@ -2,8 +2,6 @@ use napi::bindgen_prelude::*;
 
 use std::path::PathBuf;
 use tracing::trace;
-use watchexec_events::filekind::ModifyKind::Name;
-use watchexec_events::filekind::RenameMode;
 use watchexec_events::{Event, Tag};
 
 #[napi(string_enum)]
