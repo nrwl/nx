@@ -71,7 +71,7 @@ export default function Browse(props: BrowseProps): JSX.Element {
     menu: Menu;
   } = {
     menu: {
-      sections: [getBasicPluginsSection(menusApi.getMenu('plugins', ''))],
+      sections: [getBasicPluginsSection(menusApi.getMenu('extending-nx', ''))],
     },
   };
 

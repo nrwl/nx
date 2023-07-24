@@ -22,7 +22,7 @@ export function DocViewer({
   const router = useRouter();
   const hideTableOfContent =
     router.asPath.includes('/getting-started/intro') ||
-    router.asPath.includes('/plugins/intro/getting-started') ||
+    router.asPath.includes('/extending-nx/intro/getting-started') ||
     router.asPath.includes('/packages/devkit') ||
     router.asPath.includes('/reference/glossary');
   const ref = useRef<HTMLDivElement | null>(null);

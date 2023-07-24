@@ -1,6 +1,6 @@
 # Maintain a Published Plugins
 
-To create a plugin, see the [create a local plugin tutorial](/plugins/tutorials/create-plugin).
+To create a plugin, see the [create a local plugin tutorial](/extending-nx/tutorials/create-plugin).
 
 ## Publish your Nx Plugin
 
@@ -32,4 +32,4 @@ We will then verify the plugin, offer suggestions or merge the pull request!
 
 ## Write Migrations
 
-Once other repos are using your plugin, it would help them if you write migrations to automatically update their configuration files whenever you make breaking changes. Read the [migration generators guide](/plugins/recipes/migration-generators) to find out how.
+Once other repos are using your plugin, it would help them if you write migrations to automatically update their configuration files whenever you make breaking changes. Read the [migration generators guide](/extending-nx/recipes/migration-generators) to find out how.

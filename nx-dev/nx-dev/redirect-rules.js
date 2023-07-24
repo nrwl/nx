@@ -213,7 +213,7 @@ const diataxis = {
   '/using-nx/updating-nx': '/core-features/automate-updating-dependencies',
   '/using-nx/nx-nodejs-typescript-version-matrix':
     '/workspace/nx-nodejs-typescript-version-matrix',
-  '/extending-nx/nx-devkit': '/plugins/intro/getting-started',
+  '/extending-nx/nx-devkit': '/extending-nx/intro/getting-started',
   '/extending-nx/project-inference-plugins':
     '/recipes/advanced-plugins/project-inference-plugins',
   '/extending-nx/project-graph-plugins':
@@ -654,27 +654,33 @@ const nested5minuteTutorialUrls = {
 };
 
 const pluginUrls = {
-  '/plugin-features/create-your-own-plugin': '/plugins/tutorials/create-plugin',
-  '/recipes/advanced-plugins': '/plugins/recipes',
-  '/recipes/advanced-plugins/create-preset': '/plugins/recipes/create-preset',
+  '/plugin-features/create-your-own-plugin':
+    '/extending-nx/tutorials/create-plugin',
+  '/recipes/advanced-plugins': '/extending-nx/recipes',
+  '/recipes/advanced-plugins/create-preset':
+    '/extending-nx/recipes/create-preset',
   '/recipes/advanced-plugins/migration-generators':
-    '/plugins/recipes/migration-generators',
+    '/extending-nx/recipes/migration-generators',
   '/recipes/advanced-plugins/project-graph-plugins':
-    '/plugins/recipes/project-graph-plugins',
+    '/extending-nx/recipes/project-graph-plugins',
   '/recipes/advanced-plugins/project-inference-plugins':
-    '/plugins/recipes/project-inference-plugins',
+    '/extending-nx/recipes/project-inference-plugins',
   '/recipes/advanced-plugins/share-your-plugin':
-    '/plugins/tutorials/maintain-published-plugin',
-  '/recipes/executors/compose-executors': '/plugins/recipes/compose-executors',
+    '/extending-nx/tutorials/maintain-published-plugin',
+  '/recipes/executors/compose-executors':
+    '/extending-nx/recipes/compose-executors',
   '/recipes/executors/creating-custom-executors':
-    '/plugins/recipes/local-executors',
-  '/recipes/generators': '/plugins/recipes',
+    '/extending-nx/recipes/local-executors',
+  '/recipes/generators': '/extending-nx/recipes',
   '/recipes/generators/composing-generators':
-    '/plugins/recipes/composing-generators',
-  '/recipes/generators/creating-files': '/plugins/recipes/creating-files',
-  '/recipes/generators/generator-options': '/plugins/recipes/generator-options',
-  '/recipes/generators/local-generators': '/plugins/recipes/local-generators',
-  '/recipes/generators/modifying-files': '/plugins/recipes/modifying-files',
+    '/extending-nx/recipes/composing-generators',
+  '/recipes/generators/creating-files': '/extending-nx/recipes/creating-files',
+  '/recipes/generators/generator-options':
+    '/extending-nx/recipes/generator-options',
+  '/recipes/generators/local-generators':
+    '/extending-nx/recipes/local-generators',
+  '/recipes/generators/modifying-files':
+    '/extending-nx/recipes/modifying-files',
 };
 
 const referenceUrls = {
@@ -709,6 +715,11 @@ const makeMoreConceptsSubmenu = {
   '/more-concepts/:path*': '/concepts/more-concepts/:path*',
 };
 
+const pluginsToExtendNx = {
+  '/plugins': '/extending-nx',
+  '/plugins/:path*': '/extending-nx/:path*',
+};
+
 /**
  * Public export API
  */
@@ -731,4 +742,5 @@ module.exports = {
   missingAndCatchAllRedirects,
   movePluginFeaturesToCore,
   makeMoreConceptsSubmenu,
+  pluginsToExtendNx,
 };

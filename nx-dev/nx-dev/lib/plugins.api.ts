@@ -3,7 +3,7 @@ import documents from '../public/documentation/generated/manifests/plugins.json'
 import { tagsApi } from './tags.api';
 
 export const nxPluginsApi = new DocumentsApi({
-  id: 'plugins',
+  id: 'extending-nx',
   manifest: documents,
   prefix: '',
   publicDocsRoot: 'public/documentation',

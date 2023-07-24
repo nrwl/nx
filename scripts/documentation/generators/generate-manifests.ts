@@ -368,10 +368,10 @@ function createDocumentSections(
       prefix: 'recipes',
     },
     {
-      name: 'plugins',
-      content: documents.find((x) => x.id === 'plugins')!
+      name: 'extending-nx',
+      content: documents.find((x) => x.id === 'extending-nx')!
         .itemList as Partial<DocumentMetadata>[],
-      prefix: 'plugins',
+      prefix: 'extending-nx',
     },
     {
       name: 'cloud',

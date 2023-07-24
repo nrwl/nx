@@ -81,13 +81,13 @@ export default function PluginsRoot({
 
 export const getStaticProps: GetStaticProps = async () => {
   const document = nxPluginsApi.generateRootDocumentIndex({
-    name: 'Plugins',
-    description: 'Learn quickly how to do things with Nx.',
+    name: 'Extending Nx',
+    description: 'Learn more about creating your own plugin, extending Nx.',
   });
   return {
     props: {
       document,
-      menu: menusApi.getMenu('plugins', ''),
+      menu: menusApi.getMenu('extending-nx', ''),
       relatedDocuments: document.tags
         .map((t) => tagsApi.getAssociatedItems(t))
         .flat(),

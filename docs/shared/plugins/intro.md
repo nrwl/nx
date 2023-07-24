@@ -17,10 +17,9 @@ Nx plugins help you scaffold new projects, pre-configure tooling, follow best pr
 
 {% cards cols="2" %}
 
-{% card title="Browse Existing Plugins" description="Find a plugin to use" url="/plugins/registry" /%}
+{% card title="Browse Existing Plugins" description="Find a plugin to use" url="/extending-nx/registry" /%}
 {% card title="Use Task Executors" description="Run operations on your code" url="/core-features/plugin-features/use-task-executors" /%}
 {% card title="Use Code Generators" description="Create or modify code" url="/core-features/plugin-features/use-code-generators" /%}
-{% card title="Automate Updating Dependencies" description="Keep code up to date with package breaking changes" url="/core-features/automate-updating-dependencies" /%}
 
 {% /cards %}
 
@@ -30,9 +29,9 @@ Local plugins allow you to automate repository specific tasks and enforce best p
 
 {% cards cols="3" %}
 
-{% card title="Create a Plugin" description="Set up a new plugin" url="/plugins/tutorials/create-plugin" /%}
-{% card title="Local Generators" description="Add a generator to your plugin" url="/plugins/recipes/local-generators" /%}
-{% card title="Local Executors" description="Add an executor to your plugin" url="/plugins/recipes/local-executors" /%}
+{% card title="Create a Plugin" description="Set up a new plugin" url="/extending-nx/tutorials/create-plugin" /%}
+{% card title="Local Generators" description="Add a generator to your plugin" url="/extending-nx/recipes/local-generators" /%}
+{% card title="Local Executors" description="Add an executor to your plugin" url="/extending-nx/recipes/local-executors" /%}
 
 {% /cards %}
 
@@ -42,8 +41,8 @@ If your plugin has functionality that would be useful in more than just your rep
 
 {% cards cols="2" %}
 
-{% card title="Share Your Plugin" description="Submit your plugin to the Nx plugin registry" url="/plugins/tutorials/publish-plugin" /%}
-{% card title="Migration Generators" description="Update repos when you introduce breaking changes" url="/plugins/recipes/migration-generators" /%}
+{% card title="Share Your Plugin" description="Submit your plugin to the Nx plugin registry" url="/extending-nx/tutorials/publish-plugin" /%}
+{% card title="Migration Generators" description="Update repos when you introduce breaking changes" url="/extending-nx/recipes/migration-generators" /%}
 
 {% /cards %}
 
@@ -53,8 +52,8 @@ You can also hook into the way Nx works and modify it to suit your needs
 
 {% cards cols="3" %}
 
-{% card title="Scaffold a New Workspace" description="Set up a new repo" url="/plugins/recipes/create-preset" /%}
-{% card title="Project Inference Plugins" description="Modify how Nx identifies projects" url="/plugins/recipes/project-inference-plugins" /%}
-{% card title="Project Graph Plugins" description="Modify the Nx graph" url="/plugins/recipes/project-graph-plugins" /%}
+{% card title="Scaffold a New Workspace" description="Set up a new repo" url="/extending-nx/recipes/create-preset" /%}
+{% card title="Project Inference Plugins" description="Modify how Nx identifies projects" url="/extending-nx/recipes/project-inference-plugins" /%}
+{% card title="Project Graph Plugins" description="Modify the Nx graph" url="/extending-nx/recipes/project-graph-plugins" /%}
 
 {% /cards %}
