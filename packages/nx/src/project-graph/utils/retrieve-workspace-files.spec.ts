@@ -1,10 +1,10 @@
-import { TempFs } from '../utils/testing/temp-fs';
-import { globForProjectFiles } from './workspaces';
+import { TempFs } from '../../utils/testing/temp-fs';
+import { retrieveProjectConfigurationPaths } from './retrieve-workspace-files';
 
-describe('globForProjectFiles', () => {
+describe('retrieveProjectConfigurationPaths', () => {
   let fs: TempFs;
   beforeAll(() => {
-    fs = new TempFs('glob-for-project-files');
+    fs = new TempFs('retrieveProjectConfigurationPaths');
   });
   afterAll(() => {
     fs.cleanup();
@@ -24,10 +24,10 @@ describe('globForProjectFiles', () => {
         name: 'project-1',
       })
     );
-    expect(globForProjectFiles(fs.tempDir, [])).not.toContain(
+    expect(retrieveProjectConfigurationPaths(fs.tempDir, {})).not.toContain(
       'not-projects/project.json'
     );
-    expect(globForProjectFiles(fs.tempDir, [])).toContain(
+    expect(retrieveProjectConfigurationPaths(fs.tempDir, {})).toContain(
       'projects/project.json'
     );
   });

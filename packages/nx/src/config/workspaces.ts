@@ -1,14 +1,13 @@
-import { sync as globSync } from 'fast-glob';
 import { existsSync } from 'fs';
 import * as path from 'path';
 import { basename, dirname, join } from 'path';
-import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile, readYamlFile } from '../utils/fileutils';
 import { logger, NX_PREFIX } from '../utils/logger';
 import { loadNxPlugins, loadNxPluginsSync } from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
+import { readNxJson } from './nx-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
@@ -21,9 +20,7 @@ import {
   mergeAngularJsonAndProjects,
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
-import { getNxRequirePaths } from '../utils/installation-directory';
-import { getIgnoredGlobs } from '../utils/ignore';
-import { readNxJson } from './nx-json';
+import { retrieveProjectConfigurationPaths } from '../project-graph/utils/retrieve-workspace-files';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -38,7 +35,6 @@ export class Workspaces {
    * @deprecated
    */
   readProjectsConfigurations(opts?: {
-    _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations {
     if (
@@ -48,19 +44,10 @@ export class Workspaces {
       return this.cachedProjectsConfig;
     }
     const nxJson = readNxJson(this.root);
+    const projectPaths = retrieveProjectConfigurationPaths(this.root, nxJson);
     let projectsConfigurations = buildProjectsConfigurationsFromProjectPaths(
       nxJson,
-      globForProjectFiles(
-        this.root,
-        opts?._ignorePluginInference
-          ? []
-          : getGlobPatternsFromPlugins(
-              nxJson,
-              getNxRequirePaths(this.root),
-              this.root
-            ),
-        nxJson
-      ),
+      projectPaths,
       (path) => readJsonFile(join(this.root, path))
     );
     if (
@@ -131,9 +118,6 @@ export function toProjectName(fileName: string): string {
   const parts = dirname(fileName).split(/[\/\\]/g);
   return parts[parts.length - 1].toLowerCase();
 }
-
-let projectGlobCache: string[];
-let projectGlobCacheKey: string;
 
 /**
  * @deprecated Use getGlobPatternsFromPluginsAsync instead.
@@ -245,103 +229,6 @@ function normalizePatterns(patterns: string[]): string[] {
 
 function removeRelativePath(pattern: string): string {
   return pattern.startsWith('./') ? pattern.substring(2) : pattern;
-}
-
-export function globForProjectFiles(
-  root: string,
-  pluginsGlobPatterns: string[],
-  nxJson?: NxJsonConfiguration
-) {
-  // Deal w/ Caching
-  const cacheKey = [root, ...pluginsGlobPatterns].join(',');
-  if (
-    process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
-    projectGlobCache &&
-    cacheKey === projectGlobCacheKey
-  ) {
-    return projectGlobCache;
-  }
-  projectGlobCacheKey = cacheKey;
-
-  const _globPatternsFromPackageManagerWorkspaces =
-    getGlobPatternsFromPackageManagerWorkspaces(root);
-
-  const globPatternsFromPackageManagerWorkspaces =
-    _globPatternsFromPackageManagerWorkspaces ?? [];
-
-  const globsToInclude = globPatternsFromPackageManagerWorkspaces.filter(
-    (glob) => !glob.startsWith('!')
-  );
-
-  const globsToExclude = globPatternsFromPackageManagerWorkspaces
-    .filter((glob) => glob.startsWith('!'))
-    .map((glob) => glob.substring(1))
-    .map((glob) => (glob.startsWith('/') ? glob.substring(1) : glob));
-
-  const projectGlobPatterns: string[] = [
-    'project.json',
-    '**/project.json',
-    ...globsToInclude,
-  ];
-
-  projectGlobPatterns.push(...pluginsGlobPatterns);
-
-  const combinedProjectGlobPattern = '{' + projectGlobPatterns.join(',') + '}';
-
-  performance.mark('start-glob-for-projects');
-  /**
-   * This configures the files and directories which we always want to ignore as part of file watching
-   * and which we know the location of statically (meaning irrespective of user configuration files).
-   * This has the advantage of being ignored directly within globSync
-   *
-   * Other ignored entries will need to be determined dynamically by reading and evaluating the user's
-   * .gitignore and .nxignore files below.
-   */
-
-  const staticIgnores = [
-    'node_modules',
-    '**/node_modules',
-    'dist',
-    '.git',
-    ...globsToExclude,
-    ...getIgnoredGlobs(root, false),
-  ];
-
-  /**
-   * TODO: This utility has been implemented multiple times across the Nx codebase,
-   * discuss whether it should be moved to a shared location.
-   */
-  const opts = {
-    ignore: staticIgnores,
-    absolute: false,
-    cwd: root,
-    dot: true,
-    suppressErrors: true,
-  };
-
-  const globResults = globSync(combinedProjectGlobPattern, opts);
-
-  projectGlobCache = deduplicateProjectFiles(globResults);
-
-  // TODO @vsavkin remove after Nx 16
-  if (
-    projectGlobCache.length === 0 &&
-    _globPatternsFromPackageManagerWorkspaces === undefined &&
-    nxJson?.extends === 'nx/presets/npm.json'
-  ) {
-    output.warn({
-      title:
-        'Nx could not find any projects. Check if you need to configure workspaces in package.json or pnpm-workspace.yaml',
-    });
-  }
-
-  performance.mark('finish-glob-for-projects');
-  performance.measure(
-    'glob-for-project-files',
-    'start-glob-for-projects',
-    'finish-glob-for-projects'
-  );
-  return projectGlobCache;
 }
 
 /**

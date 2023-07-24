@@ -9,6 +9,28 @@ use std::path::{Path, PathBuf};
 
 #[napi]
 /// Get workspace config files based on provided globs
+pub fn get_project_configuration_files(
+    workspace_root: String,
+    globs: Vec<String>,
+) -> napi::Result<Vec<String>> {
+    let globs = build_glob_set(&globs)?;
+    let config_paths: Vec<String> = nx_walker(workspace_root, move |rec| {
+        let mut config_paths: HashMap<PathBuf, PathBuf> = HashMap::new();
+        for (path, _) in rec {
+            insert_config_file_into_map(path, &mut config_paths, &globs);
+        }
+
+        config_paths
+            .into_values()
+            .map(|p| p.to_normalized_string())
+            .collect()
+    });
+
+    Ok(config_paths)
+}
+
+#[napi]
+/// Get workspace config files based on provided globs
 pub fn get_project_configurations<ConfigurationParser>(
     workspace_root: String,
     globs: Vec<String>,

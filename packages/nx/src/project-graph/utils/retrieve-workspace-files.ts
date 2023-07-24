@@ -2,6 +2,7 @@ import { performance } from 'perf_hooks';
 import {
   buildProjectsConfigurationsFromProjectPaths,
   getGlobPatternsFromPackageManagerWorkspaces,
+  getGlobPatternsFromPlugins,
   getGlobPatternsFromPluginsAsync,
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
@@ -17,7 +18,7 @@ import {
   mergeAngularJsonAndProjects,
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { FileData, ProjectFileMap } from '../../config/project-graph';
 import type { NxWorkspaceFiles } from '../../native';
 
@@ -49,13 +50,7 @@ export async function retrieveWorkspaceFiles(
       workspaceRoot,
       globs,
       (configs: string[]): Record<string, ProjectConfiguration> => {
-        const projectConfigurations = createProjectConfigurations(
-          workspaceRoot,
-          nxJson,
-          configs
-        );
-
-        return projectConfigurations.projects;
+        return createProjectConfigurations(workspaceRoot, nxJson, configs);
       }
     ) as NxWorkspaceFiles;
   performance.mark('get-workspace-files:end');
@@ -85,21 +80,58 @@ export async function retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ): Promise<Record<string, ProjectConfiguration>> {
-  const { getProjectConfigurations } = require('../../native');
+  const { getProjectConfigurations } =
+    require('../../native') as typeof import('../../native');
   const globs = await configurationGlobs(workspaceRoot, nxJson);
   return getProjectConfigurations(
     workspaceRoot,
     globs,
     (configs: string[]): Record<string, ProjectConfiguration> => {
-      const projectConfigurations = createProjectConfigurations(
-        workspaceRoot,
-        nxJson,
-        configs
-      );
-
-      return projectConfigurations.projects;
+      return createProjectConfigurations(workspaceRoot, nxJson, configs);
     }
-  );
+  ) as Record<string, ProjectConfiguration>;
+}
+
+export function retrieveProjectConfigurationPaths(
+  root: string,
+  nxJson: NxJsonConfiguration
+): string[] {
+  const projectGlobPatterns = configurationGlobsSync(root, nxJson);
+  const { getProjectConfigurationFiles } =
+    require('../../native') as typeof import('../../native');
+  return getProjectConfigurationFiles(root, projectGlobPatterns);
+}
+
+const projectsWithoutPluginCache = new Map<
+  string,
+  Record<string, ProjectConfiguration>
+>();
+
+// TODO: This function is called way too often, it should be optimized without this cache
+export function retrieveProjectConfigurationsWithoutPluginInference(
+  root: string
+): Record<string, ProjectConfiguration> {
+  const nxJson = readNxJson(root);
+  const projectGlobPatterns = configurationGlobsWithoutPlugins(root);
+  const cacheKey = root + ',' + projectGlobPatterns.join(',');
+
+  if (projectsWithoutPluginCache.has(cacheKey)) {
+    return projectsWithoutPluginCache.get(cacheKey);
+  }
+
+  const { getProjectConfigurations } =
+    require('../../native') as typeof import('../../native');
+  const projectConfigurations = getProjectConfigurations(
+    root,
+    projectGlobPatterns,
+    (configs: string[]): Record<string, ProjectConfiguration> => {
+      return createProjectConfigurations(root, nxJson, configs);
+    }
+  ) as Record<string, ProjectConfiguration>;
+
+  projectsWithoutPluginCache.set(cacheKey, projectConfigurations);
+
+  return projectConfigurations;
 }
 
 function buildAllWorkspaceFiles(
@@ -124,7 +156,7 @@ function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[]
-): ProjectsConfigurations {
+): Record<string, ProjectConfiguration> {
   performance.mark('build-project-configs:start');
 
   let projectConfigurations = mergeTargetDefaultsIntoProjectDescriptions(
@@ -147,10 +179,7 @@ function createProjectConfigurations(
     'build-project-configs:end'
   );
 
-  return {
-    version: 2,
-    projects: projectConfigurations,
-  };
+  return projectConfigurations;
 }
 
 function mergeTargetDefaultsIntoProjectDescriptions(
@@ -190,10 +219,29 @@ async function configurationGlobs(
     workspaceRoot
   );
 
+  return [...configurationGlobsWithoutPlugins(workspaceRoot), ...pluginGlobs];
+}
+
+/**
+ * @deprecated Use {@link configurationGlobs} instead.
+ */
+function configurationGlobsSync(
+  workspaceRoot: string,
+  nxJson: NxJsonConfiguration
+): string[] {
+  let pluginGlobs = getGlobPatternsFromPlugins(
+    nxJson,
+    getNxRequirePaths(workspaceRoot),
+    workspaceRoot
+  );
+
+  return [...configurationGlobsWithoutPlugins(workspaceRoot), ...pluginGlobs];
+}
+
+function configurationGlobsWithoutPlugins(workspaceRoot: string): string[] {
   return [
     'project.json',
     '**/project.json',
-    ...pluginGlobs,
     ...getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot),
   ];
 }

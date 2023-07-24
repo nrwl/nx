@@ -38,6 +38,8 @@ export const enum WorkspaceErrors {
   Generic = 'Generic'
 }
 /** Get workspace config files based on provided globs */
+export function getProjectConfigurationFiles(workspaceRoot: string, globs: Array<string>): Array<string>
+/** Get workspace config files based on provided globs */
 export function getProjectConfigurations(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Record<string, object>): Record<string, object>
 export interface NxWorkspaceFiles {
   projectFileMap: Record<string, Array<FileData>>
