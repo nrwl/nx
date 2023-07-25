@@ -14,7 +14,6 @@
         "main": "packages-legacy/rollup/index.ts",
         "tsConfig": "packages-legacy/rollup/tsconfig.json",
         "outputPath": "build/packages/rollup-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/rollup",

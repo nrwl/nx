@@ -14,7 +14,6 @@
         "main": "packages-legacy/vite/index.ts",
         "tsConfig": "packages-legacy/vite/tsconfig.json",
         "outputPath": "build/packages/vite-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/vite",

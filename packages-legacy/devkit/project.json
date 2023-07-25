@@ -14,7 +14,6 @@
         "main": "packages-legacy/devkit/index.ts",
         "tsConfig": "packages-legacy/devkit/tsconfig.json",
         "outputPath": "build/packages/devkit-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/devkit",

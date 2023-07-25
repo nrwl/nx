@@ -14,7 +14,6 @@
         "main": "packages-legacy/detox/index.ts",
         "tsConfig": "packages-legacy/detox/tsconfig.json",
         "outputPath": "build/packages/detox-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/detox",

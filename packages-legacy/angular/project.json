@@ -20,7 +20,6 @@
         "main": "packages-legacy/angular/index.ts",
         "tsConfig": "packages-legacy/angular/tsconfig.json",
         "outputPath": "build/packages/angular-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/angular",
