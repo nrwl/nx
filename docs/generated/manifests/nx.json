@@ -1404,6 +1404,21 @@
             "tags": []
           },
           {
+            "id": "faster-builds-with-module-federation",
+            "name": "Faster Builds with Module Federation",
+            "description": "",
+            "file": "shared/guides/module-federation/faster-builds",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/faster-builds-with-module-federation",
+            "tags": [
+              "use-task-executors",
+              "module-federation",
+              "angular",
+              "react"
+            ]
+          },
+          {
             "id": "applications-and-libraries",
             "name": "Applications and Libraries",
             "description": "",
@@ -1690,6 +1705,16 @@
         "tags": []
       },
       {
+        "id": "faster-builds-with-module-federation",
+        "name": "Faster Builds with Module Federation",
+        "description": "",
+        "file": "shared/guides/module-federation/faster-builds",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/more-concepts/faster-builds-with-module-federation",
+        "tags": ["use-task-executors", "module-federation", "angular", "react"]
+      },
+      {
         "id": "applications-and-libraries",
         "name": "Applications and Libraries",
         "description": "",
@@ -1903,6 +1928,16 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/micro-frontend-architecture",
     "tags": []
+  },
+  "/concepts/more-concepts/faster-builds-with-module-federation": {
+    "id": "faster-builds-with-module-federation",
+    "name": "Faster Builds with Module Federation",
+    "description": "",
+    "file": "shared/guides/module-federation/faster-builds",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/more-concepts/faster-builds-with-module-federation",
+    "tags": ["use-task-executors", "module-federation", "angular", "react"]
   },
   "/concepts/more-concepts/applications-and-libraries": {
     "id": "applications-and-libraries",

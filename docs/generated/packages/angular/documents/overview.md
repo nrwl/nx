@@ -93,6 +93,6 @@ nx g @nx/angular:service my-service
 
 - [Angular Nx Tutorial](/angular-tutorial/1-code-generation)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
-- [Setup Module Federation with Angular and Nx](/more-concepts/faster-builds-with-module-federation)
+- [Setup Module Federation with Angular and Nx](/concepts/more-concepts/faster-builds-with-module-federation)
 - [Upgrading an AngularJS application to Angular](/recipes/angular/migration/angularjs)
 - [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)
