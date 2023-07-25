@@ -4,6 +4,7 @@
   "$id": "NxPluginCreatePackage",
   "title": "Create a framework package",
   "description": "Create a framework package that uses Nx CLI.",
+  "examplesFile": "../../../docs/generators/create-package-examples.md",
   "type": "object",
   "properties": {
     "name": {
