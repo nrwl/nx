@@ -455,6 +455,17 @@
                   "file": "shared/guides/module-federation/micro-frontend-architecture"
                 },
                 {
+                  "name": "Faster Builds with Module Federation",
+                  "id": "faster-builds-with-module-federation",
+                  "tags": [
+                    "use-task-executors",
+                    "module-federation",
+                    "angular",
+                    "react"
+                  ],
+                  "file": "shared/guides/module-federation/faster-builds"
+                },
+                {
                   "name": "Applications and Libraries",
                   "id": "applications-and-libraries",
                   "tags": ["enforce-project-boundaries"],

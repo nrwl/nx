@@ -81,6 +81,7 @@
       - [Folder Structure](/concepts/more-concepts/folder-structure)
       - [Nx Devkit and Angular Devkit](/concepts/more-concepts/nx-devkit-angular-devkit)
       - [Micro Frontend Architecture](/concepts/more-concepts/micro-frontend-architecture)
+      - [Faster Builds with Module Federation](/concepts/more-concepts/faster-builds-with-module-federation)
       - [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
       - [Creating Libraries](/concepts/more-concepts/creating-libraries)
       - [Library Types](/concepts/more-concepts/library-types)
