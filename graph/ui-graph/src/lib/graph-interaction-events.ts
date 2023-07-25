@@ -38,10 +38,16 @@ interface FileLinkClickEvent {
   file: string;
 }
 
+interface ProjectOpenConfigClickEvent {
+  type: 'ProjectOpenConfigClick';
+  projectName: string;
+}
+
 export type GraphInteractionEvents =
   | ProjectNodeClickEvent
   | EdgeClickEvent
   | GraphRegeneratedEvent
   | TaskNodeClickEvent
   | BackgroundClickEvent
-  | FileLinkClickEvent;
+  | FileLinkClickEvent
+  | ProjectOpenConfigClickEvent;

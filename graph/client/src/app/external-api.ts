@@ -23,6 +23,9 @@ export class ExternalApi {
   };
 
   private fileClickCallbackListeners: ((url: string) => void)[] = [];
+  private openProjectConfigCallbackListeners: ((
+    projectName: string
+  ) => void)[] = [];
 
   get depGraphService() {
     return this.projectGraphService;
@@ -33,6 +36,11 @@ export class ExternalApi {
       if (event.type === 'FileLinkClick') {
         const url = `${event.sourceRoot}/${event.file}`;
         this.fileClickCallbackListeners.forEach((cb) => cb(url));
+      }
+      if (event.type === 'ProjectOpenConfigClick') {
+        this.openProjectConfigCallbackListeners.forEach((cb) =>
+          cb(event.projectName)
+        );
       }
     });
   }
@@ -57,6 +65,9 @@ export class ExternalApi {
 
   registerFileClickCallback(callback: (url: string) => void) {
     this.fileClickCallbackListeners.push(callback);
+  }
+  registerOpenProjectConfigCallback(callback: (projectName: string) => void) {
+    this.openProjectConfigCallbackListeners.push(callback);
   }
 
   private handleLegacyProjectGraphEvent(event: ProjectGraphMachineEvents) {
