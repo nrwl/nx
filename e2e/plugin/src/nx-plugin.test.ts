@@ -76,7 +76,6 @@ describe('Nx Plugin', () => {
         [`update-${version}`]: {
           version,
           description: `update-${version}`,
-          cli: `nx`,
           implementation: `./src/migrations/update-${version}/update-${version}`,
         },
       }),

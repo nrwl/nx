@@ -73,7 +73,6 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
   generators[options.name] = {
     version: options.packageVersion,
     description: options.description,
-    cli: 'nx',
     implementation: `./src/migrations/${options.name}/${options.name}`,
   };
   migrations.generators = generators;
