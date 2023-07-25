@@ -88,6 +88,11 @@ static MULTI_PATTERNS_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\((.*?)\)")
 /// Converts a glob string to a list of globs
 /// e.g. `path/!(cache)/**` -> `path/**`, `!path/cache/**`
 fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
+    // If there are no negations or multiple patterns, return the glob as is
+    if !glob.contains('!') || !glob.contains('(') {
+        return Ok(vec![glob.to_string()]);
+    }
+
     let glob = MULTI_PATTERNS_REGEX.replace_all(glob, |caps: &regex::Captures| {
         format!("{{{}}}", &caps[1].replace('|', ","))
     });
