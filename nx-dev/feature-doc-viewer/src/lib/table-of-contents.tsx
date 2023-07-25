@@ -71,7 +71,7 @@ export function TableOfContents({
                 <Link
                   href={href}
                   className={cx(
-                    'block w-full border-l-4 border-slate-100 py-1 pl-3 transition hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700',
+                    'block w-full border-l-4 border-slate-200 py-1 pl-3 transition hover:border-slate-500 dark:border-slate-700/40 dark:hover:border-slate-700',
                     {
                       'border-slate-500 bg-slate-50 dark:border-slate-700 dark:bg-slate-800/60':
                         activeId === item.id,
