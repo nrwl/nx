@@ -7,19 +7,13 @@
     "moduleResolution": "node",
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "composite": true,
     "declaration": true
   },
-  "files": [
-    "../../node_modules/@nx/react-native/typings/svg.d.ts"
-  ],
+  "files": [],
   "include": [],
   "references": [
     {
       "path": "./tsconfig.app.json"
     }
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }

@@ -1,17 +1,12 @@
 import { sync as globSync } from 'fast-glob';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
 import * as path from 'path';
-import { basename, dirname, extname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile, readYamlFile } from '../utils/fileutils';
 import { logger, NX_PREFIX } from '../utils/logger';
-import {
-  loadNxPlugins,
-  loadNxPluginsSync,
-  readPluginPackageJson,
-  registerPluginTSTranspiler,
-} from '../utils/nx-plugin';
+import { loadNxPlugins, loadNxPluginsSync } from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
 import {
@@ -19,16 +14,6 @@ import {
   ProjectsConfigurations,
   TargetConfiguration,
 } from './workspace-json-project-json';
-import {
-  CustomHasher,
-  Executor,
-  ExecutorConfig,
-  ExecutorsJson,
-  Generator,
-  GeneratorsJson,
-  GeneratorsJsonEntry,
-  TaskGraphExecutor,
-} from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
@@ -42,6 +27,7 @@ import {
   findProjectForPath,
   normalizeProjectRoot,
 } from '../project-graph/utils/find-project-for-path';
+import { readNxJson } from './nx-json';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -94,7 +80,7 @@ export class Workspaces {
     ) {
       return this.cachedProjectsConfig;
     }
-    const nxJson = this.readNxJson();
+    const nxJson = readNxJson(this.root);
     let projectsConfigurations = buildProjectsConfigurationsFromProjectPaths(
       nxJson,
       globForProjectFiles(
@@ -138,7 +124,7 @@ export class Workspaces {
     _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations & NxJsonConfiguration {
-    const nxJson = this.readNxJson();
+    const nxJson = readNxJson(this.root);
     return { ...this.readProjectsConfigurations(opts), ...nxJson };
   }
 
@@ -168,308 +154,6 @@ export class Workspaces {
     }
     return projects;
   }
-
-  isNxExecutor(nodeModule: string, executor: string) {
-    return !this.readExecutor(nodeModule, executor).isNgCompat;
-  }
-
-  isNxGenerator(collectionName: string, generatorName: string) {
-    return !this.readGenerator(collectionName, generatorName).isNgCompat;
-  }
-
-  readExecutor(
-    nodeModule: string,
-    executor: string
-  ): ExecutorConfig & { isNgCompat: boolean } {
-    try {
-      const { executorsFilePath, executorConfig, isNgCompat } =
-        this.readExecutorsJson(nodeModule, executor);
-      const executorsDir = path.dirname(executorsFilePath);
-      const schemaPath = this.resolveSchema(
-        executorConfig.schema,
-        executorsDir
-      );
-      const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
-
-      const implementationFactory = this.getImplementationFactory<Executor>(
-        executorConfig.implementation,
-        executorsDir
-      );
-
-      const batchImplementationFactory = executorConfig.batchImplementation
-        ? this.getImplementationFactory<TaskGraphExecutor>(
-            executorConfig.batchImplementation,
-            executorsDir
-          )
-        : null;
-
-      const hasherFactory = executorConfig.hasher
-        ? this.getImplementationFactory<CustomHasher>(
-            executorConfig.hasher,
-            executorsDir
-          )
-        : null;
-
-      return {
-        schema,
-        implementationFactory,
-        batchImplementationFactory,
-        hasherFactory,
-        isNgCompat,
-      };
-    } catch (e) {
-      throw new Error(
-        `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
-      );
-    }
-  }
-
-  readGenerator(
-    collectionName: string,
-    generatorName: string
-  ): {
-    resolvedCollectionName: string;
-    normalizedGeneratorName: string;
-    schema: any;
-    implementationFactory: () => Generator<unknown>;
-    isNgCompat: boolean;
-    /**
-     * @deprecated(v16): This will be removed in v16, use generatorConfiguration.aliases
-     */
-    aliases: string[];
-    generatorConfiguration: GeneratorsJsonEntry;
-  } {
-    try {
-      const {
-        generatorsFilePath,
-        generatorsJson,
-        resolvedCollectionName,
-        normalizedGeneratorName,
-      } = this.readGeneratorsJson(collectionName, generatorName);
-      const generatorsDir = path.dirname(generatorsFilePath);
-      const generatorConfig =
-        generatorsJson.generators?.[normalizedGeneratorName] ||
-        generatorsJson.schematics?.[normalizedGeneratorName];
-      const isNgCompat = !generatorsJson.generators?.[normalizedGeneratorName];
-      const schemaPath = this.resolveSchema(
-        generatorConfig.schema,
-        generatorsDir
-      );
-      const schema = readJsonFile(schemaPath);
-      if (!schema.properties || typeof schema.properties !== 'object') {
-        schema.properties = {};
-      }
-      generatorConfig.implementation =
-        generatorConfig.implementation || generatorConfig.factory;
-      const implementationFactory = this.getImplementationFactory<Generator>(
-        generatorConfig.implementation,
-        generatorsDir
-      );
-      const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
-        ...generatorConfig,
-        aliases: generatorConfig.aliases ?? [],
-        hidden: !!generatorConfig.hidden,
-      };
-      return {
-        resolvedCollectionName,
-        normalizedGeneratorName,
-        schema,
-        implementationFactory,
-        isNgCompat,
-        aliases: generatorConfig.aliases || [],
-        generatorConfiguration: normalizedGeneratorConfiguration,
-      };
-    } catch (e) {
-      throw new Error(
-        `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
-      );
-    }
-  }
-
-  hasNxJson(): boolean {
-    const nxJson = path.join(this.root, 'nx.json');
-    return existsSync(nxJson);
-  }
-
-  readNxJson(): NxJsonConfiguration {
-    const nxJson = path.join(this.root, 'nx.json');
-    if (existsSync(nxJson)) {
-      const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
-      if (nxJsonConfiguration.extends) {
-        const extendedNxJsonPath = require.resolve(
-          nxJsonConfiguration.extends,
-          {
-            paths: [dirname(nxJson)],
-          }
-        );
-        const baseNxJson =
-          readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-        return {
-          ...baseNxJson,
-          ...nxJsonConfiguration,
-        };
-      } else {
-        return nxJsonConfiguration;
-      }
-    } else {
-      try {
-        return readJsonFile(
-          join(__dirname, '..', '..', 'presets', 'core.json')
-        );
-      } catch (e) {
-        return {};
-      }
-    }
-  }
-
-  private getImplementationFactory<T>(
-    implementation: string,
-    directory: string
-  ): () => T {
-    const [implementationModulePath, implementationExportName] =
-      implementation.split('#');
-    return () => {
-      const modulePath = this.resolveImplementation(
-        implementationModulePath,
-        directory
-      );
-      if (extname(modulePath) === '.ts') {
-        registerPluginTSTranspiler();
-      }
-      const module = require(modulePath);
-      return implementationExportName
-        ? module[implementationExportName]
-        : module.default ?? module;
-    };
-  }
-
-  private resolveSchema(schemaPath: string, directory: string): string {
-    const maybeSchemaPath = join(directory, schemaPath);
-    if (existsSync(maybeSchemaPath)) {
-      return maybeSchemaPath;
-    }
-
-    return require.resolve(schemaPath, {
-      paths: [directory],
-    });
-  }
-
-  private resolveImplementation(
-    implementationModulePath: string,
-    directory: string
-  ): string {
-    const validImplementations = ['', '.js', '.ts'].map(
-      (x) => implementationModulePath + x
-    );
-
-    for (const maybeImplementation of validImplementations) {
-      const maybeImplementationPath = join(directory, maybeImplementation);
-      if (existsSync(maybeImplementationPath)) {
-        return maybeImplementationPath;
-      }
-
-      try {
-        return require.resolve(maybeImplementation, {
-          paths: [directory],
-        });
-      } catch {}
-    }
-
-    throw new Error(
-      `Could not resolve "${implementationModulePath}" from "${directory}".`
-    );
-  }
-
-  private readExecutorsJson(nodeModule: string, executor: string) {
-    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
-      nodeModule,
-      this.resolvePaths()
-    );
-    const executorsFile = packageJson.executors ?? packageJson.builders;
-
-    if (!executorsFile) {
-      throw new Error(
-        `The "${nodeModule}" package does not support Nx executors.`
-      );
-    }
-
-    const executorsFilePath = require.resolve(
-      path.join(path.dirname(packageJsonPath), executorsFile)
-    );
-    const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
-    const executorConfig: {
-      implementation: string;
-      batchImplementation?: string;
-      schema: string;
-      hasher?: string;
-    } =
-      executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
-    if (!executorConfig) {
-      throw new Error(
-        `Cannot find executor '${executor}' in ${executorsFilePath}.`
-      );
-    }
-    const isNgCompat = !executorsJson.executors?.[executor];
-    return { executorsFilePath, executorConfig, isNgCompat };
-  }
-
-  private readGeneratorsJson(
-    collectionName: string,
-    generator: string
-  ): {
-    generatorsFilePath: string;
-    generatorsJson: GeneratorsJson;
-    normalizedGeneratorName: string;
-    resolvedCollectionName: string;
-  } {
-    let generatorsFilePath;
-    if (collectionName.endsWith('.json')) {
-      generatorsFilePath = require.resolve(collectionName, {
-        paths: this.resolvePaths(),
-      });
-    } else {
-      const { json: packageJson, path: packageJsonPath } =
-        readPluginPackageJson(collectionName, this.resolvePaths());
-      const generatorsFile = packageJson.generators ?? packageJson.schematics;
-
-      if (!generatorsFile) {
-        throw new Error(
-          `The "${collectionName}" package does not support Nx generators.`
-        );
-      }
-
-      generatorsFilePath = require.resolve(
-        path.join(path.dirname(packageJsonPath), generatorsFile)
-      );
-    }
-    const generatorsJson = readJsonFile<GeneratorsJson>(generatorsFilePath);
-
-    let normalizedGeneratorName =
-      findFullGeneratorName(generator, generatorsJson.generators) ||
-      findFullGeneratorName(generator, generatorsJson.schematics);
-
-    if (!normalizedGeneratorName) {
-      for (let parent of generatorsJson.extends || []) {
-        try {
-          return this.readGeneratorsJson(parent, generator);
-        } catch (e) {}
-      }
-
-      throw new Error(
-        `Cannot find generator '${generator}' in ${generatorsFilePath}.`
-      );
-    }
-    return {
-      generatorsFilePath,
-      generatorsJson,
-      normalizedGeneratorName,
-      resolvedCollectionName: collectionName,
-    };
-  }
-
-  private resolvePaths() {
-    return this.root ? [this.root, __dirname] : [__dirname];
-  }
 }
 
 function findMatchingProjectInCwd(
@@ -483,42 +167,6 @@ function findMatchingProjectInCwd(
   }
   const matchingProject = findProjectForPath(relativeCwd, projectRootMappings);
   return matchingProject;
-}
-
-export function normalizeExecutorSchema(
-  schema: Partial<ExecutorConfig['schema']>
-): ExecutorConfig['schema'] {
-  const version = (schema.version ??= 1);
-  return {
-    version,
-    outputCapture:
-      schema.outputCapture ?? version < 2 ? 'direct-nodejs' : 'pipe',
-    properties:
-      !schema.properties || typeof schema.properties !== 'object'
-        ? {}
-        : schema.properties,
-    ...schema,
-  };
-}
-
-function findFullGeneratorName(
-  name: string,
-  generators: {
-    [name: string]: { aliases?: string[] };
-  }
-) {
-  if (generators) {
-    for (let [key, data] of Object.entries<{ aliases?: string[] }>(
-      generators
-    )) {
-      if (
-        key === name ||
-        (data.aliases && (data.aliases as string[]).includes(name))
-      ) {
-        return key;
-      }
-    }
-  }
 }
 
 /**

@@ -4,10 +4,9 @@ import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ExecutorContext } from '@nx/devkit';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
-import { registerTsConfigPaths } from '@nx/js/src/internal';
 
 export async function validateTypes(opts: {
   workspaceRoot: string;
@@ -27,7 +26,7 @@ export async function validateTypes(opts: {
   }
 }
 
-export function registerPaths(
+export function createBuildableTsConfig(
   projectRoot: string,
   options: ViteBuildExecutorOptions | ViteDevServerExecutorOptions,
   context: ExecutorContext
@@ -36,22 +35,15 @@ export function registerPaths(
   options.buildLibsFromSource ??= true;
 
   if (!options.buildLibsFromSource) {
-    const { dependencies } = calculateProjectDependencies(
+    const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
       context.projectGraph,
       context.root,
       context.projectName,
       context.targetName,
       context.configurationName
     );
-    const tmpTsConfig = createTmpTsConfig(
-      tsConfig,
-      context.root,
-      projectRoot,
-      dependencies
-    );
-
-    registerTsConfigPaths(tmpTsConfig);
-  } else {
-    registerTsConfigPaths(tsConfig);
+    // this tsconfig is used via the vite ts paths plugin
+    createTmpTsConfig(tsConfig, context.root, projectRoot, dependencies);
   }
 }

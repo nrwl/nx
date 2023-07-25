@@ -163,7 +163,7 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/plugins/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the React app using Vite.
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the React app using Vite.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
 Learn more about how to [run tasks with Nx](/core-features/run-tasks).
@@ -216,7 +216,7 @@ Not all tasks might be cacheable though. You can configure `cacheableOperations`
 
 ## Creating New Components
 
-You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
+You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/core-features/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
 
 ```shell {% command="npx nx list @nx/react" path="myreactapp" %}
 
@@ -434,7 +434,7 @@ nx g @nx/react:component product-list --project=modules-products
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main React application.
 
-```tsx {% fileName="modules/products/src/lib/product-list.tsx" %}
+```tsx {% fileName="modules/products/src/lib/product-list/product-list.tsx" %}
 import styles from './product-list.module.css';
 
 /* eslint-disable-next-line */
@@ -784,8 +784,8 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-proje
 Here's some more things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn how to [migrate your CRA app to Nx](/recipes/adopting-nx/migration-cra)
-- [Learn how to setup Tailwind](/recipes/other/using-tailwind-css-in-react)
+- Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
+- [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/packages/storybook/documents/overview-react)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)]
 - [Speed up CI: Share your cache](/core-features/share-your-cache)]

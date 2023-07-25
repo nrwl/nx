@@ -30,7 +30,7 @@ describe('Package executor', () => {
 
   beforeEach(async () => {
     (
-      buildableLibsUtils.calculateProjectDependencies as jest.Mock
+      buildableLibsUtils.calculateProjectBuildableDependencies as jest.Mock
     ).mockImplementation(() => ({
       target: {},
       dependencies: [],

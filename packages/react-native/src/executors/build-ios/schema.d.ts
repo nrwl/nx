@@ -16,7 +16,10 @@ export interface ReactNativeBuildIosOptions extends ReactNativeStartOptions {
   extraParams?: string;
 
   // nx options
+  // @deprecated, no longer used
   packager: boolean; // default is true
+  // @deprecated, add to pod-install to dependsOn
   install: boolean; // default is true
+  // @deprecated, add to sync-deps to dependsOn
   sync: boolean; // default is true
 }

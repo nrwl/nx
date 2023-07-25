@@ -69,7 +69,7 @@ In general, you should not replace the configuration files provided for you. You
 
 In addition to configuration files for external libraries, your Nx workspace will have configuration files for Nx itself. This will be `angular.json` for workspaces using the Angular CLI and `project.json` files for workspaces using the Nx CLI. This file will define all of the individual projects in your workspace (of which your application is one) and the tasks available for them.
 
-For example, your generated application should have four [tasks available](/plugin-features/use-task-executors) for it: `build`, `serve`, `lint`, and `test`. Each of these comes with its own configuration. If you find you need to adjust the configuration of a task for your codebase, this is the place to begin looking.
+For example, your generated application should have four [tasks available](/core-features/plugin-features/use-task-executors) for it: `build`, `serve`, `lint`, and `test`. Each of these comes with its own configuration. If you find you need to adjust the configuration of a task for your codebase, this is the place to begin looking.
 
 These workspace configuration files can seem a little long and intimidating. The Nx Console can help you navigate it more easily with its Workspace JSON panel. By clicking on a project in your workspace, it will navigate you to the right place in the workspace file to begin making edits.
 
@@ -157,7 +157,7 @@ nx format:write
 
 Nx offers built-in tasks for the most common needs: `serve`, `build`, `test`, `e2e`, and `lint`. You likely have additional tasks that are needed to manage or deploy your codebase. These tasks might include deployment, i18n workflows, or uploading assets to CDNs. These tasks can be set up as scripts that you run manually with node, ts-node, or npm scripts. You can migrate those tasks over as-is, to begin with.
 
-You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` executor](/recipes/executors/run-commands-executor) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
+You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` executor](/recipes/tips-n-tricks/run-commands-executor) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
 
 Your use-case may also be covered by one of our community plugins. Plugin authors are able to extend the functionality of Nx through our plugin API.
 

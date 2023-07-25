@@ -10,6 +10,11 @@ The `nx migrate` command helps by automating the process of updating:
 
 ## How does it work?
 
+{% youtube
+src="https://www.youtube.com/embed/Ss6MfcXi0jE"
+title="How Automated Code Migrations Work"
+width="100%" /%}
+
 Nx knows where its configuration files are and can therefore make sure they match the expected format. This automated update process, commonly referred to as "migration," becomes even more powerful when you leverage [Nx plugins](/packages). Nx plugins, which are NPM packages with a range of capabilities (code generation, task automation...), offer targeted updates based on their specific areas of responsibility.
 
 For example, the [Nx ESLint plugin](/packages/linter) excels at configuring linting in your workspace. With its understanding of the configuration file locations, this plugin can provide precise migration scripts to update ESLint packages in your `package.json` and corresponding configuration files in your workspace when a new version is released.
@@ -63,4 +68,4 @@ Note: You may want to keep the `migrations.json` until every branch that was cre
 
 ## Need to opt-out of some migrations?
 
-Sometimes you need to temporarily opt-out from some migrations because your workspace is not ready yet. You can manually adjust the `migrations.json` or run the update with the `--interactive` flag to choose which migrations you accept. Find more details in our [Advanced Update Process](/recipes/other/advanced-update) guide.
+Sometimes you need to temporarily opt-out from some migrations because your workspace is not ready yet. You can manually adjust the `migrations.json` or run the update with the `--interactive` flag to choose which migrations you accept. Find more details in our [Advanced Update Process](/recipes/tips-n-tricks/advanced-update) guide.

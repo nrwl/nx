@@ -1,8 +1,6 @@
 import { ExecutorContext, names } from '@nx/devkit';
-import { join } from 'path';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
-
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 
 import { SubmitExecutorSchema } from './schema';
 
@@ -18,7 +16,6 @@ export default async function* submitExecutor(
 ): AsyncGenerator<ReactNativeSubmitOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
     await runCliSubmit(context.root, projectRoot, options);
@@ -38,10 +35,10 @@ function runCliSubmit(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/eas-cli/bin/run'),
+      require.resolve('eas-cli/bin/run'),
       ['submit', ...createSubmitOptions(options)],
       {
-        cwd: join(workspaceRoot, projectRoot),
+        cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
       }
     );

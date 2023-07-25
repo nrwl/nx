@@ -1,5 +1,5 @@
 import { ExecutorContext, logger, names } from '@nx/devkit';
-import { join } from 'path';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
@@ -42,10 +42,10 @@ export function runCliBuildList(
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/eas-cli/bin/run'),
+      require.resolve('eas-cli/bin/run'),
       ['build:list', ...createBuildListOptions(options)],
       {
-        cwd: join(workspaceRoot, projectRoot),
+        cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
         stdio: ['inherit', 'pipe', 'inherit', 'ipc'], // only stream stdout on child process
       }

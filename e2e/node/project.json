@@ -4,8 +4,7 @@
   "sourceRoot": "e2e/node",
   "projectType": "application",
   "targets": {
-    "e2e": {},
-    "run-e2e-tests": {}
+    "e2e": {}
   },
   "implicitDependencies": ["node", "nest"]
 }

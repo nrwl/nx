@@ -21,6 +21,7 @@ export async function generateStories(
       options.configureCypress && options.generateCypressSpecs,
     cypressProject: e2eProjectName,
     ignorePaths: options.ignorePaths,
+    interactionTests: options.interactionTests,
     skipFormat: true,
   });
 }

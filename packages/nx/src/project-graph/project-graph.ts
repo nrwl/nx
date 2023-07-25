@@ -16,7 +16,7 @@ import { fileExists } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
 import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
-import { readNxJson } from './file-utils';
+import { readNxJson } from '../config/nx-json';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.

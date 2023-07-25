@@ -8,7 +8,7 @@ import {
 import exportApp from 'next/dist/export';
 import { join, resolve } from 'path';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 
@@ -43,7 +43,8 @@ export default async function exportExecutor(
 ) {
   let dependencies: DependentBuildableProjectNode[] = [];
   if (!options.buildLibsFromSource) {
-    const result = calculateProjectDependencies(
+    const result = calculateProjectBuildableDependencies(
+      context.taskGraph,
       context.projectGraph,
       context.root,
       context.projectName,

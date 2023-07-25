@@ -1,6 +1,7 @@
 import type { Schema } from './schema';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { readCachedProjectGraph, workspaceRoot, Workspaces } from '@nx/devkit';
+import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
+import { readCachedProjectGraph, workspaceRoot } from '@nx/devkit';
 import {
   getDynamicRemotes,
   getStaticRemotes,
@@ -21,7 +22,6 @@ export function executeModuleFederationDevSSRBuilder(
   const projectGraph = readCachedProjectGraph();
   const { projects: workspaceProjects } =
     readProjectsConfigurationFromProjectGraph(projectGraph);
-  const ws = new Workspaces(workspaceRoot);
   const project = workspaceProjects[context.target.project];
 
   let pathToManifestFile = join(
@@ -90,7 +90,11 @@ export function executeModuleFederationDevSSRBuilder(
     if (options.verbose) {
       const [collection, executor] =
         workspaceProjects[remote].targets[target].executor.split(':');
-      const { schema } = ws.readExecutor(collection, executor);
+      const { schema } = getExecutorInformation(
+        collection,
+        executor,
+        workspaceRoot
+      );
 
       if (schema.additionalProperties || 'verbose' in schema.properties) {
         runOptions.verbose = options.verbose;

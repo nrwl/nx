@@ -16,7 +16,7 @@
     "Playwright",
     "CLI"
   ],
-  "main": "./index",
+  "main": "./index.js",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -29,15 +29,18 @@
     "directory": "packages/playwright"
   },
   "dependencies": {
-    "@nx/devkit": "file:../devkit"
+    "@nx/devkit": "file:../devkit",
+    "@nx/linter": "file:../linter",
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "@playwright/test": "^1.30.0"
+    "@playwright/test": "^1.36.0"
   },
   "peerDependenciesMeta": {
     "@playwright/test": {
       "optional": true
     }
   },
-  "executors": "./executors.json"
+  "executors": "./executors.json",
+  "generators": "./generators.json"
 }

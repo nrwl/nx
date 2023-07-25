@@ -4,7 +4,9 @@ import {
   cleanupProject,
   createFile,
   newProject,
+  readFile,
   readJson,
+  rmDist,
   runCLI,
   runCLIAsync,
   uniq,
@@ -159,5 +161,73 @@ export function ${lib}Wildcard() {
     runCLI(`generate @nx/js:setup-build ${nonBuildable} --bundler=tsc`);
     runCLI(`build ${nonBuildable}`);
     checkFilesExist(`dist/libs/${nonBuildable}/src/index.js`);
+  });
+
+  it('should build buildable libraries using the task graph and handle more scenarios than current implementation', () => {
+    const lib1 = uniq('lib1');
+    const lib2 = uniq('lib2');
+    runCLI(`generate @nx/js:lib ${lib1} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib ${lib2} --bundler=tsc --no-interactive`);
+
+    // add dep between lib1 and lib2
+    updateFile(
+      `libs/${lib1}/src/index.ts`,
+      `export { ${lib2} } from '@${scope}/${lib2}';`
+    );
+
+    // check current implementation
+    expect(runCLI(`build ${lib1} --skip-nx-cache`)).toContain(
+      'Done compiling TypeScript files'
+    );
+    checkFilesExist(`dist/libs/${lib1}/src/index.js`);
+    checkFilesExist(`dist/libs/${lib2}/src/index.js`);
+
+    // cleanup dist
+    rmDist();
+
+    // check task graph implementation
+    expect(
+      runCLI(`build ${lib1} --skip-nx-cache`, {
+        env: { NX_BUILDABLE_LIBRARIES_TASK_GRAPH: 'true' },
+      })
+    ).toContain('Done compiling TypeScript files');
+    checkFilesExist(`dist/libs/${lib1}/src/index.js`);
+    checkFilesExist(`dist/libs/${lib2}/src/index.js`);
+
+    // change build target name of lib2 and update target dependencies
+    updateJson(`libs/${lib2}/project.json`, (json) => {
+      json.targets['my-custom-build'] = json.targets.build;
+      delete json.targets.build;
+      return json;
+    });
+    const originalNxJson = readFile('nx.json');
+    updateJson('nx.json', (json) => {
+      json.targetDefaults.build = {
+        ...json.targetDefaults.build,
+        dependsOn: [...json.targetDefaults.build.dependsOn, '^my-custom-build'],
+      };
+      return json;
+    });
+
+    // cleanup dist
+    rmDist();
+
+    // check current implementation, it doesn't support a different build target name
+    expect(() => runCLI(`build ${lib1} --skip-nx-cache`)).toThrow();
+
+    // cleanup dist
+    rmDist();
+
+    // check task graph implementation
+    expect(
+      runCLI(`build ${lib1} --skip-nx-cache`, {
+        env: { NX_BUILDABLE_LIBRARIES_TASK_GRAPH: 'true' },
+      })
+    ).toContain('Done compiling TypeScript files');
+    checkFilesExist(`dist/libs/${lib1}/src/index.js`);
+    checkFilesExist(`dist/libs/${lib2}/src/index.js`);
+
+    // restore nx.json
+    updateFile('nx.json', () => originalNxJson);
   });
 });

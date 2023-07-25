@@ -161,7 +161,6 @@ pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
 /CODEOWNERS @FrozenPandaz @AgentEnder
 
 # Scripts
-/scripts/depcheck @FrozenPandaz @vsavkin @jaysoo
 /scripts/documentation @nrwl/nx-docs-reviewers
 /scripts/angular-support-upgrades @nrwl/nx-angular-reviewers
 

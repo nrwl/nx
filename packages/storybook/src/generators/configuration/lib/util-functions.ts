@@ -28,6 +28,7 @@ import {
 import { StorybookConfigureSchema } from '../schema';
 import { UiFramework7 } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
+import ts = require('typescript');
 
 const DEFAULT_PORT = 4400;
 
@@ -257,6 +258,23 @@ export function createStorybookTsconfigFile(
   };
 
   writeJson(tree, storybookTsConfigPath, storybookTsConfig);
+}
+
+export function editTsconfigBaseJson(tree: Tree) {
+  let tsconfigBasePath = 'tsconfig.base.json';
+
+  // standalone workspace maybe
+  if (!tree.exists(tsconfigBasePath)) tsconfigBasePath = 'tsconfig.json';
+
+  if (!tree.exists(tsconfigBasePath)) return;
+
+  const tsconfigBaseContent = readJson<TsConfig>(tree, tsconfigBasePath);
+
+  if (!tsconfigBaseContent.compilerOptions)
+    tsconfigBaseContent.compilerOptions = {};
+  tsconfigBaseContent.compilerOptions.skipLibCheck = true;
+
+  writeJson(tree, tsconfigBasePath, tsconfigBaseContent);
 }
 
 export function configureTsProjectConfig(
@@ -721,17 +739,29 @@ export function renameAndMoveOldTsConfig(
 
   const projectTsConfig = joinPathFragments(projectRoot, 'tsconfig.json');
 
-  if (!tree.exists(projectTsConfig)) {
-    return;
+  if (tree.exists(projectTsConfig)) {
+    updateJson(tree, projectTsConfig, (json) => {
+      for (let i = 0; i < json.references?.length; i++) {
+        if (json.references[i].path === './.storybook/tsconfig.json') {
+          json.references[i].path = './tsconfig.storybook.json';
+          break;
+        }
+      }
+      return json;
+    });
   }
 
-  updateJson(tree, projectTsConfig, (json) => {
-    for (let i = 0; i < json.references?.length; i++) {
-      if (json.references[i].path === './.storybook/tsconfig.json') {
-        json.references[i].path = './tsconfig.storybook.json';
-        break;
-      }
-    }
-    return json;
-  });
+  const projectEsLintFile = joinPathFragments(projectRoot, '.eslintrc.json');
+
+  if (tree.exists(projectEsLintFile)) {
+    updateJson(tree, projectEsLintFile, (json) => {
+      const jsonString = JSON.stringify(json);
+      const newJsonString = jsonString.replace(
+        /\.storybook\/tsconfig\.json/g,
+        'tsconfig.storybook.json'
+      );
+      json = JSON.parse(newJsonString);
+      return json;
+    });
+  }
 }

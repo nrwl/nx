@@ -310,7 +310,6 @@ export class ProjectTraversalGraph {
       projectNode.affected = affectedProjectIds.includes(project.name);
 
       projectNodes.push(projectNode);
-
       dependencies[project.name].forEach((dep) => {
         if (filteredProjectNames.includes(dep.target)) {
           const edge = new ProjectEdge(dep);

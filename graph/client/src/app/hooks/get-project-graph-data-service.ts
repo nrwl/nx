@@ -7,11 +7,14 @@ let projectGraphService: ProjectGraphService;
 
 export function getProjectGraphDataService() {
   if (projectGraphService === undefined) {
-    if (window.environment === 'dev' || window.environment === 'nx-console') {
+    if (window.environment === 'dev') {
       projectGraphService = new FetchProjectGraphService();
     } else if (window.environment === 'watch') {
       projectGraphService = new MockProjectGraphService();
-    } else if (window.environment === 'release') {
+    } else if (
+      window.environment === 'release' ||
+      window.environment === 'nx-console'
+    ) {
       if (window.localMode === 'build') {
         projectGraphService = new LocalProjectGraphService();
       } else {

@@ -16,8 +16,8 @@
     "Tsc",
     "CLI"
   ],
-  "main": "src/index.js",
-  "typings": "src/index.d.ts",
+  "main": "./index.js",
+  "typings": "./index.d.ts",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nrwl/nx/issues"

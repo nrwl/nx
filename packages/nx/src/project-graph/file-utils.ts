@@ -9,7 +9,6 @@ import type { NxArgs } from '../utils/command-line-utils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
-import ignore from 'ignore';
 import {
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
@@ -155,8 +154,7 @@ export function readPackageJson(): any {
 }
 // Original Exports
 export { FileData };
-
-// TODO(v16): Remove these exports
+// TODO(17): Remove these exports
 export {
   readNxJson,
   readAllWorkspaceConfiguration,

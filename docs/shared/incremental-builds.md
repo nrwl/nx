@@ -27,7 +27,7 @@ On the other hand, the executor of a **buildable library**, performs a subset of
 nx g @nx/react:lib mylib --buildable
 ```
 
-Read more about [Publishable and Buildable Nx Libraries here.](/more-concepts/buildable-and-publishable-libraries)
+Read more about [Publishable and Buildable Nx Libraries here.](/concepts/more-concepts/buildable-and-publishable-libraries)
 
 ## Nx computation cache and Nx Cloud
 
@@ -66,7 +66,29 @@ The downsides of incremental builds:
 
 If you are only planning to use incremental builds to speed up your CI, then the watch mode concern is irrelevant, and the only thing you need to assess is whether the benefits of skipping the compilation outweigh the costs of initializing the TypeScript compiler several times.
 
-## Custom Serve Target
+## Using the @nx/js:tsc Batch Implementation
+
+{% callout type="check" title="Available since Nx 16.5.0" %}
+The `@nx/js:tsc` batch implementation was introduced in Nx **16.5.0**.
+{% /callout %}
+
+If you're using the `@nx/js:tsc` to build your projects, you can opt-in to use its batch implementation. The batch implementation uses the [TypeScript APIs for incremental builds](https://www.typescriptlang.org/docs/handbook/project-references.html#build-mode-for-typescript) and batches the execution of the tasks into a single process. This results in a much faster build time when compared to the default implementation (the bigger the task graph to run, the more the performance improvements).
+
+{% callout type="warning" title="Experimental feature" %}
+Executing tasks in batch mode is an experimental feature.
+{% /callout %}
+
+To run your builds using the batch implementation, set the `NX_BATCH_MODE` environment variable to `true`:
+
+```shell
+NX_BATCH_MODE=true nx build my-project
+```
+
+For optimal performance, you could set the `clean` option to `false`. Otherwise, the executor cleans the output folder before running the build, which results in the loss of the [`.tsbuildinfo` file](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile) and, consequently, the loss of important optimizations performed by TypeScript. This is not a requirement. Even if the `clean` option is not set to `false` there are other important optimizations that are performed by the batch implementation.
+
+You can get a sense of the performance improvements over using the `@nx/js:tsc` default implementation in the following example repository: https://github.com/nrwl/large-ts-monorepo.
+
+## Custom Serve Target with Webpack
 
 If you are implementing a custom serve command, you can use `WebpackNxBuildCoordinationPlugin` provided by `@nx/webpack`. It's a webpack plugin you can use to coordinate the compiling of the libs and the webpack linking.
 
@@ -78,4 +100,4 @@ But there are other ways to make the build process incremental. One of them is u
 
 When using WebPack Module Federation, you split the application into multiple webpack builds. Imagine the application has 3 big sections, and they are built using 3 webpack builds: `W1`, `W2`, and `W3`. Each of them has to build shared code in addition to building the corresponding application section code. So the time it takes to build all of them (`W1` + `W2` + `W3`) will be greater than `W`. However, if you change only Section 1, you will only need to run `W1`. `W2` and `W3` will be retrieved from cache. In addition, `W1`, `W2`, and `W3` can run on separate machines. Because of that, both the CI time and the local serve time can be drastically reduced.
 
-Learn more: [Faster Builds with Module Federation](/recipes/module-federation/faster-builds)
+Learn more: [Faster Builds with Module Federation](/concepts/more-concepts/faster-builds-with-module-federation)

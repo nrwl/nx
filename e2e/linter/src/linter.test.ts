@@ -452,12 +452,6 @@ describe('Linter', () => {
           ];
           return json;
         });
-        // Set this to false for now until the `@nx/js:lib` generator is updated to include ts/swc helpers by default.
-        // TODO(jack): Remove this once the above is addressed in another PR.
-        updateJson(`libs/${mylib}/tsconfig.lib.json`, (json) => {
-          json.compilerOptions.importHelpers = false;
-          return json;
-        });
         updateJson(`libs/${mylib}/project.json`, (json) => {
           json.targets.lint.options.lintFilePatterns = [
             `libs/${mylib}/**/*.ts`,
@@ -471,7 +465,7 @@ describe('Linter', () => {
       it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
-        const tslibVersion = rootPackageJson.devDependencies['tslib'];
+        const tslibVersion = rootPackageJson.dependencies['tslib'];
 
         let out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain('All files pass linting');
@@ -484,13 +478,12 @@ describe('Linter', () => {
             content.replace(/return .*;/, `return names(${mylib}).className;`)
         );
 
-        // output should now report missing dependencies section
+        // output should now report missing dependency
         out = runCLI(`lint ${mylib}`, { silenceError: true });
-        expect(out).toContain(
-          'Dependency sections are missing from the "package.json"'
-        );
+        expect(out).toContain('they are missing');
+        expect(out).toContain('@nx/devkit');
 
-        // should fix the missing section issue
+        // should fix the missing dependency issue
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
@@ -500,9 +493,12 @@ describe('Linter', () => {
           {
             "dependencies": {
               "@nx/devkit": "${nxVersion}",
+              "tslib": "${tslibVersion}",
             },
+            "main": "./src/index.js",
             "name": "@proj/${mylib}",
             "type": "commonjs",
+            "typings": "./src/index.d.ts",
             "version": "0.0.1",
           }
         `);
@@ -514,7 +510,7 @@ describe('Linter', () => {
         });
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain(
-          `The version specifier does not contain the installed version of "@nx/devkit" package: ${nxVersion}`
+          'version specifier does not contain the installed version of "@nx/devkit"'
         );
 
         // should fix the version mismatch issue

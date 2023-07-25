@@ -32,6 +32,7 @@ import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
+import { getExecutorInformation } from './executor-utils';
 
 export interface Target {
   project: string;
@@ -131,9 +132,10 @@ async function parseExecutorAndTarget(
   }
 
   const [nodeModule, executor] = targetConfig.executor.split(':');
-  const { schema, implementationFactory } = ws.readExecutor(
+  const { schema, implementationFactory } = getExecutorInformation(
     nodeModule,
-    executor
+    executor,
+    root
   );
 
   return { executor, implementationFactory, nodeModule, schema, targetConfig };
@@ -195,7 +197,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     isVerbose
   );
 
-  if (ws.isNxExecutor(nodeModule, executor)) {
+  if (getExecutorInformation(nodeModule, executor, root).isNxExecutor) {
     const implementation = implementationFactory() as Executor<any>;
     const r = implementation(combinedOptions, {
       root,

@@ -53,7 +53,9 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
     /\s/.test(nxWorkspaceRoot) &&
     packageManager === 'npm'
   ) {
-    const pmVersion = +getPackageManagerVersion(packageManager).split('.')[0];
+    const pmVersion = +getPackageManagerVersion(packageManager, tmpDir).split(
+      '.'
+    )[0];
     if (pmVersion < 7) {
       nxWorkspaceRoot = `\\"${nxWorkspaceRoot.slice(1, -1)}\\"`;
     }

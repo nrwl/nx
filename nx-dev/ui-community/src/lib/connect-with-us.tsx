@@ -18,7 +18,10 @@ export function ConnectWithUs(): JSX.Element {
           </p>
           <p className="py-4">
             Looking for community plugins? Find them listed in the{' '}
-            <a href="/plugins/registry" className="underline font-semibold">
+            <a
+              href="/extending-nx/registry"
+              className="underline font-semibold"
+            >
               plugin registry
             </a>
             .

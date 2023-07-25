@@ -28,8 +28,7 @@
       },
       "configureCypress": {
         "type": "boolean",
-        "description": "Specifies whether to configure Cypress or not.",
-        "x-deprecated": "Please use Storybook interaction tests instead."
+        "description": "Specifies whether to configure Cypress or not."
       },
       "generateStories": {
         "type": "boolean",
@@ -40,8 +39,7 @@
       },
       "generateCypressSpecs": {
         "type": "boolean",
-        "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
-        "x-deprecated": "Please use Storybook interaction tests instead."
+        "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app."
       },
       "configureStaticServe": {
         "type": "boolean",
@@ -52,8 +50,7 @@
       },
       "cypressDirectory": {
         "type": "string",
-        "description": "A directory where the Cypress project will be placed. Placed at the root by default.",
-        "x-deprecated": "Please use Storybook interaction tests instead."
+        "description": "A directory where the Cypress project will be placed. Placed at the root by default."
       },
       "linter": {
         "description": "The tool to use for running lint checks.",

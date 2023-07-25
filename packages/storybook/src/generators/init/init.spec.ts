@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import { storybookVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { initGenerator } from './init';
 
 describe('@nx/storybook:init', () => {
@@ -22,7 +22,7 @@ describe('@nx/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -71,7 +71,7 @@ describe('@nx/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -114,7 +114,7 @@ describe('@nx/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -160,7 +160,7 @@ describe('@nx/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -216,7 +216,7 @@ describe('@nx/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -272,7 +272,7 @@ describe('@nx/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -333,7 +333,7 @@ describe('@nx/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nx/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {

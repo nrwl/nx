@@ -252,7 +252,6 @@ export async function invokeTasksRunner({
   // a distributed fashion
   performance.mark('hashing:start');
   await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-    new Workspaces(workspaceRoot),
     hasher,
     projectGraph,
     taskGraph,

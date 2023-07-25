@@ -18,7 +18,9 @@ export function getCliOptions<T>(
       const cliKey = optionKeysInCamelName.includes(optionKey)
         ? names(optionKey).propertyName
         : names(optionKey).fileName; // cli uses kebab case as default
-      if (typeof optionValue === 'boolean' && optionValue) {
+      if (Array.isArray(optionValue)) {
+        acc.push(`--${cliKey}`, optionValue.join(','));
+      } else if (typeof optionValue === 'boolean' && optionValue) {
         // no need to pass in the value when it is true, just the flag name
         acc.push(`--${cliKey}`);
       } else {

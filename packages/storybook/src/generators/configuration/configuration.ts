@@ -23,6 +23,7 @@ import {
   configureTsSolutionConfig,
   createProjectStorybookDir,
   createStorybookTsconfigFile,
+  editTsconfigBaseJson,
   getE2EProjectName,
   getViteConfigFilePath,
   projectIsRootProjectInStandaloneWorkspace,
@@ -35,13 +36,12 @@ import {
   storybookMajorVersion,
 } from '../../utils/utilities';
 import {
+  coreJsVersion,
   nxVersion,
-  storybookJestVersion,
-  storybookTestingLibraryVersion,
-  storybookTestRunnerVersion,
   storybookVersion,
   tsNodeVersion,
 } from '../../utils/versions';
+import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -129,6 +129,7 @@ export async function configurationGenerator(
     );
   }
   configureTsProjectConfig(tree, schema);
+  editTsconfigBaseJson(tree);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
 
@@ -150,7 +151,7 @@ export async function configurationGenerator(
     addStaticTarget(tree, schema);
   }
 
-  // TODO(katerina): remove this feature in 17?
+  // TODO(v18): remove Cypress
   if (schema.configureCypress) {
     const e2eProject = await getE2EProjectName(tree, schema.name);
     if (!e2eProject) {
@@ -173,22 +174,28 @@ export async function configurationGenerator(
     }
   }
 
-  const devDeps = {};
+  let devDeps = {};
 
   if (schema.tsConfiguration) {
-    devDeps['@storybook/core-common'] = storybookVersion;
     devDeps['ts-node'] = tsNodeVersion;
   }
 
   if (schema.interactionTests) {
-    devDeps['@storybook/test-runner'] = storybookTestRunnerVersion;
-    devDeps['@storybook/addon-interactions'] = storybookVersion;
-    devDeps['@storybook/testing-library'] = storybookTestingLibraryVersion;
-    devDeps['@storybook/jest'] = storybookJestVersion;
+    devDeps = {
+      ...devDeps,
+      ...interactionTestsDependencies(),
+    };
   }
 
   if (schema.configureStaticServe) {
     devDeps['@nx/web'] = nxVersion;
+  }
+
+  if (
+    projectType !== 'application' &&
+    schema.uiFramework === '@storybook/react-webpack5'
+  ) {
+    devDeps['core-js'] = coreJsVersion;
   }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));

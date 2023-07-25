@@ -86,7 +86,7 @@ export function CreateNxPlugin(): JSX.Element {
                   </Link>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="rounded-full border border-slate-100 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="rounded-full border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
                     <DocumentPlusIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                   </div>
                 </div>
@@ -113,7 +113,7 @@ export function CreateNxPlugin(): JSX.Element {
                   </Link>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="rounded-full border border-slate-100 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="rounded-full border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
                     <ShareIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                   </div>
                 </div>

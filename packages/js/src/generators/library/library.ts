@@ -32,10 +32,14 @@ import { getImportPath } from '../../utils/get-import-path';
 import {
   esbuildVersion,
   nxVersion,
+  swcHelpersVersion,
+  tsLibVersion,
   typesNodeVersion,
+  swcNodeVersion,
+  swcCoreVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 
@@ -128,6 +132,10 @@ export async function projectGenerator(
     ]);
   }
 
+  if (options.bundler !== 'none') {
+    addBundlerDependencies(tree, options);
+  }
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
@@ -176,11 +184,13 @@ function addProject(
 
     if (options.bundler === 'esbuild') {
       projectConfiguration.targets.build.options.generatePackageJson = true;
+      projectConfiguration.targets.build.options.format = ['cjs'];
     }
 
     if (options.bundler === 'rollup') {
       projectConfiguration.targets.build.options.project = `${options.projectRoot}/package.json`;
       projectConfiguration.targets.build.options.compiler = 'swc';
+      projectConfiguration.targets.build.options.format = ['cjs', 'esm'];
     }
 
     if (options.bundler === 'swc' && options.skipTypeCheck) {
@@ -242,6 +252,23 @@ export async function addLint(
     ],
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
+  });
+}
+
+function addBundlerDependencies(tree: Tree, options: NormalizedSchema) {
+  updateJson(tree, `${options.projectRoot}/package.json`, (json) => {
+    if (options.bundler === 'tsc') {
+      json.dependencies = {
+        ...json.dependencies,
+        tslib: tsLibVersion,
+      };
+    } else if (options.bundler === 'swc') {
+      json.dependencies = {
+        ...json.dependencies,
+        '@swc/helpers': swcHelpersVersion,
+      };
+    }
+    return json;
   });
 }
 
@@ -325,18 +352,25 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     updateJson<PackageJson>(tree, packageJsonPath, (json) => {
       json.name = options.importPath;
       json.version = '0.0.1';
-      json.type = 'commonjs';
       // If the package is publishable, we should remove the private field.
       if (json.private && options.publishable) {
         delete json.private;
       }
-      return json;
+      return {
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          ...determineDependencies(options),
+        },
+        ...determineEntryFields(options),
+      };
     });
   } else {
     writeJson<PackageJson>(tree, packageJsonPath, {
       name: options.importPath,
       version: '0.0.1',
-      type: 'commonjs',
+      dependencies: determineDependencies(options),
+      ...determineEntryFields(options),
     });
   }
 
@@ -617,6 +651,77 @@ function createProjectTsConfigJson(tree: Tree, options: NormalizedSchema) {
     joinPathFragments(options.projectRoot, 'tsconfig.json'),
     tsconfig
   );
+}
+
+function determineDependencies(
+  options: LibraryGeneratorSchema
+): Record<string, string> {
+  switch (options.bundler) {
+    case 'tsc':
+      // importHelpers is true by default, so need to add tslib as a dependency.
+      return {
+        tslib: tsLibVersion,
+      };
+    case 'swc':
+      // externalHelpers is true  by default, so need to add swc helpers as a dependency.
+      return {
+        '@swc/helpers': swcHelpersVersion,
+      };
+    default: {
+      // In other cases (vite, rollup, esbuild), helpers are bundled so no need to add them as a dependency.
+      return {};
+    }
+  }
+}
+
+type EntryField = string | { [key: string]: EntryField };
+
+function determineEntryFields(
+  options: LibraryGeneratorSchema
+): Record<string, EntryField> {
+  switch (options.bundler) {
+    case 'tsc':
+      return {
+        type: 'commonjs',
+        main: './src/index.js',
+        typings: './src/index.d.ts',
+      };
+    case 'swc':
+      return {
+        type: 'commonjs',
+        main: './src/index.js',
+        typings: './src/index.d.ts',
+      };
+    case 'rollup':
+      return {
+        type: 'commonjs',
+        main: './index.cjs',
+        module: './index.js',
+        // typings is missing for rollup currently
+      };
+    case 'vite':
+      return {
+        // Since we're publishing both formats, skip the type field.
+        // Bundlers or Node will determine the entry point to use.
+        main: './index.js',
+        module: './index.mjs',
+        typings: './index.d.ts',
+      };
+    case 'esbuild':
+      // For libraries intended for Node, use CJS.
+      return {
+        type: 'commonjs',
+        main: './index.cjs',
+        // typings is missing for esbuild currently
+      };
+    default: {
+      return {
+        // CJS is the safest optional for now due to lack of support from some packages
+        // also setting `type: module` results in different resolution behavior (e.g. import 'foo' no longer resolves to 'foo/index.js')
+        type: 'commonjs',
+      };
+    }
+  }
 }
 
 export default libraryGenerator;

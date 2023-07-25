@@ -2,7 +2,7 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { resolve } from 'path';
 
 /**
- * @deprecated use bundler: 'metro' instead, will be removed in 16.0.0
+ * @deprecated TODO(v17) use bundler: 'metro' instead, will be removed in 16.0.0
  * This function add additional rules to expo's webpack config to make expo web working
  */
 export async function withNxWebpack(config) {

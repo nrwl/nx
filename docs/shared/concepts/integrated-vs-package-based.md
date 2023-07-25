@@ -13,9 +13,9 @@ There are two styles of monorepos that you can build with Nx: integrated repos a
 
 ## Package-Based Repos
 
-A package-based repo is a collection of packages that depend on each other via `package.json` files and nested `node_modules`. With this setup, you typically have [different dependencies for each project](/more-concepts/dependency-management). Build tools like Jest and Webpack work as usual, since everything is resolved as if each package was in a separate repo and all of its dependencies were published to npm. Moving an existing package into a package-based repo is very easy since you generally leave that package's existing build tooling untouched. Creating a new package inside the repo is just as difficult as spinning up a new repo since you have to create all the build tooling from scratch.
+A package-based repo is a collection of packages that depend on each other via `package.json` files and nested `node_modules`. With this setup, you typically have [different dependencies for each project](/concepts/more-concepts/dependency-management). Build tools like Jest and Webpack work as usual, since everything is resolved as if each package was in a separate repo and all of its dependencies were published to npm. Moving an existing package into a package-based repo is very easy since you generally leave that package's existing build tooling untouched. Creating a new package inside the repo is just as difficult as spinning up a new repo since you have to create all the build tooling from scratch.
 
-Lerna, Yarn, Lage, [Turborepo](/more-concepts/turbo-and-nx) and Nx (without plugins) support this style.
+Lerna, Yarn, Lage, [Turborepo](/concepts/more-concepts/turbo-and-nx) and Nx (without plugins) support this style.
 
 {% cards %}
 {% card title="Tutorial: Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="documentation" url="/getting-started/tutorials/package-based-repo-tutorial" /%}
@@ -23,7 +23,7 @@ Lerna, Yarn, Lage, [Turborepo](/more-concepts/turbo-and-nx) and Nx (without plug
 
 ## Integrated Repos
 
-An integrated repo contains projects that depend on each other through standard import statements. There is typically a [single version of every dependency](/more-concepts/dependency-management) defined at the root. Sometimes build tools like Jest and Webpack need to be wrapped to work correctly. It's harder to add an existing package to this repo style because the build tooling for that package may need to be modified. It's straightforward to add a brand-new project to the repo because all the tooling decisions have already been made.
+An integrated repo contains projects that depend on each other through standard import statements. There is typically a [single version of every dependency](/concepts/more-concepts/dependency-management) defined at the root. Sometimes build tools like Jest and Webpack need to be wrapped to work correctly. It's harder to add an existing package to this repo style because the build tooling for that package may need to be modified. It's straightforward to add a brand-new project to the repo because all the tooling decisions have already been made.
 
 Bazel and Nx (with plugins) support this style.
 
@@ -33,7 +33,7 @@ Bazel and Nx (with plugins) support this style.
 
 ## Standalone Applications
 
-Nx plugins, especially the [generators](/plugin-features/use-code-generators), [executors](/plugin-features/use-task-executors) and [migrations](/core-features/automate-updating-dependencies) that come with them, are not only valuable for a monorepo scenario. In fact, many developers use Nx not primarily for its monorepo support, but for its tooling support, particularly its ability to modularize a codebase and, thus, better scale it. In v15.3, Nx introduced support for Standalone Applications. It is like an integrated monorepo setup, but with just a single, root-level application. Think of it as an advanced, more capable Create-React-App or Angular CLI. And obviously, you can still leverage all the generators and executors and structure your application into libraries or submodules.
+Nx plugins, especially the [generators](/core-features/plugin-features/use-code-generators), [executors](/core-features/plugin-features/use-task-executors) and [migrations](/core-features/automate-updating-dependencies) that come with them, are not only valuable for a monorepo scenario. In fact, many developers use Nx not primarily for its monorepo support, but for its tooling support, particularly its ability to modularize a codebase and, thus, better scale it. In v15.3, Nx introduced support for Standalone Applications. It is like an integrated monorepo setup, but with just a single, root-level application. Think of it as an advanced, more capable Create-React-App or Angular CLI. And obviously, you can still leverage all the generators and executors and structure your application into libraries or submodules.
 
 {% cards %}
 {% card title="Standalone Applications with Nx" description="Learn what Standlone Apps are and how Nx can be useful" type="video" url="https://youtu.be/qEaVzh-oBBc" /%}

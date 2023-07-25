@@ -111,6 +111,19 @@ export function ensureCypressInstallation() {
   }
 }
 
+export function ensurePlaywrightBrowsersInstallation() {
+  execSync('npx playwright install --with-deps --force', {
+    stdio: isVerbose() ? 'inherit' : 'pipe',
+    encoding: 'utf-8',
+    cwd: tmpProjPath(),
+  });
+  e2eConsoleLogger(
+    `Playwright browsers ${execSync('npx playwright --version')
+      .toString()
+      .trim()} installed.`
+  );
+}
+
 export function getStrippedEnvironmentVariables() {
   return Object.fromEntries(
     Object.entries(process.env).filter(([key, value]) => {

@@ -106,11 +106,21 @@ describe('Angular Projects', () => {
     const appPort = 4207;
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
-      (output) => output.includes(`listening on localhost:4207`)
+      (output) => output.includes(`listening on localhost:${appPort}`)
     );
 
     // port and process cleanup
     await killProcessAndPorts(process.pid, appPort);
+
+    const esbProcess = await runCommandUntil(
+      `serve my-dir-${esbuildApp} -- --port=${appPort}`,
+      (output) =>
+        output.includes(`Application bundle generation complete`) &&
+        output.includes(`localhost:${appPort}`)
+    );
+
+    // port and process cleanup
+    await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 
   it('should lint correctly with eslint and handle external HTML files and inline templates', async () => {
@@ -164,6 +174,11 @@ describe('Angular Projects', () => {
 
   it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
     // ARRANGE
+    const esbuildApp = uniq('esbuild-app');
+    runCLI(
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-interactive`
+    );
+
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
 
@@ -177,6 +192,27 @@ describe('Angular Projects', () => {
     // update the app module to include a ref to the buildable lib
     updateFile(
       `apps/${app1}/src/app/app.module.ts`,
+      `
+        import { BrowserModule } from '@angular/platform-browser';
+        import { NgModule } from '@angular/core';
+        import {${
+          names(buildableLib).className
+        }Module} from '@${proj}/${buildableLib}';
+
+        import { AppComponent } from './app.component';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+
+        @NgModule({
+          declarations: [AppComponent, NxWelcomeComponent],
+          imports: [BrowserModule, ${names(buildableLib).className}Module],
+          providers: [],
+          bootstrap: [AppComponent],
+        })
+        export class AppModule {}
+    `
+    );
+    updateFile(
+      `apps/${esbuildApp}/src/app/app.module.ts`,
       `
         import { BrowserModule } from '@angular/platform-browser';
         import { NgModule } from '@angular/core';
@@ -224,9 +260,20 @@ describe('Angular Projects', () => {
       };
       return config;
     });
+    updateProjectConfig(esbuildApp, (config) => {
+      config.targets.build.executor = '@nx/angular:browser-esbuild';
+      config.targets.build.options = {
+        ...config.targets.build.options,
+        buildLibsFromSource: false,
+      };
+      return config;
+    });
 
     // ACT
     const libOutput = runCLI(`build ${app1} --configuration=development`);
+    const esbuildLibOutput = runCLI(
+      `build ${esbuildApp} --configuration=development`
+    );
 
     // ASSERT
     expect(libOutput).toContain(
@@ -238,6 +285,9 @@ describe('Angular Projects', () => {
     // the path to dist
     const mainBundle = readFile(`dist/apps/${app1}/main.js`);
     expect(mainBundle).toContain(`dist/libs/${buildableLib}`);
+
+    const mainEsBuildBundle = readFile(`dist/apps/${esbuildApp}/main.js`);
+    expect(mainEsBuildBundle).toContain(`dist/libs/${buildableLib}`);
   });
 
   it('should build publishable libs successfully', () => {
