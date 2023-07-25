@@ -2,8 +2,6 @@ use napi::bindgen_prelude::*;
 
 use std::path::PathBuf;
 use tracing::trace;
-use watchexec_events::filekind::ModifyKind::Name;
-use watchexec_events::filekind::RenameMode;
 use watchexec_events::{Event, Tag};
 
 #[napi(string_enum)]
@@ -96,6 +94,8 @@ impl From<&Event> for WatchEventInternal {
             #[cfg(not(target_os = "macos"))]
             {
                 use watchexec_events::filekind::FileEventKind;
+                use watchexec_events::filekind::ModifyKind::Name;
+                use watchexec_events::filekind::RenameMode;
 
                 match event_kind {
                     FileEventKind::Create(_) => EventType::create,

@@ -112,7 +112,7 @@ fn create_root_map(
 
 type WorkspaceData = (HashSet<PathBuf>, Vec<FileData>);
 fn get_file_data(workspace_root: &str, globs: Vec<String>) -> anyhow::Result<WorkspaceData> {
-    let globs = build_glob_set(globs)?;
+    let globs = build_glob_set(&globs)?;
     let (projects, file_data) = nx_walker(workspace_root, move |rec| {
         let mut projects: HashMap<PathBuf, PathBuf> = HashMap::new();
         let mut file_hashes: Vec<FileData> = vec![];

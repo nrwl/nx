@@ -328,6 +328,21 @@ But if the above is not possible, globs (parsed by the [GlobSet](https://docs.rs
 }
 ```
 
+More advanced patterns can be used to exclude files and folders in a single line
+
+```json
+{
+  "targets": {
+    "build-js": {
+      "outputs": ["{workspaceRoot}/dist/libs/!(cache|.next)/**/*.{js,map}"]
+    },
+    "build-css": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/!(secondary).css"]
+    }
+  }
+}
+```
+
 ### dependsOn
 
 Targets can depend on other targets. This is the relevant portion of the configuration file:
