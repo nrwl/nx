@@ -714,7 +714,7 @@ const makeMoreConceptsSubmenu = {
 };
 
 const pluginsToExtendNx = {
-  '/plugins': '/extending-nx',
+  '/plugins': '/extending-nx/intro/getting-started',
   '/plugins/:path*': '/extending-nx/:path*',
 };
 
