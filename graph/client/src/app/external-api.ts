@@ -1,6 +1,7 @@
 import { getRouter } from './get-router';
 import { getProjectGraphService } from './machines/get-services';
 import { ProjectGraphMachineEvents } from './feature-projects/machines/interfaces';
+import { getGraphService } from './machines/graph.service';
 
 export class ExternalApi {
   _projectGraphService = getProjectGraphService();
@@ -13,6 +14,7 @@ export class ExternalApi {
   });
 
   router = getRouter();
+  graphService = getGraphService();
 
   projectGraphService = {
     send: (event: ProjectGraphMachineEvents) => {
@@ -20,8 +22,19 @@ export class ExternalApi {
     },
   };
 
+  private fileClickCallbackListeners: ((url: string) => void)[] = [];
+
   get depGraphService() {
     return this.projectGraphService;
+  }
+
+  constructor() {
+    this.graphService.listen((event) => {
+      if (event.type === 'FileLinkClick') {
+        const url = `${event.sourceRoot}/${event.file}`;
+        this.fileClickCallbackListeners.forEach((cb) => cb(url));
+      }
+    });
   }
 
   focusProject(projectName: string) {
@@ -40,6 +53,10 @@ export class ExternalApi {
   disableExperimentalFeatures() {
     localStorage.setItem('showExperimentalFeatures', 'false');
     window.appConfig.showExperimentalFeatures = false;
+  }
+
+  registerFileClickCallback(callback: (url: string) => void) {
+    this.fileClickCallbackListeners.push(callback);
   }
 
   private handleLegacyProjectGraphEvent(event: ProjectGraphMachineEvents) {
