@@ -17,7 +17,7 @@ export function Tabs({
     <TabContext.Provider value={currentTab}>
       <section>
         <div className="not-prose ">
-          <div className="border-b border-slate-100 dark:border-slate-800">
+          <div className="border-b border-slate-200 dark:border-slate-800">
             <nav className="-mb-px flex space-x-8" aria-label="Tabs">
               {labels.map((label: string) => (
                 <button
