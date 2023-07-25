@@ -33,7 +33,6 @@ import {
   babelLoaderVersion,
   nxRspackVersion,
   nxVersion,
-  swcLoaderVersion,
 } from '../../utils/versions';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
