@@ -14,12 +14,16 @@ import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
 import { readJsonFile } from '../../utils/fileutils';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  TargetConfiguration,
+} from '../../config/workspace-json-project-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { NX_PREFIX } from '../../utils/logger';
 import {
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
+  resolveNxTokensInOptions,
 } from '../../config/workspaces';
 
 export async function buildWorkspaceProjectNodes(
@@ -123,7 +127,7 @@ export async function buildWorkspaceProjectNodes(
 /**
  * Apply target defaults and normalization
  */
-function normalizeProjectTargets(
+export function normalizeProjectTargets(
   project: ProjectConfiguration,
   targetDefaults: NxJsonConfiguration['targetDefaults'],
   projectName: string
@@ -135,33 +139,31 @@ function normalizeProjectTargets(
         ? 'nx:run-commands'
         : null;
 
-    const defaults = readTargetDefaultsForTarget(
-      target,
-      targetDefaults,
-      executor
+    const defaults = resolveCommandSyntacticSugar(
+      readTargetDefaultsForTarget(target, targetDefaults, executor),
+      `targetDefaults:${target}`
+    );
+
+    targets[target] = resolveCommandSyntacticSugar(
+      targets[target],
+      `${projectName}:${target}`
     );
 
     if (defaults) {
       targets[target] = mergeTargetConfigurations(project, target, defaults);
     }
 
-    const config = targets[target];
-    if (config.command) {
-      if (config.executor) {
-        throw new Error(
-          `${NX_PREFIX} ${projectName}: ${target} should not have executor and command both configured.`
-        );
-      } else {
-        targets[target] = {
-          ...targets[target],
-          executor,
-          options: {
-            ...config.options,
-            command: config.command,
-          },
-        };
-        delete config.command;
-      }
+    targets[target].options = resolveNxTokensInOptions(
+      targets[target].options,
+      project,
+      `${projectName}:${target}`
+    );
+    for (const configuration in targets[target].configurations ?? {}) {
+      targets[target].configurations[configuration] = resolveNxTokensInOptions(
+        targets[target].configurations[configuration],
+        project,
+        `${projectName}:${target}:${configuration}`
+      );
     }
   }
   return targets;
@@ -183,4 +185,30 @@ export function normalizeImplicitDependencies(
       // implicit-project-dependencies.ts after explicit deps are added to graph.
       .concat(implicitDependencies.filter((x) => x.startsWith('!')))
   );
+}
+
+function resolveCommandSyntacticSugar(
+  target: TargetConfiguration,
+  key: string
+): TargetConfiguration {
+  const { command, ...config } = target ?? {};
+
+  if (!command) {
+    return target;
+  }
+
+  if (config.executor) {
+    throw new Error(
+      `${NX_PREFIX} ${key} should not have executor and command both configured.`
+    );
+  } else {
+    return {
+      ...config,
+      executor: 'nx:run-commands',
+      options: {
+        ...config.options,
+        command: command,
+      },
+    };
+  }
 }

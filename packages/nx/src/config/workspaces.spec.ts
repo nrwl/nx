@@ -256,30 +256,6 @@ describe('Workspaces', () => {
           ).options
         ).toEqual({ a: 'project-value' });
       });
-
-      it('should resolve workspaceRoot and projectRoot tokens', () => {
-        expect(
-          mergeTargetConfigurations(
-            {
-              root: 'my/project',
-              targets: {
-                build: {
-                  options: {
-                    a: '{workspaceRoot}',
-                  },
-                },
-              },
-            },
-            'build',
-            {
-              executor: 'target',
-              options: {
-                b: '{workspaceRoot}/dist/{projectRoot}',
-              },
-            }
-          ).options
-        ).toEqual({ a: '{workspaceRoot}', b: 'dist/my/project' });
-      });
     });
 
     describe('configurations', () => {
@@ -391,37 +367,6 @@ describe('Workspaces', () => {
             }
           ).configurations
         ).toEqual(projectConfigurations);
-      });
-
-      it('should resolve workspaceRoot and projectRoot tokens', () => {
-        expect(
-          mergeTargetConfigurations(
-            {
-              root: 'my/project',
-              targets: {
-                build: {
-                  configurations: {
-                    dev: {
-                      a: '{workspaceRoot}',
-                    },
-                  },
-                },
-              },
-            },
-            'build',
-            {
-              executor: 'target',
-              configurations: {
-                prod: {
-                  a: '{workspaceRoot}/dist/{projectRoot}',
-                },
-              },
-            }
-          ).configurations
-        ).toEqual({
-          dev: { a: '{workspaceRoot}' },
-          prod: { a: 'dist/my/project' },
-        });
       });
     });
 

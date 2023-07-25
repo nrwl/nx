@@ -115,6 +115,73 @@ describe('Nx Running Tests', () => {
 
       updateProjectConfig(mylib, (c) => original);
     }, 1000000);
+
+    describe('tokens support', () => {
+      let app: string;
+
+      beforeAll(() => {
+        app = uniq('myapp');
+        runCLI(`generate @nx/web:app ${app}`);
+      });
+
+      it('should support using {projectRoot} in options blocks in project.json', async () => {
+        updateProjectConfig(app, (c) => {
+          c.targets['echo'] = {
+            command: `node -e 'console.log("{projectRoot}")'`,
+          };
+          return c;
+        });
+
+        const output = runCLI(`echo ${app}`);
+        expect(output).toContain(`apps/${app}`);
+      });
+
+      it('should support using {projectName} in options blocks in project.json', async () => {
+        updateProjectConfig(app, (c) => {
+          c.targets['echo'] = {
+            command: `node -e 'console.log("{projectName}")'`,
+          };
+          return c;
+        });
+
+        const output = runCLI(`echo ${app}`);
+        expect(output).toContain(app);
+      });
+
+      it('should support using {projectRoot} in targetDefaults', async () => {
+        updateJson(`nx.json`, (json) => {
+          json.targetDefaults = {
+            echo: {
+              command: `node -e 'console.log("{projectRoot}")'`,
+            },
+          };
+          return json;
+        });
+        updateProjectConfig(app, (c) => {
+          c.targets['echo'] = {};
+          return c;
+        });
+        const output = runCLI(`echo ${app}`);
+        expect(output).toContain(`apps/${app}`);
+      });
+
+      it('should support using {projectName} in targetDefaults', async () => {
+        updateJson(`nx.json`, (json) => {
+          json.targetDefaults = {
+            echo: {
+              command: `node -e 'console.log("{projectName}")'`,
+            },
+          };
+          return json;
+        });
+        updateProjectConfig(app, (c) => {
+          c.targets['echo'] = {};
+          return c;
+        });
+        const output = runCLI(`echo ${app}`);
+        expect(output).toContain(app);
+      });
+    });
   });
 
   describe('Nx Bail', () => {
