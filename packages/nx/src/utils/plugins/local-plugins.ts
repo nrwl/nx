@@ -9,23 +9,29 @@ import { join } from 'path';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync } from 'fs';
 import { getPluginCapabilities } from './plugin-capabilities';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 
 export async function getLocalWorkspacePlugins(
-  projectsConfiguration: ProjectsConfigurations
+  projectsConfiguration: ProjectsConfigurations,
+  nxJson: NxJsonConfiguration
 ): Promise<Map<string, PluginCapabilities>> {
   const plugins: Map<string, PluginCapabilities> = new Map();
   for (const project of Object.values(projectsConfiguration.projects)) {
     const packageJsonPath = join(workspaceRoot, project.root, 'package.json');
     if (existsSync(packageJsonPath)) {
       const packageJson: PackageJson = readJsonFile(packageJsonPath);
+      const includeRuntimeCapabilities = nxJson?.plugins?.some((p) =>
+        p.startsWith(packageJson.name)
+      );
       const capabilities = await getPluginCapabilities(
         workspaceRoot,
-        packageJson.name
+        packageJson.name,
+        includeRuntimeCapabilities
       );
       if (
         capabilities &&
-        (capabilities.executors ||
-          capabilities.generators ||
+        (Object.keys(capabilities.executors ?? {}).length ||
+          Object.keys(capabilities.generators ?? {}).length ||
           capabilities.projectGraphExtension ||
           capabilities.projectInference)
       ) {
@@ -36,7 +42,6 @@ export async function getLocalWorkspacePlugins(
       }
     }
   }
-
   return plugins;
 }
 
@@ -52,6 +57,12 @@ export function listLocalWorkspacePlugins(
     }
     if (hasElements(p.generators)) {
       capabilities.push('generators');
+    }
+    if (p.projectGraphExtension) {
+      capabilities.push('graph-extension');
+    }
+    if (p.projectInference) {
+      capabilities.push('project-inference');
     }
     bodyLines.push(`${chalk.bold(p.name)} (${capabilities.join()})`);
   }

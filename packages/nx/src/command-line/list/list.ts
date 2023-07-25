@@ -15,6 +15,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
+import { readNxJson } from '../../config/nx-json';
 
 export interface ListArgs {
   /** The name of an installed plugin to query  */
@@ -33,11 +34,13 @@ export async function listHandler(args: ListArgs): Promise<void> {
   if (args.plugin) {
     await listPluginCapabilities(args.plugin);
   } else {
+    const nxJson = readNxJson();
     const corePlugins = fetchCorePlugins();
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
     const localPlugins = await getLocalWorkspacePlugins(
-      readProjectsConfigurationFromProjectGraph(projectGraph)
+      readProjectsConfigurationFromProjectGraph(projectGraph),
+      nxJson
     );
     const installedPlugins = await getInstalledPluginsAndCapabilities(
       workspaceRoot

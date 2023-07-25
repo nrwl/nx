@@ -51,11 +51,13 @@ export function printChanges(fileChanges: FileChange[]) {
 
 async function promptForCollection(
   generatorName: string,
-  ws: Workspaces,
   interactive: boolean,
   projectsConfiguration: ProjectsConfigurations
 ): Promise<string> {
-  const localPlugins = await getLocalWorkspacePlugins(projectsConfiguration);
+  const localPlugins = await getLocalWorkspacePlugins(
+    projectsConfiguration,
+    readNxJson()
+  );
 
   const installedCollections = Array.from(
     new Set(findInstalledPlugins().map((x) => x.name))
@@ -221,7 +223,6 @@ async function convertToGenerateOptions(
     } else if (!defaultCollectionName) {
       const generatorString = await promptForCollection(
         generatorDescriptor,
-        ws,
         interactive,
         projectsConfiguration
       );
