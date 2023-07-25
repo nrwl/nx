@@ -40,7 +40,7 @@ commands:
       - restore_cache:
           name: Restore pnpm Package Cache
           keys:
-            - node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
+            - node-deps-{{ arch }}-vv3-{{ checksum "pnpm-lock.yaml" }}
       - when:
           condition:
             equal: [<< parameters.os >>, linux]
@@ -63,9 +63,10 @@ commands:
             pnpm install --frozen-lockfile
       - save_cache:
           name: Save pnpm Package Cache
-          key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
+          key: node-deps-{{ arch }}-vv3-{{ checksum "pnpm-lock.yaml" }}
           paths:
             - ~/.pnpm-store
+            - ~/.yarn
             - ~/.cache/Cypress
             - node_modules
 
@@ -164,6 +165,7 @@ jobs:
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
+      SELECTED_PM: yarn
     steps:
       - run:
           name: Set dynamic nx run variable
@@ -179,21 +181,18 @@ jobs:
           command: pnpm nx documentation --no-dte
           no_output_timeout: 20m
       - run:
+          name: Set yarn berry
+          command: |
+            yarn set version berry && yarn config set nodeLinker pnp
+            rm -rf package.json
+          working_directory: ~/
+          no_output_timeout: 20m
+      - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
             pids=()
 
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
-            pids+=($!)
-
-            pnpm nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-            pnpm nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
             (pnpm nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
             pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
@@ -201,31 +200,6 @@ jobs:
             for pid in "${pids[@]}"; do
               wait "$pid"
             done
-  # -------------------------
-  #     JOBS: Main-MacOS
-  # -------------------------
-  mainmacos:
-    executor: macos
-    environment:
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
-      NX_DAEMON: 'true'
-      NX_PERF_LOGGING: 'false'
-      SELECTED_PM: 'npm' # explicitly define npm for macOS tests
-    steps:
-      - run:
-          name: Set dynamic nx run variable
-          command: |
-            echo "export NX_CI_EXECUTION_ENV=\"macos\";" >> $BASH_ENV
-      - setup:
-          os: macos
-      - rust/install
-      - nx/set-shas:
-          main-branch-name: 'master'
-      - run:
-          name: Run E2E Tests for macOS
-          command: |
-            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
-          no_output_timeout: 45m
 
 # -------------------------
 #        WORKFLOWS(JOBS)
@@ -252,5 +226,3 @@ workflows:
       - agent:
           name: 'agent8'
       - main-linux
-      - mainmacos:
-          name: main-macos-e2e

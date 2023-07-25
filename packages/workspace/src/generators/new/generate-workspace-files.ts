@@ -178,10 +178,7 @@ function createNpmrc(tree: Tree, options: NormalizedSchema) {
 // ensure that yarn (berry) install uses classic node linker
 
 function createYarnrcYml(tree: Tree, options: NormalizedSchema) {
-  tree.write(
-    join(options.directory, '.yarnrc.yml'),
-    'nodeLinker: node-modules\n'
-  );
+  tree.write(join(options.directory, '.yarnrc.yml'), 'nodeLinker: pnp\n');
 }
 
 function addNpmScripts(tree: Tree, options: NormalizedSchema) {

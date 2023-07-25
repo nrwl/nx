@@ -47,7 +47,7 @@ export function getPackageManagerCommand(
       const installCommand = 'yarn install --silent';
       return {
         preInstall: useBerry
-          ? 'yarn set version stable'
+          ? 'yarn set version stable && yarn config set nodeLinker pnp'
           : 'yarn set version classic',
         install: useBerry
           ? installCommand
@@ -84,7 +84,7 @@ export function generatePackageManagerFiles(
       if (+pmMajor >= 2) {
         writeFileSync(
           join(root, '.yarnrc.yml'),
-          'nodeLinker: node-modules\nenableScripts: false'
+          'nodeLinker: pnp\nenableScripts: false'
         );
         // avoids errors when using nested yarn projects
         writeFileSync(join(root, 'yarn.lock'), '');

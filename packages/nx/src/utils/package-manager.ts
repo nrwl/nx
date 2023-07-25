@@ -66,7 +66,7 @@ export function getPackageManagerCommand(
 
       return {
         preInstall: useBerry
-          ? 'yarn set version stable'
+          ? 'yarn set version stable && yarn config set nodeLinker pnp'
           : 'yarn set version classic',
         install: 'yarn',
         ciInstall: useBerry

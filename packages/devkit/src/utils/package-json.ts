@@ -526,7 +526,7 @@ function generatePackageManagerFiles(
       if (+pmMajor >= 2) {
         writeFileSync(
           join(root, '.yarnrc.yml'),
-          'nodeLinker: node-modules\nenableScripts: false'
+          'nodeLinker: pnp\nenableScripts: false'
         );
       }
       break;

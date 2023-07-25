@@ -58,6 +58,13 @@ export function newProject({
           'prefer-frozen-lockfile=false\nstrict-peer-dependencies=false\nauto-install-peers=true'
         );
       }
+      if (packageManager === 'yarn') {
+        execSync(`yarn set version stable && yarn config set nodeLinker pnp`, {
+          cwd: `${e2eCwd}/proj`,
+          stdio: isVerbose() ? 'inherit' : 'pipe',
+          encoding: 'utf-8',
+        });
+      }
 
       // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
       const packages = [
@@ -100,6 +107,14 @@ export function newProject({
 
     if (packageManager === 'pnpm') {
       execSync(getPackageManagerCommand().install, {
+        cwd: tmpProjPath(),
+        stdio: 'pipe',
+        env: { CI: 'true', ...process.env },
+        encoding: 'utf-8',
+      });
+    }
+    if (packageManager === 'yarn') {
+      execSync(`yarn set version stable && yarn config set nodeLinker pnp`, {
         cwd: tmpProjPath(),
         stdio: 'pipe',
         env: { CI: 'true', ...process.env },

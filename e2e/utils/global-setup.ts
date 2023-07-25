@@ -24,8 +24,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     !existsSync('./build')
   ) {
     console.log('Publishing packages to local registry');
+    const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
     await new Promise<void>((res, rej) => {
-      const publishProcess = exec('pnpm nx-release --local major', {
+      const publishProcess = exec(`pnpm nx-release --local ${publishVersion}`, {
         env: process.env,
       });
       let logs = Buffer.from('');
