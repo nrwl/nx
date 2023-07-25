@@ -2,7 +2,6 @@ import { sync } from 'fast-glob';
 import { existsSync } from 'fs';
 import * as path from 'path';
 import { ProjectGraphProcessor } from '../config/project-graph';
-import { Workspaces } from '../config/workspaces';
 
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
@@ -16,7 +15,6 @@ import {
 } from '../plugins/js/utils/register';
 import {
   ProjectConfiguration,
-  ProjectsConfigurations,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { logger } from './logger';
@@ -30,6 +28,7 @@ import { getNxRequirePaths } from './installation-directory';
 import { readTsConfig } from '../plugins/js/utils/typescript';
 
 import type * as ts from 'typescript';
+import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -287,10 +286,8 @@ export function registerPluginTSTranspiler() {
 }
 
 function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
-  const workspace = new Workspaces(root).readProjectsConfigurations({
-    _ignorePluginInference: true,
-  });
-  const plugin = findNxProjectForImportPath(importPath, workspace, root);
+  const projects = retrieveProjectConfigurationsWithoutPluginInference(root);
+  const plugin = findNxProjectForImportPath(importPath, projects, root);
   if (!plugin) {
     return null;
   }
@@ -299,13 +296,13 @@ function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
     registerPluginTSTranspiler();
   }
 
-  const projectConfig = workspace.projects[plugin];
+  const projectConfig: ProjectConfiguration = projects[plugin];
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
 
 function findNxProjectForImportPath(
   importPath: string,
-  projects: ProjectsConfigurations,
+  projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
 ): string | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
@@ -314,7 +311,7 @@ function findNxProjectForImportPath(
   );
   if (possiblePaths?.length) {
     const projectRootMappings =
-      createProjectRootMappingsFromProjectConfigurations(projects.projects);
+      createProjectRootMappingsFromProjectConfigurations(projects);
     for (const tsConfigPath of possiblePaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {

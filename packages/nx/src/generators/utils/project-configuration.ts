@@ -6,8 +6,6 @@ import {
 import {
   buildProjectsConfigurationsFromProjectPaths,
   deduplicateProjectFiles,
-  getGlobPatternsFromPlugins,
-  globForProjectFiles,
   renamePropertyWithStableKeys,
 } from '../../config/workspaces';
 import { joinPathFragments, normalizePath } from '../../utils/path';
@@ -18,7 +16,7 @@ import { readJson, writeJson } from './json';
 import { PackageJson } from '../../utils/package-json';
 import { readNxJson } from './nx-json';
 import { output } from '../../utils/output';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
 
 export { readNxJson, updateNxJson } from './nx-json';
 export {
@@ -183,11 +181,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
 } {
   const nxJson = readNxJson(tree);
 
-  const globbedFiles = globForProjectFiles(
-    tree.root,
-    getGlobPatternsFromPlugins(nxJson, getNxRequirePaths(tree.root), tree.root),
-    nxJson
-  ).map(normalizePath);
+  const globbedFiles = retrieveProjectConfigurationPaths(tree.root, nxJson);
   const createdFiles = findCreatedProjectFiles(tree);
   const deletedFiles = findDeletedProjectFiles(tree);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
