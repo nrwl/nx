@@ -383,6 +383,33 @@ describe('lib', () => {
 
         expect.assertions(1);
       });
+
+      it('should provide a default import path using npm scope', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+        });
+
+        const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+        expect(
+          tsconfigJson.compilerOptions.paths['@proj/my-lib']
+        ).toBeDefined();
+      });
+
+      it('should read import path from existing name in package.json', async () => {
+        updateJson(tree, 'package.json', (json) => {
+          json.name = '@acme/core';
+          return json;
+        });
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          rootProject: true,
+          name: 'myLib',
+        });
+
+        const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+        expect(tsconfigJson.compilerOptions.paths['@acme/core']).toBeDefined();
+      });
     });
 
     describe('--pascalCaseFiles', () => {
