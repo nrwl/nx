@@ -20,6 +20,7 @@ import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { NxJsonConfiguration } from '../../config/nx-json';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import type { Arguments } from 'yargs';
 import { output } from '../../utils/output';
@@ -359,8 +360,9 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       nxJsonConfiguration,
       schema,
       opts.interactive,
-      ws.calculateDefaultProjectName(
+      calculateDefaultProjectName(
         cwd,
+        workspaceRoot,
         projectsConfigurations,
         nxJsonConfiguration
       ),
