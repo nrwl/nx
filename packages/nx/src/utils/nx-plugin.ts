@@ -5,7 +5,6 @@ import {
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
-  ProjectGraphProcessor,
 } from '../config/project-graph';
 import { toProjectName, Workspaces } from '../config/workspaces';
 
