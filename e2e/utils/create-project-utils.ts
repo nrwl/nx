@@ -29,7 +29,7 @@ import {
   runCommand,
 } from './command-utils';
 import { output } from '@nx/devkit';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
 let projName: string;
@@ -46,10 +46,37 @@ export function newProject({
     const projScope = 'proj';
 
     if (!directoryExists(tmpBackupProjPath())) {
-      runCreateWorkspace(projScope, {
-        preset: 'empty',
-        packageManager,
-      });
+      console.log(
+        'newProject',
+        existsSync(tmpBackupProjPath()),
+        directoryExists(tmpBackupProjPath()),
+        directoryExists(`${e2eCwd}/proj`)
+      );
+      if (directoryExists(`${e2eCwd}/proj`)) {
+        removeSync(`${e2eCwd}/proj`);
+      }
+      try {
+        runCreateWorkspace(projScope, {
+          preset: 'empty',
+          packageManager,
+        });
+      } catch (e) {
+        console.log(
+          'runCreateWorkspace',
+          e.status,
+          e.stdout,
+          e.stderr,
+          e.output
+        );
+        const errorFile = e.stdout
+          .split(' ')
+          .filter(Boolean)
+          .flatMap((s) => s.trim().split('\n'))
+          .filter(Boolean)
+          .find((message) => message.endsWith('error.log'));
+        console.log('errorFile', errorFile);
+        console.log(readFileSync(errorFile, 'utf-8'));
+      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {
