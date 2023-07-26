@@ -65,7 +65,7 @@ describe('Node Applications', () => {
     setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nodeapp}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
     await runCLIAsync(`build ${nodeapp}`);
@@ -100,7 +100,7 @@ describe('Node Applications', () => {
     setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nodeapp}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     updateJson(join('apps', nodeapp, 'project.json'), (config) => {
       config.targets.build.options.additionalEntryPoints = [
@@ -194,7 +194,7 @@ describe('Node Applications', () => {
     runCLI(`generate @nx/express:app ${nodeapp} --linter=eslint`);
     setMaxWorkers(join('apps', nodeapp, 'project.json'));
     const lintResults = runCLI(`lint ${nodeapp}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     updateFile(
       `apps/${nodeapp}/src/app/test.spec.ts`,
@@ -237,7 +237,7 @@ describe('Node Applications', () => {
     setMaxWorkers(join('apps', nestapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nestapp}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     updateFile(`apps/${nestapp}/src/assets/file.txt`, ``);
     const jestResult = await runCLIAsync(`test ${nestapp}`);
@@ -590,7 +590,7 @@ ${jslib}();
       runCLI(`generate @nx/nest:lib ${nestlib}`);
 
       const lintResults = runCLI(`lint ${nestlib}`);
-      expect(lintResults).toContain('All files pass linting.');
+      expect(lintResults).toContain('All files pass linting');
 
       const testResults = runCLI(`test ${nestlib}`);
       expect(testResults).toContain(
@@ -604,7 +604,7 @@ ${jslib}();
       runCLI(`generate @nx/nest:lib ${nestlib} --service`);
 
       const lintResults = runCLI(`lint ${nestlib}`);
-      expect(lintResults).toContain('All files pass linting.');
+      expect(lintResults).toContain('All files pass linting');
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
       expect(jestResult.combinedOutput).toContain(
@@ -618,7 +618,7 @@ ${jslib}();
       runCLI(`generate @nx/nest:lib ${nestlib} --controller`);
 
       const lintResults = runCLI(`lint ${nestlib}`);
-      expect(lintResults).toContain('All files pass linting.');
+      expect(lintResults).toContain('All files pass linting');
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
       expect(jestResult.combinedOutput).toContain(
@@ -632,7 +632,7 @@ ${jslib}();
       runCLI(`generate @nx/nest:lib ${nestlib} --controller --service`);
 
       const lintResults = runCLI(`lint ${nestlib}`);
-      expect(lintResults).toContain('All files pass linting.');
+      expect(lintResults).toContain('All files pass linting');
 
       const jestResult = await runCLIAsync(`test ${nestlib}`);
       expect(jestResult.combinedOutput).toContain(
