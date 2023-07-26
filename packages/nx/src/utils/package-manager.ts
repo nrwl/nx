@@ -75,7 +75,7 @@ export function getPackageManagerCommand(
         add: useBerry ? 'yarn add' : 'yarn add -W',
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
         rm: 'yarn remove',
-        exec: useBerry ? 'yarn exec' : 'yarn',
+        exec: 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
       };
