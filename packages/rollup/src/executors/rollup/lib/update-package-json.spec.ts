@@ -12,6 +12,7 @@ describe('updatePackageJson', () => {
     projectRoot: '.',
     assets: [],
     rollupConfig: [],
+    typesTmpDir: '',
   };
 
   const sharedContext = {

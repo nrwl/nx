@@ -1,4 +1,4 @@
-import { relative } from 'path';
+import { parse } from 'path';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import {
@@ -19,10 +19,10 @@ export function updatePackageJson(
   const hasEsmFormat = options.format.includes('esm');
   const hasCjsFormat = options.format.includes('cjs');
 
-  const types = `./${relative(options.projectRoot, options.main).replace(
-    /\.[jt]sx?$/,
-    '.d.ts'
-  )}`;
+  const entryPointName = parse(options.main).name;
+  const cjsEntryPoint = `./${entryPointName}.cjs`;
+  const esmEntryPoint = `./${entryPointName}.js`;
+  const types = `./${entryPointName}.d.ts`;
   const exports = {
     // TS 4.5+
     '.': {
@@ -33,17 +33,17 @@ export function updatePackageJson(
   if (hasEsmFormat) {
     // `module` field is used by bundlers like rollup and webpack to detect ESM.
     // May not be required in the future if type is already "module".
-    packageJson.module = './index.js';
-    exports['.']['import'] = './index.js';
+    packageJson.module = esmEntryPoint;
+    exports['.']['import'] = esmEntryPoint;
 
     if (!hasCjsFormat) {
-      packageJson.main = './index.js';
+      packageJson.main = esmEntryPoint;
     }
   }
 
   if (hasCjsFormat) {
-    packageJson.main = './index.cjs';
-    exports['.']['require'] = './index.cjs';
+    packageJson.main = cjsEntryPoint;
+    exports['.']['require'] = cjsEntryPoint;
   }
   if (!options.skipTypeField) {
     packageJson.type = options.format.includes('esm') ? 'module' : 'commonjs';

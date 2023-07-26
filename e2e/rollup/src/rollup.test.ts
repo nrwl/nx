@@ -1,6 +1,8 @@
 import {
+  checkFilesExist,
   cleanupProject,
   newProject,
+  readJson,
   rmDist,
   runCLI,
   runCommand,
@@ -26,6 +28,10 @@ describe('Rollup Plugin', () => {
     runCLI(`build ${myPkg}`);
     let output = runCommand(`node dist/libs/${myPkg}/index.cjs`);
     expect(output).toMatch(/Hello/);
+    expect(readJson(`dist/libs/${myPkg}/package.json`).types).toBe(
+      './index.d.ts'
+    );
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
 
     updateProjectConfig(myPkg, (config) => {
       delete config.targets.build;
@@ -40,6 +46,10 @@ describe('Rollup Plugin', () => {
     runCLI(`build ${myPkg}`);
     output = runCommand(`node dist/libs/${myPkg}/index.cjs`);
     expect(output).toMatch(/Hello/);
+    expect(readJson(`dist/libs/${myPkg}/package.json`).types).toBe(
+      './index.d.ts'
+    );
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
 
     updateProjectConfig(myPkg, (config) => {
       delete config.targets.build;
@@ -54,6 +64,10 @@ describe('Rollup Plugin', () => {
     runCLI(`build ${myPkg}`);
     output = runCommand(`node dist/libs/${myPkg}/index.cjs`);
     expect(output).toMatch(/Hello/);
+    expect(readJson(`dist/libs/${myPkg}/package.json`).types).toBe(
+      './index.d.ts'
+    );
+    checkFilesExist(`dist/libs/${myPkg}/index.d.ts`);
   }, 500000);
 
   it('should be able to build libs generated with @nx/js:lib --bundler rollup', () => {

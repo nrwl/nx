@@ -3,7 +3,7 @@ import * as ts from 'typescript';
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import { getBabelInputPlugin } from '@rollup/plugin-babel';
-import { dirname, join, parse, resolve } from 'path';
+import { dirname, join, parse, relative, resolve } from 'path';
 import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
@@ -26,8 +26,9 @@ import {
 import { analyze } from './lib/analyze-plugin';
 import { deleteOutputDir } from '../../utils/fs';
 import { swc } from './lib/swc-plugin';
-import { validateTypes } from './lib/validate-types';
 import { updatePackageJson } from './lib/update-package-json';
+import dts from 'rollup-plugin-dts';
+import { rmSync } from 'fs';
 
 export type RollupExecutorEvent = {
   success: boolean;
@@ -41,6 +42,7 @@ const image = require('@rollup/plugin-image');
 const json = require('@rollup/plugin-json');
 const copy = require('rollup-plugin-copy');
 const postcss = require('rollup-plugin-postcss');
+const rollupTypescript = require('rollup-plugin-typescript2');
 
 const fileExtensions = ['.js', '.jsx', '.ts', '.tsx'];
 
@@ -84,18 +86,6 @@ export async function* rollupExecutor(
   );
 
   const outfile = resolveOutfile(context, options);
-
-  if (options.compiler === 'swc') {
-    try {
-      await validateTypes({
-        workspaceRoot: context.root,
-        projectRoot: options.projectRoot,
-        tsconfig: options.tsConfig,
-      });
-    } catch {
-      return { success: false };
-    }
-  }
 
   if (options.watch) {
     const watcher = rollup.watch(rollupOptions);
@@ -203,113 +193,148 @@ export function createRollupOptions(
     options.format = readCompatibleFormats(config);
   }
 
-  return options.format.map((format, idx) => {
-    const plugins = [
-      copy({
-        targets: convertCopyAssetsToRollupOptions(
-          options.outputPath,
-          options.assets
-        ),
-      }),
-      image(),
-      json(),
-      (useTsc || useBabel) &&
-        require('rollup-plugin-typescript2')({
-          check: !options.skipTypeCheck,
-          tsconfig: options.tsConfig,
-          tsconfigOverride: {
-            compilerOptions: createTsCompilerOptions(
-              config,
-              dependencies,
-              options
-            ),
+  const compilerOptions = createTsCompilerOptions(
+    config,
+    dependencies,
+    options
+  );
+
+  let externalPackages = [
+    ...Object.keys(packageJson.dependencies || {}),
+    ...Object.keys(packageJson.peerDependencies || {}),
+  ]; // If external is set to none, include all dependencies and peerDependencies in externalPackages
+  if (options.external === 'all') {
+    externalPackages = externalPackages
+      .concat(dependencies.map((d) => d.name))
+      .concat(npmDeps);
+  } else if (Array.isArray(options.external) && options.external.length > 0) {
+    externalPackages = externalPackages.concat(options.external);
+  }
+  externalPackages = [...new Set(externalPackages)];
+
+  const rollupOptions: rollup.RollupOptions[] = options.format.map(
+    (format, idx) => {
+      const plugins = [
+        copy({
+          targets: convertCopyAssetsToRollupOptions(
+            options.outputPath,
+            options.assets
+          ),
+        }),
+        image(),
+        json(),
+        // if the compiler is swc, we only need to run it once to generate
+        // declarations and type check if needed
+        (useTsc || useBabel || idx === 0) &&
+          rollupTypescript({
+            check: !options.skipTypeCheck,
+            tsconfig: options.tsConfig,
+            useTsconfigDeclarationDir: true,
+            tsconfigOverride: { compilerOptions },
+          }),
+        peerDepsExternal({
+          packageJsonPath: options.project,
+        }),
+        postcss({
+          inject: true,
+          extract: options.extractCss,
+          autoModules: true,
+          plugins: [autoprefixer],
+          use: {
+            less: {
+              javascriptEnabled: options.javascriptEnabled,
+            },
           },
         }),
-      peerDepsExternal({
-        packageJsonPath: options.project,
-      }),
-      postcss({
-        inject: true,
-        extract: options.extractCss,
-        autoModules: true,
-        plugins: [autoprefixer],
-        use: {
-          less: {
-            javascriptEnabled: options.javascriptEnabled,
-          },
-        },
-      }),
-      nodeResolve({
-        preferBuiltins: true,
-        extensions: fileExtensions,
-      }),
-      useSwc && swc(),
-      useBabel &&
-        getBabelInputPlugin({
-          // Lets `@nx/js/babel` preset know that we are packaging.
-          caller: {
-            // @ts-ignore
-            // Ignoring type checks for caller since we have custom attributes
-            isNxPackage: true,
-            // Always target esnext and let rollup handle cjs
-            supportsStaticESM: true,
-            isModern: true,
-          },
-          cwd: join(context.root, sourceRoot),
-          rootMode: options.babelUpwardRootMode ? 'upward' : undefined,
-          babelrc: true,
+        nodeResolve({
+          preferBuiltins: true,
           extensions: fileExtensions,
-          babelHelpers: 'bundled',
-          skipPreflightCheck: true, // pre-flight check may yield false positives and also slows down the build
-          exclude: /node_modules/,
-          plugins: [
-            format === 'esm'
-              ? undefined
-              : require.resolve('babel-plugin-transform-async-to-promises'),
-          ].filter(Boolean),
         }),
-      commonjs(),
-      analyze(),
-    ];
+        useSwc && swc(),
+        useBabel &&
+          getBabelInputPlugin({
+            // Lets `@nx/js/babel` preset know that we are packaging.
+            caller: {
+              // @ts-ignore
+              // Ignoring type checks for caller since we have custom attributes
+              isNxPackage: true,
+              // Always target esnext and let rollup handle cjs
+              supportsStaticESM: true,
+              isModern: true,
+            },
+            cwd: join(context.root, sourceRoot),
+            rootMode: options.babelUpwardRootMode ? 'upward' : undefined,
+            babelrc: true,
+            extensions: fileExtensions,
+            babelHelpers: 'bundled',
+            skipPreflightCheck: true, // pre-flight check may yield false positives and also slows down the build
+            exclude: /node_modules/,
+            plugins: [
+              format === 'esm'
+                ? undefined
+                : require.resolve('babel-plugin-transform-async-to-promises'),
+            ].filter(Boolean),
+          }),
+        commonjs(),
+        analyze(),
+      ];
 
-    let externalPackages = [
-      ...Object.keys(packageJson.dependencies || {}),
-      ...Object.keys(packageJson.peerDependencies || {}),
-    ]; // If external is set to none, include all dependencies and peerDependencies in externalPackages
-    if (options.external === 'all') {
-      externalPackages = externalPackages
-        .concat(dependencies.map((d) => d.name))
-        .concat(npmDeps);
-    } else if (Array.isArray(options.external) && options.external.length > 0) {
-      externalPackages = externalPackages.concat(options.external);
+      const rollupConfig = {
+        input: options.outputFileName
+          ? {
+              [parse(options.outputFileName).name]: options.main,
+            }
+          : options.main,
+        output: {
+          format,
+          dir: `${options.outputPath}`,
+          name: names(context.projectName).className,
+          entryFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
+          chunkFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
+        },
+        external: (id: string) => {
+          return externalPackages.some(
+            (name) => id === name || id.startsWith(`${name}/`)
+          ); // Could be a deep import
+        },
+        plugins,
+      };
+
+      return options.rollupConfig.reduce((currentConfig, plugin) => {
+        return require(plugin)(currentConfig, options);
+      }, rollupConfig);
     }
-    externalPackages = [...new Set(externalPackages)];
+  );
 
-    const rollupConfig = {
-      input: options.outputFileName
-        ? {
-            [parse(options.outputFileName).name]: options.main,
-          }
-        : options.main,
-      output: {
-        format,
-        dir: `${options.outputPath}`,
-        name: names(context.projectName).className,
-        entryFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
-        chunkFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
-      },
-      external: (id: string) => {
-        return externalPackages.some(
-          (name) => id === name || id.startsWith(`${name}/`)
-        ); // Could be a deep import
-      },
-      plugins,
-    };
+  const dtsFileName = `${parse(options.main).name}.d.ts`;
+  const inputPath = join(
+    options.typesTmpDir,
+    relative(options.projectRoot, dirname(options.main)),
+    dtsFileName
+  );
+  const outputFilePath = join(options.outputPath, dtsFileName);
 
-    return options.rollupConfig.reduce((currentConfig, plugin) => {
-      return require(plugin)(currentConfig, options);
-    }, rollupConfig);
+  rollupOptions.push({
+    input: inputPath,
+    output: { file: outputFilePath, format: 'es' },
+    external: (id: string) =>
+      externalPackages.some((name) => id === name || id.startsWith(`${name}/`)),
+    plugins: [
+      dts({
+        tsconfig: options.tsConfig,
+        respectExternal: true,
+        compilerOptions,
+      }),
+    ],
   });
+
+  process.on('exit', () => {
+    try {
+      rmSync(options.typesTmpDir, { recursive: true, force: true });
+    } catch {}
+  });
+
+  return rollupOptions;
 }
 
 function createTsCompilerOptions(
@@ -322,10 +347,14 @@ function createTsCompilerOptions(
     rootDir: options.projectRoot,
     allowJs: options.allowJs,
     declaration: true,
+    declarationDir: options.typesTmpDir,
     paths: compilerOptionPaths,
   };
   if (config.options.module === ts.ModuleKind.CommonJS) {
     compilerOptions['module'] = 'ESNext';
+  }
+  if (options.compiler === 'swc') {
+    compilerOptions['emitDeclarationOnly'] = true;
   }
   return compilerOptions;
 }

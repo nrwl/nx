@@ -9,6 +9,7 @@ export interface NormalizedRollupExecutorOptions extends RollupExecutorOptions {
   projectRoot: string;
   assets: AssetGlobPattern[];
   rollupConfig: string[];
+  typesTmpDir: string;
 }
 
 export function normalizeRollupExecutorOptions(
@@ -45,6 +46,7 @@ export function normalizeRollupExecutorOptions(
     projectRoot,
     outputPath,
     skipTypeCheck: options.skipTypeCheck || false,
+    typesTmpDir: join(root, 'tmp', '__nx__types__'),
   };
 }
 

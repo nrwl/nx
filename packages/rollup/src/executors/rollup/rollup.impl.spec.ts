@@ -62,6 +62,10 @@ describe('rollupExecutor', () => {
           chunkFileNames: '[name].cjs',
           entryFileNames: '[name].cjs',
         },
+        {
+          file: '/root/dist/ui/index.d.ts',
+          format: 'es',
+        },
       ]);
     });
 
