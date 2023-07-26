@@ -332,7 +332,7 @@ export default createESLintRule<Options, MessageIds>({
             fix(fixer) {
               // imp has form of @myorg/someproject/some/path
               const indexTsPaths = getBarrelEntryPointByImportScope(imp);
-              if (indexTsPaths && indexTsPaths.length > 0) {
+              if (indexTsPaths.length > 0) {
                 const specifiers = (node as any).specifiers;
                 if (!specifiers || specifiers.length === 0) {
                   return;
@@ -358,14 +358,20 @@ export default createESLintRule<Options, MessageIds>({
                         dirname(fileName),
                         dirname(importPath)
                       );
+                      const maybeTagRelative = (path: string): string =>
+                        path.startsWith('./') || path.startsWith('../')
+                          ? path
+                          : `./${path}`;
 
                       // if the string is empty, it's the current file
                       const importPathResolved =
                         relativePath === ''
                           ? `./${basename(importPath)}`
-                          : joinPathFragments(
-                              relativePath,
-                              basename(importPath)
+                          : maybeTagRelative(
+                              joinPathFragments(
+                                relativePath,
+                                basename(importPath)
+                              )
                             );
 
                       importsToRemap.push({
