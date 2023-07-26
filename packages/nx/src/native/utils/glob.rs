@@ -156,6 +156,12 @@ mod test {
     }
 
     #[test]
+    fn should_work_with_simple_globs() {
+        let glob_set = build_glob_set(&["**/*"]).unwrap();
+        assert!(glob_set.is_match("packages/nx/package.json"))
+    }
+
+    #[test]
     fn should_detect_package_json() {
         let glob_set = build_glob_set(&["packages/*/package.json"]).unwrap();
         assert!(glob_set.is_match("packages/nx/package.json"))

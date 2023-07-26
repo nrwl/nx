@@ -1,8 +1,6 @@
 use crate::native::types::FileData;
-use crate::native::utils::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
 use crate::native::walker::nx_walker;
-use rayon::prelude::*;
 use std::collections::HashMap;
 use xxhash_rust::xxh3;
 
@@ -36,38 +34,6 @@ pub fn hash_files(workspace_root: String) -> HashMap<String, String> {
         }
         collection
     })
-}
-
-#[napi]
-fn hash_files_matching_globs(
-    directory: String,
-    glob_patterns: Vec<String>,
-) -> anyhow::Result<Option<String>> {
-    let glob_set = build_glob_set(&glob_patterns)?;
-
-    let mut hashes = nx_walker(directory, move |receiver| {
-        let mut collection: Vec<FileData> = Vec::new();
-        for (path, content) in receiver {
-            if glob_set.is_match(&path) {
-                collection.push(FileData {
-                    file: path.to_normalized_string(),
-                    hash: xxh3::xxh3_64(&content).to_string(),
-                });
-            }
-        }
-        collection
-    });
-
-    if hashes.is_empty() {
-        return Ok(None);
-    }
-
-    // Sort the file data so that its in deterministically ordered by file path
-    hashes.par_sort();
-
-    let sorted_file_hashes: Vec<String> =
-        hashes.into_iter().map(|file_data| file_data.hash).collect();
-    Ok(Some(hash_array(sorted_file_hashes)))
 }
 
 #[cfg(test)]
@@ -107,24 +73,5 @@ mod tests {
         let content = hash_file(test_file_path);
 
         assert_eq!(content.unwrap().hash, "6193209363630369380");
-    }
-
-    #[test]
-    fn it_hashes_files_matching_globs() -> anyhow::Result<()> {
-        // handle empty workspaces
-        let content =
-            hash_files_matching_globs("/does/not/exist".into(), Vec::from([String::from("**/*")]))?;
-        assert!(content.is_none());
-
-        let temp_dir = setup_fs();
-
-        let content = hash_files_matching_globs(
-            temp_dir.display().to_string(),
-            Vec::from([String::from("fo*.txt")]),
-        )?;
-        // println!("{:?}", content);
-        assert_eq!(content.unwrap(), String::from("12742692716897613184"),);
-
-        Ok(())
     }
 }

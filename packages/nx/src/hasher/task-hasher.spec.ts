@@ -1,6 +1,7 @@
 // This must come before the Hasher import
+import { TempFs } from '../utils/testing/temp-fs';
+let tempFs = new TempFs('TaskHasher');
 import { DependencyType } from '../config/project-graph';
-import { vol } from 'memfs';
 import {
   expandNamedInput,
   filterUsingGlobPatterns,
@@ -12,22 +13,9 @@ import { withEnvironmentVariables } from '../../internal-testing-utils/with-envi
 
 jest.mock('../utils/workspace-root', () => {
   return {
-    workspaceRoot: '/root',
+    workspaceRoot: tempFs.tempDir,
   };
 });
-
-jest.mock('./file-hasher', () => {
-  return {
-    hashArray: (values: string[]) => values.join('|'),
-  };
-});
-
-jest.mock('fs', () => require('memfs').fs);
-jest.mock('../plugins/js/utils/typescript', () => ({
-  getRootTsConfigFileName: jest
-    .fn()
-    .mockImplementation(() => '/root/tsconfig.base.json'),
-}));
 
 describe('TaskHasher', () => {
   const packageJson = {
@@ -54,26 +42,16 @@ describe('TaskHasher', () => {
     { file: 'global2', hash: 'global2.hash' },
   ];
 
-  function createFileHasher(): any {
-    return {
-      allFileData: () => allWorkspaceFiles,
-    };
-  }
-
-  beforeEach(() => {
-    vol.fromJSON(
-      {
-        'tsconfig.base.json': tsConfigBaseJson,
-        'yarn.lock': 'content',
-        'package.json': JSON.stringify(packageJson),
-      },
-      '/root'
-    );
+  beforeEach(async () => {
+    await tempFs.createFiles({
+      'tsconfig.base.json': tsConfigBaseJson,
+      'yarn.lock': 'content',
+      'package.json': JSON.stringify(packageJson),
+    });
   });
 
   afterEach(() => {
-    jest.resetAllMocks();
-    vol.reset();
+    tempFs.reset();
   });
 
   it('should create task hash', () =>
@@ -147,7 +125,7 @@ describe('TaskHasher', () => {
         {
           runtimeCacheInputs: ['echo runtime456'],
         },
-        createFileHasher()
+        fileHasher
       );
 
       const hash = await hasher.hashTask({
@@ -156,34 +134,7 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      expect(hash.value).toContain('file.hash'); //project files
-      expect(hash.value).toContain('prop-value'); //overrides
-      expect(hash.value).toContain('parent'); //project
-      expect(hash.value).toContain('build'); //target
-      expect(hash.value).toContain('runtime123');
-      expect(hash.value).toContain('runtime456');
-      expect(hash.value).toContain('env123');
-      expect(hash.value).toContain('filec.hash');
-
-      expect(hash.details.command).toEqual(
-        'parent|build||{"prop":"prop-value"}'
-      );
-      expect(hash.details.nodes).toEqual({
-        'parent:{projectRoot}/**/*':
-          '/file|file.hash|{"root":"libs/parent","targets":{"build":{"executor":"nx:run-commands","inputs":["default","^default",{"runtime":"echo runtime123"},{"env":"TESTENV"},{"env":"NONEXISTENTENV"},{"input":"default","projects":["unrelated","tag:some-tag"]}]}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
-        target: 'nx:run-commands',
-        'unrelated:{projectRoot}/**/*':
-          'libs/unrelated/filec.ts|filec.hash|{"root":"libs/unrelated","targets":{"build":{}}}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
-        'tagged:{projectRoot}/**/*':
-          '{"root":"libs/tagged","targets":{"build":{}},"tags":["some-tag"]}|{"compilerOptions":{"paths":{"@nx/parent":["libs/parent/src/index.ts"],"@nx/child":["libs/child/src/index.ts"]}}}',
-        '{workspaceRoot}/nx.json': 'nx.json.hash',
-        '{workspaceRoot}/.gitignore': '',
-        '{workspaceRoot}/.nxignore': '',
-        'runtime:echo runtime123': 'runtime123',
-        'runtime:echo runtime456': 'runtime456',
-        'env:TESTENV': 'env123',
-        'env:NONEXISTENTENV': '',
-      });
+      expect(hash).toMatchSnapshot();
     }));
 
   it('should hash task where the project has dependencies', async () => {
@@ -218,6 +169,7 @@ describe('TaskHasher', () => {
             },
           },
         },
+        externalNodes: {},
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
@@ -242,7 +194,7 @@ describe('TaskHasher', () => {
       },
       {} as any,
       {},
-      createFileHasher()
+      fileHasher
     );
 
     const hash = await hasher.hashTask({
@@ -251,16 +203,7 @@ describe('TaskHasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    assertFilesets(hash, {
-      'child:{projectRoot}/**/*': {
-        contains: '/fileb.ts|/fileb.spec.ts',
-        excludes: '/filea.ts',
-      },
-      'parent:{projectRoot}/**/*': {
-        contains: '/filea.ts|/filea.spec.ts',
-        excludes: '/fileb.ts',
-      },
-    });
+    expect(hash).toMatchSnapshot();
   });
 
   it('should hash non-default filesets', async () => {
@@ -303,6 +246,7 @@ describe('TaskHasher', () => {
             },
           },
         },
+        externalNodes: {},
         dependencies: {
           parent: [{ source: 'parent', target: 'child', type: 'static' }],
         },
@@ -331,7 +275,7 @@ describe('TaskHasher', () => {
         },
       } as any,
       {},
-      createFileHasher()
+      fileHasher
     );
 
     const hash = await hasher.hashTask({
@@ -340,16 +284,7 @@ describe('TaskHasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    assertFilesets(hash, {
-      'child:{projectRoot}/**/*': {
-        contains: 'libs/child/fileb.ts|libs/child/fileb.spec.ts',
-        excludes: 'filea.ts',
-      },
-      'parent:!{projectRoot}/**/*.spec.ts': {
-        contains: 'filea.ts',
-        excludes: 'filea.spec.ts',
-      },
-    });
+    expect(hash).toMatchSnapshot();
   });
 
   it('should hash multiple filesets of a project', async () => {
@@ -382,6 +317,7 @@ describe('TaskHasher', () => {
             },
           },
         },
+        externalNodes: {},
         dependencies: {
           parent: [],
         },
@@ -403,7 +339,7 @@ describe('TaskHasher', () => {
         },
       } as any,
       {},
-      createFileHasher()
+      fileHasher
     );
 
     const test = await hasher.hashTask({
@@ -412,11 +348,7 @@ describe('TaskHasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    assertFilesets(test, {
-      'parent:{projectRoot}/**/*': {
-        contains: 'libs/parent/filea.ts|libs/parent/filea.spec.ts',
-      },
-    });
+    expect(test).toMatchSnapshot();
 
     const build = await hasher.hashTask({
       target: { project: 'parent', target: 'build' },
@@ -424,16 +356,11 @@ describe('TaskHasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    assertFilesets(build, {
-      'parent:!{projectRoot}/**/*.spec.ts': {
-        contains: 'libs/parent/filea.ts',
-        excludes: 'libs/parent/filea.spec.ts',
-      },
-    });
+    expect(build).toMatchSnapshot();
   });
 
   it('should be able to handle multiple filesets per project', async () => {
-    withEnvironmentVariables(
+    await withEnvironmentVariables(
       { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' },
       async () => {
         const hasher = new InProcessTaskHasher(
@@ -484,6 +411,7 @@ describe('TaskHasher', () => {
                 },
               },
             },
+            externalNodes: {},
             dependencies: {
               parent: [{ source: 'parent', target: 'child', type: 'static' }],
             },
@@ -513,7 +441,7 @@ describe('TaskHasher', () => {
             },
           } as any,
           {},
-          createFileHasher()
+          fileHasher
         );
 
         const parentHash = await hasher.hashTask({
@@ -522,25 +450,7 @@ describe('TaskHasher', () => {
           overrides: { prop: 'prop-value' },
         });
 
-        assertFilesets(parentHash, {
-          'child:!{projectRoot}/**/*.spec.ts': {
-            contains: 'libs/child/fileb.ts',
-            excludes: 'fileb.spec.ts',
-          },
-          'parent:{projectRoot}/**/*': {
-            contains: 'libs/parent/filea.ts|libs/parent/filea.spec.ts',
-          },
-        });
-
-        expect(parentHash.details.nodes['{workspaceRoot}/global1']).toEqual(
-          'global1.hash'
-        );
-        expect(parentHash.details.nodes['{workspaceRoot}/global2']).toBe(
-          'global2.hash'
-        );
-        expect(parentHash.details.nodes['env:MY_TEST_HASH_ENV']).toEqual(
-          'MY_TEST_HASH_ENV_VALUE'
-        );
+        expect(parentHash).toMatchSnapshot();
 
         const childHash = await hasher.hashTask({
           target: { project: 'child', target: 'test' },
@@ -548,18 +458,7 @@ describe('TaskHasher', () => {
           overrides: { prop: 'prop-value' },
         });
 
-        assertFilesets(childHash, {
-          'child:{projectRoot}/**/*': {
-            contains: 'libs/child/fileb.ts|libs/child/fileb.spec.ts',
-          },
-        });
-        expect(childHash.details.nodes['{workspaceRoot}/global1']).toEqual(
-          'global1.hash'
-        );
-        expect(childHash.details.nodes['{workspaceRoot}/global2']).toBe(
-          undefined
-        );
-        expect(childHash.details.nodes['env:MY_TEST_HASH_ENV']).toBeUndefined();
+        expect(childHash).toMatchSnapshot();
       }
     );
   });
@@ -632,7 +531,7 @@ describe('TaskHasher', () => {
         },
       } as any,
       {},
-      createFileHasher()
+      fileHasher
     );
 
     const hash = await hasher.hashTask({
@@ -640,17 +539,7 @@ describe('TaskHasher', () => {
       id: 'parent-build',
       overrides: { prop: 'prop-value' },
     });
-
-    assertFilesets(hash, {
-      'child:!{projectRoot}/**/*.spec.ts': {
-        contains: 'libs/child/fileb.ts',
-        excludes: 'libs/child/fileb.spec.ts',
-      },
-      'parent:!{projectRoot}/**/*.spec.ts': {
-        contains: 'libs/parent/filea.ts',
-        excludes: 'libs/parent/filea.spec.ts',
-      },
-    });
+    expect(hash).toMatchSnapshot();
   });
 
   it('should be able to include only a part of the base tsconfig', async () => {
@@ -691,7 +580,7 @@ describe('TaskHasher', () => {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
         selectivelyHashTsConfig: true,
       },
-      createFileHasher()
+      fileHasher
     );
 
     const hash = await hasher.hashTask({
@@ -700,20 +589,7 @@ describe('TaskHasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(hash.value).toContain('file.hash'); //project files
-    expect(hash.value).toContain('prop-value'); //overrides
-    expect(hash.value).toContain('parent'); //project
-    expect(hash.value).toContain('build'); //target
-    expect(hash.value).toContain('runtime123'); //target
-    expect(hash.value).toContain('runtime456'); //target
-
-    expect(hash.details.command).toEqual('parent|build||{"prop":"prop-value"}');
-
-    assertFilesets(hash, {
-      'parent:{projectRoot}/**/*': {
-        contains: '/file',
-      },
-    });
+    expect(hash).toMatchSnapshot();
   });
 
   it('should hash tasks where the project graph has circular dependencies', async () => {
@@ -768,7 +644,7 @@ describe('TaskHasher', () => {
       },
       {} as any,
       {},
-      createFileHasher()
+      fileHasher
     );
 
     const tasksHash = await hasher.hashTask({
@@ -777,22 +653,7 @@ describe('TaskHasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(tasksHash.value).toContain('a.hash'); //project files
-    expect(tasksHash.value).toContain('b.hash'); //project files
-    expect(tasksHash.value).toContain('prop-value'); //overrides
-    expect(tasksHash.value).toContain('parent|build'); //project and target
-    expect(tasksHash.value).toContain('build'); //target
-
-    assertFilesets(tasksHash, {
-      'child:{projectRoot}/**/*': {
-        contains: 'fileb.ts',
-        excludes: 'filea.tx',
-      },
-      'parent:{projectRoot}/**/*': {
-        contains: 'filea.ts',
-        excludes: 'fileb.tx',
-      },
-    });
+    expect(tasksHash).toMatchSnapshot();
 
     const hashb = await hasher.hashTask({
       target: { project: 'child', target: 'build' },
@@ -800,22 +661,7 @@ describe('TaskHasher', () => {
       overrides: { prop: 'prop-value' },
     });
 
-    expect(hashb.value).toContain('a.hash'); //project files
-    expect(hashb.value).toContain('b.hash'); //project files
-    expect(hashb.value).toContain('prop-value'); //overrides
-    expect(hashb.value).toContain('child|build'); //project and target
-    expect(hashb.value).toContain('build'); //target
-
-    assertFilesets(hashb, {
-      'child:{projectRoot}/**/*': {
-        contains: 'fileb.ts',
-        excludes: 'filea.tx',
-      },
-      'parent:{projectRoot}/**/*': {
-        contains: 'filea.ts',
-        excludes: 'fileb.tx',
-      },
-    });
+    expect(hashb).toMatchSnapshot();
   });
 
   it('should throw an error when failed to execute runtimeCacheInputs', async () => {
@@ -854,7 +700,7 @@ describe('TaskHasher', () => {
       {
         runtimeCacheInputs: ['boom'],
       },
-      createFileHasher()
+      fileHasher
     );
 
     try {
@@ -920,7 +766,7 @@ describe('TaskHasher', () => {
       },
       {} as any,
       {},
-      createFileHasher()
+      fileHasher
     );
 
     const hash = await hasher.hashTask({
@@ -928,11 +774,7 @@ describe('TaskHasher', () => {
       id: 'app-build',
       overrides: { prop: 'prop-value' },
     });
-
-    // note that the parent hash is based on parent source files only!
-    assertFilesets(hash, {
-      'npm:react': { contains: '17.0.0' },
-    });
+    expect(hash).toMatchSnapshot();
   });
 
   it('should hash missing dependent npm project versions', async () => {
@@ -977,7 +819,7 @@ describe('TaskHasher', () => {
       },
       {} as any,
       {},
-      createFileHasher()
+      fileHasher
     );
 
     const hash = await hasher.hashTask({
@@ -1042,11 +884,7 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      assertFilesets(hash, {
-        target: { contains: '@nx/webpack:webpack' },
-      });
-
-      expect(hash.value).toContain('|16.0.0|');
+      expect(hash).toMatchSnapshot();
     });
 
     it('should hash entire subtree of dependencies', async () => {
@@ -1150,14 +988,7 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      assertFilesets(hash, {
-        target: { contains: '@nx/webpack:webpack' },
-      });
-
-      expect(hash.value).toContain('|$nx/webpack16$|');
-      expect(hash.value).toContain('|$nx/devkit16$|');
-      expect(hash.value).toContain('|$nx16$|');
-      expect(hash.value).toContain('|5.0.0|');
+      expect(hash).toMatchSnapshot();
     });
 
     it('should hash entire subtree in a deterministic way', async () => {
@@ -1353,8 +1184,7 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      expect(hash.value).not.toContain('|16.0.0|');
-      expect(hash.details.nodes['target']).toEqual('nx:run-commands');
+      expect(hash.details.nodes['target']).toEqual('13019111166724682201');
     });
 
     it('should use externalDependencies to override nx:run-commands', async () => {
@@ -1430,10 +1260,7 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      expect(hash.value).not.toContain('|16.0.0|');
-      expect(hash.value).toContain('|17.0.0|');
-      expect(hash.value).toContain('|5.0.0|');
-      expect(hash.details.nodes['target']).toEqual('nx:run-commands');
+      expect(hash).toMatchSnapshot();
     });
 
     it('should use externalDependencies with empty array to ignore all deps', async () => {
@@ -1509,21 +1336,12 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      expect(hash.details.nodes['npm:nx']).not.toBeDefined();
-      expect(hash.details.nodes['app']).not.toBeDefined();
+      expect(hash).toMatchSnapshot();
     });
   });
 
   describe('dependentTasksOutputFiles', () => {
     it('should depend on dependent tasks output files', async () => {
-      const distFolder = [
-        ['dist/libs/parent/filea.js', 'a.js.hash'],
-        ['dist/libs/parent/filea.d.ts', 'a.d.ts.hash'],
-        ['dist/libs/child/fileb.js', 'b.js.hash'],
-        ['dist/libs/child/fileb.d.ts', 'b.d.ts.hash'],
-        ['dist/libs/grandchild/filec.js', 'c.js.hash'],
-        ['dist/libs/grandchild/filec.d.ts', 'c.d.ts.hash'],
-      ];
       const hasher = new InProcessTaskHasher(
         {
           parent: [
@@ -1567,10 +1385,6 @@ describe('TaskHasher', () => {
                     dependsOn: ['^build'],
                     inputs: ['prod', 'deps'],
                     executor: 'nx:run-commands',
-                    // options: {
-                    //   outputPath: 'dist/{projectRoot}',
-                    // },
-                    // outputs: ['{options.outputPath}'],
                     outputs: ['dist/{projectRoot}'],
                   },
                 },
@@ -1592,6 +1406,7 @@ describe('TaskHasher', () => {
               },
             },
           },
+          externalNodes: {},
           dependencies: {
             parent: [{ source: 'parent', target: 'child', type: 'static' }],
             child: [{ source: 'child', target: 'grandchild', type: 'static' }],
@@ -1641,23 +1456,13 @@ describe('TaskHasher', () => {
           },
         } as any,
         {},
-        {
-          hashFilesMatchingGlobs: (path: string, globs: string[]) => {
-            const hashes = [];
-            for (const [file, hash] of distFolder) {
-              if (!file.startsWith(path)) {
-                continue;
-              }
-              for (const glob of globs) {
-                if (file.endsWith(glob.split('**/*')[1])) {
-                  hashes.push(hash);
-                }
-              }
-            }
-            return hashes.join('|');
-          },
-        } as any
+        fileHasher
       );
+
+      await tempFs.createFiles({
+        'dist/libs/child/index.d.ts': '',
+        'dist/libs/grandchild/index.d.ts': '',
+      });
 
       const hash = await hasher.hashTask({
         target: { project: 'parent', target: 'build' },
@@ -1665,15 +1470,139 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      expect(hash.value).not.toContain('a.d.ts.hash');
-      expect(hash.value).not.toContain('js.hash');
-      expect(hash.value).toContain('b.d.ts.hash');
-      expect(hash.value).toContain('c.d.ts.hash');
+      expect(hash).toMatchSnapshot();
+    });
 
-      assertFilesets(hash, {
-        'dist/libs/child/**/*.d.ts': { contains: 'b.d.ts.hash' },
-        'dist/libs/grandchild/**/*.d.ts': { contains: 'c.d.ts.hash' },
+    it('should work with dependent tasks with globs as outputs', async () => {
+      const hasher = new InProcessTaskHasher(
+        {
+          parent: [
+            { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+            { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+          ],
+          child: [
+            { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+            { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+          ],
+          grandchild: [
+            { file: 'libs/grandchild/filec.ts', hash: 'c.hash' },
+            { file: 'libs/grandchild/filec.spec.ts', hash: 'c.spec.hash' },
+          ],
+        },
+        allWorkspaceFiles,
+        {
+          nodes: {
+            parent: {
+              name: 'parent',
+              type: 'lib',
+              data: {
+                root: 'libs/parent',
+                targets: {
+                  build: {
+                    dependsOn: ['^build'],
+                    inputs: ['prod', 'deps'],
+                    executor: 'nx:run-commands',
+                    outputs: ['dist/{projectRoot}'],
+                  },
+                },
+              },
+            },
+            child: {
+              name: 'child',
+              type: 'lib',
+              data: {
+                root: 'libs/child',
+                targets: {
+                  build: {
+                    dependsOn: ['^build'],
+                    inputs: ['prod', 'deps'],
+                    executor: 'nx:run-commands',
+                    outputs: ['dist/{projectRoot}/**/*'],
+                  },
+                },
+              },
+            },
+            grandchild: {
+              name: 'grandchild',
+              type: 'lib',
+              data: {
+                root: 'libs/grandchild',
+                targets: {
+                  build: {
+                    dependsOn: ['^build'],
+                    inputs: ['prod', 'deps'],
+                    executor: 'nx:run-commands',
+                    outputs: ['dist/{projectRoot}'],
+                  },
+                },
+              },
+            },
+          },
+          externalNodes: {},
+          dependencies: {
+            parent: [{ source: 'parent', target: 'child', type: 'static' }],
+            child: [{ source: 'child', target: 'grandchild', type: 'static' }],
+          },
+        },
+        {
+          roots: ['grandchild-build'],
+          tasks: {
+            'parent-build': {
+              id: 'parent-build',
+              target: { project: 'parent', target: 'build' },
+              overrides: {},
+            },
+            'child-build': {
+              id: 'child-build',
+              target: { project: 'child', target: 'build' },
+              overrides: {},
+            },
+            'grandchild-build': {
+              id: 'grandchild-build',
+              target: { project: 'grandchild', target: 'build' },
+              overrides: {},
+            },
+          },
+          dependencies: {
+            'parent-build': ['child-build'],
+            'child-build': ['grandchild-build'],
+          },
+        },
+        {
+          namedInputs: {
+            prod: ['!{projectRoot}/**/*.spec.ts'],
+            deps: [
+              { dependentTasksOutputFiles: '**/*.d.ts', transitive: true },
+            ],
+          },
+          targetDefaults: {
+            build: {
+              dependsOn: ['^build'],
+              inputs: ['prod', 'deps'],
+              executor: 'nx:run-commands',
+              options: {
+                outputPath: 'dist/libs/{projectRoot}',
+              },
+              outputs: ['{options.outputPath}'],
+            },
+          },
+        } as any,
+        {},
+        fileHasher
+      );
+
+      await tempFs.createFiles({
+        'dist/libs/child/index.d.ts': '',
+        'dist/libs/grandchild/index.d.ts': '',
       });
+
+      const hash = await hasher.hashTask({
+        target: { project: 'parent', target: 'build' },
+        id: 'parent-build',
+        overrides: { prop: 'prop-value' },
+      });
+
+      expect(hash).toMatchSnapshot();
     });
   });
 
