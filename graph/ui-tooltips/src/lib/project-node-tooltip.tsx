@@ -22,7 +22,7 @@ export function ProjectNodeToolTip({
 }: ProjectNodeToolTipProps) {
   return (
     <div className="text-sm text-slate-700 dark:text-slate-400">
-      <h4 className="flex justify-between items-center">
+      <h4 className="flex justify-between items-center gap-4">
         <div className="flex items-center">
           <Tag className="mr-3">{type}</Tag>
           <span className="font-mono">{id}</span>

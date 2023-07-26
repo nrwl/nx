@@ -43,6 +43,11 @@ interface ProjectOpenConfigClickEvent {
   projectName: string;
 }
 
+interface RunTaskClickEvent {
+  type: 'RunTaskClick';
+  taskId: string;
+}
+
 export type GraphInteractionEvents =
   | ProjectNodeClickEvent
   | EdgeClickEvent
@@ -50,4 +55,5 @@ export type GraphInteractionEvents =
   | TaskNodeClickEvent
   | BackgroundClickEvent
   | FileLinkClickEvent
-  | ProjectOpenConfigClickEvent;
+  | ProjectOpenConfigClickEvent
+  | RunTaskClickEvent;

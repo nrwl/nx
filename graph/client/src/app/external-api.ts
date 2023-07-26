@@ -26,6 +26,7 @@ export class ExternalApi {
   private openProjectConfigCallbackListeners: ((
     projectName: string
   ) => void)[] = [];
+  private runTaskCallbackListeners: ((taskId: string) => void)[] = [];
 
   get depGraphService() {
     return this.projectGraphService;
@@ -41,6 +42,9 @@ export class ExternalApi {
         this.openProjectConfigCallbackListeners.forEach((cb) =>
           cb(event.projectName)
         );
+      }
+      if (event.type === 'RunTaskClick') {
+        this.runTaskCallbackListeners.forEach((cb) => cb(event.taskId));
       }
     });
   }
@@ -68,6 +72,9 @@ export class ExternalApi {
   }
   registerOpenProjectConfigCallback(callback: (projectName: string) => void) {
     this.openProjectConfigCallbackListeners.push(callback);
+  }
+  registerRunTaskCallback(callback: (taskId: string) => void) {
+    this.runTaskCallbackListeners.push(callback);
   }
 
   private handleLegacyProjectGraphEvent(event: ProjectGraphMachineEvents) {

@@ -37,8 +37,17 @@ export class GraphTooltipService {
           });
           break;
         case 'TaskNodeClick':
+          const runTaskCallback =
+            graph.renderMode === 'nx-console'
+              ? () =>
+                  graph.broadcast({
+                    type: 'RunTaskClick',
+                    taskId: event.data.id,
+                  })
+              : undefined;
           this.openTaskNodeTooltip(event.ref, {
             ...event.data,
+            runTaskCallback,
           });
           break;
         case 'EdgeClick':
