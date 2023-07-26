@@ -1,4 +1,9 @@
-import { cacheDir, ExecutorContext, logger } from '@nx/devkit';
+import {
+  cacheDir,
+  ExecutorContext,
+  getPackageManagerCommand,
+  logger,
+} from '@nx/devkit';
 import { exec, execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
@@ -10,7 +15,8 @@ function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
-  let swcCmd = `npx swc ${
+  const packageManager = getPackageManagerCommand();
+  let swcCmd = `${packageManager.exec} swc ${
     // TODO(jack): clean this up when we remove inline module support
     // Handle root project
     srcPath === '.' ? 'src' : srcPath
@@ -42,8 +48,6 @@ export async function compileSwc(
   normalizedOptions: NormalizedSwcExecutorOptions,
   postCompilationCallback: () => Promise<void>
 ) {
-  const isRootProject =
-    context.projectGraph.nodes[context.projectName].data.root === '.';
   logger.log(`Compiling with SWC for ${context.projectName}...`);
 
   if (normalizedOptions.clean) {
