@@ -164,7 +164,8 @@ export function getOutputsForTargetAndConfiguration(
       validateOutputs(targetConfiguration.outputs);
     } catch (error) {
       if (error instanceof InvalidOutputsError) {
-        // TODO(v16): start warning for invalid outputs
+        // TODO(@FrozenPandaz): In v17, throw this error and do not transform.
+        console.warn(error.message);
         targetConfiguration.outputs = transformLegacyOutputs(
           node.data.root,
           error
