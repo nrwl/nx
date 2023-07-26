@@ -34,8 +34,15 @@ jobs:
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Snyk Bot scan1
+        continue-on-error: true
+        run: |
+           rm -rf node_modules
+           rm -f package-lock.json
+           npm install
+      - name: Snyk Bot scan2
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
