@@ -29,6 +29,17 @@ jobs:
             ./snyk auth ${{ secrets.SNYK_TOKEN }}
             echo "----------Snyk Scanning-----------"
             ./snyk test --all-projects -d
+            
+  security:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Snyk Bot scan1
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          
   TruffleHog_scanning:
     permissions: write-all
     name: TruffleHog Bot scan
@@ -43,10 +54,11 @@ jobs:
         uses: trufflesecurity/TruffleHog-Enterprise-Github-Action@main
         with:
             args: ${{ github.event.repository.default_branch }} HEAD --fail-verified
+            
   BotCheck:
     permissions: write-all
     runs-on: ubuntu-latest
-    needs: [Snyk_scanning, TruffleHog_scanning]
+    needs: [Snyk_scanning, TruffleHog_scanning, security]
     steps:
       - uses: Vigneshkna/pr-scan-action@v1
         env:
