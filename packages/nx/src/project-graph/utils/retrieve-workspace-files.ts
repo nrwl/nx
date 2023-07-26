@@ -19,7 +19,11 @@ import {
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import { FileData, ProjectFileMap } from '../../config/project-graph';
+import {
+  FileData,
+  ProjectFileMap,
+  ProjectGraphExternalNode,
+} from '../../config/project-graph';
 import type { NxWorkspaceFiles } from '../../native';
 
 /**
@@ -32,7 +36,8 @@ export async function retrieveWorkspaceFiles(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ) {
-  const { getWorkspaceFilesNative } = require('../../native');
+  const { getWorkspaceFilesNative } =
+    require('../../native') as typeof import('../../native');
 
   performance.mark('native-file-deps:start');
   let globs = await configurationGlobs(workspaceRoot, nxJson);
@@ -45,14 +50,19 @@ export async function retrieveWorkspaceFiles(
 
   performance.mark('get-workspace-files:start');
 
-  const { projectConfigurations, projectFileMap, globalFiles } =
-    getWorkspaceFilesNative(
-      workspaceRoot,
-      globs,
-      (configs: string[]): Record<string, ProjectConfiguration> => {
-        return createProjectConfigurations(workspaceRoot, nxJson, configs);
-      }
-    ) as NxWorkspaceFiles;
+  const { projectConfigurations, projectFileMap, globalFiles, externalNodes } =
+    getWorkspaceFilesNative(workspaceRoot, globs, (configs: string[]) => {
+      const projectConfigurations = createProjectConfigurations(
+        workspaceRoot,
+        nxJson,
+        configs
+      );
+
+      return {
+        projectNodes: projectConfigurations.projects,
+        externalNodes: projectConfigurations.externalNodes,
+      };
+    }) as NxWorkspaceFiles;
   performance.mark('get-workspace-files:end');
   performance.measure(
     'get-workspace-files',
@@ -67,6 +77,7 @@ export async function retrieveWorkspaceFiles(
       version: 2,
       projects: projectConfigurations,
     } as ProjectsConfigurations,
+    externalNodes: externalNodes as Record<string, ProjectGraphExternalNode>,
   };
 }
 
@@ -79,17 +90,28 @@ export async function retrieveWorkspaceFiles(
 export async function retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
-): Promise<Record<string, ProjectConfiguration>> {
+): Promise<{
+  externalNodes: Record<string, ProjectGraphExternalNode>;
+  projectNodes: Record<string, ProjectConfiguration>;
+}> {
   const { getProjectConfigurations } =
     require('../../native') as typeof import('../../native');
   const globs = await configurationGlobs(workspaceRoot, nxJson);
-  return getProjectConfigurations(
-    workspaceRoot,
-    globs,
-    (configs: string[]): Record<string, ProjectConfiguration> => {
-      return createProjectConfigurations(workspaceRoot, nxJson, configs);
-    }
-  ) as Record<string, ProjectConfiguration>;
+  return getProjectConfigurations(workspaceRoot, globs, (configs: string[]) => {
+    const projectConfigurations = createProjectConfigurations(
+      workspaceRoot,
+      nxJson,
+      configs
+    );
+
+    return {
+      projectNodes: projectConfigurations.projects,
+      externalNodes: projectConfigurations.externalNodes,
+    };
+  }) as {
+    externalNodes: Record<string, ProjectGraphExternalNode>;
+    projectNodes: Record<string, ProjectConfiguration>;
+  };
 }
 
 export function retrieveProjectConfigurationPaths(
@@ -124,10 +146,14 @@ export function retrieveProjectConfigurationsWithoutPluginInference(
   const projectConfigurations = getProjectConfigurations(
     root,
     projectGlobPatterns,
-    (configs: string[]): Record<string, ProjectConfiguration> => {
-      return createProjectConfigurations(root, nxJson, configs);
+    (configs: string[]) => {
+      const { projects } = createProjectConfigurations(root, nxJson, configs);
+      return {
+        projectNodes: projects,
+        externalNodes: {},
+      };
     }
-  ) as Record<string, ProjectConfiguration>;
+  ).projectNodes as Record<string, ProjectConfiguration>;
 
   projectsWithoutPluginCache.set(cacheKey, projectConfigurations);
 
@@ -156,16 +182,22 @@ function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[]
-): Record<string, ProjectConfiguration> {
+): {
+  projects: Record<string, ProjectConfiguration>;
+  externalNodes: Record<string, ProjectGraphExternalNode>;
+} {
   performance.mark('build-project-configs:start');
 
-  let projectConfigurations = mergeTargetDefaultsIntoProjectDescriptions(
+  const { projects, externalNodes } =
     buildProjectsConfigurationsFromProjectPaths(
       nxJson,
       configFiles,
       workspaceRoot,
       (path) => readJsonFile(join(workspaceRoot, path))
-    ),
+    );
+
+  let projectConfigurations = mergeTargetDefaultsIntoProjectDescriptions(
+    projects,
     nxJson
   );
 
@@ -182,7 +214,10 @@ function createProjectConfigurations(
     'build-project-configs:end'
   );
 
-  return projectConfigurations;
+  return {
+    projects: projectConfigurations,
+    externalNodes,
+  };
 }
 
 function mergeTargetDefaultsIntoProjectDescriptions(

@@ -44,13 +44,18 @@ export const enum WorkspaceErrors {
 /** Get workspace config files based on provided globs */
 export function getProjectConfigurationFiles(workspaceRoot: string, globs: Array<string>): Array<string>
 /** Get workspace config files based on provided globs */
-export function getProjectConfigurations(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Record<string, object>): Record<string, object>
+export function getProjectConfigurations(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): ConfigurationParserResult
 export interface NxWorkspaceFiles {
   projectFileMap: Record<string, Array<FileData>>
   globalFiles: Array<FileData>
   projectConfigurations: Record<string, object>
+  externalNodes: Record<string, object>
 }
-export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Record<string, object>): NxWorkspaceFiles
+export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): NxWorkspaceFiles
+export interface ConfigurationParserResult {
+  projectNodes: Record<string, object>
+  externalNodes: Record<string, object>
+}
 export class ImportResult {
   file: string
   sourceProject: string

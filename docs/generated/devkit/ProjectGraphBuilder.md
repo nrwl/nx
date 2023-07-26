@@ -1,5 +1,13 @@
 # Class: ProjectGraphBuilder
 
+@deprecated(v18): General project graph processors are deprecated. Replace usage with a plugin that utilizes `processProjectNodes` and `processProjectDependencies`.
+
+## Hierarchy
+
+- `ProjectDependencyBuilder`
+
+  ↳ **`ProjectGraphBuilder`**
+
 ## Table of contents
 
 ### Constructors
@@ -43,11 +51,19 @@
 | `g?`       | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
 | `fileMap?` | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
 
+#### Overrides
+
+ProjectDependencyBuilder.constructor
+
 ## Properties
 
 ### fileMap
 
-• `Private` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
+• `Protected` `Optional` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
+
+#### Inherited from
+
+ProjectDependencyBuilder.fileMap
 
 ---
 
@@ -59,17 +75,21 @@
 
 ### removedEdges
 
-• `Readonly` **removedEdges**: `Object` = `{}`
+• `Protected` `Readonly` **removedEdges**: `Object` = `{}`
 
 #### Index signature
 
 ▪ [source: `string`]: `Set`<`string`\>
 
+#### Inherited from
+
+ProjectDependencyBuilder.removedEdges
+
 ## Methods
 
 ### addDependency
 
-▸ `Private` **addDependency**(`sourceProjectName`, `targetProjectName`, `type`, `sourceProjectFile?`): `void`
+▸ `Protected` **addDependency**(`sourceProjectName`, `targetProjectName`, `type`, `sourceProjectFile?`): `void`
 
 #### Parameters
 
@@ -83,6 +103,10 @@
 #### Returns
 
 `void`
+
+#### Inherited from
+
+ProjectDependencyBuilder.addDependency
 
 ---
 
@@ -297,6 +321,10 @@ Removes a dependency from source project to target project
 #### Returns
 
 `void`
+
+#### Inherited from
+
+ProjectDependencyBuilder.removeDependency
 
 ---
 

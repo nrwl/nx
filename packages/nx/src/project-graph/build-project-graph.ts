@@ -17,6 +17,7 @@ import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphExternalNode,
   ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
@@ -49,6 +50,7 @@ export function getProjectFileMap(): {
 
 export async function buildProjectGraphUsingProjectFileMap(
   projectsConfigurations: ProjectsConfigurations,
+  externalNodes: Record<string, ProjectGraphExternalNode>,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   fileMap: ProjectFileMapCache | null,
@@ -94,6 +96,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   );
   let projectGraph = await buildProjectGraphUsingContext(
     nxJson,
+    externalNodes,
     context,
     cachedFileData,
     projectGraphVersion
@@ -139,6 +142,7 @@ function readCombinedDeps() {
 
 async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
+  knownExternalNodes: Record<string, ProjectGraphExternalNode>,
   ctx: ProjectGraphProcessorContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string
@@ -147,6 +151,9 @@ async function buildProjectGraphUsingContext(
 
   const builder = new ProjectGraphBuilder(null, ctx.fileMap);
   builder.setVersion(projectGraphVersion);
+  for (const node in knownExternalNodes) {
+    builder.addExternalNode(knownExternalNodes[node]);
+  }
 
   await buildWorkspaceProjectNodes(ctx, builder, nxJson);
   const initProjectGraph = builder.getUpdatedProjectGraph();

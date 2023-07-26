@@ -1,14 +1,13 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
-import { basename, dirname, join } from 'path';
+import { dirname, join } from 'path';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile, readYamlFile } from '../utils/fileutils';
-import { logger, NX_PREFIX } from '../utils/logger';
+import { NX_PREFIX } from '../utils/logger';
 import {
   loadNxPlugins,
   loadNxPluginsSync,
   NxPluginV2,
-  readPluginPackageJson,
 } from '../utils/nx-plugin';
 import minimatch = require('minimatch');
 
@@ -27,6 +26,7 @@ import {
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
 import { retrieveProjectConfigurationPaths } from '../project-graph/utils/retrieve-workspace-files';
+import { ProjectGraphExternalNode } from './project-graph';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -52,7 +52,7 @@ export class Workspaces {
       projectPaths,
       this.root,
       (path) => readJsonFile(join(this.root, path))
-    );
+    ).projects;
     if (
       shouldMergeAngularProjects(
         this.root,
@@ -335,9 +335,13 @@ export function buildProjectsConfigurationsFromProjectPaths(
   root: string = workspaceRoot,
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
     readJsonFile<T>(string) // making this an arg allows us to reuse in devkit
-): Record<string, ProjectConfiguration> {
+): {
+  projects: Record<string, ProjectConfiguration>;
+  externalNodes: Record<string, ProjectGraphExternalNode>;
+} {
   const projectRootMap: Map<string, string> = new Map();
   const projects: Record<string, ProjectConfiguration> = {};
+  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
   // We go in reverse here s.t. plugins listed first in the plugins array have highest priority - they overwrite
   // whatever configuration was added by plugins later in the array.
   const plugins = loadNxPluginsSync(nxJson.plugins).reverse();
@@ -345,25 +349,27 @@ export function buildProjectsConfigurationsFromProjectPaths(
   // We push the nx core node builder onto the end, s.t. it overwrites any user specified behavior
   const globPatternsFromPackageManagerWorkspaces =
     getGlobPatternsFromPackageManagerWorkspaces(root);
-  plugins.push({
+  const nxCorePlugin: NxPluginV2 = {
     name: 'nx-core-build-nodes',
     processProjectNodes: {
       // Load projects from pnpm / npm workspaces
       ...(globPatternsFromPackageManagerWorkspaces.length
-        ? ({
+        ? {
             [combineGlobPatterns(globPatternsFromPackageManagerWorkspaces)]: (
               pkgJsonPath
             ) => {
               const json = readJson<PackageJson>(pkgJsonPath);
               return {
-                [json.name]: buildProjectConfigurationFromPackageJson(
-                  pkgJsonPath,
-                  json,
-                  nxJson
-                ),
+                projectNodes: {
+                  [json.name]: buildProjectConfigurationFromPackageJson(
+                    pkgJsonPath,
+                    json,
+                    nxJson
+                  ),
+                },
               };
             },
-          } as NxPluginV2['processProjectNodes'])
+          }
         : {}),
       // Load projects from project.json files. These will be read second, since
       // they are listed last in the plugin, so they will overwrite things from the package.json
@@ -372,11 +378,14 @@ export function buildProjectsConfigurationsFromProjectPaths(
         const json = readJson<ProjectConfiguration>(file);
         json.name ??= toProjectName(file);
         return {
-          [json.name]: json,
+          projectNodes: {
+            [json.name]: json,
+          },
         };
       },
     },
-  });
+  };
+  plugins.push(nxCorePlugin);
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const plugin of plugins) {
@@ -384,24 +393,26 @@ export function buildProjectsConfigurationsFromProjectPaths(
     for (const pattern in plugin.processProjectNodes ?? {}) {
       for (const file of projectFiles) {
         if (minimatch(file, pattern)) {
-          const nodes = plugin.processProjectNodes[pattern](file, {
-            projectsConfigurations: projects,
-            nxJsonConfiguration: nxJson,
-            workspaceRoot: root
-          });
-          for (const node in nodes) {
+          const { projectNodes, externalNodes: pluginExternalNodes } =
+            plugin.processProjectNodes[pattern](file, {
+              projectsConfigurations: projects,
+              nxJsonConfiguration: nxJson,
+              workspaceRoot: root,
+            });
+          for (const node in projectNodes) {
             mergeProjectConfigurationIntoWorkspace(
               projects,
               projectRootMap,
-              nodes[node]
+              projectNodes[node]
             );
           }
+          Object.assign(externalNodes, pluginExternalNodes);
         }
       }
     }
   }
 
-  return projects;
+  return { projects, externalNodes };
 }
 
 export function mergeTargetConfigurations(

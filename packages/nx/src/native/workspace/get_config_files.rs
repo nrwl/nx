@@ -1,8 +1,8 @@
 use crate::native::utils::glob::{build_glob_set, NxGlobSet};
 use crate::native::utils::path::Normalize;
 use crate::native::walker::nx_walker;
+use crate::native::workspace::types::ConfigurationParserResult;
 
-use napi::JsObject;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -34,11 +34,10 @@ pub fn get_project_configuration_files(
 pub fn get_project_configurations<ConfigurationParser>(
     workspace_root: String,
     globs: Vec<String>,
-
     parse_configurations: ConfigurationParser,
-) -> napi::Result<HashMap<String, JsObject>>
+) -> napi::Result<ConfigurationParserResult>
 where
-    ConfigurationParser: Fn(Vec<String>) -> napi::Result<HashMap<String, JsObject>>,
+ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>
 {
     let globs = build_glob_set(&globs)?;
     let config_paths: Vec<String> = nx_walker(workspace_root, move |rec| {

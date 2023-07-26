@@ -192,7 +192,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     projectFiles,
     tree.root,
     (file) => readJson(tree, file)
-  );
+  ).projects;
 }
 
 /**

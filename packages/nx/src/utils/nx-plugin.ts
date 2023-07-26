@@ -1,7 +1,12 @@
 import { sync } from 'fast-glob';
 import { existsSync } from 'fs';
 import * as path from 'path';
-import { ProjectGraphProcessor } from '../config/project-graph';
+import {
+  ProjectFileMap,
+  ProjectGraph,
+  ProjectGraphExternalNode,
+  ProjectGraphProcessor,
+} from '../config/project-graph';
 import { toProjectName, Workspaces } from '../config/workspaces';
 
 import { workspaceRoot } from './workspace-root';
@@ -16,6 +21,7 @@ import {
 } from '../plugins/js/utils/register';
 import {
   ProjectConfiguration,
+  ProjectsConfigurations,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { logger } from './logger';
@@ -32,15 +38,49 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import type * as ts from 'typescript';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 import { NxPluginV1 } from './nx-plugin.deprecated';
+import { ProjectDependencyBuilder } from '../project-graph/project-graph-builder';
 
 export type ProjectConfigurationBuilder = (
   projectConfigurationFile: string,
   context: {
-    projectsConfigurations: Record<string, ProjectConfiguration>,
-    nxJsonConfiguration: NxJsonConfiguration,
-    workspaceRoot: string
+    projectsConfigurations: Record<string, ProjectConfiguration>;
+    nxJsonConfiguration: NxJsonConfiguration;
+    workspaceRoot: string;
   }
-) => Record<string, ProjectConfiguration>;
+) => {
+  projectNodes?: Record<string, ProjectConfiguration>;
+  externalNodes?: Record<string, ProjectGraphExternalNode>;
+};
+
+export type DependencyLocator = (
+  builder: ProjectDependencyBuilder,
+  context: {
+    /**
+     * The current project graph,
+     */
+    readonly graph: ProjectGraph;
+
+    /**
+     * The configuration of each project in the workspace
+     */
+    projectsConfigurations: ProjectsConfigurations;
+
+    /**
+     * The `nx.json` configuration from the workspace
+     */
+    nxJsonConfiguration: NxJsonConfiguration;
+
+    /**
+     * All files in the workspace
+     */
+    fileMap: ProjectFileMap;
+
+    /**
+     * Files changes since last invocation
+     */
+    filesToProcess: ProjectFileMap;
+  }
+) => {};
 
 export type NxPluginV2 = {
   name: string;
@@ -52,7 +92,7 @@ export type NxPluginV2 = {
   processProjectNodes?: Record<string, ProjectConfigurationBuilder>;
 
   // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
-  processProjectDependencies?: ProjectGraphProcessor;
+  processProjectDependencies?: DependencyLocator;
 };
 
 export * from './nx-plugin.deprecated';
@@ -200,10 +240,12 @@ function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
         ) => {
           const name = toProjectName(configFilePath);
           return {
-            [name]: {
-              name,
-              root: dirname(configFilePath),
-              targets: plugin.registerProjectTargets?.(configFilePath),
+            projectNodes: {
+              [name]: {
+                name,
+                root: dirname(configFilePath),
+                targets: plugin.registerProjectTargets?.(configFilePath),
+              },
             },
           };
         },
