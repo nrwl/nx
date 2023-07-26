@@ -360,7 +360,7 @@ describe('Tailwind support', () => {
       runCLI(
         `generate @nx/angular:app ${appWithTailwind} --add-tailwind --no-interactive`
       );
-      updateProjectConfig(appWithTailwind, (config) => {
+      await updateProjectConfig(appWithTailwind, (config) => {
         config.targets.build.executor = '@nx/angular:webpack-browser';
         config.targets.build.options = {
           ...config.targets.build.options,

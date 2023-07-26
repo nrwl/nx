@@ -1,8 +1,6 @@
-import { dirname, join } from 'path';
-import { workspaceRoot } from '../utils/workspace-root';
-import { readJsonFile } from '../utils/fileutils';
+import { dirname } from 'path';
 import { getNxRequirePaths } from '../utils/installation-directory';
-import { loadNxPlugins, loadNxPluginsSync } from '../utils/nx-plugin';
+import { loadNxPluginsSync } from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration } from './nx-json';
 import { readNxJson } from './nx-json';
@@ -21,13 +19,18 @@ import {
   readTargetDefaultsForTarget,
 } from '../project-graph/utils/project-configuration-utils';
 
+// TODO(v18): remove this class
+/**
+ * @deprecated These will be removed in v18.
+ * - For Workspaces.readWorkspaceConfiguration, use retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead.
+ */
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
 
   constructor(private root: string) {}
 
   /**
-   * @deprecated
+   * @deprecated se retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead
    */
   readProjectsConfigurations(opts?: {
     _includeProjectsFromAngularJson?: boolean;

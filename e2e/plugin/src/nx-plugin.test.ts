@@ -381,14 +381,14 @@ describe('Nx Plugin', () => {
   });
 
   describe('--directory', () => {
-    it('should create a plugin in the specified directory', () => {
+    it('should create a plugin in the specified directory', async () => {
       const plugin = uniq('plugin');
       runCLI(
         `generate @nx/plugin:plugin ${plugin} --linter=eslint --directory subdir --e2eTestRunner=jest`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
-      const pluginProject = readProjectConfig(`subdir-${plugin}`);
-      const pluginE2EProject = readProjectConfig(`subdir-${plugin}-e2e`);
+      const pluginProject = await readProjectConfig(`subdir-${plugin}`);
+      const pluginE2EProject = await readProjectConfig(`subdir-${plugin}-e2e`);
       expect(pluginProject.targets).toBeDefined();
       expect(pluginE2EProject).toBeTruthy();
     }, 90000);
@@ -399,7 +399,7 @@ describe('Nx Plugin', () => {
       runCLI(
         `generate @nx/plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
       );
-      const pluginProject = readProjectConfig(plugin);
+      const pluginProject = await readProjectConfig(plugin);
       expect(pluginProject.tags).toEqual(['e2etag', 'e2ePackage']);
     }, 90000);
   });

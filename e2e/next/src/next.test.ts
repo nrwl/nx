@@ -67,7 +67,7 @@ describe('Next.js Applications', () => {
 
     // Additional assets that should be copied to dist
     const sharedLib = uniq('sharedLib');
-    updateProjectConfig(appName, (json) => {
+    await updateProjectConfig(appName, (json) => {
       json.targets.build.options.assets = [
         {
           glob: '**/*',
@@ -367,7 +367,7 @@ describe('Next.js Applications', () => {
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
 
     // Make sure withNx works with run-commands.
-    updateProjectConfig(appName, (json) => {
+    await updateProjectConfig(appName, (json) => {
       json.targets.build = {
         command: 'npx next build',
         outputs: [`apps/${appName}/.next`],

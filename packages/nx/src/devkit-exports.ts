@@ -37,15 +37,17 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
+// TODO(v18): Remove this export
 /**
+ * @deprecated These will be removed in v18.
+ * - For Workspaces.readWorkspaceConfiguration, use retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead.
+ * - For Workspaces.readProjectsConfigurations, use retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead.
+ * - For Workspaces.readNxJson, use readNxJsonFromDisk instead.
  * @category Workspace
  */
 export { Workspaces } from './config/workspaces';
 
-export {
-  readAllWorkspaceConfiguration,
-  workspaceLayout,
-} from './config/configuration';
+export { workspaceLayout } from './config/configuration';
 
 export type {
   NxPlugin,

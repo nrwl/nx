@@ -138,7 +138,6 @@ It only uses language primitives and immutable objects
 - [offsetFromRoot](../../devkit/documents/offsetFromRoot)
 - [parseJson](../../devkit/documents/parseJson)
 - [parseTargetString](../../devkit/documents/parseTargetString)
-- [readAllWorkspaceConfiguration](../../devkit/documents/readAllWorkspaceConfiguration)
 - [readCachedProjectGraph](../../devkit/documents/readCachedProjectGraph)
 - [readJson](../../devkit/documents/readJson)
 - [readJsonFile](../../devkit/documents/readJsonFile)

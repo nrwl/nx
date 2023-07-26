@@ -15,7 +15,6 @@ import {
 import { fileExists } from '../../utils/fileutils';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
-import { Workspaces } from '../../config/workspaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { execSync } from 'child_process';
 import { fileHasher, hashArray } from '../../hasher/file-hasher';
@@ -23,7 +22,10 @@ import {
   retrieveWorkspaceFiles,
   retrieveProjectConfigurations,
 } from '../../project-graph/utils/retrieve-workspace-files';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/nx-json';
 
 let cachedSerializedProjectGraphPromise: Promise<{
@@ -173,7 +175,7 @@ async function processCollectedUpdatedAndDeletedFiles() {
     );
     fileHasher.incrementalUpdate(updatedFiles, deletedFiles);
 
-    let nxJson = readNxJson(workspaceRoot);
+    const nxJson = readNxJson(workspaceRoot);
 
     const { projectNodes } = await retrieveProjectConfigurations(
       workspaceRoot,
@@ -264,16 +266,17 @@ async function createAndSerializeProjectGraph(): Promise<{
 }> {
   try {
     performance.mark('create-project-graph-start');
-    const projectsConfigurations = new Workspaces(
-      workspaceRoot
-    ).readProjectsConfigurations();
+    const projectConfigurations = await retrieveProjectConfigurations(
+      workspaceRoot,
+      readNxJson(workspaceRoot)
+    );
     const projectFileMap = copyFileMap(projectFileMapWithFiles.projectFileMap);
     const allWorkspaceFiles = copyFileData(
       projectFileMapWithFiles.allWorkspaceFiles
     );
     const { projectGraph, projectFileMapCache } =
       await buildProjectGraphUsingProjectFileMap(
-        projectsConfigurations,
+        projectConfigurations.projectNodes,
         knownExternalNodes,
         projectFileMap,
         allWorkspaceFiles,

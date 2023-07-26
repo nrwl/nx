@@ -64,7 +64,7 @@ describe('Vite Plugin', () => {
     });
 
     describe('set up new React app with --bundler=vite option', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         proj = newProject();
         runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
         createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
@@ -99,7 +99,7 @@ describe('Vite Plugin', () => {
           `
         );
 
-        updateProjectConfig(myApp, (config) => {
+        await updateProjectConfig(myApp, (config) => {
           config.targets.build.options.fileReplacements = [
             {
               replace: `apps/${myApp}/src/environments/environment.ts`,
@@ -380,7 +380,7 @@ export default App;
     }, 100_000);
 
     // TODO: This takes forever and times out everything - find out why
-    xit('should not delete the project directory when coverage is enabled', () => {
+    xit('should not delete the project directory when coverage is enabled', async () => {
       // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
       // from the @nx/vite:test executor options, vite will delete the project root directory
       runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
@@ -416,7 +416,7 @@ export default defineConfig({
 });
 `;
       });
-      updateProjectConfig(lib, (config) => {
+      await updateProjectConfig(lib, (config) => {
         delete config.targets.test.options.reportsDirectory;
         return config;
       });

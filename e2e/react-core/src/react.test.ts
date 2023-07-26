@@ -234,14 +234,14 @@ describe('React Applications', () => {
       ${'scss'}
       ${'less'}
       ${'styl'}
-    `('should support global and css modules', ({ style }) => {
+    `('should support global and css modules', async ({ style }) => {
       const appName = uniq('app');
       runCLI(
         `generate @nx/react:app ${appName} --style=${style} --bundler=webpack --no-interactive`
       );
 
       // make sure stylePreprocessorOptions works
-      updateProjectConfig(appName, (config) => {
+      await updateProjectConfig(appName, (config) => {
         config.targets.build.options.stylePreprocessorOptions = {
           includePaths: ['libs/shared/lib'],
         };

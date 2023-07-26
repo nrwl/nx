@@ -45,7 +45,7 @@ module.exports = composePlugins(withNx(), (config) => {
     expect(output).not.toMatch(/Conflicting/);
     expect(output).not.toMatch(/process.env.NODE_ENV/);
 
-    updateProjectConfig(myPkg, (config) => {
+    await updateProjectConfig(myPkg, (config) => {
       delete config.targets.build;
       return config;
     });
@@ -59,7 +59,7 @@ module.exports = composePlugins(withNx(), (config) => {
     output = runCommand(`node dist/libs/${myPkg}/main.js`);
     expect(output).toMatch(/Hello/);
 
-    updateProjectConfig(myPkg, (config) => {
+    await updateProjectConfig(myPkg, (config) => {
       delete config.targets.build;
       return config;
     });

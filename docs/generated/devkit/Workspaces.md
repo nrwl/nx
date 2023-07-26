@@ -1,5 +1,11 @@
 # Class: Workspaces
 
+**`Deprecated`**
+
+These will be removed in v18.
+
+- For Workspaces.readWorkspaceConfiguration, use retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead.
+
 ## Table of contents
 
 ### Constructors
@@ -65,6 +71,8 @@
 ▸ **readProjectsConfigurations**(`opts?`): [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
 
 **`Deprecated`**
+
+se retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead
 
 #### Parameters
 

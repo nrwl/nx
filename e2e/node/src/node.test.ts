@@ -75,7 +75,7 @@ describe('Node Applications', () => {
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
 
-    updateProjectConfig(nodeapp, (config) => {
+    await updateProjectConfig(nodeapp, (config) => {
       config.targets.build.options.outputFileName = 'index.js';
       return config;
     });
@@ -94,7 +94,7 @@ describe('Node Applications', () => {
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
 
-    updateProjectConfig(nodeapp, (config) => {
+    await updateProjectConfig(nodeapp, (config) => {
       config.targets.build.options.additionalEntryPoints = [
         {
           entryName: 'additional-main',
@@ -254,7 +254,7 @@ describe('Node Applications', () => {
       config.target = 'es2020';
       return config;
     });
-    updateProjectConfig(esmapp, (config) => {
+    await updateProjectConfig(esmapp, (config) => {
       config.targets.build.options.outputFileName = 'main.mjs';
       config.targets.build.options.assets = [];
       return config;
@@ -436,7 +436,7 @@ ${jslib}();
 
       packageInstall('@nestjs/swagger', undefined, '^6.0.0');
 
-      updateProjectConfig(nestapp, (config) => {
+      await updateProjectConfig(nestapp, (config) => {
         config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
         return config;
       });
@@ -549,7 +549,7 @@ describe('nest libraries', function () {
 
     packageInstall('@nestjs/swagger', undefined, '~6.3.0');
 
-    updateProjectConfig(nestlib, (config) => {
+    await updateProjectConfig(nestlib, (config) => {
       config.targets.build.options.transformers = [
         {
           name: '@nestjs/swagger/plugin',

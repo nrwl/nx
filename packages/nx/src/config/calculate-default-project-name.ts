@@ -44,7 +44,7 @@ export function calculateDefaultProjectName(
 }
 
 export function findMatchingProjectInCwd(
-  projects: { [projectName: string]: ProjectConfiguration },
+  projects: Record<string, ProjectConfiguration>,
   relativeCwd: string
 ): string | undefined {
   const projectRootMappings = new Map<string, string>();

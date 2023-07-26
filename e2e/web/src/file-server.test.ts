@@ -20,7 +20,7 @@ describe('file-server', () => {
     const port = 4301;
 
     runCLI(`generate @nx/web:app ${appName} --no-interactive`);
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       config.targets['serve'].executor = '@nx/web:file-server';
       return config;
     });

@@ -587,7 +587,10 @@ async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
 
   return {
     ctx: {
-      projectsConfigurations: projectConfigurations,
+      projectsConfigurations: {
+        version: 2,
+        projectConfigurations: projectConfigurations,
+      },
       nxJsonConfiguration: nxJson,
       filesToProcess: projectFileMap,
     },

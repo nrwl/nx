@@ -151,7 +151,7 @@ describe('Node Applications + webpack', () => {
     runCLI(
       `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive`
     );
-    updateProjectConfig(nodeApp1, (config) => {
+    await updateProjectConfig(nodeApp1, (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
       return config;
     });
