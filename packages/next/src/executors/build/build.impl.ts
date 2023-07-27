@@ -55,11 +55,10 @@ export default async function buildExecutor(
 
   const args = createCliOptions({ experimentalAppOnly, profile, debug });
   const pm = getPackageManagerCommand();
-  const command = `${pm.exec} next build ${args.join(' ')}`;
+  const command = `${pm.exec} next build ${projectRoot} ${args.join(' ')}`;
   const execSyncOptions: ExecSyncOptions = {
     stdio: 'inherit',
     encoding: 'utf-8',
-    cwd: projectRoot,
   };
   try {
     execSync(command, execSyncOptions);
