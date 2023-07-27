@@ -4,6 +4,7 @@ import {
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
 import * as chalk from 'chalk';
+import { config as loadDotEnvFile } from 'dotenv';
 import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
 import {
@@ -25,6 +26,8 @@ function main() {
   ) {
     assertSupportedPlatform();
   }
+
+  loadDotEnvFiles();
 
   const workspace = findWorkspaceRoot(process.cwd());
   // new is a special case because there is no local workspace to load
@@ -85,6 +88,20 @@ function main() {
         require(localNx);
       }
     }
+  }
+}
+
+/**
+ * This loads dotenv files from:
+ * - .env
+ * - .local.env
+ * - .env.local
+ */
+function loadDotEnvFiles() {
+  for (const file of ['.env', '.local.env', '.env.local']) {
+    loadDotEnvFile({
+      path: file,
+    });
   }
 }
 
