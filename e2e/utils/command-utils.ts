@@ -6,6 +6,7 @@ import {
   getNpmMajorVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
+  getYarnMajorVersion,
   isVerboseE2ERun,
 } from './get-env-info';
 import { TargetConfiguration } from '@nx/devkit';
@@ -119,6 +120,7 @@ export function getPackageManagerCommand({
   runLerna: string;
 } {
   const npmMajorVersion = getNpmMajorVersion();
+  const yarnMajorVersion = getYarnMajorVersion(path);
   const publishedVersion = getPublishedVersion();
   const isYarnWorkspace = fileExists(join(path, 'package.json'))
     ? readJson('package.json').workspaces
@@ -147,14 +149,14 @@ export function getPackageManagerCommand({
       } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
-      runNxSilent: `yarn --silent nx`,
+      runNxSilent: +yarnMajorVersion >= 2 ? 'yarn nx' : `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
       ciInstall: 'yarn --frozen-lockfile',
       addProd: isYarnWorkspace ? 'yarn add -W' : 'yarn add',
       addDev: isYarnWorkspace ? 'yarn add -DW' : 'yarn add -D',
       list: 'yarn list --pattern',
-      runLerna: `yarn --silent lerna`,
+      runLerna: +yarnMajorVersion >= 2 ? 'yarn lerna' : `yarn --silent lerna`,
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
