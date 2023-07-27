@@ -3789,15 +3789,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Commands",
-            "path": "/reference/commands",
-            "id": "commands",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "nx.json",
+            "name": "Nx Configuration",
             "path": "/reference/nx-json",
             "id": "nx-json",
             "isExternal": false,
@@ -3840,15 +3832,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Commands",
-        "path": "/reference/commands",
-        "id": "commands",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "nx.json",
+        "name": "Nx Configuration",
         "path": "/reference/nx-json",
         "id": "nx-json",
         "isExternal": false,

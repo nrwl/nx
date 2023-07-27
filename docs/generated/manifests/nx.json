@@ -4725,18 +4725,8 @@
     "file": "",
     "itemList": [
       {
-        "id": "commands",
-        "name": "Commands",
-        "description": "",
-        "file": "shared/reference/commands",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/commands",
-        "tags": []
-      },
-      {
         "id": "nx-json",
-        "name": "nx.json",
+        "name": "Nx Configuration",
         "description": "",
         "file": "shared/reference/nx-json",
         "itemList": [],
@@ -4789,19 +4779,9 @@
     "path": "/reference",
     "tags": []
   },
-  "/reference/commands": {
-    "id": "commands",
-    "name": "Commands",
-    "description": "",
-    "file": "shared/reference/commands",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/reference/commands",
-    "tags": []
-  },
   "/reference/nx-json": {
     "id": "nx-json",
-    "name": "nx.json",
+    "name": "Nx Configuration",
     "description": "",
     "file": "shared/reference/nx-json",
     "itemList": [],
