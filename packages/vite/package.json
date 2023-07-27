@@ -45,9 +45,8 @@
     "access": "public"
   },
   "exports": {
-    "./package.json": {
-      "require": "./package.json"
-    },
+    ".": "./index.js",
+    "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
