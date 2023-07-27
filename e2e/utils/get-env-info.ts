@@ -76,16 +76,16 @@ export function getNpmMajorVersion(): string {
 export function getYarnMajorVersion(path: string): string {
   try {
     // this fails if path is not yet created
-    const [npmMajorVersion] = execSync(`yarn -v`, {
+    const [yarnMajorVersion] = execSync(`yarn -v`, {
       cwd: path,
       encoding: 'utf-8',
     }).split('.');
-    return npmMajorVersion;
+    return yarnMajorVersion;
   } catch {
-    const [npmMajorVersion] = execSync(`yarn -v`, { encoding: 'utf-8' }).split(
+    const [yarnMajorVersion] = execSync(`yarn -v`, { encoding: 'utf-8' }).split(
       '.'
     );
-    return npmMajorVersion;
+    return yarnMajorVersion;
   }
 }
 
