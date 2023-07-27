@@ -16,8 +16,10 @@ import { createProjectRootMappings } from '../project-graph/utils/find-project-f
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { FileHasher, hashArray } from './file-hasher';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
-import { join } from 'path';
 import { getHashEnv } from './set-hash-env';
+import { workspaceRoot } from '../utils/workspace-root';
+import { join, relative } from 'path';
+import { normalizePath } from '../utils/path';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -282,8 +284,8 @@ class TaskHasherImpl {
       projectGraphDeps,
       visited
     );
-    const depsOut = this.hashDepsOutputs(task, depsOutputs);
-    const projects = await this.hashProjectInputs(projectInputs, visited);
+    const depsOut = await this.hashDepsOutputs(task, depsOutputs);
+    const projects = await this.hashProjectInputs(projectInputs);
 
     let details = {};
     for (const s of self) {
@@ -350,27 +352,31 @@ class TaskHasherImpl {
       .filter((r) => !!r);
   }
 
-  private hashDepsOutputs(
+  private async hashDepsOutputs(
     task: Task,
     depsOutputs: ExpandedDepsOutput[]
-  ): PartialHash[] {
+  ): Promise<PartialHash[]> {
     if (depsOutputs.length === 0) {
       return [];
     }
     const result: PartialHash[] = [];
     for (const { dependentTasksOutputFiles, transitive } of depsOutputs) {
       result.push(
-        ...this.hashDepOuputs(task, dependentTasksOutputFiles, transitive)
+        ...(await this.hashDepOuputs(
+          task,
+          dependentTasksOutputFiles,
+          transitive
+        ))
       );
     }
     return result;
   }
 
-  private hashDepOuputs(
+  private async hashDepOuputs(
     task: Task,
     dependentTasksOutputFiles: string,
     transitive?: boolean
-  ): PartialHash[] {
+  ): Promise<PartialHash[]> {
     // task has no dependencies
     if (!this.taskGraph.dependencies[task.id]) {
       return [];
@@ -379,29 +385,38 @@ class TaskHasherImpl {
     const partialHashes: PartialHash[] = [];
     for (const d of this.taskGraph.dependencies[task.id]) {
       const childTask = this.taskGraph.tasks[d];
-      const outputDirs = getOutputsForTargetAndConfiguration(
+      const outputs = getOutputsForTargetAndConfiguration(
         childTask,
         this.projectGraph.nodes[childTask.target.project]
       );
-      const hashes = {};
-      for (const outputDir of outputDirs) {
-        hashes[join(outputDir, dependentTasksOutputFiles)] =
-          this.fileHasher.hashFilesMatchingGlobs(outputDir, [
-            dependentTasksOutputFiles,
-          ]);
+      const { getFilesForOutputs } =
+        require('../native') as typeof import('../native');
+      const outputFiles = getFilesForOutputs(workspaceRoot, outputs);
+      const filteredFiles = outputFiles.filter(
+        (p) =>
+          p === dependentTasksOutputFiles ||
+          minimatch(p, dependentTasksOutputFiles)
+      );
+      const hashDetails = {};
+      const hashes: string[] = [];
+      for (const [file, hash] of await this.fileHasher.hashFiles(
+        filteredFiles.map((p) => join(workspaceRoot, p))
+      )) {
+        hashes.push(hash);
+        hashDetails[normalizePath(relative(workspaceRoot, file))] = hash;
       }
 
       partialHashes.push({
-        value: hashArray(Object.values(hashes)),
-        details: hashes,
+        value: hashArray(hashes),
+        details: hashDetails,
       });
       if (transitive) {
         partialHashes.push(
-          ...this.hashDepOuputs(
+          ...(await this.hashDepOuputs(
             childTask,
             dependentTasksOutputFiles,
             transitive
-          )
+          ))
         );
       }
     }
@@ -521,7 +536,7 @@ class TaskHasherImpl {
     return {
       value: hash,
       details: {
-        target: target.executor,
+        target: hash,
       },
     };
   }
@@ -588,6 +603,8 @@ class TaskHasherImpl {
     const notFilesets = inputs.filter((r) => !r['fileset']);
     return Promise.all([
       this.hashProjectFileset(projectName, projectFilesets),
+      this.hashProjectConfig(projectName),
+      this.hashTsConfig(projectName),
       ...[
         ...workspaceFilesets,
         ...this.legacyFilesetInputs.map((r) => r.fileset),
@@ -599,8 +616,7 @@ class TaskHasherImpl {
   }
 
   private async hashProjectInputs(
-    projectInputs: { input: string; projects: string[] }[],
-    visited: string[]
+    projectInputs: { input: string; projects: string[] }[]
   ): Promise<PartialHash[]> {
     const partialHashes: Promise<PartialHash[]>[] = [];
     for (const input of projectInputs) {
@@ -653,6 +669,33 @@ class TaskHasherImpl {
     return this.filesetHashes[mapKey];
   }
 
+  private hashProjectConfig(projectName: string): PartialHash {
+    const p = this.projectGraph.nodes[projectName];
+    const projectConfig = hashArray([
+      JSON.stringify({ ...p.data, files: undefined }),
+    ]);
+
+    return {
+      value: projectConfig,
+      details: {
+        ProjectConfiguration: projectConfig,
+      },
+    };
+  }
+
+  private hashTsConfig(projectName: string): PartialHash {
+    const p = this.projectGraph.nodes[projectName];
+    const tsConfig = hashArray([
+      hashTsConfig(p, this.projectRootMappings, this.options),
+    ]);
+    return {
+      value: tsConfig,
+      details: {
+        TsConfig: tsConfig,
+      },
+    };
+  }
+
   private async hashProjectFileset(
     projectName: string,
     filesetPatterns: string[]
@@ -666,15 +709,12 @@ class TaskHasherImpl {
           this.projectFileMap[projectName] || [],
           filesetPatterns
         );
-        const fileNames = filteredFiles.map((f) => f.file);
-        const values = filteredFiles.map((f) => f.hash);
+        const files: string[] = [];
+        for (const { file, hash } of filteredFiles) {
+          files.push(file, hash);
+        }
 
-        const value = hashArray([
-          ...fileNames,
-          ...values,
-          JSON.stringify({ ...p.data, files: undefined }),
-          hashTsConfig(p, this.projectRootMappings, this.options),
-        ]);
+        const value = hashArray(files);
         res({
           value,
           details: { [mapKey]: value },

@@ -5,8 +5,8 @@ use crate::native::utils::path::Normalize;
 use crate::native::walker::nx_walker_sync;
 
 #[napi]
-/// Expands the given entries into a list of existing files.
-/// First checks if the entry exists, if not, it will glob the working directory to find the file.
+/// Expands the given entries into a list of existing directories and files.
+/// This is used for copying outputs to and from the cache
 pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
     let directory: PathBuf = directory.into();
 
@@ -31,6 +31,67 @@ pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result
         .chain(existing_paths);
 
     Ok(found_paths.collect())
+}
+
+#[napi]
+/// Expands the given outputs into a list of existing files.
+/// This is used when hashing outputs
+pub fn get_files_for_outputs(
+    directory: String,
+    entries: Vec<String>,
+) -> anyhow::Result<Vec<String>> {
+    let directory: PathBuf = directory.into();
+
+    let mut globs: Vec<String> = vec![];
+    let mut files: Vec<String> = vec![];
+    let mut directories: Vec<String> = vec![];
+    for entry in entries.into_iter() {
+        let path = directory.join(&entry);
+
+        if !path.exists() {
+            globs.push(entry);
+        } else if path.is_dir() {
+            directories.push(entry);
+        } else {
+            files.push(entry);
+        }
+    }
+
+    if !globs.is_empty() {
+        let glob_set = build_glob_set(&globs)?;
+        let found_paths = nx_walker_sync(&directory).filter_map(|path| {
+            if glob_set.is_match(&path) {
+                Some(path.to_normalized_string())
+            } else {
+                None
+            }
+        });
+
+        files.extend(found_paths);
+    }
+
+    if !directories.is_empty() {
+        for dir in directories {
+            let dir = PathBuf::from(dir);
+            let dir_path = directory.join(&dir);
+            let files_in_dir: Vec<String> = nx_walker_sync(&dir_path)
+                .filter_map(|e| {
+                    let path = dir_path.join(&e);
+
+                    if path.is_file() {
+                        Some(dir.join(e).to_normalized_string())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            files.extend(files_in_dir);
+        }
+    }
+
+    files.sort();
+
+    Ok(files)
 }
 
 #[cfg(test)]
