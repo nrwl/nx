@@ -36,7 +36,7 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'jcammisuli',
     },
     {
-      description: `Max Kless is a senior software engineer at Nx, focussed on improving Nx Console and breaking Jon's code.`,
+      description: `Max Kless is a senior software engineer at Nx, focussed on building Nx Console and breaking Jon's code.`,
       imageUrl: '/images/conf/max-kless.webp',
       name: 'Max Kless',
       twitter: 'MaxKless',
