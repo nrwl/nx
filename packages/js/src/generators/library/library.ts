@@ -238,7 +238,7 @@ export async function addLint(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
-  return lintProjectGenerator(tree, {
+  const task = lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
     skipFormat: true,
@@ -252,6 +252,22 @@ export async function addLint(
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
   });
+  // Also update the root .eslintrc.json lintProjectGenerator will not generate it for root projects.
+  // But we need to set the package.json checks.
+  if (options.rootProject) {
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.overrides ??= [];
+      json.overrides.push({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': 'error',
+        },
+      });
+      return json;
+    });
+  }
+  return task;
 }
 
 function addBundlerDependencies(tree: Tree, options: NormalizedSchema) {
@@ -351,8 +367,8 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
     updateJson<PackageJson>(tree, packageJsonPath, (json) => {
       json.name = options.importPath;
       json.version = '0.0.1';
-      // If the package is publishable, we should remove the private field.
-      if (json.private && options.publishable) {
+      // If the package is publishable or root/standalone, we should remove the private field.
+      if (json.private && (options.publishable || options.rootProject)) {
         delete json.private;
       }
       return {
