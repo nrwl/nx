@@ -681,6 +681,7 @@ describe('TaskHasher', () => {
             },
           },
         },
+        externalNodes: {},
         dependencies: {
           parent: [],
         },
@@ -794,7 +795,16 @@ describe('TaskHasher', () => {
             },
           },
         },
-        externalNodes: {},
+        externalNodes: {
+          'npm:react': {
+            name: 'npm:react',
+            type: 'npm',
+            data: {
+              version: '17.0.0',
+              packageName: 'react',
+            },
+          },
+        },
         dependencies: {
           'npm:react': [],
           app: [
@@ -829,9 +839,7 @@ describe('TaskHasher', () => {
     });
 
     // note that the parent hash is based on parent source files only!
-    assertFilesets(hash, {
-      'npm:react': { contains: '__npm:react__' },
-    });
+    expect(hash).toMatchSnapshot();
   });
 
   describe('hashTarget', () => {
@@ -885,6 +893,113 @@ describe('TaskHasher', () => {
       });
 
       expect(hash).toMatchSnapshot();
+    });
+
+    it('should hash entire subtree of dependencies deterministically', async () => {
+      function createHasher() {
+        return new InProcessTaskHasher(
+          {
+            a: [{ file: 'a/filea.ts', hash: 'a.hash' }],
+            b: [{ file: 'b/fileb.ts', hash: 'b.hash' }],
+          },
+          allWorkspaceFiles,
+          {
+            nodes: {
+              a: {
+                name: 'a',
+                type: 'lib',
+                data: {
+                  root: 'a',
+                  targets: { build: { executor: '@nx/webpack:webpack' } },
+                },
+              },
+              b: {
+                name: 'b',
+                type: 'lib',
+                data: {
+                  root: 'b',
+                  targets: { build: { executor: '@nx/webpack:webpack' } },
+                },
+              },
+            },
+            externalNodes: {
+              'npm:@nx/webpack': {
+                name: 'npm:@nx/webpack',
+                type: 'npm',
+                data: {
+                  packageName: '@nx/webpack',
+                  version: '16.0.0',
+                  hash: '$nx/webpack16$',
+                },
+              },
+            },
+            dependencies: {
+              a: [
+                {
+                  source: 'a',
+                  target: 'b',
+                  type: DependencyType.static,
+                },
+              ],
+              b: [
+                {
+                  source: 'b',
+                  target: 'a',
+                  type: DependencyType.static,
+                },
+              ],
+              'npm:@nx/webpack': [],
+            },
+          },
+          {
+            roots: [],
+            tasks: {
+              'a-build': {
+                id: 'a-build',
+                target: { project: 'a', target: 'build' },
+                overrides: {},
+              },
+              'b-build': {
+                id: 'b-build',
+                target: { project: 'b', target: 'build' },
+                overrides: {},
+              },
+            },
+            dependencies: {},
+          },
+          {} as any,
+          {},
+          fileHasher
+        );
+      }
+
+      const hasher1 = createHasher();
+      const hasher2 = createHasher();
+
+      const hashA1 = hasher1.hashTask({
+        id: 'a-build',
+        target: { project: 'a', target: 'build' },
+        overrides: {},
+      });
+      const hashB1 = hasher1.hashTask({
+        id: 'b-build',
+        target: { project: 'b', target: 'build' },
+        overrides: {},
+      });
+
+      const hashB2 = hasher2.hashTask({
+        id: 'b-build',
+        target: { project: 'b', target: 'build' },
+        overrides: {},
+      });
+      const hashA2 = hasher2.hashTask({
+        id: 'a-build',
+        target: { project: 'a', target: 'build' },
+        overrides: {},
+      });
+
+      expect(hashA1).toEqual(hashA2);
+      expect(hashB1).toEqual(hashB2);
     });
 
     it('should hash entire subtree of dependencies', async () => {
@@ -1043,6 +1158,15 @@ describe('TaskHasher', () => {
                   hash: '$packageC0.0.0$',
                 },
               },
+              'npm:@nx/webpack': {
+                name: 'npm:@nx/webpack',
+                type: 'npm',
+                data: {
+                  packageName: '@nx/webpack',
+                  version: '0.0.0',
+                  hash: '$@nx/webpack0.0.0$',
+                },
+              },
             },
             dependencies: {
               appA: [
@@ -1184,7 +1308,9 @@ describe('TaskHasher', () => {
         overrides: { prop: 'prop-value' },
       });
 
-      expect(hash.details.nodes['target']).toEqual('13019111166724682201');
+      expect(hash.details.nodes['AllExternalDependencies']).toEqual(
+        '13019111166724682201'
+      );
     });
 
     it('should use externalDependencies to override nx:run-commands', async () => {
@@ -1716,21 +1842,3 @@ describe('TaskHasher', () => {
     });
   });
 });
-
-function assertFilesets(
-  hash: Hash,
-  assertions: { [name: string]: { contains?: string; excludes?: string } }
-) {
-  const nodes = hash.details.nodes;
-  for (let k of Object.keys(assertions)) {
-    expect(nodes[k]).toBeDefined();
-    if (assertions[k].contains) {
-      expect(nodes[k]).toContain(assertions[k].contains);
-    }
-    if (assertions[k].excludes) {
-      expect(nodes[k]).not.toContain(assertions[k].excludes);
-    }
-  }
-}
-
-//{ [name: string]: string }

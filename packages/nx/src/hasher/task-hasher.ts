@@ -186,7 +186,11 @@ class TaskHasherImpl {
   private runtimeHashes: {
     [runtime: string]: Promise<PartialHash>;
   } = {};
-  private externalDepsHashCache: { [packageName: string]: string } = {};
+  private externalDependencyHashes: Map<string, PartialHash> = new Map<
+    string,
+    PartialHash
+  >();
+  private allExternalDependenciesHash: PartialHash;
   private projectRootMappings = createProjectRootMappings(
     this.projectGraph.nodes
   );
@@ -201,7 +205,10 @@ class TaskHasherImpl {
     private readonly taskGraph: TaskGraph,
     private readonly fileHasher: FileHasher,
     private readonly options: { selectivelyHashTsConfig: boolean }
-  ) {}
+  ) {
+    // External Dependencies are all calculated up front in a deterministic order
+    this.calculateExternalDependencyHashes();
+  }
 
   async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
@@ -227,10 +234,7 @@ class TaskHasherImpl {
         selfInputs
       );
       if (target) {
-        return {
-          value: hashArray([selfAndInputs.value, target.value]),
-          details: { ...selfAndInputs.details, ...target.details },
-        };
+        return this.combinePartialHashes([selfAndInputs, target]);
       }
       return selfAndInputs;
     });
@@ -287,26 +291,20 @@ class TaskHasherImpl {
     const depsOut = await this.hashDepsOutputs(task, depsOutputs);
     const projects = await this.hashProjectInputs(projectInputs);
 
-    let details = {};
-    for (const s of self) {
-      details = { ...details, ...s.details };
-    }
-    for (const s of deps) {
-      details = { ...details, ...s.details };
-    }
-    for (const s of projects) {
-      details = { ...details, ...s.details };
-    }
-    for (const s of depsOut) {
-      details = { ...details, ...s.details };
-    }
-
-    const value = hashArray([
-      ...self.map((d) => d.value),
-      ...deps.map((d) => d.value),
-      ...depsOut.map((d) => d.value),
-      ...projects.map((d) => d.value),
+    return this.combinePartialHashes([
+      ...self,
+      ...deps,
+      ...projects,
+      ...depsOut,
     ]);
+  }
+
+  private combinePartialHashes(partialHashes: PartialHash[]): PartialHash {
+    let details = {};
+    for (const partial of partialHashes) {
+      details = { ...details, ...partial.details };
+    }
+    const value = hashArray(partialHashes.map(({ value }) => value));
 
     return { value, details };
   }
@@ -334,13 +332,7 @@ class TaskHasherImpl {
                     visited
                   );
                 } else {
-                  const { hash } = this.hashExternalDependency(d.target);
-                  return {
-                    value: hash,
-                    details: {
-                      [d.target]: hash,
-                    },
-                  };
+                  return this.getExternalDependencyHash(d.target);
                 }
               }
             })
@@ -423,63 +415,63 @@ class TaskHasherImpl {
     return partialHashes;
   }
 
+  private getExternalDependencyHash(externalNodeName: string) {
+    return this.externalDependencyHashes.get(externalNodeName);
+  }
+
   private hashExternalDependency(
-    projectName: string,
-    parentProjects = new Set<string>()
-  ): { fullyResolved: boolean; hash: string } {
+    externalNodeName: string,
+    visited: Set<string>
+  ): PartialHash {
     // try to retrieve the hash from cache
-    if (this.externalDepsHashCache[projectName]) {
-      return {
-        fullyResolved: true,
-        hash: this.externalDepsHashCache[projectName],
-      };
+    if (this.externalDependencyHashes.has(externalNodeName)) {
+      return this.externalDependencyHashes.get(externalNodeName);
     }
-    parentProjects.add(projectName);
-    const node = this.projectGraph.externalNodes[projectName];
-    let partialHash: string;
-    let fullyResolved = true;
+    visited.add(externalNodeName);
+    const node = this.projectGraph.externalNodes[externalNodeName];
+    let partialHash: PartialHash;
     if (node) {
-      const partialHashes: string[] = [];
+      const partialHashes: PartialHash[] = [];
       if (node.data.hash) {
         // we already know the hash of this dependency
-        partialHashes.push(node.data.hash);
+        partialHashes.push({
+          value: node.data.hash,
+          details: {
+            [externalNodeName]: node.data.hash,
+          },
+        });
       } else {
         // we take version as a hash
-        partialHashes.push(node.data.version);
+        partialHashes.push({
+          value: node.data.version,
+          details: {
+            [externalNodeName]: node.data.version,
+          },
+        });
       }
       // we want to calculate the hash of the entire dependency tree
-      if (this.projectGraph.dependencies[projectName]) {
-        this.projectGraph.dependencies[projectName].forEach((d) => {
-          if (!parentProjects.has(d.target)) {
-            const hashResult = this.hashExternalDependency(
-              d.target,
-              new Set(parentProjects)
-            );
-            partialHashes.push(hashResult.hash);
-            if (!hashResult.fullyResolved) {
-              fullyResolved = false;
-            }
-          } else {
-            // NOTE: do not store hash to cache since it is only a partial hash
-            fullyResolved = false;
+      if (this.projectGraph.dependencies[externalNodeName]) {
+        this.projectGraph.dependencies[externalNodeName].forEach((d) => {
+          if (!visited.has(d.target)) {
+            partialHashes.push(this.hashExternalDependency(d.target, visited));
           }
         });
       }
-
-      partialHash = hashArray(partialHashes);
+      partialHash = this.combinePartialHashes(partialHashes);
     } else {
       // unknown dependency
       // this may occur if dependency is not an npm package
       // but rather symlinked in node_modules or it's pointing to a remote git repo
       // in this case we have no information about the versioning of the given package
-      partialHash = `__${projectName}__`;
+      partialHash = {
+        value: `__${externalNodeName}__`,
+        details: {
+          [externalNodeName]: `__${externalNodeName}__`,
+        },
+      };
     }
-
-    if (fullyResolved) {
-      this.externalDepsHashCache[projectName] = partialHash;
-    }
-
-    return { fullyResolved, hash: partialHash };
+    this.externalDependencyHashes.set(externalNodeName, partialHash);
+    return partialHash;
   }
 
   private hashTarget(
@@ -504,10 +496,10 @@ class TaskHasherImpl {
       const executorPackage = target.executor.split(':')[0];
       const executorNodeName =
         this.findExternalDependencyNodeName(executorPackage);
-      hash = this.hashExternalDependency(executorNodeName).hash;
+      return this.getExternalDependencyHash(executorNodeName);
     } else {
       // use command external dependencies if available to construct the hash
-      const partialHashes: string[] = [];
+      const partialHashes: PartialHash[] = [];
       let hasCommandExternalDependencies = false;
       for (const input of selfInputs) {
         if (input['externalDependencies']) {
@@ -516,29 +508,28 @@ class TaskHasherImpl {
           const externalDependencies = input['externalDependencies'];
           for (let dep of externalDependencies) {
             dep = this.findExternalDependencyNodeName(dep);
-            partialHashes.push(this.hashExternalDependency(dep).hash);
+            partialHashes.push(this.getExternalDependencyHash(dep));
           }
         }
       }
       if (hasCommandExternalDependencies) {
-        hash = hashArray(partialHashes);
+        return this.combinePartialHashes(partialHashes);
       } else {
         // cache the hash of the entire external dependencies tree
-        if (this.externalDepsHashCache['']) {
-          hash = this.externalDepsHashCache[''];
+        if (this.allExternalDependenciesHash) {
+          return this.allExternalDependenciesHash;
         } else {
           hash = hashArray([JSON.stringify(this.projectGraph.externalNodes)]);
-          this.externalDepsHashCache[''] = hash;
+          this.allExternalDependenciesHash = {
+            value: hash,
+            details: {
+              AllExternalDependencies: hash,
+            },
+          };
+          return this.allExternalDependenciesHash;
         }
       }
     }
-
-    return {
-      value: hash,
-      details: {
-        target: hash,
-      },
-    };
   }
 
   private findExternalDependencyNodeName(packageName: string): string {
@@ -761,6 +752,13 @@ class TaskHasherImpl {
       details: { [`env:${envVarName}`]: value },
       value,
     };
+  }
+
+  private calculateExternalDependencyHashes() {
+    const keys = Object.keys(this.projectGraph.externalNodes);
+    for (const externalNodeName of keys) {
+      this.hashExternalDependency(externalNodeName, new Set<string>());
+    }
   }
 }
 
