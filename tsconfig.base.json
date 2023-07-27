@@ -33,6 +33,8 @@
       "@nx/expo": ["packages/expo"],
       "@nx/expo/*": ["packages/expo/*"],
       "@nx/express": ["packages/express"],
+      "@nx/gradle": ["packages/gradle"],
+      "@nx/gradle/*": ["packages/gradle/*"],
       "@nx/graph/ui-components": ["graph/ui-components/src/index.ts"],
       "@nx/graph/ui-graph": ["graph/ui-graph/src/index.ts"],
       "@nx/graph/ui-tooltips": ["graph/ui-tooltips/src/index.ts"],

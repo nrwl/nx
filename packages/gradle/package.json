@@ -1,0 +1,31 @@
+{
+  "name": "@nx/gradle",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "homepage": "https://nx.dev",
+  "private": true,
+  "description": "The Nx Plugin for gradle contains executors and generators allowing your workspace to use the powerful gradle integration testing capabilities.",
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "gradle",
+    "CLI"
+  ],
+  "main": "./src/index.js",
+  "typings": "./src/index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/gradle"
+  }
+}
