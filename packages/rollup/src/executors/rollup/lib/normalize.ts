@@ -46,7 +46,12 @@ export function normalizeRollupExecutorOptions(
     projectRoot,
     outputPath,
     skipTypeCheck: options.skipTypeCheck || false,
-    typesTmpDir: join(root, 'tmp', '__nx__types__'),
+    typesTmpDir: join(
+      root,
+      'tmp',
+      '__nx__rollup__types__',
+      relative(root, projectRoot)
+    ),
   };
 }
 
