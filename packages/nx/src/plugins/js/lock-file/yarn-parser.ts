@@ -200,20 +200,33 @@ function findVersion(
     return snapshot.resolution.slice(packageName.length + 1);
   }
 
-  if (!isBerry && snapshot.resolved && !isValidVersionRange(versionRange)) {
+  if (!isBerry && isTarballPackage(versionRange, snapshot)) {
     return snapshot.resolved;
   }
   // otherwise it's a standard version
   return snapshot.version;
 }
 
-// check if value can be parsed as a semver range
-function isValidVersionRange(versionRange: string): boolean {
+// check if snapshot represents tarball package
+function isTarballPackage(
+  versionRange: string,
+  snapshot: YarnDependency
+): boolean {
+  // if resolved is missing it's internal link
+  if (!snapshot.resolved) {
+    return false;
+  }
+  // tarballs have no integrity
+  if (snapshot.integrity) {
+    return false;
+  }
   try {
     new Range(versionRange);
-    return true;
-  } catch {
+    // range is a valid semver
     return false;
+  } catch {
+    // range is not a valid semver, it can be an npm tag or url part of a tarball
+    return snapshot.version && !snapshot.resolved.includes(snapshot.version);
   }
 }
 
