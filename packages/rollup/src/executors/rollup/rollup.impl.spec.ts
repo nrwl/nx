@@ -52,15 +52,15 @@ describe('rollupExecutor', () => {
           dir: '/root/dist/ui',
           format: 'esm',
           name: 'Example',
-          chunkFileNames: '[name].js',
-          entryFileNames: '[name].js',
+          chunkFileNames: '[name].esm.js',
+          entryFileNames: '[name].esm.js',
         },
         {
           dir: '/root/dist/ui',
           format: 'cjs',
           name: 'Example',
-          chunkFileNames: '[name].cjs',
-          entryFileNames: '[name].cjs',
+          chunkFileNames: '[name].cjs.js',
+          entryFileNames: '[name].cjs.js',
         },
       ]);
     });

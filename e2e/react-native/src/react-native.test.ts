@@ -172,7 +172,7 @@ describe('react native', () => {
     );
     expect(() => {
       runCLI(`build ${libName}`);
-      checkFilesExist(`dist/libs/${libName}/index.js`);
+      checkFilesExist(`dist/libs/${libName}/index.esm.js`);
       checkFilesExist(`dist/libs/${libName}/src/index.d.ts`);
     }).not.toThrow();
   });

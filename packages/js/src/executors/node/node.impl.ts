@@ -394,22 +394,18 @@ function getFileToRun(
 }
 
 function fileToRunCorrectPath(fileToRun: string): string {
-  if (!fileExists(fileToRun)) {
-    const cjsFile = fileToRun.replace(/\.js$/, '.cjs');
-    if (fileExists(cjsFile)) {
-      fileToRun = cjsFile;
-    } else {
-      const mjsFile = fileToRun.replace(/\.js$/, '.mjs');
-      if (fileExists(mjsFile)) {
-        fileToRun = mjsFile;
-      } else {
-        throw new Error(
-          `Could not find ${fileToRun}. Make sure your build succeeded.`
-        );
-      }
-    }
+  if (fileExists(fileToRun)) return fileToRun;
+
+  const extensionsToTry = ['.cjs', '.mjs', 'cjs.js', '.esm.js'];
+
+  for (const ext of extensionsToTry) {
+    const file = fileToRun.replace(/\.js$/, ext);
+    if (fileExists(file)) return file;
   }
-  return fileToRun;
+
+  throw new Error(
+    `Could not find ${fileToRun}. Make sure your build succeeded.`
+  );
 }
 
 export default nodeExecutor;

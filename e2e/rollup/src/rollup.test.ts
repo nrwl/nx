@@ -1,6 +1,8 @@
 import {
+  checkFilesExist,
   cleanupProject,
   newProject,
+  readJson,
   rmDist,
   runCLI,
   runCommand,
@@ -23,8 +25,16 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
     rmDist();
-    runCLI(`build ${myPkg}`);
-    let output = runCommand(`node dist/libs/${myPkg}/index.cjs`);
+    runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
+    checkFilesExist(`dist/libs/${myPkg}/index.cjs.d.ts`);
+    expect(readJson(`dist/libs/${myPkg}/package.json`).exports).toEqual({
+      '.': {
+        import: './index.esm.js',
+        default: './index.cjs.js',
+      },
+      './package.json': './package.json',
+    });
+    let output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
     updateProjectConfig(myPkg, (config) => {
@@ -38,7 +48,7 @@ describe('Rollup Plugin', () => {
     );
     rmDist();
     runCLI(`build ${myPkg}`);
-    output = runCommand(`node dist/libs/${myPkg}/index.cjs`);
+    output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
     updateProjectConfig(myPkg, (config) => {
@@ -52,7 +62,7 @@ describe('Rollup Plugin', () => {
     );
     rmDist();
     runCLI(`build ${myPkg}`);
-    output = runCommand(`node dist/libs/${myPkg}/index.cjs`);
+    output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
   }, 500000);
 

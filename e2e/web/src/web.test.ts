@@ -125,7 +125,7 @@ describe('Web Components Applications', () => {
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
 
     // Asset that React runtime is imported
-    expect(readFile(`dist/libs/${libName}/index.js`)).toMatch(
+    expect(readFile(`dist/libs/${libName}/index.esm.js`)).toMatch(
       /react\/jsx-runtime/
     );
 

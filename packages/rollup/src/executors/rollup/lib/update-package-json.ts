@@ -9,6 +9,7 @@ import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { NormalizedRollupExecutorOptions } from './normalize';
 
+// TODO(jack): Use updatePackageJson from @nx/js instead.
 export function updatePackageJson(
   options: NormalizedRollupExecutorOptions,
   context: ExecutorContext,
@@ -19,42 +20,34 @@ export function updatePackageJson(
   const hasEsmFormat = options.format.includes('esm');
   const hasCjsFormat = options.format.includes('cjs');
 
-  const types = `./${relative(options.projectRoot, options.main).replace(
-    /\.[jt]sx?$/,
-    '.d.ts'
-  )}`;
   const exports = {
-    // TS 4.5+
-    '.': {
-      types,
-    },
+    '.': {},
   };
 
   if (hasEsmFormat) {
     // `module` field is used by bundlers like rollup and webpack to detect ESM.
     // May not be required in the future if type is already "module".
-    packageJson.module = './index.js';
-    exports['.']['import'] = './index.js';
+    packageJson.module = './index.esm.js';
+    exports['.']['import'] = './index.esm.js';
 
     if (!hasCjsFormat) {
-      packageJson.main = './index.js';
+      packageJson.main = './index.esm.js';
     }
   }
 
   if (hasCjsFormat) {
-    packageJson.main = './index.cjs';
-    exports['.']['require'] = './index.cjs';
+    packageJson.main = './index.cjs.js';
+    exports['.']['default'] = './index.cjs.js';
   }
-  if (!options.skipTypeField) {
+
+  // Dual format should not specify `type` field, the `exports` field resolves ESM vs CJS.
+  if (!options.skipTypeField && options.format.length === 1) {
     packageJson.type = options.format.includes('esm') ? 'module' : 'commonjs';
   }
 
-  // Support for older TS versions < 4.5
-  packageJson.types = types;
-
-  // TODO(jack): remove this for Nx 16
   if (options.generateExportsField && typeof packageJson.exports !== 'string') {
     packageJson.exports = {
+      './package.json': './package.json',
       ...packageJson.exports,
       ...exports,
     };
