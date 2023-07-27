@@ -22,18 +22,18 @@ import { join, relative } from 'path';
 import { normalizePath } from '../utils/path';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 
-type ExpandedSelfInput =
+export type ExpandedSelfInput =
   | { fileset: string }
   | { runtime: string }
   | { env: string }
   | { externalDependencies: string[] };
 
-type ExpandedDepsOutput = {
+export type ExpandedDepsOutput = {
   dependentTasksOutputFiles: string;
   transitive?: boolean;
 };
 
-type ExpandedInput = ExpandedSelfInput | ExpandedDepsOutput;
+export type ExpandedInput = ExpandedSelfInput | ExpandedDepsOutput;
 
 /**
  * A data structure returned by the default hasher.
@@ -900,15 +900,17 @@ function splitInputsIntoSelfAndDependencies(
   };
 }
 
-function isSelfInput(input: ExpandedInput): input is ExpandedSelfInput {
+export function isSelfInput(input: ExpandedInput): input is ExpandedSelfInput {
   return !('dependentTasksOutputFiles' in input);
 }
 
-function isDepsOutput(input: ExpandedInput): input is ExpandedDepsOutput {
+export function isDepsOutput(
+  input: ExpandedInput
+): input is ExpandedDepsOutput {
   return 'dependentTasksOutputFiles' in input;
 }
 
-function expandSingleProjectInputs(
+export function expandSingleProjectInputs(
   inputs: ReadonlyArray<InputDefinition | string>,
   namedInputs: { [inputName: string]: ReadonlyArray<InputDefinition | string> }
 ): ExpandedInput[] {
