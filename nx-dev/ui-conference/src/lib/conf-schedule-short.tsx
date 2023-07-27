@@ -162,10 +162,9 @@ export function ConfScheduleShort(): JSX.Element {
       type: 'event',
       time: '5:05pm',
       title: 'Level Up Your Productivity with Nx Console',
-      description: `In today's fast-paced and demanding software development landscape, maximizing productivity is paramount. Are you seeking ways to enhance your coding efficiency and streamline your development workflows? Look no further than Nx Console!
-      In this talk, we will explore the powerful capabilities of Nx Console, a game-changing tool designed to supercharge your productivity and seamlessly integrate with  popular editors like Visual Studio Code and JetBrains editors (WebStorm, IntelliJ IDEA, PhpStorm).
-      During the session, we will dive into the key features of Nx Console and demonstrate how it enhances code generation and boosts your ability to navigate and understand complex codebases.
-      Whether you are a seasoned developer or just starting your coding journey, this talk will provide you with valuable insights and practical tips on how to leverage the full potential of Nx Console in your daily development workflow. Don't miss this opportunity to discover some new features, accelerate your productivity and take your coding prowess to the next level!
+      description: `Tired of typing endless CLI commands? Can't remember every generator option? Look no further than Nx Console!
+      Nx Console is a game-changing tool designed to supercharge your productivity and seamlessly integrate with popular editors like Visual Studio Code and JetBrains editors (WebStorm, IntelliJ IDEA, PhpStorm).
+      We will dive into the key features of Nx Console and demonstrate how it enhances code generation and boosts your ability to navigate and understand complex codebases. Leverage the full potential of Nx Console in your daily development workflow!
       `,
       speakers: ['Jonathan Cammisuli', 'Max Kless'],
       videoUrl: '',
