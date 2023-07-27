@@ -101,7 +101,7 @@ export function newProject({
     if (packageManager === 'pnpm') {
       execSync(getPackageManagerCommand().install, {
         cwd: tmpProjPath(),
-        stdio: 'pipe',
+        stdio: isVerbose() ? 'inherit' : 'pipe',
         env: { CI: 'true', ...process.env },
         encoding: 'utf-8',
       });
@@ -205,7 +205,7 @@ export function runCreateWorkspace(
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
-      stdio: 'pipe',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       env: { CI: 'true', ...process.env },
       encoding: 'utf-8',
     });
@@ -256,7 +256,7 @@ export function runCreatePlugin(
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd: e2eCwd,
-      stdio: 'pipe',
+      stdio: isVerbose() ? 'inherit' : 'pipe',
       env: process.env,
       encoding: 'utf-8',
     });
