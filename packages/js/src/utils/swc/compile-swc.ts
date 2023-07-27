@@ -55,8 +55,8 @@ export async function compileSwc(
   }
 
   const swcCmdLog = execSync(getSwcCmd(normalizedOptions.swcCliOptions), {
-    cwd: normalizedOptions.swcCliOptions.swcCwd,
-  }).toString();
+    encoding: 'utf8',
+  });
   logger.log(swcCmdLog.replace(/\n/, ''));
   const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
 
