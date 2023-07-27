@@ -13,7 +13,7 @@ import {
   satisfies,
   valid,
 } from 'semver';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { promisify } from 'util';
 import {
   MigrationsJson,

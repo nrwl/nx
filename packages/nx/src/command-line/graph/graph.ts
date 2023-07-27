@@ -6,7 +6,7 @@ import * as http from 'http';
 import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
 import { output } from '../../utils/output';
 import { writeJsonFile } from '../../utils/fileutils';

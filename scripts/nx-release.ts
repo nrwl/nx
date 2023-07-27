@@ -2,7 +2,7 @@
 import * as yargs from 'yargs';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { join } from 'path';
 
 import { parse } from 'semver';
@@ -49,6 +49,9 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   const buildCommand = 'pnpm build';
   console.log(`> ${buildCommand}`);
   execSync(buildCommand, {
+    stdio: [0, 1, 2],
+  });
+  execSync(`ls -lah build/packages/nx/src/native`, {
     stdio: [0, 1, 2],
   });
 
