@@ -14,10 +14,6 @@ import { sortObjectByKeys } from '../../../utils/object-sort';
  * - Classic has resolved and integrity
  * - Berry has resolution, checksum, languageName and linkType
  */
-type YarnLockFile = {
-  __metadata?: {};
-} & Record<string, YarnDependency>;
-
 type YarnDependency = {
   version: string;
   dependencies?: Record<string, string>;
@@ -41,12 +37,17 @@ export function parseYarnLockfile(
   builder: ProjectGraphBuilder
 ) {
   const { parseSyml } = require('@yarnpkg/parsers');
-  const data = parseSyml(lockFileContent);
+  const { __metadata, ...dependencies } = parseSyml(lockFileContent);
+  const isBerry = !!__metadata;
 
   // we use key => node map to avoid duplicate work when parsing keys
   const keyMap = new Map<string, ProjectGraphExternalNode>();
-  addNodes(data, packageJson, builder, keyMap);
-  addDependencies(data, builder, keyMap);
+
+  // yarn classic splits keys when parsing so we need to stich them back together
+  const groupedDependencies = groupDependencies(dependencies, isBerry);
+
+  addNodes(groupedDependencies, packageJson, builder, keyMap, isBerry);
+  addDependencies(groupedDependencies, builder, keyMap);
 }
 
 function getPackageNames(keys: string): string[] {
@@ -59,12 +60,12 @@ function getPackageNames(keys: string): string[] {
 }
 
 function addNodes(
-  { __metadata, ...dependencies }: YarnLockFile,
+  dependencies: Record<string, YarnDependency>,
   packageJson: NormalizedPackageJson,
   builder: ProjectGraphBuilder,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  isBerry: boolean
 ) {
-  const isBerry = !!__metadata;
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
   const combinedDeps = {
     ...packageJson.dependencies,
@@ -238,7 +239,7 @@ function getHoistedVersion(packageName: string): string {
 }
 
 function addDependencies(
-  { __metadata, ...dependencies }: YarnLockFile,
+  dependencies: Record<string, YarnDependency>,
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
@@ -301,8 +302,12 @@ export function stringifyYarnLockfile(
 }
 
 function groupDependencies(
-  dependencies: Record<string, YarnDependency>
+  dependencies: Record<string, YarnDependency>,
+  isBerry: boolean
 ): Record<string, YarnDependency> {
+  if (isBerry) {
+    return dependencies;
+  }
   let groupedDependencies: Record<string, YarnDependency>;
   const resolutionMap = new Map<string, YarnDependency>();
   const snapshotMap = new Map<YarnDependency, Set<string>>();
@@ -355,13 +360,8 @@ function mapSnapshots(
     ...packageJson.peerDependencies,
   };
 
-  let groupedDependencies: Record<string, YarnDependency>;
-  if (isBerry) {
-    groupedDependencies = dependencies;
-  } else {
-    // yarn classic splits keys when parsing so we need to stich them back together
-    groupedDependencies = groupDependencies(dependencies);
-  }
+  // yarn classic splits keys when parsing so we need to stich them back together
+  const groupedDependencies = groupDependencies(dependencies, isBerry);
 
   // collect snapshots and their matching keys
   Object.values(nodes).forEach((node) => {
