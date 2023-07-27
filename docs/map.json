@@ -1888,6 +1888,20 @@
             }
           ]
         },
+
+        {
+          "name": "playwright",
+          "id": "playwright",
+          "description": "Playwright package.",
+          "itemList": [
+            {
+              "name": "Overview",
+              "id": "overview",
+              "path": "/packages/playwright",
+              "file": "shared/packages/playwright/playwright-plugin"
+            }
+          ]
+        },
         {
           "name": "storybook",
           "id": "storybook",

@@ -1818,7 +1818,19 @@
   },
   {
     "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
-    "documents": [],
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
+        "file": "generated/packages/playwright/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "playwright/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/playwright/playwright-plugin"
+      }
+    ],
     "executors": [
       {
         "description": "Run Playwright tests.",
