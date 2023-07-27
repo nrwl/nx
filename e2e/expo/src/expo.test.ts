@@ -1,3 +1,4 @@
+import { names } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -50,7 +51,9 @@ describe('expo', () => {
     );
 
     updateFile(`apps/${appName}/src/app/App.tsx`, (content) => {
-      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${componentName}} from '${proj}/${libName}';\n${content}`;
+      let updated = `// eslint-disable-next-line @typescript-eslint/no-unused-vars\nimport {${
+        names(componentName).className
+      }} from '${proj}/${libName}';\n${content}`;
       return updated;
     });
 
@@ -147,7 +150,8 @@ describe('expo', () => {
     expect(() => {
       const pmc = getPackageManagerCommand();
       runCommand(
-        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
+        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`,
+        { failOnError: true }
       );
       checkFilesExist(
         `dist/out-tsc/apps/${appName}/src/app/App.js`,
