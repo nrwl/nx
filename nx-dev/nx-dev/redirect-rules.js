@@ -825,6 +825,8 @@ const latestRecipesRefactoring = {
   // nx concepts
   '/recipes/module-federation/faster-builds':
     '/concepts/more-concepts/faster-builds-with-module-federation',
+
+  '/reference/commands': '/packages/nx',
 };
 
 /**
