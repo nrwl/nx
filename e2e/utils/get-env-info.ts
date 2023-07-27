@@ -73,6 +73,22 @@ export function getNpmMajorVersion(): string {
   return npmMajorVersion;
 }
 
+export function getYarnMajorVersion(path: string): string {
+  try {
+    // this fails if path is not yet created
+    const [yarnMajorVersion] = execSync(`yarn -v`, {
+      cwd: path,
+      encoding: 'utf-8',
+    }).split('.');
+    return yarnMajorVersion;
+  } catch {
+    const [yarnMajorVersion] = execSync(`yarn -v`, { encoding: 'utf-8' }).split(
+      '.'
+    );
+    return yarnMajorVersion;
+  }
+}
+
 export function getLatestLernaVersion(): string {
   const lernaVersion = execSync(`npm view lerna version`, {
     encoding: 'utf-8',
