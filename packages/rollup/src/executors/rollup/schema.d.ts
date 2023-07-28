@@ -41,6 +41,7 @@ export interface RollupExecutorOptions {
   compiler?: 'babel' | 'tsc' | 'swc';
   javascriptEnabled?: boolean;
   generateExportsField?: boolean;
+  additionalEntryPoints?: string[];
   skipTypeCheck?: boolean;
   babelUpwardRootMode?: boolean;
   skipTypeField?: boolean;

@@ -1,4 +1,4 @@
-import { relative } from 'path';
+import { basename, dirname, parse, relative } from 'path';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import {
@@ -8,6 +8,7 @@ import {
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { NormalizedRollupExecutorOptions } from './normalize';
+import { normalizePath } from '@nx/devkit';
 
 // TODO(jack): Use updatePackageJson from @nx/js instead.
 export function updatePackageJson(
@@ -20,37 +21,55 @@ export function updatePackageJson(
   const hasEsmFormat = options.format.includes('esm');
   const hasCjsFormat = options.format.includes('cjs');
 
-  const exports = {
-    '.': {},
-  };
+  if (options.generateExportsField) {
+    packageJson.exports =
+      typeof packageJson.exports === 'string' ? {} : { ...packageJson.exports };
+    packageJson.exports['./package.json'] = './package.json';
+  }
 
   if (hasEsmFormat) {
-    // `module` field is used by bundlers like rollup and webpack to detect ESM.
-    // May not be required in the future if type is already "module".
-    packageJson.module = './index.esm.js';
-    exports['.']['import'] = './index.esm.js';
+    const esmExports = getExports({
+      ...options,
+      fileExt: '.esm.js',
+    });
+
+    packageJson.module = esmExports['.'];
 
     if (!hasCjsFormat) {
-      packageJson.main = './index.esm.js';
+      packageJson.type = 'module';
+      packageJson.main ??= esmExports['.'];
+    }
+
+    if (options.generateExportsField) {
+      for (const [exportEntry, filePath] of Object.entries(esmExports)) {
+        packageJson.exports[exportEntry] = hasCjsFormat
+          ? { import: filePath }
+          : filePath;
+      }
     }
   }
 
   if (hasCjsFormat) {
-    packageJson.main = './index.cjs.js';
-    exports['.']['default'] = './index.cjs.js';
-  }
+    const cjsExports = getExports({
+      ...options,
+      fileExt: '.cjs.js',
+    });
 
-  // Dual format should not specify `type` field, the `exports` field resolves ESM vs CJS.
-  if (!options.skipTypeField && options.format.length === 1) {
-    packageJson.type = options.format.includes('esm') ? 'module' : 'commonjs';
-  }
+    packageJson.main = cjsExports['.'];
 
-  if (options.generateExportsField && typeof packageJson.exports !== 'string') {
-    packageJson.exports = {
-      './package.json': './package.json',
-      ...packageJson.exports,
-      ...exports,
-    };
+    if (!hasEsmFormat) {
+      packageJson.type = 'commonjs';
+    }
+
+    if (options.generateExportsField) {
+      for (const [exportEntry, filePath] of Object.entries(cjsExports)) {
+        if (hasEsmFormat) {
+          packageJson.exports[exportEntry]['default'] ??= filePath;
+        } else {
+          packageJson.exports[exportEntry] = filePath;
+        }
+      }
+    }
   }
 
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
@@ -69,4 +88,35 @@ export function updatePackageJson(
       options.buildableProjectDepsInPackageJsonType
     );
   }
+}
+
+interface Exports {
+  '.': string;
+
+  [name: string]: string;
+}
+
+function getExports(
+  options: Pick<
+    NormalizedRollupExecutorOptions,
+    'main' | 'projectRoot' | 'outputFileName' | 'additionalEntryPoints'
+  > & {
+    fileExt: string;
+  }
+): Exports {
+  const mainFile = options.outputFileName
+    ? options.outputFileName.replace(/\.[tj]s$/, '')
+    : basename(options.main).replace(/\.[tj]s$/, '');
+  const exports: Exports = {
+    '.': './' + mainFile + options.fileExt,
+  };
+
+  if (options.additionalEntryPoints) {
+    for (const file of options.additionalEntryPoints) {
+      const { name: fileName } = parse(file);
+      exports['./' + fileName] = './' + fileName + options.fileExt;
+    }
+  }
+
+  return exports;
 }

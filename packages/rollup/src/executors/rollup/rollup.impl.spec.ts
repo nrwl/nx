@@ -39,7 +39,11 @@ describe('rollupExecutor', () => {
   describe('createRollupOptions', () => {
     it('should create rollup options for valid config', () => {
       const result: any = createRollupOptions(
-        normalizeRollupExecutorOptions(testOptions, '/root', '/root/src'),
+        normalizeRollupExecutorOptions(
+          testOptions,
+          { root: '/root' } as any,
+          '/root/src'
+        ),
         [],
         context,
         { name: 'example' },
@@ -74,7 +78,7 @@ describe('rollupExecutor', () => {
       const result: any = createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, rollupConfig: 'custom-rollup.config.ts' },
-          '/root',
+          { root: '/root' } as any,
           '/root/src'
         ),
         [],
@@ -110,7 +114,7 @@ describe('rollupExecutor', () => {
               'custom-rollup-2.config.ts',
             ],
           },
-          '/root',
+          { root: '/root' } as any,
           '/root/src'
         ),
         [],
@@ -129,7 +133,11 @@ describe('rollupExecutor', () => {
     it(`should always use forward slashes for asset paths`, () => {
       createRollupOptions(
         {
-          ...normalizeRollupExecutorOptions(testOptions, '/root', '/root/src'),
+          ...normalizeRollupExecutorOptions(
+            testOptions,
+            { root: '/root' } as any,
+            '/root/src'
+          ),
           assets: [
             {
               glob: 'README.md',
@@ -154,7 +162,7 @@ describe('rollupExecutor', () => {
       const options = createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, external: 'all' },
-          '/root',
+          { root: '/root' } as any,
           '/root/src'
         ),
         [],
@@ -175,7 +183,7 @@ describe('rollupExecutor', () => {
       const options = createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, external: 'none' },
-          '/root',
+          { root: '/root' } as any,
           '/root/src'
         ),
         [],
@@ -196,7 +204,7 @@ describe('rollupExecutor', () => {
       const options = createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, external: ['rxjs'] },
-          '/root',
+          { root: '/root' } as any,
           '/root/src'
         ),
         [],

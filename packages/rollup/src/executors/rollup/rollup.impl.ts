@@ -64,7 +64,7 @@ export async function* rollupExecutor(
 
   const options = normalizeRollupExecutorOptions(
     rawOptions,
-    context.root,
+    context,
     sourceRoot
   );
 
@@ -282,12 +282,15 @@ export function createRollupOptions(
     }
     externalPackages = [...new Set(externalPackages)];
 
+    const mainEntryFileName = options.outputFileName || options.main;
+    const input: Record<string, string> = {};
+    input[parse(mainEntryFileName).name] = options.main;
+    options.additionalEntryPoints.forEach((entry) => {
+      input[parse(entry).name] = entry;
+    });
+
     const rollupConfig = {
-      input: options.outputFileName
-        ? {
-            [parse(options.outputFileName).name]: options.main,
-          }
-        : options.main,
+      input,
       output: {
         format,
         dir: `${options.outputPath}`,

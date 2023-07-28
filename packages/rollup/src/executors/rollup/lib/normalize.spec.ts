@@ -20,7 +20,11 @@ describe('normalizeRollupExecutorOptions', () => {
   });
 
   it('should resolve both node modules and relative path for rollupConfig', () => {
-    let result = normalizeRollupExecutorOptions(testOptions, root, sourceRoot);
+    let result = normalizeRollupExecutorOptions(
+      testOptions,
+      { root } as any,
+      sourceRoot
+    );
     expect(result.rollupConfig).toEqual(['/root/apps/nodeapp/rollup.config']);
 
     result = normalizeRollupExecutorOptions(
@@ -29,7 +33,7 @@ describe('normalizeRollupExecutorOptions', () => {
         // something that exists in node_modules
         rollupConfig: 'react',
       },
-      root,
+      { root } as any,
       sourceRoot
     );
     expect(result.rollupConfig).toHaveLength(1);
@@ -42,7 +46,7 @@ describe('normalizeRollupExecutorOptions', () => {
 
     const result = normalizeRollupExecutorOptions(
       testOptions,
-      root,
+      { root } as any,
       sourceRoot
     );
     expect(result.rollupConfig).toEqual([]);

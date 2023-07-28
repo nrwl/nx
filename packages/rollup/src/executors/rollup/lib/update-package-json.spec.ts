@@ -42,9 +42,7 @@ describe('updatePackageJson', () => {
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
           './package.json': './package.json',
-          '.': {
-            import: './index.esm.js',
-          },
+          '.': './index.esm.js',
         },
         main: './index.esm.js',
         module: './index.esm.js',
@@ -72,9 +70,7 @@ describe('updatePackageJson', () => {
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
           './package.json': './package.json',
-          '.': {
-            default: './index.cjs.js',
-          },
+          '.': './index.cjs.js',
         },
         main: './index.cjs.js',
         type: 'commonjs',
@@ -127,9 +123,7 @@ describe('updatePackageJson', () => {
         [],
         {
           exports: {
-            './foo': {
-              import: './foo.esm.js',
-            },
+            './foo': './foo.esm.js',
           },
         } as unknown as PackageJson
       );
@@ -137,12 +131,9 @@ describe('updatePackageJson', () => {
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
           './package.json': './package.json',
-          '.': {
-            import: './index.esm.js',
-          },
-          './foo': {
-            import: './foo.esm.js',
-          },
+          '.': './index.esm.js',
+
+          './foo': './foo.esm.js',
         },
         main: './index.esm.js',
         module: './index.esm.js',
@@ -234,9 +225,7 @@ describe('updatePackageJson', () => {
         [],
         {
           exports: {
-            './foo': {
-              import: './foo.esm.js',
-            },
+            './foo': './foo.esm.js',
           },
         } as unknown as PackageJson
       );
@@ -246,9 +235,7 @@ describe('updatePackageJson', () => {
         module: './index.esm.js',
         type: 'module',
         exports: {
-          './foo': {
-            import: './foo.esm.js',
-          },
+          './foo': './foo.esm.js',
         },
       });
 
