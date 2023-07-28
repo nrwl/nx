@@ -60,6 +60,21 @@ describe('app', () => {
     expect(tsconfig.extends).toEqual('../../tsconfig.base.json');
 
     expect(appTree.exists('apps/my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.read('apps/my-app/jest.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "module.exports = {
+        displayName: 'my-app',
+        preset: 'react-native',
+        resolver: '@nx/jest/plugins/resolver',
+        moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
+        setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+        moduleNameMapper: {
+          '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock',
+        },
+        coverageDirectory: '../../coverage/apps/my-app',
+      };
+      "
+    `);
   });
 
   it('should generate targets', async () => {
@@ -71,7 +86,6 @@ describe('app', () => {
       install: false,
     });
     const targets = readProjectConfiguration(appTree, 'my-app').targets;
-    console.log(targets.test);
     expect(targets.test).toBeDefined();
   });
 
