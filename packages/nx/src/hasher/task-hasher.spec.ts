@@ -976,23 +976,23 @@ describe('TaskHasher', () => {
       const hasher1 = createHasher();
       const hasher2 = createHasher();
 
-      const hashA1 = hasher1.hashTask({
+      const hashA1 = await hasher1.hashTask({
         id: 'a-build',
         target: { project: 'a', target: 'build' },
         overrides: {},
       });
-      const hashB1 = hasher1.hashTask({
+      const hashB1 = await hasher1.hashTask({
         id: 'b-build',
         target: { project: 'b', target: 'build' },
         overrides: {},
       });
 
-      const hashB2 = hasher2.hashTask({
+      const hashB2 = await hasher2.hashTask({
         id: 'b-build',
         target: { project: 'b', target: 'build' },
         overrides: {},
       });
-      const hashA2 = hasher2.hashTask({
+      const hashA2 = await hasher2.hashTask({
         id: 'a-build',
         target: { project: 'a', target: 'build' },
         overrides: {},
