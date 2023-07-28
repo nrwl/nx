@@ -138,7 +138,7 @@ describe('expo', () => {
   it('should build publishable library', async () => {
     expect(() => {
       runCLI(`build ${libName}`);
-      checkFilesExist(`dist/libs/${libName}/index.js`);
+      checkFilesExist(`dist/libs/${libName}/index.esm.js`);
       checkFilesExist(`dist/libs/${libName}/src/index.d.ts`);
     }).not.toThrow();
   });
