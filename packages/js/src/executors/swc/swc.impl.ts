@@ -120,13 +120,11 @@ export async function* swcExecutor(
   if (!isInlineGraphEmpty(inlineProjectGraph)) {
     options.projectRoot = '.'; // set to root of workspace to include other libs for type check
 
-    // remap paths for SWC compilation
-    options.swcCliOptions.srcPath = options.swcCliOptions.swcCwd;
-    options.swcCliOptions.swcCwd = '.';
-    options.swcCliOptions.destPath = options.swcCliOptions.destPath
-      .split('../')
-      .at(-1)
-      .concat('/', options.swcCliOptions.srcPath);
+    options.swcCliOptions.srcPath = root.split('/').slice(0, -1).join('/'); // set to root of libraries to include other libs
+    options.swcCliOptions.destPath = join(
+      _options.outputPath,
+      options.swcCliOptions.srcPath
+    ); // new destPath is dist/{libs}/{parentLib}/{libs}
 
     // tmp swcrc with dependencies to exclude
     // - buildable libraries
