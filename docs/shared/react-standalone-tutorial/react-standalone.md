@@ -19,6 +19,8 @@ Note, this tutorial sets up a repo with a single application at the root level t
 
 {% /callout %}
 
+Note, while you could easily use Nx together with your manually set up React application, we're going to use the `@nx/react` plugin for this tutorial which provides some nice enhancements when working with React. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
+
 ## Warm Up
 
 Here's the source code of the final result for this tutorial.
@@ -26,6 +28,11 @@ Here's the source code of the final result for this tutorial.
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone" /%}
 
 {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%}
+
+{% youtube
+src="https://www.youtube.com/embed/OQ-Zc5tcxJE"
+title="Tutorial: Standalone React Application"
+width="100%" /%}
 
 ## Creating a new React App
 
@@ -213,6 +220,16 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 ```
 
 Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+
+## Nx Plugins? Why?
+
+One thing you might be curious about is the project.json. You may wonder why we define tasks inside the `project.json` file instead of using the `package.json` file with scripts that directly launch Vite.
+
+Nx understands and supports both approaches, allowing you to define targets either in your `package.json` or `project.json` files. While both serve a similar purpose, the `project.json` file can be seen as an advanced form of `package.json` scripts, providing additional metadata and capabilities. In this tutorial, we utilize the `project.json` approach primarily because we take advantage of Nx Plugins.
+
+So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
+
+[visit our "Why Nx" page](/getting-started/why-nx) for more deails.
 
 ## Creating New Components
 
