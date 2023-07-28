@@ -31,6 +31,8 @@ width="100%" /%}
 
 ## Creating a new Angular App
 
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=49" /%}
+
 Create a new Angular application with the following command:
 
 ```shell {% command="npx create-nx-workspace@latest myngapp --preset=angular-standalone" path="~" %}
@@ -106,6 +108,8 @@ Compared to the Angular CLI, you might notice the addition of an `nx.json` file 
 | `project.json` | Nx uses this file to define targets that can be run, similar to how the Angular CLI uses the `angular.json` file. If you're familiar with the Angular CLI you should have no difficulty navigating the `project.json` file. If you're curious how the two compare, you can learn more in [the Nx and Angular CLI comparision article](/concepts/more-concepts/nx-and-angular). The [project-configuration documentation page](/reference/project-configuration) has more details on how to use the `project.json` file. |
 
 ## Serving the App
+
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=296" /%}
 
 The most common tasks are already defined in the `package.json` file:
 
@@ -183,6 +187,8 @@ Learn more about how to [run tasks with Nx](/core-features/run-tasks).
 
 ## Testing and Linting - Running Multiple Tasks
 
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=369" /%}
+
 Our current setup not only has targets for serving and building the Angular application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
 
 ```bash
@@ -207,6 +213,8 @@ More conveniently, we can also run them in parallel using the following syntax:
 
 ### Caching
 
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=443" /%}
+
 One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
@@ -228,6 +236,8 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
 
 ## Creating New Components
+
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=500" /%}
 
 Similar to the Angular CLI, Nx comes with code generation abilities. What the Angular CLI calls "Schematics", Nx calls "Generators".
 
@@ -314,6 +324,8 @@ export class HelloWorldComponent {}
 
 ## Building the App for Deployment
 
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=680" /%}
+
 If you're ready and want to ship your application, you can build it using
 
 ```shell {% command="npx nx build" path="myngapp" %}
@@ -342,6 +354,8 @@ All the required files will be placed in the `dist/myngapp` folder and can be de
 
 ## You're ready to go!
 
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=723" /%}
+
 In the previous sections you learned about the basics of using Nx, running tasks and navigating an Nx workspace. You're ready to ship features now!
 
 But there's more to learn. You have two possibilities here:
@@ -350,6 +364,8 @@ But there's more to learn. You have two possibilities here:
 - keep reading and learn some more about what makes Nx unique when working with Angular.
 
 ## Modularizing your Angular App with Local Libraries
+
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=750" /%}
 
 When you develop your Angular application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, this becomes more and more monolithic though.
 
@@ -381,6 +397,8 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 - better scalability in your teams by allowing different teams to work on separate libraries
 
 ### Creating Local Libraries
+
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=818" /%}
 
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
 
@@ -452,6 +470,8 @@ Each of these libraries
 - is mapped in the `tsconfig.base.json` at the root of the workspace
 
 ### Importing Libraries into the Angular Application
+
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=976" /%}
 
 All libraries that we generate automatically have aliases created in the root-level `tsconfig.base.json`.
 
@@ -557,6 +577,8 @@ A couple of notes:
 
 ## Visualizing your Project Structure
 
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=958" /%}
+
 Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/core-features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/core-features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
 Just run:
@@ -633,6 +655,8 @@ Notice how `modules-shared-ui` is not yet connected to anything because we didn'
 Exercise for you: change the codebase so that `modules-shared-ui` is used by `modules-orders` and `modules-products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
 
 ## Imposing Constraints with Module Boundary Rules
+
+{% video-link link="https://youtu.be/ZAO0yXupIIE?t=1147" /%}
 
 Once you modularize your codebase you want to make sure that the modules are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
