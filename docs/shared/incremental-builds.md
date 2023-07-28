@@ -78,6 +78,10 @@ If you're using the `@nx/js:tsc` to build your projects, you can opt-in to use i
 Executing tasks in batch mode is an experimental feature.
 {% /callout %}
 
+{% callout type="info" title="Requirements" %}
+Building a project with the `@nx/js:tsc` executor in batch mode requires all dependent projects to be buildable and built using the `@nx/js:tsc` executor.
+{% /callout %}
+
 To run your builds using the batch implementation, set the `NX_BATCH_MODE` environment variable to `true`:
 
 ```shell

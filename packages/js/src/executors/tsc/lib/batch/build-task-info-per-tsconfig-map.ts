@@ -4,7 +4,7 @@ import { join, relative } from 'path';
 import { CopyAssetsHandler } from '../../../../utils/assets/copy-assets-handler';
 import { calculateProjectBuildableDependencies } from '../../../../utils/buildable-libs-utils';
 import type { NormalizedExecutorOptions } from '../../../../utils/schema';
-import { getTaskWithTscExecutorOptions } from '../get-task-options';
+import { getTaskOptions } from '../get-task-options';
 import type { TypescriptInMemoryTsConfig } from '../typescript-compilation';
 import type { TaskInfo } from './types';
 
@@ -47,8 +47,7 @@ function processTasksAndPopulateTsConfigTaskInfoMap(
     }
 
     let taskOptions =
-      tasksOptions[taskName] ??
-      getTaskWithTscExecutorOptions(taskName, context);
+      tasksOptions[taskName] ?? getTaskOptions(taskName, context);
     if (taskOptions) {
       const taskInfo = createTaskInfo(taskName, taskOptions, context, tsConfig);
       const tsConfigPath = join(
