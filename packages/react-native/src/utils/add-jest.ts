@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import { Tree, offsetFromRoot } from '@nx/devkit';
 import { configurationGenerator } from '@nx/jest';
 
 export async function addJest(
@@ -34,7 +34,10 @@ export async function addJest(
   setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
   moduleNameMapper: {
     '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock'
-  }
+  },
+  coverageDirectory: '${offsetFromRoot(
+    appProjectRoot
+  )}coverage/${appProjectRoot}'
 };`;
   host.write(configPath, content);
 

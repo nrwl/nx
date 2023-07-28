@@ -242,6 +242,72 @@ describe('lib', () => {
         outputs: ['{options.outputFile}'],
       });
     });
+
+    it('should generate test configuration', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        unitTestRunner: 'jest',
+      });
+
+      expect(appTree.read('libs/my-lib/tsconfig.spec.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "compilerOptions": {
+            "outDir": "../../dist/out-tsc",
+            "module": "commonjs",
+            "types": ["jest", "node"]
+          },
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts"
+          ]
+        }
+        "
+      `);
+      expect(appTree.read('libs/my-lib/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-lib',
+          preset: 'react-native',
+          resolver: '@nx/jest/plugins/resolver',
+          moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
+          setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+          moduleNameMapper: {
+            '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock',
+          },
+          coverageDirectory: '../../coverage/libs/my-lib',
+        };
+        "
+      `);
+      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
+      expect(projectConfiguration.targets.test).toMatchInlineSnapshot(`
+        {
+          "configurations": {
+            "ci": {
+              "ci": true,
+              "codeCoverage": true,
+            },
+          },
+          "executor": "@nx/jest:jest",
+          "options": {
+            "jestConfig": "libs/my-lib/jest.config.ts",
+            "passWithNoTests": true,
+          },
+          "outputs": [
+            "{workspaceRoot}/coverage/{projectRoot}",
+          ],
+        }
+      `);
+    });
   });
 
   describe('--buildable', () => {
