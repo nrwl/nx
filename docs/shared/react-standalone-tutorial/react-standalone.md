@@ -27,7 +27,7 @@ Here's the source code of the final result for this tutorial.
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone" /%}
 
-{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%}
+<!-- {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%} -->
 
 {% youtube
 src="https://www.youtube.com/embed/OQ-Zc5tcxJE"
