@@ -1257,6 +1257,9 @@ describe('TaskHasher', () => {
 
       expect(hashAppB1).toEqual(hashAppB2);
       expect(hashAppA1).toEqual(hashAppA2);
+
+      expect(hashAppA1).toMatchSnapshot();
+      expect(hashAppB1).toMatchSnapshot();
     });
 
     it('should not hash when nx:run-commands executor', async () => {
