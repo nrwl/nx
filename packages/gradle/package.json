@@ -4,16 +4,10 @@
   "type": "commonjs",
   "homepage": "https://nx.dev",
   "private": true,
-  "description": "The Nx Plugin for gradle contains executors and generators allowing your workspace to use the powerful gradle integration testing capabilities.",
+  "description": "The Nx Plugin for Gradle contains executors and generators allowing your workspace to use the powerful gradle integration testing capabilities.",
   "keywords": [
     "Monorepo",
-    "Angular",
-    "React",
-    "Web",
-    "Node",
-    "Nest",
-    "Jest",
-    "gradle",
+    "Gradle",
     "CLI"
   ],
   "main": "./src/index.js",
@@ -27,5 +21,9 @@
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
     "directory": "packages/gradle"
+  },
+  "generators": "./generators.json",
+  "dependencies": {
+    "@nx/devkit": "0.0.1"
   }
 }

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "GradleInit",
+  "title": "Gradle Init Schema",
+  "type": "object",
+  "description": "Initializes a Gradle project in the current workspace.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use?"
+    },
+    "buildScriptDSL": {
+      "type": "string",
+      "description": "The build script DSL to use.",
+      "enum": ["groovy", "kotlin"],
+      "default": "groovy",
+      "x-prompt": "What build script DSL would you like to use?"
+    }
+  },
+  "required": ["name", "buildScriptDSL"]
+}

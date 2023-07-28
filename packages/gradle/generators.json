@@ -1,0 +1,18 @@
+{
+  "name": "Nx Gradle",
+  "version": "0.1",
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initializes a Gradle project in the current workspace"
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/generator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initializes a Gradle project in the current workspace"
+    }
+  }
+}
