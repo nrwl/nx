@@ -6,10 +6,6 @@ import { fileExists } from './fileutils';
  */
 export let workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
 
-export function setWorkspaceRoot(root: string): void {
-  workspaceRoot = root;
-}
-
 export function workspaceRootInner(
   dir: string,
   candidateRoot: string | null

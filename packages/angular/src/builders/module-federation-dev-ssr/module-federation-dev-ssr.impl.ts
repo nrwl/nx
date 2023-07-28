@@ -1,7 +1,11 @@
 import type { Schema } from './schema';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
-import { readCachedProjectGraph, workspaceRoot } from '@nx/devkit';
+import {
+  getPackageManagerCommand,
+  readCachedProjectGraph,
+  workspaceRoot,
+} from '@nx/devkit';
 import {
   getDynamicRemotes,
   getStaticRemotes,
@@ -109,8 +113,9 @@ export function executeModuleFederationDevSSRBuilder(
           remoteProject.targets.server.options.outputPath,
           'main.js'
         );
+        const pm = getPackageManagerCommand();
         execSync(
-          `npx nx run ${remote}:server${
+          `${pm.exec} nx run ${remote}:server${
             context.target.configuration
               ? `:${context.target.configuration}`
               : ''

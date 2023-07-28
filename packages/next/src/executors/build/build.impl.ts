@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import {
   ExecutorContext,
+  getPackageManagerCommand,
   logger,
   readJsonFile,
   writeJsonFile,
@@ -53,11 +54,11 @@ export default async function buildExecutor(
   process.env.NX_NEXT_OUTPUT_PATH ??= outputPath;
 
   const args = createCliOptions({ experimentalAppOnly, profile, debug });
-  const command = `npx next build ${args.join(' ')}`;
+  const pm = getPackageManagerCommand();
+  const command = `${pm.exec} next build ${projectRoot} ${args.join(' ')}`;
   const execSyncOptions: ExecSyncOptions = {
     stdio: 'inherit',
     encoding: 'utf-8',
-    cwd: projectRoot,
   };
   try {
     execSync(command, execSyncOptions);

@@ -156,6 +156,12 @@ mod test {
     }
 
     #[test]
+    fn should_work_with_simple_globs() {
+        let glob_set = build_glob_set(&["**/*"]).unwrap();
+        assert!(glob_set.is_match("packages/nx/package.json"))
+    }
+
+    #[test]
     fn should_detect_package_json() {
         let glob_set = build_glob_set(&["packages/*/package.json"]).unwrap();
         assert!(glob_set.is_match("packages/nx/package.json"))
@@ -218,21 +224,21 @@ mod test {
 
     #[test]
     fn should_handle_complex_patterns() {
-        // let glob_set =
-        //     build_glob_set(&["dist/!(cache|cache2)/**/!(README|LICENSE).(txt|md)"]).unwrap();
-        //
-        // // matches
-        // assert!(glob_set.is_match("dist/nested/file.txt"));
-        // assert!(glob_set.is_match("dist/nested/file.md"));
-        // // no matches
-        // assert!(!glob_set.is_match("dist/file.txt"));
-        // assert!(!glob_set.is_match("dist/cache/nested/README.txt"));
-        // assert!(!glob_set.is_match("dist/nested/LICENSE.md"));
-        // assert!(!glob_set.is_match("dist/cache/file.txt"));
-        // assert!(!glob_set.is_match("dist/cache2/file.txt"));
-        // assert!(!glob_set.is_match("dist/cache2/README.txt"));
-        // assert!(!glob_set.is_match("dist/LICENSE.md"));
-        // assert!(!glob_set.is_match("dist/README.txt"));
+        let glob_set =
+            build_glob_set(&["dist/!(cache|cache2)/**/!(README|LICENSE).(txt|md)"]).unwrap();
+
+        // matches
+        assert!(glob_set.is_match("dist/nested/file.txt"));
+        assert!(glob_set.is_match("dist/nested/file.md"));
+        // no matches
+        assert!(!glob_set.is_match("dist/file.txt"));
+        assert!(!glob_set.is_match("dist/cache/nested/README.txt"));
+        assert!(!glob_set.is_match("dist/nested/LICENSE.md"));
+        assert!(!glob_set.is_match("dist/cache/file.txt"));
+        assert!(!glob_set.is_match("dist/cache2/file.txt"));
+        assert!(!glob_set.is_match("dist/cache2/README.txt"));
+        assert!(!glob_set.is_match("dist/LICENSE.md"));
+        assert!(!glob_set.is_match("dist/README.txt"));
 
         let glob_set = build_glob_set(&["dist/*.(js|ts)"]).unwrap();
         // matches

@@ -11,4 +11,5 @@ export const edgeRuntimeVmVersion = '~3.0.2';
 
 // Coverage providers
 export const vitestCoverageC8Version = '~0.32.0';
+export const vitestCoverageV8Version = '~0.32.0';
 export const vitestCoverageIstanbulVersion = '~0.32.0';

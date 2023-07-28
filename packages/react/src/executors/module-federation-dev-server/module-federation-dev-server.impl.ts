@@ -204,6 +204,7 @@ export default async function* moduleFederationDevServer(
               waitForPortOpen(port, {
                 retries: 480,
                 retryDelay: 2500,
+                host: 'localhost',
               })
             )
           );

@@ -2,12 +2,7 @@ import { join } from 'path';
 import { satisfies } from 'semver';
 import { AST } from 'jsonc-eslint-parser';
 import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
-import {
-  normalizePath,
-  ProjectGraphProjectNode,
-  FileData,
-  workspaceRoot,
-} from '@nx/devkit';
+import { normalizePath, workspaceRoot } from '@nx/devkit';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
 
 import { createESLintRule } from '../utils/create-eslint-rule';
@@ -209,7 +204,9 @@ export default createESLintRule<Options, MessageIds>({
       if (
         npmDependencies[packageName] === '*' ||
         packageRange === '*' ||
-        satisfies(npmDependencies[packageName], packageRange)
+        satisfies(npmDependencies[packageName], packageRange, {
+          includePrerelease: true,
+        })
       ) {
         return;
       }
