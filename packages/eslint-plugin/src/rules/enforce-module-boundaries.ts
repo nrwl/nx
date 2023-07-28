@@ -358,7 +358,10 @@ export default createESLintRule<Options, MessageIds>({
                         dirname(fileName),
                         dirname(importPath)
                       );
-                      const maybeTagRelative = (path: string): string =>
+
+                      // the string we receive from elsewhere might not have a leading './' here despite still being a relative path
+                      // we'd like to ensure it's a normalized relative form starting from ./ or ../
+                      const ensureRelativeForm = (path: string): string =>
                         path.startsWith('./') || path.startsWith('../')
                           ? path
                           : `./${path}`;
@@ -367,7 +370,7 @@ export default createESLintRule<Options, MessageIds>({
                       const importPathResolved =
                         relativePath === ''
                           ? `./${basename(importPath)}`
-                          : maybeTagRelative(
+                          : ensureRelativeForm(
                               joinPathFragments(
                                 relativePath,
                                 basename(importPath)

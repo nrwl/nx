@@ -28,38 +28,33 @@ function tryReadBaseJson() {
 export function getBarrelEntryPointByImportScope(
   importScope: string
 ): string[] {
-  const getOneOrNone = <T, R>(a: T[], f: (a: T[]) => R): [] | [T] | R => {
-    if (a.length > 1) {
-      return f(a);
-    }
-    return a as [] | [T];
-  };
   const tryPaths = (
     paths: Record<string, string[]>,
     importScope: string
   ): string[] => {
     // TODO check and warn that the entries of paths[importScope] have no wildcards; that'd be user misconfiguration
     if (paths[importScope]) return paths[importScope];
-    const WILDCARD_TS_SPECIAL_CASE = '*';
+
     // accommodate wildcards (it's not glob) https://www.typescriptlang.org/docs/handbook/module-resolution.html#path-mapping
-    return getOneOrNone(
-      Object.entries(paths)
-        .map(([src, dests]) => {
-          const isWildcard = src.endsWith(WILDCARD_TS_SPECIAL_CASE);
-          if (!isWildcard) return false;
-          const srcWithoutWildcard = src.slice(
-            0,
-            -WILDCARD_TS_SPECIAL_CASE.length
-          );
-          if (!importScope.startsWith(srcWithoutWildcard)) return false;
-          const suffix = importScope.slice(srcWithoutWildcard.length);
-          return dests.map((dest) => {
-            return dest.replace(WILDCARD_TS_SPECIAL_CASE, suffix);
-          });
-        })
-        .filter((r): r is string[] => !!r),
-      (a) => [a[0]] /*TODO warn on duplicate entries*/
-    ).flat(1);
+    const result = new Set<string>(); // set ensures there are no duplicates
+
+    for (const [alias, targets] of Object.entries(paths)) {
+      if (!alias.endsWith('*')) {
+        continue;
+      }
+      const strippedAlias = alias.slice(0, -1); // remove asterisk
+      if (!importScope.startsWith(strippedAlias)) {
+        continue;
+      }
+      const dynamicPart = importScope.slice(strippedAlias.length);
+      targets.forEach((target) => {
+        result.add(target.replace('*', dynamicPart)); // add interpolated value
+      });
+      // we found the entry for importScope; an import scope not supposed and has no sense having > 1 Aliases; TODO warn on duplicated entries
+      break;
+    }
+
+    return Array.from(result);
   };
   const tsConfigBase = tryReadBaseJson();
   if (!tsConfigBase?.compilerOptions?.paths) return [];
@@ -115,29 +110,6 @@ function hasMemberExport(exportedMember, filePath) {
 }
 
 export function getRelativeImportPath(exportedMember, filePath, basePath) {
-  const TSX_SUFFIX = '.tsx';
-  const TS_SUFFIX = '.ts';
-  const JSX_SUFFIX = '.jsx';
-  const JS_SUFFIX = '.js';
-  const stats = lstatSync(filePath, { throwIfNoEntry: false }); // TODO nodejs bug: can return undefined despite contract https://nodejs.org/api/fs.html#fslstatsyncpath-options
-  if (!stats) {
-    const suffixesToTry = [TSX_SUFFIX, TS_SUFFIX, JSX_SUFFIX, JS_SUFFIX];
-    const alreadyTried = suffixesToTry.some((suffix) =>
-      filePath.endsWith(suffix)
-    );
-    if (alreadyTried) return;
-    for (const suffix of suffixesToTry) {
-      const r = getRelativeImportPath(
-        exportedMember,
-        filePath + suffix,
-        basePath
-      );
-      // TODO probably warn if suffixesToTry yield more than one match
-      if (!r) continue;
-      return r;
-    }
-    return;
-  }
   if (lstatSync(filePath).isDirectory()) {
     const file = readdirSync(filePath).find((file) =>
       /^index\.[jt]sx?$/.exec(file)
@@ -147,7 +119,20 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
     } else {
       return;
     }
+  } else if (
+    !lstatSync(filePath, {
+      throwIfNoEntry: false,
+    }) /*not folder, but probably not full file with an extension either*/
+  ) {
+    // try to find an extension that exists
+    const ext = ['.ts', '.tsx', '.js', '.jsx'].find((ext) =>
+      lstatSync(filePath + ext, { throwIfNoEntry: false })
+    );
+    if (ext) {
+      filePath += ext;
+    }
   }
+
   const fileContent = readFileSync(filePath, 'utf8');
 
   // use the TypeScript AST to find the path to the file where exportedMember is defined
@@ -267,7 +252,7 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
       const modulePath = (exportDeclaration as any).moduleSpecifier.text;
 
       let moduleFilePath;
-      if (modulePath.endsWith(JS_SUFFIX) || modulePath.endsWith(JSX_SUFFIX)) {
+      if (modulePath.endsWith('.js') || modulePath.endsWith('.jsx')) {
         moduleFilePath = joinPathFragments(dirname(filePath), modulePath);
         if (!existsSync(moduleFilePath)) {
           const tsifiedModulePath = modulePath.replace(/\.js(x?)$/, '.ts$1');
@@ -276,21 +261,18 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
             `${tsifiedModulePath}`
           );
         }
-      } else if (
-        modulePath.endsWith(TS_SUFFIX) ||
-        modulePath.endsWith(TSX_SUFFIX)
-      ) {
+      } else if (modulePath.endsWith('.ts') || modulePath.endsWith('.tsx')) {
         moduleFilePath = joinPathFragments(dirname(filePath), modulePath);
       } else {
         moduleFilePath = joinPathFragments(
           dirname(filePath),
-          `${modulePath}${TS_SUFFIX}`
+          `${modulePath}.ts`
         );
         if (!existsSync(moduleFilePath)) {
           // might be a tsx file
           moduleFilePath = joinPathFragments(
             dirname(filePath),
-            `${modulePath}${TSX_SUFFIX}`
+            `${modulePath}.tsx`
           );
         }
       }
