@@ -28,7 +28,7 @@ You can use Nx to quickly scaffold a new project or even an entire monorepo. It 
 
 {% title-card title="New Monorepo" url="#get-started-with-the-basics" /%}
 {% title-card title="Choose a Stack" url="#learn-about-nx-and-your-favorite-stack" /%}
-{% title-card title="Add to an Existing Project" url="#http://localhost:4200/getting-started/intro#adding-nx-to-an-existing-project" /%}
+{% title-card title="Add to an Existing Project" url="#adding-nx-to-an-existing-project" /%}
 
 {% /cards %}
 
