@@ -170,6 +170,14 @@ title="Nx Console Run UI Form"
 width="100%" /%}
 ```
 
+#### Youtube Section Link
+
+Have a more decent button-like widget that you can place below sections of a tutorial with a link to a specific point in a Youtube video.
+
+```markdown
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
+```
+
 #### Graph
 
 Embed an Nx Graph visualization that can be panned by the user.
