@@ -186,9 +186,9 @@ class TaskHasherImpl {
   private runtimeHashes: {
     [runtime: string]: Promise<PartialHash>;
   } = {};
-  private externalDependencyHashes: Map<string, PartialHash> = new Map<
+  private externalDependencyHashes: Map<string, PartialHash[]> = new Map<
     string,
-    PartialHash
+    PartialHash[]
   >();
   private allExternalDependenciesHash: PartialHash;
   private projectRootMappings = createProjectRootMappings(
@@ -300,11 +300,16 @@ class TaskHasherImpl {
   }
 
   private combinePartialHashes(partialHashes: PartialHash[]): PartialHash {
-    let details = {};
-    for (const partial of partialHashes) {
-      details = { ...details, ...partial.details };
+    if (partialHashes.length === 1) {
+      return partialHashes[0];
     }
-    const value = hashArray(partialHashes.map(({ value }) => value));
+    const details = {};
+    const hashValues: string[] = [];
+    for (const partial of partialHashes) {
+      hashValues.push(partial.value);
+      Object.assign(details, partial.details);
+    }
+    const value = hashArray(hashValues);
 
     return { value, details };
   }
@@ -416,25 +421,29 @@ class TaskHasherImpl {
   }
 
   private getExternalDependencyHash(externalNodeName: string) {
-    return this.externalDependencyHashes.get(externalNodeName);
+    const combinedHash = this.combinePartialHashes(
+      this.externalDependencyHashes.get(externalNodeName)
+    );
+    // Set the combined hash into the hashes so it's not recalculated next time
+    this.externalDependencyHashes.set(externalNodeName, [combinedHash]);
+    return combinedHash;
   }
 
   private hashExternalDependency(
     externalNodeName: string,
     visited: Set<string>
-  ): PartialHash {
+  ): PartialHash[] {
     // try to retrieve the hash from cache
     if (this.externalDependencyHashes.has(externalNodeName)) {
       return this.externalDependencyHashes.get(externalNodeName);
     }
     visited.add(externalNodeName);
     const node = this.projectGraph.externalNodes[externalNodeName];
-    let partialHash: PartialHash;
+    const partialHashes: Set<PartialHash> = new Set<PartialHash>();
     if (node) {
-      const partialHashes: PartialHash[] = [];
       if (node.data.hash) {
         // we already know the hash of this dependency
-        partialHashes.push({
+        partialHashes.add({
           value: node.data.hash,
           details: {
             [externalNodeName]: node.data.hash,
@@ -442,7 +451,7 @@ class TaskHasherImpl {
         });
       } else {
         // we take version as a hash
-        partialHashes.push({
+        partialHashes.add({
           value: node.data.version,
           details: {
             [externalNodeName]: node.data.version,
@@ -453,25 +462,27 @@ class TaskHasherImpl {
       if (this.projectGraph.dependencies[externalNodeName]) {
         this.projectGraph.dependencies[externalNodeName].forEach((d) => {
           if (!visited.has(d.target)) {
-            partialHashes.push(this.hashExternalDependency(d.target, visited));
+            for (const hash of this.hashExternalDependency(d.target, visited)) {
+              partialHashes.add(hash);
+            }
           }
         });
       }
-      partialHash = this.combinePartialHashes(partialHashes);
     } else {
       // unknown dependency
       // this may occur if dependency is not an npm package
       // but rather symlinked in node_modules or it's pointing to a remote git repo
       // in this case we have no information about the versioning of the given package
-      partialHash = {
+      partialHashes.add({
         value: `__${externalNodeName}__`,
         details: {
           [externalNodeName]: `__${externalNodeName}__`,
         },
-      };
+      });
     }
-    this.externalDependencyHashes.set(externalNodeName, partialHash);
-    return partialHash;
+    const partialHashArray = Array.from(partialHashes);
+    this.externalDependencyHashes.set(externalNodeName, partialHashArray);
+    return partialHashArray;
   }
 
   private hashTarget(
