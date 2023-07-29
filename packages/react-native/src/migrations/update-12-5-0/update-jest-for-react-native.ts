@@ -4,10 +4,10 @@ import {
   readProjectConfiguration,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { join } from 'path';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
-import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
+import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
 
 /**
  * This function update jest.config.js and test.setup.ts for react native project for Jest 27.

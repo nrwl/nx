@@ -1,8 +1,7 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
+import { ExecutorContext, names } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
-import { join } from 'path';
+import { resolve as pathResolve } from 'path';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ExportExecutorSchema } from './schema';
 
 export interface ExpoExportOutput {
@@ -17,7 +16,6 @@ export default async function* exportExecutor(
 ): AsyncGenerator<ExpoExportOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
     await exportAsync(context.root, projectRoot, options);
@@ -39,13 +37,13 @@ function exportAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
+      require.resolve('@expo/cli/build/bin/cli'),
       [
         `export${options.bundler === 'webpack' ? ':web' : ''}`,
         '.',
         ...createExportOptions(options),
       ],
-      { cwd: join(workspaceRoot, projectRoot) }
+      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits

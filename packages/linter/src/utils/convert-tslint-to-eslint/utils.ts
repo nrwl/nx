@@ -1,5 +1,5 @@
-import { addDependenciesToPackageJson, logger } from '@nrwl/devkit';
-import type { Tree, GeneratorCallback } from '@nrwl/devkit';
+import { addDependenciesToPackageJson, logger } from '@nx/devkit';
+import type { Tree, GeneratorCallback } from '@nx/devkit';
 import type { Linter } from 'eslint';
 import type { TSLintRuleOptions } from 'tslint-to-eslint-config';
 import { convertTslintNxRuleToEslintNxRule } from './convert-nx-enforce-module-boundaries-rule';

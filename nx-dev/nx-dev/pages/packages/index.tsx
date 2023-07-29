@@ -1,18 +1,18 @@
-import { Heading1 } from '@nrwl/nx-dev-feature-package-schema-viewer';
-import { getPackagesSections } from '@nrwl/nx-dev/data-access-menu';
+import { Heading1 } from '@nx/nx-dev/feature-package-schema-viewer';
+import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import {
   filterMigrationPackages,
   sortCorePackagesFirst,
-} from '@nrwl/nx-dev/data-access-packages';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
-import { IntrinsicPackageMetadata } from '@nrwl/nx-dev/models-package';
+} from '@nx/nx-dev/data-access-packages';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { IntrinsicPackageMetadata } from '@nx/nx-dev/models-package';
 import {
   Breadcrumbs,
   DocumentationHeader,
   Footer,
   SidebarContainer,
-} from '@nrwl/nx-dev/ui-common';
-import { iconsMap } from '@nrwl/nx-dev/ui-references';
+} from '@nx/nx-dev/ui-common';
+import { iconsMap } from '@nx/nx-dev/ui-references';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -38,14 +38,27 @@ export default function Packages({
         'id'
       ),
     },
-    packages: useMemo(
-      () =>
-        sortCorePackagesFirst<IntrinsicPackageMetadata>(
-          filterMigrationPackages<IntrinsicPackageMetadata>(packages),
-          'name'
-        ),
-      [packages]
-    ),
+    packages: useMemo(() => {
+      const storybookIdx = packages.findIndex((p) => p.name === 'storybook');
+      const packagesWithRspack = [
+        ...packages.slice(0, storybookIdx),
+        {
+          description:
+            'The Nx Plugin for Rspack contains executors and generators that support building applications using Rspack.',
+          githubRoot: 'https://github.com/nrwl/nx/blob/master',
+          name: 'rspack',
+          packageName: '@nrwl/rspack',
+          path: '/packages/rspack',
+          root: '/packages/rspack',
+          source: '/packages/rspack/src',
+        },
+        ...packages.slice(storybookIdx),
+      ];
+      return sortCorePackagesFirst<IntrinsicPackageMetadata>(
+        filterMigrationPackages<IntrinsicPackageMetadata>(packagesWithRspack),
+        'name'
+      );
+    }, [packages]),
   };
 
   return (
@@ -93,10 +106,19 @@ export default function Packages({
                 <div data-document="main">
                   <Heading1 title={'Official Packages Reference'} />
 
+                  <section id="packages-section" className="py-1">
+                    <p>
+                      In version 16, we have rescoped our packages to{' '}
+                      <code>@nx/*</code> from <code>@nrwl/*</code>.{' '}
+                      <a href="/recipes/other/rescope" className="underline">
+                        Read more about the rescope ≫
+                      </a>
+                    </p>
+                  </section>
                   <section id="packages-section" className="py-12">
                     <nav
                       aria-labelledby="package-index-navigation"
-                      className="relative mb-24 grid grid-cols-2 gap-4 md:grid-cols-4"
+                      className="relative mb-24 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-5"
                     >
                       {vm.packages.map((pkg) => (
                         <Link

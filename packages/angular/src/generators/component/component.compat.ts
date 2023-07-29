@@ -1,4 +1,5 @@
-import componentGenerator from './component';
-import { convertNxGenerator } from '@nrwl/devkit';
+import { convertNxGenerator } from '@nx/devkit';
+import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
+import { componentGenerator } from './component';
 
-export default convertNxGenerator(componentGenerator);
+export default warnForSchematicUsage(convertNxGenerator(componentGenerator));

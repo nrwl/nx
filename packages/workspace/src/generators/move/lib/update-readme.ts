@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { Tree } from '@nx/devkit';
 import { join } from 'path';
 import { NormalizedSchema } from '../schema';
 

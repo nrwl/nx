@@ -1,9 +1,9 @@
 import { applicationGenerator } from '../application/application';
 import { componentGenerator } from './component';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Tree } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/react';
-import { Linter } from '@nrwl/linter';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { libraryGenerator } from '@nx/react';
+import { Linter } from '@nx/linter';
 
 describe('component', () => {
   let tree: Tree;

@@ -12,11 +12,11 @@ The Project Graph is derived from the source code of your workspace. Make the fo
 
 ### `common-ui`
 
-Run the `@nrwl/angular:component` generator with the command:
+Run the `@nx/angular:component` generator with the command:
 
-```{% command="npx nx g @nrwl/angular:component banner --project=common-ui --export" path="~/myorg" %}
+```{% command="npx nx g @nx/angular:component banner --project=common-ui --export" path="~/myorg" %}
 
->  NX  Generating @nrwl/angular:component
+>  NX  Generating @nx/angular:component
 
 CREATE libs/common-ui/src/lib/banner/banner.component.css
 CREATE libs/common-ui/src/lib/banner/banner.component.html

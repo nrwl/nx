@@ -43,6 +43,12 @@
         "enum": ["jest", "none"],
         "default": "jest"
       },
+      "e2eTestRunner": {
+        "type": "string",
+        "enum": ["jest", "none"],
+        "description": "Test runner to use for end to end (e2e) tests",
+        "default": "jest"
+      },
       "tags": {
         "description": "Add tags to the application (used for linting).",
         "type": "string"
@@ -61,6 +67,11 @@
       "setParserOptionsProject": {
         "type": "boolean",
         "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      },
+      "strict": {
+        "type": "boolean",
+        "description": "Adds strictNullChecks, noImplicitAny, strictBindCallApply, forceConsistentCasingInFileNames and noFallthroughCasesInSwitch to tsconfig.",
         "default": false
       }
     },

@@ -1,12 +1,13 @@
-import { joinPathFragments, stripIndents } from '@nrwl/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { from, Observable } from 'rxjs';
+import { Observable, from } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { lt } from 'semver';
+import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { mergeCustomWebpackConfig } from '../utilities/webpack';
 import { Schema } from './schema';
-import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { switchMap } from 'rxjs/operators';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
-import { lt } from 'semver';
+import { validateOptions } from './validate-options';
 
 function buildServerApp(
   options: Schema,
@@ -92,15 +93,15 @@ export function executeWebpackServerBuilder(
   options: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/build-angular').ServerBuilderOutput> {
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo();
+  validateOptions(options);
 
+  const installedAngularVersionInfo = getInstalledAngularVersionInfo();
+  // default bundleDependencies to true if supported by Angular version
   if (
-    lt(installedAngularVersionInfo.version, '15.1.0') &&
-    Array.isArray(options.assets) &&
-    options.assets.length > 0
+    lt(installedAngularVersionInfo.version, '15.0.0') &&
+    options.bundleDependencies === undefined
   ) {
-    throw new Error(stripIndents`The "assets" option is only supported in Angular >= 15.1.0. You are currently using ${installedAngularVersionInfo.version}.
-    You can resolve this error by removing the "assets" option or by migrating to Angular 15.1.0.`);
+    options.bundleDependencies = true;
   }
 
   options.buildLibsFromSource ??= true;

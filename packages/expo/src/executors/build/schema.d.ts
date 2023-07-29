@@ -3,7 +3,7 @@
 export interface ExpoEasBuildOptions {
   platform: 'ios' | 'android' | 'all';
   profile?: string;
-  nonInteractive: boolean; // default is false
+  interactive: boolean; // default is true
   local: boolean; // default is false
   output?: string;
   wait: boolean; // default is true

@@ -1,7 +1,7 @@
 {
   "name": "nx/next",
   "version": "0.1",
-  "extends": ["@nrwl/react"],
+  "extends": ["@nx/react"],
   "schematics": {
     "init": {
       "factory": "./src/generators/init/init#nextInitSchematic",
@@ -67,6 +67,11 @@
       "factory": "./src/generators/custom-server/custom-server#customServerGenerator",
       "schema": "./src/generators/custom-server/schema.json",
       "description": "Set up a custom server."
+    },
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "cypress-component-configuration generator"
     }
   }
 }

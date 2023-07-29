@@ -1,7 +1,12 @@
-import { cacheDir, ExecutorContext, logger } from '@nrwl/devkit';
+import {
+  cacheDir,
+  ExecutorContext,
+  getPackageManagerCommand,
+  logger,
+} from '@nx/devkit';
 import { exec, execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
-import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { NormalizedSwcExecutorOptions, SwcCliOptions } from '../schema';
 import { printDiagnostics } from '../typescript/print-diagnostics';
 import { runTypeCheck, TypeCheckOptions } from '../typescript/run-type-check';
@@ -10,7 +15,12 @@ function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
-  let swcCmd = `npx swc ${srcPath} -d ${destPath} --no-swcrc --config-file=${swcrcPath}`;
+  const packageManager = getPackageManagerCommand();
+  let swcCmd = `${packageManager.exec} swc ${
+    // TODO(jack): clean this up when we remove inline module support
+    // Handle root project
+    srcPath === '.' ? 'src' : srcPath
+  } -d ${destPath} --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
@@ -45,8 +55,8 @@ export async function compileSwc(
   }
 
   const swcCmdLog = execSync(getSwcCmd(normalizedOptions.swcCliOptions), {
-    cwd: normalizedOptions.swcCliOptions.swcCwd,
-  }).toString();
+    encoding: 'utf8',
+  });
   logger.log(swcCmdLog.replace(/\n/, ''));
   const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
 

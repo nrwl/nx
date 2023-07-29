@@ -9,6 +9,7 @@ import {
   packageManagerLockFile,
   readFile,
   readJson,
+  rmDist,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -28,18 +29,9 @@ describe('js e2e', () => {
 
   it('should create libs with js executors (--compiler=tsc)', async () => {
     const lib = uniq('lib');
-    runCLI(
-      `generate @nrwl/js:lib ${lib} --buildable --compiler=tsc --no-interactive`
-    );
+    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
     const libPackageJson = readJson(`libs/${lib}/package.json`);
     expect(libPackageJson.scripts).toBeUndefined();
-
-    // Since `@nrwl/web` is installed in workspace, .babelrc and babel preset are needed for this lib
-    const babelRc = readJson(`libs/${lib}/.babelrc`);
-    expect(babelRc.plugins).toBeUndefined();
-    expect(babelRc.presets).toStrictEqual([
-      ['@nrwl/js/babel', { useBuiltIns: 'usage' }],
-    ]);
 
     expect(runCLI(`build ${lib}`)).toContain('Done compiling TypeScript files');
     checkFilesExist(
@@ -97,9 +89,7 @@ describe('js e2e', () => {
     libBuildProcess.kill();
 
     const parentLib = uniq('parentlib');
-    runCLI(
-      `generate @nrwl/js:lib ${parentLib} --buildable --compiler=tsc --no-interactive`
-    );
+    runCLI(`generate @nx/js:lib ${parentLib} --bundler=tsc --no-interactive`);
     const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
     expect(parentLibPackageJson.scripts).toBeUndefined();
     expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
@@ -139,13 +129,17 @@ describe('js e2e', () => {
       return json;
     });
 
-    runCLI(`build ${lib}`);
+    updateJson(`libs/${lib}/package.json`, (json) => {
+      // Delete automatically generated helper dependency to test legacy behavior.
+      delete json.dependencies.tslib;
+      return json;
+    });
 
-    const rootPackageJson = readJson(`package.json`);
+    runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
 
-    expect(
-      readJson(`dist/libs/${lib}/package.json`).peerDependencies.tslib
-    ).toEqual(rootPackageJson.dependencies.tslib);
+    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
+      'peerDependencies.tslib'
+    );
 
     updateJson(`libs/${lib}/tsconfig.json`, (json) => {
       json.compilerOptions = { ...json.compilerOptions, importHelpers: false };
@@ -157,12 +151,63 @@ describe('js e2e', () => {
     expect(readJson(`dist/libs/${lib}/package.json`)).not.toHaveProperty(
       'peerDependencies.tslib'
     );
+
+    // check batch build
+    rmDist();
+    const batchBuildOutput = runCLI(`build ${parentLib} --skip-nx-cache`, {
+      env: { NX_BATCH_MODE: 'true' },
+    });
+
+    expect(batchBuildOutput).toContain(`Running 2 tasks with @nx/js:tsc`);
+    expect(batchBuildOutput).toContain(
+      `Compiling TypeScript files for project "${lib}"...`
+    );
+    expect(batchBuildOutput).toContain(
+      `Done compiling TypeScript files for project "${lib}".`
+    );
+    expect(batchBuildOutput).toContain(
+      `Compiling TypeScript files for project "${parentLib}"...`
+    );
+    expect(batchBuildOutput).toContain(
+      `Done compiling TypeScript files for project "${parentLib}".`
+    );
+    expect(batchBuildOutput).toContain(
+      `Successfully ran target build for project ${parentLib} and 1 task it depends on`
+    );
+
+    checkFilesExist(
+      // parent
+      `dist/libs/${parentLib}/package.json`,
+      `dist/libs/${parentLib}/README.md`,
+      `dist/libs/${parentLib}/tsconfig.tsbuildinfo`,
+      `dist/libs/${parentLib}/src/index.js`,
+      `dist/libs/${parentLib}/src/index.d.ts`,
+      `dist/libs/${parentLib}/src/lib/${parentLib}.js`,
+      `dist/libs/${parentLib}/src/lib/${parentLib}.d.ts`,
+      // child
+      `dist/libs/${lib}/package.json`,
+      `dist/libs/${lib}/README.md`,
+      `dist/libs/${lib}/tsconfig.tsbuildinfo`,
+      `dist/libs/${lib}/src/index.js`,
+      `dist/libs/${lib}/src/index.d.ts`,
+      `dist/libs/${lib}/src/lib/${lib}.js`,
+      `dist/libs/${lib}/src/lib/${lib}.d.ts`
+    );
+
+    // run a second time skipping the nx cache and with the outputs present
+    const secondBatchBuildOutput = runCLI(
+      `build ${parentLib} --skip-nx-cache`,
+      { env: { NX_BATCH_MODE: 'true' } }
+    );
+    expect(secondBatchBuildOutput).toContain(
+      `Successfully ran target build for project ${parentLib} and 1 task it depends on`
+    );
   }, 240_000);
 
   it('should not create a `.babelrc` file when creating libs with js executors (--compiler=tsc)', () => {
     const lib = uniq('lib');
     runCLI(
-      `generate @nrwl/js:lib ${lib} --compiler=tsc --includeBabelRc=false --no-interactive`
+      `generate @nx/js:lib ${lib} --compiler=tsc --includeBabelRc=false --no-interactive`
     );
 
     checkFilesDoNotExist(`libs/${lib}/.babelrc`);
@@ -177,9 +222,7 @@ describe('package.json updates', () => {
   it('should update package.json with detected dependencies', async () => {
     const pmc = getPackageManagerCommand();
     const lib = uniq('lib');
-    runCLI(
-      `generate @nrwl/js:lib ${lib} --buildable --compiler=tsc --no-interactive`
-    );
+    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
 
     // Add a dependency for this lib to check the built package.json
     runCommand(`${pmc.addProd} react`);
@@ -191,7 +234,13 @@ describe('package.json updates', () => {
     `;
     });
 
-    runCLI(`build ${lib}`);
+    updateJson(`libs/${lib}/package.json`, (json) => {
+      // Delete automatically generated helper dependency to test legacy behavior.
+      delete json.dependencies.tslib;
+      return json;
+    });
+
+    runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
 
     // Check that only 'react' exists, don't care about version
     expect(readJson(`dist/libs/${lib}/package.json`).dependencies).toEqual({

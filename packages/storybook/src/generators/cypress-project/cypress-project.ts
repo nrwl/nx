@@ -1,11 +1,11 @@
 import {
   cypressInitGenerator as _cypressInitGenerator,
   cypressProjectGenerator as _cypressProjectGenerator,
-} from '@nrwl/cypress';
+} from '@nx/cypress';
 import {
   getE2eProjectName,
   getUnscopedLibName,
-} from '@nrwl/cypress/src/utils/project-name';
+} from '@nx/cypress/src/utils/project-name';
 import {
   convertNxGenerator,
   formatFiles,
@@ -14,12 +14,13 @@ import {
   joinPathFragments,
   readJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
+import { Linter } from '@nx/linter';
+
 import { join } from 'path';
 import { safeFileDelete } from '../../utils/utilities';
 
@@ -29,6 +30,8 @@ export interface CypressConfigureSchema {
   directory?: string;
   linter: Linter;
   standaloneConfig?: boolean;
+  ciTargetName?: string;
+  skipFormat?: boolean;
 }
 
 export async function cypressProjectGenerator(
@@ -44,7 +47,7 @@ export async function cypressProjectGenerator(
   const tasks: GeneratorCallback[] = [];
 
   if (!projectAlreadyHasCypress(tree)) {
-    tasks.push(_cypressInitGenerator(tree, {}));
+    tasks.push(await _cypressInitGenerator(tree, {}));
   }
 
   const installTask = await _cypressProjectGenerator(tree, {
@@ -54,6 +57,7 @@ export async function cypressProjectGenerator(
     linter: schema.linter,
     directory: schema.directory,
     standaloneConfig: schema.standaloneConfig,
+    skipFormat: true,
   });
   tasks.push(installTask);
 
@@ -64,9 +68,15 @@ export async function cypressProjectGenerator(
   );
   removeUnneededFiles(tree, generatedCypressProjectName, schema.js);
   addBaseUrlToCypressConfig(tree, generatedCypressProjectName);
-  updateAngularJsonBuilder(tree, generatedCypressProjectName, schema.name);
+  updateAngularJsonBuilder(tree, {
+    e2eProjectName: generatedCypressProjectName,
+    targetProjectName: schema.name,
+    ciTargetName: schema.ciTargetName,
+  });
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }
@@ -106,30 +116,37 @@ function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
 
 function updateAngularJsonBuilder(
   tree: Tree,
-  e2eProjectName: string,
-  targetProjectName: string
+  opts: {
+    e2eProjectName: string;
+    targetProjectName: string;
+    ciTargetName?: string;
+  }
 ) {
-  const project = readProjectConfiguration(tree, e2eProjectName);
+  const project = readProjectConfiguration(tree, opts.e2eProjectName);
   const e2eTarget = project.targets.e2e;
   project.targets.e2e = {
     ...e2eTarget,
     options: <any>{
       ...e2eTarget.options,
-      devServerTarget: `${targetProjectName}:storybook`,
+      devServerTarget: `${opts.targetProjectName}:storybook`,
     },
     configurations: {
       ci: {
-        devServerTarget: `${targetProjectName}:storybook:ci`,
+        devServerTarget: opts.ciTargetName
+          ? `${opts.targetProjectName}:${opts.ciTargetName}:ci`
+          : `${opts.targetProjectName}:storybook:ci`,
       },
     },
   };
-  updateProjectConfiguration(tree, e2eProjectName, project);
+  updateProjectConfiguration(tree, opts.e2eProjectName, project);
 }
 
 function projectAlreadyHasCypress(tree: Tree): boolean {
   const packageJsonContents = readJson(tree, 'package.json');
   return (
-    (packageJsonContents?.['devDependencies']?.['@nrwl/cypress'] ||
+    (packageJsonContents?.['devDependencies']?.['@nx/cypress'] ||
+      packageJsonContents?.['dependencies']?.['@nx/cypress'] ||
+      packageJsonContents?.['devDependencies']?.['@nrwl/cypress'] ||
       packageJsonContents?.['dependencies']?.['@nrwl/cypress']) &&
     (packageJsonContents?.['devDependencies']?.['cypress'] ||
       packageJsonContents?.['dependencies']?.['cypress'])

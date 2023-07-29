@@ -1,0 +1,59 @@
+{
+  "name": "plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/plugin",
+  "projectType": "library",
+  "targets": {
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/plugin",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/plugin",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/plugin",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/plugin",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/plugin",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/plugin"],
+      "options": {
+        "commands": [
+          "node ./scripts/copy-readme.js plugin",
+          "node ./scripts/add-dependency-to-build.js plugin @nrwl/nx-plugin"
+        ]
+      }
+    },
+    "lint": {}
+  }
+}

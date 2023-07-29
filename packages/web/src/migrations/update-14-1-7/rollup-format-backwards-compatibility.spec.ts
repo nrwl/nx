@@ -1,5 +1,5 @@
-import { addProjectConfiguration, readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './rollup-format-backwards-compatibility';
 
 describe('rollup-format-backwards-compatibility', () => {

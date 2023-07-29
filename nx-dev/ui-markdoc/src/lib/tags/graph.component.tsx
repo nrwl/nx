@@ -1,4 +1,4 @@
-import { useTheme } from '@nrwl/nx-dev/ui-theme';
+import { useTheme } from '@nx/nx-dev/ui-theme';
 import dynamic from 'next/dynamic';
 import { ReactElement, useEffect, useState } from 'react';
 
@@ -6,7 +6,7 @@ export function Loading() {
   return (
     <div className="flex h-[450px] w-full items-center justify-center">
       <div
-        className="spinner-border inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-100 border-r-slate-400 dark:border-slate-700 dark:border-r-slate-500"
+        className="spinner-border inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-r-slate-400 dark:border-slate-700 dark:border-r-slate-500"
         role="status"
       >
         <span className="sr-only">Loading...</span>
@@ -20,15 +20,14 @@ export function Loading() {
  * in the top level of the module for preloading to work, similar to React.lazy.
  */
 const NxProjectGraphViz = dynamic(
-  () =>
-    import('@nrwl/graph/ui-graph').then((module) => module.NxProjectGraphViz),
+  () => import('@nx/graph/ui-graph').then((module) => module.NxProjectGraphViz),
   {
     ssr: false,
     loading: () => <Loading />,
   }
 );
 const NxTaskGraphViz = dynamic(
-  () => import('@nrwl/graph/ui-graph').then((module) => module.NxTaskGraphViz),
+  () => import('@nx/graph/ui-graph').then((module) => module.NxTaskGraphViz),
   {
     ssr: false,
     loading: () => <Loading />,

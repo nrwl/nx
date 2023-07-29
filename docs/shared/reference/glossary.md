@@ -8,13 +8,13 @@ This is a short list of Nx-specific terms that will help you understand the rest
 
 A [project](#project) that can run on its own. Generally uses [libraries](#library).
 
-> See: [Applications and Libraries](/more-concepts/applications-and-libraries)
+> See: [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
 
 ### Buildable Library
 
 A [library](#library) that has a `build` [target](#target). Some libraries can be generated with a `build` target using the `--buildable` flag.
 
-> See: [Publishable and Buildable Nx Libraries](/more-concepts/buildable-and-publishable-libraries)
+> See: [Publishable and Buildable Nx Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
 
 ### Cache
 
@@ -32,7 +32,7 @@ When the [cache inputs](#cache-inputs) for a [task](#task) match an existing ent
 
 Everything that might change the output of a [task](#task). This may include source code, task options, environment variables and other settings determined at run time. These values are combined as a hash to serve as a key for an entry in the [cache](#cache).
 
-> See: [Customizing Inputs and Named Inputs](/more-concepts/customizing-inputs)
+> See: [Customizing Inputs and Named Inputs](/concepts/more-concepts/customizing-inputs)
 
 ### Cache Miss
 
@@ -48,15 +48,15 @@ The terminal output and any file artifacts created by running a [task](#task). T
 
 ### Command
 
-Anything you run in the terminal. An example commmand that invokes a [task](#task) is `nx build my-app`.
+Anything you run in the terminal. An example command that invokes a [task](#task) is `nx build my-app`.
 
 > See: [Run Tasks](/core-features/run-tasks)
 
 ### Configurations
 
-A set of preconfigured options for a [target](#target) that should be enabled all together. For example, a `production` configuration would set all the options needed for a build that could be deployed to production.
+A set of preconfigured options for a [target](#target) that should be enabled altogether. For example, a `production` configuration would set all the options needed for a build that could be deployed to production.
 
-> See: [Use Executor Configurations](/recipes/executors/use-executor-configurations)
+> See: [Use Executor Configurations](/core-features/plugin-features/use-task-executors#use-executor-configurations)
 
 ### Distributed Cache
 
@@ -74,13 +74,13 @@ A system for running [tasks](#task) in CI across multiple agent processes in the
 
 A script that performs some action on your code. This can include building, linting, testing, serving and many other actions. A [target](#target) configuration specifies an executor and a set of options. Executors can be found in [plugins](#plugin).
 
-> See: [Use Task Executors](/plugin-features/use-task-executors)
+> See: [Use Task Executors](/core-features/plugin-features/use-task-executors)
 
 ### Generator
 
 A script that creates or modifies your code. Generators can be found in [plugins](#plugin).
 
-> See: [Use Code Generators](/plugin-features/use-code-generators)
+> See: [Use Code Generators](/core-features/plugin-features/use-code-generators)
 
 ### Graph
 
@@ -98,13 +98,13 @@ A repository using Nx [plugins](#plugin) to boost efficiency and ease of mainten
 
 A [project](#project) that is used by [applications](#application) or other [libraries](#library).
 
-> See: [Applications and Libraries](/more-concepts/applications-and-libraries)
+> See: [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
 
 ### Monolith
 
 A large [application](#application) that is difficult to separate into smaller pieces.
 
-> See: [Applications and Libraries](/more-concepts/applications-and-libraries)
+> See: [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
 
 ### Monorepo
 
@@ -136,7 +136,7 @@ A repository using Nx without [plugins](#plugin) that prioritizes the independen
 
 A set of [executors](#executor), [generators](#generator) and other code that extends the functionality of Nx. May be installed from a package manager like NPM or developed directly in the repository.
 
-> See: [Create Your Own Plugin](/plugin-features/create-your-own-plugin)
+> See: [Create Your Own Plugin](/extending-nx/intro/getting-started)
 
 ### Polyrepo
 
@@ -146,13 +146,13 @@ Related [projects](#project) spread across multiple repositories.
 
 The unit of code on which a [task](#task) can be run. A project can be an [application](#application) or a [library](#library).
 
-> See: [Applications and Libraries](/more-concepts/applications-and-libraries)
+> See: [Applications and Libraries](/concepts/more-concepts/applications-and-libraries)
 
 ### Publishable Library
 
 A [library](#library) that has a `publish` [target](#target). Some libraries can be generated with a `publish` target using the `--publishable` flag.
 
-> See: [Publishable and Buildable Nx Libraries](/more-concepts/buildable-and-publishable-libraries)
+> See: [Publishable and Buildable Nx Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
 
 ### Root-Level Project
 

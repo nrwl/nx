@@ -1,4 +1,4 @@
-export { readTsConfig } from './src/utilities/typescript';
+export { readTsConfig } from './src/utilities/ts-config';
 export { ProjectType, projectRootDir } from './src/utils/project-type';
 export {
   renameSync,
@@ -7,12 +7,7 @@ export {
   createDirectory,
 } from './src/utilities/fileutils';
 
-export { names } from '@nrwl/devkit';
-
-export {
-  ExistingPrettierConfig,
-  resolveUserExistingPrettierConfig,
-} from './src/utilities/prettier';
+export { names } from '@nx/devkit';
 
 export { output } from './src/utilities/output';
 
@@ -20,36 +15,10 @@ export {
   readWorkspaceConfig,
   readPackageJson,
 } from 'nx/src/project-graph/file-utils';
-export { ProjectGraphCache } from 'nx/src/project-graph/nx-deps-cache';
-export {
-  readJsonInTree,
-  updateJsonInTree,
-  updateWorkspaceInTree,
-  insert,
-  replaceNodeValue,
-  addDepsToPackageJson,
-  addMethod,
-  addIncludeToTsConfig,
-  addGlobal,
-  getProjectConfig,
-  addParameterToConstructor,
-  createOrUpdate,
-  findNodes, // TODO(v16): remove this
-  updatePackageJsonDependencies,
-  readWorkspace,
-  renameSyncInTree,
-  renameDirSyncInTree,
-  updateNxJsonInTree,
-  readNxJsonInTree,
-  InsertChange,
-  ReplaceChange,
-  RemoveChange,
-} from './src/utils/ast-utils';
+export { ProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 export {
-  getNpmScope,
   getWorkspacePath,
-  replaceAppNameWithPath,
   editTarget,
   parseTarget,
   serializeTarget,
@@ -60,20 +29,18 @@ export {
   updateWorkspace,
   updateBuilderConfig,
 } from './src/utils/workspace';
-export { addUpdateTask } from './src/utils/update-task';
-export { addLintFiles, generateProjectLint, Linter } from './src/utils/lint';
+export { Linter } from './src/utils/lint';
 
 export { addInstallTask } from './src/utils/rules/add-install-task';
 export { formatFiles } from './src/utils/rules/format-files';
 export { deleteFile } from './src/utils/rules/deleteFile';
-export * from './src/utils/rules/ng-add';
-export { updateKarmaConf } from './src/utils/rules/update-karma-conf';
+
 export { visitNotIgnoredFiles } from './src/utils/rules/visit-not-ignored-files';
 import * as strings from './src/utils/strings';
-export { checkAndCleanWithSemver } from './src/utils/version-utils';
-export { updatePackagesInPackageJson } from './src/utils/update-packages-in-package-json';
 
-export { libraryGenerator } from './src/generators/library/library';
+// TODO(v17): Remove this export.
+export { checkAndCleanWithSemver } from './src/utils/version-utils';
+
 export { moveGenerator } from './src/generators/move/move';
 export { removeGenerator } from './src/generators/remove/remove';
 export { runCommandsGenerator } from './src/generators/run-commands/run-commands';

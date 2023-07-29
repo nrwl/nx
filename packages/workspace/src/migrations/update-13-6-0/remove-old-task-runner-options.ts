@@ -1,4 +1,4 @@
-import { readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
+import { readNxJson, Tree, updateNxJson } from '@nx/devkit';
 
 export function removeOldTaskRunnerOptions(host: Tree) {
   const nxJson = readNxJson(host);

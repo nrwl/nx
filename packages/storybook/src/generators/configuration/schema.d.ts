@@ -1,17 +1,22 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import { UiFramework7, UiFramework } from '../../utils/models';
 
 export interface StorybookConfigureSchema {
   name: string;
-  uiFramework: UiFramework; // TODO(katerina): Remove when Storybook 7
-  configureCypress?: boolean;
-  bundler?: 'webpack' | 'vite'; // TODO(katerina): Remove when Storybook 7
+  uiFramework?: UiFramework7;
   linter?: Linter;
   js?: boolean;
+  interactionTests?: boolean;
   tsConfiguration?: boolean;
-  cypressDirectory?: string;
   standaloneConfig?: boolean;
-  configureTestRunner?: boolean;
-  storybook7betaConfiguration?: boolean; // TODO(katerina): Change when Storybook 7
-  storybook7UiFramework?: UiFramework7; // TODO(katerina): Change when Storybook 7
+  configureStaticServe?: boolean;
+  skipFormat?: boolean;
+  /**
+   * @deprecated Use interactionTests instead. This option will be removed in v18.
+   */
+  configureCypress?: boolean;
+  /**
+   * @deprecated Use interactionTests instead. This option will be removed in v18.
+   */
+  cypressDirectory?: string;
 }

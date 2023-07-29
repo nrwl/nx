@@ -51,27 +51,32 @@
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
-        "default": false
+        "default": false,
+        "x-priority": "internal"
       },
       "skipTsConfig": {
         "type": "boolean",
         "default": false,
-        "description": "Do not update `tsconfig.base.json` for development experience."
+        "description": "Do not update `tsconfig.base.json` for development experience.",
+        "x-priority": "internal"
       },
       "publishable": {
         "type": "boolean",
-        "description": "Create a publishable library."
+        "description": "Create a publishable library.",
+        "x-priority": "important"
       },
       "buildable": {
         "type": "boolean",
         "default": false,
-        "description": "Generate a buildable library."
+        "description": "Generate a buildable library.",
+        "x-priority": "important"
       },
       "compiler": {
         "type": "string",
         "enum": ["tsc", "swc"],
         "default": "tsc",
-        "description": "The compiler used by the build and test targets."
+        "description": "The compiler used by the build and test targets.",
+        "x-priority": "important"
       },
       "importPath": {
         "type": "string",

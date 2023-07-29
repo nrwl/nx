@@ -4,7 +4,7 @@ Linter can be configured in multiple ways. The basic way is to provide only `lin
 
 ```json
 "lint": {
-  "executor": "@nrwl/linter:eslint",
+  "executor": "@nx/linter:eslint",
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"]
   }
@@ -20,7 +20,7 @@ Linter provides an automated way of fixing known issues. To ensure that those ch
 
 ```json
 "lint": {
-  "executor": "@nrwl/linter:eslint",
+  "executor": "@nx/linter:eslint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"]
@@ -38,7 +38,7 @@ We can also set this flag via project configuration to always fix files when run
 
 ```json
 "lint": {
-  "executor": "@nrwl/linter:eslint",
+  "executor": "@nx/linter:eslint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
@@ -54,7 +54,7 @@ ESLint executor uses the `stylish` output format by default. You can change this
 
 ```json
 "lint": {
-  "executor": "@nrwl/linter:eslint",
+  "executor": "@nx/linter:eslint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
@@ -76,7 +76,7 @@ We can also set this via project configuration as a default option.
 
 ```json
 "lint": {
-  "executor": "@nrwl/linter:eslint",
+  "executor": "@nx/linter:eslint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
@@ -86,20 +86,22 @@ We can also set this via project configuration as a default option.
 ```
 
 {% /tab %}
-{% tab label="ESLint config file" %}
+{% tab label="Flat Config file" %}
 
-`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting the `eslintConfig` flag:
+`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting the `eslintConfig` flag. The new `Flat Config` is now also supported:
 
 ```json
 "lint": {
-  "executor": "@nrwl/linter:eslint",
+  "executor": "@nx/linter:eslint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
-    "eslintConfig": ".eslintrc.js"
+    "eslintConfig": "eslint.config.js"
   }
 }
 ```
+
+**Note:** In contrast to other configuration formats, the `Flat Config` requires that all configuration files are converted to `eslint.config.js`. Built-in migrations and generators support only `.eslintrc.json` at the moment.
 
 {% /tab %}
 {% /tabs %}

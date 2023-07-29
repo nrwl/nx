@@ -1,0 +1,95 @@
+{
+  "name": "cypress-e2e-configuration",
+  "aliases": ["e2e", "e2e-config"],
+  "factory": "./src/generators/cypress-e2e-configuration/cypress-e2e-configuration",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxCypressE2EConfigGenerator",
+    "cli": "nx",
+    "title": "Add a Cypress Configuration.",
+    "description": "Add a Cypress configuration to an existing project.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The project to add a Cypress configuration to",
+        "$default": { "$source": "projectName" },
+        "x-priority": "important",
+        "x-prompt": "What project do you want to add Cypress to?"
+      },
+      "devServerTarget": {
+        "type": "string",
+        "description": "A devServerTarget,'<projectName>:<targetName>[:<configName>], that will be used to run tests against. This is usually the app this project will be used in. Pass --baseUrl if you wish to not use a devServerTarget.",
+        "x-priority": "important"
+      },
+      "port": {
+        "oneOf": [
+          { "type": "string", "enum": ["cypress-auto"] },
+          { "type": "number" }
+        ],
+        "description": "Set the 'port' option on the e2e target. It's recommend to set a different port so you can run tests e2e targets in parallel. Most dev servers support using '0' to automatically find a free port. The value 'cypress-auto' can be used if the underlying dev server does not support automatically finding a free port.",
+        "x-priority": "important"
+      },
+      "baseUrl": {
+        "type": "string",
+        "description": "The address (with the port) which your application is running on. If you wish to start your application when running the e2e target, then use --devServerTarget instead."
+      },
+      "directory": {
+        "type": "string",
+        "description": "A directory where the project is placed relative from the project root",
+        "x-priority": "important",
+        "default": "cypress"
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "eslint"
+      },
+      "js": {
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "setParserOptionsProject": {
+        "type": "boolean",
+        "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+        "default": false
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not add dependencies to `package.json`.",
+        "x-priority": "internal"
+      },
+      "rootProject": {
+        "description": "Create a application at the root of the workspace",
+        "type": "boolean",
+        "default": false,
+        "hidden": true,
+        "x-priority": "internal"
+      },
+      "bundler": {
+        "description": "The Cypress bundler to use.",
+        "type": "string",
+        "enum": ["vite", "webpack", "none"],
+        "x-prompt": "Which Cypress bundler do you want to use?",
+        "default": "webpack"
+      }
+    },
+    "required": ["project"],
+    "examplesFile": "This is a generator to add a cypress e2e configuration to an existing project.\n\n```bash\nnx g cypress-e2e-configuration --project=my-cool-project --devServerTarget=some-app:serve\n```\n\nRunning this generator, adds the required files to run cypress tests for a project,\nMainly a `cypress.config.ts` file and default files in the `<project-root>/cypress/` directory.\nTests will be located in `<project-root>/cypress/e2e/*` by default.\n\nYou can customize the directory used via the `--directory` flag, the value is relative to the project root.\n\nFor example if you wanted to place the files inside an `e2e` folder\n\n```bash\nnx g cypress-e2e-configuration --project=my-cool-project --devServerTarget=some-app:serve --directory=e2e\n```\n\nProviding a `--devServerTarget` is optional if you provide a `--baseUrl` or the project you're adding the configuration to has a `serve` target already.\nOtherwise, a `--devServerTarget` is recommend for the `@nx/cypress:cypress` executor to spin up the dev server for you automatically when needed.\n\n## Feature Based Testing\n\nThis generator helps in creating feature based e2e/integration testing setups where you can place the feature tests in the same project as the feature library.\nThis differs from creating a separate e2e project that contained all tests for an application which can easily cause more tests to run than is strictly necessary.\n\nTake the following workspace where the `feature-cart` project is affected.\n\n{% graph height=\"450px\" %}\n\n```json\n{\n  \"projects\": [\n    {\n      \"type\": \"app\",\n      \"name\": \"fancy-app\",\n      \"data\": {\n        \"tags\": []\n      }\n    },\n    {\n      \"type\": \"app\",\n      \"name\": \"fancy-app-e2e\",\n      \"data\": {\n        \"tags\": []\n      }\n    },\n    {\n      \"type\": \"lib\",\n      \"name\": \"feature-user\",\n      \"data\": {\n        \"tags\": []\n      }\n    },\n    {\n      \"type\": \"lib\",\n      \"name\": \"feature-dashboard\",\n      \"data\": {\n        \"tags\": []\n      }\n    },\n    {\n      \"type\": \"lib\",\n      \"name\": \"feature-cart\",\n      \"data\": {\n        \"tags\": []\n      }\n    }\n  ],\n  \"groupByFolder\": false,\n  \"workspaceLayout\": {\n    \"appsDir\": \"apps\",\n    \"libsDir\": \"libs\"\n  },\n  \"dependencies\": {\n    \"fancy-app\": [\n      {\n        \"target\": \"feature-user\",\n        \"source\": \"fancy-app\",\n        \"type\": \"static\"\n      },\n      {\n        \"target\": \"feature-cart\",\n        \"source\": \"fancy-app\",\n        \"type\": \"static\"\n      }\n    ],\n    \"fancy-app-e2e\": [\n      {\n        \"target\": \"fancy-app\",\n        \"source\": \"fancy-app-e2e\",\n        \"type\": \"implicit\"\n      }\n    ],\n    \"feature-user\": [\n      {\n        \"target\": \"feature-dashboard\",\n        \"source\": \"feature-user\",\n        \"type\": \"direct\"\n      }\n    ],\n    \"feature-cart\": [],\n    \"feature-dashboard\": []\n  },\n  \"affectedProjectIds\": [\"feature-cart\", \"fancy-app\", \"fancy-app-e2e\"]\n}\n```\n\n{% /graph %}\n\nIn this case, if tests for the all the `feature-*` projects where contained in the `fancy-app-e2e` project, then all of those features will be tested in the app, when only the `feature-cart` tests need to run.\n\nRunning these e2e/integration tests more often than they should results in longer CI times.\n\nBrining those e2e test closer to each feature can result is lowering CI times since we don't need to test those features if they did not change.\n\nBuilding this way leaves the `fancy-app-e2e` for mostly smoke type testing instead of more in-depth feature testing.\n\nUsing the `cypress-e2e-configuration` generator can help you accomplish this in your workspace.\n\n```bash\nnx g cypress-e2e-configuration --project=feature-cart --devServerTarget=fancy-app:serve\nnx g cypress-e2e-configuration --project=feature-user --devServerTarget=fancy-app:serve\nnx g cypress-e2e-configuration --project=feature-dashboard --devServerTarget=fancy-app:serve\n```\n\nEach project will now get their own `e2e` target, where the feature project is only concerned with itself. This allows for more focused tests without worrying about forcing unrelated tests to also run.\n\nIt's important to remember that these feature tests are still going to be leveraging the same app to run the tests against so if you plan to run in parallel, you can leverage using a file server and the ability for `@nx/cypress:cypress` executor to pass through a port or find a free port to allow running tests in parallel. Read more [about the --port flag](/packages/cypress/executors/cypress#port)\n",
+    "presets": []
+  },
+  "description": "Add a Cypress E2E Configuration to an existing project.",
+  "implementation": "/packages/cypress/src/generators/cypress-e2e-configuration/cypress-e2e-configuration.ts",
+  "hidden": false,
+  "path": "/packages/cypress/src/generators/cypress-e2e-configuration/schema.json",
+  "type": "generator"
+}

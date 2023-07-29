@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 export interface Schema {
   project?: string;
@@ -11,6 +11,5 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   standaloneConfig?: boolean;
   skipPackageJson?: boolean;
-  rootProject?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
 }

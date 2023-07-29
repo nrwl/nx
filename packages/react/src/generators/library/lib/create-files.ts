@@ -1,12 +1,13 @@
-import { Tree } from 'nx/src/generators/tree';
+import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
   joinPathFragments,
   names,
   offsetFromRoot,
   toJS,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+  writeJson,
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { NormalizedSchema } from '../schema';
 import { createTsConfig } from '../../../utils/create-ts-config';
@@ -21,6 +22,7 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     ...names(options.name),
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
+    fileName: options.fileName,
   };
 
   generateFiles(
@@ -37,10 +39,33 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
       options.projectRoot,
       substitutions
     );
+  }
 
-    if (host.exists(joinPathFragments(options.projectRoot, '.babelrc'))) {
-      host.delete(joinPathFragments(options.projectRoot, '.babelrc'));
-    }
+  if (options.compiler === 'babel') {
+    writeJson(host, joinPathFragments(options.projectRoot, '.babelrc'), {
+      presets: [
+        [
+          '@nx/react/babel',
+          {
+            runtime: 'automatic',
+            useBuiltIns: 'usage',
+            importSource:
+              options.style === '@emotion/styled'
+                ? '@emotion/react'
+                : undefined,
+          },
+        ],
+      ],
+      plugins: [
+        options.style === 'styled-components'
+          ? ['styled-components', { pure: true, ssr: true }]
+          : undefined,
+        options.style === 'styled-jsx' ? 'styled-jsx/babel' : undefined,
+        options.style === '@emotion/styled'
+          ? '@emotion/babel-plugin'
+          : undefined,
+      ].filter(Boolean),
+    });
   }
 
   if (!options.publishable && !options.buildable) {

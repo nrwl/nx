@@ -4,7 +4,7 @@ import {
   formatFiles,
   updateProjectConfiguration,
   getProjects,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { findStorybookAndBuildTargetsAndCompiler } from '../../utils/utilities';
 
 export default async function setProjectBuildConfig(tree: Tree) {

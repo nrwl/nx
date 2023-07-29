@@ -95,13 +95,17 @@ export class AppModule {}
 <router-outlet></router-outlet>
 ```
 
+{% callout type="note" title="Typescript Paths" %}
+When a library is created, Nx adds a new Typescript path to the `tsconfig.base.json` file. The running Typescript server process inside of your editor sometimes doesn't pick up these changes and you have to restart the server to remove inline errors on your import statements. This can be done in VS Code from the command palette when viewing a typescript file (Command-Shift-P) "Typescript: Restart TS server"
+{% /callout %}
+
 ### `shared-ui`
 
-Run the `@nrwl/angular:component` generator with the command:
+Run the `@nx/angular:component` generator with the command:
 
-```{% command="npx nx g @nrwl/angular:component banner --project=shared-ui --export" path="~/store" %}
+```{% command="npx nx g @nx/angular:component banner --project=shared-ui --export" path="~/store" %}
 
->  NX  Generating @nrwl/angular:component
+>  NX  Generating @nx/angular:component
 
 CREATE shared/ui/src/lib/banner/banner.component.css
 CREATE shared/ui/src/lib/banner/banner.component.html
@@ -134,9 +138,9 @@ export class BannerComponent {
 
 Create a cart-route component:
 
-```{% command="npx nx g @nrwl/angular:component cart-route --project=cart" path="~/store" %}
+```{% command="npx nx g @nx/angular:component cart-route --project=cart" path="~/store" %}
 
->  NX  Generating @nrwl/angular:component
+>  NX  Generating @nx/angular:component
 
 CREATE cart/src/lib/cart-route/cart-route.component.css
 CREATE cart/src/lib/cart-route/cart-route.component.html
@@ -226,7 +230,7 @@ Now run `npx nx graph` again:
     "shared-ui": [],
     "e2e": [{ "source": "e2e", "target": "store", "type": "implicit" }],
     "store": [
-      { "source": "store", "target": "cart", "type": "static" },
+      { "source": "store", "target": "cart", "type": "dynamic" },
       { "source": "store", "target": "shared-ui", "type": "static" }
     ]
   },

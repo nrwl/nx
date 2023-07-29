@@ -1,9 +1,5 @@
-import {
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nrwl/devkit';
+import { getWorkspaceLayout, joinPathFragments, names, Tree } from '@nx/devkit';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -27,14 +23,15 @@ export function normalizeOptions(
 
   const projectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = projectName;
-  const { libsDir, npmScope } = getWorkspaceLayout(host);
+  const { libsDir } = getWorkspaceLayout(host);
   const projectRoot = joinPathFragments(libsDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const importPath = options.importPath || `@${npmScope}/${projectDirectory}`;
+  const importPath =
+    options.importPath || getImportPath(host, projectDirectory);
 
   const appMain = options.js ? 'src/index.js' : 'src/index.ts';
 

@@ -6,5 +6,6 @@ export interface Schema {
   serverPort?: number;
   rootModuleFileName?: string;
   rootModuleClassName?: string;
+  standalone?: boolean;
   skipFormat?: boolean;
 }

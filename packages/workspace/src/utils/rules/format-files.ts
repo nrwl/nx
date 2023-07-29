@@ -9,8 +9,11 @@ import {
 import { from } from 'rxjs';
 import { filter, map, mergeMap } from 'rxjs/operators';
 import * as path from 'path';
-import { workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 
+/**
+ * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. This function can be replaced with 'formatFiles' from @nx/devkit.
+ */
 export function formatFiles(
   options: { skipFormat: boolean } = { skipFormat: false },
   directory: string = ''

@@ -3,7 +3,7 @@ import {
   DocumentPlusIcon,
   ShareIcon,
 } from '@heroicons/react/24/solid';
-import { SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 import Link from 'next/link';
 
 export function CreateNxPlugin(): JSX.Element {
@@ -33,7 +33,7 @@ export function CreateNxPlugin(): JSX.Element {
         <ul className="mx-4 mt-8 list-disc">
           <li className="mt-2">
             <Link
-              href="/packages/nx-plugin#generating-a-plugin"
+              href="/packages/plugin#generating-a-plugin"
               className="hover:underline"
             >
               Create your Nx Plugin
@@ -41,7 +41,7 @@ export function CreateNxPlugin(): JSX.Element {
           </li>
           <li className="mt-2">
             <Link
-              href="/packages/nx-plugin#testing-your-plugin"
+              href="/packages/plugin#testing-your-plugin"
               className="hover:underline"
             >
               Test your plugin
@@ -49,7 +49,7 @@ export function CreateNxPlugin(): JSX.Element {
           </li>
           <li className="mt-2">
             <Link
-              href="/packages/nx-plugin#generating-a-plugin"
+              href="/recipes/advanced-plugins/share-your-plugin"
               className="hover:underline"
             >
               Publish your Nx Plugin
@@ -72,7 +72,7 @@ export function CreateNxPlugin(): JSX.Element {
               <div className="flex w-full px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <Link
-                    href="/packages/nx-plugin#generating-a-plugin"
+                    href="/packages/plugin#generating-a-plugin"
                     className="focus:outline-none"
                   >
                     <span className="absolute inset-0" aria-hidden="true" />
@@ -86,7 +86,7 @@ export function CreateNxPlugin(): JSX.Element {
                   </Link>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="rounded-full border border-slate-100 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="rounded-full border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
                     <DocumentPlusIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                   </div>
                 </div>
@@ -100,7 +100,7 @@ export function CreateNxPlugin(): JSX.Element {
               <div className="flex w-full px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <Link
-                    href="/packages/nx-plugin#publishing-your-nx-plugin"
+                    href="/recipes/advanced-plugins/share-your-plugin"
                     className="focus:outline-none"
                   >
                     <span className="absolute inset-0" aria-hidden="true" />
@@ -113,7 +113,7 @@ export function CreateNxPlugin(): JSX.Element {
                   </Link>
                 </div>
                 <div className="flex-shrink-0">
-                  <div className="rounded-full border border-slate-100 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                  <div className="rounded-full border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
                     <ShareIcon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
                   </div>
                 </div>

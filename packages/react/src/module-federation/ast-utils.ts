@@ -1,19 +1,27 @@
-import * as ts from 'typescript';
-import { ChangeType, StringChange } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+import type * as ts from 'typescript';
+import { ChangeType, StringChange } from '@nx/devkit';
+import { findNodes } from '@nx/js';
+
 import {
-  addImport,
   findClosestOpening,
   findElements,
+  addImport,
 } from '../utils/ast-utils';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 export function addRemoteToConfig(
   source: ts.SourceFile,
   app: string
 ): StringChange[] {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   const assignments = findNodes(
     source,
-    ts.SyntaxKind.PropertyAssignment
+    tsModule.SyntaxKind.PropertyAssignment
   ) as ts.PropertyAssignment[];
 
   const remotesAssignment = assignments.find(
@@ -46,10 +54,10 @@ export function addRemoteToConfig(
 
   const binaryExpressions = findNodes(
     source,
-    ts.SyntaxKind.BinaryExpression
+    tsModule.SyntaxKind.BinaryExpression
   ) as ts.BinaryExpression[];
   const exportExpression = binaryExpressions.find((b) => {
-    if (b.left.kind === ts.SyntaxKind.PropertyAccessExpression) {
+    if (b.left.kind === tsModule.SyntaxKind.PropertyAccessExpression) {
       const pae = b.left as ts.PropertyAccessExpression;
       return (
         pae.expression.getText() === 'module' &&
@@ -58,7 +66,9 @@ export function addRemoteToConfig(
     }
   });
 
-  if (exportExpression?.right.kind === ts.SyntaxKind.ObjectLiteralExpression) {
+  if (
+    exportExpression?.right.kind === tsModule.SyntaxKind.ObjectLiteralExpression
+  ) {
     const ole = exportExpression.right as ts.ObjectLiteralExpression;
     return [
       {

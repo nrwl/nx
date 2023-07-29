@@ -1,7 +1,6 @@
 import {
   ProjectGraph,
   ProjectGraphExternalNode,
-  ProjectGraphNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
 
@@ -20,8 +19,9 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
   }
 
   const result = {
-    nodes: graph.nodes,
-    externalNodes: graph.externalNodes,
+    ...graph,
+    nodes: { ...graph.nodes },
+    externalNodes: { ...graph.externalNodes },
     dependencies: {},
   } as ProjectGraph;
   Object.keys(graph.nodes).forEach((n) => (result.dependencies[n] = []));
@@ -49,7 +49,7 @@ export function reverse(graph: ProjectGraph): ProjectGraph {
 }
 
 export function filterNodes(
-  predicate?: (n: ProjectGraphNode) => boolean
+  predicate?: (n: ProjectGraphProjectNode) => boolean
 ): (p: ProjectGraph) => ProjectGraph {
   return (original) => {
     const graph = { nodes: {}, dependencies: {} } as ProjectGraph;
@@ -73,7 +73,7 @@ export function filterNodes(
 }
 
 export function isNpmProject(
-  project: ProjectGraphNode
+  project: ProjectGraphProjectNode | ProjectGraphExternalNode
 ): project is ProjectGraphExternalNode {
   return project?.type === 'npm';
 }

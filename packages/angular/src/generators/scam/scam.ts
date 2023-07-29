@@ -1,58 +1,32 @@
-import type { Tree } from '@nrwl/devkit';
-import {
-  formatFiles,
-  normalizePath,
-  readNxJson,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
+import type { Tree } from '@nx/devkit';
+import { formatFiles } from '@nx/devkit';
+import { componentGenerator } from '../component/component';
 import { exportScam } from '../utils/export-scam';
-import { getComponentFileInfo } from '../utils/file-info';
-import { pathStartsWith } from '../utils/path';
-import { convertComponentToScam, normalizeOptions } from './lib';
+import {
+  convertComponentToScam,
+  normalizeOptions,
+  validateOptions,
+} from './lib';
 import type { Schema } from './schema';
 
 export async function scamGenerator(tree: Tree, rawOptions: Schema) {
-  const options = normalizeOptions(tree, rawOptions);
-  const { inlineScam, projectSourceRoot, ...schematicOptions } = options;
+  validateOptions(tree, rawOptions);
 
-  checkPathUnderProjectRoot(tree, options);
-
-  const angularComponentSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
-  );
-  await angularComponentSchematic(tree, {
-    ...schematicOptions,
+  const { inlineScam, ...generatorOptions } = rawOptions;
+  await componentGenerator(tree, {
+    ...generatorOptions,
     skipImport: true,
     export: false,
     standalone: false,
+    skipFormat: true,
   });
 
-  const componentFileInfo = getComponentFileInfo(tree, options);
-  convertComponentToScam(tree, componentFileInfo, options);
-  exportScam(tree, componentFileInfo, options);
+  const options = normalizeOptions(tree, rawOptions);
+  convertComponentToScam(tree, options);
+  exportScam(tree, options);
 
-  await formatFiles(tree);
-}
-
-function checkPathUnderProjectRoot(tree: Tree, options: Partial<Schema>) {
-  if (!options.path) {
-    return;
-  }
-
-  const project = options.project ?? readNxJson(tree).defaultProject;
-  const { root } = readProjectConfiguration(tree, project);
-
-  let pathToComponent = normalizePath(options.path);
-  pathToComponent = pathToComponent.startsWith('/')
-    ? pathToComponent.slice(1)
-    : pathToComponent;
-
-  if (!pathStartsWith(pathToComponent, root)) {
-    throw new Error(
-      `The path provided for the SCAM (${options.path}) does not exist under the project root (${root}).`
-    );
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 }
 

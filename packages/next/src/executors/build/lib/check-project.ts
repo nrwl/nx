@@ -1,4 +1,4 @@
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import { readdirSync } from 'fs-extra';
 import { join } from 'path';
 

@@ -29,6 +29,12 @@ Type: `string`
 
 Exclude certain projects from being processed
 
+### graph
+
+Type: `string`
+
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
+
 ### nx-bail
 
 Type: `boolean`
@@ -82,8 +88,6 @@ Rerun the tasks even when the results are available in the cache
 ### verbose
 
 Type: `boolean`
-
-Default: `false`
 
 Prints additional information about the commands (e.g., stack traces)
 

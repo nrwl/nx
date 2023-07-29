@@ -19,12 +19,9 @@ export interface ExpoStartOptions {
   localhost?: boolean;
   tunnel?: boolean;
   offline?: boolean;
+
   /**
-   * @deprecated
+   * @deprecated TODO(v17) Add sync-deps to dependsOn in project.json for this target instead
    */
-  sendTo?: string; // deprecated from @expo/cli
-  /**
-   * @deprecated
-   */
-  webpack?: boolean; // deprecated from @expo/cli
+  sync?: boolean; // default is true
 }

@@ -2,28 +2,32 @@ import {
   createReadStream,
   createWriteStream,
   existsSync,
-  writeFileSync,
   mkdirSync,
   renameSync as fsRenameSync,
+  writeFileSync,
 } from 'fs';
 import { basename, dirname, resolve } from 'path';
 import {
+  createDirectory,
+  directoryExists,
+  fileExists,
+  isRelativePath,
   readJsonFile,
   writeJsonFile,
-  fileExists,
-  directoryExists,
-  isRelativePath,
-  createDirectory,
 } from 'nx/src/utils/fileutils';
 
 export { fileExists, directoryExists, isRelativePath, createDirectory };
 
+/**
+ * @deprecated This will be removed in v17.
+ */
 export function writeToFile(filePath: string, str: string) {
   mkdirSync(dirname(filePath), { recursive: true });
   writeFileSync(filePath, str);
 }
 
 /**
+ * @deprecated This will be removed in v17.
  * This method is specifically for updating a JSON file using the filesystem
  *
  * @remarks
@@ -37,6 +41,9 @@ export function updateJsonFile(path: string, callback: (a: any) => any) {
   writeJsonFile(path, json);
 }
 
+/**
+ * @deprecated This will be removed in v17.
+ */
 export function copyFile(file: string, target: string) {
   const f = basename(file);
   const source = createReadStream(file);
@@ -45,6 +52,9 @@ export function copyFile(file: string, target: string) {
   source.on('error', (e) => console.error(e));
 }
 
+/**
+ * @deprecated This will be removed in v17.
+ */
 export function renameSync(
   from: string,
   to: string,

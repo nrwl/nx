@@ -1,4 +1,4 @@
-import { VirtualElement } from '@floating-ui/react-dom';
+import { VirtualElement } from '@floating-ui/react';
 import { ProjectNodeDataDefinition } from './util-cytoscape/project-node';
 import { TaskNodeDataDefinition } from './util-cytoscape/task-node';
 import { ProjectEdgeDataDefinition } from './util-cytoscape';
@@ -32,9 +32,16 @@ interface BackgroundClickEvent {
   type: 'BackgroundClick';
 }
 
+interface FileLinkClickEvent {
+  type: 'FileLinkClick';
+  sourceRoot: string;
+  file: string;
+}
+
 export type GraphInteractionEvents =
   | ProjectNodeClickEvent
   | EdgeClickEvent
   | GraphRegeneratedEvent
   | TaskNodeClickEvent
-  | BackgroundClickEvent;
+  | BackgroundClickEvent
+  | FileLinkClickEvent;

@@ -1,0 +1,18 @@
+{
+  "builders": {
+    "e2e": {
+      "implementation": "./src/executors/e2e/compat",
+      "schema": "./src/executors/e2e/schema.json",
+      "description": "Creates and runs the E2E tests for an Nx Plugin.",
+      "x-deprecated": "@nx/plugin:e2e is deprecated and will be removed in Nx 18. Use @nx/jest:jest instead."
+    }
+  },
+  "executors": {
+    "e2e": {
+      "implementation": "./src/executors/e2e/e2e.impl",
+      "schema": "./src/executors/e2e/schema.json",
+      "description": "Creates and runs the E2E tests for an Nx Plugin.",
+      "x-deprecated": "@nx/plugin:e2e is deprecated and will be removed in Nx 18. Use @nx/jest:jest instead."
+    }
+  }
+}

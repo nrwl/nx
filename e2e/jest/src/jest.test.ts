@@ -4,13 +4,10 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
-  readJson,
   updateFile,
   expectJestTestsToPass,
   cleanupProject,
-  readFile,
-  checkFilesExist,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Jest', () => {
   beforeAll(() => {
@@ -20,17 +17,18 @@ describe('Jest', () => {
   afterAll(() => cleanupProject());
 
   it('should be able test projects using jest', async () => {
-    await expectJestTestsToPass('@nrwl/workspace:lib');
-    await expectJestTestsToPass('@nrwl/js:lib');
+    await expectJestTestsToPass('@nx/js:lib --unitTestRunner=jest');
   }, 500000);
 
   it('should merge with jest config globals', async () => {
     const testGlobal = `'My Test Global'`;
     const mylib = uniq('mylib');
     const utilLib = uniq('util-lib');
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
     runCLI(
-      `generate @nrwl/workspace:lib ${utilLib} --importPath=@global-fun/globals`
+      `generate @nx/js:lib ${mylib} --unitTestRunner=jest --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib ${utilLib} --importPath=@global-fun/globals --unitTestRunner=jest --no-interactive`
     );
     updateFile(
       `libs/${utilLib}/src/index.ts`,
@@ -54,7 +52,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/setup.ts`,
       stripIndents`
-      const { registerTsProject } = require('nx/src/utils/register');
+      const { registerTsProject } = require('@nx/js/src/internal');
       const cleanup = registerTsProject('.', 'tsconfig.base.json');
 
       import {setup} from '@global-fun/globals';
@@ -67,7 +65,7 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/teardown.ts`,
       stripIndents`
-      import { registerTsProject } from 'nx/src/utils/register';
+      const { registerTsProject } = require('@nx/js/src/internal');
       const cleanup = registerTsProject('.', 'tsconfig.base.json');
 
       import {teardown} from '@global-fun/globals';
@@ -79,22 +77,24 @@ describe('Jest', () => {
     updateFile(
       `libs/${mylib}/jest.config.ts`,
       stripIndents`
-          module.exports = {
-            testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-            transform: {
-              '^.+\\.(ts|js|html)$': 'ts-jest'
-            },
-            resolver: '@nrwl/jest/plugins/resolver',
-            moduleFileExtensions: ['ts', 'js', 'html'],
-            coverageReporters: ['html'],
-            passWithNoTests: true,
-            globals: { testGlobal: ${testGlobal} },
-            globalSetup: '<rootDir>/setup.ts',
-            globalTeardown: '<rootDir>/teardown.ts'
-          };`
+        export default {
+          testEnvironment: 'node',
+          displayName: "${mylib}",
+          preset: "../../jest.preset.js",
+          transform: {
+            "^.+\\.[tj]s$": ["ts-jest", { tsconfig: "<rootDir>/tsconfig.spec.json" }],
+          },
+          moduleFileExtensions: ["ts", "js", "html"],
+          coverageDirectory: "../../coverage/libs/${mylib}",
+          globals: { testGlobal: ${testGlobal} },
+          globalSetup: '<rootDir>/setup.ts',
+          globalTeardown: '<rootDir>/teardown.ts'
+        };`
     );
 
-    const appResult = await runCLIAsync(`test ${mylib} --no-watch`);
+    const appResult = await runCLIAsync(`test ${mylib} --no-watch`, {
+      silenceError: true,
+    });
     expect(appResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
@@ -102,13 +102,13 @@ describe('Jest', () => {
 
   it('should set the NODE_ENV to `test`', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,
       `
         test('can access jest global', () => {
-          expect(process.env.NODE_ENV).toBe('test');
+          expect(process.env['NODE_ENV']).toBe('test');
         });
         `
     );
@@ -120,7 +120,7 @@ describe('Jest', () => {
 
   it('should support multiple `coverageReporters` through CLI', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nrwl/workspace:lib ${mylib} --unit-test-runner jest`);
+    runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,
@@ -143,7 +143,7 @@ describe('Jest', () => {
   it('should be able to test node lib with babel-jest', async () => {
     const libName = uniq('babel-test-lib');
     runCLI(
-      `generate @nrwl/node:lib ${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest`
+      `generate @nx/node:lib ${libName} --buildable --importPath=@some-org/babel-test --publishable --babelJest`
     );
 
     const cliResults = await runCLIAsync(`test ${libName}`);

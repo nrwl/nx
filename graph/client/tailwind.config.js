@@ -1,7 +1,7 @@
 const path = require('path');
 
 // nx-ignore-next-line
-const { createGlobPatternsForDependencies } = require('@nrwl/react/tailwind');
+const { createGlobPatternsForDependencies } = require('@nx/react/tailwind');
 
 module.exports = {
   content: [
@@ -36,5 +36,10 @@ module.exports = {
       translate: ['group-hover'],
     },
   },
-  plugins: [require('@tailwindcss/typography')],
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms')({
+      strategy: 'class',
+    }),
+  ],
 };

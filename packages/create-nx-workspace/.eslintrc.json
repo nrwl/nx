@@ -3,10 +3,12 @@
   "rules": {
     "no-restricted-imports": [
       "error",
-      "@nrwl/workspace",
+      "@nx/workspace",
       "@angular-devkit/core",
       "@angular-devkit/architect",
-      "@angular-devkit/schematics"
+      "@angular-devkit/schematics",
+      "nx",
+      "@nx/devkit"
     ]
   },
   "ignorePatterns": ["!**/*"],
@@ -22,6 +24,18 @@
     {
       "files": ["*.js", "*.jsx"],
       "rules": {}
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"]
+          }
+        ]
+      }
     }
   ]
 }

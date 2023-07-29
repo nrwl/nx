@@ -1,7 +1,8 @@
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { dirname } from 'path';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import {
   AppConfig,
   createApp,
@@ -10,10 +11,9 @@ import {
   getLibConfig,
 } from '../../utils/nx-devkit/testing';
 import { ngrxVersion } from '../../utils/versions';
+import { generateTestApplication } from '../utils/testing';
 import { ngrxGenerator } from './ngrx';
-import applicationGenerator from '../application/application';
 import type { NgRxGeneratorOptions } from './schema';
-import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 
 describe('ngrx', () => {
   let appConfig: AppConfig;
@@ -30,7 +30,7 @@ describe('ngrx', () => {
   const defaultStandaloneOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    parent: 'apps/my-app/src/main.ts',
+    parent: 'apps/my-app/src/app/app.config.ts',
     name: 'users',
   };
 
@@ -496,7 +496,7 @@ describe('ngrx', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'my-app',
         standalone: true,
         routing: true,
@@ -534,6 +534,9 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('/apps/my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
       expect(tree.exists('/apps/my-app/src/app/+state/users.actions.ts')).toBe(
         false
       );
@@ -562,6 +565,55 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('/apps/my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should add a feature module when route is undefined', async () => {
+      await ngrxGenerator(tree, {
+        ...defaultStandaloneOptions,
+        root: false,
+        route: undefined,
+        parent: 'apps/my-app/src/app/app.routes.ts',
+      });
+
+      expect(
+        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should add a feature module when route is non-empty', async () => {
+      tree.write(
+        'apps/my-app/src/app/app.routes.ts',
+        `import { Routes } from '@angular/router';
+        import { NxWelcomeComponent } from './nx-welcome.component'; 
+      export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];`
+      );
+
+      await ngrxGenerator(tree, {
+        ...defaultStandaloneOptions,
+        root: false,
+        route: 'home',
+        parent: 'apps/my-app/src/app/app.routes.ts',
+      });
+
+      expect(
+        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should add a feature module when route is set to default', async () => {
+      await ngrxGenerator(tree, {
+        ...defaultStandaloneOptions,
+        root: false,
+        route: '',
+        parent: 'apps/my-app/src/app/app.routes.ts',
+      });
+
+      expect(
+        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should add facade provider when facade is true', async () => {
@@ -573,6 +625,9 @@ describe('ngrx', () => {
       });
 
       expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('/apps/my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should add facade provider when facade is true and --root is false', async () => {
@@ -594,7 +649,7 @@ describe('ngrx', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await applicationGenerator(tree, { name: 'myapp' });
+      await generateTestApplication(tree, { name: 'myapp' });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
@@ -755,6 +810,28 @@ describe('ngrx', () => {
       ).rejects.toThrowError(
         `The provided parent path "${parentPath}" does not contain an "NgModule".`
       );
+    });
+  });
+
+  describe('rxjs v6 support', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, { name: 'myapp' });
+      devkit.updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          rxjs: '~6.6.7',
+        },
+      }));
+    });
+
+    it('should generate the ngrx effects using rxjs operators imported from "rxjs/operators"', async () => {
+      await ngrxGenerator(tree, defaultOptions);
+
+      expect(
+        tree.read('/apps/myapp/src/app/+state/users.effects.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 });

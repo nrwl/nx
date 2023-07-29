@@ -3,8 +3,8 @@ import {
   addProjectConfiguration,
   readJson,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
 import { viteConfigurationGenerator } from './configuration';
@@ -18,7 +18,7 @@ import {
   mockWebAppGenerator,
 } from '../../utils/test-utils';
 
-describe('@nrwl/vite:configuration', () => {
+describe('@nx/vite:configuration', () => {
   let tree: Tree;
 
   describe('transform React app to use Vite', () => {
@@ -29,7 +29,7 @@ describe('@nrwl/vite:configuration', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+        { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
@@ -37,6 +37,7 @@ describe('@nrwl/vite:configuration', () => {
         project: 'my-test-react-app',
       });
     });
+
     it('should add vite packages and react-related dependencies for vite', async () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies).toMatchObject({
@@ -81,7 +82,7 @@ describe('@nrwl/vite:configuration', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+        { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
@@ -93,7 +94,6 @@ describe('@nrwl/vite:configuration', () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies).toMatchObject({
         vite: expect.any(String),
-        'vite-tsconfig-paths': expect.any(String),
       });
     });
 
@@ -138,7 +138,7 @@ describe('@nrwl/vite:configuration', () => {
       } catch (e) {
         expect(e).toBeDefined();
         expect(e.toString()).toContain(
-          'The project my-test-angular-app cannot be converted to use the @nrwl/vite executors'
+          'The project my-test-angular-app cannot be converted to use the @nx/vite executors'
         );
       }
     });
@@ -184,7 +184,7 @@ describe('@nrwl/vite:configuration', () => {
       } catch (e) {
         expect(e).toBeDefined();
         expect(e.toString()).toContain(
-          'Nx could not verify that the executors you are using can be converted to the @nrwl/vite executors.'
+          'Nx could not verify that the executors you are using can be converted to the @nx/vite executors.'
         );
       }
     });
@@ -199,7 +199,7 @@ describe('@nrwl/vite:configuration', () => {
         const existingVersion = '1.0.0';
         addDependenciesToPackageJson(
           tree,
-          { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+          { '@nx/vite': nxVersion, [existing]: existingVersion },
           { [existing]: existingVersion }
         );
         await viteConfigurationGenerator(tree, {
@@ -235,7 +235,7 @@ describe('@nrwl/vite:configuration', () => {
         const existingVersion = '1.0.0';
         addDependenciesToPackageJson(
           tree,
-          { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+          { '@nx/vite': nxVersion, [existing]: existingVersion },
           { [existing]: existingVersion }
         );
       });
@@ -254,7 +254,7 @@ describe('@nrwl/vite:configuration', () => {
         } catch (e) {
           expect(e).toBeDefined();
           expect(e.toString()).toContain(
-            'The build target invalid-build cannot be converted to use the @nrwl/vite:build executor'
+            'The build target invalid-build cannot be converted to use the @nx/vite:build executor'
           );
         }
       });
@@ -289,7 +289,7 @@ describe('@nrwl/vite:configuration', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+        { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {

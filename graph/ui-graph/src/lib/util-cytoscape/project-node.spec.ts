@@ -4,6 +4,7 @@ describe('ProjectNode', () => {
   describe('app nodes', () => {
     it('should not set parentId if groupByFolder is false', () => {
       const projectNode = new ProjectNode(
+        {},
         {
           name: 'sub-app',
           type: 'app',
@@ -11,9 +12,7 @@ describe('ProjectNode', () => {
             projectType: 'application',
             root: 'apps/sub/app',
             sourceRoot: 'apps/sub/app/src',
-            prefix: 'sub-app',
             tags: [],
-            files: [],
           },
         },
         'apps'
@@ -26,6 +25,7 @@ describe('ProjectNode', () => {
 
     it('should not set parentId if app is not nested', () => {
       const projectNode = new ProjectNode(
+        {},
         {
           name: 'app',
           type: 'app',
@@ -33,9 +33,7 @@ describe('ProjectNode', () => {
             projectType: 'application',
             root: 'apps/app',
             sourceRoot: 'apps/app/src',
-            prefix: 'app',
             tags: [],
-            files: [],
           },
         },
         'apps'
@@ -48,6 +46,7 @@ describe('ProjectNode', () => {
 
     it('should set parentId if the app is nested and groupByFolder is true', () => {
       const projectNode = new ProjectNode(
+        {},
         {
           name: 'sub-app',
           type: 'app',
@@ -55,9 +54,7 @@ describe('ProjectNode', () => {
             projectType: 'application',
             root: 'apps/sub/app',
             sourceRoot: 'apps/sub/app/src',
-            prefix: 'sub-app',
             tags: [],
-            files: [],
           },
         },
         'apps'
@@ -72,6 +69,7 @@ describe('ProjectNode', () => {
   describe('lib nodes', () => {
     it('should not set parentId if groupByFolder is false', () => {
       const projectNode = new ProjectNode(
+        {},
         {
           name: 'sub-lib',
           type: 'lib',
@@ -79,7 +77,6 @@ describe('ProjectNode', () => {
             root: 'libs/sub/lib',
             sourceRoot: 'libs/sub/lib/src',
             projectType: 'library',
-            files: [],
           },
         },
         'libs'
@@ -92,6 +89,7 @@ describe('ProjectNode', () => {
 
     it('should not set parentId if lib is not nested', () => {
       const projectNode = new ProjectNode(
+        {},
         {
           name: 'lib',
           type: 'lib',
@@ -99,7 +97,6 @@ describe('ProjectNode', () => {
             root: 'libs/lib',
             sourceRoot: 'libs/lib/src',
             projectType: 'library',
-            files: [],
           },
         },
         'libs'
@@ -112,6 +109,7 @@ describe('ProjectNode', () => {
 
     it('should set parentId if the lib is nested and groupByFolder is true', () => {
       const projectNode = new ProjectNode(
+        {},
         {
           name: 'sub-lib',
           type: 'lib',
@@ -119,7 +117,6 @@ describe('ProjectNode', () => {
             root: 'libs/sub/lib',
             sourceRoot: 'libs/sub/lib/src',
             projectType: 'library',
-            files: [],
           },
         },
         'libs'

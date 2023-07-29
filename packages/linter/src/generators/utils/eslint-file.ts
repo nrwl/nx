@@ -1,4 +1,4 @@
-import { joinPathFragments, Tree } from '@nrwl/devkit';
+import { joinPathFragments, Tree } from '@nx/devkit';
 
 export const eslintConfigFileWhitelist = [
   '.eslintrc',

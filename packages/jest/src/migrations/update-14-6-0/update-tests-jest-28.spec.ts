@@ -1,5 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator as workspaceLib } from '@nrwl/workspace';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { libraryGenerator as workspaceLib } from '@nx/js';
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
@@ -19,12 +19,34 @@ describe('Jest Migration - jest 28 test files', () => {
       linter: undefined,
       unitTestRunner: 'jest',
     });
+    const projectConfiguration = readProjectConfiguration(tree, 'blah');
+    updateProjectConfiguration(tree, 'blah', {
+      ...projectConfiguration,
+      targets: {
+        ...projectConfiguration.targets,
+        test: {
+          ...projectConfiguration.targets.test,
+          executor: '@nrwl/jest:jest',
+        },
+      },
+    });
 
     await workspaceLib(tree, {
       name: 'blah-again',
       linter: undefined,
       unitTestRunner: 'jest',
       js: true,
+    });
+    const projectConfiguration2 = readProjectConfiguration(tree, 'blah-again');
+    updateProjectConfiguration(tree, 'blah-again', {
+      ...projectConfiguration2,
+      targets: {
+        ...projectConfiguration2.targets,
+        test: {
+          ...projectConfiguration2.targets.test,
+          executor: '@nrwl/jest:jest',
+        },
+      },
     });
 
     tree.write(
@@ -139,10 +161,10 @@ describe('Jest Migration - jest 28 test files', () => {
     const { somethingElse } = require('ts-jest/utils');
     import * from ts from 'typescript'
     const mockTs = mocked(ts);
-    
+
     describe('something expected', () => {
       it('should do something', () => {
-        const actual = somethingExpected('abc'); 
+        const actual = somethingExpected('abc');
         expect(1 + 1).toBe(2);
       });
     })
@@ -155,10 +177,10 @@ describe('Jest Migration - jest 28 test files', () => {
     const { somethingElse } = require('ts-jest/utils');
     import * from ts from 'typescript'
     const mockTs = mocked(ts);
-    
+
     describe('something expected', () => {
       it('should do something', () => {
-        const actual = somethingExpected('abc'); 
+        const actual = somethingExpected('abc');
         expect(1 + 1).toBe(2);
       });
     })
@@ -176,7 +198,7 @@ describe('Jest Migration - jest 28 test files', () => {
 
     describe('something expected', () => {
       it('should do something', () => {
-        const actual = somethingExpected('abc'); 
+        const actual = somethingExpected('abc');
         expect(1 + 1).toBe(2);
       });
     })
@@ -190,7 +212,7 @@ describe('Jest Migration - jest 28 test files', () => {
 
     describe('something expected', () => {
       it('should do something', () => {
-        const actual = somethingExpected('abc'); 
+        const actual = somethingExpected('abc');
         expect(1 + 1).toBe(2);
       });
     })

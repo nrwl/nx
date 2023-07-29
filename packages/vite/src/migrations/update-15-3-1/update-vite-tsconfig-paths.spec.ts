@@ -1,5 +1,5 @@
-import { addDependenciesToPackageJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { mockViteReactAppGenerator } from '../../utils/test-utils';
 import { removeProjectsFromViteTsConfigPaths } from './update-vite-tsconfig-paths';

@@ -1,0 +1,26 @@
+{
+  "name": "@nx/nx-darwin-x64",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/darwin-x64"
+  },
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "nx.darwin-x64.node",
+  "files": [
+    "nx.darwin-x64.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

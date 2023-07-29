@@ -1,5 +1,4 @@
 import * as path from 'path';
-import * as ts from 'typescript';
 import {
   addImport,
   addReduxStoreToMain,
@@ -19,8 +18,11 @@ import {
   readJson,
   toJS,
   Tree,
-} from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
+} from '@nx/devkit';
+import { getRootTsConfigPathInTree } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 export async function reduxGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
@@ -63,6 +65,10 @@ function addReduxPackageDependencies(host: Tree) {
 }
 
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   const indexFilePath = path.join(
     options.projectSourcePath,
     options.js ? 'index.js' : 'index.ts'
@@ -70,10 +76,10 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
 
   const indexSource = host.read(indexFilePath, 'utf-8');
   if (indexSource !== null) {
-    const indexSourceFile = ts.createSourceFile(
+    const indexSourceFile = tsModule.createSourceFile(
       indexFilePath,
       indexSource,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
 
@@ -95,10 +101,10 @@ function addStoreConfiguration(host: Tree, options: NormalizedSchema) {
 
   const mainSource = host.read(options.appMainFilePath, 'utf-8');
   if (!mainSource.includes('redux')) {
-    const mainSourceFile = ts.createSourceFile(
+    const mainSourceFile = tsModule.createSourceFile(
       options.appMainFilePath,
       mainSource,
-      ts.ScriptTarget.Latest,
+      tsModule.ScriptTarget.Latest,
       true
     );
     const changes = applyChangesToString(
@@ -110,15 +116,19 @@ function addStoreConfiguration(host: Tree, options: NormalizedSchema) {
 }
 
 function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   if (!options.appProjectSourcePath) {
     return;
   }
 
   const mainSource = host.read(options.appMainFilePath, 'utf-8');
-  const mainSourceFile = ts.createSourceFile(
+  const mainSourceFile = tsModule.createSourceFile(
     options.appMainFilePath,
     mainSource,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
   const changes = applyChangesToString(

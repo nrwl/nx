@@ -1806,5 +1806,6 @@
   "affected": ["cart", "cart-e2e"],
   "focus": null,
   "groupByFolder": false,
+  "fileMap": {},
   "exclude": []
 }

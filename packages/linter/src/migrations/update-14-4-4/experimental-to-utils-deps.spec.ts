@@ -1,5 +1,5 @@
-import { updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { WORKSPACE_PLUGIN_DIR } from '../../generators/workspace-rules-project/workspace-rules-project';
 import addTypescriptEslintUtilsIfNeeded from './experimental-to-utils-deps';
 

@@ -1,13 +1,9 @@
 import { insertStatement } from './insert-statement';
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
-import {
-  createSourceFile,
-  isImportDeclaration,
-  isNamedImports,
-  isStringLiteral,
-  NamedImports,
-  ScriptTarget,
-} from 'typescript';
+import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
+import type { NamedImports } from 'typescript';
+import { ensureTypescript } from '../../utilities/typescript';
+
+let tsModule: typeof import('typescript');
 
 export function insertImport(
   tree: Tree,
@@ -15,6 +11,17 @@ export function insertImport(
   name: string,
   modulePath: string
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+  const {
+    createSourceFile,
+    ScriptTarget,
+    isStringLiteral,
+    isImportDeclaration,
+    isNamedImports,
+  } = tsModule;
+
   const contents = tree.read(path, 'utf-8');
 
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);

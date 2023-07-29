@@ -1,6 +1,10 @@
-import { convertNxGenerator, formatFiles, Tree } from '@nrwl/devkit';
+import {
+  convertNxGenerator,
+  formatFiles,
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
 
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import detoxInitGenerator from '../init/init';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { addLinting } from './lib/add-linting';
@@ -13,6 +17,7 @@ export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(host, schema);
 
   const initTask = await detoxInitGenerator(host, {
+    ...options,
     skipFormat: true,
   });
   createFiles(host, options);

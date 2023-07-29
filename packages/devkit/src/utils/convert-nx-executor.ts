@@ -1,11 +1,8 @@
 import type { Observable } from 'rxjs';
-import { Workspaces } from 'nx/src/config/workspaces';
-import { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
-import {
-  createProjectGraphAsync,
-  readCachedProjectGraph,
-} from 'nx/src/project-graph/project-graph';
-import { ProjectGraph } from 'nx/src/config/project-graph';
+import type { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { requireNx } from '../../nx';
+
+const { Workspaces, readNxJsonFromDisk } = requireNx();
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -16,18 +13,15 @@ import { ProjectGraph } from 'nx/src/config/project-graph';
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const nxJsonConfiguration = workspaces.readNxJson();
+    const nxJsonConfiguration = readNxJsonFromDisk
+      ? readNxJsonFromDisk(builderContext.workspaceRoot)
+      : // TODO(v18): remove readNxJson. This is to be backwards compatible with Nx 16.5 and below.
+        (workspaces as any).readNxJson();
     const projectsConfigurations = workspaces.readProjectsConfigurations({
       _includeProjectsFromAngularJson: true,
     });
 
     const promise = async () => {
-      let projectGraph: ProjectGraph;
-      try {
-        projectGraph = readCachedProjectGraph();
-      } catch {
-        projectGraph = await createProjectGraphAsync();
-      }
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,
         projectName: builderContext.target.project,
@@ -36,9 +30,9 @@ export function convertNxExecutor(executor: Executor) {
         configurationName: builderContext.target.configuration,
         projectsConfigurations,
         nxJsonConfiguration,
-        workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
         cwd: process.cwd(),
-        projectGraph,
+        projectGraph: null,
+        taskGraph: null,
         isVerbose: false,
       };
       return executor(options, context);

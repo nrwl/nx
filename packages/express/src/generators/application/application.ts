@@ -7,9 +7,9 @@ import {
   names,
   toJS,
   updateJson,
-} from '@nrwl/devkit';
-import type { Tree } from '@nrwl/devkit';
-import { applicationGenerator as nodeApplicationGenerator } from '@nrwl/node';
+} from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
+import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { join } from 'path';
 import { initGenerator } from '../init/init';
 import type { Schema } from './schema';
@@ -60,13 +60,8 @@ server.on('error', console.error);
     toJS(tree);
   }
 }
-// TODO (nicholas): Remove After Nx 16
-// @deprecated Use `nx g @nrwl/node:app --framework=express instead.
-export async function applicationGenerator(tree: Tree, schema: Schema) {
-  console.warn(
-    'As of Nx 16 using `nx g @nrwl/express:app` has been deprecated! Use `nx g @nrwl/node:app --framework=express instead.'
-  );
 
+export async function applicationGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
   const initTask = await initGenerator(tree, { ...options, skipFormat: true });
   const applicationTask = await nodeApplicationGenerator(tree, {

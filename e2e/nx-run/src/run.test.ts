@@ -16,7 +16,7 @@ import {
   updateFile,
   updateJson,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
 
@@ -29,7 +29,7 @@ describe('Nx Running Tests', () => {
     describe('(forwarding params)', () => {
       let proj = uniq('proj');
       beforeAll(() => {
-        runCLI(`generate @nrwl/workspace:lib ${proj}`);
+        runCLI(`generate @nx/js:lib ${proj}`);
         updateProjectConfig(proj, (c) => {
           c.targets['echo'] = {
             command: 'echo ECHO:',
@@ -56,10 +56,10 @@ describe('Nx Running Tests', () => {
 
     it('should execute long running tasks', async () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
       updateProjectConfig(myapp, (c) => {
         c.targets['counter'] = {
-          executor: '@nrwl/workspace:counter',
+          executor: '@nx/workspace:counter',
           options: {
             to: 2,
           },
@@ -76,7 +76,7 @@ describe('Nx Running Tests', () => {
 
     it('should run npm scripts', async () => {
       const mylib = uniq('mylib');
-      runCLI(`generate @nrwl/node:lib ${mylib}`);
+      runCLI(`generate @nx/node:lib ${mylib}`);
 
       // Used to restore targets to lib after test
       const original = readProjectConfig(mylib);
@@ -121,8 +121,8 @@ describe('Nx Running Tests', () => {
     it('should stop executing all tasks when one of the tasks fails', async () => {
       const myapp1 = uniq('a');
       const myapp2 = uniq('b');
-      runCLI(`generate @nrwl/web:app ${myapp1}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
+      runCLI(`generate @nx/web:app ${myapp1}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
       updateProjectConfig(myapp1, (c) => {
         c.targets['error'] = {
           command: 'echo boom1 && exit 1',
@@ -173,34 +173,60 @@ describe('Nx Running Tests', () => {
   describe('run-one', () => {
     it('should build a specific project', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       runCLI(`build ${myapp}`);
+    }, 10000);
+
+    it('should support project name positional arg non-consecutive to target', () => {
+      const myapp = uniq('app');
+      runCLI(`generate @nx/web:app ${myapp}`);
+
+      runCLI(`build --verbose ${myapp}`);
     }, 10000);
 
     it('should run targets from package json', () => {
       const myapp = uniq('app');
       const target = uniq('script');
       const expectedOutput = uniq('myEchoedString');
+      const expectedEnvOutput = uniq('myEnvString');
 
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
       updateFile(
         `apps/${myapp}/package.json`,
         JSON.stringify({
           name: myapp,
           scripts: {
-            [target]: `echo ${expectedOutput}`,
+            [target]: `echo ${expectedOutput} $ENV_VAR`,
+          },
+          nx: {
+            targets: {
+              [target]: {
+                configurations: {
+                  production: {},
+                },
+              },
+            },
           },
         })
       );
 
+      updateFile(
+        `apps/${myapp}/.env.production`,
+        `ENV_VAR=${expectedEnvOutput}`
+      );
+
       expect(runCLI(`${target} ${myapp}`)).toContain(expectedOutput);
+      expect(runCLI(`${target} ${myapp}`)).not.toContain(expectedEnvOutput);
+      expect(runCLI(`${target} ${myapp} --configuration production`)).toContain(
+        expectedEnvOutput
+      );
     }, 10000);
 
     it('should run targets inferred from plugin-specified project files', () => {
       // Setup an app to extend
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       // Register an Nx plugin
       const plugin = `module.exports = {
@@ -229,7 +255,7 @@ describe('Nx Running Tests', () => {
 
     it('should build a specific project with the daemon disabled', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       const buildWithDaemon = runCLI(`build ${myapp}`, {
         env: { ...process.env, NX_DAEMON: 'false' },
@@ -246,7 +272,7 @@ describe('Nx Running Tests', () => {
 
     it('should build the project when within the project root', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       // Should work within the project directory
       expect(runCommand(`cd apps/${myapp}/src && npx nx build`)).toContain(
@@ -325,9 +351,9 @@ describe('Nx Running Tests', () => {
         myapp = uniq('myapp');
         mylib1 = uniq('mylib1');
         mylib2 = uniq('mylib1');
-        runCLI(`generate @nrwl/web:app ${myapp}`);
-        runCLI(`generate @nrwl/web:lib ${mylib1} --buildable`);
-        runCLI(`generate @nrwl/web:lib ${mylib2} --buildable`);
+        runCLI(`generate @nx/web:app ${myapp}`);
+        runCLI(`generate @nx/js:lib ${mylib1}`);
+        runCLI(`generate @nx/js:lib ${mylib2}`);
 
         updateFile(
           `apps/${myapp}/src/main.ts`,
@@ -338,7 +364,7 @@ describe('Nx Running Tests', () => {
         );
       });
 
-      it('should be able to include deps using target dependencies', () => {
+      it('should be able to include deps using dependsOn', () => {
         const originalWorkspace = readProjectConfig(myapp);
         updateProjectConfig(myapp, (config) => {
           config.targets.prep = {
@@ -361,25 +387,6 @@ describe('Nx Running Tests', () => {
         expect(output).toContain('PREP');
 
         updateProjectConfig(myapp, () => originalWorkspace);
-      }, 10000);
-
-      it('should be able to include deps using target dependencies defined at the root', () => {
-        const originalNxJson = readFile('nx.json');
-        const nxJson = readJson('nx.json');
-        nxJson.targetDependencies = {
-          build: ['^build', '^e2e-extra-entry-to-bust-cache'],
-        };
-        updateFile('nx.json', JSON.stringify(nxJson));
-
-        const output = runCLI(`build ${myapp}`);
-        expect(output).toContain(
-          `NX   Running target build for project ${myapp} and 2 tasks it depends on`
-        );
-        expect(output).toContain(myapp);
-        expect(output).toContain(mylib1);
-        expect(output).toContain(mylib2);
-
-        updateFile('nx.json', originalNxJson);
       }, 10000);
 
       it('should be able to include deps using target defaults defined at the root', () => {
@@ -431,11 +438,15 @@ describe('Nx Running Tests', () => {
       const libC = uniq('libc-rand');
       const libD = uniq('libd-rand');
 
-      runCLI(`generate @nrwl/web:app ${appA}`);
-      runCLI(`generate @nrwl/js:lib ${libA} --buildable --defaults`);
-      runCLI(`generate @nrwl/js:lib ${libB} --buildable --defaults`);
-      runCLI(`generate @nrwl/js:lib ${libC} --buildable --defaults`);
-      runCLI(`generate @nrwl/node:lib ${libD} --defaults`);
+      runCLI(`generate @nx/web:app ${appA}`);
+      runCLI(`generate @nx/js:lib ${libA} --bundler=tsc --defaults`);
+      runCLI(
+        `generate @nx/js:lib ${libB} --bundler=tsc --defaults --tags=ui-a`
+      );
+      runCLI(
+        `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared`
+      );
+      runCLI(`generate @nx/node:lib ${libD} --defaults --tags=api`);
 
       // libA depends on libC
       updateFile(
@@ -455,6 +466,7 @@ describe('Nx Running Tests', () => {
         `run-many --target=build --projects="${libC},${libB}"`
       );
       expect(buildParallel).toContain(`Running target build for 2 projects:`);
+      expect(buildParallel).not.toContain(`- ${appA}`);
       expect(buildParallel).not.toContain(`- ${libA}`);
       expect(buildParallel).toContain(`- ${libB}`);
       expect(buildParallel).toContain(`- ${libC}`);
@@ -473,6 +485,36 @@ describe('Nx Running Tests', () => {
       expect(buildAllParallel).not.toContain(`- ${libD}`);
       expect(buildAllParallel).toContain('Successfully ran target build');
 
+      // testing run many by tags
+      const buildByTagParallel = runCLI(
+        `run-many --target=build --projects="tag:ui*"`
+      );
+      expect(buildByTagParallel).toContain(
+        `Running target build for 2 projects:`
+      );
+      expect(buildByTagParallel).not.toContain(`- ${appA}`);
+      expect(buildByTagParallel).not.toContain(`- ${libA}`);
+      expect(buildByTagParallel).toContain(`- ${libB}`);
+      expect(buildByTagParallel).toContain(`- ${libC}`);
+      expect(buildByTagParallel).not.toContain(`- ${libD}`);
+      expect(buildByTagParallel).toContain('Successfully ran target build');
+
+      // testing run many with exclude
+      const buildWithExcludeParallel = runCLI(
+        `run-many --target=build --exclude="${libD},tag:ui*"`
+      );
+      expect(buildWithExcludeParallel).toContain(
+        `Running target build for 2 projects and 1 task they depend on:`
+      );
+      expect(buildWithExcludeParallel).toContain(`- ${appA}`);
+      expect(buildWithExcludeParallel).toContain(`- ${libA}`);
+      expect(buildWithExcludeParallel).not.toContain(`- ${libB}`);
+      expect(buildWithExcludeParallel).toContain(`${libC}`); // should still include libC as dependency despite exclude
+      expect(buildWithExcludeParallel).not.toContain(`- ${libD}`);
+      expect(buildWithExcludeParallel).toContain(
+        'Successfully ran target build'
+      );
+
       // testing run many when project depends on other projects
       const buildWithDeps = runCLI(
         `run-many --target=build --projects="${libA}"`
@@ -480,6 +522,7 @@ describe('Nx Running Tests', () => {
       expect(buildWithDeps).toContain(
         `Running target build for project ${libA} and 1 task it depends on:`
       );
+      expect(buildWithDeps).not.toContain(`- ${appA}`);
       expect(buildWithDeps).toContain(`- ${libA}`);
       expect(buildWithDeps).toContain(`${libC}`); // build should include libC as dependency
       expect(buildWithDeps).not.toContain(`- ${libB}`);
@@ -508,8 +551,8 @@ describe('Nx Running Tests', () => {
     it('should run multiple targets', () => {
       const myapp1 = uniq('myapp');
       const myapp2 = uniq('myapp');
-      runCLI(`generate @nrwl/web:app ${myapp1}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
+      runCLI(`generate @nx/web:app ${myapp1}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).

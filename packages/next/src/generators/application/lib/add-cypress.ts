@@ -1,18 +1,23 @@
-import { cypressProjectGenerator } from '@nrwl/cypress';
-import { Tree } from '@nrwl/devkit';
+import { ensurePackage, Tree } from '@nx/devkit';
+import { Linter } from '@nx/linter';
+
+import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
-import { Linter } from '@nrwl/linter';
 
 export async function addCypress(host: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner !== 'cypress') {
     return () => {};
   }
 
+  const { cypressProjectGenerator } = ensurePackage<
+    typeof import('@nx/cypress')
+  >('@nx/cypress', nxVersion);
   return cypressProjectGenerator(host, {
     ...options,
     linter: Linter.EsLint,
-    name: `${options.name}-e2e`,
+    name: options.e2eProjectName,
     directory: options.directory,
     project: options.projectName,
+    skipFormat: true,
   });
 }

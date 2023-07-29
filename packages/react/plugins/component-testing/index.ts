@@ -1,10 +1,11 @@
 import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
-} from '@nrwl/cypress/plugins/cypress-preset';
-import type { CypressExecutorOptions } from '@nrwl/cypress/src/executors/cypress/cypress.impl';
+} from '@nx/cypress/plugins/cypress-preset';
+import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
   ExecutorContext,
+  joinPathFragments,
   logger,
   parseTargetString,
   ProjectGraph,
@@ -13,13 +14,15 @@ import {
   stripIndents,
   Target,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   createExecutorContext,
   getProjectConfigByPath,
-} from '@nrwl/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/src/utils/ct-helpers';
 
-import type { Configuration } from 'webpack';
+import { existsSync } from 'fs';
+import { dirname, join } from 'path';
+
 type ViteDevServer = {
   framework: 'react';
   bundler: 'vite';
@@ -31,6 +34,7 @@ type WebpackDevServer = {
   bundler: 'webpack';
   webpackConfig?: any;
 };
+
 /**
  * React nx preset for Cypress Component Testing
  *
@@ -60,12 +64,47 @@ export function nxComponentTestingPreset(
   video: boolean;
   chromeWebSecurity: boolean;
 } {
+  const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
+    pathToConfig.endsWith(ext)
+  )
+    ? pathToConfig
+    : dirname(pathToConfig);
+
+  const basePresetSettings = nxBaseCypressPreset(pathToConfig, {
+    testingType: 'component',
+  });
+
   if (options?.bundler === 'vite') {
     return {
-      ...nxBaseCypressPreset(pathToConfig),
+      ...basePresetSettings,
       specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
       devServer: {
         ...({ framework: 'react', bundler: 'vite' } as const),
+        viteConfig: async () => {
+          const viteConfigPath = findViteConfig(normalizedProjectRootPath);
+
+          const { mergeConfig, loadConfigFromFile, searchForWorkspaceRoot } =
+            await import('vite');
+
+          const resolved = await loadConfigFromFile(
+            {
+              mode: 'watch',
+              command: 'serve',
+            },
+            viteConfigPath
+          );
+          return mergeConfig(resolved.config, {
+            server: {
+              fs: {
+                allow: [
+                  searchForWorkspaceRoot(normalizedProjectRootPath),
+                  workspaceRoot,
+                  joinPathFragments(workspaceRoot, 'node_modules/vite'),
+                ],
+              },
+            },
+          });
+        },
       },
     };
   }
@@ -115,13 +154,13 @@ export function nxComponentTestingPreset(
 
     const { buildBaseWebpackConfig } = require('./webpack-fallback');
     webpackConfig = buildBaseWebpackConfig({
-      tsConfigPath: 'cypress/tsconfig.cy.json',
+      tsConfigPath: findTsConfig(normalizedProjectRootPath),
       compiler: 'babel',
     });
   }
 
   return {
-    ...nxBaseCypressPreset(pathToConfig),
+    ...basePresetSettings,
     specPattern: 'src/**/*.cy.{js,jsx,ts,tsx}',
     devServer: {
       // cypress uses string union type,
@@ -135,7 +174,7 @@ export function nxComponentTestingPreset(
 }
 
 /**
- * apply the schema.json defaults from the @nrwl/web:webpack executor to the target options
+ * apply the schema.json defaults from the @nx/web:webpack executor to the target options
  */
 function withSchemaDefaults(target: Target, context: ExecutorContext) {
   const options = readTargetOptions(target, context);
@@ -188,13 +227,13 @@ function buildTargetWebpack(
 
   const {
     normalizeOptions,
-  } = require('@nrwl/webpack/src/executors/webpack/lib/normalize-options');
+  } = require('@nx/webpack/src/executors/webpack/lib/normalize-options');
   const {
     resolveCustomWebpackConfig,
-  } = require('@nrwl/webpack/src/utils/webpack/custom-webpack');
+  } = require('@nx/webpack/src/utils/webpack/custom-webpack');
   const {
     getWebpackConfig,
-  } = require('@nrwl/webpack/src/executors/webpack/lib/get-webpack-config');
+  } = require('@nx/webpack/src/executors/webpack/lib/get-webpack-config');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),
@@ -203,32 +242,61 @@ function buildTargetWebpack(
     buildableProjectConfig.sourceRoot!
   );
 
-  if (options.webpackConfig) {
-    let customWebpack: any;
+  let customWebpack: any;
 
+  if (options.webpackConfig) {
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
       options.tsConfig
     );
+  }
 
-    return async () => {
-      customWebpack = await customWebpack;
-      // TODO(jack): Once webpackConfig is always set in @nrwl/webpack:webpack, we no longer need this default.
-      const defaultWebpack = getWebpackConfig(context, {
-        ...options,
-        root: workspaceRoot,
-        projectRoot: ctProjectConfig.root,
-        sourceRoot: ctProjectConfig.sourceRoot,
+  return async () => {
+    customWebpack = await customWebpack;
+    // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
+    const defaultWebpack = getWebpackConfig(context, {
+      ...options,
+      // cypress will generate its own index.html from component-index.html
+      generateIndexHtml: false,
+      // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
+      extractLicenses: false,
+      root: workspaceRoot,
+      projectRoot: ctProjectConfig.root,
+      sourceRoot: ctProjectConfig.sourceRoot,
+    });
+
+    if (customWebpack) {
+      return await customWebpack(defaultWebpack, {
+        options,
+        context,
+        configuration: parsed.configuration,
       });
+    }
 
-      if (customWebpack) {
-        return await customWebpack(defaultWebpack, {
-          options,
-          context,
-          configuration: parsed.configuration,
-        });
-      }
-      return defaultWebpack;
-    };
+    return defaultWebpack;
+  };
+}
+
+function findViteConfig(projectRootFullPath: string): string {
+  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
+
+  for (const ext of allowsExt) {
+    if (existsSync(join(projectRootFullPath, `vite.config.${ext}`))) {
+      return join(projectRootFullPath, `vite.config.${ext}`);
+    }
+  }
+}
+
+function findTsConfig(projectRoot: string) {
+  const potentialConfigs = [
+    'cypress/tsconfig.json',
+    'cypress/tsconfig.cy.json',
+    'tsconfig.cy.json',
+  ];
+
+  for (const config of potentialConfigs) {
+    if (existsSync(join(projectRoot, config))) {
+      return config;
+    }
   }
 }

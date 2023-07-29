@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`jest should generate files  1`] = `
-"import { getJestProjects } from '@nrwl/jest';
+"import { getJestProjects } from '@nx/jest';
 
 export default {
 projects: getJestProjects()
@@ -9,13 +9,13 @@ projects: getJestProjects()
 `;
 
 exports[`jest should generate files  2`] = `
-"const nxPreset = require('@nrwl/jest/preset').default;
+"const nxPreset = require('@nx/jest/preset').default;
 
 module.exports = { ...nxPreset }"
 `;
 
 exports[`jest should generate files with --js flag 1`] = `
-"const { getJestProjects } = require('@nrwl/jest');
+"const { getJestProjects } = require('@nx/jest');
 
 module.exports = {
 projects: getJestProjects()
@@ -23,7 +23,7 @@ projects: getJestProjects()
 `;
 
 exports[`jest should generate files with --js flag 2`] = `
-"const nxPreset = require('@nrwl/jest/preset').default;
+"const nxPreset = require('@nx/jest/preset').default;
 
 module.exports = { ...nxPreset }"
 `;

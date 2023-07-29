@@ -1,8 +1,5 @@
-import { ExecutorContext } from '@nrwl/devkit';
-import {
-  assetGlobsToFiles,
-  FileInputOutput,
-} from '@nrwl/workspace/src/utilities/assets';
+import { ExecutorContext } from '@nx/devkit';
+import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import { removeSync } from 'fs-extra';
 import { dirname, join, relative, resolve } from 'path';
 import { copyAssets } from '../../utils/assets';
@@ -25,13 +22,13 @@ import { compileSwc, compileSwcWatch } from '../../utils/swc/compile-swc';
 import { getSwcrcPath } from '../../utils/swc/get-swcrc-path';
 import { generateTmpSwcrc } from '../../utils/swc/inline';
 
-export function normalizeOptions(
+function normalizeOptions(
   options: SwcExecutorOptions,
-  contextRoot: string,
-  sourceRoot?: string,
-  projectRoot?: string
+  root: string,
+  sourceRoot: string,
+  projectRoot: string
 ): NormalizedSwcExecutorOptions {
-  const outputPath = join(contextRoot, options.outputPath);
+  const outputPath = join(root, options.outputPath);
 
   if (options.skipTypeCheck == null) {
     options.skipTypeCheck = false;
@@ -57,23 +54,16 @@ export function normalizeOptions(
 
   const files: FileInputOutput[] = assetGlobsToFiles(
     options.assets,
-    contextRoot,
+    root,
     outputPath
   );
 
-  const projectRootParts = projectRoot.split('/');
-  // We pop the last part of the `projectRoot` to pass
-  // the last part (projectDir) and the remainder (projectRootParts) to swc
-  const projectDir = projectRootParts.pop();
-  // default to current directory if projectRootParts is [].
-  // Eg: when a project is at the root level, outside of layout dir
-  const swcCwd = projectRootParts.join('/') || '.';
-  const swcrcPath = getSwcrcPath(options, contextRoot, projectRoot);
-
+  const swcrcPath = getSwcrcPath(options, root, projectRoot);
+  // TODO(meeroslav): Check why this is needed in order for swc to properly nest folders
+  const distParent = outputPath.split('/').slice(0, -1).join('/');
   const swcCliOptions = {
-    srcPath: projectDir,
-    destPath: relative(join(contextRoot, swcCwd), outputPath),
-    swcCwd,
+    srcPath: projectRoot,
+    destPath: relative(root, distParent),
     swcrcPath,
   };
 
@@ -84,12 +74,12 @@ export function normalizeOptions(
       options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
     ),
     files,
-    root: contextRoot,
+    root,
     sourceRoot,
     projectRoot,
     originalProjectRoot: projectRoot,
     outputPath,
-    tsConfig: join(contextRoot, options.tsConfig),
+    tsConfig: join(root, options.tsConfig),
     swcCliOptions,
   } as NormalizedSwcExecutorOptions;
 }
@@ -130,13 +120,11 @@ export async function* swcExecutor(
   if (!isInlineGraphEmpty(inlineProjectGraph)) {
     options.projectRoot = '.'; // set to root of workspace to include other libs for type check
 
-    // remap paths for SWC compilation
-    options.swcCliOptions.srcPath = options.swcCliOptions.swcCwd;
-    options.swcCliOptions.swcCwd = '.';
-    options.swcCliOptions.destPath = options.swcCliOptions.destPath
-      .split('../')
-      .at(-1)
-      .concat('/', options.swcCliOptions.srcPath);
+    options.swcCliOptions.srcPath = root.split('/').slice(0, -1).join('/'); // set to root of libraries to include other libs
+    options.swcCliOptions.destPath = join(
+      _options.outputPath,
+      options.swcCliOptions.srcPath
+    ); // new destPath is dist/{libs}/{parentLib}/{libs}
 
     // tmp swcrc with dependencies to exclude
     // - buildable libraries
@@ -190,7 +178,7 @@ export async function* swcExecutor(
 }
 
 function removeTmpSwcrc(swcrcPath: string) {
-  if (swcrcPath.startsWith('tmp/')) {
+  if (swcrcPath.includes('tmp/') && swcrcPath.includes('.generated.swcrc')) {
     removeSync(dirname(swcrcPath));
   }
 }

@@ -3,13 +3,13 @@ import {
   NxJsonConfiguration,
   readJson,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import { storybookVersion } from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { initGenerator } from './init';
 
-describe('@nrwl/storybook:init', () => {
+describe('@nx/storybook:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
@@ -33,8 +33,8 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson).toMatchSnapshot();
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -49,16 +49,20 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.devDependencies['@angular/forms']).toBeDefined();
 
       // react specific
-      expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/react-webpack5']
+      ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
 
       // generic html specific
-      expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/html-webpack5']
+      ).not.toBeDefined();
 
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte']
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
     });
 
@@ -67,17 +71,17 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
-        uiFramework: '@storybook/react',
+        uiFramework: '@storybook/react-webpack5',
       });
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -85,9 +89,9 @@ describe('@nrwl/storybook:init', () => {
       ).toBeDefined();
 
       // react specific
-      expect(packageJson.devDependencies['@storybook/react']).toBeDefined();
-      expect(packageJson.devDependencies['@babel/core']).toBeDefined();
-      expect(packageJson.devDependencies['babel-loader']).toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/react-webpack5']
+      ).toBeDefined();
 
       // angular specific
       expect(
@@ -96,11 +100,13 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
 
       // generic html specific
-      expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/html-webpack5']
+      ).not.toBeDefined();
 
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte']
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
     });
     it('should add html related dependencies when using html as uiFramework', async () => {
@@ -108,17 +114,17 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
-        uiFramework: '@storybook/html',
+        uiFramework: '@storybook/html-webpack5',
       });
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -126,7 +132,9 @@ describe('@nrwl/storybook:init', () => {
       ).toBeDefined();
 
       // react specific
-      expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/react-webpack5']
+      ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
 
@@ -137,11 +145,13 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
 
       // generic html specific
-      expect(packageJson.devDependencies['@storybook/html']).toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/html-webpack5']
+      ).toBeDefined();
 
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte']
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
     });
 
@@ -150,17 +160,17 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
-        uiFramework: '@storybook/web-components',
+        uiFramework: '@storybook/web-components-webpack5',
       });
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -168,7 +178,9 @@ describe('@nrwl/storybook:init', () => {
       ).toBeDefined();
 
       // react specific
-      expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/react-webpack5']
+      ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
 
@@ -179,19 +191,23 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
 
       // generic html specific
-      expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/html-webpack5']
+      ).not.toBeDefined();
 
       // generic web-components specific
       expect(
-        packageJson.devDependencies['@storybook/web-components']
+        packageJson.devDependencies['@storybook/web-components-webpack5']
       ).toBeDefined();
 
       // generic vue specific
-      expect(packageJson.devDependencies['@storybook/vue']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/vue-webpack5']
+      ).not.toBeDefined();
 
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte']
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
     });
 
@@ -200,17 +216,17 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
-        uiFramework: '@storybook/vue',
+        uiFramework: '@storybook/vue-webpack5',
       });
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -218,7 +234,9 @@ describe('@nrwl/storybook:init', () => {
       ).toBeDefined();
 
       // react specific
-      expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/react-webpack5']
+      ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
 
@@ -229,20 +247,24 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
 
       // generic html specific
-      expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/html-webpack5']
+      ).not.toBeDefined();
 
       // generic web-components specific
       expect(
-        packageJson.devDependencies['@storybook/web-components']
+        packageJson.devDependencies['@storybook/web-components-webpack5']
       ).not.toBeDefined();
 
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte']
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
 
       // generic vue specific
-      expect(packageJson.devDependencies['@storybook/vue']).toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/vue-webpack5']
+      ).toBeDefined();
     });
 
     it('should add vue3 related dependencies when using vue3 as uiFramework', async () => {
@@ -250,17 +272,17 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
-        uiFramework: '@storybook/vue3',
+        uiFramework: '@storybook/vue3-webpack5',
       });
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -268,7 +290,9 @@ describe('@nrwl/storybook:init', () => {
       ).toBeDefined();
 
       // react specific
-      expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/react-webpack5']
+      ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
 
@@ -279,23 +303,29 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
 
       // generic html specific
-      expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/html-webpack5']
+      ).not.toBeDefined();
 
       // generic vue specific
-      expect(packageJson.devDependencies['@storybook/vue']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/vue-webpack5']
+      ).not.toBeDefined();
 
       // generic web-components specific
       expect(
-        packageJson.devDependencies['@storybook/web-components']
+        packageJson.devDependencies['@storybook/web-components-webpack5']
       ).not.toBeDefined();
 
       // generic svelte specific
       expect(
-        packageJson.devDependencies['@storybook/svelte']
+        packageJson.devDependencies['@storybook/svelte-webpack5']
       ).not.toBeDefined();
 
       // generic vue3 specific
-      expect(packageJson.devDependencies['@storybook/vue3']).toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/vue3-webpack5']
+      ).toBeDefined();
     });
 
     it('should add svelte related dependencies when using svelte as uiFramework', async () => {
@@ -303,17 +333,17 @@ describe('@nrwl/storybook:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/storybook': storybookVersion, [existing]: existingVersion },
+        { '@nx/storybook': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
-        uiFramework: '@storybook/svelte',
+        uiFramework: '@storybook/svelte-webpack5',
       });
       const packageJson = readJson(tree, 'package.json');
 
       // general deps
-      expect(packageJson.devDependencies['@nrwl/storybook']).toBeDefined();
-      expect(packageJson.dependencies['@nrwl/storybook']).toBeUndefined();
+      expect(packageJson.devDependencies['@nx/storybook']).toBeDefined();
+      expect(packageJson.dependencies['@nx/storybook']).toBeUndefined();
       expect(packageJson.dependencies[existing]).toBeDefined();
       expect(packageJson.devDependencies[existing]).toBeDefined();
       expect(
@@ -321,7 +351,9 @@ describe('@nrwl/storybook:init', () => {
       ).toBeDefined();
 
       // react specific
-      expect(packageJson.devDependencies['@storybook/react']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/react-webpack5']
+      ).not.toBeDefined();
       expect(packageJson.devDependencies['@babel/core']).not.toBeDefined();
       expect(packageJson.devDependencies['babel-loader']).not.toBeDefined();
 
@@ -332,28 +364,36 @@ describe('@nrwl/storybook:init', () => {
       expect(packageJson.devDependencies['@angular/forms']).not.toBeDefined();
 
       // generic html specific
-      expect(packageJson.devDependencies['@storybook/html']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/html-webpack5']
+      ).not.toBeDefined();
 
       // generic vue specific
-      expect(packageJson.devDependencies['@storybook/vue']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/vue-webpack5']
+      ).not.toBeDefined();
 
       // generic web-components specific
       expect(
-        packageJson.devDependencies['@storybook/web-components']
+        packageJson.devDependencies['@storybook/web-components-webpack5']
       ).not.toBeDefined();
 
       // generic vue3 specific
-      expect(packageJson.devDependencies['@storybook/vue3']).not.toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/vue3-webpack5']
+      ).not.toBeDefined();
 
       // generic svelte specific
-      expect(packageJson.devDependencies['@storybook/svelte']).toBeDefined();
+      expect(
+        packageJson.devDependencies['@storybook/svelte-webpack5']
+      ).toBeDefined();
     });
   });
 
   describe('cacheable operations', () => {
     it('should add build-storybook to cacheable operations', async () => {
       await initGenerator(tree, {
-        uiFramework: '@storybook/html',
+        uiFramework: '@storybook/html-webpack5',
       });
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(
@@ -363,7 +403,7 @@ describe('@nrwl/storybook:init', () => {
 
     it('should add build-storybook to cacheable operations for web-components', async () => {
       await initGenerator(tree, {
-        uiFramework: '@storybook/web-components',
+        uiFramework: '@storybook/web-components-webpack5',
       });
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(
@@ -373,7 +413,7 @@ describe('@nrwl/storybook:init', () => {
 
     it('should add build-storybook to cacheable operations for vue', async () => {
       await initGenerator(tree, {
-        uiFramework: '@storybook/vue',
+        uiFramework: '@storybook/vue-webpack5',
       });
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(
@@ -383,17 +423,34 @@ describe('@nrwl/storybook:init', () => {
 
     it('should add build-storybook to cacheable operations for vue3', async () => {
       await initGenerator(tree, {
-        uiFramework: '@storybook/vue3',
+        uiFramework: '@storybook/vue3-webpack5',
       });
       const nxJson = readJson(tree, 'nx.json');
       expect(
         nxJson.tasksRunnerOptions.default.options.cacheableOperations
       ).toContain('build-storybook');
     });
+
+    it('should not add any framework specific dependencies when no framework is specified', async () => {
+      await initGenerator(tree, { uiFramework: undefined });
+
+      // get the updated package.json
+      const packageJson = readJson(tree, 'package.json');
+
+      // check that only the following dependencies have been added
+      expect(Object.keys(packageJson.devDependencies)).toEqual([
+        '@nx/js',
+        '@nx/storybook',
+        '@storybook/addon-essentials',
+        '@storybook/core-server',
+        'prettier',
+        'typescript',
+      ]);
+    });
   });
 
   describe('update root tsconfig.json', () => {
-    it('should set the tsnode module to commonjs if there is a root tsconfig.json', () => {
+    it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
       tree.write(
         'tsconfig.json',
         JSON.stringify({
@@ -422,14 +479,14 @@ describe('@nrwl/storybook:init', () => {
           ],
         })
       );
-      initGenerator(tree, {
-        uiFramework: '@storybook/react',
+      await initGenerator(tree, {
+        uiFramework: '@storybook/react-webpack5',
       });
       const tsconfig = readJson(tree, 'tsconfig.json');
       expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
     });
 
-    it('should set the tsnode module to commonjs and respect other tsnode settings', () => {
+    it('should set the tsnode module to commonjs and respect other tsnode settings', async () => {
       tree.write(
         'tsconfig.json',
         JSON.stringify({
@@ -457,8 +514,8 @@ describe('@nrwl/storybook:init', () => {
           },
         })
       );
-      initGenerator(tree, {
-        uiFramework: '@storybook/react',
+      await initGenerator(tree, {
+        uiFramework: '@storybook/react-webpack5',
       });
       const tsconfig = readJson(tree, 'tsconfig.json');
       expect(tsconfig['ts-node'].otherSetting).toEqual('value');

@@ -3,29 +3,15 @@
   "outputCapture": "direct-nodejs",
   "title": "Storybook Dev Builder",
   "cli": "nx",
-  "description": "Serve up storybook in development mode.",
+  "description": "Serve up Storybook in development mode.",
   "type": "object",
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": ["uiFramework", "port", "configDir"]
+      "keys": ["port", "configDir"]
     }
   ],
   "properties": {
-    "uiFramework": {
-      "type": "string",
-      "description": "Storybook framework npm package.",
-      "enum": [
-        "@storybook/react",
-        "@storybook/html",
-        "@storybook/web-components",
-        "@storybook/vue",
-        "@storybook/vue3",
-        "@storybook/svelte"
-      ],
-      "default": "@storybook/react",
-      "x-priority": "important"
-    },
     "port": {
       "type": "number",
       "description": "Port to listen on.",
@@ -85,10 +71,56 @@
       "type": "boolean",
       "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
       "default": false
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package.",
+      "enum": [
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
+      "x-deprecated": "Upgrade to Storybook 7."
+    },
+    "webpackStatsJson": {
+      "type": ["boolean", "string"],
+      "description": "Write Webpack Stats JSON to disk.",
+      "default": false
+    },
+    "sslCa": {
+      "type": "string",
+      "description": "Provide an SSL certificate authority. (Optional with --https, required if using a self-signed certificate)."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "Provide an SSL certificate. (Required with --https)."
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "Provide an SSL key. (Required with --https)."
+    },
+    "smokeTest": {
+      "type": "boolean",
+      "description": "Exit after successful start."
+    },
+    "noOpen": {
+      "type": "boolean",
+      "description": "Do not open Storybook automatically in the browser."
+    },
+    "debugWebpack": {
+      "type": "boolean",
+      "description": "Display final webpack configurations for debugging purposes."
+    },
+    "disableTelemetry": {
+      "type": "boolean",
+      "description": "Disables Storybook's telemetry."
     }
   },
   "additionalProperties": true,
   "definitions": {},
-  "required": ["uiFramework", "configDir"],
+  "required": ["configDir"],
   "examplesFile": "../../../docs/storybook-executor-examples.md"
 }

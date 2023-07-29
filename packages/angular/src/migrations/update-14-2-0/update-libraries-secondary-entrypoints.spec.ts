@@ -1,10 +1,5 @@
-import {
-  addProjectConfiguration,
-  readJson,
-  Tree,
-  writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readJson, Tree, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateLibrariesSecondaryEntrypoints from './update-libraries-secondary-entrypoints';
 
 const libraryExecutors = [

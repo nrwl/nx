@@ -1,17 +1,12 @@
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
-import {
-  createLockFile,
-  createPackageJson,
-  ExecutorContext,
-  type ProjectGraph,
-  serializeJson,
-} from '@nrwl/devkit';
+import { createLockFile, createPackageJson } from '@nx/js';
+import { ExecutorContext, type ProjectGraph, serializeJson } from '@nx/devkit';
 import {
   getHelperDependenciesFromProjectGraph,
+  getLockFileName,
   HelperDependency,
-} from '@nrwl/js/src/utils/compiler-helper-dependency';
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
+  readTsConfig,
+} from '@nx/js';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
@@ -55,17 +50,15 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             });
           }
 
-          if (helperDependencies.length > 0) {
-            this.projectGraph.dependencies[this.context.projectName] =
-              this.projectGraph.dependencies[this.context.projectName].concat(
-                helperDependencies
-              );
-          }
-
           const packageJson = createPackageJson(
             this.context.projectName,
             this.projectGraph,
-            { root: this.context.root, isProduction: true }
+            {
+              target: this.context.targetName,
+              root: this.context.root,
+              isProduction: true,
+              helperDependencies: helperDependencies.map((dep) => dep.target),
+            }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
 

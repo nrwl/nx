@@ -5,3 +5,8 @@ export interface Schema {
   importPath?: string;
   skipFormat?: boolean;
 }
+
+export interface NormalizedSchema extends Schema {
+  oldProjectRoot: string;
+  newProjectName: string;
+}

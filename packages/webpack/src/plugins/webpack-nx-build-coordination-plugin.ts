@@ -1,7 +1,7 @@
 import { watch } from 'chokidar';
 import { execSync } from 'child_process';
-import { workspaceLayout } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
+import { workspaceLayout } from '@nx/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import ignore from 'ignore';
 import { readFileSync } from 'fs';
 import type { Compiler } from 'webpack';
@@ -9,8 +9,10 @@ import type { Compiler } from 'webpack';
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
 
-  constructor(private readonly buildCmd: string) {
-    this.buildChangedProjects();
+  constructor(private readonly buildCmd: string, skipInitialBuild?: boolean) {
+    if (!skipInitialBuild) {
+      this.buildChangedProjects();
+    }
     this.startWatchingBuildableLibs();
   }
 

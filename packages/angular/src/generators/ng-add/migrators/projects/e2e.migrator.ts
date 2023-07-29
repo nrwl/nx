@@ -1,11 +1,11 @@
-import { cypressProjectGenerator } from '@nrwl/cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { cypressProjectGenerator } from '@nx/cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -19,11 +19,9 @@ import {
   updateProjectConfiguration,
   visitNotIgnoredFiles,
   writeJson,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { getRootTsConfigPathInTree } from '@nrwl/workspace/src/utilities/typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/linter';
+import { getRootTsConfigPathInTree, insertImport } from '@nx/js';
 import { basename, relative } from 'path';
 import type {
   Node,
@@ -44,8 +42,9 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
-import { FileChangeRecorder } from '../../utilities';
+import { FileChangeRecorder } from '../../../../utils/file-change-recorder';
 import { ProjectMigrator } from './project.migrator';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 type SupportedTargets = 'e2e';
 const supportedTargets: Record<SupportedTargets, Target> = {
@@ -460,7 +459,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   ): TargetConfiguration {
     const updatedTarget = {
       ...existingTarget,
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         ...existingTarget.options,
         cypressConfig,
@@ -578,6 +577,8 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateCypress10ConfigFile(configFilePath: string): void {
+    ensureTypescript();
+    const { tsquery } = require('@phenomnomnominal/tsquery');
     this.cypressPreset = nxE2EPreset(configFilePath);
 
     const fileContent = this.tree.read(configFilePath, 'utf-8');
@@ -657,6 +658,8 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     recorder: FileChangeRecorder,
     { ...globalConfig }: CypressCommonConfig
   ): void {
+    ensureTypescript();
+    const { tsquery } = require('@phenomnomnominal/tsquery');
     const e2eConfig = {};
     const presetSpreadAssignment = `...nxE2EPreset(__dirname),`;
     if (!e2eNode) {
@@ -778,7 +781,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       sourceFile,
       configFilePath,
       'nxE2EPreset',
-      '@nrwl/cypress/plugins/cypress-preset'
+      '@nx/cypress/plugins/cypress-preset'
     );
     // update recorder with the new content from the file
     recorder.setContentToFileContent();

@@ -12,11 +12,11 @@ The Project Graph is derived from the source code of your workspace. Make the fo
 
 ### `common-ui`
 
-Run the `@nrwl/react:component` generator with the command:
+Run the `@nx/react:component` generator with the command:
 
-```{% command="npx nx g @nrwl/react:component banner --project=common-ui --export" path="~/myorg" %}
+```{% command="npx nx g @nx/react:component banner --project=common-ui --export" path="~/myorg" %}
 
->  NX  Generating @nrwl/react:component
+>  NX  Generating @nx/react:component
 
 CREATE libs/common-ui/src/lib/banner/banner.module.css
 CREATE libs/common-ui/src/lib/banner/banner.spec.tsx

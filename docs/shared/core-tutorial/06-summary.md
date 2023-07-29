@@ -9,7 +9,7 @@ In this tutorial you:
 - Used Nx's affected commands to only rebuild affected projects
 - Used Nx's ability to automatically detect dependencies between js/ts projects
 
-You created a workspace from scratch in this tutorial, but if you would like to add Nx to an existing repository, you can use the `npx add-nx-to-monorepo` terminal command to get started. For more information see the [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](migration/adding-to-monorepo) guide.
+You created a workspace from scratch in this tutorial, but if you would like to add Nx to an existing repository, you can use the `npx nx@latest init` terminal command to get started. For more information see the [Adding Nx to Lerna/Yarn/PNPM/NPM Workspace](/recipes/adopting-nx/adding-to-monorepo) guide.
 
 ## Learn more
 

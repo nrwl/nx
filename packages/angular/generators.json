@@ -1,7 +1,7 @@
 {
   "name": "Nx Angular",
   "version": "0.1",
-  "extends": ["@schematics/angular", "@nrwl/workspace"],
+  "extends": ["@schematics/angular", "@nx/workspace"],
   "schematics": {
     "add-linting": {
       "factory": "./src/generators/add-linting/compat",
@@ -40,30 +40,15 @@
       "description": "Creates a cypress component test file for a component."
     },
     "convert-tslint-to-eslint": {
-      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
+      "factory": "./src/generators/convert-tslint-to-eslint/compat",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Converts a project from TSLint to ESLint."
-    },
-    "downgrade-module": {
-      "factory": "./src/generators/downgrade-module/compat",
-      "schema": "./src/generators/downgrade-module/schema.json",
-      "description": "Sets up a Downgrade Module."
     },
     "init": {
       "factory": "./src/generators/init/init.compat#initSchematic",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true
-    },
-    "karma": {
-      "factory": "./src/generators/karma/compat",
-      "schema": "./src/generators/karma/schema.json",
-      "description": "Adds Karma configuration to a workspace."
-    },
-    "karma-project": {
-      "factory": "./src/generators/karma-project/compat",
-      "schema": "./src/generators/karma-project/schema.json",
-      "description": "Adds Karma configuration to a project."
     },
     "library": {
       "factory": "./src/generators/library/library.compat#librarySchematic",
@@ -85,7 +70,7 @@
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
-      "factory": "./src/generators/move/move#angularMoveSchematic",
+      "factory": "./src/generators/move/compat",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
@@ -110,7 +95,8 @@
     "ngrx": {
       "factory": "./src/generators/ngrx/compat",
       "schema": "./src/generators/ngrx/schema.json",
-      "description": "Adds NgRx support to an application or library."
+      "description": "Adds NgRx support to an application or library.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead."
     },
     "scam-to-standalone": {
       "factory": "./src/generators/scam-to-standalone/compat",
@@ -162,21 +148,10 @@
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a project."
     },
-    "upgrade-module": {
-      "factory": "./src/generators/upgrade-module/compat",
-      "schema": "./src/generators/upgrade-module/schema.json",
-      "description": "Sets up an Upgrade Module."
-    },
     "web-worker": {
       "factory": "./src/generators/web-worker/compat",
       "schema": "./src/generators/web-worker/schema.json",
       "description": "Creates a Web Worker."
-    },
-    "change-storybook-targets": {
-      "factory": "./src/generators/change-storybook-targets/compat",
-      "schema": "./src/generators/change-storybook-targets/schema.json",
-      "description": "Change storybook targets for Angular projects to use @storybook/angular executors",
-      "hidden": false
     }
   },
   "generators": {
@@ -221,26 +196,17 @@
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
       "description": "Converts a project from TSLint to ESLint."
     },
-    "downgrade-module": {
-      "factory": "./src/generators/downgrade-module/downgrade-module",
-      "schema": "./src/generators/downgrade-module/schema.json",
-      "description": "Sets up a Downgrade Module."
+    "directive": {
+      "factory": "./src/generators/directive/directive",
+      "schema": "./src/generators/directive/schema.json",
+      "aliases": ["d"],
+      "description": "Generate an Angular directive."
     },
     "init": {
       "factory": "./src/generators/init/init",
       "schema": "./src/generators/init/schema.json",
       "description": "Initializes the `@nrwl/angular` plugin.",
       "hidden": true
-    },
-    "karma": {
-      "factory": "./src/generators/karma/karma",
-      "schema": "./src/generators/karma/schema.json",
-      "description": "Adds Karma configuration to a workspace."
-    },
-    "karma-project": {
-      "factory": "./src/generators/karma-project/karma-project",
-      "schema": "./src/generators/karma-project/schema.json",
-      "description": "Adds Karma configuration to a project."
     },
     "library": {
       "factory": "./src/generators/library/library",
@@ -287,7 +253,24 @@
     "ngrx": {
       "factory": "./src/generators/ngrx/ngrx",
       "schema": "./src/generators/ngrx/schema.json",
-      "description": "Adds NgRx support to an application or library."
+      "description": "Adds NgRx support to an application or library.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead."
+    },
+    "ngrx-feature-store": {
+      "factory": "./src/generators/ngrx-feature-store/ngrx-feature-store",
+      "schema": "./src/generators/ngrx-feature-store/schema.json",
+      "description": "Adds an NgRx Feature Store to an application or library."
+    },
+    "ngrx-root-store": {
+      "factory": "./src/generators/ngrx-root-store/ngrx-root-store",
+      "schema": "./src/generators/ngrx-root-store/schema.json",
+      "description": "Adds an NgRx Root Store to an application."
+    },
+    "pipe": {
+      "factory": "./src/generators/pipe/pipe",
+      "schema": "./src/generators/pipe/schema.json",
+      "description": "Generate an Angular Pipe",
+      "aliases": ["p"]
     },
     "scam-to-standalone": {
       "factory": "./src/generators/scam-to-standalone/scam-to-standalone",
@@ -339,20 +322,10 @@
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a project."
     },
-    "upgrade-module": {
-      "factory": "./src/generators/upgrade-module/upgrade-module",
-      "schema": "./src/generators/upgrade-module/schema.json",
-      "description": "Sets up an Upgrade Module."
-    },
     "web-worker": {
       "factory": "./src/generators/web-worker/web-worker",
       "schema": "./src/generators/web-worker/schema.json",
       "description": "Creates a Web Worker."
-    },
-    "change-storybook-targets": {
-      "factory": "./src/generators/change-storybook-targets/change-storybook-targets",
-      "schema": "./src/generators/change-storybook-targets/schema.json",
-      "description": "Change storybook targets for Angular projects to use @storybook/angular executors"
     }
   }
 }

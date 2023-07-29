@@ -1,11 +1,12 @@
 import {
   ExecutorContext,
+  getPackageManagerCommand,
   logger,
   runExecutor,
   workspaceRoot,
-} from '@nrwl/devkit';
-import ssrDevServerExecutor from '@nrwl/webpack/src/executors/ssr-dev-server/ssr-dev-server.impl';
-import { WebSsrDevServerOptions } from '@nrwl/webpack/src/executors/ssr-dev-server/schema';
+} from '@nx/devkit';
+import ssrDevServerExecutor from '@nx/webpack/src/executors/ssr-dev-server/ssr-dev-server.impl';
+import { WebSsrDevServerOptions } from '@nx/webpack/src/executors/ssr-dev-server/schema';
 import { join } from 'path';
 import * as chalk from 'chalk';
 import {
@@ -13,7 +14,7 @@ import {
   createAsyncIterable,
   mapAsyncIterable,
   tapAsyncIterable,
-} from '@nrwl/devkit/src/utils/async-iterable';
+} from '@nx/devkit/src/utils/async-iterable';
 import { execSync, fork } from 'child_process';
 
 type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
@@ -41,14 +42,32 @@ export default async function* moduleFederationSsrDevServer(
   } catch {
     // TODO(jack): Add a link to guide
     throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nrwl/react:host"?`
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?`
     );
   }
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
-  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter(
-    (r) => !remotesToSkip.has(r)
-  );
+  const remotesNotInWorkspace: string[] = [];
+  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
+    const validRemote = Array.isArray(r) ? r[0] : r;
+
+    if (remotesToSkip.has(validRemote)) {
+      return false;
+    } else if (!context.projectGraph.nodes[validRemote]) {
+      remotesNotInWorkspace.push(validRemote);
+      return false;
+    } else {
+      return true;
+    }
+  });
+
+  if (remotesNotInWorkspace.length > 0) {
+    logger.warn(
+      `Skipping serving ${remotesNotInWorkspace.join(
+        ', '
+      )} as they could not be found in the workspace. Ensure they are served correctly.`
+    );
+  }
 
   const devServeApps = !options.devRemotes
     ? []
@@ -80,8 +99,9 @@ export default async function* moduleFederationSsrDevServer(
               remoteProject.targets.server.options.outputPath,
               'main.js'
             );
+            const pm = getPackageManagerCommand();
             execSync(
-              `npx nx run ${appName}:server${
+              `${pm.exec} nx run ${appName}:server${
                 context.configurationName ? `:${context.configurationName}` : ''
               }`,
               { stdio: 'inherit' }

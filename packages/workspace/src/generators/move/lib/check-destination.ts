@@ -1,4 +1,4 @@
-import { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import { ProjectConfiguration, Tree } from '@nx/devkit';
 import { Schema } from '../schema';
 import { getDestination } from './utils';
 

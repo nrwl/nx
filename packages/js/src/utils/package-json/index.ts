@@ -1,6 +1,5 @@
-import { join } from 'path';
-import { ExecutorContext } from '@nrwl/devkit';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { ExecutorContext } from '@nx/devkit';
+import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 import { watchForSingleFileChanges } from '../watch-for-single-file-changes';
 import type { UpdatePackageJsonOption } from './update-package-json';

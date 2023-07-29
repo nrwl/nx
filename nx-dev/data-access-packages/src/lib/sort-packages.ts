@@ -1,12 +1,12 @@
-export function sortCorePackagesFirst<ItemType>(
+export function sortCorePackagesFirst<ItemType extends object>(
   itemList: ItemType[],
   ref: PropertyKey
 ): ItemType[] {
   const nxPackageIds = ['nx', 'workspace', 'devkit', 'nx-plugin'];
-  function assertRef<OBJECT>(
+  function assertRef(
     value: PropertyKey,
-    target: OBJECT
-  ): value is keyof OBJECT {
+    target: ItemType
+  ): value is keyof ItemType {
     if (!(value in target))
       throw new Error(
         `Property '${value.toString()}' can not be found in passed object.`
@@ -27,14 +27,7 @@ export function sortCorePackagesFirst<ItemType>(
 export function filterMigrationPackages<ItemType extends { name: string }>(
   itemList: ItemType[]
 ): ItemType[] {
-  const nxPackageNames = [
-    'add-nx-to-monorepo',
-    'create-nx-workspace',
-    'create-nx-plugin',
-    'cra-to-nx',
-    'make-angular-cli-faster',
-    'tao',
-  ];
+  const nxPackageNames = ['create-nx-workspace', 'create-nx-plugin', 'tao'];
   return itemList.filter(
     (item): item is ItemType => !nxPackageNames.includes(item.name)
   );

@@ -4,6 +4,7 @@ import {
   readNxJson,
   updateNxJson,
 } from '../../generators/utils/project-configuration';
+import { assertRunsAgainstNxRepo } from '../../../internal-testing-utils/run-migration-against-this-workspace';
 import removeDefaultCollection from './remove-default-collection';
 
 describe('remove-default-collection', () => {
@@ -52,4 +53,6 @@ describe('remove-default-collection', () => {
     tree.delete('nx.json');
     await expect(removeDefaultCollection(tree)).resolves.not.toThrow();
   });
+
+  assertRunsAgainstNxRepo(removeDefaultCollection);
 });

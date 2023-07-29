@@ -18,31 +18,22 @@
       "x-dropdown": "projects",
       "x-priority": "important"
     },
-    "uiFramework": {
-      "type": "string",
-      "description": "Storybook UI Framework to use.",
-      "enum": [
-        "@storybook/angular",
-        "@storybook/react",
-        "@storybook/react-native",
-        "@storybook/html",
-        "@storybook/web-components",
-        "@storybook/vue",
-        "@storybook/vue3",
-        "@storybook/svelte"
-      ],
-      "x-prompt": "What UI framework plugin should storybook use?",
-      "x-priority": "important"
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "alias": ["configureTestRunner"],
+      "default": true
     },
     "configureCypress": {
       "type": "boolean",
       "description": "Run the cypress-configure generator.",
-      "x-prompt": "Configure a cypress e2e app to run against the storybook instance?",
-      "x-priority": "important"
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
     },
     "cypressDirectory": {
       "type": "string",
-      "description": "A directory where the Cypress project will be placed. Added at root by default."
+      "description": "A directory where the Cypress project will be placed. Added at root by default.",
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -58,7 +49,7 @@
     "tsConfiguration": {
       "type": "boolean",
       "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
-      "default": false,
+      "default": true,
       "x-priority": "important"
     },
     "standaloneConfig": {
@@ -67,25 +58,19 @@
       "default": true,
       "x-deprecated": "Nx only supports standaloneConfig"
     },
-    "configureTestRunner": {
+    "configureStaticServe": {
       "type": "boolean",
-      "description": "Add a Storybook Test-Runner target."
+      "description": "Add a static-storybook to serve the static storybook built files.",
+      "default": false
     },
     "bundler": {
       "description": "The Storybook builder to use.",
       "type": "string",
       "enum": ["vite", "webpack"],
-      "x-prompt": "Which Storybook builder do you want to use?",
       "default": "webpack",
       "x-priority": "important"
     },
-    "storybook7betaConfiguration": {
-      "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
-      "type": "boolean",
-      "default": false,
-      "hidden": true
-    },
-    "storybook7UiFramework": {
+    "uiFramework": {
       "type": "string",
       "description": "Storybook UI Framework to use.",
       "enum": [
@@ -106,9 +91,18 @@
         "@storybook/web-components-webpack5",
         "@storybook/web-components-vite"
       ],
-      "hidden": true
+      "aliases": ["storybook7UiFramework"],
+      "x-prompt": "Choose the Storybook framework that you need to use.",
+      "x-priority": "important",
+      "hidden": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
     }
   },
-  "required": ["name"],
+  "required": ["name", "uiFramework"],
   "examplesFile": "../../../docs/configuration-generator-examples.md"
 }

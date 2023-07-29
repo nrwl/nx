@@ -7,7 +7,7 @@ import {
   Tree,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export default async function update(tree: Tree) {
   const nxJson = readJson(tree, 'nx.json') as NxJsonConfiguration & {

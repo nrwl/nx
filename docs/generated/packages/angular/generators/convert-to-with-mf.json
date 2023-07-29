@@ -11,7 +11,7 @@
     "additionalProperties": false,
     "examples": [
       {
-        "command": "nx g @nrwl/angular:convert-to-with-mf --project mf-app",
+        "command": "nx g @nx/angular:convert-to-with-mf --project mf-app",
         "description": "Convert a Module Federation Project using legacy webpack config to use the `withModuleFederation` helper."
       }
     ],

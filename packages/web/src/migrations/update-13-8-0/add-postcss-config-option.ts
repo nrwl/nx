@@ -3,7 +3,7 @@ import {
   getProjects,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /*
  * This migration ensures that the previous behavior of applying the app postcss config

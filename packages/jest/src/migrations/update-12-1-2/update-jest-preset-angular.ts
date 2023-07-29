@@ -4,14 +4,13 @@ import {
   readProjectConfiguration,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
-
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { join } from 'path';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
 } from '../../utils/config/update-config';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 import { JestExecutorOptions } from '../../executors/jest/schema';
 
 function updateJestConfig(tree: Tree) {

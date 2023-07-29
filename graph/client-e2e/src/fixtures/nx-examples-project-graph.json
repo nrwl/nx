@@ -1833,5 +1833,6 @@
   "affected": [],
   "focus": null,
   "groupByFolder": false,
+  "fileMap": {},
   "exclude": []
 }

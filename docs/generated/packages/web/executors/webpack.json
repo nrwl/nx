@@ -29,7 +29,8 @@
         "type": "string",
         "description": "The compiler to use.",
         "enum": ["babel", "swc"],
-        "default": "babel"
+        "default": "babel",
+        "x-priority": "important"
       },
       "outputPath": {
         "type": "string",
@@ -48,11 +49,13 @@
       },
       "baseHref": {
         "type": "string",
-        "description": "Base url for the application being built."
+        "description": "Base url for the application being built.",
+        "x-priority": "important"
       },
       "deployUrl": {
         "type": "string",
-        "description": "URL where the application will be deployed."
+        "description": "URL where the application will be deployed.",
+        "x-priority": "important"
       },
       "vendorChunk": {
         "type": "boolean",
@@ -376,7 +379,8 @@
         "type": "string",
         "description": "Path to a function which takes a webpack config, some context and returns the resulting webpack config. See https://nx.dev/guides/customize-webpack",
         "x-completion-type": "file",
-        "x-completion-glob": "webpack?(*)@(.js|.ts)"
+        "x-completion-glob": "webpack?(*)@(.js|.ts)",
+        "x-priority": "important"
       }
     },
     "required": ["tsConfig", "main", "index"],

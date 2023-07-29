@@ -4,13 +4,9 @@ If your organization uses [Google Identity](https://cloud.google.com/identity) o
 
 By default, when you invite a member by email, they can create a separate NxCloud account using their work e-mail address. **If their primary email address gets disabled, they will still be able to sign-in with their NxCloud account, unless you explicitly revoke their membership from the Members page.**
 
-If you'd like them to sign-in with Google directly, which ensures they automatically lose access to their NxCloud account if their email gets disabled, you need to enable this option when inviting them:
+If you'd like them to sign-in with Google directly, which ensures they automatically lose access to their NxCloud account if their email gets disabled, you need to enable this option when inviting them: "_Require Social OAuth Sign-In_". They will then only be able to accept the invite if they sign-in with Google directly.
 
-![Require Google OAuth Sign-In toggle](/nx-cloud/account/require_google_signin.png)
-
-They will then only be able to accept the invite if they sign-in with Google directly:
-
-![Log In with Google Button](/nx-cloud/account/google_oauth.png)
+![Require Google OAuth Sign-In toggle](/nx-cloud/account/require-google-signin.webp)
 
 ## SAML integration
 

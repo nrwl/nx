@@ -12,7 +12,7 @@
       "rules": {
         "no-restricted-imports": [
           "error",
-          "@nrwl/workspace",
+          "@nx/workspace",
           "@angular-devkit/core",
           "@angular-devkit/architect",
           "@angular-devkit/schematics"
@@ -28,10 +28,30 @@
       ],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": [
+        "@nx/nx-plugin-checks": [
           "error",
           {
             "allowedVersionStrings": ["latest", "*"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "prettier",
+              "typescript",
+              "@angular-devkit/schematics",
+              "@angular-devkit/core",
+              "@angular-devkit/architect"
+            ]
           }
         ]
       }

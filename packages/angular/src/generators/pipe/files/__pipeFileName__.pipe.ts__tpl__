@@ -1,0 +1,13 @@
+import { Pipe, PipeTransform } from '@angular/core';
+
+@Pipe({
+  name: '<%= pipePropertyName %>'<% if(standalone) {%>,
+  standalone: true<%}%>
+})
+export class <%= pipeClassName %>Pipe implements PipeTransform {
+
+  transform(value: unknown, ...args: unknown[]): unknown {
+    return null;
+  }
+
+}

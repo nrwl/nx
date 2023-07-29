@@ -3,10 +3,10 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from './library';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import { Schema } from './schema';
 
 describe('lib', () => {
@@ -33,7 +33,7 @@ describe('lib', () => {
       expect(projectConfiguration.root).toEqual('libs/my-lib');
       expect(projectConfiguration.targets.build).toBeUndefined();
       expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -159,7 +159,7 @@ describe('lib', () => {
 
       expect(projectConfiguration.root).toEqual('libs/my-dir/my-lib');
       expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['libs/my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -235,12 +235,78 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchObject({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: ['libs/my-lib/**/*.{ts,tsx,js,jsx}'],
         },
         outputs: ['{options.outputFile}'],
       });
+    });
+
+    it('should generate test configuration', async () => {
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        unitTestRunner: 'jest',
+      });
+
+      expect(appTree.read('libs/my-lib/tsconfig.spec.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": "./tsconfig.json",
+          "compilerOptions": {
+            "outDir": "../../dist/out-tsc",
+            "module": "commonjs",
+            "types": ["jest", "node"]
+          },
+          "include": [
+            "jest.config.ts",
+            "src/**/*.test.ts",
+            "src/**/*.spec.ts",
+            "src/**/*.test.tsx",
+            "src/**/*.spec.tsx",
+            "src/**/*.test.js",
+            "src/**/*.spec.js",
+            "src/**/*.test.jsx",
+            "src/**/*.spec.jsx",
+            "src/**/*.d.ts"
+          ]
+        }
+        "
+      `);
+      expect(appTree.read('libs/my-lib/jest.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "module.exports = {
+          displayName: 'my-lib',
+          preset: 'react-native',
+          resolver: '@nx/jest/plugins/resolver',
+          moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
+          setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+          moduleNameMapper: {
+            '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock',
+          },
+          coverageDirectory: '../../coverage/libs/my-lib',
+        };
+        "
+      `);
+      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
+      expect(projectConfiguration.targets.test).toMatchInlineSnapshot(`
+        {
+          "configurations": {
+            "ci": {
+              "ci": true,
+              "codeCoverage": true,
+            },
+          },
+          "executor": "@nx/jest:jest",
+          "options": {
+            "jestConfig": "libs/my-lib/jest.config.ts",
+            "passWithNoTests": true,
+          },
+          "outputs": [
+            "{workspaceRoot}/coverage/{projectRoot}",
+          ],
+        }
+      `);
     });
   });
 
@@ -268,15 +334,15 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
 
       expect(projectConfiguration.targets.build).toMatchObject({
-        executor: '@nrwl/web:rollup',
+        executor: '@nx/rollup:rollup',
         outputs: ['{options.outputPath}'],
         options: {
-          external: ['react/jsx-runtime', 'react-native'],
+          external: ['react/jsx-runtime', 'react-native', 'react', 'react-dom'],
           entryFile: 'libs/my-lib/src/index.ts',
           outputPath: 'dist/libs/my-lib',
           project: 'libs/my-lib/package.json',
           tsConfig: 'libs/my-lib/tsconfig.lib.json',
-          rollupConfig: '@nrwl/react/plugins/bundle-rollup',
+          rollupConfig: '@nx/react/plugins/bundle-rollup',
         },
       });
     });
@@ -384,14 +450,14 @@ describe('lib', () => {
 
   describe('--skipPackageJson', () => {
     it('should not add or update dependencies when true', async () => {
-      const packageJsonBefore = appTree.read('package.json', 'utf-8');
+      const packageJsonBefore = readJson(appTree, 'package.json');
 
       await libraryGenerator(appTree, {
         ...defaultSchema,
         skipPackageJson: true,
       });
 
-      expect(appTree.read('package.json', 'utf-8')).toEqual(packageJsonBefore);
+      expect(readJson(appTree, 'package.json')).toEqual(packageJsonBefore);
     });
   });
 });

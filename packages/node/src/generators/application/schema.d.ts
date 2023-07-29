@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 export interface Schema {
   name: string;
@@ -10,6 +10,8 @@ export interface Schema {
   linter?: Linter;
   tags?: string;
   frontendProject?: string;
+  swcJest?: boolean;
+  /** @deprecated use `swcJest` instead */
   babelJest?: boolean;
   js?: boolean;
   pascalCaseFiles?: boolean;
@@ -20,6 +22,7 @@ export interface Schema {
   port?: number;
   rootProject?: boolean;
   docker?: boolean;
+  isNest?: boolean;
 }
 
-export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'none';
+export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'nest' | 'none';

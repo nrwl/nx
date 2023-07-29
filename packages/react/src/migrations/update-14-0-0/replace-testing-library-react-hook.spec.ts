@@ -1,10 +1,10 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   readJson,
   stripIndents,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import update from './replace-testing-library-react-hook';
 
 describe('Remove deprecated hook testing package', () => {

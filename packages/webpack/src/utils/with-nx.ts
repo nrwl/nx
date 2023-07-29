@@ -1,12 +1,10 @@
 import * as path from 'path';
-import { Configuration, WebpackPluginInstance, ProgressPlugin } from 'webpack';
+import { join } from 'path';
+import { Configuration, ProgressPlugin, WebpackPluginInstance } from 'webpack';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
-import { readTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+import { readTsConfig } from '@nx/js';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import TerserPlugin = require('terser-webpack-plugin');
-import nodeExternals = require('webpack-node-externals');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { StatsJsonPlugin } from '../plugins/stats-json-plugin';
@@ -14,6 +12,44 @@ import { createCopyPlugin } from './create-copy-plugin';
 import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getOutputHashFormat } from './hash-format';
 import { NxWebpackPlugin } from './config';
+import { existsSync } from 'fs';
+import TerserPlugin = require('terser-webpack-plugin');
+import nodeExternals = require('webpack-node-externals');
+import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+import browserslist = require('browserslist');
+
+const VALID_BROWSERSLIST_FILES = ['.browserslistrc', 'browserslist'];
+
+const ES5_BROWSERS = [
+  'ie 10',
+  'ie 11',
+  'safari 11',
+  'safari 11.1',
+  'safari 12',
+  'safari 12.1',
+  'safari 13',
+  'ios_saf 13.0',
+  'ios_saf 13.3',
+];
+
+function getTerserEcmaVersion(projectRoot: string) {
+  let pathToBrowserslistFile = '';
+  for (const browserslistFile of VALID_BROWSERSLIST_FILES) {
+    const fullPathToFile = join(projectRoot, browserslistFile);
+    if (existsSync(fullPathToFile)) {
+      pathToBrowserslistFile = fullPathToFile;
+      break;
+    }
+  }
+
+  if (!pathToBrowserslistFile) {
+    return 2020;
+  }
+
+  const env = browserslist.loadConfig({ path: pathToBrowserslistFile });
+  const browsers = browserslist(env);
+  return browsers.some((b) => ES5_BROWSERS.includes(b)) ? 5 : 2020;
+}
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -21,7 +57,7 @@ const IGNORED_WEBPACK_WARNINGS = [
 ];
 
 const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-const mainFields = ['main', 'module'];
+const mainFields = ['module', 'main'];
 
 const processed = new Set();
 
@@ -139,16 +175,20 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
         : undefined,
       target: options.target,
       node: false as const,
-      // When mode is development or production, webpack will automatically
-      // configure DefinePlugin to replace `process.env.NODE_ENV` with the
-      // build-time value. Thus, we need to make sure it's the same value to
-      // avoid conflicts.
-      //
-      // When the NODE_ENV is something else (e.g. test), then set it to none
-      // to prevent extra behavior from webpack.
       mode:
-        process.env.NODE_ENV === 'development' ||
-        process.env.NODE_ENV === 'production'
+        // When the target is Node avoid any optimizations, such as replacing `process.env.NODE_ENV` with build time value.
+        options.target === ('node' as const)
+          ? 'none'
+          : // Otherwise, make sure it matches `process.env.NODE_ENV`.
+          // When mode is development or production, webpack will automatically
+          // configure DefinePlugin to replace `process.env.NODE_ENV` with the
+          // build-time value. Thus, we need to make sure it's the same value to
+          // avoid conflicts.
+          //
+          // When the NODE_ENV is something else (e.g. test), then set it to none
+          // to prevent extra behavior from webpack.
+          process.env.NODE_ENV === 'development' ||
+            process.env.NODE_ENV === 'production'
           ? (process.env.NODE_ENV as 'development' | 'production')
           : ('none' as const),
       devtool:
@@ -167,7 +207,8 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
         hashFunction: 'xxhash64',
         // Disabled for performance
         pathinfo: false,
-        scriptType: 'module' as const,
+        // Use CJS for Node since it has the widest support.
+        scriptType: options.target === 'node' ? undefined : ('module' as const),
       },
       watch: options.watch,
       watchOptions: {
@@ -208,14 +249,17 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
                 parallel: true,
                 terserOptions: {
                   keep_classnames: true,
-                  ecma: 2020,
+                  ecma: getTerserEcmaVersion(
+                    join(options.root, options.projectRoot)
+                  ),
                   safari10: true,
-                  output: {
+                  format: {
                     ascii_only: true,
                     comments: false,
                     webkit: true,
                   },
                 },
+                extractComments: false,
               })
             : new TerserPlugin({
                 minify: TerserPlugin.swcMinify,
@@ -324,7 +368,7 @@ export function createLoaderFromCompiler(
         },
       };
     case 'tsc':
-      const { loadTsTransformers } = require('@nrwl/js');
+      const { loadTsTransformers } = require('@nx/js');
       const { compilerPluginHooks, hasPlugin } = loadTsTransformers(
         options.transformers
       );
@@ -350,21 +394,32 @@ export function createLoaderFromCompiler(
       };
     case 'babel':
       const tsConfig = readTsConfig(options.tsConfig);
-      return {
+
+      const babelConfig = {
         test: /\.([jt])sx?$/,
         loader: path.join(__dirname, './web-babel-loader'),
         exclude: /node_modules/,
         options: {
-          rootMode: 'upward',
           cwd: path.join(options.root, options.sourceRoot),
           emitDecoratorMetadata: tsConfig.options.emitDecoratorMetadata,
           isModern: true,
-          envName: process.env.NODE_ENV,
-          babelrc: true,
+          isTest: process.env.NX_CYPRESS_COMPONENT_TEST === 'true',
+          envName: process.env.BABEL_ENV ?? process.env.NODE_ENV,
           cacheDirectory: true,
           cacheCompression: false,
         },
       };
+
+      if (options.babelUpwardRootMode) {
+        babelConfig.options['rootMode'] = 'upward';
+        babelConfig.options['babelrc'] = true;
+      } else {
+        babelConfig.options['configFile'] =
+          babelConfig.options?.['babelConfig'] ??
+          path.join(options.root, options.projectRoot, '.babelrc');
+      }
+
+      return babelConfig;
     default:
       return null;
   }

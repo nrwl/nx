@@ -1,5 +1,5 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 describe('setupDockerGenerator', () => {
   let tree: Tree;
@@ -23,10 +23,7 @@ describe('setupDockerGenerator', () => {
         expect.objectContaining({
           'docker-build': {
             dependsOn: ['build'],
-            executor: 'nx:run-commands',
-            options: {
-              commands: ['docker build -f api/Dockerfile . -t api'],
-            },
+            command: 'docker build -f api/Dockerfile . -t api',
           },
         })
       );
@@ -48,10 +45,7 @@ describe('setupDockerGenerator', () => {
         expect.objectContaining({
           'docker-build': {
             dependsOn: ['build'],
-            executor: 'nx:run-commands',
-            options: {
-              commands: ['docker build -f Dockerfile . -t api'],
-            },
+            command: 'docker build -f Dockerfile . -t api',
           },
         })
       );

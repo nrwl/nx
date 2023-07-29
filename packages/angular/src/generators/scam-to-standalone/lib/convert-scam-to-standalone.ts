@@ -1,6 +1,5 @@
-import { Node, SourceFile } from 'typescript';
+import type { Node, SourceFile } from 'typescript';
 import { Tree } from 'nx/src/generators/tree';
-import { tsquery } from '@phenomnomnominal/tsquery';
 import { parse } from 'path';
 import { joinPathFragments } from 'nx/src/utils/path';
 
@@ -17,6 +16,7 @@ export function convertScamToStandalone(
   let newComponentContents = '';
   const COMPONENT_PROPERTY_SELECTOR =
     'ClassDeclaration > Decorator > CallExpression:has(Identifier[name=Component]) ObjectLiteralExpression';
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const componentDecoratorMetadataNode = tsquery(
     componentAST,
     COMPONENT_PROPERTY_SELECTOR,

@@ -10,7 +10,6 @@ describe('splitTarget', () => {
     builder.addNode({
       name: 'project',
       data: {
-        files: [],
         root: '',
         targets: {
           target: {},
@@ -55,10 +54,11 @@ describe('splitTarget', () => {
   });
 
   it('should targets that contain colons when not provided graph but surrounded by quotes', () => {
-    expect(splitTarget('project:"other:other":configuration')).toEqual([
-      'project',
-      'other:other',
-      'configuration',
-    ]);
+    expect(
+      splitTarget('project:"other:other":configuration', {
+        nodes: {},
+        dependencies: {},
+      } as ProjectGraph)
+    ).toEqual(['project', 'other:other', 'configuration']);
   });
 });

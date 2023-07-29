@@ -1,50 +1,47 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
+import { cypressProjectGenerator } from '@nx/cypress';
+import type { Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nx/devkit';
+import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
-
-import { cypressProjectGenerator } from '@nrwl/cypress';
-
-import { E2eTestRunner } from '../../../utils/test-runners';
-
-import { addProtractor } from './add-protractor';
 import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
-import { updateE2eProject } from './update-e2e-project';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
-  if (options.e2eTestRunner === E2eTestRunner.Protractor) {
-    await addProtractor(tree, options);
-  } else {
-    removeScaffoldedE2e(tree, options, options.ngCliSchematicE2ERoot);
-  }
+  removeScaffoldedE2e(tree, options, options.ngCliSchematicE2ERoot);
 
   if (options.e2eTestRunner === 'cypress') {
+    // TODO: This can call `@nx/web:static-config` generator when ready
+    addFileServerTarget(tree, options, 'serve-static');
+
     await cypressProjectGenerator(tree, {
       name: options.e2eProjectName,
       directory: options.directory,
       project: options.name,
       linter: options.linter,
-      skipFormat: options.skipFormat,
       standaloneConfig: options.standaloneConfig,
       skipPackageJson: options.skipPackageJson,
-      rootProject: options.rootProject,
+      skipFormat: true,
     });
   }
+}
 
-  if (options.e2eTestRunner === E2eTestRunner.Protractor) {
-    updateE2eProject(tree, options);
-    if (options.linter === Linter.EsLint) {
-      await lintProjectGenerator(tree, {
-        project: options.e2eProjectName,
-        linter: options.linter,
-        eslintFilePatterns: [
-          joinPathFragments(options.e2eProjectRoot, '**/*.ts'),
-        ],
-        unitTestRunner: options.unitTestRunner,
-        skipFormat: true,
-        setParserOptionsProject: options.setParserOptionsProject,
-        skipPackageJson: options.skipPackageJson,
-      });
-    }
-  }
+function addFileServerTarget(
+  tree: Tree,
+  options: NormalizedSchema,
+  targetName: string
+) {
+  addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
+
+  const projectConfig = readProjectConfiguration(tree, options.name);
+  projectConfig.targets[targetName] = {
+    executor: '@nx/web:file-server',
+    options: {
+      buildTarget: `${options.name}:build`,
+      port: options.port,
+    },
+  };
+  updateProjectConfiguration(tree, options.name, projectConfig);
 }

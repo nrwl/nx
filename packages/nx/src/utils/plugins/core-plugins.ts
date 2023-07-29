@@ -5,51 +5,51 @@ import type { CorePlugin, PluginCapabilities } from './models';
 export function fetchCorePlugins(): CorePlugin[] {
   return [
     {
-      name: '@nrwl/angular',
+      name: '@nx/angular',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/cypress',
+      name: '@nx/cypress',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/detox',
+      name: '@nx/detox',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/esbuild',
+      name: '@nx/esbuild',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/expo',
+      name: '@nx/expo',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/express',
+      name: '@nx/express',
       capabilities: 'generators',
     },
     {
-      name: '@nrwl/jest',
+      name: '@nx/jest',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/js',
+      name: '@nx/js',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/linter',
+      name: '@nx/linter',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/nest',
+      name: '@nx/nest',
       capabilities: 'generators',
     },
     {
-      name: '@nrwl/next',
+      name: '@nx/next',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/node',
+      name: '@nx/node',
       capabilities: 'executors,generators',
     },
     {
@@ -57,35 +57,39 @@ export function fetchCorePlugins(): CorePlugin[] {
       capabilities: 'executors',
     },
     {
-      name: '@nrwl/nx-plugin',
+      name: '@nx/plugin',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/react',
+      name: '@nx/react',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/react-native',
+      name: '@nx/react-native',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/rollup',
+      name: '@nx/rollup',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/storybook',
+      name: '@nx/storybook',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/web',
+      name: '@nx/vite',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/webpack',
+      name: '@nx/web',
       capabilities: 'executors,generators',
     },
     {
-      name: '@nrwl/workspace',
+      name: '@nx/webpack',
+      capabilities: 'executors,generators',
+    },
+    {
+      name: '@nx/workspace',
       capabilities: 'executors,generators',
     },
   ];

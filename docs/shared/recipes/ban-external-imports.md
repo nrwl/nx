@@ -10,8 +10,8 @@ A common example of this is for backend projects that use NestJS and frontend pr
 {
   // ... more ESLint config here
 
-  // nx-enforce-module-boundaries should already exist at the top-level of your config
-  "nx-enforce-module-boundaries": [
+  // @nx/enforce-module-boundaries should already exist at the top-level of your config
+  "@nx/enforce-module-boundaries": [
     "error",
     {
       "allow": [],
@@ -40,8 +40,8 @@ Another common example is ensuring that util libraries stay framework-free by ba
 ```jsonc {% fileName=".eslintrc.json" %}
 {
   // ... more ESLint config here
-  // nx-enforce-module-boundaries should already exist at the top-level of your config
-  "nx-enforce-module-boundaries": [
+  // @nx/enforce-module-boundaries should already exist at the top-level of your config
+  "@nx/enforce-module-boundaries": [
     "error",
     {
       "allow": [],
@@ -69,8 +69,8 @@ This is useful if you want to enforce separation of concerns _(e.g. keeping your
 {
   // ... more ESLint config here
 
-  // nx-enforce-module-boundaries should already exist at the top-level of your config
-  "nx-enforce-module-boundaries": [
+  // @nx/enforce-module-boundaries should already exist at the top-level of your config
+  "@nx/enforce-module-boundaries": [
     "error",
     {
       "allow": [],

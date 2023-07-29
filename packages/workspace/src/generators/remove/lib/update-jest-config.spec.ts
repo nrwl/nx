@@ -1,12 +1,14 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
 import { Schema } from '../schema';
 import { updateJestConfig } from './update-jest-config';
-import { libraryGenerator } from '../../library/library';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nx/js');
 
 describe('updateRootJestConfig', () => {
   let tree: Tree;
@@ -30,7 +32,7 @@ describe('updateRootJestConfig', () => {
 
     tree.write(
       'jest.config.ts',
-      readFileSync(join(__dirname, './test-files/jest.config.ts'), 'utf-8')
+      readFileSync(join(__dirname, './__fixtures__/jest.config.ts'), 'utf-8')
     );
   });
 
@@ -63,6 +65,22 @@ describe('updateRootJestConfig', () => {
     tree.write(
       'jest.config.ts',
       originalRootJestConfig.replace(`'<rootDir>/libs/my-lib',`, '')
+    );
+
+    updateJestConfig(tree, schema, readProjectConfiguration(tree, 'my-lib'));
+
+    const rootJestConfig = tree.read('jest.config.ts', 'utf-8');
+
+    expect(rootJestConfig).toMatchSnapshot();
+  });
+
+  it('should delete project if root jest config is not a multi-project config', () => {
+    tree.write(
+      'jest.config.ts',
+      readFileSync(
+        join(__dirname, './__fixtures__/jest-project.config.ts'),
+        'utf-8'
+      )
     );
 
     updateJestConfig(tree, schema, readProjectConfiguration(tree, 'my-lib'));

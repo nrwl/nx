@@ -1,7 +1,7 @@
 # Project Configuration
 
 Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
-[use task executors](/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
+[use task executors](/core-features/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
 files to get each project's configuration.
 
 The following configuration creates `build` and `test` targets for Nx.
@@ -27,13 +27,13 @@ The following configuration creates `build` and `test` targets for Nx.
   "root": "libs/mylib/",
   "targets": {
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         /* ... */
       }
     },
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         /* ... */
       }
@@ -96,14 +96,14 @@ You can add Nx-specific configuration as follows:
   },
   "targets": {
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "inputs": ["default", "^production"],
       "outputs": [],
       "dependsOn": ["build"],
       "options": {}
     },
     "build": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/libs/mylib"],
       "dependsOn": ["^build"],
@@ -123,7 +123,7 @@ You can add Nx-specific configuration as follows:
 The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
 hit or not. There are three types of inputs:
 
-_Filesets_
+#### Filesets
 
 Examples:
 
@@ -132,12 +132,17 @@ Examples:
 - `{workspaceRoot}/jest.config.ts`
 - same as `{fileset: "{workspaceRoot}/jest.config.ts}`
 
-{% callout type="note" title="{projectRoot} and {workspaceRoot}" %}
-`{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
-`{workspaceRoot}` is a key word that is replaced by the path to the workspace root directory.
+{% callout type="note" title="inputs syntax" %}
+
+The `inputs` and `namedInputs` are parsed with the following rules:
+
+1. `{projectRoot}` and `{workspaceRoot}` are replaced with the appropriate path
+2. A `^` character at the beginning of the string means this entry applies to the project dependencies of the project, not the project itself.
+3. Everything else is processed with the [minimatch](https://github.com/isaacs/minimatch) library
+
 {% /callout %}
 
-_Runtime Inputs_
+#### Runtime Inputs
 
 Examples:
 
@@ -145,7 +150,7 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
-_Env Variables_
+#### Env Variables
 
 Examples:
 
@@ -153,12 +158,81 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
-_Named Inputs_
+#### External Dependencies
+
+For official plugins, Nx intelligently finds a set of external dependencies which it hashes for the target. `nx:run-commands` is an exception to this.
+Because you may specify any command to be run, it is not possible to determine which, if any, external dependencies are used by the target.
+To be safe, Nx assumes that updating any external dependency invalidates the cache for the target.
+
+> Note: Community plugins are also treated like `nx:run-commands`
+
+This input type allows you to override this cautious behavior by specifying a set of external dependencies to hash for the target.
+
+Examples:
+
+Targets that only use commands natively available in the terminal will not depend on any external dependencies. Specify an empty array to not hash any external dependencies.
+
+```json
+{
+  "targets": {
+    "copyFiles": {
+      "inputs": [
+        {
+          "externalDependencies": []
+        }
+      ],
+      "command": "cp src/assets dist"
+    }
+  }
+}
+```
+
+If a target uses a command from an npm package, that package should be listed.
+
+```json
+{
+  "targets": {
+    "copyFiles": {
+      "inputs": [
+        {
+          "externalDependencies": ["lerna"]
+        }
+      ],
+      "command": "npx lerna publish"
+    }
+  }
+}
+```
+
+#### Dependent tasks output
+
+This input allows us to depend on the output, rather than the input of the dependent tasks. We can specify the glob pattern to match only the subset of the output files.
+The `transitive` parameter defines whether the check and the pattern should be recursively applied to the dependent tasks of the child tasks.
+
+Examples:
+
+```json
+{
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "production": ["default", "!{projectRoot}/**/*.spec.ts"],
+    "deps": [{ "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["production", "deps"]
+    }
+  }
+}
+```
+
+#### Named Inputs
 
 Examples:
 
 - `inputs: ["production"]`
-- same as `inputs: [{input: "production", projects: "self"}]`
+- same as `"inputs": [{"input": "production", "projects": "self"}]` in versions prior to Nx 16, or `"inputs": [{"input": "production"}]` after version 16.
 
 Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
 keeping them in sync is error-prone, we recommend defining `namedInputs`, which you can then reference in all of those
@@ -169,14 +243,18 @@ places.
 Examples:
 
 - `inputs: ["^production"]`
-- same as `inputs: [{input: "production", projects: "dependencies"}]`
+- same as `inputs: [{"input": "production", "projects": "dependencies"}]` prior to Nx 16, or `"inputs": [{"input": "production", "dependencies": true }]` after version 16.
 
 Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
 an example.
 
-```
-"test": {
-  "inputs": [ "default", "^production" ]
+```json
+{
+  "targets": {
+    "test": {
+      "inputs": ["default", "^production"]
+    }
+  }
 }
 ```
 
@@ -185,10 +263,10 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 
 {% cards %}
 {% card title="nx.json reference" type="documentation" description="inputs and namedInputs are also described in the nx.json reference" url="/reference/nx-json#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/concepts/more-concepts/customizing-inputs" /%}
 {% /cards %}
 
-### outputs
+### Outputs
 
 Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["{workspaceRoot}/dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
 
@@ -207,11 +285,13 @@ Usually, a target writes to a specific directory or a file. The following instru
 
 ```json
 {
-  "build": {
-    "outputs": [
-      "{workspaceRoot}/dist/libs/mylib",
-      "{workspaceRoot}/build/libs/mylib/main.js"
-    ]
+  "targets": {
+    "build": {
+      "outputs": [
+        "{workspaceRoot}/dist/libs/mylib",
+        "{workspaceRoot}/build/libs/mylib/main.js"
+      ]
+    }
   }
 }
 ```
@@ -222,24 +302,43 @@ Sometimes, multiple targets might write to the same directory. When possible it 
 
 ```json
 {
-  "build-js": {
-    "outputs": ["{workspaceRoot}/dist/libs/mylib/js"]
-  },
-  "build-css": {
-    "outputs": ["{workspaceRoot}/dist/libs/mylib/css"]
+  "targets": {
+    "build-js": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/js"]
+    },
+    "build-css": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/css"]
+    }
   }
 }
 ```
 
-But if the above is not possible, globs can be specified as outputs to only cache a set of files rather than the whole directory.
+But if the above is not possible, globs (parsed by the [GlobSet](https://docs.rs/globset/0.4.5/globset/#syntax) Rust library) can be specified as outputs to only cache a set of files rather than the whole directory.
 
 ```json
 {
-  "build-js": {
-    "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.js"]
-  },
-  "build-css": {
-    "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
+  "targets": {
+    "build-js": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.{js,map}"]
+    },
+    "build-css": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
+    }
+  }
+}
+```
+
+More advanced patterns can be used to exclude files and folders in a single line
+
+```json
+{
+  "targets": {
+    "build-js": {
+      "outputs": ["{workspaceRoot}/dist/libs/!(cache|.next)/**/*.{js,map}"]
+    },
+    "build-css": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/!(secondary).css"]
+    }
   }
 }
 ```
@@ -249,11 +348,15 @@ But if the above is not possible, globs can be specified as outputs to only cach
 Targets can depend on other targets. This is the relevant portion of the configuration file:
 
 ```json
-"build": {
-  "dependsOn": ["^build"]
-},
-"test": {
-  "dependsOn": ["build"]
+{
+  "targets": {
+    "build": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["build"]
+    }
+  }
 }
 ```
 
@@ -269,42 +372,237 @@ instance, `"dependsOn": ["build"]` of
 the `test` target tells Nx that before it can test `mylib` it needs to make sure that `mylib` is built, which will
 result in `mylib`'s dependencies being built as well.
 
-You can also express the same configuration using:
+You can also express task dependencies with an object syntax:
+
+{% tabs %}
+{% tab label="Version < 16" %}
 
 ```json
-"build": {
-  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-},
-"test": {
-  "dependsOn": [{ "projects": "self", "target": "build" }]
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "projects": "dependencies", // "dependencies" or "self"
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
 }
 ```
+
+{% /tab %}
+{% tab label="Version 16+ (self)" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+ (dependencies)" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "dependencies": true, // Run this target on all dependencies first
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+ (specific projects)" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "projects": ["my-app"], // Run build on "my-app" first
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+#### Examples
+
+You can write the shorthand configuration above in the object syntax like this:
+
+{% tabs %}
+{% tab label="Version < 16" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+    },
+    "test": {
+      "dependsOn": [{ "projects": "self", "target": "build" }]
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      "dependsOn": [{ "dependencies": true, "target": "build" }] // Run build on my dependencies first
+    },
+    "test": {
+      "dependsOn": [{ "target": "build" }] // Run build on myself first
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
 
 With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
 
+{% tabs %}
+{% tab label="Version < 16" %}
+
 ```json
-"build": {
-   // forward params passed to this target to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "forward" }]
-},
-"test": {
-  // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build", "params": "ignore" }]
-}
-"lint": {
-  // ignore params passed to this target, won't be forwarded to the dependency targets
-  "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the dependency targets
+      "dependsOn": [
+        { "projects": "dependencies", "target": "build", "params": "forward" }
+      ]
+    },
+    "test": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [
+        { "projects": "dependencies", "target": "build", "params": "ignore" }
+      ]
+    },
+    "lint": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+    }
+  }
 }
 ```
 
-Obviously this also works when defining a relation for the target of the project itself using `"projects": "self"`:
+{% /tab %}
+{% tab label="Version 16+" %}
 
 ```json
-"build": {
-   // forward params passed to this target to the project target
-  "dependsOn": [{ "projects": "self", "target": "pre-build", "params": "forward" }]
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the dependency targets
+      "dependsOn": [
+        { "projects": "{dependencies}", "target": "build", "params": "forward" }
+      ]
+    },
+    "test": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [
+        { "projects": "{dependencies}", "target": "build", "params": "ignore" }
+      ]
+    },
+    "lint": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [{ "projects": "{dependencies}", "target": "build" }]
+    }
+  }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
+
+This also works when defining a relation for the target of the project itself using `"projects": "self"`:
+
+{% tabs %}
+{% tab label="Version < 16" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the project target
+      "dependsOn": [
+        { "projects": "self", "target": "pre-build", "params": "forward" }
+      ]
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Version 16+" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the project target
+      "dependsOn": [{ "target": "pre-build", "params": "forward" }]
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
+
+Additionally, when using the expanded object syntax, you can specify individual projects in version 16 or greater.
+
+{% tabs %}
+{% tab label="Version 16+" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      // Run is-even:pre-build and is-odd:pre-build before this target
+      "dependsOn": [
+        { "projects": ["is-even", "is-odd"], "target": "pre-build" }
+      ]
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
@@ -343,7 +641,7 @@ belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
 
-Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced statically, so you can set them manually like this:
+Nx uses powerful source-code analysis to figure out your workspace's project graph. Some dependencies cannot be deduced statically, so you can set them manually like this. The `implicitDependencies` property is parsed with the [minimatch](https://github.com/isaacs/minimatch) library, so you can review that syntax for more advanced use cases.
 
 {% tabs %}
 {% tab label="package.json" %}

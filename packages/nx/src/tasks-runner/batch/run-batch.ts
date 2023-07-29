@@ -1,9 +1,10 @@
 import {
-  BatchCompleteMessage,
+  CompleteBatchExecutionMessage,
   BatchMessage,
   BatchMessageType,
+  CompleteTaskMessage,
+  BatchResults,
 } from './batch-messages';
-import { Workspaces } from '../../config/workspaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { combineOptionsForExecutor } from '../../utils/params';
 import { TaskGraph } from '../../config/task-graph';
@@ -13,21 +14,26 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
+import { isAsyncIterator } from '../../utils/async-iterator';
+import { getExecutorInformation } from '../../command-line/run/executor-utils';
 
 function getBatchExecutor(executorName: string) {
-  const workspace = new Workspaces(workspaceRoot);
   const [nodeModule, exportName] = executorName.split(':');
-  return workspace.readExecutor(nodeModule, exportName);
+  return getExecutorInformation(nodeModule, exportName, workspaceRoot);
 }
 
-async function runTasks(executorName: string, taskGraph: TaskGraph) {
+async function runTasks(
+  executorName: string,
+  batchTaskGraph: TaskGraph,
+  fullTaskGraph: TaskGraph
+) {
   const input: Record<string, any> = {};
   const projectGraph = await createProjectGraphAsync();
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJsonConfiguration = readNxJson();
   const batchExecutor = getBatchExecutor(executorName);
-  const tasks = Object.values(taskGraph.tasks);
+  const tasks = Object.values(batchTaskGraph.tasks);
   const context: ExecutorContext = {
     root: workspaceRoot,
     cwd: process.cwd(),
@@ -36,6 +42,7 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
     workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
     isVerbose: false,
     projectGraph,
+    taskGraph: fullTaskGraph,
   };
   for (const task of tasks) {
     const projectConfiguration =
@@ -54,7 +61,7 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
 
   try {
     const results = await batchExecutor.batchImplementationFactory()(
-      taskGraph,
+      batchTaskGraph,
       input,
       tasks[0].overrides,
       context
@@ -62,6 +69,27 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
 
     if (typeof results !== 'object') {
       throw new Error(`"${executorName} returned invalid results: ${results}`);
+    }
+
+    if (isAsyncIterator(results)) {
+      const batchResults: BatchResults = {};
+
+      do {
+        const current = await results.next();
+
+        if (!current.done) {
+          batchResults[current.value.task] = current.value.result;
+          process.send({
+            type: BatchMessageType.CompleteTask,
+            task: current.value.task,
+            result: current.value.result,
+          } as CompleteTaskMessage);
+        } else {
+          break;
+        }
+      } while (true);
+
+      return batchResults;
     }
 
     return results;
@@ -74,12 +102,16 @@ async function runTasks(executorName: string, taskGraph: TaskGraph) {
 
 process.on('message', async (message: BatchMessage) => {
   switch (message.type) {
-    case BatchMessageType.Tasks: {
-      const results = await runTasks(message.executorName, message.taskGraph);
+    case BatchMessageType.RunTasks: {
+      const results = await runTasks(
+        message.executorName,
+        message.batchTaskGraph,
+        message.fullTaskGraph
+      );
       process.send({
-        type: BatchMessageType.Complete,
+        type: BatchMessageType.CompleteBatchExecution,
         results,
-      } as BatchCompleteMessage);
+      } as CompleteBatchExecutionMessage);
     }
   }
 });

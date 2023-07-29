@@ -3,7 +3,7 @@ import {
   ClipboardDocumentCheckIcon,
   ClipboardDocumentIcon,
 } from '@heroicons/react/24/outline';
-import { ButtonLink } from '@nrwl/nx-dev/ui-common';
+import { ButtonLink } from '@nx/nx-dev/ui-common';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
 // @ts-ignore
@@ -63,7 +63,7 @@ export function Hero(): JSX.Element {
               </ButtonLink>
 
               <CopyToClipboard
-                text="npx create-nx-workspace"
+                text="npx create-nx-workspace@latest"
                 onCopy={() => {
                   setCopied(true);
                 }}

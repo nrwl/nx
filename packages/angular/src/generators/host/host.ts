@@ -1,4 +1,11 @@
-import { formatFiles, getProjects, stripIndents, Tree } from '@nrwl/devkit';
+import {
+  extractLayoutDirectory,
+  formatFiles,
+  getProjects,
+  runTasksInSerial,
+  stripIndents,
+  Tree,
+} from '@nx/devkit';
 import type { Schema } from './schema';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
@@ -6,7 +13,7 @@ import { normalizeProjectName } from '../utils/project';
 import { setupMf } from '../setup-mf/setup-mf';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { addSsr } from './lib';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { lt } from 'semver';
 
@@ -33,10 +40,12 @@ export async function host(tree: Tree, options: Schema) {
     });
   }
 
-  const appName = normalizeProjectName(options.name, options.directory);
+  const { projectDirectory } = extractLayoutDirectory(options.directory);
+  const appName = normalizeProjectName(options.name, projectDirectory);
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
+    standalone: options.standalone ?? false,
     routing: true,
     port: 4200,
     skipFormat: true,
@@ -55,6 +64,7 @@ export async function host(tree: Tree, options: Schema) {
     skipFormat: true,
     skipE2E,
     e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
+    prefix: options.prefix,
   });
 
   let installTasks = [appInstallTask];

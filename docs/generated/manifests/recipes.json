@@ -1,145 +1,791 @@
 {
-  "/recipes/getting-started": {
-    "id": "getting-started",
-    "name": "Getting Started",
-    "description": "Basic information to get you started.",
+  "/recipes/adopting-nx": {
+    "id": "adopting-nx",
+    "name": "Migrating to Nx",
+    "description": "Adopting Nx incrementally, on existing project or from scratch.",
     "file": "",
     "itemList": [
       {
-        "id": "set-up-a-new-workspace",
-        "name": "Set up a new workspace",
-        "description": "How to setup quickly a new Nx workspace.",
-        "file": "shared/recipes/set-up-a-new-workspace",
+        "id": "adding-to-monorepo",
+        "name": "NPM/Yarn/PNPM workspaces",
+        "description": "",
+        "file": "shared/migration/adding-to-monorepo",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/getting-started/set-up-a-new-workspace",
+        "path": "/recipes/adopting-nx/adding-to-monorepo",
+        "tags": []
+      },
+      {
+        "id": "adding-to-existing-project",
+        "name": "Add to any Project",
+        "description": "",
+        "file": "shared/migration/adding-to-existing-project",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/adding-to-existing-project",
+        "tags": []
+      },
+      {
+        "id": "lerna-and-nx",
+        "name": "Nx and Lerna",
+        "description": "",
+        "file": "shared/migration/lerna-and-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/lerna-and-nx",
+        "tags": []
+      },
+      {
+        "id": "preserving-git-histories",
+        "name": "Preserving Git Histories",
+        "description": "",
+        "file": "shared/migration/preserving-git-histories",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/preserving-git-histories",
+        "tags": []
+      },
+      {
+        "id": "manual",
+        "name": "Manual migration",
+        "description": "",
+        "file": "shared/migration/manual",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/manual",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/recipes/getting-started",
+    "path": "/recipes/adopting-nx",
     "tags": []
   },
-  "/recipes/getting-started/set-up-a-new-workspace": {
-    "id": "set-up-a-new-workspace",
-    "name": "Set up a new workspace",
-    "description": "How to setup quickly a new Nx workspace.",
-    "file": "shared/recipes/set-up-a-new-workspace",
+  "/recipes/adopting-nx/adding-to-monorepo": {
+    "id": "adding-to-monorepo",
+    "name": "NPM/Yarn/PNPM workspaces",
+    "description": "",
+    "file": "shared/migration/adding-to-monorepo",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/getting-started/set-up-a-new-workspace",
+    "path": "/recipes/adopting-nx/adding-to-monorepo",
     "tags": []
   },
-  "/recipes/nx-console": {
-    "id": "nx-console",
-    "name": "Nx Console",
-    "description": "Checkout all the recipes related to Nx Console.",
+  "/recipes/adopting-nx/adding-to-existing-project": {
+    "id": "adding-to-existing-project",
+    "name": "Add to any Project",
+    "description": "",
+    "file": "shared/migration/adding-to-existing-project",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/adding-to-existing-project",
+    "tags": []
+  },
+  "/recipes/adopting-nx/lerna-and-nx": {
+    "id": "lerna-and-nx",
+    "name": "Nx and Lerna",
+    "description": "",
+    "file": "shared/migration/lerna-and-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/lerna-and-nx",
+    "tags": []
+  },
+  "/recipes/adopting-nx/preserving-git-histories": {
+    "id": "preserving-git-histories",
+    "name": "Preserving Git Histories",
+    "description": "",
+    "file": "shared/migration/preserving-git-histories",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/preserving-git-histories",
+    "tags": []
+  },
+  "/recipes/adopting-nx/manual": {
+    "id": "manual",
+    "name": "Manual migration",
+    "description": "",
+    "file": "shared/migration/manual",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/manual",
+    "tags": []
+  },
+  "/recipes/angular": {
+    "id": "angular",
+    "name": "Angular",
+    "description": "Advanced guides to adopt Nx in Angular.",
     "file": "",
     "itemList": [
       {
-        "id": "console-generate-command",
-        "name": "Nx Console Generate Command",
+        "id": "migration",
+        "name": "Migration",
         "description": "",
-        "file": "shared/recipes/console-generate-command",
-        "itemList": [],
+        "file": "",
+        "itemList": [
+          {
+            "id": "angular",
+            "name": "Migrating from Angular CLI",
+            "description": "",
+            "file": "shared/migration/migration-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/migration/angular",
+            "tags": []
+          },
+          {
+            "id": "angular-multiple",
+            "name": "Migrating From Multiple Angular CLI Repos",
+            "description": "",
+            "file": "shared/migration/angular-multiple",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/migration/angular-multiple",
+            "tags": []
+          },
+          {
+            "id": "angular-manual",
+            "name": "Migrating Angular Application manually",
+            "description": "",
+            "file": "shared/migration/angular-manual",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/migration/angular-manual",
+            "tags": []
+          },
+          {
+            "id": "angularjs",
+            "name": "Migrating from AngularJS",
+            "description": "",
+            "file": "shared/migration/migration-angularjs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/migration/angularjs",
+            "tags": []
+          }
+        ],
         "isExternal": false,
-        "path": "/recipes/nx-console/console-generate-command",
-        "tags": ["integrate-with-editors"]
+        "path": "/recipes/angular/migration",
+        "tags": []
       },
       {
-        "id": "console-run-command",
-        "name": "Nx Console Run Command",
+        "id": "use-environment-variables-in-angular",
+        "name": "Use Environment Variables in Angular",
         "description": "",
-        "file": "shared/recipes/console-run-command",
+        "file": "shared/guides/use-environment-variables-in-angular",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-console/console-run-command",
-        "tags": ["integrate-with-editors"]
+        "path": "/recipes/angular/use-environment-variables-in-angular",
+        "tags": ["environment-variables"]
       },
       {
-        "id": "console-add-dependency-command",
-        "name": "Nx Console Add Dependency Command",
+        "id": "using-tailwind-css-with-angular-projects",
+        "name": "Using Tailwind CSS with Angular projects",
         "description": "",
-        "file": "shared/recipes/console-add-dependency-command",
+        "file": "shared/guides/using-tailwind-css-with-angular-projects",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-console/console-add-dependency-command",
-        "tags": ["integrate-with-editors"]
+        "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
+        "tags": []
       },
       {
-        "id": "console-project-pane",
-        "name": "Nx Console Project Pane",
+        "id": "module-federation-with-ssr",
+        "name": "Setup Module Federation with SSR for Angular",
         "description": "",
-        "file": "shared/recipes/console-project-pane",
+        "file": "shared/recipes/module-federation-with-ssr",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-console/console-project-pane",
-        "tags": ["integrate-with-editors"]
+        "path": "/recipes/angular/module-federation-with-ssr",
+        "tags": ["use-task-executors", "module-federation", "angular"]
       },
       {
-        "id": "console-shortcuts",
-        "name": "Nx Console Keyboard Shortcuts",
+        "id": "dynamic-module-federation-with-angular",
+        "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
         "description": "",
-        "file": "shared/recipes/console-shortcuts",
+        "file": "shared/guides/module-federation/dynamic-mfe-angular",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-console/console-shortcuts",
-        "tags": ["integrate-with-editors"]
+        "path": "/recipes/angular/dynamic-module-federation-with-angular",
+        "tags": ["use-task-executors", "module-federation", "angular"]
+      },
+      {
+        "id": "setup-incremental-builds-angular",
+        "name": "Setup incremental builds for Angular applications",
+        "description": "",
+        "file": "shared/guides/setup-incremental-builds-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/setup-incremental-builds-angular",
+        "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/recipes/nx-console",
+    "path": "/recipes/angular",
     "tags": []
   },
-  "/recipes/nx-console/console-generate-command": {
-    "id": "console-generate-command",
-    "name": "Nx Console Generate Command",
+  "/recipes/angular/migration": {
+    "id": "migration",
+    "name": "Migration",
     "description": "",
-    "file": "shared/recipes/console-generate-command",
-    "itemList": [],
+    "file": "",
+    "itemList": [
+      {
+        "id": "angular",
+        "name": "Migrating from Angular CLI",
+        "description": "",
+        "file": "shared/migration/migration-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/migration/angular",
+        "tags": []
+      },
+      {
+        "id": "angular-multiple",
+        "name": "Migrating From Multiple Angular CLI Repos",
+        "description": "",
+        "file": "shared/migration/angular-multiple",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/migration/angular-multiple",
+        "tags": []
+      },
+      {
+        "id": "angular-manual",
+        "name": "Migrating Angular Application manually",
+        "description": "",
+        "file": "shared/migration/angular-manual",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/migration/angular-manual",
+        "tags": []
+      },
+      {
+        "id": "angularjs",
+        "name": "Migrating from AngularJS",
+        "description": "",
+        "file": "shared/migration/migration-angularjs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/migration/angularjs",
+        "tags": []
+      }
+    ],
     "isExternal": false,
-    "path": "/recipes/nx-console/console-generate-command",
-    "tags": ["integrate-with-editors"]
+    "path": "/recipes/angular/migration",
+    "tags": []
   },
-  "/recipes/nx-console/console-run-command": {
-    "id": "console-run-command",
-    "name": "Nx Console Run Command",
+  "/recipes/angular/migration/angular": {
+    "id": "angular",
+    "name": "Migrating from Angular CLI",
     "description": "",
-    "file": "shared/recipes/console-run-command",
+    "file": "shared/migration/migration-angular",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-console/console-run-command",
-    "tags": ["integrate-with-editors"]
+    "path": "/recipes/angular/migration/angular",
+    "tags": []
   },
-  "/recipes/nx-console/console-add-dependency-command": {
-    "id": "console-add-dependency-command",
-    "name": "Nx Console Add Dependency Command",
+  "/recipes/angular/migration/angular-multiple": {
+    "id": "angular-multiple",
+    "name": "Migrating From Multiple Angular CLI Repos",
     "description": "",
-    "file": "shared/recipes/console-add-dependency-command",
+    "file": "shared/migration/angular-multiple",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-console/console-add-dependency-command",
-    "tags": ["integrate-with-editors"]
+    "path": "/recipes/angular/migration/angular-multiple",
+    "tags": []
   },
-  "/recipes/nx-console/console-project-pane": {
-    "id": "console-project-pane",
-    "name": "Nx Console Project Pane",
+  "/recipes/angular/migration/angular-manual": {
+    "id": "angular-manual",
+    "name": "Migrating Angular Application manually",
     "description": "",
-    "file": "shared/recipes/console-project-pane",
+    "file": "shared/migration/angular-manual",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-console/console-project-pane",
-    "tags": ["integrate-with-editors"]
+    "path": "/recipes/angular/migration/angular-manual",
+    "tags": []
   },
-  "/recipes/nx-console/console-shortcuts": {
-    "id": "console-shortcuts",
-    "name": "Nx Console Keyboard Shortcuts",
+  "/recipes/angular/migration/angularjs": {
+    "id": "angularjs",
+    "name": "Migrating from AngularJS",
     "description": "",
-    "file": "shared/recipes/console-shortcuts",
+    "file": "shared/migration/migration-angularjs",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-console/console-shortcuts",
-    "tags": ["integrate-with-editors"]
+    "path": "/recipes/angular/migration/angularjs",
+    "tags": []
+  },
+  "/recipes/angular/use-environment-variables-in-angular": {
+    "id": "use-environment-variables-in-angular",
+    "name": "Use Environment Variables in Angular",
+    "description": "",
+    "file": "shared/guides/use-environment-variables-in-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/use-environment-variables-in-angular",
+    "tags": ["environment-variables"]
+  },
+  "/recipes/angular/using-tailwind-css-with-angular-projects": {
+    "id": "using-tailwind-css-with-angular-projects",
+    "name": "Using Tailwind CSS with Angular projects",
+    "description": "",
+    "file": "shared/guides/using-tailwind-css-with-angular-projects",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
+    "tags": []
+  },
+  "/recipes/angular/module-federation-with-ssr": {
+    "id": "module-federation-with-ssr",
+    "name": "Setup Module Federation with SSR for Angular",
+    "description": "",
+    "file": "shared/recipes/module-federation-with-ssr",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/module-federation-with-ssr",
+    "tags": ["use-task-executors", "module-federation", "angular"]
+  },
+  "/recipes/angular/dynamic-module-federation-with-angular": {
+    "id": "dynamic-module-federation-with-angular",
+    "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+    "description": "",
+    "file": "shared/guides/module-federation/dynamic-mfe-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/dynamic-module-federation-with-angular",
+    "tags": ["use-task-executors", "module-federation", "angular"]
+  },
+  "/recipes/angular/setup-incremental-builds-angular": {
+    "id": "setup-incremental-builds-angular",
+    "name": "Setup incremental builds for Angular applications",
+    "description": "",
+    "file": "shared/guides/setup-incremental-builds-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/setup-incremental-builds-angular",
+    "tags": []
+  },
+  "/recipes/react": {
+    "id": "react",
+    "name": "React",
+    "description": "Advanced guides to adopt Nx in React.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "migration-cra",
+        "name": "Migrating from CRA",
+        "description": "",
+        "file": "shared/migration/migration-cra",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/migration-cra",
+        "tags": []
+      },
+      {
+        "id": "react-18",
+        "name": "React 18 Migration",
+        "description": "",
+        "file": "shared/guides/react-18",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/react-18",
+        "tags": []
+      },
+      {
+        "id": "react-native",
+        "name": "React Native with Nx",
+        "description": "",
+        "file": "shared/guides/react-native",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/react-native",
+        "tags": []
+      },
+      {
+        "id": "remix",
+        "name": "Remix with Nx",
+        "description": "",
+        "file": "shared/guides/remix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/remix",
+        "tags": []
+      },
+      {
+        "id": "use-environment-variables-in-react",
+        "name": "Use Environment Variables in React",
+        "description": "",
+        "file": "shared/guides/use-environment-variables-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/use-environment-variables-in-react",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "using-tailwind-css-in-react",
+        "name": "Using Tailwind CSS in React",
+        "description": "",
+        "file": "shared/guides/using-tailwind-css-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/using-tailwind-css-in-react",
+        "tags": []
+      },
+      {
+        "id": "adding-assets-react",
+        "name": "Adding Images, Fonts, and Files",
+        "description": "",
+        "file": "shared/guides/adding-assets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/adding-assets-react",
+        "tags": []
+      },
+      {
+        "id": "module-federation-with-ssr",
+        "name": "Setup Module Federation with SSR for React",
+        "description": "",
+        "file": "shared/recipes/module-federation-with-ssr",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/module-federation-with-ssr",
+        "tags": ["use-task-executors", "module-federation", "react"]
+      },
+      {
+        "id": "deploy-nextjs-to-vercel",
+        "name": "Deploying Next.js applications to Vercel",
+        "description": "",
+        "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/deploy-nextjs-to-vercel",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/react",
+    "tags": []
+  },
+  "/recipes/react/migration-cra": {
+    "id": "migration-cra",
+    "name": "Migrating from CRA",
+    "description": "",
+    "file": "shared/migration/migration-cra",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/migration-cra",
+    "tags": []
+  },
+  "/recipes/react/react-18": {
+    "id": "react-18",
+    "name": "React 18 Migration",
+    "description": "",
+    "file": "shared/guides/react-18",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/react-18",
+    "tags": []
+  },
+  "/recipes/react/react-native": {
+    "id": "react-native",
+    "name": "React Native with Nx",
+    "description": "",
+    "file": "shared/guides/react-native",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/react-native",
+    "tags": []
+  },
+  "/recipes/react/remix": {
+    "id": "remix",
+    "name": "Remix with Nx",
+    "description": "",
+    "file": "shared/guides/remix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/remix",
+    "tags": []
+  },
+  "/recipes/react/use-environment-variables-in-react": {
+    "id": "use-environment-variables-in-react",
+    "name": "Use Environment Variables in React",
+    "description": "",
+    "file": "shared/guides/use-environment-variables-in-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/use-environment-variables-in-react",
+    "tags": ["environment-variables"]
+  },
+  "/recipes/react/using-tailwind-css-in-react": {
+    "id": "using-tailwind-css-in-react",
+    "name": "Using Tailwind CSS in React",
+    "description": "",
+    "file": "shared/guides/using-tailwind-css-in-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/using-tailwind-css-in-react",
+    "tags": []
+  },
+  "/recipes/react/adding-assets-react": {
+    "id": "adding-assets-react",
+    "name": "Adding Images, Fonts, and Files",
+    "description": "",
+    "file": "shared/guides/adding-assets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/adding-assets-react",
+    "tags": []
+  },
+  "/recipes/react/module-federation-with-ssr": {
+    "id": "module-federation-with-ssr",
+    "name": "Setup Module Federation with SSR for React",
+    "description": "",
+    "file": "shared/recipes/module-federation-with-ssr",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/module-federation-with-ssr",
+    "tags": ["use-task-executors", "module-federation", "react"]
+  },
+  "/recipes/react/deploy-nextjs-to-vercel": {
+    "id": "deploy-nextjs-to-vercel",
+    "name": "Deploying Next.js applications to Vercel",
+    "description": "",
+    "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/deploy-nextjs-to-vercel",
+    "tags": []
+  },
+  "/recipes/node": {
+    "id": "node",
+    "name": "Node",
+    "description": "Set of Node related recipes.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "node-server-fly-io",
+        "name": "Deploying a Node App to Fly.io",
+        "description": "",
+        "file": "shared/recipes/deployment/node-server-fly-io",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/node-server-fly-io",
+        "tags": ["deployment", "node"]
+      },
+      {
+        "id": "node-serverless-functions-netlify",
+        "name": "Add and Deploy Netlify Edge Functions with Node",
+        "description": "",
+        "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/node-serverless-functions-netlify",
+        "tags": ["deployment", "node"]
+      },
+      {
+        "id": "node-aws-lambda",
+        "name": "Deploying AWS lambda in Node.js",
+        "description": "",
+        "file": "shared/recipes/deployment/node-aws-lambda",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/node-aws-lambda",
+        "tags": ["deployment", "node"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/node",
+    "tags": []
+  },
+  "/recipes/node/node-server-fly-io": {
+    "id": "node-server-fly-io",
+    "name": "Deploying a Node App to Fly.io",
+    "description": "",
+    "file": "shared/recipes/deployment/node-server-fly-io",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/node-server-fly-io",
+    "tags": ["deployment", "node"]
+  },
+  "/recipes/node/node-serverless-functions-netlify": {
+    "id": "node-serverless-functions-netlify",
+    "name": "Add and Deploy Netlify Edge Functions with Node",
+    "description": "",
+    "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/node-serverless-functions-netlify",
+    "tags": ["deployment", "node"]
+  },
+  "/recipes/node/node-aws-lambda": {
+    "id": "node-aws-lambda",
+    "name": "Deploying AWS lambda in Node.js",
+    "description": "",
+    "file": "shared/recipes/deployment/node-aws-lambda",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/node-aws-lambda",
+    "tags": ["deployment", "node"]
+  },
+  "/recipes/storybook": {
+    "id": "storybook",
+    "name": "Storybook",
+    "description": "Storybook how tos.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "one-storybook-for-all",
+        "name": "One main Storybook instance for all projects",
+        "description": "",
+        "file": "shared/recipes/one-storybook-for-all",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/one-storybook-for-all",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "one-storybook-per-scope",
+        "name": "One Storybook instance per scope",
+        "description": "",
+        "file": "shared/recipes/one-storybook-per-scope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/one-storybook-per-scope",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "one-storybook-with-composition",
+        "name": "One main Storybook instance using Storybook Composition",
+        "description": "",
+        "file": "shared/recipes/one-storybook-with-composition",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/one-storybook-with-composition",
+        "tags": ["storybook"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/storybook",
+    "tags": []
+  },
+  "/recipes/storybook/one-storybook-for-all": {
+    "id": "one-storybook-for-all",
+    "name": "One main Storybook instance for all projects",
+    "description": "",
+    "file": "shared/recipes/one-storybook-for-all",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/one-storybook-for-all",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/one-storybook-per-scope": {
+    "id": "one-storybook-per-scope",
+    "name": "One Storybook instance per scope",
+    "description": "",
+    "file": "shared/recipes/one-storybook-per-scope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/one-storybook-per-scope",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/one-storybook-with-composition": {
+    "id": "one-storybook-with-composition",
+    "name": "One main Storybook instance using Storybook Composition",
+    "description": "",
+    "file": "shared/recipes/one-storybook-with-composition",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/one-storybook-with-composition",
+    "tags": ["storybook"]
+  },
+  "/recipes/enforce-module-boundaries": {
+    "id": "enforce-module-boundaries",
+    "name": "Enforce Module Boundaries",
+    "description": "Configuring the enforce module boundaries rule",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ban-dependencies-with-tags",
+        "name": "Ban Dependencies with Certain Tags",
+        "description": "",
+        "file": "shared/recipes/ban-dependencies-with-tags",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "tag-multiple-dimensions",
+        "name": "Tag in Multiple Dimensions",
+        "description": "",
+        "file": "shared/recipes/tag-multiple-dimensions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "ban-external-imports",
+        "name": "Ban External Imports",
+        "description": "",
+        "file": "shared/recipes/ban-external-imports",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+        "tags": ["enforce-project-boundaries"]
+      },
+      {
+        "id": "tags-allow-list",
+        "name": "Tags Allow List",
+        "description": "",
+        "file": "shared/recipes/tags-allow-list",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+        "tags": ["enforce-project-boundaries"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries",
+    "tags": []
+  },
+  "/recipes/enforce-module-boundaries/ban-dependencies-with-tags": {
+    "id": "ban-dependencies-with-tags",
+    "name": "Ban Dependencies with Certain Tags",
+    "description": "",
+    "file": "shared/recipes/ban-dependencies-with-tags",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/tag-multiple-dimensions": {
+    "id": "tag-multiple-dimensions",
+    "name": "Tag in Multiple Dimensions",
+    "description": "",
+    "file": "shared/recipes/tag-multiple-dimensions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/ban-external-imports": {
+    "id": "ban-external-imports",
+    "name": "Ban External Imports",
+    "description": "",
+    "file": "shared/recipes/ban-external-imports",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+    "tags": ["enforce-project-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/tags-allow-list": {
+    "id": "tags-allow-list",
+    "name": "Tags Allow List",
+    "description": "",
+    "file": "shared/recipes/tags-allow-list",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+    "tags": ["enforce-project-boundaries"]
   },
   "/recipes/ci": {
     "id": "ci",
@@ -312,937 +958,161 @@
     "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
     "tags": []
   },
-  "/recipes/adopting-nx": {
-    "id": "adopting-nx",
-    "name": "Adopting Nx",
-    "description": "Adopting Nx incrementally, on existing project or from scratch.",
+  "/recipes/nx-console": {
+    "id": "nx-console",
+    "name": "Nx Console",
+    "description": "Checkout all the recipes related to Nx Console.",
     "file": "",
     "itemList": [
       {
-        "id": "adding-to-monorepo",
-        "name": "NPM/Yarn/PNPM workspaces",
+        "id": "console-telemetry",
+        "name": "Telemetry",
         "description": "",
-        "file": "shared/migration/adding-to-monorepo",
+        "file": "shared/recipes/console-telemetry",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/adopting-nx/adding-to-monorepo",
-        "tags": []
+        "path": "/recipes/nx-console/console-telemetry",
+        "tags": ["integrate-with-editors"]
       },
       {
-        "id": "adding-to-existing-project",
-        "name": "Add to any Project",
+        "id": "console-generate-command",
+        "name": "Generate Command",
         "description": "",
-        "file": "shared/migration/adding-to-existing-project",
+        "file": "shared/recipes/console-generate-command",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/adopting-nx/adding-to-existing-project",
-        "tags": []
+        "path": "/recipes/nx-console/console-generate-command",
+        "tags": ["integrate-with-editors"]
       },
       {
-        "id": "migration-cra",
-        "name": "From CRA",
+        "id": "console-run-command",
+        "name": "Run Command",
         "description": "",
-        "file": "shared/migration/migration-cra",
+        "file": "shared/recipes/console-run-command",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/adopting-nx/migration-cra",
-        "tags": []
+        "path": "/recipes/nx-console/console-run-command",
+        "tags": ["integrate-with-editors"]
       },
       {
-        "id": "migration-angular",
-        "name": "From Angular CLI",
+        "id": "console-add-dependency-command",
+        "name": "Add Dependency Command",
         "description": "",
-        "file": "shared/migration/migration-angular",
+        "file": "shared/recipes/console-add-dependency-command",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/adopting-nx/migration-angular",
-        "tags": []
+        "path": "/recipes/nx-console/console-add-dependency-command",
+        "tags": ["integrate-with-editors"]
       },
       {
-        "id": "lerna-and-nx",
-        "name": "Nx and Lerna",
+        "id": "console-project-pane",
+        "name": "Project Pane",
         "description": "",
-        "file": "shared/migration/lerna-and-nx",
+        "file": "shared/recipes/console-project-pane",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/adopting-nx/lerna-and-nx",
-        "tags": []
+        "path": "/recipes/nx-console/console-project-pane",
+        "tags": ["integrate-with-editors"]
       },
       {
-        "id": "migration-angularjs",
-        "name": "From AngularJS",
+        "id": "console-shortcuts",
+        "name": "Keyboard Shortcuts",
         "description": "",
-        "file": "shared/migration/migration-angularjs",
+        "file": "shared/recipes/console-shortcuts",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/adopting-nx/migration-angularjs",
-        "tags": []
-      },
-      {
-        "id": "preserving-git-histories",
-        "name": "Preserving Git Histories",
-        "description": "",
-        "file": "shared/migration/preserving-git-histories",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/adopting-nx/preserving-git-histories",
-        "tags": []
-      },
-      {
-        "id": "manual",
-        "name": "Manual migration",
-        "description": "",
-        "file": "shared/migration/manual",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/adopting-nx/manual",
-        "tags": []
+        "path": "/recipes/nx-console/console-shortcuts",
+        "tags": ["integrate-with-editors"]
       }
     ],
     "isExternal": false,
-    "path": "/recipes/adopting-nx",
+    "path": "/recipes/nx-console",
     "tags": []
   },
-  "/recipes/adopting-nx/adding-to-monorepo": {
-    "id": "adding-to-monorepo",
-    "name": "NPM/Yarn/PNPM workspaces",
+  "/recipes/nx-console/console-telemetry": {
+    "id": "console-telemetry",
+    "name": "Telemetry",
     "description": "",
-    "file": "shared/migration/adding-to-monorepo",
+    "file": "shared/recipes/console-telemetry",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/adopting-nx/adding-to-monorepo",
-    "tags": []
+    "path": "/recipes/nx-console/console-telemetry",
+    "tags": ["integrate-with-editors"]
   },
-  "/recipes/adopting-nx/adding-to-existing-project": {
-    "id": "adding-to-existing-project",
-    "name": "Add to any Project",
+  "/recipes/nx-console/console-generate-command": {
+    "id": "console-generate-command",
+    "name": "Generate Command",
     "description": "",
-    "file": "shared/migration/adding-to-existing-project",
+    "file": "shared/recipes/console-generate-command",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/adopting-nx/adding-to-existing-project",
-    "tags": []
+    "path": "/recipes/nx-console/console-generate-command",
+    "tags": ["integrate-with-editors"]
   },
-  "/recipes/adopting-nx/migration-cra": {
-    "id": "migration-cra",
-    "name": "From CRA",
+  "/recipes/nx-console/console-run-command": {
+    "id": "console-run-command",
+    "name": "Run Command",
     "description": "",
-    "file": "shared/migration/migration-cra",
+    "file": "shared/recipes/console-run-command",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/adopting-nx/migration-cra",
-    "tags": []
+    "path": "/recipes/nx-console/console-run-command",
+    "tags": ["integrate-with-editors"]
   },
-  "/recipes/adopting-nx/migration-angular": {
-    "id": "migration-angular",
-    "name": "From Angular CLI",
+  "/recipes/nx-console/console-add-dependency-command": {
+    "id": "console-add-dependency-command",
+    "name": "Add Dependency Command",
     "description": "",
-    "file": "shared/migration/migration-angular",
+    "file": "shared/recipes/console-add-dependency-command",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/adopting-nx/migration-angular",
-    "tags": []
+    "path": "/recipes/nx-console/console-add-dependency-command",
+    "tags": ["integrate-with-editors"]
   },
-  "/recipes/adopting-nx/lerna-and-nx": {
-    "id": "lerna-and-nx",
-    "name": "Nx and Lerna",
+  "/recipes/nx-console/console-project-pane": {
+    "id": "console-project-pane",
+    "name": "Project Pane",
     "description": "",
-    "file": "shared/migration/lerna-and-nx",
+    "file": "shared/recipes/console-project-pane",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/adopting-nx/lerna-and-nx",
-    "tags": []
+    "path": "/recipes/nx-console/console-project-pane",
+    "tags": ["integrate-with-editors"]
   },
-  "/recipes/adopting-nx/migration-angularjs": {
-    "id": "migration-angularjs",
-    "name": "From AngularJS",
+  "/recipes/nx-console/console-shortcuts": {
+    "id": "console-shortcuts",
+    "name": "Keyboard Shortcuts",
     "description": "",
-    "file": "shared/migration/migration-angularjs",
+    "file": "shared/recipes/console-shortcuts",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/adopting-nx/migration-angularjs",
-    "tags": []
+    "path": "/recipes/nx-console/console-shortcuts",
+    "tags": ["integrate-with-editors"]
   },
-  "/recipes/adopting-nx/preserving-git-histories": {
-    "id": "preserving-git-histories",
-    "name": "Preserving Git Histories",
-    "description": "",
-    "file": "shared/migration/preserving-git-histories",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/adopting-nx/preserving-git-histories",
-    "tags": []
-  },
-  "/recipes/adopting-nx/manual": {
-    "id": "manual",
-    "name": "Manual migration",
-    "description": "",
-    "file": "shared/migration/manual",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/adopting-nx/manual",
-    "tags": []
-  },
-  "/recipes/executors": {
-    "id": "executors",
-    "name": "Executors",
-    "description": "Use, extend and compose executors.",
+  "/recipes/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to troubleshoot common problems.",
     "file": "",
     "itemList": [
       {
-        "id": "use-executor-configurations",
-        "name": "Use Executor Configurations",
+        "id": "resolve-circular-dependencies",
+        "name": "Resolve Circular Dependencies",
         "description": "",
-        "file": "shared/recipes/use-executor-configurations",
+        "file": "shared/recipes/resolve-circular-dependencies",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/executors/use-executor-configurations",
-        "tags": ["use-task-executors"]
-      },
-      {
-        "id": "run-commands-executor",
-        "name": "Running Custom Commands",
-        "description": "",
-        "file": "shared/running-custom-commands",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/executors/run-commands-executor",
-        "tags": ["use-task-executors"]
-      },
-      {
-        "id": "creating-custom-executors",
-        "name": "Local Executors",
-        "description": "",
-        "file": "shared/recipes/plugins/local-executors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/executors/creating-custom-executors",
-        "tags": ["use-task-executors", "create-your-own-plugin"]
-      },
-      {
-        "id": "compose-executors",
-        "name": "Compose Executors",
-        "description": "",
-        "file": "shared/recipes/plugins/compose-executors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/executors/compose-executors",
-        "tags": ["use-task-executors"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/executors",
-    "tags": []
-  },
-  "/recipes/executors/use-executor-configurations": {
-    "id": "use-executor-configurations",
-    "name": "Use Executor Configurations",
-    "description": "",
-    "file": "shared/recipes/use-executor-configurations",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/executors/use-executor-configurations",
-    "tags": ["use-task-executors"]
-  },
-  "/recipes/executors/run-commands-executor": {
-    "id": "run-commands-executor",
-    "name": "Running Custom Commands",
-    "description": "",
-    "file": "shared/running-custom-commands",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/executors/run-commands-executor",
-    "tags": ["use-task-executors"]
-  },
-  "/recipes/executors/creating-custom-executors": {
-    "id": "creating-custom-executors",
-    "name": "Local Executors",
-    "description": "",
-    "file": "shared/recipes/plugins/local-executors",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/executors/creating-custom-executors",
-    "tags": ["use-task-executors", "create-your-own-plugin"]
-  },
-  "/recipes/executors/compose-executors": {
-    "id": "compose-executors",
-    "name": "Compose Executors",
-    "description": "",
-    "file": "shared/recipes/plugins/compose-executors",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/executors/compose-executors",
-    "tags": ["use-task-executors"]
-  },
-  "/recipes/generators": {
-    "id": "generators",
-    "name": "Generators",
-    "description": "Use, extend and compose generators.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "local-generators",
-        "name": "Local Generators",
-        "description": "",
-        "file": "shared/recipes/generators/local-generators",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/local-generators",
-        "tags": ["use-code-generators", "create-your-own-plugin"]
-      },
-      {
-        "id": "composing-generators",
-        "name": "Composing Generators",
-        "description": "",
-        "file": "shared/recipes/generators/composing-generators",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/composing-generators",
-        "tags": ["use-code-generators"]
-      },
-      {
-        "id": "generator-options",
-        "name": "Generator Options",
-        "description": "",
-        "file": "shared/recipes/generators/generator-options",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/generator-options",
-        "tags": ["use-code-generators"]
-      },
-      {
-        "id": "creating-files",
-        "name": "Creating Files",
-        "description": "",
-        "file": "shared/recipes/generators/creating-files",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/creating-files",
-        "tags": ["use-code-generators"]
-      },
-      {
-        "id": "modifying-files",
-        "name": "Modifying Files",
-        "description": "",
-        "file": "shared/recipes/generators/modifying-files",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/generators/modifying-files",
-        "tags": ["use-code-generators"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/generators",
-    "tags": []
-  },
-  "/recipes/generators/local-generators": {
-    "id": "local-generators",
-    "name": "Local Generators",
-    "description": "",
-    "file": "shared/recipes/generators/local-generators",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/local-generators",
-    "tags": ["use-code-generators", "create-your-own-plugin"]
-  },
-  "/recipes/generators/composing-generators": {
-    "id": "composing-generators",
-    "name": "Composing Generators",
-    "description": "",
-    "file": "shared/recipes/generators/composing-generators",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/composing-generators",
-    "tags": ["use-code-generators"]
-  },
-  "/recipes/generators/generator-options": {
-    "id": "generator-options",
-    "name": "Generator Options",
-    "description": "",
-    "file": "shared/recipes/generators/generator-options",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/generator-options",
-    "tags": ["use-code-generators"]
-  },
-  "/recipes/generators/creating-files": {
-    "id": "creating-files",
-    "name": "Creating Files",
-    "description": "",
-    "file": "shared/recipes/generators/creating-files",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/creating-files",
-    "tags": ["use-code-generators"]
-  },
-  "/recipes/generators/modifying-files": {
-    "id": "modifying-files",
-    "name": "Modifying Files",
-    "description": "",
-    "file": "shared/recipes/generators/modifying-files",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/generators/modifying-files",
-    "tags": ["use-code-generators"]
-  },
-  "/recipes/advanced-plugins": {
-    "id": "advanced-plugins",
-    "name": "Advanced Plugins",
-    "description": "Learn more about creating your own plugin, extending Nx.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "share-your-plugin",
-        "name": "Share Your Plugin",
-        "description": "",
-        "file": "shared/recipes/plugins/share-your-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/share-your-plugin",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "create-preset",
-        "name": "Create a Preset",
-        "description": "",
-        "file": "shared/recipes/plugins/create-preset",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/create-preset",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "migration-generators",
-        "name": "Migration Generators",
-        "description": "",
-        "file": "shared/recipes/plugins/migration-generators",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/migration-generators",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "project-graph-plugins",
-        "name": "Project Graph Plugins",
-        "description": "",
-        "file": "shared/recipes/plugins/project-graph-plugins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/project-graph-plugins",
-        "tags": ["create-your-own-plugin", "explore-graph"]
-      },
-      {
-        "id": "project-inference-plugins",
-        "name": "Project Inference Plugins",
-        "description": "",
-        "file": "shared/recipes/plugins/project-inference-plugins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/advanced-plugins/project-inference-plugins",
-        "tags": ["create-your-own-plugin"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins",
-    "tags": []
-  },
-  "/recipes/advanced-plugins/share-your-plugin": {
-    "id": "share-your-plugin",
-    "name": "Share Your Plugin",
-    "description": "",
-    "file": "shared/recipes/plugins/share-your-plugin",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/share-your-plugin",
-    "tags": ["create-your-own-plugin"]
-  },
-  "/recipes/advanced-plugins/create-preset": {
-    "id": "create-preset",
-    "name": "Create a Preset",
-    "description": "",
-    "file": "shared/recipes/plugins/create-preset",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/create-preset",
-    "tags": ["create-your-own-plugin"]
-  },
-  "/recipes/advanced-plugins/migration-generators": {
-    "id": "migration-generators",
-    "name": "Migration Generators",
-    "description": "",
-    "file": "shared/recipes/plugins/migration-generators",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/migration-generators",
-    "tags": ["create-your-own-plugin"]
-  },
-  "/recipes/advanced-plugins/project-graph-plugins": {
-    "id": "project-graph-plugins",
-    "name": "Project Graph Plugins",
-    "description": "",
-    "file": "shared/recipes/plugins/project-graph-plugins",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/project-graph-plugins",
-    "tags": ["create-your-own-plugin", "explore-graph"]
-  },
-  "/recipes/advanced-plugins/project-inference-plugins": {
-    "id": "project-inference-plugins",
-    "name": "Project Inference Plugins",
-    "description": "",
-    "file": "shared/recipes/plugins/project-inference-plugins",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/advanced-plugins/project-inference-plugins",
-    "tags": ["create-your-own-plugin"]
-  },
-  "/recipes/environment-variables": {
-    "id": "environment-variables",
-    "name": "Environment Variables",
-    "description": "Using environment variables in an Nx workspace.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "define-environment-variables",
-        "name": "Define Environment Variables",
-        "description": "",
-        "file": "shared/guides/define-environment-variables",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/environment-variables/define-environment-variables",
-        "tags": ["environment-variables"]
-      },
-      {
-        "id": "use-environment-variables-in-react",
-        "name": "Use Environment Variables in React",
-        "description": "",
-        "file": "shared/guides/use-environment-variables-in-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/environment-variables/use-environment-variables-in-react",
-        "tags": ["environment-variables"]
-      },
-      {
-        "id": "use-environment-variables-in-angular",
-        "name": "Use Environment Variables in Angular",
-        "description": "",
-        "file": "shared/guides/use-environment-variables-in-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/environment-variables/use-environment-variables-in-angular",
-        "tags": ["environment-variables"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/environment-variables",
-    "tags": []
-  },
-  "/recipes/environment-variables/define-environment-variables": {
-    "id": "define-environment-variables",
-    "name": "Define Environment Variables",
-    "description": "",
-    "file": "shared/guides/define-environment-variables",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/environment-variables/define-environment-variables",
-    "tags": ["environment-variables"]
-  },
-  "/recipes/environment-variables/use-environment-variables-in-react": {
-    "id": "use-environment-variables-in-react",
-    "name": "Use Environment Variables in React",
-    "description": "",
-    "file": "shared/guides/use-environment-variables-in-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/environment-variables/use-environment-variables-in-react",
-    "tags": ["environment-variables"]
-  },
-  "/recipes/environment-variables/use-environment-variables-in-angular": {
-    "id": "use-environment-variables-in-angular",
-    "name": "Use Environment Variables in Angular",
-    "description": "",
-    "file": "shared/guides/use-environment-variables-in-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/environment-variables/use-environment-variables-in-angular",
-    "tags": ["environment-variables"]
-  },
-  "/recipes/module-federation": {
-    "id": "module-federation",
-    "name": "Module Federation and Micro Frontends",
-    "description": "How to work with and setup Module Federation with Nx.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "faster-builds",
-        "name": "Faster Builds with Module Federation",
-        "description": "",
-        "file": "shared/guides/module-federation/faster-builds",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/module-federation/faster-builds",
-        "tags": ["use-task-executors", "module-federation", "angular", "react"]
-      },
-      {
-        "id": "module-federation-with-ssr",
-        "name": "Setup Module Federation with SSR for Angular and React",
-        "description": "",
-        "file": "shared/recipes/module-federation-with-ssr",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/module-federation/module-federation-with-ssr",
-        "tags": ["use-task-executors", "module-federation", "angular", "react"]
-      },
-      {
-        "id": "dynamic-module-federation-with-angular",
-        "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-        "description": "",
-        "file": "shared/guides/module-federation/dynamic-mfe-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/module-federation/dynamic-module-federation-with-angular",
-        "tags": ["use-task-executors", "module-federation", "angular"]
-      },
-      {
-        "id": "nx-examples",
-        "name": "Nx Micro-Frontend Example",
-        "description": "",
-        "file": "shared/examples/nx-examples",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/module-federation/nx-examples",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/module-federation",
-    "tags": []
-  },
-  "/recipes/module-federation/faster-builds": {
-    "id": "faster-builds",
-    "name": "Faster Builds with Module Federation",
-    "description": "",
-    "file": "shared/guides/module-federation/faster-builds",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/module-federation/faster-builds",
-    "tags": ["use-task-executors", "module-federation", "angular", "react"]
-  },
-  "/recipes/module-federation/module-federation-with-ssr": {
-    "id": "module-federation-with-ssr",
-    "name": "Setup Module Federation with SSR for Angular and React",
-    "description": "",
-    "file": "shared/recipes/module-federation-with-ssr",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/module-federation/module-federation-with-ssr",
-    "tags": ["use-task-executors", "module-federation", "angular", "react"]
-  },
-  "/recipes/module-federation/dynamic-module-federation-with-angular": {
-    "id": "dynamic-module-federation-with-angular",
-    "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-    "description": "",
-    "file": "shared/guides/module-federation/dynamic-mfe-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/module-federation/dynamic-module-federation-with-angular",
-    "tags": ["use-task-executors", "module-federation", "angular"]
-  },
-  "/recipes/module-federation/nx-examples": {
-    "id": "nx-examples",
-    "name": "Nx Micro-Frontend Example",
-    "description": "",
-    "file": "shared/examples/nx-examples",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/module-federation/nx-examples",
-    "tags": []
-  },
-  "/recipes/storybook": {
-    "id": "storybook",
-    "name": "Storybook",
-    "description": "Storybook how tos",
-    "file": "",
-    "itemList": [
-      {
-        "id": "one-storybook-for-all",
-        "name": "Publishing Storybook: One main Storybook instance for all projects",
-        "description": "",
-        "file": "shared/recipes/one-storybook-for-all",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/storybook/one-storybook-for-all",
-        "tags": ["storybook"]
-      },
-      {
-        "id": "one-storybook-per-scope",
-        "name": "Publishing Storybook: One Storybook instance per scope",
-        "description": "",
-        "file": "shared/recipes/one-storybook-per-scope",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/storybook/one-storybook-per-scope",
-        "tags": ["storybook"]
-      },
-      {
-        "id": "one-storybook-with-composition",
-        "name": "Publishing Storybook: One main Storybook instance using Storybook Composition",
-        "description": "",
-        "file": "shared/recipes/one-storybook-with-composition",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/storybook/one-storybook-with-composition",
-        "tags": ["storybook"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/storybook",
-    "tags": []
-  },
-  "/recipes/storybook/one-storybook-for-all": {
-    "id": "one-storybook-for-all",
-    "name": "Publishing Storybook: One main Storybook instance for all projects",
-    "description": "",
-    "file": "shared/recipes/one-storybook-for-all",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/storybook/one-storybook-for-all",
-    "tags": ["storybook"]
-  },
-  "/recipes/storybook/one-storybook-per-scope": {
-    "id": "one-storybook-per-scope",
-    "name": "Publishing Storybook: One Storybook instance per scope",
-    "description": "",
-    "file": "shared/recipes/one-storybook-per-scope",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/storybook/one-storybook-per-scope",
-    "tags": ["storybook"]
-  },
-  "/recipes/storybook/one-storybook-with-composition": {
-    "id": "one-storybook-with-composition",
-    "name": "Publishing Storybook: One main Storybook instance using Storybook Composition",
-    "description": "",
-    "file": "shared/recipes/one-storybook-with-composition",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/storybook/one-storybook-with-composition",
-    "tags": ["storybook"]
-  },
-  "/recipes/other": {
-    "id": "other",
-    "name": "Other",
-    "description": "Other recipes you will find useful.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "root-level-scripts",
-        "name": "Run Root-Level NPM Scripts with Nx",
-        "description": "",
-        "file": "shared/recipes/root-level-scripts",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/root-level-scripts",
-        "tags": ["run-tasks"]
-      },
-      {
-        "id": "analyze-source-files",
-        "name": "Disable Graph Links Created from Analyzing Source Files",
-        "description": "",
-        "file": "shared/recipes/analyze-source-files",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/analyze-source-files",
+        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
         "tags": ["explore-graph"]
       },
       {
-        "id": "workspace-watching",
-        "name": "Workspace Watching",
+        "id": "troubleshoot-nx-install-issues",
+        "name": "Troubleshooting Nx Install Issues",
         "description": "",
-        "file": "shared/recipes/workspace-watching",
+        "file": "shared/installation/troubleshoot-installation",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/workspace-watching",
-        "tags": ["workspace-watching"]
-      },
-      {
-        "id": "advanced-update",
-        "name": "Advanced Update Nx",
-        "description": "",
-        "file": "shared/recipes/advanced-update",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/advanced-update",
-        "tags": ["automate-updating-dependencies"]
-      },
-      {
-        "id": "js-and-ts",
-        "name": "JavaScript and TypeScript",
-        "description": "",
-        "file": "shared/guides/js-and-ts",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/js-and-ts",
-        "tags": []
-      },
-      {
-        "id": "react-native",
-        "name": "React Native with Nx",
-        "description": "",
-        "file": "shared/guides/react-native",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/react-native",
-        "tags": []
-      },
-      {
-        "id": "adding-assets-react",
-        "name": "Adding Images, Fonts, and Files",
-        "description": "",
-        "file": "shared/guides/adding-assets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/adding-assets-react",
-        "tags": []
-      },
-      {
-        "id": "setup-incremental-builds-angular",
-        "name": "Setup incremental builds for Angular applications",
-        "description": "",
-        "file": "shared/guides/setup-incremental-builds-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/setup-incremental-builds-angular",
-        "tags": []
-      },
-      {
-        "id": "performance-profiling",
-        "name": "Profiling Build Performance",
-        "description": "",
-        "file": "shared/guides/performance-profiling",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/performance-profiling",
-        "tags": ["use-task-executors", "environment-variables"]
-      },
-      {
-        "id": "eslint",
-        "name": "Using ESLint in Nx Workspaces",
-        "description": "",
-        "file": "shared/eslint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/eslint",
-        "tags": ["enforce-project-boundaries"]
-      },
-      {
-        "id": "browser-support",
-        "name": "Configuring Browser Support",
-        "description": "",
-        "file": "shared/guides/browser-support",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/browser-support",
-        "tags": []
-      },
-      {
-        "id": "deploy-nextjs-to-vercel",
-        "name": "Deploying Next.js applications to Vercel",
-        "description": "",
-        "file": "shared/guides/deploy-nextjs-to-vercel",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/deploy-nextjs-to-vercel",
-        "tags": []
-      },
-      {
-        "id": "using-tailwind-css-in-react",
-        "name": "Using Tailwind CSS in React",
-        "description": "",
-        "file": "shared/guides/using-tailwind-css-in-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/using-tailwind-css-in-react",
-        "tags": []
-      },
-      {
-        "id": "react-18",
-        "name": "React 18 Migration",
-        "description": "",
-        "file": "shared/guides/react-18",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/react-18",
-        "tags": []
-      },
-      {
-        "id": "using-tailwind-css-with-angular-projects",
-        "name": "Using Tailwind CSS with Angular projects",
-        "description": "",
-        "file": "shared/guides/using-tailwind-css-with-angular-projects",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/using-tailwind-css-with-angular-projects",
-        "tags": []
-      },
-      {
-        "id": "misc-ngrx",
-        "name": "Using NgRx",
-        "description": "",
-        "file": "shared/guides/misc-ngrx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/misc-ngrx",
-        "tags": []
-      },
-      {
-        "id": "misc-data-persistence",
-        "name": "Using Data Persistence operators",
-        "description": "",
-        "file": "shared/guides/misc-data-persistence",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/misc-data-persistence",
-        "tags": []
-      },
-      {
-        "id": "react-nx",
-        "name": "Powering Up React Development With Nx",
-        "description": "",
-        "file": "shared/examples/react-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/react-nx",
-        "tags": []
-      },
-      {
-        "id": "apollo-react",
-        "name": "Using Apollo GraphQL",
-        "description": "",
-        "file": "shared/examples/apollo-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/apollo-react",
-        "tags": []
-      },
-      {
-        "id": "caching",
-        "name": "Large Repo and Caching",
-        "description": "",
-        "file": "shared/examples/caching",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/caching",
-        "tags": []
-      },
-      {
-        "id": "dte",
-        "name": "Large Repo and DTE",
-        "description": "",
-        "file": "shared/examples/dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/dte",
+        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
         "tags": []
       },
       {
@@ -1252,68 +1122,129 @@
         "file": "shared/recipes/troubleshoot-cache-misses",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/troubleshoot-cache-misses",
+        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
         "tags": ["cache-task-results"]
       },
       {
-        "id": "ban-dependencies-with-tags",
-        "name": "Ban Dependencies with Certain Tags",
+        "id": "unknown-local-cache",
+        "name": "Unknown Local Cache Error",
         "description": "",
-        "file": "shared/recipes/ban-dependencies-with-tags",
+        "file": "shared/guides/unknown-local-cache",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/ban-dependencies-with-tags",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/recipes/troubleshooting/unknown-local-cache",
+        "tags": []
       },
       {
-        "id": "tag-multiple-dimensions",
-        "name": "Tag in Multiple Dimensions",
+        "id": "performance-profiling",
+        "name": "Profiling Build Performance",
         "description": "",
-        "file": "shared/recipes/tag-multiple-dimensions",
+        "file": "shared/guides/performance-profiling",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/tag-multiple-dimensions",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/recipes/troubleshooting/performance-profiling",
+        "tags": ["use-task-executors", "environment-variables"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting",
+    "tags": []
+  },
+  "/recipes/troubleshooting/resolve-circular-dependencies": {
+    "id": "resolve-circular-dependencies",
+    "name": "Resolve Circular Dependencies",
+    "description": "",
+    "file": "shared/recipes/resolve-circular-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+    "tags": ["explore-graph"]
+  },
+  "/recipes/troubleshooting/troubleshoot-nx-install-issues": {
+    "id": "troubleshoot-nx-install-issues",
+    "name": "Troubleshooting Nx Install Issues",
+    "description": "",
+    "file": "shared/installation/troubleshoot-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+    "tags": []
+  },
+  "/recipes/troubleshooting/troubleshoot-cache-misses": {
+    "id": "troubleshoot-cache-misses",
+    "name": "Troubleshoot Cache Misses",
+    "description": "",
+    "file": "shared/recipes/troubleshoot-cache-misses",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+    "tags": ["cache-task-results"]
+  },
+  "/recipes/troubleshooting/unknown-local-cache": {
+    "id": "unknown-local-cache",
+    "name": "Unknown Local Cache Error",
+    "description": "",
+    "file": "shared/guides/unknown-local-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/unknown-local-cache",
+    "tags": []
+  },
+  "/recipes/troubleshooting/performance-profiling": {
+    "id": "performance-profiling",
+    "name": "Profiling Build Performance",
+    "description": "",
+    "file": "shared/guides/performance-profiling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/performance-profiling",
+    "tags": ["use-task-executors", "environment-variables"]
+  },
+  "/recipes/tips-n-tricks": {
+    "id": "tips-n-tricks",
+    "name": "Tips and tricks",
+    "description": "Various tips and tricks for using Nx.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "eslint",
+        "name": "Configuring ESLint with Typescript",
+        "description": "",
+        "file": "shared/eslint",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/eslint",
+        "tags": []
       },
       {
-        "id": "ban-external-imports",
-        "name": "Ban External Imports",
+        "id": "define-environment-variables",
+        "name": "Define Environment Variables",
         "description": "",
-        "file": "shared/recipes/ban-external-imports",
+        "file": "shared/guides/define-environment-variables",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/ban-external-imports",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/recipes/tips-n-tricks/define-environment-variables",
+        "tags": ["environment-variables"]
       },
       {
-        "id": "tags-allow-list",
-        "name": "Tags Allow List",
+        "id": "browser-support",
+        "name": "Configuring Browser Support",
         "description": "",
-        "file": "shared/recipes/tags-allow-list",
+        "file": "shared/guides/browser-support",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/tags-allow-list",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/recipes/tips-n-tricks/browser-support",
+        "tags": []
       },
       {
-        "id": "export-project-graph",
-        "name": "Export Project Graph",
+        "id": "include-assets-in-build",
+        "name": "Include Assets in Build",
         "description": "",
-        "file": "shared/recipes/export-project-graph",
+        "file": "shared/recipes/include-assets-in-build",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/export-project-graph",
-        "tags": ["explore-graph"]
-      },
-      {
-        "id": "resolve-circular-dependencies",
-        "name": "Resolve Circular Dependencies",
-        "description": "",
-        "file": "shared/recipes/resolve-circular-dependencies",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/resolve-circular-dependencies",
-        "tags": ["explore-graph"]
+        "path": "/recipes/tips-n-tricks/include-assets-in-build",
+        "tags": []
       },
       {
         "id": "include-all-packagejson",
@@ -1322,7 +1253,7 @@
         "file": "shared/recipes/include-all-packagejson",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/include-all-packagejson",
+        "path": "/recipes/tips-n-tricks/include-all-packagejson",
         "tags": []
       },
       {
@@ -1332,17 +1263,248 @@
         "file": "shared/recipes/identify-dependencies-between-folders",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/identify-dependencies-between-folders",
+        "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
         "tags": []
       },
       {
-        "id": "standalone-ngrx-apis",
-        "name": "Standalone NgRx APIs",
+        "id": "root-level-scripts",
+        "name": "Run Root-Level NPM Scripts with Nx",
         "description": "",
-        "file": "shared/recipes/standalone-ngrx-apis",
+        "file": "shared/recipes/root-level-scripts",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/other/standalone-ngrx-apis",
+        "path": "/recipes/tips-n-tricks/root-level-scripts",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "analyze-source-files",
+        "name": "Disable Graph Links Created from Analyzing Source Files",
+        "description": "",
+        "file": "shared/recipes/analyze-source-files",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/analyze-source-files",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "workspace-watching",
+        "name": "Workspace Watching",
+        "description": "",
+        "file": "shared/recipes/workspace-watching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/workspace-watching",
+        "tags": ["workspace-watching"]
+      },
+      {
+        "id": "standalone-to-integrated",
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "description": "",
+        "file": "shared/recipes/repo-types/standalone-to-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+        "tags": ["repository-types"]
+      },
+      {
+        "id": "js-and-ts",
+        "name": "Use JavaScript instead TypeScript",
+        "description": "",
+        "file": "shared/guides/js-and-ts",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/js-and-ts",
+        "tags": []
+      },
+      {
+        "id": "advanced-update",
+        "name": "Altering Migration Process",
+        "description": "",
+        "file": "shared/recipes/advanced-update",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/advanced-update",
+        "tags": ["automate-updating-dependencies"]
+      },
+      {
+        "id": "run-commands-executor",
+        "name": "Running Custom Commands",
+        "description": "",
+        "file": "shared/running-custom-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/run-commands-executor",
+        "tags": ["use-task-executors"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/eslint": {
+    "id": "eslint",
+    "name": "Configuring ESLint with Typescript",
+    "description": "",
+    "file": "shared/eslint",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/eslint",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/define-environment-variables": {
+    "id": "define-environment-variables",
+    "name": "Define Environment Variables",
+    "description": "",
+    "file": "shared/guides/define-environment-variables",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/define-environment-variables",
+    "tags": ["environment-variables"]
+  },
+  "/recipes/tips-n-tricks/browser-support": {
+    "id": "browser-support",
+    "name": "Configuring Browser Support",
+    "description": "",
+    "file": "shared/guides/browser-support",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/browser-support",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/include-assets-in-build": {
+    "id": "include-assets-in-build",
+    "name": "Include Assets in Build",
+    "description": "",
+    "file": "shared/recipes/include-assets-in-build",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/include-assets-in-build",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/include-all-packagejson": {
+    "id": "include-all-packagejson",
+    "name": "Include All package.json Files as Projects",
+    "description": "",
+    "file": "shared/recipes/include-all-packagejson",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/include-all-packagejson",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/identify-dependencies-between-folders": {
+    "id": "identify-dependencies-between-folders",
+    "name": "Identify Dependencies Between Folders",
+    "description": "",
+    "file": "shared/recipes/identify-dependencies-between-folders",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/root-level-scripts": {
+    "id": "root-level-scripts",
+    "name": "Run Root-Level NPM Scripts with Nx",
+    "description": "",
+    "file": "shared/recipes/root-level-scripts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/root-level-scripts",
+    "tags": ["run-tasks"]
+  },
+  "/recipes/tips-n-tricks/analyze-source-files": {
+    "id": "analyze-source-files",
+    "name": "Disable Graph Links Created from Analyzing Source Files",
+    "description": "",
+    "file": "shared/recipes/analyze-source-files",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/analyze-source-files",
+    "tags": ["explore-graph"]
+  },
+  "/recipes/tips-n-tricks/workspace-watching": {
+    "id": "workspace-watching",
+    "name": "Workspace Watching",
+    "description": "",
+    "file": "shared/recipes/workspace-watching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/workspace-watching",
+    "tags": ["workspace-watching"]
+  },
+  "/recipes/tips-n-tricks/standalone-to-integrated": {
+    "id": "standalone-to-integrated",
+    "name": "Convert from a Standalone Repository to an Integrated Repository",
+    "description": "",
+    "file": "shared/recipes/repo-types/standalone-to-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+    "tags": ["repository-types"]
+  },
+  "/recipes/tips-n-tricks/js-and-ts": {
+    "id": "js-and-ts",
+    "name": "Use JavaScript instead TypeScript",
+    "description": "",
+    "file": "shared/guides/js-and-ts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/js-and-ts",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/advanced-update": {
+    "id": "advanced-update",
+    "name": "Altering Migration Process",
+    "description": "",
+    "file": "shared/recipes/advanced-update",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/advanced-update",
+    "tags": ["automate-updating-dependencies"]
+  },
+  "/recipes/tips-n-tricks/run-commands-executor": {
+    "id": "run-commands-executor",
+    "name": "Running Custom Commands",
+    "description": "",
+    "file": "shared/running-custom-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/run-commands-executor",
+    "tags": ["use-task-executors"]
+  },
+  "/recipes/other": {
+    "id": "other",
+    "name": "Other",
+    "description": "Other recipes you will find useful.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "deno-deploy",
+        "name": "Serverless deployment with Deno Deploy",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-deploy",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/deno-deploy",
+        "tags": ["deployment", "deno"]
+      },
+      {
+        "id": "deno-netlify-functions",
+        "name": "Add and Deploy Netlify Edge Functions with Deno",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/deno-netlify-functions",
+        "tags": ["deployment", "deno"]
+      },
+      {
+        "id": "rescope",
+        "name": "Rescope Packages from @nrwl to @nx",
+        "description": "",
+        "file": "shared/recipes/rescope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/rescope",
         "tags": []
       }
     ],
@@ -1350,314 +1512,245 @@
     "path": "/recipes/other",
     "tags": []
   },
-  "/recipes/other/root-level-scripts": {
-    "id": "root-level-scripts",
-    "name": "Run Root-Level NPM Scripts with Nx",
+  "/recipes/other/deno-deploy": {
+    "id": "deno-deploy",
+    "name": "Serverless deployment with Deno Deploy",
     "description": "",
-    "file": "shared/recipes/root-level-scripts",
+    "file": "shared/recipes/deployment/deno-deploy",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/root-level-scripts",
-    "tags": ["run-tasks"]
+    "path": "/recipes/other/deno-deploy",
+    "tags": ["deployment", "deno"]
   },
-  "/recipes/other/analyze-source-files": {
-    "id": "analyze-source-files",
-    "name": "Disable Graph Links Created from Analyzing Source Files",
+  "/recipes/other/deno-netlify-functions": {
+    "id": "deno-netlify-functions",
+    "name": "Add and Deploy Netlify Edge Functions with Deno",
     "description": "",
-    "file": "shared/recipes/analyze-source-files",
+    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/analyze-source-files",
-    "tags": ["explore-graph"]
+    "path": "/recipes/other/deno-netlify-functions",
+    "tags": ["deployment", "deno"]
   },
-  "/recipes/other/workspace-watching": {
-    "id": "workspace-watching",
-    "name": "Workspace Watching",
+  "/recipes/other/rescope": {
+    "id": "rescope",
+    "name": "Rescope Packages from @nrwl to @nx",
     "description": "",
-    "file": "shared/recipes/workspace-watching",
+    "file": "shared/recipes/rescope",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/workspace-watching",
-    "tags": ["workspace-watching"]
-  },
-  "/recipes/other/advanced-update": {
-    "id": "advanced-update",
-    "name": "Advanced Update Nx",
-    "description": "",
-    "file": "shared/recipes/advanced-update",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/advanced-update",
-    "tags": ["automate-updating-dependencies"]
-  },
-  "/recipes/other/js-and-ts": {
-    "id": "js-and-ts",
-    "name": "JavaScript and TypeScript",
-    "description": "",
-    "file": "shared/guides/js-and-ts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/js-and-ts",
+    "path": "/recipes/other/rescope",
     "tags": []
   },
-  "/recipes/other/react-native": {
-    "id": "react-native",
-    "name": "React Native with Nx",
-    "description": "",
-    "file": "shared/guides/react-native",
-    "itemList": [],
+  "/recipes/example-repos": {
+    "id": "example-repos",
+    "name": "Example Repos",
+    "description": "Examples of different ways to use Nx",
+    "file": "",
+    "itemList": [
+      {
+        "id": "react-nx",
+        "name": "Powering Up React Development With Nx",
+        "description": "",
+        "file": "shared/examples/react-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/react-nx",
+        "tags": []
+      },
+      {
+        "id": "apollo-react",
+        "name": "Using Apollo GraphQL",
+        "description": "",
+        "file": "shared/examples/apollo-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/apollo-react",
+        "tags": []
+      },
+      {
+        "id": "nestjs-prisma",
+        "name": "Using Prisma with NestJS",
+        "description": "",
+        "file": "shared/recipes/database/nestjs-prisma",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/nestjs-prisma",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "mongo-fastify",
+        "name": "Using Mongo with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/mongo-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/mongo-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "redis-fastify",
+        "name": "Using Redis with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/redis-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/redis-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "postgres-fastify",
+        "name": "Using Postgres with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/postgres-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/postgres-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "serverless-fastify-planetscale",
+        "name": "Using PlanetScale with Serverless Fastify",
+        "description": "",
+        "file": "shared/recipes/database/serverless-fastify-planetscale",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/serverless-fastify-planetscale",
+        "tags": ["database", "node", "serverless"]
+      },
+      {
+        "id": "caching",
+        "name": "Large Repo and Caching",
+        "description": "",
+        "file": "shared/examples/caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/caching",
+        "tags": []
+      },
+      {
+        "id": "dte",
+        "name": "Large Repo and DTE",
+        "description": "",
+        "file": "shared/examples/dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/dte",
+        "tags": []
+      },
+      {
+        "id": "mfe",
+        "name": "Nx Micro-Frontend Example",
+        "description": "",
+        "file": "shared/examples/nx-examples",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/example-repos/mfe",
+        "tags": []
+      }
+    ],
     "isExternal": false,
-    "path": "/recipes/other/react-native",
+    "path": "/recipes/example-repos",
     "tags": []
   },
-  "/recipes/other/adding-assets-react": {
-    "id": "adding-assets-react",
-    "name": "Adding Images, Fonts, and Files",
-    "description": "",
-    "file": "shared/guides/adding-assets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/adding-assets-react",
-    "tags": []
-  },
-  "/recipes/other/setup-incremental-builds-angular": {
-    "id": "setup-incremental-builds-angular",
-    "name": "Setup incremental builds for Angular applications",
-    "description": "",
-    "file": "shared/guides/setup-incremental-builds-angular",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/setup-incremental-builds-angular",
-    "tags": []
-  },
-  "/recipes/other/performance-profiling": {
-    "id": "performance-profiling",
-    "name": "Profiling Build Performance",
-    "description": "",
-    "file": "shared/guides/performance-profiling",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/performance-profiling",
-    "tags": ["use-task-executors", "environment-variables"]
-  },
-  "/recipes/other/eslint": {
-    "id": "eslint",
-    "name": "Using ESLint in Nx Workspaces",
-    "description": "",
-    "file": "shared/eslint",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/eslint",
-    "tags": ["enforce-project-boundaries"]
-  },
-  "/recipes/other/browser-support": {
-    "id": "browser-support",
-    "name": "Configuring Browser Support",
-    "description": "",
-    "file": "shared/guides/browser-support",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/browser-support",
-    "tags": []
-  },
-  "/recipes/other/deploy-nextjs-to-vercel": {
-    "id": "deploy-nextjs-to-vercel",
-    "name": "Deploying Next.js applications to Vercel",
-    "description": "",
-    "file": "shared/guides/deploy-nextjs-to-vercel",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/deploy-nextjs-to-vercel",
-    "tags": []
-  },
-  "/recipes/other/using-tailwind-css-in-react": {
-    "id": "using-tailwind-css-in-react",
-    "name": "Using Tailwind CSS in React",
-    "description": "",
-    "file": "shared/guides/using-tailwind-css-in-react",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/using-tailwind-css-in-react",
-    "tags": []
-  },
-  "/recipes/other/react-18": {
-    "id": "react-18",
-    "name": "React 18 Migration",
-    "description": "",
-    "file": "shared/guides/react-18",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/react-18",
-    "tags": []
-  },
-  "/recipes/other/using-tailwind-css-with-angular-projects": {
-    "id": "using-tailwind-css-with-angular-projects",
-    "name": "Using Tailwind CSS with Angular projects",
-    "description": "",
-    "file": "shared/guides/using-tailwind-css-with-angular-projects",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/using-tailwind-css-with-angular-projects",
-    "tags": []
-  },
-  "/recipes/other/misc-ngrx": {
-    "id": "misc-ngrx",
-    "name": "Using NgRx",
-    "description": "",
-    "file": "shared/guides/misc-ngrx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/misc-ngrx",
-    "tags": []
-  },
-  "/recipes/other/misc-data-persistence": {
-    "id": "misc-data-persistence",
-    "name": "Using Data Persistence operators",
-    "description": "",
-    "file": "shared/guides/misc-data-persistence",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/misc-data-persistence",
-    "tags": []
-  },
-  "/recipes/other/react-nx": {
+  "/recipes/example-repos/react-nx": {
     "id": "react-nx",
     "name": "Powering Up React Development With Nx",
     "description": "",
     "file": "shared/examples/react-nx",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/react-nx",
+    "path": "/recipes/example-repos/react-nx",
     "tags": []
   },
-  "/recipes/other/apollo-react": {
+  "/recipes/example-repos/apollo-react": {
     "id": "apollo-react",
     "name": "Using Apollo GraphQL",
     "description": "",
     "file": "shared/examples/apollo-react",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/apollo-react",
+    "path": "/recipes/example-repos/apollo-react",
     "tags": []
   },
-  "/recipes/other/caching": {
+  "/recipes/example-repos/nestjs-prisma": {
+    "id": "nestjs-prisma",
+    "name": "Using Prisma with NestJS",
+    "description": "",
+    "file": "shared/recipes/database/nestjs-prisma",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/nestjs-prisma",
+    "tags": ["database", "node"]
+  },
+  "/recipes/example-repos/mongo-fastify": {
+    "id": "mongo-fastify",
+    "name": "Using Mongo with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/mongo-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/mongo-fastify",
+    "tags": ["database", "node"]
+  },
+  "/recipes/example-repos/redis-fastify": {
+    "id": "redis-fastify",
+    "name": "Using Redis with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/redis-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/redis-fastify",
+    "tags": ["database", "node"]
+  },
+  "/recipes/example-repos/postgres-fastify": {
+    "id": "postgres-fastify",
+    "name": "Using Postgres with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/postgres-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/postgres-fastify",
+    "tags": ["database", "node"]
+  },
+  "/recipes/example-repos/serverless-fastify-planetscale": {
+    "id": "serverless-fastify-planetscale",
+    "name": "Using PlanetScale with Serverless Fastify",
+    "description": "",
+    "file": "shared/recipes/database/serverless-fastify-planetscale",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/example-repos/serverless-fastify-planetscale",
+    "tags": ["database", "node", "serverless"]
+  },
+  "/recipes/example-repos/caching": {
     "id": "caching",
     "name": "Large Repo and Caching",
     "description": "",
     "file": "shared/examples/caching",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/caching",
+    "path": "/recipes/example-repos/caching",
     "tags": []
   },
-  "/recipes/other/dte": {
+  "/recipes/example-repos/dte": {
     "id": "dte",
     "name": "Large Repo and DTE",
     "description": "",
     "file": "shared/examples/dte",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/dte",
+    "path": "/recipes/example-repos/dte",
     "tags": []
   },
-  "/recipes/other/troubleshoot-cache-misses": {
-    "id": "troubleshoot-cache-misses",
-    "name": "Troubleshoot Cache Misses",
+  "/recipes/example-repos/mfe": {
+    "id": "mfe",
+    "name": "Nx Micro-Frontend Example",
     "description": "",
-    "file": "shared/recipes/troubleshoot-cache-misses",
+    "file": "shared/examples/nx-examples",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/other/troubleshoot-cache-misses",
-    "tags": ["cache-task-results"]
-  },
-  "/recipes/other/ban-dependencies-with-tags": {
-    "id": "ban-dependencies-with-tags",
-    "name": "Ban Dependencies with Certain Tags",
-    "description": "",
-    "file": "shared/recipes/ban-dependencies-with-tags",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/ban-dependencies-with-tags",
-    "tags": ["enforce-project-boundaries"]
-  },
-  "/recipes/other/tag-multiple-dimensions": {
-    "id": "tag-multiple-dimensions",
-    "name": "Tag in Multiple Dimensions",
-    "description": "",
-    "file": "shared/recipes/tag-multiple-dimensions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/tag-multiple-dimensions",
-    "tags": ["enforce-project-boundaries"]
-  },
-  "/recipes/other/ban-external-imports": {
-    "id": "ban-external-imports",
-    "name": "Ban External Imports",
-    "description": "",
-    "file": "shared/recipes/ban-external-imports",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/ban-external-imports",
-    "tags": ["enforce-project-boundaries"]
-  },
-  "/recipes/other/tags-allow-list": {
-    "id": "tags-allow-list",
-    "name": "Tags Allow List",
-    "description": "",
-    "file": "shared/recipes/tags-allow-list",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/tags-allow-list",
-    "tags": ["enforce-project-boundaries"]
-  },
-  "/recipes/other/export-project-graph": {
-    "id": "export-project-graph",
-    "name": "Export Project Graph",
-    "description": "",
-    "file": "shared/recipes/export-project-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/export-project-graph",
-    "tags": ["explore-graph"]
-  },
-  "/recipes/other/resolve-circular-dependencies": {
-    "id": "resolve-circular-dependencies",
-    "name": "Resolve Circular Dependencies",
-    "description": "",
-    "file": "shared/recipes/resolve-circular-dependencies",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/resolve-circular-dependencies",
-    "tags": ["explore-graph"]
-  },
-  "/recipes/other/include-all-packagejson": {
-    "id": "include-all-packagejson",
-    "name": "Include All package.json Files as Projects",
-    "description": "",
-    "file": "shared/recipes/include-all-packagejson",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/include-all-packagejson",
-    "tags": []
-  },
-  "/recipes/other/identify-dependencies-between-folders": {
-    "id": "identify-dependencies-between-folders",
-    "name": "Identify Dependencies Between Folders",
-    "description": "",
-    "file": "shared/recipes/identify-dependencies-between-folders",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/identify-dependencies-between-folders",
-    "tags": []
-  },
-  "/recipes/other/standalone-ngrx-apis": {
-    "id": "standalone-ngrx-apis",
-    "name": "Standalone NgRx APIs",
-    "description": "",
-    "file": "shared/recipes/standalone-ngrx-apis",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/standalone-ngrx-apis",
+    "path": "/recipes/example-repos/mfe",
     "tags": []
   }
 }

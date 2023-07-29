@@ -5,7 +5,7 @@ import {
   readProjectConfiguration,
   toJS,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import * as chalk from 'chalk';
 
@@ -25,6 +25,8 @@ export async function createStorybookFiles(
 
   // do not proceed if not a react native project
   if (
+    targets?.start?.executor !== '@nx/react-native:start' &&
+    targets?.start?.executor !== '@nx/expo:start' &&
     targets?.start?.executor !== '@nrwl/react-native:start' &&
     targets?.start?.executor !== '@nrwl/expo:start'
   ) {

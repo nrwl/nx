@@ -29,7 +29,75 @@
       "version": "14.1.5-beta.0",
       "description": "Rename option swcrcPath to swcrc, and resolve relative to workspace root",
       "factory": "./src/migrations/update-14-1-5/update-swcrc-path"
+    },
+    "rename-swcrc-config": {
+      "cli": "nx",
+      "version": "15.8.0-beta.0",
+      "description": "Rename .lib.swcrc to .swcrc for better SWC support throughout the workspace",
+      "factory": "./src/migrations/update-15-8-0/rename-swcrc-config"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/js with @nx/js",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "explicitly-set-projects-to-update-buildable-deps": {
+      "cli": "nx",
+      "version": "16.6.0-beta.0",
+      "description": "Explicitly set 'updateBuildableProjectDepsInPackageJson' to 'true' in targets that rely on that value as the default.",
+      "factory": "./src/migrations/update-16-6-0/explicitly-set-projects-to-update-buildable-deps"
     }
   },
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "15.8.0": {
+      "version": "15.8.0-beta.2",
+      "x-prompt": "Do you want to update to TypeScript v4.9?",
+      "requires": {
+        "typescript": ">=4.8.2 <4.9.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~4.9.5"
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.3",
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.1.62",
+          "alwaysAddToPackageJson": false
+        },
+        "@swc/helpers": {
+          "version": "~0.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.0": {
+      "version": "16.1.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.0?",
+      "requires": {
+        "typescript": ">=4.9.5 <5.0.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.0.2"
+        }
+      }
+    },
+    "16.4.0": {
+      "version": "16.4.0-beta.11",
+      "x-prompt": "Do you want to update to TypeScript v5.1?",
+      "requires": {
+        "typescript": ">=5.0.0 <5.1.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.1.3"
+        }
+      }
+    }
+  }
 }

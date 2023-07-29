@@ -1,14 +1,11 @@
 import {
   getBasicNxCloudSection,
   getDeepDiveNxCloudSection,
-} from '@nrwl/nx-dev/data-access-menu';
-import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
-import {
-  ProcessedDocument,
-  RelatedDocument,
-} from '@nrwl/nx-dev/models-document';
-import { Menu, MenuItem } from '@nrwl/nx-dev/models-menu';
-import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
+} from '@nx/nx-dev/data-access-menu';
+import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
+import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
+import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
@@ -16,15 +13,18 @@ import { nxCloudApi } from '../../lib/cloud.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { tagsApi } from '../../lib/tags.api';
+import { fetchGithubStarCount } from '../../lib/githubStars.api';
 
-export default function Recipes({
+export default function Pages({
   document,
   menu,
   relatedDocuments,
+  widgetData,
 }: {
   document: ProcessedDocument;
   menu: MenuItem[];
   relatedDocuments: RelatedDocument[];
+  widgetData: { githubStarsCount: number };
 }) {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -78,6 +78,7 @@ export default function Recipes({
           <DocViewer
             document={vm.document}
             relatedDocuments={vm.relatedDocuments}
+            widgetData={widgetData}
           />
         </div>
       </main>
@@ -102,6 +103,9 @@ export const getStaticProps: GetStaticProps = async ({
     return {
       props: {
         document,
+        widgetData: {
+          githubStarsCount: await fetchGithubStarCount(),
+        },
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item

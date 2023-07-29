@@ -1,5 +1,6 @@
 import { buildEsbuildOptions } from './build-esbuild-options';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import path = require('path');
 
 describe('buildEsbuildOptions', () => {
   const context: ExecutorContext = {
@@ -12,12 +13,22 @@ describe('buildEsbuildOptions', () => {
         },
       },
     },
+    projectGraph: {
+      nodes: {
+        myapp: {
+          type: 'app',
+          name: 'myapp',
+          data: { root: 'apps/myapp' },
+        },
+      },
+      dependencies: { myapp: [] },
+    },
     nxJsonConfiguration: {},
     isVerbose: false,
-    root: '/',
-    cwd: '/',
+    root: path.join(__dirname, 'fixtures'),
+    cwd: path.join(__dirname, 'fixtures'),
     target: {
-      executor: '@nrwl/esbuild:esbuild',
+      executor: '@nx/esbuild:esbuild',
       options: {
         outputPath: 'dist/apps/myapp',
       },
@@ -34,11 +45,11 @@ describe('buildEsbuildOptions', () => {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
           tsConfig: 'apps/myapp/tsconfig.app.json',
-          project: 'apps/myapp/package.json',
           assets: [],
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -57,6 +68,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -71,11 +86,11 @@ describe('buildEsbuildOptions', () => {
           additionalEntryPoints: ['apps/myapp/src/extra-entry.ts'],
           outputPath: 'dist/apps/myapp',
           tsConfig: 'apps/myapp/tsconfig.app.json',
-          project: 'apps/myapp/package.json',
           assets: [],
           outputFileName: 'index.js',
           singleEntry: false,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -94,6 +109,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -107,11 +126,11 @@ describe('buildEsbuildOptions', () => {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
           tsConfig: 'apps/myapp/tsconfig.app.json',
-          project: 'apps/myapp/package.json',
           assets: [],
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -130,6 +149,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.cjs',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -143,11 +166,11 @@ describe('buildEsbuildOptions', () => {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
           tsConfig: 'apps/myapp/tsconfig.app.json',
-          project: 'apps/myapp/package.json',
           assets: [],
           outputFileName: 'index.js',
           singleEntry: true,
           external: [],
+          userDefinedBuildOptions: {},
         },
         context
       )
@@ -163,6 +186,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.cjs',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
   });
 
@@ -176,12 +203,11 @@ describe('buildEsbuildOptions', () => {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
           tsConfig: 'apps/myapp/tsconfig.app.json',
-          project: 'apps/myapp/package.json',
           outputFileName: 'index.js',
           assets: [],
           singleEntry: true,
           external: [],
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             outExtension: {
               '.js': '.mjs',
             },
@@ -201,6 +227,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.mjs',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
 
     expect(
@@ -212,12 +242,11 @@ describe('buildEsbuildOptions', () => {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
           tsConfig: 'apps/myapp/tsconfig.app.json',
-          project: 'apps/myapp/package.json',
           outputFileName: 'index.js',
           assets: [],
           singleEntry: true,
           external: [],
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             outExtension: {
               '.js': '.js',
             },
@@ -237,6 +266,10 @@ describe('buildEsbuildOptions', () => {
       outExtension: {
         '.js': '.js',
       },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
     });
 
     // ESM cannot be mapped to .cjs so ignore
@@ -249,12 +282,11 @@ describe('buildEsbuildOptions', () => {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
           tsConfig: 'apps/myapp/tsconfig.app.json',
-          project: 'apps/myapp/package.json',
           outputFileName: 'index.js',
           assets: [],
           singleEntry: true,
           external: [],
-          esbuildOptions: {
+          userDefinedBuildOptions: {
             outExtension: {
               '.js': '.cjs',
             },
@@ -271,6 +303,239 @@ describe('buildEsbuildOptions', () => {
       outfile: 'dist/apps/myapp/index.js',
       tsconfig: 'apps/myapp/tsconfig.app.json',
       external: [],
+      outExtension: {
+        '.js': '.js',
+      },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
+    });
+  });
+
+  it('should respect user defined external', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: true,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          assets: [],
+          singleEntry: true,
+          outputFileName: 'index.js',
+          external: ['foo'],
+          userDefinedBuildOptions: {
+            external: ['bar'],
+          },
+        },
+        context
+      )
+    ).toEqual({
+      bundle: true,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outfile: 'dist/apps/myapp/index.js',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: ['bar', 'foo'],
+      outExtension: {
+        '.js': '.js',
+      },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
+    });
+  });
+
+  it('should not set external if --bundle=false', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          assets: [],
+          singleEntry: true,
+          external: ['foo'],
+          userDefinedBuildOptions: {},
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      outExtension: {
+        '.js': '.js',
+      },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
+    });
+  });
+
+  it('should set sourcemap', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          sourcemap: true,
+          external: [],
+          userDefinedBuildOptions: {},
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      sourcemap: true,
+      outExtension: {
+        '.js': '.js',
+      },
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+    });
+  });
+
+  it('should default to false for sourcemap', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          external: [],
+          userDefinedBuildOptions: {},
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      sourcemap: false,
+      outExtension: {
+        '.js': '.js',
+      },
+    });
+  });
+
+  it('should set sourcemap when passed via the esbuildOptions', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          userDefinedBuildOptions: {
+            sourcemap: true,
+          },
+          external: [],
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      sourcemap: true,
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
+      outExtension: {
+        '.js': '.js',
+      },
+    });
+  });
+
+  it('the base options sourcemap property should supercede the one passed via the esbuildOptions', () => {
+    expect(
+      buildEsbuildOptions(
+        'esm',
+        {
+          bundle: false,
+          platform: 'node',
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          outputFileName: 'index.js',
+          assets: [],
+          singleEntry: true,
+          userDefinedBuildOptions: {
+            sourcemap: false,
+          },
+          sourcemap: true,
+          external: [],
+        },
+        context
+      )
+    ).toEqual({
+      bundle: false,
+      entryNames: '[dir]/[name]',
+      entryPoints: ['apps/myapp/src/index.ts'],
+      format: 'esm',
+      platform: 'node',
+      outdir: 'dist/apps/myapp',
+      tsconfig: 'apps/myapp/tsconfig.app.json',
+      external: undefined,
+      sourcemap: true,
+      metafile: undefined,
+      minify: undefined,
+      target: undefined,
       outExtension: {
         '.js': '.js',
       },

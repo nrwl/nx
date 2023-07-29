@@ -4,9 +4,8 @@ import {
   joinPathFragments,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, dirname, extname, relative } from 'path';
-import * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
@@ -14,16 +13,21 @@ import {
 import { getDefaultsForComponent } from '../../utils/component-props';
 import { nxVersion } from '../../utils/versions';
 import { ComponentTestSchema } from './schema';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 export async function componentTestGenerator(
   tree: Tree,
   options: ComponentTestSchema
 ) {
-  await ensurePackage(tree, '@nrwl/cypress', nxVersion);
+  ensurePackage('@nx/cypress', nxVersion);
   const { assertMinimumCypressVersion } = await import(
-    '@nrwl/cypress/src/utils/cypress-version'
+    '@nx/cypress/src/utils/cypress-version'
   );
   assertMinimumCypressVersion(10);
+  // normalize any windows paths
+  options.componentPath = options.componentPath.replace(/\\/g, '/');
 
   const projectConfig = readProjectConfiguration(tree, options.project);
 
@@ -44,10 +48,14 @@ export async function componentTestGenerator(
 }
 
 function generateSpecsForComponents(tree: Tree, filePath: string) {
-  const sourceFile = ts.createSourceFile(
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
+  const sourceFile = tsModule.createSourceFile(
     filePath,
     tree.read(filePath, 'utf-8'),
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

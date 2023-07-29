@@ -3,9 +3,9 @@ import {
   parseTargetString,
   readTargetOptions,
   runExecutor,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import * as chalk from 'chalk';
-import { combineAsyncIterables } from '@nrwl/devkit/src/utils/async-iterable';
+import { combineAsyncIterables } from '@nx/devkit/src/utils/async-iterable';
 
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { TargetOptions, WebSsrDevServerOptions } from './schema';
@@ -58,7 +58,7 @@ export async function* ssrDevServerExecutor(
 
   for await (const output of combined) {
     if (!output.success) throw new Error('Could not build application');
-    if (output.options.target === 'node') {
+    if (output.options?.target === 'node') {
       nodeStarted = true;
     } else if (output.options?.target === 'web') {
       browserBuilt = true;

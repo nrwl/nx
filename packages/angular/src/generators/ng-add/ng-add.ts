@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import { angularInitGenerator } from '../init/init';
 import { migrateFromAngularCli } from './migrate-from-angular-cli';
 import type { GeneratorOptions } from './schema';

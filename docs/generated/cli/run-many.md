@@ -20,31 +20,49 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 Test all projects:
 
 ```shell
- nx run-many --target=test
+ nx run-many -t test
 ```
 
 Test proj1 and proj2 in parallel:
 
 ```shell
- nx run-many --target=test --projects=proj1,proj2
+ nx run-many -t test -p proj1 proj2
 ```
 
 Test proj1 and proj2 in parallel using 5 workers:
 
 ```shell
- nx run-many --target=test --projects=proj1,proj2 --parallel=5
+ nx run-many -t test -p proj1 proj2 --parallel=5
 ```
 
 Test proj1 and proj2 in sequence:
 
 ```shell
- nx run-many --target=test --projects=proj1,proj2 --parallel=false
+ nx run-many -t test -p proj1 proj2 --parallel=false
 ```
 
-Test all projects ending with `*-app` except `excluded-app`:
+Test all projects ending with `*-app` except `excluded-app`. Note: your shell may require you to escape the `*` like this: `\*`:
 
 ```shell
- nx run-many --target=test --projects=*-app --exclude excluded-app
+ nx run-many -t test --projects=*-app --exclude excluded-app
+```
+
+Test all projects with tags starting with `api-`. Note: your shell may require you to escape the `*` like this: `\*`:
+
+```shell
+ nx run-many -t test --projects=tag:api-*
+```
+
+Test all projects with a `type:ui` tag:
+
+```shell
+ nx run-many -t test --projects=tag:type:ui
+```
+
+Test all projects with a `type:feature` or `type:ui` tag:
+
+```shell
+ nx run-many -t test --projects=tag:type:feature,tag:type:ui
 ```
 
 Run lint, test, and build targets for all projects. Requires Nx v15.4+:
@@ -74,6 +92,12 @@ This is the configuration to use when performing tasks on projects
 Type: `string`
 
 Exclude certain projects from being processed
+
+### graph
+
+Type: `string`
+
+Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
 
 ### help
 
@@ -140,8 +164,6 @@ Tasks to run for affected projects
 ### verbose
 
 Type: `boolean`
-
-Default: `false`
 
 Prints additional information about the commands (e.g., stack traces)
 

@@ -1,45 +1,36 @@
 import {
   formatFiles,
+  GeneratorCallback,
   installPackagesTask,
-  moveFilesToNewDirectory,
+  offsetFromRoot,
   readNxJson,
   stripIndents,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { join } from 'path';
-import { UnitTestRunner } from '../../utils/test-runners';
+} from '@nx/devkit';
 import { angularInitGenerator } from '../init/init';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
-import {
-  getGeneratorDirectoryForInstalledAngularVersion,
-  getInstalledAngularVersionInfo,
-} from '../utils/version-utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   addE2e,
   addLinting,
   addProxyConfig,
-  addRouterRootConfiguration,
   addUnitTestRunner,
-  convertToStandaloneApp,
   createFiles,
+  createProject,
   enableStrictTypeChecking,
   normalizeOptions,
   setApplicationStrictDefault,
-  updateAppComponentTemplate,
-  updateComponentSpec,
-  updateConfigFiles,
   updateEditorTsConfig,
-  updateNxComponentTemplate,
 } from './lib';
 import type { Schema } from './schema';
-import { lt } from 'semver';
+import { gte, lt } from 'semver';
+import { prompt } from 'enquirer';
 
 export async function applicationGenerator(
   tree: Tree,
   schema: Partial<Schema>
-) {
+): Promise<GeneratorCallback> {
   const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
 
   if (lt(installedAngularVersionInfo.version, '14.1.0') && schema.standalone) {
@@ -47,71 +38,29 @@ export async function applicationGenerator(
     You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   }
 
-  const generatorDirectory =
-    getGeneratorDirectoryForInstalledAngularVersion(tree);
-  if (generatorDirectory) {
-    let previousGenerator = await import(
-      join(__dirname, generatorDirectory, 'application')
-    );
-    return await previousGenerator.default(tree, schema);
+  if (
+    gte(installedAngularVersionInfo.version, '14.1.0') &&
+    schema.standalone === undefined &&
+    process.env.NX_INTERACTIVE === 'true'
+  ) {
+    schema.standalone = await prompt({
+      name: 'standalone-components',
+      message: 'Would you like to use Standalone Components?',
+      type: 'confirm',
+    }).then((a) => a['standalone-components']);
   }
 
   const options = normalizeOptions(tree, schema);
+  const rootOffset = offsetFromRoot(options.appProjectRoot);
 
   await angularInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
 
-  const angularAppSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'application'
-  );
-  await angularAppSchematic(tree, {
-    name: options.name,
-    inlineStyle: options.inlineStyle,
-    inlineTemplate: options.inlineTemplate,
-    prefix: options.prefix,
-    skipTests: options.skipTests,
-    style: options.style,
-    viewEncapsulation: options.viewEncapsulation,
-    routing: false,
-    skipInstall: true,
-    skipPackageJson: options.skipPackageJson,
-  });
+  createProject(tree, options);
 
-  if (options.ngCliSchematicAppRoot !== options.appProjectRoot) {
-    moveFilesToNewDirectory(
-      tree,
-      options.ngCliSchematicAppRoot,
-      options.appProjectRoot
-    );
-  }
-
-  createFiles(tree, options);
-  updateConfigFiles(tree, options);
-  updateAppComponentTemplate(tree, options);
-
-  if (!options.minimal) {
-    // Create the NxWelcomeComponent
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
-      name: 'NxWelcome',
-      inlineTemplate: true,
-      inlineStyle: true,
-      prefix: options.prefix,
-      skipTests: true,
-      style: options.style,
-      flat: true,
-      viewEncapsulation: 'None',
-      project: options.name,
-      standalone: options.standalone,
-    });
-    updateNxComponentTemplate(tree, options);
-  }
+  await createFiles(tree, options, rootOffset);
 
   if (options.addTailwind) {
     await setupTailwindGenerator(tree, {
@@ -119,14 +68,6 @@ export async function applicationGenerator(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
     });
-  }
-
-  if (options.unitTestRunner !== UnitTestRunner.None) {
-    updateComponentSpec(tree, options);
-  }
-
-  if (options.routing) {
-    addRouterRootConfiguration(tree, options);
   }
 
   await addLinting(tree, options);
@@ -148,10 +89,6 @@ export async function applicationGenerator(
     enableStrictTypeChecking(tree, options);
   } else {
     setApplicationStrictDefault(tree, false);
-  }
-
-  if (options.standalone) {
-    convertToStandaloneApp(tree, options);
   }
 
   if (!options.skipFormat) {

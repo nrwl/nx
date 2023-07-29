@@ -1,14 +1,19 @@
-import { joinPathFragments, names, Tree } from '@nrwl/devkit';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import * as ts from 'typescript';
+import { joinPathFragments, names, Tree } from '@nx/devkit';
+import { insertImport } from '@nx/js';
 import { addImportToModule } from '../../../utils/nx-devkit/ast-utils';
 import { NormalizedSchema } from './normalized-schema';
 import { dirname } from 'path';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 export function addLazyLoadedRouterConfiguration(
   tree: Tree,
   options: NormalizedSchema['libraryOptions']
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const constName = `${names(options.fileName).propertyName}Routes`;
   tree.write(
     joinPathFragments(dirname(options.modulePath), 'lib.routes.ts'),
@@ -18,18 +23,11 @@ export const ${constName}: Route[] = [/* {path: '', pathMatch: 'full', component
   );
 
   const routeFileSource = tree.read(options.modulePath, 'utf-8');
-  let sourceFile = ts.createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     options.modulePath,
     routeFileSource,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
-  );
-  sourceFile = addImportToModule(
-    tree,
-    sourceFile,
-    options.modulePath,
-    `
-    RouterModule.forChild(${constName}) `
   );
 
   sourceFile = insertImport(

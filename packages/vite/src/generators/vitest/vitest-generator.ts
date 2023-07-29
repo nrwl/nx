@@ -7,21 +7,25 @@ import {
   joinPathFragments,
   offsetFromRoot,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   addOrChangeTestTarget,
-  findExistingTargetsInProject,
   createOrEditViteConfig,
+  findExistingTargetsInProject,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import initGenerator from '../init/init';
 import {
   vitestCoverageC8Version,
   vitestCoverageIstanbulVersion,
+  vitestCoverageV8Version,
 } from '../../utils/versions';
+
+import { addTsLibDependencies } from '@nx/js';
 
 export async function vitestGenerator(
   tree: Tree,
@@ -40,8 +44,9 @@ export async function vitestGenerator(
 
   addOrChangeTestTarget(tree, schema, testTarget);
 
-  const initTask = initGenerator(tree, {
+  const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
+    testEnvironment: schema.testEnvironment,
   });
   tasks.push(initTask);
 
@@ -60,20 +65,20 @@ export async function vitestGenerator(
   createFiles(tree, schema, root);
   updateTsConfig(tree, schema, root);
 
+  const coverageProviderDependency = getCoverageProviderDependency(
+    schema.coverageProvider
+  );
+
   const installCoverageProviderTask = addDependenciesToPackageJson(
     tree,
     {},
-    schema.coverageProvider === 'istanbul'
-      ? {
-          '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
-        }
-      : {
-          '@vitest/coverage-c8': vitestCoverageC8Version,
-        }
+    coverageProviderDependency
   );
   tasks.push(installCoverageProviderTask);
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }
@@ -126,6 +131,8 @@ function updateTsConfig(
         }
       );
     }
+
+    addTsLibDependencies(tree);
   }
 }
 
@@ -140,6 +147,25 @@ function createFiles(
     projectRoot,
     offsetFromRoot: offsetFromRoot(projectRoot),
   });
+}
+
+function getCoverageProviderDependency(
+  coverageProvider: VitestGeneratorSchema['coverageProvider']
+) {
+  switch (coverageProvider) {
+    case 'c8':
+      return {
+        '@vitest/coverage-c8': vitestCoverageC8Version,
+      };
+    case 'istanbul':
+      return {
+        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
+      };
+    default:
+      return {
+        '@vitest/coverage-v8': vitestCoverageV8Version,
+      };
+  }
 }
 
 export default vitestGenerator;

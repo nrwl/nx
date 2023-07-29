@@ -60,7 +60,7 @@ async function generateGraph(directory: string, name: string) {
 
 (async () => {
   const parsedArgs = yargs
-    .scriptName('yarn generate-graph')
+    .scriptName('pnpm generate-graph')
     .strictOptions()
     .option('name', {
       type: 'string',

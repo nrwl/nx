@@ -1,6 +1,6 @@
-import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import { readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { applicationGenerator } from '../application/application';
 import { libraryGenerator } from '../library/library';
 import { reduxGenerator } from './redux';

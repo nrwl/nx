@@ -8,7 +8,7 @@
     }
   },
   "pluginsConfig": {
-    "@nrwl/js": {
+    "@nx/js": {
       "analyzeSourceFiles": false
     }
   }

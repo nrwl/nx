@@ -1,13 +1,8 @@
 import '../src/styles.css';
 
-import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
+export const parameters = {};
 
-import { rootParameters } from '../../.storybook/preview';
-
-export const parameters = {
-  ...rootParameters,
-};
 export const decorators = [
   (Story, context) => {
     return (

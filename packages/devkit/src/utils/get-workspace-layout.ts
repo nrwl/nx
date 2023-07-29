@@ -1,5 +1,7 @@
-import { readNxJson } from 'nx/src/generators/utils/nx-json';
 import type { Tree } from 'nx/src/generators/tree';
+import { requireNx } from '../../nx';
+
+const { readNxJson } = requireNx();
 
 /**
  * Returns workspace defaults. It includes defaults folders for apps and libs,
@@ -16,6 +18,9 @@ export function getWorkspaceLayout(tree: Tree): {
   appsDir: string;
   libsDir: string;
   standaloneAsDefault: boolean;
+  /**
+   * @deprecated This will be removed in Nx 17. Use {@link getNpmScope} instead.
+   */
   npmScope: string;
 } {
   const nxJson = readNxJson(tree);

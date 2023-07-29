@@ -15,12 +15,14 @@ export interface JestExecutorOptions {
   color?: boolean;
   clearCache?: boolean;
   findRelatedTests?: string;
+  forceExit?: boolean;
   json?: boolean;
   maxWorkers?: number | string;
   onlyChanged?: boolean;
   changedSince?: string;
   outputFile?: string;
   passWithNoTests?: boolean;
+  randomize?: boolean;
   runInBand?: boolean;
   showConfig?: boolean;
   silent?: boolean;

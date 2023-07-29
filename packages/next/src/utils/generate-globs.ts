@@ -1,5 +1,5 @@
-import { joinPathFragments, logger } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import { joinPathFragments, logger } from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { getSourceDirOfDependentProjects } from 'nx/src/utils/project-graph-utils';
 import { resolve } from 'path';
 
@@ -12,7 +12,7 @@ export function createGlobPatternsOfDependentProjects(
   fileGlobPattern: string = '/**/!(*.stories|*.spec).tsx'
 ): string[] {
   logger.warn(
-    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nrwl/next/tailwind" instead`
+    `createGlobPatternsOfDependentProjects is deprecated. Use "createGlobPatternsForDependencies(__dirname)" from "@nx/next/tailwind" instead`
   );
 
   try {

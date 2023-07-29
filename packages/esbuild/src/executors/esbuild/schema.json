@@ -92,10 +92,12 @@
       "default": false
     },
     "sourcemap": {
-      "type": "boolean",
+      "oneOf": [
+        { "type": "string", "enum": ["linked", "inline", "external", "both"] },
+        { "type": "boolean" }
+      ],
       "alias": "sourceMap",
-      "description": "Generate sourcemap.",
-      "default": false
+      "description": "Generate sourcemap."
     },
     "minify": {
       "type": "boolean",
@@ -119,10 +121,14 @@
       "default": false,
       "x-priority": "internal"
     },
+    "generatePackageJson": {
+      "type": "boolean",
+      "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
+      "default": false
+    },
     "thirdParty": {
       "type": "boolean",
-      "description": "Includes third-party packages in the bundle (i.e. npm packages).",
-      "default": true
+      "description": "Includes third-party packages in the bundle (i.e. npm packages)."
     },
     "dependenciesFieldType": {
       "type": "string",
@@ -132,8 +138,13 @@
     },
     "esbuildOptions": {
       "type": "object",
-      "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/.",
+      "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/. Cannot be used with 'esbuildConfig' option.",
       "additionalProperties": true,
+      "x-priority": "important"
+    },
+    "esbuildConfig": {
+      "type": "string",
+      "description": "Path to a esbuild configuration file. See https://esbuild.github.io/api/. Cannot be used with 'esbuildOptions' option.",
       "x-priority": "important"
     }
   },

@@ -1,4 +1,4 @@
-import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nx/devkit';
 
 export async function setParallelDefault(host: Tree) {
   const config = readNxJson(host);

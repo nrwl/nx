@@ -41,8 +41,15 @@
       ]
     },
     "https": {
-      "type": "boolean",
-      "description": "Serve using HTTPS."
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "description": "Serve using HTTPS. https://vitejs.dev/config/server-options.html#server-https"
     },
     "open": {
       "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
@@ -67,6 +74,11 @@
     "clearScreen": {
       "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
       "type": "boolean"
+    },
+    "staticFilePath": {
+      "type": "string",
+      "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath",
+      "x-completion-type": "directory"
     }
   },
   "definitions": {},

@@ -1,3 +1,8 @@
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
+
+import { readJsonFile } from '../utils/fileutils';
+import { workspaceRoot } from '../utils/workspace-root';
 import { PackageManager } from '../utils/package-manager';
 import {
   InputDefinition,
@@ -32,6 +37,18 @@ export interface NrwlJsPluginConfig {
   analyzePackageJson?: boolean;
 }
 
+interface NxInstallationConfiguration {
+  /**
+   * Version used for Nx
+   */
+  version: string;
+  /**
+   * Record<pluginPackageName, pluginVersion>. e.g.
+   * plugins: { '@nx/angular': '1.0.0' }
+   */
+  plugins?: Record<string, string>;
+}
+
 /**
  * Nx.json configuration
  *
@@ -44,13 +61,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   extends?: string;
   /**
    * Map of files to projects that implicitly depend on them
+   * @deprecated use {@link namedInputs} instead. For more information see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies
    */
   implicitDependencies?: ImplicitDependencyEntry<T>;
-  /**
-   * @deprecated use targetDefaults instead
-   * Dependencies between different target names across all projects
-   */
-  targetDependencies?: TargetDependencies;
   /**
    * Named inputs targets can refer to reduce duplication
    */
@@ -60,6 +73,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   targetDefaults?: TargetDefaults;
   /**
+   * @deprecated This is inferred from the package.json in the workspace root. Please use {@link getNpmScope} instead.
    * NPM Scope that the workspace uses
    */
   npmScope?: string;
@@ -98,7 +112,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    *
    * ```
    * {
-   *   "@nrwl/react": {
+   *   "@nx/react": {
    *     "library": {
    *       "style": "scss"
    *     }
@@ -135,4 +149,41 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * will be used. Convenient for small workspaces with one main application.
    */
   defaultProject?: string;
+
+  /**
+   * Configures the Nx installation for a repo. Useful for maintaining  a separate
+   * set of dependencies for Nx + Plugins compared to the base package.json, but also
+   * useful for workspaces that don't have a root package.json + node_modules.
+   */
+  installation?: NxInstallationConfiguration;
+}
+
+export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
+  const nxJson = join(root, 'nx.json');
+  if (existsSync(nxJson)) {
+    const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
+    if (nxJsonConfiguration.extends) {
+      const extendedNxJsonPath = require.resolve(nxJsonConfiguration.extends, {
+        paths: [dirname(nxJson)],
+      });
+      const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
+      return {
+        ...baseNxJson,
+        ...nxJsonConfiguration,
+      };
+    } else {
+      return nxJsonConfiguration;
+    }
+  } else {
+    try {
+      return readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'));
+    } catch (e) {
+      return {};
+    }
+  }
+}
+
+export function hasNxJson(root: string): boolean {
+  const nxJson = join(root, 'nx.json');
+  return existsSync(nxJson);
 }

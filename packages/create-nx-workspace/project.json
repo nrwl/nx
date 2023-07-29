@@ -6,9 +6,9 @@
   "targets": {
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
-        "main": "packages/create-nx-workspace/bin/create-nx-workspace.ts",
+        "main": "packages/create-nx-workspace/index.ts",
         "assets": [
           {
             "input": "packages/create-nx-workspace",

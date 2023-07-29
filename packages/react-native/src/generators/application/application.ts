@@ -1,14 +1,12 @@
-import { join } from 'path';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
 import {
   convertNxGenerator,
-  Tree,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
-} from '@nrwl/devkit';
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
 
-import { runPodInstall } from '../../utils/pod-install-task';
 import { runSymlink } from '../../utils/symlink-task';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -49,12 +47,8 @@ export async function reactNativeApplicationGenerator(
   );
   const detoxTask = await addDetox(host, options);
   const symlinkTask = runSymlink(host.root, options.appProjectRoot);
-  const podInstallTask = runPodInstall(
-    join(host.root, options.iosProjectRoot),
-    options.install
-  );
   const chmodTaskGradlew = chmodAndroidGradlewFilesTask(
-    join(host.root, options.androidProjectRoot)
+    joinPathFragments(host.root, options.androidProjectRoot)
   );
 
   if (!options.skipFormat) {
@@ -67,7 +61,6 @@ export async function reactNativeApplicationGenerator(
     jestTask,
     detoxTask,
     symlinkTask,
-    podInstallTask,
     chmodTaskGradlew
   );
 }

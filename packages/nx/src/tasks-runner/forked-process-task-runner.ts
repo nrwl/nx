@@ -6,11 +6,7 @@ import * as logTransformer from 'strong-log-transformer';
 import { workspaceRoot } from '../utils/workspace-root';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { output } from '../utils/output';
-import {
-  getCliPath,
-  getPrintableCommandArgsForTask,
-  getSerializedArgsForTask,
-} from './utils';
+import { getCliPath, getPrintableCommandArgsForTask } from './utils';
 import { Batch } from './tasks-schedule';
 import { join } from 'path';
 import {
@@ -19,7 +15,8 @@ import {
   BatchResults,
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
-import { Task } from '../config/task-graph';
+import { Task, TaskGraph } from '../config/task-graph';
+import { Transform } from 'stream';
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
@@ -35,10 +32,13 @@ export class ForkedProcessTaskRunner {
   }
 
   // TODO: vsavkin delegate terminal output printing
-  public forkProcessForBatch({ executorName, taskGraph }: Batch) {
+  public forkProcessForBatch(
+    { executorName, taskGraph: batchTaskGraph }: Batch,
+    fullTaskGraph: TaskGraph
+  ) {
     return new Promise<BatchResults>((res, rej) => {
       try {
-        const count = Object.keys(taskGraph.tasks).length;
+        const count = Object.keys(batchTaskGraph.tasks).length;
         if (count > 1) {
           output.logSingleLine(
             `Running ${output.bold(count)} ${output.bold(
@@ -47,7 +47,7 @@ export class ForkedProcessTaskRunner {
           );
         } else {
           const args = getPrintableCommandArgsForTask(
-            Object.values(taskGraph.tasks)[0]
+            Object.values(batchTaskGraph.tasks)[0]
           );
           output.logCommand(args.join(' '));
           output.addNewline();
@@ -64,9 +64,10 @@ export class ForkedProcessTaskRunner {
           if (code === null) code = this.signalToCode(signal);
           if (code !== 0) {
             const results: BatchResults = {};
-            for (const rootTaskId of taskGraph.roots) {
+            for (const rootTaskId of batchTaskGraph.roots) {
               results[rootTaskId] = {
                 success: false,
+                terminalOutput: '',
               };
             }
             rej(
@@ -79,11 +80,11 @@ export class ForkedProcessTaskRunner {
 
         p.on('message', (message: BatchMessage) => {
           switch (message.type) {
-            case BatchMessageType.Complete: {
+            case BatchMessageType.CompleteBatchExecution: {
               res(message.results);
               break;
             }
-            case BatchMessageType.Tasks: {
+            case BatchMessageType.RunTasks: {
               break;
             }
             default: {
@@ -97,9 +98,10 @@ export class ForkedProcessTaskRunner {
 
         // Start the tasks
         p.send({
-          type: BatchMessageType.Tasks,
-          taskGraph,
+          type: BatchMessageType.RunTasks,
           executorName,
+          batchTaskGraph,
+          fullTaskGraph,
         });
       } catch (e) {
         rej(e);
@@ -112,21 +114,22 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
+      taskGraph,
     }: {
       streamOutput: boolean;
       temporaryOutputPath: string;
+      taskGraph: TaskGraph;
     }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
         const args = getPrintableCommandArgsForTask(task);
-        const serializedArgs = getSerializedArgsForTask(task, this.verbose);
         if (streamOutput) {
           output.logCommand(args.join(' '));
           output.addNewline();
         }
 
-        const p = fork(this.cliPath, serializedArgs, {
+        const p = fork(this.cliPath, {
           stdio: ['inherit', 'pipe', 'pipe', 'ipc'],
           env: this.getEnvVariablesForTask(
             task,
@@ -146,15 +149,27 @@ export class ForkedProcessTaskRunner {
           }
         });
 
+        // Send message to run the executor
+        p.send({
+          targetDescription: task.target,
+          overrides: task.overrides,
+          taskGraph,
+          isVerbose: this.verbose,
+        });
+
         if (streamOutput) {
           if (process.env.NX_PREFIX_OUTPUT === 'true') {
             const color = getColor(task.target.project);
             const prefixText = `${task.target.project}:`;
 
             p.stdout
+              .pipe(
+                logClearLineToPrefixTransformer(color.bold(prefixText) + ' ')
+              )
               .pipe(logTransformer({ tag: color.bold(prefixText) }))
               .pipe(process.stdout);
             p.stderr
+              .pipe(logClearLineToPrefixTransformer(color(prefixText) + ' '))
               .pipe(logTransformer({ tag: color(prefixText) }))
               .pipe(process.stderr);
           } else {
@@ -200,20 +215,21 @@ export class ForkedProcessTaskRunner {
     {
       streamOutput,
       temporaryOutputPath,
+      taskGraph,
     }: {
       streamOutput: boolean;
       temporaryOutputPath: string;
+      taskGraph: TaskGraph;
     }
   ) {
     return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
       try {
         const args = getPrintableCommandArgsForTask(task);
-        const serializedArgs = getSerializedArgsForTask(task, this.verbose);
         if (streamOutput) {
           output.logCommand(args.join(' '));
           output.addNewline();
         }
-        const p = fork(this.cliPath, serializedArgs, {
+        const p = fork(this.cliPath, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
           env: this.getEnvVariablesForTask(
             task,
@@ -229,6 +245,14 @@ export class ForkedProcessTaskRunner {
           if (process.send) {
             process.send(message);
           }
+        });
+
+        // Send message to run the executor
+        p.send({
+          targetDescription: task.target,
+          overrides: task.overrides,
+          taskGraph,
+          isVerbose: this.verbose,
         });
 
         p.on('exit', (code, signal) => {
@@ -351,6 +375,8 @@ export class ForkedProcessTaskRunner {
   ) {
     const env: NodeJS.ProcessEnv = {
       NX_TASK_TARGET_PROJECT: task.target.project,
+      NX_TASK_TARGET_TARGET: task.target.target,
+      NX_TASK_TARGET_CONFIGURATION: task.target.configuration ?? undefined,
       NX_TASK_HASH: task.hash,
       // used when Nx is invoked via Lerna
       LERNA_PACKAGE_NAME: task.target.project,
@@ -385,11 +411,39 @@ export class ForkedProcessTaskRunner {
         ...this.getDotenvVariablesForForkedProcess(),
         ...parseEnv(`.${task.target.target}.env`),
         ...parseEnv(`.env.${task.target.target}`),
+        ...(task.target.configuration
+          ? {
+              ...parseEnv(`.${task.target.configuration}.env`),
+              ...parseEnv(
+                `.${task.target.target}.${task.target.configuration}.env`
+              ),
+              ...parseEnv(`.env.${task.target.configuration}`),
+              ...parseEnv(
+                `.env.${task.target.target}.${task.target.configuration}`
+              ),
+            }
+          : {}),
         ...parseEnv(`${task.projectRoot}/.env`),
         ...parseEnv(`${task.projectRoot}/.local.env`),
         ...parseEnv(`${task.projectRoot}/.env.local`),
         ...parseEnv(`${task.projectRoot}/.${task.target.target}.env`),
         ...parseEnv(`${task.projectRoot}/.env.${task.target.target}`),
+        ...(task.target.configuration
+          ? {
+              ...parseEnv(
+                `${task.projectRoot}/.${task.target.configuration}.env`
+              ),
+              ...parseEnv(
+                `${task.projectRoot}/.${task.target.target}.${task.target.configuration}.env`
+              ),
+              ...parseEnv(
+                `${task.projectRoot}/.env.${task.target.configuration}`
+              ),
+              ...parseEnv(
+                `${task.projectRoot}/.env.${task.target.target}.${task.target.configuration}`
+              ),
+            }
+          : {}),
       };
     } else {
       return {};
@@ -416,6 +470,13 @@ export class ForkedProcessTaskRunner {
     });
 
     // Terminate any task processes on exit
+    process.on('exit', () => {
+      this.processes.forEach((p) => {
+        if (p.connected) {
+          p.kill();
+        }
+      });
+    });
     process.on('SIGINT', () => {
       this.processes.forEach((p) => {
         if (p.connected) {
@@ -474,4 +535,21 @@ function getColor(projectName: string) {
   const colorIndex = code % colors.length;
 
   return colors[colorIndex];
+}
+
+/**
+ * Prevents terminal escape sequence from clearing line prefix.
+ */
+function logClearLineToPrefixTransformer(prefix) {
+  let prevChunk = null;
+  return new Transform({
+    transform(chunk, _encoding, callback) {
+      if (prevChunk && prevChunk.toString() === '\x1b[2K') {
+        chunk = chunk.toString().replace(/\x1b\[1G/g, (m) => m + prefix);
+      }
+      this.push(chunk);
+      prevChunk = chunk;
+      callback();
+    },
+  });
 }

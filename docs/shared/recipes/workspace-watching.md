@@ -100,10 +100,10 @@ If multiple packages change at the same time, Nx will run the callback for each 
 
 ## Watch Environment Variables
 
-Nx will run the watch callback command with the `$NX_PROJECT_NAME` and `$NX_FILE_CHANGES` environment variables set.
+Nx will run the watch callback command with the `NX_PROJECT_NAME` and `NX_FILE_CHANGES` environment variables set.
 
-- `$NX_PROJECT_NAME` will be the name of the project.
-- `$NX_FILE_CHANGES` will be a list of files that changed formatted in stdin (ie, if `file1.txt`, and `file2.txt` change, `$NX_FILE_CHANGES` will be `file1.txt file2.txt`. This allows you to pass the list of files to other commands that accept this format.)
+- `NX_PROJECT_NAME` will be the name of the project.
+- `NX_FILE_CHANGES` will be a list of files that changed formatted in stdin (ie, if `file1.txt`, and `file2.txt` change, `NX_FILE_CHANGES` will be `file1.txt file2.txt`. This allows you to pass the list of files to other commands that accept this format.)
 
 ### Running Nx watch with package managers
 
@@ -131,6 +131,18 @@ yarn nx -- watch --all -- echo \$NX_PROJECT_NAME
 npx -c 'nx watch --all -- echo \$NX_PROJECT_NAME'
 ```
 
+{% callout type="note" title="Windows" %}
+
+If you're running these commands on Windows Powershell (not WSL), the environment variables need to be wrapped in `%`.
+
+For example:
+
+```shell
+yarn nx -- watch --all -- echo %NX_PROJECT_NAME%
+```
+
+{% /callout %}
+
 ## Additional Use Cases
 
 ### Watching for specific projects
@@ -138,7 +150,7 @@ npx -c 'nx watch --all -- echo \$NX_PROJECT_NAME'
 To watch for specific projects and echo the changed files, run this command:
 
 ```shell
-nx watch --projects=app1,app2 -- echo \$NX_CHANGED_FILES
+nx watch --projects=app1,app2 -- echo \$NX_FILE_CHANGES
 ```
 
 ### Watching for dependent projects

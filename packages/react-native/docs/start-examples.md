@@ -7,7 +7,7 @@
   "targets": {
     //...
     "start": {
-      "executor": "@nrwl/react-native:start",
+      "executor": "@nx/react-native:start",
       "options": {
         "port": 8081
       }
@@ -28,7 +28,7 @@ The `interactive` option allows you to specify whether to use interactive mode:
 
 ```json
     "start": {
-      "executor": "@nrwl/react-native:start",
+      "executor": "@nx/react-native:start",
       "options": {
         "port": 8081,
         "interactive": false
@@ -43,7 +43,7 @@ The `resetCache` option allows you to remove cached files.
 
 ```json
     "start": {
-      "executor": "@nrwl/react-native:start",
+      "executor": "@nx/react-native:start",
       "options": {
         "port": 8081,
         "resetCache": true

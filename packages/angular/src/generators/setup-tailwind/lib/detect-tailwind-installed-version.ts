@@ -1,5 +1,5 @@
-import { readJson, Tree } from '@nrwl/devkit';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { readJson, Tree } from '@nx/devkit';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { lt } from 'semver';
 
 export function detectTailwindInstalledVersion(

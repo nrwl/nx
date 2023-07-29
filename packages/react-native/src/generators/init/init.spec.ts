@@ -1,6 +1,6 @@
-import { NxJsonConfiguration } from '@nrwl/devkit';
-import { Tree, readJson, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { NxJsonConfiguration } from '@nx/devkit';
+import { Tree, readJson, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { reactNativeInitGenerator } from './init';
 
 describe('init', () => {
@@ -34,48 +34,5 @@ describe('init', () => {
 
     expect(content).toMatch(/# React Native/);
     expect(content).toMatch(/# Nested node_modules/);
-  });
-
-  describe('babel config', () => {
-    it('should create babel config if not present', async () => {
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-        json.namedInputs = {
-          sharedGlobals: ['{workspaceRoot}/exiting-file.json'],
-        };
-        return json;
-      });
-
-      await reactNativeInitGenerator(tree, {
-        unitTestRunner: 'none',
-        e2eTestRunner: 'none',
-      });
-
-      expect(tree.exists('babel.config.json')).toBe(true);
-      const sharedGloabls = readJson<NxJsonConfiguration>(tree, 'nx.json')
-        .namedInputs.sharedGlobals;
-      expect(sharedGloabls).toContain('{workspaceRoot}/exiting-file.json');
-      expect(sharedGloabls).toContain('{workspaceRoot}/babel.config.json');
-    });
-
-    it('should not overwrite existing babel config', async () => {
-      tree.write('babel.config.json', '{ "preset": ["preset-awesome"] }');
-
-      await reactNativeInitGenerator(tree, {
-        unitTestRunner: 'none',
-        e2eTestRunner: 'none',
-      });
-
-      const existing = readJson(tree, 'babel.config.json');
-      expect(existing).toEqual({ preset: ['preset-awesome'] });
-    });
-
-    it('should not overwrite existing babel config (.js)', async () => {
-      tree.write('/babel.config.js', 'module.exports = () => {};');
-      await reactNativeInitGenerator(tree, {
-        unitTestRunner: 'none',
-        e2eTestRunner: 'none',
-      });
-      expect(tree.exists('babel.config.json')).toBe(false);
-    });
   });
 });

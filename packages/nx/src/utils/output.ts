@@ -1,5 +1,6 @@
 import * as chalk from 'chalk';
 import { EOL } from 'os';
+import * as readline from 'readline';
 import { isCI } from './is-ci';
 import { TaskStatus } from '../tasks-runner/tasks-runner';
 
@@ -75,6 +76,15 @@ class CLIOutput {
     process.stdout.write(str);
   }
 
+  overwriteLine(lineText: string = '') {
+    // this replaces the existing text up to the new line length
+    process.stdout.write(lineText);
+    // clear whatever text might be left to the right of the cursor (happens
+    // when existing text was longer than new one)
+    readline.clearLine(process.stdout, 1);
+    process.stdout.write(EOL);
+  }
+
   private writeOutputTitle({
     color,
     title,
@@ -118,9 +128,15 @@ class CLIOutput {
   }
 
   addVerticalSeparatorWithoutNewLines(color = 'gray') {
-    this.writeToStdOut(
-      `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}${EOL}`
-    );
+    this.writeToStdOut(`${this.getVerticalSeparator(color)}${EOL}`);
+  }
+
+  getVerticalSeparatorLines(color = 'gray') {
+    return ['', this.getVerticalSeparator(color), ''];
+  }
+
+  private getVerticalSeparator(color: string): string {
+    return `${this.X_PADDING}${chalk.dim[color](this.VERTICAL_SEPARATOR)}`;
   }
 
   error({ title, slug, bodyLines }: CLIErrorMessageConfig) {
@@ -166,7 +182,7 @@ class CLIOutput {
       this.writeToStdOut(
         `${chalk.grey(
           '  Learn more about this warning: '
-        )}https://errors.nx.dev/${slug}\n`
+        )}https://errors.nx.dev/${slug}${EOL}`
       );
     }
 

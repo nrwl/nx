@@ -2,38 +2,39 @@ import {
   addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
+  GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
 import {
-  expoVersion,
-  expoSplashScreenVersion,
-  expoStatusBarVersion,
-  nxVersion,
-  reactNativeVersion,
-  reactNativeWebVersion,
-  typesReactNativeVersion,
-  expoMetroConfigVersion,
-  metroVersion,
-  testingLibraryReactNativeVersion,
-  testingLibraryJestNativeVersion,
-  reactNativeSvgTransformerVersion,
-  reactNativeSvgVersion,
-  expoCliVersion,
   babelPresetExpoVersion,
   easCliVersion,
-  deprecatedExpoCliVersion,
-  expoWebpackConfig,
-  reactVersion,
-  reactTestRendererVersion,
-  typesReactVersion,
+  expoCliVersion,
+  expoMetroConfigVersion,
+  expoSplashScreenVersion,
+  expoStatusBarVersion,
+  expoVersion,
+  jestExpoVersion,
+  metroVersion,
+  nxVersion,
   reactDomVersion,
+  reactNativeSvgTransformerVersion,
+  reactNativeSvgVersion,
+  reactNativeVersion,
+  reactNativeWebVersion,
+  reactTestRendererVersion,
+  reactVersion,
+  testingLibraryJestNativeVersion,
+  testingLibraryReactNativeVersion,
+  typesReactNativeVersion,
+  typesReactVersion,
 } from '../../utils/versions';
 
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { jestInitGenerator } from '@nrwl/jest';
-import { detoxInitGenerator } from '@nrwl/detox';
+import { jestInitGenerator } from '@nx/jest';
+import { detoxInitGenerator } from '@nx/detox';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { initRootBabelConfig } from './lib/init-root-babel-config';
@@ -42,7 +43,14 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
   initRootBabelConfig(host);
 
-  const tasks = [];
+  const tasks: GeneratorCallback[] = [];
+
+  tasks.push(
+    await jsInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+    })
+  );
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
@@ -50,12 +58,15 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, {});
+    const jestTask = await jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, { skipFormat: true });
+    const detoxTask = await detoxInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+    });
     tasks.push(detoxTask);
   }
 
@@ -78,19 +89,19 @@ export function updateDependencies(host: Tree) {
       'expo-status-bar': expoStatusBarVersion,
       'react-native-web': reactNativeWebVersion,
       '@expo/metro-config': expoMetroConfigVersion,
-      '@expo/webpack-config': expoWebpackConfig,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
     },
     {
-      '@nrwl/expo': nxVersion,
+      '@nx/expo': nxVersion,
       '@types/react': typesReactVersion,
       '@types/react-native': typesReactNativeVersion,
+      metro: metroVersion,
       'metro-resolver': metroVersion,
       'react-test-renderer': reactTestRendererVersion,
       '@testing-library/react-native': testingLibraryReactNativeVersion,
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'expo-cli': deprecatedExpoCliVersion,
+      'jest-expo': jestExpoVersion,
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
       'babel-preset-expo': babelPresetExpoVersion,
@@ -99,7 +110,7 @@ export function updateDependencies(host: Tree) {
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/react-native'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
 }
 
 export default expoInitGenerator;

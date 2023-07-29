@@ -9,7 +9,7 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nrwl/angular:scam --project=my-lib my-sample",
+        "command": "nx g @nx/angular:scam --project=my-lib my-sample",
         "description": "Generate a `MySampleComponent` component in the `my-lib` library."
       }
     ],
@@ -25,8 +25,8 @@
       "project": {
         "type": "string",
         "description": "The name of the project.",
-        "x-dropdown": "projects",
-        "x-priority": "important"
+        "$default": { "$source": "projectName" },
+        "x-dropdown": "projects"
       },
       "name": {
         "type": "string",
@@ -116,9 +116,15 @@
         "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
         "default": true,
         "x-priority": "important"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "description": "Skip formatting files.",
+        "default": false,
+        "x-priority": "internal"
       }
     },
-    "required": ["name"],
+    "required": ["name", "project"],
     "presets": []
   },
   "description": "Generate a component with an accompanying Single Component Angular Module (SCAM).",

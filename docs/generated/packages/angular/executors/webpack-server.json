@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Webpack Server",
-    "description": "The webpack-dev-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
+    "description": "The webpack-dev-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
     "type": "object",
     "properties": {
       "assets": {
@@ -185,6 +185,11 @@
         "description": "URL where files will be deployed.",
         "x-deprecated": "Use \"baseHref\" browser builder option, \"APP_BASE_HREF\" DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
       },
+      "vendorChunk": {
+        "type": "boolean",
+        "description": "Generate a seperate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time. _Note: supported in Angular versions >= 15.1.0_",
+        "default": false
+      },
       "verbose": {
         "type": "boolean",
         "description": "Adds more details to output logging.",
@@ -242,6 +247,11 @@
         "description": "Extract all licenses in a separate file, in the case of production builds only.",
         "default": true
       },
+      "buildOptimizer": {
+        "type": "boolean",
+        "description": "Enables advanced build optimizations. _Note: only supported in Angular versions >= 16.0.0_.",
+        "default": true
+      },
       "namedChunks": {
         "type": "boolean",
         "description": "Use file name for lazy loaded chunks.",
@@ -254,8 +264,7 @@
         "default": []
       },
       "bundleDependencies": {
-        "description": "Which external dependencies to bundle into the bundle. By default, all of node_modules will be bundled.",
-        "default": true,
+        "description": "Which external dependencies to bundle into the bundle. By default, all of node_modules will be bundled. _Note: This is only supported in Angular versions >= 14.0.0, < 15.0.0. It was removed in Angular 15._",
         "oneOf": [
           { "type": "boolean" },
           { "type": "string", "enum": ["none", "all"] }

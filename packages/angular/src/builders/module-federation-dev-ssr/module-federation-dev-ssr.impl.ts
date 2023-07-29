@@ -1,10 +1,11 @@
 import type { Schema } from './schema';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
 import {
+  getPackageManagerCommand,
   readCachedProjectGraph,
   workspaceRoot,
-  Workspaces,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   getDynamicRemotes,
   getStaticRemotes,
@@ -12,9 +13,10 @@ import {
 } from '../utilities/module-federation';
 import { switchMap, tap } from 'rxjs/operators';
 import { from } from 'rxjs';
-import { join } from 'path';
+import { extname, join } from 'path';
 import { execSync, fork } from 'child_process';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
+import { existsSync } from 'fs';
 
 export function executeModuleFederationDevSSRBuilder(
   schema: Schema,
@@ -24,8 +26,30 @@ export function executeModuleFederationDevSSRBuilder(
   const projectGraph = readCachedProjectGraph();
   const { projects: workspaceProjects } =
     readProjectsConfigurationFromProjectGraph(projectGraph);
-  const ws = new Workspaces(workspaceRoot);
   const project = workspaceProjects[context.target.project];
+
+  let pathToManifestFile = join(
+    context.workspaceRoot,
+    project.sourceRoot,
+    'assets/module-federation.manifest.json'
+  );
+  if (options.pathToManifestFile) {
+    const userPathToManifestFile = join(
+      context.workspaceRoot,
+      options.pathToManifestFile
+    );
+    if (!existsSync(userPathToManifestFile)) {
+      throw new Error(
+        `The provided Module Federation manifest file path does not exist. Please check the file exists at "${userPathToManifestFile}".`
+      );
+    } else if (extname(options.pathToManifestFile) !== '.json') {
+      throw new Error(
+        `The Module Federation manifest file must be a JSON. Please ensure the file at ${userPathToManifestFile} is a JSON.`
+      );
+    }
+
+    pathToManifestFile = userPathToManifestFile;
+  }
 
   validateDevRemotes(options, workspaceProjects);
 
@@ -40,7 +64,8 @@ export function executeModuleFederationDevSSRBuilder(
     project,
     context,
     workspaceProjects,
-    remotesToSkip
+    remotesToSkip,
+    pathToManifestFile
   );
   const remotes = [...staticRemotes, ...dynamicRemotes];
 
@@ -69,7 +94,11 @@ export function executeModuleFederationDevSSRBuilder(
     if (options.verbose) {
       const [collection, executor] =
         workspaceProjects[remote].targets[target].executor.split(':');
-      const { schema } = ws.readExecutor(collection, executor);
+      const { schema } = getExecutorInformation(
+        collection,
+        executor,
+        workspaceRoot
+      );
 
       if (schema.additionalProperties || 'verbose' in schema.properties) {
         runOptions.verbose = options.verbose;
@@ -84,8 +113,9 @@ export function executeModuleFederationDevSSRBuilder(
           remoteProject.targets.server.options.outputPath,
           'main.js'
         );
+        const pm = getPackageManagerCommand();
         execSync(
-          `npx nx run ${remote}:server${
+          `${pm.exec} nx run ${remote}:server${
             context.target.configuration
               ? `:${context.target.configuration}`
               : ''

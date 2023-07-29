@@ -1,5 +1,5 @@
-import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import update from './change-main-to-class-name-14-0-2';
 
@@ -30,7 +30,7 @@ describe('Change from main tag to className tag', () => {
     await update(tree);
 
     expect(tree.read('apps/products/src/main.tsx', 'utf-8')).toEqual(
-      `AppRegistry.registerComponent('Products', () => App);`
+      `AppRegistry.registerComponent('Products', () => App);\n`
     );
   });
 

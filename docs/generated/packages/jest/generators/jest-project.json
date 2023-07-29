@@ -41,7 +41,7 @@
       },
       "testEnvironment": {
         "type": "string",
-        "enum": ["jsdom", "node"],
+        "enum": ["jsdom", "node", "none"],
         "description": "The test environment for jest.",
         "default": "jsdom",
         "x-priority": "important"
@@ -75,13 +75,6 @@
         "type": "boolean",
         "default": false,
         "description": "Use JavaScript instead of TypeScript for config files"
-      },
-      "rootProject": {
-        "description": "Add Jest to an application at the root of the workspace",
-        "type": "boolean",
-        "default": false,
-        "hidden": true,
-        "x-priority": "internal"
       }
     },
     "required": [],

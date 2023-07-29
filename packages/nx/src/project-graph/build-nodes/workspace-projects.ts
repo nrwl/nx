@@ -5,7 +5,10 @@ import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
 } from '../../utils/nx-plugin';
-import { ProjectGraphProcessorContext } from '../../config/project-graph';
+import {
+  ProjectGraphProcessorContext,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { mergeNpmScriptsWithTargets } from '../../utils/project-graph-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
@@ -19,17 +22,29 @@ import {
   readTargetDefaultsForTarget,
 } from '../../config/workspaces';
 
-export function buildWorkspaceProjectNodes(
+export async function buildWorkspaceProjectNodes(
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder,
   nxJson: NxJsonConfiguration
 ) {
   const toAdd = [];
-  const projects = Object.keys(ctx.workspace.projects);
-  const projectsSet = new Set(projects);
+  const projects = Object.keys(ctx.projectsConfigurations.projects);
+
+  // Used for expanding implicit dependencies (e.g. `@proj/*` or `tag:foo`)
+  const partialProjectGraphNodes = projects.reduce((graph, project) => {
+    const projectConfiguration = ctx.projectsConfigurations.projects[project];
+    graph[project] = {
+      name: project,
+      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+      data: {
+        ...projectConfiguration,
+      },
+    };
+    return graph;
+  }, {} as Record<string, ProjectGraphProjectNode>);
 
   for (const key of projects) {
-    const p = ctx.workspace.projects[key];
+    const p = ctx.projectsConfigurations.projects[key];
     const projectRoot = join(workspaceRoot, p.root);
 
     if (existsSync(join(projectRoot, 'package.json'))) {
@@ -59,14 +74,13 @@ export function buildWorkspaceProjectNodes(
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
       p.implicitDependencies,
-      projects,
-      projectsSet
+      partialProjectGraphNodes
     );
 
     p.targets = mergePluginTargetsWithNxTargets(
       p.root,
       p.targets,
-      loadNxPlugins(ctx.workspace.plugins)
+      await loadNxPlugins(ctx.nxJsonConfiguration.plugins)
     );
 
     p.targets = normalizeProjectTargets(p, nxJson.targetDefaults, key);
@@ -78,7 +92,7 @@ export function buildWorkspaceProjectNodes(
           ? 'e2e'
           : 'app'
         : 'lib';
-    const tags = ctx.workspace.projects?.[key]?.tags || [];
+    const tags = ctx.projectsConfigurations.projects?.[key]?.tags || [];
 
     toAdd.push({
       name: key,
@@ -86,7 +100,6 @@ export function buildWorkspaceProjectNodes(
       data: {
         ...p,
         tags,
-        files: ctx.fileMap[key],
       },
     });
   }
@@ -157,16 +170,17 @@ function normalizeProjectTargets(
 export function normalizeImplicitDependencies(
   source: string,
   implicitDependencies: ProjectConfiguration['implicitDependencies'],
-  projectNames: string[],
-  projectsSet: Set<string>
+  projects: Record<string, ProjectGraphProjectNode>
 ) {
   if (!implicitDependencies?.length) {
     return implicitDependencies ?? [];
   }
-  const matches = findMatchingProjects(
-    implicitDependencies,
-    projectNames,
-    projectsSet
+  const matches = findMatchingProjects(implicitDependencies, projects);
+  return (
+    matches
+      .filter((x) => x !== source)
+      // implicit dependencies that start with ! should hang around, to be processed by
+      // implicit-project-dependencies.ts after explicit deps are added to graph.
+      .concat(implicitDependencies.filter((x) => x.startsWith('!')))
   );
-  return matches.filter((x) => x !== source);
 }

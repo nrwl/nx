@@ -2,9 +2,9 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { addProject } from './add-project';
 
 describe('Add Project', () => {
@@ -61,16 +61,16 @@ describe('Add Project', () => {
       const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.targets).toMatchObject({
         'build-ios': {
-          executor: '@nrwl/detox:build',
+          executor: '@nx/detox:build',
         },
         'test-ios': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
         'build-android': {
-          executor: '@nrwl/detox:build',
+          executor: '@nx/detox:build',
         },
         'test-android': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
       });
     });
@@ -112,16 +112,16 @@ describe('Add Project', () => {
       const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
       expect(project.targets).toMatchObject({
         'build-ios': {
-          executor: '@nrwl/detox:build',
+          executor: '@nx/detox:build',
         },
         'test-ios': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
         'build-android': {
-          executor: '@nrwl/detox:build',
+          executor: '@nx/detox:build',
         },
         'test-android': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
       });
     });

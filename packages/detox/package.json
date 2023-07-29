@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/detox",
+  "name": "@nx/detox",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
@@ -22,17 +22,18 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "index.js",
+  "main": "./index",
   "types": "index.d.ts",
   "dependencies": {
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/jest": "file:../jest",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/react": "file:../react",
-    "@nrwl/workspace": "file:../workspace"
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/react": "file:../react",
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
-    "detox": "^20.1.1"
+    "detox": "^20.9.0"
   },
   "builders": "./executors.json",
   "ng-update": {

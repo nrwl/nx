@@ -1,5 +1,6 @@
-export interface Schema {
+export interface ViteConfigurationGeneratorSchema {
   uiFramework: 'react' | 'none';
+  compiler?: 'babel' | 'swc';
   project: string;
   newProject?: boolean;
   includeVitest?: boolean;
@@ -8,4 +9,6 @@ export interface Schema {
   buildTarget?: string;
   serveTarget?: string;
   testTarget?: string;
+  skipFormat?: boolean;
+  testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
 }

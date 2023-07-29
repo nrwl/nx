@@ -4,13 +4,12 @@ import {
   formatFiles,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { findNodes } from 'nx/src/utils/typescript';
-import ts = require('typescript');
+import { findNodes } from '@nx/js';
 import { normalizeViteConfigFilePathWithTree } from '../../utils/generator-utils';
+import ts = require('typescript');
 
 export async function removeProjectsFromViteTsConfigPaths(tree: Tree) {
   findAllProjectsWithViteConfig(tree);

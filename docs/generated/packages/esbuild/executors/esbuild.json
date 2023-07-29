@@ -114,10 +114,15 @@
         "default": false
       },
       "sourcemap": {
-        "type": "boolean",
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": ["linked", "inline", "external", "both"]
+          },
+          { "type": "boolean" }
+        ],
         "alias": "sourceMap",
-        "description": "Generate sourcemap.",
-        "default": false
+        "description": "Generate sourcemap."
       },
       "minify": {
         "type": "boolean",
@@ -141,10 +146,14 @@
         "default": false,
         "x-priority": "internal"
       },
+      "generatePackageJson": {
+        "type": "boolean",
+        "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
+        "default": false
+      },
       "thirdParty": {
         "type": "boolean",
-        "description": "Includes third-party packages in the bundle (i.e. npm packages).",
-        "default": true
+        "description": "Includes third-party packages in the bundle (i.e. npm packages)."
       },
       "dependenciesFieldType": {
         "type": "string",
@@ -154,8 +163,13 @@
       },
       "esbuildOptions": {
         "type": "object",
-        "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/.",
+        "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/. Cannot be used with 'esbuildConfig' option.",
         "additionalProperties": true,
+        "x-priority": "important"
+      },
+      "esbuildConfig": {
+        "type": "string",
+        "description": "Path to a esbuild configuration file. See https://esbuild.github.io/api/. Cannot be used with 'esbuildOptions' option.",
         "x-priority": "important"
       }
     },
@@ -192,7 +206,7 @@
       }
     },
     "additionalProperties": true,
-    "examplesFile": "`<app-root>/project.json`:\n\n```json\n{\n  //...\n  \"targets\": {\n    //...\n    \"build\": {\n      \"executor\": \"@nrwl/esbuild:esbuild\",\n      \"options\": {\n        \"main\": \"<app-root>\",\n        \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n        \"outputPath\": \"dist/<app-root>\"\n      }\n    }\n  }\n}\n```\n\n```bash\nnx build <app-name>\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"CommonJS output\" %}\n\nThe CommonJS format is required in some environments, such as Electron applications. By default, `esbuild` will use the ESM format, which is recommended for Web and Node applications. You may also output to multiple formats.\n\n```bash\nnx build <app-name> --format=cjs\nnx build <app-name> --format=esm,cjs\nnx build <app-name> # defaults to es# defaults to esm\n```\n\n```json\n\"build\": {\n  \"executor\": \"@nrwl/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n    \"format\": [\"esm\", \"cjs\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"External packages\" %}\n\nYou can avoid packages from being bundled by providing the `external` option with a list of packages to skip.\n\nYou can also use `*` wildcard to match assets.\n\n```json\n\"build\": {\n  \"executor\": \"@nrwl/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n  \"external\": [\"lodash\", \"*.png\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"Skip type checking\" %}\n\nType checking is the slowest part of the build. You may want to skip type checking during build and run it as another job in CI.\n\n```json\n\"build\": {\n  \"executor\": \"@nrwl/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n  \"skipTypeCheck\": true\n}\n```\n\n{% /tab %}\n{% tab label=\"Additional esbuild options\" %}\n\nAdditional [esbuild options](https://esbuild.github.io/api/) can be passed using `esbuildOptions` in your project configuration.\n\n```json\n\"build\": {\n  \"executor\": \"@nrwl/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n  \"esbuildOptions\": {\n    \"legalComments\": \"inline\"\n    \"banner\": {\n      \".js\": \"// banner\"\n    },\n    \"footer\": {\n      \".js\": \"// footer\"\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tabs %}\n",
+    "examplesFile": "`<app-root>/project.json`:\n\n```jsonc\n{\n  //...\n  \"targets\": {\n    //...\n    \"build\": {\n      \"executor\": \"@nx/esbuild:esbuild\",\n      \"options\": {\n        \"main\": \"<app-root>\",\n        \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n        \"outputPath\": \"dist/<app-root>\"\n      }\n    }\n  }\n}\n```\n\n```bash\nnx build <app-name>\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"CommonJS output\" %}\n\nThe CommonJS format is required in some environments, such as Electron applications. By default, `esbuild` will use the ESM format, which is recommended for Web and Node applications. You may also output to multiple formats.\n\n```bash\nnx build <app-name> --format=cjs\nnx build <app-name> --format=esm,cjs\nnx build <app-name> # defaults to es# defaults to esm\n```\n\n```json\n\"build\": {\n  \"executor\": \"@nx/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n    \"format\": [\"esm\", \"cjs\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"External packages\" %}\n\nYou can avoid packages from being bundled by providing the `external` option with a list of packages to skip.\n\nYou can also use `*` wildcard to match assets.\n\n```json\n\"build\": {\n  \"executor\": \"@nx/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n  \"external\": [\"lodash\", \"*.png\"]\n}\n```\n\n{% /tab %}\n{% tab label=\"Skip type checking\" %}\n\nType checking is the slowest part of the build. You may want to skip type checking during build and run it as another job in CI.\n\n```json\n\"build\": {\n  \"executor\": \"@nx/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n  \"skipTypeCheck\": true\n}\n```\n\n{% /tab %}\n{% tab label=\"Additional esbuild options\" %}\n\nAdditional [esbuild options](https://esbuild.github.io/api/) can be passed using `esbuildOptions` in your project configuration.\n\n```json\n\"build\": {\n  \"executor\": \"@nx/esbuild:esbuild\",\n  \"options\": {\n  \"main\": \"<app-root>\",\n  \"tsConfig\": \"<app-root>/tsconfig.app.json\",\n  \"outputPath\": \"dist/<app-root>\",\n  \"esbuildOptions\": {\n    \"legalComments\": \"inline\"\n    \"banner\": {\n      \".js\": \"// banner\"\n    },\n    \"footer\": {\n      \".js\": \"// footer\"\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tabs %}\n",
     "presets": []
   },
   "description": "Bundle a package using EsBuild.",

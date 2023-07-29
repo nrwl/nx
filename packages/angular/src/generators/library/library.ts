@@ -1,22 +1,23 @@
 import {
-  addDependenciesToPackageJson,
   formatFiles,
+  GeneratorCallback,
   installPackagesTask,
-  moveFilesToNewDirectory,
-  removeDependenciesFromPackageJson,
+  joinPathFragments,
   Tree,
-} from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { jestProjectGenerator } from '@nrwl/jest';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { configurationGenerator } from '@nx/jest';
+import { Linter } from '@nx/linter';
+import { addTsConfigPath } from '@nx/js';
 import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
-import { getPkgVersionForAngularMajorVersion } from '../../utils/version-utils';
 import addLintingGenerator from '../add-linting/add-linting';
-import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import {
+  addDependenciesToPackageJsonIfDontExist,
+  getInstalledAngularVersionInfo,
+  versions,
+} from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
 import { addStandaloneComponent } from './lib/add-standalone-component';
@@ -27,11 +28,15 @@ import {
 import { normalizeOptions } from './lib/normalize-options';
 import { NormalizedSchema } from './lib/normalized-schema';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
-import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
+import { createFiles } from './lib/create-files';
+import { addProject } from './lib/add-project';
 
-export async function libraryGenerator(tree: Tree, schema: Schema) {
+export async function libraryGenerator(
+  tree: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
@@ -57,7 +62,9 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   }
 
   const options = normalizeOptions(tree, schema);
-  const { libraryOptions, componentOptions } = options;
+  const { libraryOptions } = options;
+
+  const pkgVersions = versions(tree);
 
   await init(tree, {
     ...libraryOptions,
@@ -65,28 +72,9 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     e2eTestRunner: E2eTestRunner.None,
   });
 
-  const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'library'
-  );
-  await runAngularLibrarySchematic(tree, {
-    name: libraryOptions.name,
-    prefix: libraryOptions.prefix,
-    entryFile: 'index',
-    skipPackageJson:
-      libraryOptions.skipPackageJson ||
-      !(libraryOptions.publishable || libraryOptions.buildable),
-    skipTsConfig: true,
-  });
+  const project = addProject(tree, libraryOptions);
 
-  if (libraryOptions.ngCliSchematicLibRoot !== libraryOptions.projectRoot) {
-    moveFilesToNewDirectory(
-      tree,
-      libraryOptions.ngCliSchematicLibRoot,
-      libraryOptions.projectRoot
-    );
-  }
-  await updateProject(tree, libraryOptions);
+  createFiles(tree, options, project);
   updateTsConfig(tree, libraryOptions);
   await addUnitTestRunner(tree, libraryOptions);
   updateNpmScopeIfBuildableOrPublishable(tree, libraryOptions);
@@ -108,19 +96,19 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   }
 
   if (libraryOptions.buildable || libraryOptions.publishable) {
-    removeDependenciesFromPackageJson(tree, [], ['ng-packagr']);
-    addDependenciesToPackageJson(
+    addDependenciesToPackageJsonIfDontExist(
       tree,
       {},
       {
-        'ng-packagr': getPkgVersionForAngularMajorVersion(
-          'ngPackagrVersion',
-          userInstalledAngularVersion.major
-        ),
+        'ng-packagr': pkgVersions.ngPackagrVersion,
       }
     );
     addBuildableLibrariesPostCssDependencies(tree);
   }
+
+  addTsConfigPath(tree, libraryOptions.importPath, [
+    joinPathFragments(libraryOptions.projectRoot, './src', 'index.ts'),
+  ]);
 
   if (!libraryOptions.skipFormat) {
     await formatFiles(tree);
@@ -136,7 +124,7 @@ async function addUnitTestRunner(
   options: NormalizedSchema['libraryOptions']
 ) {
   if (options.unitTestRunner === 'jest') {
-    await jestProjectGenerator(host, {
+    await configurationGenerator(host, {
       project: options.name,
       setupFile: 'angular',
       supportTsx: false,
@@ -144,11 +132,25 @@ async function addUnitTestRunner(
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
     });
-  } else if (options.unitTestRunner === 'karma') {
-    await karmaProjectGenerator(host, {
-      project: options.name,
-      skipFormat: true,
-    });
+    const setupFile = joinPathFragments(
+      options.projectRoot,
+      'src',
+      'test-setup.ts'
+    );
+    if (options.strict && host.exists(setupFile)) {
+      const contents = host.read(setupFile, 'utf-8');
+      host.write(
+        setupFile,
+        `// @ts-expect-error https://thymikee.github.io/jest-preset-angular/docs/getting-started/test-environment
+globalThis.ngJest = {
+  testEnvironmentOptions: {
+    errorOnUnknownElements: true,
+    errorOnUnknownProperties: true,
+  },
+};
+${contents}`
+      );
+    }
   }
 }
 

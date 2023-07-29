@@ -4,7 +4,7 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function addProject(host, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
@@ -27,7 +27,7 @@ export function addProject(host, options: NormalizedSchema) {
   });
 }
 
-function maybeJs(options: NormalizedSchema, path: string): string {
+export function maybeJs(options: NormalizedSchema, path: string): string {
   return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
     ? path.replace(/\.tsx?$/, '.js')
     : path;
@@ -35,7 +35,7 @@ function maybeJs(options: NormalizedSchema, path: string): string {
 
 function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/webpack:webpack',
+    executor: '@nx/webpack:webpack',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
@@ -106,7 +106,7 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
 
 function createServeTarget(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/webpack:dev-server',
+    executor: '@nx/webpack:dev-server',
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,

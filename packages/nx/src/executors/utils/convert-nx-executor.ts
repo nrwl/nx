@@ -1,15 +1,11 @@
 /**
- * This is a copy of the @nrwl/devkit utility but this should not be used outside of the nx package
+ * This is a copy of the @nx/devkit utility but this should not be used outside of the nx package
  */
 
 import type { Observable } from 'rxjs';
 import { Workspaces } from '../../config/workspaces';
+import { readNxJson } from '../../config/nx-json';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
-import {
-  createProjectGraphAsync,
-  readCachedProjectGraph,
-} from '../../project-graph/project-graph';
-import { ProjectGraph } from '../../config/project-graph';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -22,24 +18,19 @@ export function convertNxExecutor(executor: Executor) {
     const projectsConfigurations = workspaces.readProjectsConfigurations();
 
     const promise = async () => {
-      let projectGraph: ProjectGraph;
-      try {
-        projectGraph = readCachedProjectGraph();
-      } catch {
-        projectGraph = await createProjectGraphAsync();
-      }
-      const nxJsonConfiguration = workspaces.readNxJson();
+      const nxJsonConfiguration = readNxJson(builderContext.workspaceRoot);
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,
         projectName: builderContext.target.project,
         targetName: builderContext.target.target,
         target: builderContext.target.target,
         configurationName: builderContext.target.configuration,
+        workspace: { ...nxJsonConfiguration, ...projectsConfigurations },
         projectsConfigurations,
         nxJsonConfiguration,
-        workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
         cwd: process.cwd(),
-        projectGraph,
+        projectGraph: null,
+        taskGraph: null,
         isVerbose: false,
       };
       return executor(options, context);

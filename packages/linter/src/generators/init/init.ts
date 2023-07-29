@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   readNxJson,
@@ -6,7 +6,7 @@ import {
   updateJson,
   updateNxJson,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   eslintConfigPrettierVersion,
   eslintVersion,
@@ -42,17 +42,21 @@ function addTargetDefaults(tree: Tree) {
   nxJson.targetDefaults.lint.inputs ??= [
     'default',
     `{workspaceRoot}/.eslintrc.json`,
+    `{workspaceRoot}/.eslintignore`,
   ];
   updateNxJson(tree, nxJson);
 }
 
+/**
+ * Initializes ESLint configuration in a workspace and adds necessary dependencies.
+ */
 function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   if (findEslintFile(tree)) {
     return () => {};
   }
 
   if (!options.skipPackageJson) {
-    removeDependenciesFromPackageJson(tree, ['@nrwl/linter'], []);
+    removeDependenciesFromPackageJson(tree, ['@nx/linter'], []);
   }
 
   writeJson(
@@ -60,6 +64,7 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     '.eslintrc.json',
     getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
   );
+  tree.write('.eslintignore', 'node_modules\n');
   addTargetDefaults(tree);
 
   if (tree.exists('.vscode/extensions.json')) {
@@ -78,8 +83,8 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
         tree,
         {},
         {
-          '@nrwl/linter': nxVersion,
-          '@nrwl/eslint-plugin-nx': nxVersion,
+          '@nx/linter': nxVersion,
+          '@nx/eslint-plugin': nxVersion,
           '@typescript-eslint/parser': typescriptESLintVersion,
           '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
           eslint: eslintVersion,

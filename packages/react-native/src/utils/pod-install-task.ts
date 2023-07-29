@@ -1,7 +1,9 @@
 import { execSync } from 'child_process';
 import { platform } from 'os';
 import * as chalk from 'chalk';
-import { GeneratorCallback, logger } from '@nrwl/devkit';
+import { GeneratorCallback, logger } from '@nx/devkit';
+import { existsSync } from 'fs-extra';
+import { join } from 'path';
 
 const podInstallErrorMessage = `
 Running ${chalk.bold('pod install')} failed, see above.
@@ -21,7 +23,16 @@ ${chalk.bold('sudo xcode-select --switch /Applications/Xcode.app')}
  */
 export function runPodInstall(
   iosDirectory: string,
-  install: boolean = true
+  install: boolean = true,
+  options: {
+    buildFolder?: string;
+    repoUpdate?: boolean;
+    deployment?: boolean;
+  } = {
+    buildFolder: './build',
+    repoUpdate: false,
+    deployment: false,
+  }
 ): GeneratorCallback {
   return () => {
     if (platform() !== 'darwin') {
@@ -29,27 +40,41 @@ export function runPodInstall(
       return;
     }
 
-    if (!install) {
+    if (!install || !existsSync(join(iosDirectory, 'Podfile'))) {
       logger.info('Skipping `pod install`');
       return;
     }
 
     logger.info(`Running \`pod install\` from "${iosDirectory}"`);
 
-    return podInstall(iosDirectory);
+    return podInstall(iosDirectory, options);
   };
 }
 
-export function podInstall(iosDirectory: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const result = execSync('pod install', {
-      cwd: iosDirectory,
-    });
-    logger.info(result.toString());
-    if (result.toString().includes('Pod installation complete')) {
-      resolve();
-    } else {
-      reject(new Error(podInstallErrorMessage));
-    }
-  });
+export function podInstall(
+  iosDirectory: string,
+  options: {
+    buildFolder?: string;
+    repoUpdate?: boolean;
+    deployment?: boolean;
+  } = {
+    buildFolder: './build',
+    repoUpdate: false,
+    deployment: false,
+  }
+) {
+  try {
+    execSync(
+      `pod install ${options.repoUpdate ? '--repo-update' : ''} ${
+        options.deployment ? '--deployment' : ''
+      }`,
+      {
+        cwd: iosDirectory,
+        stdio: 'inherit',
+      }
+    );
+  } catch (e) {
+    logger.error(podInstallErrorMessage);
+    throw e;
+  }
 }

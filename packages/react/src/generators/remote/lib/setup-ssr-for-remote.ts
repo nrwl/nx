@@ -1,12 +1,12 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
+  runTasksInSerial,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
 
 import { NormalizedSchema } from '../../application/schema';
 import type { Schema } from '../schema';

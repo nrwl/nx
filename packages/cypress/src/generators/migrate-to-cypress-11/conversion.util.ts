@@ -7,15 +7,13 @@ import {
   updateJson,
   visitNotIgnoredFiles,
   normalizePath,
-} from '@nrwl/devkit';
-import { tsquery } from '@phenomnomnominal/tsquery';
+} from '@nx/devkit';
 import { basename, dirname, extname, relative } from 'path';
-import {
-  isCallExpression,
-  isExportDeclaration,
-  isImportDeclaration,
-  StringLiteral,
-} from 'typescript';
+import type { StringLiteral } from 'typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
+let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
 
 const validFilesEndingsToUpdate = [
   '.js',
@@ -272,6 +270,15 @@ export function updateImports(
   oldImportPath: string,
   newImportPath: string
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+  if (!tsquery) {
+    ensureTypescript();
+    tsquery = require('@phenomnomnominal/tsquery').tsquery;
+  }
+  const { isCallExpression, isExportDeclaration, isImportDeclaration } =
+    tsModule;
   const endOfImportSelector = `StringLiteral[value=/${oldImportPath}$/]`;
   const fileContent = tree.read(filePath, 'utf-8');
   const newContent = tsquery.replace(
@@ -317,7 +324,7 @@ export function writeNewConfig(
     cypressConfigPathTs,
     stripIndents`
 import { defineConfig } from 'cypress'
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 ${pluginImport}
 
 const cypressJsonConfig = ${convertedConfig}

@@ -1,17 +1,20 @@
-import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
+import { AssetGlob } from '@nx/js/src/utils/assets/assets';
+import * as esbuild from 'esbuild';
 
 type Compiler = 'babel' | 'swc';
 
 export interface EsBuildExecutorOptions {
   additionalEntryPoints?: string[];
-  assets: AssetGlob[];
+  assets: (AssetGlob | string)[];
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   bundle?: boolean;
   deleteOutputPath?: boolean;
   dependenciesFieldType?: boolean;
   esbuildOptions?: Record<string, any>;
+  esbuildConfig?: string;
   external?: string[];
   format?: Array<'esm' | 'cjs'>;
+  generatePackageJson?: boolean;
   main: string;
   metafile?: boolean;
   minify?: boolean;
@@ -19,7 +22,7 @@ export interface EsBuildExecutorOptions {
   outputHashing?: 'none' | 'all';
   outputPath: string;
   platform?: 'node' | 'browser' | 'neutral';
-  project: string;
+  sourcemap?: boolean | 'linked' | 'inline' | 'external' | 'both';
   skipTypeCheck?: boolean;
   target?: string;
   thirdParty?: boolean;
@@ -28,7 +31,8 @@ export interface EsBuildExecutorOptions {
 }
 
 export interface NormalizedEsBuildExecutorOptions
-  extends EsBuildExecutorOptions {
+  extends Omit<EsBuildExecutorOptions, 'esbuildOptions' | 'esbuildConfig'> {
   singleEntry: boolean;
   external: string[];
+  userDefinedBuildOptions: esbuild.BuildOptions;
 }

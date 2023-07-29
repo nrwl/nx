@@ -6,29 +6,69 @@ import {
   uniq,
   runCreatePlugin,
   cleanupProject,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('create-nx-plugin', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject());
 
-  // TODO: Re-enable to work with pnpm
-  xit('should be able to create a plugin repo and run plugin e2e', () => {
-    const wsName = uniq('ws-plugin');
+  it('should be able to create a plugin repo build a plugin', () => {
     const pluginName = uniq('plugin');
+    const generatorName = uniq('generator');
+    const executorName = uniq('executor');
 
-    runCreatePlugin(wsName, {
+    runCreatePlugin(pluginName, {
       packageManager,
-      pluginName,
+      extraArgs: `--createPackageName=false`,
     });
 
     checkFilesExist(
       'package.json',
       packageManagerLockFile[packageManager],
-      `packages/${pluginName}/package.json`,
-      `packages/${pluginName}/project.json`
+      `project.json`
     );
+
+    runCLI(`build ${pluginName}`);
+
+    checkFilesExist(
+      `dist/${pluginName}/package.json`,
+      `dist/${pluginName}/src/index.js`
+    );
+
+    runCLI(
+      `generate @nx/plugin:generator ${generatorName} --project=${pluginName}`
+    );
+    runCLI(
+      `generate @nx/plugin:executor ${executorName} --project=${pluginName}`
+    );
+
+    runCLI(`build ${pluginName}`);
+
+    checkFilesExist(
+      `dist/${pluginName}/package.json`,
+      `dist/${pluginName}/generators.json`,
+      `dist/${pluginName}/executors.json`
+    );
+  });
+
+  it('should be able to create a repo with create workspace cli', () => {
+    const pluginName = uniq('plugin');
+
+    runCreatePlugin(pluginName, {
+      packageManager,
+      extraArgs: `--createPackageName=create-${pluginName}-package`,
+    });
+
+    runCLI(`build ${pluginName}`);
+    checkFilesExist(
+      `dist/packages/${pluginName}/package.json`,
+      `dist/packages/${pluginName}/generators.json`,
+      `packages/${pluginName}-e2e/tests/${pluginName}.spec.ts`
+    );
+
+    runCLI(`build create-${pluginName}-package`);
+    checkFilesExist(`dist/packages/create-${pluginName}-package/bin/index.js`);
 
     expect(() => runCLI(`e2e ${pluginName}-e2e`)).not.toThrow();
   });

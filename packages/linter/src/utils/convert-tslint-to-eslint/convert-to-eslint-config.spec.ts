@@ -1,5 +1,5 @@
-import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'path';
 import {
   convertToESLintConfig,
@@ -71,8 +71,11 @@ describe('convertToESLintConfig()', () => {
       exampleRootTslintJson.raw,
       []
     );
+    expect(
+      converted.convertedESLintConfig.rules['no-console'][1].allow
+    ).toContain('log');
     // Ensure no-console snapshot is deterministic
-    converted.convertedESLintConfig.rules['no-console'][1].allow.sort();
+    delete converted.convertedESLintConfig.rules['no-console'][1].allow;
     expect(converted).toMatchSnapshot();
   });
 

@@ -1,5 +1,5 @@
-import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { scamGenerator } from './scam';
 
 describe('SCAM Generator', () => {
@@ -29,20 +29,19 @@ describe('SCAM Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrls: ['./example.component.css'],
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -77,7 +76,8 @@ describe('SCAM Generator', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -118,15 +118,17 @@ describe('SCAM Generator', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
     const secondaryEntryPointSource = tree.read(
       `libs/lib1/feature/src/index.ts`,
       'utf-8'
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
-      "export * from \\"./lib/example/example.component\\";
-      export * from \\"./lib/example/example.module\\";"
+      "export * from './lib/example/example.component';
+      export * from './lib/example/example.module';
+      "
     `);
   });
 
@@ -158,20 +160,19 @@ describe('SCAM Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Component({
-          selector: 'example',
+          selector: 'proj-example',
           templateUrl: './example.component.html',
-          styleUrls: ['./example.component.css']
+          styleUrls: ['./example.component.css'],
         })
-        export class ExampleComponent {
-
-        }
+        export class ExampleComponent {}
 
         @NgModule({
           imports: [CommonModule],
           declarations: [ExampleComponent],
           exports: [ExampleComponent],
         })
-        export class ExampleComponentModule {}"
+        export class ExampleComponentModule {}
+        "
       `);
     });
 
@@ -202,20 +203,19 @@ describe('SCAM Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Component({
-          selector: 'example',
+          selector: 'proj-example',
           templateUrl: './example.component.html',
-          styleUrls: ['./example.component.css']
+          styleUrls: ['./example.component.css'],
         })
-        export class ExampleComponent {
-
-        }
+        export class ExampleComponent {}
 
         @NgModule({
           imports: [CommonModule],
           declarations: [ExampleComponent],
           exports: [ExampleComponent],
         })
-        export class ExampleComponentModule {}"
+        export class ExampleComponentModule {}
+        "
       `);
     });
 
@@ -228,20 +228,17 @@ describe('SCAM Generator', () => {
         root: 'apps/app1',
       });
 
-      // ACT
-      try {
-        await scamGenerator(tree, {
+      // ACT & ASSERT
+      expect(
+        scamGenerator(tree, {
           name: 'example',
           project: 'app1',
           path: 'libs/proj/src/lib/random',
           inlineScam: true,
-        });
-      } catch (error) {
-        // ASSERT
-        expect(error).toMatchInlineSnapshot(
-          `[Error: The path provided for the SCAM (libs/proj/src/lib/random) does not exist under the project root (apps/app1).]`
-        );
-      }
+        })
+      ).rejects.toThrow(
+        'The path provided (libs/proj/src/lib/random) does not exist under the project root (apps/app1).'
+      );
     });
   });
 });

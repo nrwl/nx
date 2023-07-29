@@ -1,3 +1,4 @@
+import { assertRunsAgainstNxRepo } from '../../../internal-testing-utils/run-migration-against-this-workspace';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../../generators/tree';
 import {
@@ -15,7 +16,7 @@ describe('createTargetDefaults', () => {
 
   it('should work', async () => {
     const nxJson = readNxJson(tree);
-    nxJson.targetDependencies = {
+    (nxJson as any).targetDependencies = {
       a: [],
       b: [
         'bb',
@@ -33,11 +34,13 @@ describe('createTargetDefaults', () => {
         dependsOn: ['bb', 'bbb', '^c'],
       },
     });
-    expect(updated.targetDependencies).toBeUndefined();
+    expect((updated as any).targetDependencies).toBeUndefined();
   });
 
   it('should not error when nxJson does not exist', async () => {
     tree.delete('nx.json');
     await expect(createTargetDefaults(tree)).resolves.not.toThrow();
   });
+
+  assertRunsAgainstNxRepo(createTargetDefaults);
 });

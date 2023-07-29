@@ -1,5 +1,5 @@
-import { readJson, writeJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, writeJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { esbuildInitGenerator } from './init';
 
@@ -16,6 +16,7 @@ describe('esbuildInitGenerator', () => {
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies).toEqual({
+      '@nx/esbuild': expect.any(String),
       esbuild: expect.any(String),
     });
   });

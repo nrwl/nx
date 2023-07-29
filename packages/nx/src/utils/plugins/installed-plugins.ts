@@ -1,44 +1,92 @@
 import * as chalk from 'chalk';
 import { output } from '../output';
-import type { CommunityPlugin, CorePlugin, PluginCapabilities } from './models';
+import type { PluginCapabilities } from './models';
 import { getPluginCapabilities } from './plugin-capabilities';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
-import { readModulePackageJson } from '../package-json';
+import { PackageJson, readModulePackageJson } from '../package-json';
+import { workspaceRoot } from '../workspace-root';
+import { join } from 'path';
+import { NxJsonConfiguration } from '../../config/nx-json';
+import { getNxRequirePaths } from '../installation-directory';
 
-export function getInstalledPluginsFromPackageJson(
-  workspaceRoot: string,
-  corePlugins: CorePlugin[],
-  communityPlugins: CommunityPlugin[] = []
-): Map<string, PluginCapabilities> {
-  const packageJson = readJsonFile(`${workspaceRoot}/package.json`);
+export function findInstalledPlugins(): PackageJson[] {
+  const packageJsonDeps = getDependenciesFromPackageJson();
+  const nxJsonDeps = getDependenciesFromNxJson();
+  const deps = packageJsonDeps.concat(nxJsonDeps);
+  const result: PackageJson[] = [];
+  for (const dep of deps) {
+    const pluginPackageJson = getNxPluginPackageJsonOrNull(dep);
+    if (pluginPackageJson) {
+      result.push(pluginPackageJson);
+    }
+  }
+  return result.sort((a, b) => a.name.localeCompare(b.name));
+}
 
-  const plugins = new Set([
-    ...corePlugins.map((p) => p.name),
-    ...communityPlugins.map((p) => p.name),
-    ...Object.keys(packageJson.dependencies || {}),
-    ...Object.keys(packageJson.devDependencies || {}),
-  ]);
+function getNxPluginPackageJsonOrNull(pkg: string): PackageJson | null {
+  try {
+    const { packageJson } = readModulePackageJson(pkg, getNxRequirePaths());
+    return packageJson &&
+      [
+        'ng-update',
+        'nx-migrations',
+        'schematics',
+        'generators',
+        'builders',
+        'executors',
+      ].some((field) => field in packageJson)
+      ? packageJson
+      : null;
+  } catch {
+    return null;
+  }
+}
 
-  return new Map(
-    Array.from(plugins)
-      .filter((name) => {
-        try {
-          // Check for `package.json` existence instead of requiring the module itself
-          // because malformed entries like `main`, may throw false exceptions.
-          readModulePackageJson(name, [workspaceRoot]);
-          return true;
-        } catch {
-          return false;
-        }
-      })
-      .sort()
-      .map<[string, PluginCapabilities]>((name) => [
-        name,
-        getPluginCapabilities(workspaceRoot, name),
-      ])
-      .filter(([, x]) => x && !!(x.generators || x.executors))
+function getDependenciesFromPackageJson(
+  packageJsonPath = 'package.json'
+): string[] {
+  try {
+    const { dependencies, devDependencies } = readJsonFile(
+      join(workspaceRoot, packageJsonPath)
+    );
+    return Object.keys({ ...dependencies, ...devDependencies });
+  } catch {}
+  return [];
+}
+
+function getDependenciesFromNxJson(): string[] {
+  const { installation } = readJsonFile<NxJsonConfiguration>(
+    join(workspaceRoot, 'nx.json')
   );
+  if (!installation) {
+    return [];
+  }
+  return ['nx', ...Object.keys(installation.plugins || {})];
+}
+
+export async function getInstalledPluginsAndCapabilities(
+  workspaceRoot: string
+): Promise<Map<string, PluginCapabilities>> {
+  const plugins = findInstalledPlugins().map((p) => p.name);
+
+  const result = new Map<string, PluginCapabilities>();
+  for (const plugin of Array.from(plugins).sort()) {
+    try {
+      const capabilities = await getPluginCapabilities(workspaceRoot, plugin);
+      if (
+        capabilities &&
+        (capabilities.executors ||
+          capabilities.generators ||
+          capabilities.projectGraphExtension ||
+          capabilities.projectInference)
+      ) {
+        result.set(plugin, capabilities);
+      }
+    } catch {}
+  }
+
+  return result;
 }
 
 export function listInstalledPlugins(
@@ -53,6 +101,12 @@ export function listInstalledPlugins(
     }
     if (hasElements(p.generators)) {
       capabilities.push('generators');
+    }
+    if (p.projectGraphExtension) {
+      capabilities.push('graph-extensions');
+    }
+    if (p.projectInference) {
+      capabilities.push('project-inference');
     }
     bodyLines.push(`${chalk.bold(p.name)} (${capabilities.join()})`);
   }

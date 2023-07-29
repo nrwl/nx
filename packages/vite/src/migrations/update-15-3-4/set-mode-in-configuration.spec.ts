@@ -1,5 +1,5 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { mockViteReactAppGenerator } from '../../utils/test-utils';
 import { setModeInConfiguration } from './set-mode-in-configuration';
 

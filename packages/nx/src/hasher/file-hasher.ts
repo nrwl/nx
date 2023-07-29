@@ -1,27 +1,91 @@
-import { GitBasedFileHasher } from './git-based-file-hasher';
+import { performance } from 'perf_hooks';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NodeBasedFileHasher } from './node-based-file-hasher';
-import { FileHasherBase } from './file-hasher-base';
-import { execSync } from 'child_process';
-import { existsSync } from 'fs';
-import { join } from 'path';
+import { FileData } from '../config/project-graph';
 
-function createFileHasher(): FileHasherBase {
-  // special case for unit tests
-  if (workspaceRoot === '/root') {
-    return new NodeBasedFileHasher();
+export class FileHasher {
+  private fileHashes: Map<string, string>;
+  private isInitialized = false;
+
+  async init(): Promise<void> {
+    performance.mark('init hashing:start');
+    // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
+    const { hashFiles } = require('../native');
+    this.clear();
+    const filesObject = hashFiles(workspaceRoot);
+    this.fileHashes = new Map(Object.entries(filesObject));
+
+    performance.mark('init hashing:end');
+    performance.measure(
+      'init hashing',
+      'init hashing:start',
+      'init hashing:end'
+    );
   }
-  try {
-    execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
-    // we don't use git based hasher when the repo uses git submodules
-    if (!existsSync(join(workspaceRoot, '.git', 'modules'))) {
-      return new GitBasedFileHasher();
-    } else {
-      return new NodeBasedFileHasher();
+
+  hashFile(path: string): string {
+    // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
+    const { hashFile } = require('../native');
+    return hashFile(path).hash;
+  }
+
+  clear(): void {
+    this.fileHashes = new Map<string, string>();
+    this.isInitialized = false;
+  }
+
+  async ensureInitialized() {
+    if (!this.isInitialized) {
+      await this.init();
     }
-  } catch {
-    return new NodeBasedFileHasher();
+  }
+
+  async hashFiles(files: string[]): Promise<Map<string, string>> {
+    const r = new Map<string, string>();
+    for (let f of files) {
+      r.set(f, this.hashFile(f));
+    }
+    return r;
+  }
+
+  allFileData(): FileData[] {
+    const res = [];
+    this.fileHashes.forEach((hash, file) => {
+      res.push({
+        file,
+        hash,
+      });
+    });
+    res.sort((x, y) => x.file.localeCompare(y.file));
+    return res;
+  }
+
+  incrementalUpdate(
+    updatedFiles: Map<string, string>,
+    deletedFiles: string[] = []
+  ): void {
+    performance.mark('incremental hashing:start');
+
+    updatedFiles.forEach((hash, filename) => {
+      this.fileHashes.set(filename, hash);
+    });
+
+    for (const deletedFile of deletedFiles) {
+      this.fileHashes.delete(deletedFile);
+    }
+
+    performance.mark('incremental hashing:end');
+    performance.measure(
+      'incremental hashing',
+      'incremental hashing:start',
+      'incremental hashing:end'
+    );
   }
 }
 
-export const defaultFileHasher = createFileHasher();
+export const fileHasher = new FileHasher();
+
+export function hashArray(content: string[]): string {
+  // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
+  const { hashArray } = require('../native');
+  return hashArray(content);
+}

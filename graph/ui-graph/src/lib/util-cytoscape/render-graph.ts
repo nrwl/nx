@@ -5,8 +5,8 @@ import cytoscape, {
   EdgeSingular,
 } from 'cytoscape';
 import { edgeStyles, nodeStyles } from '../styles-graph';
-import { GraphInteractionEvents } from '@nrwl/graph/ui-graph';
-import { VirtualElement } from '@floating-ui/react-dom';
+import { GraphInteractionEvents } from '../graph-interaction-events';
+import { VirtualElement } from '@floating-ui/react';
 import {
   darkModeScratchKey,
   switchValueByDarkMode,
@@ -276,12 +276,18 @@ export class RenderGraph {
           type: edge.data('type'),
           source: edge.source().id(),
           target: edge.target().id(),
+          sourceRoot: edge.source().data('root'),
           fileDependencies:
             edge
               .source()
               .data('files')
               ?.filter(
-                (file) => file.deps && file.deps.includes(edge.target().id())
+                (file) =>
+                  file.deps &&
+                  file.deps.find(
+                    (d) =>
+                      (typeof d === 'string' ? d : d[0]) === edge.target().id()
+                  )
               )
               .map((file) => {
                 return {

@@ -3,10 +3,10 @@ import {
   formatFiles,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
-import { FoundTarget, updateProjectConfig } from './lib/update-configs';
+import { addCTTargetWithBuildTarget } from '../../utils/ct-utils';
 import { CypressComponentConfigurationSchema } from './schema.d';
 
 /**
@@ -18,17 +18,29 @@ export async function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  await ensurePackage(tree, '@nrwl/cypress', nxVersion);
-  const { cypressComponentProject } = await import('@nrwl/cypress');
+  const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
+    typeof import('@nx/cypress')
+  >('@nx/cypress', nxVersion);
   const projectConfig = readProjectConfiguration(tree, options.project);
-  const installTask = await cypressComponentProject(tree, {
+  const installTask = await baseCyCtConfig(tree, {
     project: options.project,
     skipFormat: true,
   });
 
-  const found: FoundTarget = await updateProjectConfig(tree, options);
+  const found = await addCTTargetWithBuildTarget(tree, {
+    project: options.project,
+    buildTarget: options.buildTarget,
+    validExecutorNames: new Set<string>([
+      '@nx/webpack:webpack',
+      '@nx/vite:build',
+      '@nrwl/webpack:webpack',
+      '@nrwl/vite:build',
+    ]),
+  });
+
   await addFiles(tree, projectConfig, options, found);
-  if (options.skipFormat) {
+
+  if (!options.skipFormat) {
     await formatFiles(tree);
   }
 

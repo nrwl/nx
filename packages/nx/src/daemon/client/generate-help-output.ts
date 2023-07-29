@@ -1,5 +1,5 @@
 import { spawnSync } from 'child_process';
-import { getDaemonProcessId } from '../cache';
+import { getDaemonProcessIdSync } from '../cache';
 import { DAEMON_OUTPUT_LOG_FILE } from '../tmp-dir';
 
 export function generateDaemonHelpOutput(): string {
@@ -16,7 +16,7 @@ export function generateDaemonHelpOutput(): string {
     return 'Nx Daemon is not running.';
   }
 
-  const pid = getDaemonProcessId();
+  const pid = getDaemonProcessIdSync();
   return `Nx Daemon is currently running:
   - Logs: ${DAEMON_OUTPUT_LOG_FILE}${
     pid

@@ -7,7 +7,7 @@
   "targets": {
     //...
     "bundle-ios": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "outputs": ["{projectRoot}/build"],
       "options": {
         "entryFile": "src/main.tsx",
@@ -16,7 +16,7 @@
       }
     },
     "bundle-android": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "android",
@@ -40,7 +40,7 @@ The `sourcemapOutput` option allows you to specify the path of the source map re
 
 ```json
     "bundle-ios": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "ios",
@@ -49,7 +49,7 @@ The `sourcemapOutput` option allows you to specify the path of the source map re
       }
     },
     "bundle-android": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "android",
@@ -66,7 +66,7 @@ The `dev` option determines whether to create a dev or release bundle. The defau
 
 ```json
     "bundle-ios": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "ios",
@@ -75,7 +75,7 @@ The `dev` option determines whether to create a dev or release bundle. The defau
       }
     },
     "bundle-android": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "android",
@@ -92,7 +92,7 @@ The `minify` option allows you to create a minified bundle:
 
 ```json
     "bundle-ios": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "ios",
@@ -101,7 +101,7 @@ The `minify` option allows you to create a minified bundle:
       }
     },
     "bundle-android": {
-      "executor": "@nrwl/react-native:bundle",
+      "executor": "@nx/react-native:bundle",
       "options": {
         "entryFile": "src/main.tsx",
         "platform": "android",

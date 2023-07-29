@@ -1,16 +1,17 @@
-import switchToJasmineMarbles from './switch-to-jasmine-marbles';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
 import {
   addProjectConfiguration,
   DependencyType,
   ProjectGraph,
   readJson,
-} from '@nrwl/devkit';
+  updateJson,
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jasmineMarblesVersion } from '../../utils/versions';
+import switchToJasmineMarbles from './switch-to-jasmine-marbles';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   readCachedProjectGraph: jest.fn().mockImplementation(() => projectGraph),
   createProjectGraphAsync: jest
     .fn()
@@ -158,5 +159,43 @@ describe('switchToJasmineMarbles', () => {
       .devDependencies['jasmine-marbles'];
     expect(jasmineMarblesDependency).toBeTruthy();
     expect(jasmineMarblesDependency).toBe(jasmineMarblesVersion);
+  });
+
+  it('should add compatible jasmine-marbles version when rxjs version is <7.0.0', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    projectGraph = {
+      nodes: {},
+      dependencies: {
+        test: [
+          {
+            type: DependencyType.static,
+            source: 'test',
+            target: 'npm:@nrwl/angular',
+          },
+        ],
+      },
+    };
+    addProjectConfiguration(tree, 'test', {
+      name: 'test',
+      root: '',
+    });
+    tree.write(
+      'a/b/mytest.spec.ts',
+      `import {hot, cold, readFirst} from '@nrwl/angular/testing';`
+    );
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      dependencies: { ...json.dependencies, rxjs: '^6.6.7' },
+    }));
+
+    // ACT
+    await switchToJasmineMarbles(tree);
+
+    // ASSERT
+
+    const jasmineMarblesDependency = readJson(tree, 'package.json')
+      .devDependencies['jasmine-marbles'];
+    expect(jasmineMarblesDependency).toBe('~0.8.3');
   });
 });

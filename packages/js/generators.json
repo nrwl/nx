@@ -12,9 +12,8 @@
     "init": {
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
-      "aliases": ["lib"],
       "x-type": "init",
-      "description": "Init placeholder.",
+      "description": "Initialize a TS/JS workspace.",
       "hidden": true
     },
     "convert-to-swc": {
@@ -23,6 +22,18 @@
       "aliases": ["swc"],
       "x-type": "library",
       "description": "Convert a TypeScript library to compile with SWC."
+    },
+    "setup-verdaccio": {
+      "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccioSchematic",
+      "schema": "./src/generators/setup-verdaccio/schema.json",
+      "alias": ["verdaccio"],
+      "description": "Setup Verdaccio for local package management."
+    },
+    "setup-build": {
+      "factory": "./src/generators/setup-build/generator#setupBuildSchematic",
+      "schema": "./src/generators/setup-build/schema.json",
+      "alias": ["build"],
+      "description": "setup-build generator"
     }
   },
   "generators": {
@@ -38,7 +49,7 @@
       "schema": "./src/generators/init/schema.json",
       "aliases": ["lib"],
       "x-type": "init",
-      "description": "Init placeholder.",
+      "description": "Initialize a TS/JS workspace.",
       "hidden": true
     },
     "convert-to-swc": {
@@ -47,6 +58,18 @@
       "aliases": ["swc"],
       "x-type": "library",
       "description": "Convert a TypeScript library to compile with SWC."
+    },
+    "setup-verdaccio": {
+      "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccio",
+      "schema": "./src/generators/setup-verdaccio/schema.json",
+      "alias": ["verdaccio"],
+      "description": "Setup Verdaccio for local package management."
+    },
+    "setup-build": {
+      "factory": "./src/generators/setup-build/generator",
+      "schema": "./src/generators/setup-build/schema.json",
+      "alias": ["build"],
+      "description": "setup-build generator"
     }
   }
 }

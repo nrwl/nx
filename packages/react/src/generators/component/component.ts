@@ -9,22 +9,20 @@ import {
   joinPathFragments,
   logger,
   names,
+  runTasksInSerial,
   toJS,
   Tree,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import * as ts from 'typescript';
+} from '@nx/devkit';
+
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import { assertValidStyle } from '../../utils/assertion';
 import { addImport } from '../../utils/ast-utils';
 import { getInSourceVitestTestsTemplate } from '../../utils/get-in-source-vitest-tests-template';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../utils/versions';
+import { reactRouterDomVersion } from '../../utils/versions';
 import { getComponentTests } from './get-component-tests';
 import { NormalizedSchema } from './noramlized-schema';
 import { Schema } from './schema';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
@@ -32,7 +30,7 @@ export async function componentGenerator(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  const styledTask = addStyledModuleDependencies(host, options);
   tasks.push(styledTask);
 
   addExportsToBarrel(host, options);
@@ -41,12 +39,14 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     const routingTask = addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      { '@types/react-router-dom': typesReactRouterDomVersion }
+      {}
     );
     tasks.push(routingTask);
   }
 
-  await formatFiles(host);
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return runTasksInSerial(...tasks);
 }
@@ -103,7 +103,12 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
+let tsModule: typeof import('typescript');
+
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const workspace = getProjects(host);
   const isApp = workspace.get(options.project).projectType === 'application';
 
@@ -114,10 +119,10 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     );
     const indexSource = host.read(indexFilePath, 'utf-8');
     if (indexSource !== null) {
-      const indexSourceFile = ts.createSourceFile(
+      const indexSourceFile = tsModule.createSourceFile(
         indexFilePath,
         indexSource,
-        ts.ScriptTarget.Latest,
+        tsModule.ScriptTarget.Latest,
         true
       );
       const changes = applyChangesToString(

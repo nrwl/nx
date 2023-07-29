@@ -1,4 +1,4 @@
-import { SectionHeading, TestimonialCard } from '@nrwl/nx-dev/ui-common';
+import { SectionHeading, TestimonialCard } from '@nx/nx-dev/ui-common';
 
 export function Testimonials(): JSX.Element {
   const column1 = [

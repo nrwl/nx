@@ -1,35 +1,18 @@
-import { offsetFromRoot, Tree } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
-import { existsSync } from 'fs';
-import { dirname, join } from 'path';
+import { ensurePackage, Tree, workspaceRoot } from '@nx/devkit';
+import { dirname } from 'path';
 import type * as ts from 'typescript';
+import { typescriptVersion } from '../utils/versions';
 export { compileTypeScript } from './typescript/compilation';
 export type { TypeScriptCompilationOptions } from './typescript/compilation';
-export { findNodes } from './typescript/find-nodes'; // TODO(v16): remove this
 export { getSourceNodes } from './typescript/get-source-nodes';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 
 let tsModule: typeof import('typescript');
 
-export function readTsConfig(tsConfigPath: string) {
-  if (!tsModule) {
-    tsModule = require('typescript');
-  }
-  const readResult = tsModule.readConfigFile(
-    tsConfigPath,
-    tsModule.sys.readFile
-  );
-  return tsModule.parseJsonConfigFileContent(
-    readResult.config,
-    tsModule.sys,
-    dirname(tsConfigPath)
-  );
-}
-
 function readTsConfigOptions(tsConfigPath: string) {
   if (!tsModule) {
-    tsModule = require('typescript');
+    tsModule = ensureTypescript();
   }
 
   const readResult = tsModule.readConfigFile(
@@ -97,36 +80,28 @@ function getCompilerHost(tsConfigPath: string) {
   return { options, host, moduleResolutionCache };
 }
 
-export function getRootTsConfigPathInTree(tree: Tree): string | null {
-  for (const path of ['tsconfig.base.json', 'tsconfig.json']) {
-    if (tree.exists(path)) {
-      return path;
-    }
-  }
-
-  return 'tsconfig.base.json';
+export function ensureTypescript() {
+  return ensurePackage<typeof import('typescript')>(
+    'typescript',
+    typescriptVersion
+  );
 }
 
-export function getRelativePathToRootTsConfig(
-  tree: Tree,
-  targetPath: string
-): string {
-  return offsetFromRoot(targetPath) + getRootTsConfigPathInTree(tree);
+import {
+  getRelativePathToRootTsConfig as _getRelativePathToRootTsConfig,
+  getRootTsConfigPathInTree as _getRootTsConfigPathInTree,
+} from './ts-config';
+
+/**
+ * @deprecated Please import this from @nx/js instead. This function will be removed in v17
+ */
+export function getRelativePathToRootTsConfig(tree: Tree, targetPath: string) {
+  return _getRelativePathToRootTsConfig(tree, targetPath);
 }
 
-export function getRootTsConfigFileName(): string | null {
-  for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
-    const tsConfigPath = join(workspaceRoot, tsConfigName);
-    if (existsSync(tsConfigPath)) {
-      return tsConfigName;
-    }
-  }
-
-  return null;
-}
-
-export function getRootTsConfigPath(): string | null {
-  const tsConfigFileName = getRootTsConfigFileName();
-
-  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
+/**
+ * @deprecated Please import this from @nx/js instead. This function will be removed in v17
+ */
+export function getRootTsConfigPathInTree(tree: Tree) {
+  return _getRootTsConfigPathInTree(tree);
 }

@@ -25,7 +25,7 @@ describe('ensureNodeModulesSymlink', () => {
       JSON.stringify({
         name: 'workspace',
         dependencies: {
-          '@nrwl/react-native': '9999.9.9',
+          '@nx/react-native': '9999.9.9',
           '@react-native-community/cli-platform-ios': '7777.7.7',
           '@react-native-community/cli-platform-android': '7777.7.7',
           'react-native': '0.9999.0',
@@ -39,7 +39,7 @@ describe('ensureNodeModulesSymlink', () => {
   });
 
   it('should create symlinks', () => {
-    createNpmDirectory('@nrwl/react-native', '9999.9.9');
+    createNpmDirectory('@nx/react-native', '9999.9.9');
     createNpmDirectory(
       '@react-native-community/cli-platform-android',
       '7777.7.7'
@@ -52,7 +52,7 @@ describe('ensureNodeModulesSymlink', () => {
 
     ensureNodeModulesSymlink(workspaceDir, appDir);
 
-    expectSymlinkToExist('@nrwl/react-native');
+    expectSymlinkToExist('@nx/react-native');
     expectSymlinkToExist('react-native');
     expectSymlinkToExist('jsc-android');
     expectSymlinkToExist('hermes-engine');
@@ -71,7 +71,7 @@ describe('ensureNodeModulesSymlink', () => {
         },
       })
     );
-    createNpmDirectory('@nrwl/react-native', '9999.9.9');
+    createNpmDirectory('@nx/react-native', '9999.9.9');
     createNpmDirectory(
       '@react-native-community/cli-platform-android',
       '7777.7.7'

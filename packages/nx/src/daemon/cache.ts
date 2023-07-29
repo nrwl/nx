@@ -1,4 +1,10 @@
-import { existsSync, readJson, unlinkSync, writeJson } from 'fs-extra';
+import {
+  existsSync,
+  readJson,
+  readJsonSync,
+  unlinkSync,
+  writeJson,
+} from 'fs-extra';
 import { join } from 'path';
 import { DAEMON_DIR_FOR_CURRENT_WORKSPACE } from './tmp-dir';
 
@@ -6,21 +12,23 @@ export interface DaemonProcessJson {
   processId: number;
 }
 
-const serverProcessJsonPath = join(
+export const serverProcessJsonPath = join(
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   'server-process.json'
 );
 
-async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | null> {
+export async function readDaemonProcessJsonCache(): Promise<DaemonProcessJson | null> {
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
   return await readJson(serverProcessJsonPath);
 }
 
-function deleteDaemonJsonProcessCache(): void {
+export function deleteDaemonJsonProcessCache(): void {
   try {
-    unlinkSync(serverProcessJsonPath);
+    if (getDaemonProcessIdSync() === process.pid) {
+      unlinkSync(serverProcessJsonPath);
+    }
   } catch {}
 }
 
@@ -41,12 +49,12 @@ export async function safelyCleanUpExistingProcess(): Promise<void> {
 }
 
 // Must be sync for the help output use case
-export function getDaemonProcessId(): number | null {
+export function getDaemonProcessIdSync(): number | null {
   if (!existsSync(serverProcessJsonPath)) {
     return null;
   }
   try {
-    const daemonProcessJson = require(serverProcessJsonPath);
+    const daemonProcessJson = readJsonSync(serverProcessJsonPath);
     return daemonProcessJson.processId;
   } catch {
     return null;

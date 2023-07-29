@@ -4,7 +4,7 @@ import {
   joinPathFragments,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export async function update(tree: Tree) {
   const projects = getProjects(tree);

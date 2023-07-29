@@ -1,10 +1,10 @@
-import { assertMinimumCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   getArgsDefaultValue,
   getComponentProps,

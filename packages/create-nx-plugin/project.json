@@ -6,7 +6,7 @@
   "targets": {
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/create-nx-plugin/bin/create-nx-plugin.ts",
         "assets": [
@@ -65,5 +65,5 @@
     },
     "lint": {}
   },
-  "implicitDependencies": ["nx-plugin"]
+  "implicitDependencies": ["plugin"]
 }

@@ -9,7 +9,7 @@
     "npmScope": {
       "type": "string",
       "description": "Npm scope for importing libs. NOTE: only used if running the generator in an Angular CLI workspace.",
-      "x-priority": "important"
+      "x-deprecated": "This will be inferred from your root package.json"
     },
     "defaultBase": {
       "type": "string",
@@ -21,12 +21,6 @@
       "description": "Skip installing added packages.",
       "default": false,
       "x-priority": "internal"
-    },
-    "preserveAngularCliLayout": {
-      "type": "boolean",
-      "description": "Preserve the Angular CLI layout instead of moving the app into apps. NOTE: only used if running the generator in an Angular CLI workspace.",
-      "default": false,
-      "x-priority": "important"
     },
 
     "unitTestRunner": {

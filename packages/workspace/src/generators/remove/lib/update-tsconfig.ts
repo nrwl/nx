@@ -4,8 +4,8 @@ import {
   ProjectGraph,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '../../../utilities/typescript';
+} from '@nx/devkit';
+import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
 import { Schema } from '../schema';
 import {
   createProjectRootMappings,

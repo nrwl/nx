@@ -1,4 +1,4 @@
-import { createProjectGraphAsync, ProjectGraph, reverse } from '@nrwl/devkit';
+import { createProjectGraphAsync, ProjectGraph, reverse } from '@nx/devkit';
 import { Schema } from '../schema';
 
 /**

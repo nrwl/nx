@@ -1,10 +1,10 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   readNxJson,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import addKarmaInputs from './add-karma-inputs';
 
 describe('15.0.0 migration (add-karma-inputs)', () => {
@@ -44,30 +44,30 @@ describe('15.0.0 migration (add-karma-inputs)', () => {
 
     const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
             "!{projectRoot}/**/*.spec.[jt]s",
             "!{projectRoot}/tsconfig.spec.json",
             "!{projectRoot}/karma.conf.js",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "test": Object {
-            "inputs": Array [
+        "targetDefaults": {
+          "test": {
+            "inputs": [
               "default",
               "^production",
               "{workspaceRoot}/karma.conf.js",
             ],
           },
-          "test2": Object {
-            "inputs": Array [
+          "test2": {
+            "inputs": [
               "default",
               "^production",
               "{workspaceRoot}/karma.conf.js",

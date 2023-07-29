@@ -99,14 +99,14 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["karma", "jest", "none"],
+      "enum": ["jest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["protractor", "cypress", "none"],
-      "description": "Test runner to use for end to end (E2E) tests. The `protractor` option is deprecated and it will be removed in v15.",
+      "enum": ["cypress", "none"],
+      "description": "Test runner to use for end to end (E2E) tests.",
       "default": "cypress"
     },
     "tags": {
@@ -151,7 +151,7 @@
     "standalone": {
       "description": "Generate an application that is setup to use standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
       "type": "boolean",
-      "default": false
+      "x-priority": "important"
     },
     "rootProject": {
       "description": "Create an application at the root of the workspace.",
@@ -164,6 +164,12 @@
       "description": "Generate a Angular app with a minimal setup.",
       "type": "boolean",
       "default": false
+    },
+    "bundler": {
+      "description": "Bundler to use to build the application.",
+      "type": "string",
+      "enum": ["webpack", "esbuild"],
+      "default": "webpack"
     }
   },
   "additionalProperties": false,

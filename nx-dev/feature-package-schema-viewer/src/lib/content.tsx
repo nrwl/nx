@@ -1,8 +1,8 @@
 import { HandRaisedIcon } from '@heroicons/react/24/outline';
 import { XCircleIcon } from '@heroicons/react/24/solid';
-import { getSchemaFromReference } from '@nrwl/nx-dev/data-access-packages';
-import { JsonSchema1, NxSchema } from '@nrwl/nx-dev/models-package';
-import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
+import { getSchemaFromReference } from '@nx/nx-dev/data-access-packages';
+import { JsonSchema1, NxSchema } from '@nx/nx-dev/models-package';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { ReactNode, useState } from 'react';
@@ -77,19 +77,40 @@ export function Content({
         (x): x is { name: string; href: string; current: boolean } => !!x
       );
     },
-    get markdown(): ReactNode {
-      return renderMarkdown(
-        getMarkdown({
-          type: schemaViewModel.type,
-          packageName: schemaViewModel.packageName,
-          schemaName: schemaViewModel.schemaMetadata.name,
-          schemaAlias: schemaViewModel.schemaMetadata.aliases[0] ?? '',
-          schema: schemaViewModel.currentSchema as NxSchema,
-        }),
-        {
-          filePath: '',
-        }
-      ).node;
+    get markdown(): {
+      header: ReactNode;
+      customContent: ReactNode;
+      usageAndExamples: ReactNode;
+    } {
+      const schema = schemaViewModel.currentSchema as NxSchema;
+      return {
+        header: renderMarkdown(
+          getHeaderMarkdown({
+            type: schemaViewModel.type,
+            packageName: schemaViewModel.packageName,
+            schemaName: schemaViewModel.schemaMetadata.name,
+            schema,
+          }),
+          {
+            filePath: '',
+          }
+        ).node,
+        customContent: !!schema['examplesFile']
+          ? renderMarkdown(schema['examplesFile'], { filePath: '' }).node
+          : null,
+        usageAndExamples: renderMarkdown(
+          getUsageAndExamplesMarkdown({
+            type: schemaViewModel.type,
+            packageName: schemaViewModel.packageName,
+            schemaName: schemaViewModel.schemaMetadata.name,
+            schemaAlias: schemaViewModel.schemaMetadata.aliases[0] ?? '',
+            schema,
+          }),
+          {
+            filePath: '',
+          }
+        ).node,
+      };
     },
   };
 
@@ -104,6 +125,13 @@ export function Content({
           >
             {schemaViewModel.type}
           </div>
+          <a
+            className="relative mx-4 inline-flex rounded-md border border-green-100 bg-green-50 px-4 py-2 text-xs font-medium text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400"
+            href="/recipes/other/rescope"
+            title="Nx 16 package name changes"
+          >
+            Rescope @nrwl to @nx
+          </a>
           {schemaViewModel.deprecated && (
             <div
               aria-hidden="true"
@@ -200,7 +228,9 @@ export function Content({
       {!schemaViewModel.subReference && (
         <>
           <div className="prose prose-slate dark:prose-invert max-w-none">
-            {vm.markdown}
+            {vm.markdown.header}
+            {vm.markdown.customContent}
+            {vm.markdown.usageAndExamples}
           </div>
           <div className="h-12">{/* SPACER */}</div>
         </>
@@ -286,14 +316,12 @@ export function Content({
   );
 }
 
-const getMarkdown = (data: {
+const getHeaderMarkdown = (data: {
   packageName: string;
-  schemaAlias: string;
   schemaName: string;
   schema: NxSchema;
   type: 'executor' | 'generator';
 }): string => {
-  const hasExamplesFile = !!data.schema['examplesFile'];
   const executorNotice: string = `Options can be configured in \`project.json\` when defining the executor, or when invoking it. Read more about how to configure targets and executors here: [https://nx.dev/reference/project-configuration#targets](https://nx.dev/reference/project-configuration#targets).`;
 
   return [
@@ -303,7 +331,16 @@ const getMarkdown = (data: {
     '\n\n',
     data.type === 'executor' ? executorNotice : '',
     `\n\n`,
-    hasExamplesFile ? data.schema['examplesFile'] : '',
+  ].join('');
+};
+const getUsageAndExamplesMarkdown = (data: {
+  packageName: string;
+  schemaAlias: string;
+  schemaName: string;
+  schema: NxSchema;
+  type: 'executor' | 'generator';
+}): string => {
+  return [
     data.type === 'generator'
       ? getUsage(data.packageName, data.schemaName, data.schemaAlias)
       : '',

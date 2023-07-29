@@ -1,4 +1,4 @@
-import { exec, execSync } from 'child_process';
+import { exec } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
@@ -45,7 +45,6 @@ export interface RunCommandsOptions extends Json {
   cwd?: string;
   args?: string;
   envFile?: string;
-  outputPath?: string;
   __unparsed__: string[];
 }
 
@@ -58,7 +57,6 @@ const propKeys = [
   'cwd',
   'args',
   'envFile',
-  'outputPath',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
@@ -176,12 +174,20 @@ async function runSerially(
   context: ExecutorContext
 ) {
   for (const c of options.commands) {
-    createSyncProcess(
-      c.command,
+    const success = await createProcess(
+      c,
+      undefined,
       options.color,
       calculateCwd(options.cwd, context)
     );
+    if (!success) {
+      process.stderr.write(
+        `Warning: run-commands command "${c.command}" exited with non-zero status code`
+      );
+      return false;
+    }
   }
+
   return true;
 }
 
@@ -205,9 +211,14 @@ function createProcess(
     /**
      * Ensure the child process is killed when the parent exits
      */
-    const processExitListener = () => childProcess.kill();
+    const processExitListener = (signal?: number | NodeJS.Signals) => () =>
+      childProcess.kill(signal);
+
     process.on('exit', processExitListener);
     process.on('SIGTERM', processExitListener);
+    process.on('SIGINT', processExitListener);
+    process.on('SIGQUIT', processExitListener);
+
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(addColorAndPrefix(data, commandConfig));
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
@@ -219,6 +230,10 @@ function createProcess(
       if (readyWhen && err.toString().indexOf(readyWhen) > -1) {
         res(true);
       }
+    });
+    childProcess.on('error', (err) => {
+      process.stderr.write(addColorAndPrefix(err.toString(), commandConfig));
+      res(false);
     });
     childProcess.on('exit', (code) => {
       if (!readyWhen) {
@@ -251,15 +266,6 @@ function addColorAndPrefix(
     out = chalk[config.bgColor](out);
   }
   return out;
-}
-
-function createSyncProcess(command: string, color: boolean, cwd: string) {
-  execSync(command, {
-    env: processEnv(color),
-    stdio: ['inherit', 'inherit', 'inherit'],
-    maxBuffer: LARGE_BUFFER,
-    cwd,
-  });
 }
 
 function calculateCwd(
@@ -306,7 +312,15 @@ function parseArgs(options: RunCommandsOptions) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)
       .reduce((m, c) => ((m[c] = options[c]), m), {});
-    return unknownOptionsTreatedAsArgs;
+
+    const unparsedCommandArgs = yargsParser(options.__unparsed__, {
+      configuration: {
+        'parse-numbers': false,
+        'parse-positional-numbers': false,
+        'dot-notation': false,
+      },
+    });
+    return { ...unknownOptionsTreatedAsArgs, ...unparsedCommandArgs };
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
     configuration: { 'camel-case-expansion': false },

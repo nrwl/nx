@@ -3,8 +3,8 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import addOutputs from './add-outputs';
 
 describe('addOutputs', () => {
@@ -41,28 +41,28 @@ describe('addOutputs', () => {
     await addOutputs(tree);
 
     expect(readProjectConfiguration(tree, 'proj')).toMatchInlineSnapshot(`
-      Object {
+      {
         "$schema": "../node_modules/nx/schemas/project-schema.json",
         "name": "proj",
         "root": "proj",
-        "targets": Object {
-          "lintWithOutputs": Object {
+        "targets": {
+          "lintWithOutputs": {
             "executor": "@nrwl/linter:eslint",
-            "options": Object {},
-            "outputs": Array [
+            "options": {},
+            "outputs": [
               "dist",
             ],
           },
-          "lintWithoutOutputs": Object {
+          "lintWithoutOutputs": {
             "executor": "@nrwl/linter:eslint",
-            "options": Object {},
-            "outputs": Array [
+            "options": {},
+            "outputs": [
               "{options.outputFile}",
             ],
           },
-          "notLint": Object {
+          "notLint": {
             "executor": "@nrwl/node:build",
-            "options": Object {},
+            "options": {},
           },
         },
       }

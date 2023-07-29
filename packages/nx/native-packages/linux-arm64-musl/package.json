@@ -1,0 +1,29 @@
+{
+  "name": "@nx/nx-linux-arm64-musl",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx/native-packages/linux-arm64-musl"
+  },
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "nx.linux-arm64-musl.node",
+  "files": [
+    "nx.linux-arm64-musl.node"
+  ],
+  "engines": {
+    "node": ">= 10"
+  },
+  "libc": [
+    "musl"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

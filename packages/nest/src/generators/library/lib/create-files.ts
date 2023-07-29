@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   generateFiles,
   joinPathFragments,
   names,
   offsetFromRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { NormalizedOptions } from '../schema';
 
 export function createFiles(tree: Tree, options: NormalizedOptions): void {
@@ -13,6 +13,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
     ...names(options.projectName),
     tmpl: '',
     offsetFromRoot: offsetFromRoot(options.projectRoot),
+    fileName: options.fileName,
   };
   generateFiles(
     tree,

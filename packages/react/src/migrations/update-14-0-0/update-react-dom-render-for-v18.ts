@@ -6,8 +6,8 @@ import {
   stripIndents,
   Tree,
   formatFiles,
-} from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
+} from '@nx/devkit';
+import { findNodes } from '@nx/js';
 import * as ts from 'typescript';
 
 export async function update(tree: Tree) {

@@ -1,9 +1,5 @@
-import {
-  addProjectConfiguration,
-  readJson,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, readProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import update from './update-package-to-tsc';
 

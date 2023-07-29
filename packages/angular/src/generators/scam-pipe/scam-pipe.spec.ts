@@ -1,6 +1,6 @@
-import { addProjectConfiguration, writeJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import scamPipeGenerator from './scam-pipe';
+import { addProjectConfiguration, writeJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { scamPipeGenerator } from './scam-pipe';
 
 describe('SCAM Pipe Generator', () => {
   it('should create the inline scam pipe correctly', async () => {
@@ -30,14 +30,12 @@ describe('SCAM Pipe Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example'
+        name: 'example',
       })
       export class ExamplePipe implements PipeTransform {
-
         transform(value: unknown, ...args: unknown[]): unknown {
           return null;
         }
-
       }
 
       @NgModule({
@@ -45,7 +43,8 @@ describe('SCAM Pipe Generator', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -81,7 +80,8 @@ describe('SCAM Pipe Generator', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -109,7 +109,7 @@ describe('SCAM Pipe Generator', () => {
 
     // ASSERT
     const pipeModuleSource = tree.read(
-      'libs/lib1/feature/src/lib/example.module.ts',
+      'libs/lib1/feature/src/lib/example/example.module.ts',
       'utf-8'
     );
     expect(pipeModuleSource).toMatchInlineSnapshot(`
@@ -122,15 +122,17 @@ describe('SCAM Pipe Generator', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
     const secondaryEntryPointSource = tree.read(
       `libs/lib1/feature/src/index.ts`,
       'utf-8'
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
-      "export * from \\"./lib/example.pipe\\";
-      export * from \\"./lib/example.module\\";"
+      "export * from './lib/example/example.pipe';
+      export * from './lib/example/example.module';
+      "
     `);
   });
 
@@ -163,14 +165,12 @@ describe('SCAM Pipe Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Pipe({
-          name: 'example'
+          name: 'example',
         })
         export class ExamplePipe implements PipeTransform {
-
           transform(value: unknown, ...args: unknown[]): unknown {
             return null;
           }
-
         }
 
         @NgModule({
@@ -178,7 +178,8 @@ describe('SCAM Pipe Generator', () => {
           declarations: [ExamplePipe],
           exports: [ExamplePipe],
         })
-        export class ExamplePipeModule {}"
+        export class ExamplePipeModule {}
+        "
       `);
     });
 
@@ -210,14 +211,12 @@ describe('SCAM Pipe Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Pipe({
-          name: 'example'
+          name: 'example',
         })
         export class ExamplePipe implements PipeTransform {
-
           transform(value: unknown, ...args: unknown[]): unknown {
             return null;
           }
-
         }
 
         @NgModule({
@@ -225,7 +224,8 @@ describe('SCAM Pipe Generator', () => {
           declarations: [ExamplePipe],
           exports: [ExamplePipe],
         })
-        export class ExamplePipeModule {}"
+        export class ExamplePipeModule {}
+        "
       `);
     });
 
@@ -238,20 +238,17 @@ describe('SCAM Pipe Generator', () => {
         root: 'apps/app1',
       });
 
-      // ACT
-      try {
-        await scamPipeGenerator(tree, {
+      // ACT & ASSERT
+      expect(
+        scamPipeGenerator(tree, {
           name: 'example',
           project: 'app1',
           path: 'libs/proj/src/lib/random',
           inlineScam: true,
-        });
-      } catch (error) {
-        // ASSERT
-        expect(error).toMatchInlineSnapshot(
-          `[Error: The path provided for the SCAM (libs/proj/src/lib/random) does not exist under the project root (apps/app1).]`
-        );
-      }
+        })
+      ).rejects.toThrow(
+        'The path provided (libs/proj/src/lib/random) does not exist under the project root (apps/app1).'
+      );
     });
   });
 });

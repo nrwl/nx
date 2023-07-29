@@ -1,9 +1,11 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'path';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateReadme } from './update-readme';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nx/js');
 
 describe('updateReadme', () => {
   let tree: Tree;

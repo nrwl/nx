@@ -1,5 +1,4 @@
 import { join } from 'path';
-import { cypressProjectGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
@@ -15,16 +14,16 @@ import {
   offsetFromRoot,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   TargetConfiguration,
   Tree,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+} from '@nx/devkit';
+import { swcCoreVersion } from '@nx/js/src/utils/versions';
+import type { Linter } from '@nx/linter';
+
+import { getRelativePathToRootTsConfig } from '@nx/js';
 
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
@@ -74,19 +73,20 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
   ];
 
   if (options.bundler === 'webpack') {
-    await ensurePackage(tree, '@nrwl/webpack', nxVersion);
-    const { webpackProjectGenerator } = require('@nrwl/webpack');
-    await webpackProjectGenerator(tree, {
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    await configurationGenerator(tree, {
       project: options.projectName,
       main,
       tsConfig,
       compiler: options.compiler ?? 'babel',
       devServer: true,
-      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'
       ),
+      skipFormat: true,
     });
     const project = readProjectConfiguration(tree, options.projectName);
     const prodConfig = project.targets.build.configurations.production;
@@ -100,6 +100,10 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
     buildOptions.styles = [
       joinPathFragments(options.appProjectRoot, `src/styles.${options.style}`),
     ];
+    // We can delete that, because this projest is an application
+    // and applications have a .babelrc file in their root dir.
+    // So Nx will find it and use it
+    delete buildOptions.babelUpwardRootMode;
     buildOptions.scripts = [];
     prodConfig.fileReplacements = [
       {
@@ -124,7 +128,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
     // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
     const project = readProjectConfiguration(tree, options.projectName);
     project.targets.build = {
-      executor: `@nrwl/js:${options.compiler}`,
+      executor: `@nx/js:${options.compiler}`,
       outputs: ['{options.outputPath}'],
       options: {
         main,
@@ -163,18 +167,12 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
 function setDefaults(tree: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(tree);
   nxJson.generators = nxJson.generators || {};
-  nxJson.generators['@nrwl/web:application'] = {
+  nxJson.generators['@nx/web:application'] = {
     style: options.style,
     linter: options.linter,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,
-    ...nxJson.generators['@nrwl/web:application'],
-  };
-  nxJson.generators['@nrwl/web:library'] = {
-    style: options.style,
-    linter: options.linter,
-    unitTestRunner: options.unitTestRunner,
-    ...nxJson.generators['@nrwl/web:library'],
+    ...nxJson.generators['@nx/web:application'],
   };
   updateNxJson(tree, nxJson);
 }
@@ -187,8 +185,6 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,
-    // Vite does not use babel by default
-    skipBabelConfig: options.bundler === 'vite',
   });
   tasks.push(webTask);
 
@@ -196,8 +192,9 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   await addProject(host, options);
 
   if (options.bundler === 'vite') {
-    await ensurePackage(host, '@nrwl/vite', nxVersion);
-    const { viteConfigurationGenerator } = require('@nrwl/vite');
+    const { viteConfigurationGenerator } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -214,18 +211,22 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       newProject: true,
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(viteTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    await ensurePackage(host, '@nrwl/vite', nxVersion);
-    const { vitestGenerator } = require('@nrwl/vite');
+    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
+      nxVersion
+    );
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
       coverageProvider: 'c8',
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(vitestTask);
   }
@@ -239,40 +240,54 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
     );
   }
 
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.projectName,
-    tsConfigPaths: [
-      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
-    skipFormat: true,
-    setParserOptionsProject: options.setParserOptionsProject,
-  });
-  tasks.push(lintTask);
+  if (options.linter === 'eslint') {
+    const { lintProjectGenerator } = await ensurePackage(
+      '@nx/linter',
+      nxVersion
+    );
+    const lintTask = await lintProjectGenerator(host, {
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
+      skipFormat: true,
+      setParserOptionsProject: options.setParserOptionsProject,
+    });
+    tasks.push(lintTask);
+  }
 
   if (options.e2eTestRunner === 'cypress') {
+    const { cypressProjectGenerator } = await ensurePackage<
+      typeof import('@nx/cypress')
+    >('@nx/cypress', nxVersion);
     const cypressTask = await cypressProjectGenerator(host, {
       ...options,
       name: `${options.name}-e2e`,
       directory: options.directory,
       project: options.projectName,
+      skipFormat: true,
     });
     tasks.push(cypressTask);
   }
   if (options.unitTestRunner === 'jest') {
-    const jestTask = await jestProjectGenerator(host, {
+    const { configurationGenerator } = await ensurePackage<
+      typeof import('@nx/jest')
+    >('@nx/jest', nxVersion);
+    const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',
       compiler: options.compiler,
+      skipFormat: true,
     });
     tasks.push(jestTask);
   }
 
   if (options.compiler === 'swc') {
-    const installTask = await addDependenciesToPackageJson(
+    const installTask = addDependenciesToPackageJson(
       host,
       {},
       { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
@@ -315,13 +330,13 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   }
 
   options.style = options.style || 'css';
-  options.linter = options.linter || Linter.EsLint;
+  options.linter = options.linter || ('eslint' as Linter.EsLint);
   options.unitTestRunner = options.unitTestRunner || 'jest';
   options.e2eTestRunner = options.e2eTestRunner || 'cypress';
 
   return {
     ...options,
-    prefix: options.prefix ?? npmScope,
+    prefix: options.prefix ?? npmScope ?? 'app',
     name: names(options.name).fileName,
     compiler: options.compiler ?? 'babel',
     bundler: options.bundler ?? 'webpack',

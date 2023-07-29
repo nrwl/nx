@@ -37,21 +37,13 @@
           "@storybook/react-native"
         ],
         "x-prompt": "What UI framework plugin should storybook use?",
-        "x-priority": "important"
+        "x-priority": "important",
+        "aliases": ["storybook7UiFramework"]
       },
-      "bundler": {
-        "description": "The bundler to use.",
-        "type": "string",
-        "enum": ["vite", "webpack"],
-        "x-prompt": "Which bundler do you want to use?",
-        "default": "webpack",
-        "x-priority": "important"
-      },
-      "storybook7betaConfiguration": {
-        "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
+      "js": {
         "type": "boolean",
-        "default": false,
-        "hidden": true
+        "description": "Generate JavaScript story files rather than TypeScript story files.",
+        "default": false
       }
     },
     "presets": []

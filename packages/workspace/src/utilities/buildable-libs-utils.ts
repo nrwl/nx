@@ -1,17 +1,20 @@
 import { dirname, join, relative } from 'path';
 import { directoryExists, fileExists } from './fileutils';
-import type { ProjectGraph, ProjectGraphProjectNode } from '@nrwl/devkit';
+import type { ProjectGraph, ProjectGraphProjectNode } from '@nx/devkit';
 import {
   getOutputsForTargetAndConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
   stripIndents,
   writeJsonFile,
-} from '@nrwl/devkit';
-import * as ts from 'typescript';
+} from '@nx/devkit';
+import type * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
 import { isNpmProject } from 'nx/src/project-graph/operators';
+import { ensureTypescript } from './typescript';
+
+let tsModule: typeof import('typescript');
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (
@@ -21,12 +24,18 @@ function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   );
 }
 
+/**
+ * @deprecated This type will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
+ */
 export type DependentBuildableProjectNode = {
   name: string;
   outputs: string[];
   node: ProjectGraphProjectNode | ProjectGraphExternalNode;
 };
 
+/**
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
+ */
 export function calculateProjectDependencies(
   projGraph: ProjectGraph,
   root: string,
@@ -111,6 +120,9 @@ export function calculateProjectDependencies(
       return project;
     })
     .filter((x) => !!x);
+
+  dependencies.sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0));
+
   return {
     target,
     dependencies,
@@ -127,7 +139,8 @@ function collectDependencies(
   areTopLevelDeps = true
 ): { name: string; isTopLevel: boolean }[] {
   (projGraph.dependencies[project] || []).forEach((dependency) => {
-    if (!acc.some((dep) => dep.name === dependency.target)) {
+    const existingEntry = acc.find((dep) => dep.name === dependency.target);
+    if (!existingEntry) {
       // Temporary skip this. Currently the set of external nodes is built from package.json, not lock file.
       // As a result, some nodes might be missing. This should not cause any issues, we can just skip them.
       if (
@@ -141,6 +154,8 @@ function collectDependencies(
       if (!shallow && isInternalTarget) {
         collectDependencies(dependency.target, projGraph, acc, shallow, false);
       }
+    } else if (areTopLevelDeps && !existingEntry.isTopLevel) {
+      existingEntry.isTopLevel = true;
     }
   });
   return acc;
@@ -172,13 +187,7 @@ function readTsConfigWithRemappedPaths(
   return generatedTsConfig;
 }
 
-/**
- * Util function to create tsconfig compilerOptions object with support for workspace libs paths.
- *
- * @param tsConfig String of config path or object parsed via ts.parseJsonConfigFileContent.
- * @param dependencies Dependencies calculated by Nx.
- */
-export function computeCompilerOptionsPaths(
+function computeCompilerOptionsPaths(
   tsConfig: string | ts.ParsedCommandLine,
   dependencies: DependentBuildableProjectNode[]
 ) {
@@ -188,13 +197,19 @@ export function computeCompilerOptionsPaths(
 }
 
 function readPaths(tsConfig: string | ts.ParsedCommandLine) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   try {
     let config: ts.ParsedCommandLine;
     if (typeof tsConfig === 'string') {
-      const configFile = ts.readConfigFile(tsConfig, ts.sys.readFile);
-      config = ts.parseJsonConfigFileContent(
+      const configFile = tsModule.readConfigFile(
+        tsConfig,
+        tsModule.sys.readFile
+      );
+      config = tsModule.parseJsonConfigFileContent(
         configFile.config,
-        ts.sys,
+        tsModule.sys,
         dirname(tsConfig)
       );
     } else {
@@ -210,6 +225,9 @@ function readPaths(tsConfig: string | ts.ParsedCommandLine) {
   }
 }
 
+/**
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
+ */
 export function createTmpTsConfig(
   tsconfigPath: string,
   workspaceRoot: string,
@@ -240,6 +258,9 @@ function cleanupTmpTsConfigFile(tmpTsConfigPath) {
   } catch (e) {}
 }
 
+/**
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
+ */
 export function checkDependentProjectsHaveBeenBuilt(
   root: string,
   projectName: string,
@@ -266,6 +287,9 @@ export function checkDependentProjectsHaveBeenBuilt(
   }
 }
 
+/**
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
+ */
 export function findMissingBuildDependencies(
   root: string,
   projectName: string,
@@ -290,6 +314,9 @@ export function findMissingBuildDependencies(
   return depLibsToBuildFirst;
 }
 
+/**
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
+ */
 export function updatePaths(
   dependencies: DependentBuildableProjectNode[],
   paths: Record<string, string[]>
@@ -337,6 +364,7 @@ export function updatePaths(
 /**
  * Updates the peerDependencies section in the `dist/lib/xyz/package.json` with
  * the proper dependency and version
+ * @deprecated This function will be removed from @nx/workspace in version 17. Prefer importing from @nx/js.
  */
 export function updateBuildableProjectPackageJsonDependencies(
   root: string,

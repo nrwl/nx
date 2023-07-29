@@ -1,8 +1,8 @@
-import { Tree } from '@nrwl/devkit';
+import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import libraryGenerator from '../library/library';
 
 describe('react:stories for libraries', () => {
@@ -36,41 +36,56 @@ describe('react:stories for libraries', () => {
     );
   });
 
-  it('should create the stories', async () => {
+  it('should create the stories with interaction tests', async () => {
     await storiesGenerator(appTree, {
       project: 'test-ui-lib',
-      generateCypressSpecs: false,
     });
 
     expect(
-      appTree.exists('libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx')
-    ).toBeTruthy();
+      appTree.read('libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx', 'utf-8')
+    ).toMatchSnapshot();
     expect(
-      appTree.exists(
-        'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx'
+      appTree.read(
+        'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx',
+        'utf-8'
       )
-    ).toBeTruthy();
+    ).toMatchSnapshot();
+
+    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeDefined();
   });
 
-  it('should generate Cypress specs', async () => {
+  it('should create the stories without interaction tests', async () => {
     await storiesGenerator(appTree, {
       project: 'test-ui-lib',
-      generateCypressSpecs: true,
+      interactionTests: false,
     });
-
     expect(
-      appTree.exists(
-        'apps/test-ui-lib-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts'
-      )
-    ).toBeTruthy();
+      appTree.read('libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx', 'utf-8')
+    ).toMatchSnapshot();
     expect(
-      appTree.exists(
-        'apps/test-ui-lib-e2e/src/integration/another-cmp/another-cmp.spec.ts'
+      appTree.read(
+        'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx',
+        'utf-8'
       )
-    ).toBeTruthy();
+    ).toMatchSnapshot();
+    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@storybook/test-runner']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeUndefined();
   });
-
-  it('should not overwrite existing stories', () => {});
 
   describe('ignore paths', () => {
     beforeEach(() => {
@@ -119,7 +134,6 @@ describe('react:stories for libraries', () => {
     it('should generate stories for all if no ignorePaths', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-lib',
-        generateCypressSpecs: false,
       });
 
       expect(
@@ -144,7 +158,6 @@ describe('react:stories for libraries', () => {
     it('should ignore entire paths', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-lib',
-        generateCypressSpecs: false,
         ignorePaths: [
           'libs/test-ui-lib/src/lib/anothercmp/**',
           '**/**/src/**/test-path/ignore-it/**',
@@ -173,7 +186,6 @@ describe('react:stories for libraries', () => {
     it('should ignore path or a pattern', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-lib',
-        generateCypressSpecs: false,
         ignorePaths: [
           'libs/test-ui-lib/src/lib/anothercmp/**/*.skip.*',
           '**/test-ui-lib/src/**/test-path/**',
@@ -209,7 +221,6 @@ describe('react:stories for libraries', () => {
 
     await storiesGenerator(appTree, {
       project: 'test-ui-lib',
-      generateCypressSpecs: false,
     });
 
     // should just create the story and not error, even though there's a js file
@@ -242,7 +253,7 @@ export async function createTestUILib(
   await applicationGenerator(appTree, {
     e2eTestRunner: 'none',
     linter: Linter.EsLint,
-    skipFormat: false,
+    skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
     name: `${libName}-e2e`,

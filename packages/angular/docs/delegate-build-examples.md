@@ -8,7 +8,7 @@ Delegate the build of the project to a different target.
 ```json
 {
   "prod-build": {
-    "executor": "@nrwl/angular:delegate-build",
+    "executor": "@nx/angular:delegate-build",
     "options": {
       "buildTarget": "app:build:production",
       "outputPath": "dist/apps/app/production",
@@ -27,7 +27,7 @@ Delegate the build of the project to a different target.
 ```json
 {
   "prod-build": {
-    "executor": "@nrwl/angular:delegate-build",
+    "executor": "@nx/angular:delegate-build",
     "options": {
       "buildTarget": "app:build:production",
       "outputPath": "dist/apps/app/production",

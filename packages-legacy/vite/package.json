@@ -1,0 +1,44 @@
+{
+  "name": "@nrwl/vite",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for building and testing applications using Vite",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages-legacy/vite"
+  },
+  "keywords": [
+    "Monorepo",
+    "Vite",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "dependencies": {
+    "@nx/vite": "file:../../packages/vite"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./package.json": {
+      "require": "./package.json"
+    },
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./executors": "./executors.js"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/vite/migrations.json"
+  }
+}

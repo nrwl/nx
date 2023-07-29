@@ -1,5 +1,4 @@
-import { SourceFile } from 'typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+import type { SourceFile } from 'typescript';
 
 export function getModuleMetadataFromAST(
   componentAST: SourceFile,
@@ -7,6 +6,7 @@ export function getModuleMetadataFromAST(
 ) {
   const NGMODULE_CONTENT_SELECTOR =
     'ClassDeclaration:has(Decorator > CallExpression:has(Identifier[name=NgModule]))';
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const moduleNodes = tsquery(componentAST, NGMODULE_CONTENT_SELECTOR, {
     visitAllChildren: true,
   });

@@ -1,6 +1,7 @@
 import { parse, printParseErrorCode, stripComments } from 'jsonc-parser';
 import type { ParseError, ParseOptions } from 'jsonc-parser';
 import { LinesAndColumns } from 'lines-and-columns';
+import { codeFrameColumns } from './code-frames';
 
 export { stripComments as stripJsonComments };
 
@@ -52,7 +53,7 @@ export function parseJson<T extends object = any>(
   const result: T = parse(input, errors, options);
 
   if (errors.length > 0) {
-    throw new Error(formatParseError(input, errors[0], 3));
+    throw new Error(formatParseError(input, errors[0]));
   }
 
   return result;
@@ -63,48 +64,22 @@ export function parseJson<T extends object = any>(
  *
  * @param input JSON content as string
  * @param parseError jsonc ParseError
- * @param numContextLine Number of context lines to show before and after
  * @returns
  */
-function formatParseError(
-  input: string,
-  parseError: ParseError,
-  numContextLine: number
-) {
+function formatParseError(input: string, parseError: ParseError) {
   const { error, offset, length } = parseError;
-  const { line, column } = new LinesAndColumns(input).locationForIndex(offset);
+  let { line, column } = new LinesAndColumns(input).locationForIndex(offset);
+  line++;
+  column++;
 
-  const errorLines = [
-    `${printParseErrorCode(error)} in JSON at ${line + 1}:${column + 1}`,
-  ];
-
-  const inputLines = input.split(/\r?\n/);
-  const firstLine = Math.max(0, line - numContextLine);
-  const lastLine = Math.min(inputLines.length - 1, line + numContextLine);
-
-  if (firstLine > 0) {
-    errorLines.push('...');
-  }
-
-  for (let currentLine = firstLine; currentLine <= lastLine; currentLine++) {
-    const lineNumber = `${currentLine + 1}: `;
-    errorLines.push(`${lineNumber}${inputLines[currentLine]}`);
-    if (line == currentLine) {
-      errorLines.push(
-        `${' '.repeat(column + lineNumber.length)}${'^'.repeat(
-          length
-        )} ${printParseErrorCode(error)}`
-      );
-    }
-  }
-
-  if (lastLine < inputLines.length - 1) {
-    errorLines.push('...');
-  }
-
-  errorLines.push('');
-
-  return errorLines.join('\n');
+  return (
+    `${printParseErrorCode(error)} in JSON at ${line}:${column}\n` +
+    codeFrameColumns(input, {
+      start: { line, column },
+      end: { line, column: column + length },
+    }) +
+    '\n'
+  );
 }
 
 /**

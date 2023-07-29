@@ -16,10 +16,6 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/set-up/github',
     },
     {
-      title: 'Billing and Utilization',
-      path: '/nx-cloud/account/billing',
-    },
-    {
       title: 'User Management',
       path: '/nx-cloud/account/users',
     },
@@ -40,7 +36,7 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/account/encryption',
     },
     {
-      title: 'Running Nx Cloud on Prem',
+      title: 'Running Nx Cloud Enterprise',
       path: '/nx-cloud/private-cloud/get-started',
     },
     {
@@ -54,6 +50,10 @@ describe('nx-dev: Nx Cloud section', () => {
     {
       title: 'GitLab Auth',
       path: '/nx-cloud/private-cloud/auth-gitlab',
+    },
+    {
+      title: 'Setting up a dedicated NxCloud VM',
+      path: '/nx-cloud/private-cloud/ami-setup',
     },
     {
       title: 'BitBucket Auth',
@@ -80,7 +80,7 @@ describe('nx-dev: Nx Cloud section', () => {
       path: '/nx-cloud/reference/server-api',
     },
     {
-      title: '@nrwl/nx-cloud - Release notes',
+      title: 'nx-cloud - Release notes',
       path: '/nx-cloud/reference/release-notes',
     },
   ]).forEach((page) => assertTextOnPage(page.path, page.title));

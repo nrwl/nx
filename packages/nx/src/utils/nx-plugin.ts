@@ -2,7 +2,6 @@ import { sync } from 'fast-glob';
 import { existsSync } from 'fs';
 import * as path from 'path';
 import { ProjectGraphProcessor } from '../config/project-graph';
-import { Workspaces } from '../config/workspaces';
 
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
@@ -10,10 +9,12 @@ import {
   PackageJson,
   readModulePackageJsonWithoutFallbacks,
 } from './package-json';
-import { registerTsProject } from './register';
+import {
+  registerTranspiler,
+  registerTsConfigPaths,
+} from '../plugins/js/utils/register';
 import {
   ProjectConfiguration,
-  ProjectsConfigurations,
   TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { logger } from './logger';
@@ -22,6 +23,12 @@ import {
   findProjectForPath,
 } from '../project-graph/utils/find-project-for-path';
 import { normalizePath } from './path';
+import { join } from 'path';
+import { getNxRequirePaths } from './installation-directory';
+import { readTsConfig } from '../plugins/js/utils/typescript';
+
+import type * as ts from 'typescript';
+import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 
 export type ProjectTargetConfigurator = (
   file: string
@@ -46,9 +53,13 @@ export interface NxPlugin {
 // holding resolved nx plugin objects.
 // Allows loadNxPlugins to be called multiple times w/o
 // executing resolution mulitple times.
-let nxPluginCache: NxPlugin[] = null;
+let nxPluginCache: Map<string, NxPlugin> = new Map();
 
-function loadNxPlugin(moduleName: string, paths: string[], root: string) {
+function getPluginPathAndName(
+  moduleName: string,
+  paths: string[],
+  root: string
+) {
   let pluginPath: string;
   try {
     pluginPath = require.resolve(moduleName, {
@@ -71,20 +82,51 @@ function loadNxPlugin(moduleName: string, paths: string[], root: string) {
     }
   }
   const packageJsonPath = path.join(pluginPath, 'package.json');
+
   const { name } =
     !['.ts', '.js'].some((x) => x === path.extname(pluginPath)) && // Not trying to point to a ts or js file
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
-      : { name: path.basename(pluginPath) }; // use the name of the file we point to
-  const plugin = require(pluginPath) as NxPlugin;
-  plugin.name = name;
+      : { name: moduleName };
+  return { pluginPath, name };
+}
 
+export async function loadNxPluginAsync(
+  moduleName: string,
+  paths: string[],
+  root: string
+) {
+  let pluginModule = nxPluginCache.get(moduleName);
+  if (pluginModule) {
+    return pluginModule;
+  }
+
+  let { pluginPath, name } = getPluginPathAndName(moduleName, paths, root);
+  const plugin = (await import(pluginPath)) as NxPlugin;
+  plugin.name = name;
+  nxPluginCache.set(moduleName, plugin);
   return plugin;
 }
 
-export function loadNxPlugins(
+function loadNxPluginSync(moduleName: string, paths: string[], root: string) {
+  let pluginModule = nxPluginCache.get(moduleName);
+  if (pluginModule) {
+    return pluginModule;
+  }
+
+  let { pluginPath, name } = getPluginPathAndName(moduleName, paths, root);
+  const plugin = require(pluginPath) as NxPlugin;
+  plugin.name = name;
+  nxPluginCache.set(moduleName, plugin);
+  return plugin;
+}
+
+/**
+ * @deprecated Use loadNxPlugins instead.
+ */
+export function loadNxPluginsSync(
   plugins?: string[],
-  paths = [workspaceRoot],
+  paths = getNxRequirePaths(),
   root = workspaceRoot
 ): NxPlugin[] {
   const result: NxPlugin[] = [];
@@ -92,18 +134,47 @@ export function loadNxPlugins(
   // TODO: This should be specified in nx.json
   // Temporarily load js as if it were a plugin which is built into nx
   // In the future, this will be optional and need to be specified in nx.json
-  const jsPlugin = require('../plugins/js');
-  jsPlugin.name = 'index';
+  const jsPlugin: any = require('../plugins/js');
+  jsPlugin.name = 'nx-js-graph-plugin';
   result.push(jsPlugin as NxPlugin);
 
   plugins ??= [];
-  if (!nxPluginCache) {
-    nxPluginCache = plugins.map((moduleName) =>
-      loadNxPlugin(moduleName, paths, root)
-    );
+  for (const plugin of plugins) {
+    try {
+      result.push(loadNxPluginSync(plugin, paths, root));
+    } catch (e) {
+      if (e.code === 'ERR_REQUIRE_ESM') {
+        throw new Error(
+          `Unable to load "${plugin}". Plugins cannot be ESM modules. They must be CommonJS modules. Follow the issue on github: https://github.com/nrwl/nx/issues/15682`
+        );
+      }
+      throw e;
+    }
   }
 
-  return result.concat(nxPluginCache);
+  return result;
+}
+
+export async function loadNxPlugins(
+  plugins?: string[],
+  paths = getNxRequirePaths(),
+  root = workspaceRoot
+): Promise<NxPlugin[]> {
+  const result: NxPlugin[] = [];
+
+  // TODO: This should be specified in nx.json
+  // Temporarily load js as if it were a plugin which is built into nx
+  // In the future, this will be optional and need to be specified in nx.json
+  const jsPlugin: any = await import('../plugins/js');
+  jsPlugin.name = 'nx-js-graph-plugin';
+  result.push(jsPlugin as NxPlugin);
+
+  plugins ??= [];
+  for (const plugin of plugins) {
+    result.push(await loadNxPluginAsync(plugin, paths, root));
+  }
+
+  return result;
 }
 
 export function mergePluginTargetsWithNxTargets(
@@ -132,7 +203,7 @@ export function mergePluginTargetsWithNxTargets(
 
 export function readPluginPackageJson(
   pluginName: string,
-  paths = [workspaceRoot]
+  paths = getNxRequirePaths()
 ): {
   path: string;
   json: PackageJson;
@@ -179,33 +250,59 @@ export function resolveLocalNxPlugin(
 }
 
 let tsNodeAndPathsRegistered = false;
-function registerTSTranspiler() {
+
+/**
+ * Register swc-node or ts-node if they are not currently registered
+ * with some default settings which work well for Nx plugins.
+ */
+export function registerPluginTSTranspiler() {
   if (!tsNodeAndPathsRegistered) {
-    registerTsProject(workspaceRoot, 'tsconfig.base.json');
+    // nx-ignore-next-line
+    const ts: typeof import('typescript') = require('typescript');
+
+    // Get the first tsconfig that matches the allowed set
+    const tsConfigName = [
+      join(workspaceRoot, 'tsconfig.base.json'),
+      join(workspaceRoot, 'tsconfig.json'),
+    ].find((x) => existsSync(x));
+
+    const tsConfig: Partial<ts.ParsedCommandLine> = tsConfigName
+      ? readTsConfig(tsConfigName)
+      : {};
+
+    registerTsConfigPaths(tsConfigName);
+    registerTranspiler({
+      experimentalDecorators: true,
+      emitDecoratorMetadata: true,
+      ...tsConfig.options,
+      lib: ['es2021'],
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2021,
+      inlineSourceMap: true,
+      skipLibCheck: true,
+    });
   }
   tsNodeAndPathsRegistered = true;
 }
 
 function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
-  const workspace = new Workspaces(root).readProjectsConfigurations({
-    _ignorePluginInference: true,
-  });
-  const plugin = findNxProjectForImportPath(importPath, workspace, root);
+  const projects = retrieveProjectConfigurationsWithoutPluginInference(root);
+  const plugin = findNxProjectForImportPath(importPath, projects, root);
   if (!plugin) {
     return null;
   }
 
   if (!tsNodeAndPathsRegistered) {
-    registerTSTranspiler();
+    registerPluginTSTranspiler();
   }
 
-  const projectConfig = workspace.projects[plugin];
+  const projectConfig: ProjectConfiguration = projects[plugin];
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
 
 function findNxProjectForImportPath(
   importPath: string,
-  projects: ProjectsConfigurations,
+  projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
 ): string | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
@@ -214,7 +311,7 @@ function findNxProjectForImportPath(
   );
   if (possiblePaths?.length) {
     const projectRootMappings =
-      createProjectRootMappingsFromProjectConfigurations(projects.projects);
+      createProjectRootMappingsFromProjectConfigurations(projects);
     for (const tsConfigPath of possiblePaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
@@ -254,9 +351,14 @@ function readPluginMainFromProjectConfiguration(
 ): string | null {
   const { main } =
     Object.values(plugin.targets).find((x) =>
-      ['@nrwl/js:tsc', '@nrwl/js:swc', '@nrwl/node:package'].includes(
-        x.executor
-      )
+      [
+        '@nx/js:tsc',
+        '@nrwl/js:tsc',
+        '@nx/js:swc',
+        '@nrwl/js:swc',
+        '@nx/node:package',
+        '@nrwl/node:package',
+      ].includes(x.executor)
     )?.options ||
     plugin.targets?.build?.options ||
     {};

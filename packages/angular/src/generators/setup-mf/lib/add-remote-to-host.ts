@@ -5,13 +5,14 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from '../schema';
-import { tsquery } from '@phenomnomnominal/tsquery';
-import * as ts from 'typescript';
 import { ArrayLiteralExpression } from 'typescript';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { insertImport } from '@nx/js';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 export function checkIsCommaNeeded(mfRemoteText: string) {
   const remoteText = mfRemoteText.replace(/\s+/g, '');
@@ -82,6 +83,7 @@ function addRemoteToStaticHost(
   }
 
   const hostMFConfig = tree.read(hostMFConfigPath, 'utf-8');
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const webpackAst = tsquery.ast(hostMFConfig);
   const mfRemotesNode = tsquery(
     webpackAst,
@@ -118,6 +120,9 @@ function addLazyLoadedRouteToHostAppModule(
   options: Schema,
   hostFederationType: 'dynamic' | 'static'
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const hostAppConfig = readProjectConfiguration(tree, options.host);
 
   const pathToHostRootRouting = `${hostAppConfig.sourceRoot}/app/app.routes.ts`;
@@ -128,10 +133,10 @@ function addLazyLoadedRouteToHostAppModule(
 
   const hostRootRoutingFile = tree.read(pathToHostRootRouting, 'utf-8');
 
-  let sourceFile = ts.createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     pathToHostRootRouting,
     hostRootRoutingFile,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
@@ -141,7 +146,7 @@ function addLazyLoadedRouteToHostAppModule(
       sourceFile,
       pathToHostRootRouting,
       'loadRemoteModule',
-      '@nrwl/angular/mf'
+      '@nx/angular/mf'
     );
   }
 

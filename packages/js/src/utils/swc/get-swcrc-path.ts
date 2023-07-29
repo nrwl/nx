@@ -8,5 +8,5 @@ export function getSwcrcPath(
 ) {
   return options.swcrc
     ? join(contextRoot, options.swcrc)
-    : join(contextRoot, projectRoot, '.lib.swcrc');
+    : join(contextRoot, projectRoot, '.swcrc');
 }

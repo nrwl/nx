@@ -1,0 +1,21 @@
+import { <% if(changeDetection !== 'Default') { %>ChangeDetectionStrategy, <% }%>Component<% if(!!viewEncapsulation) { %>, ViewEncapsulation<% }%> } from '@angular/core';<% if(standalone) {%>
+import { CommonModule } from '@angular/common';<% } %>
+
+@Component({<% if(!skipSelector) {%>
+  selector: '<%= selector %>',<%}%><% if(standalone) {%>
+  standalone: true,
+  imports: [CommonModule],<%}%><% if(inlineTemplate) { %>
+  template: `<p><%= fileName %> works!</p>`<% } else { %>
+  templateUrl: './<%= fileName %><%= type ? '.' + type : '' %>.html'<% } if(inlineStyle) { %>,
+  styles: [<% if(displayBlock){ %>
+    `
+      :host {
+        display: block;
+      }
+    `<% } %>
+  ]<% } else if (style !== 'none') { %>,
+  styleUrls: ['./<%= fileName %><%= type ? '.' + type : '' %>.<%= style %>']<% } %><% if(!!viewEncapsulation) { %>,
+  encapsulation: ViewEncapsulation.<%= viewEncapsulation %><% } if (changeDetection !== 'Default') { %>,
+  changeDetection: ChangeDetectionStrategy.<%= changeDetection %><% } %>
+})
+export class <%= className %><%= typeClassName %> {}

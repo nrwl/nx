@@ -60,8 +60,7 @@ This mechanism is very flexible. Let's look at this example:
 }
 ```
 
-> Note, older versions of Nx used targetDependencies instead of targetDefaults. Both still work, but targetDefaults is
-> recommended.
+> Note, older versions of Nx used targetDependencies instead of targetDefaults. `targetDependencies` was removed in version 16, with `targetDefaults` replacing its use case.
 
 When running `nx test myproj`, the above configuration would tell Nx to
 
@@ -79,9 +78,9 @@ Situations like this are pretty common:
 ![task-graph-execution](/shared/mental-model/task-graph-execution.svg)
 
 Because we described the rules in `nx.json`, they will apply to all the projects in the repo. You can also define
-project-specific rules by adding them to the project's configuration.
+project-specific rules by adding them to the project's configuration ([learn more](/reference/project-configuration#dependson).
 
-```jsonc {% fileName="nx.json"%}
+```jsonc {% fileName="package.json"%}
 {
   ...
   "nx": {

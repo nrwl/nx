@@ -1,11 +1,20 @@
 import * as fs from 'fs';
-import * as ts from 'typescript';
 import { readTsPathMappings } from './typescript';
+
+let readConfigFileResult: any;
+let parseJsonConfigFileContentResult: any;
+jest.mock('typescript', () => ({
+  ...jest.requireActual('typescript'),
+  readConfigFile: jest.fn().mockImplementation(() => readConfigFileResult),
+  parseJsonConfigFileContent: jest
+    .fn()
+    .mockImplementation(() => parseJsonConfigFileContentResult),
+}));
 
 describe('readTsPathMappings', () => {
   it('should normalize paths', () => {
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-    jest.spyOn(ts, 'readConfigFile').mockReturnValue({
+    readConfigFileResult = {
       config: {
         options: {
           paths: {
@@ -14,9 +23,8 @@ describe('readTsPathMappings', () => {
           },
         },
       },
-    } as any);
-
-    jest.spyOn(ts, 'parseJsonConfigFileContent').mockReturnValue({
+    };
+    parseJsonConfigFileContentResult = {
       options: {
         paths: {
           '@myorg/lib1': ['./libs/lib1/src/index.ts'],
@@ -25,7 +33,7 @@ describe('readTsPathMappings', () => {
       },
       fileNames: [],
       errors: [],
-    });
+    };
 
     const paths = readTsPathMappings('/path/to/tsconfig.json');
 

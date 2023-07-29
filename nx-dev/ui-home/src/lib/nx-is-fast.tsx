@@ -7,7 +7,7 @@ import {
   ServerStackIcon,
 } from '@heroicons/react/24/outline';
 import { CogIcon } from '@heroicons/react/24/solid';
-import { SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   animate,
   motion,

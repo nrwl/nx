@@ -1,5 +1,5 @@
-import { Tree } from '@nrwl/devkit';
-import { createTree } from '@nrwl/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { createTree } from '@nx/devkit/testing';
 import { insertImport } from './insert-import';
 
 describe('insertImport', () => {

@@ -5,7 +5,7 @@ import {
   logger,
   readJson,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export async function update(host: Tree) {
   const projects = getProjects(host);

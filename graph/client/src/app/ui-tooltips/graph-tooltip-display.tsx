@@ -5,7 +5,7 @@ import {
   ProjectNodeToolTip,
   TaskNodeTooltip,
   Tooltip,
-} from '@nrwl/graph/ui-tooltips';
+} from '@nx/graph/ui-tooltips';
 import { ProjectNodeActions } from './project-node-actions';
 
 const tooltipService = getTooltipService();

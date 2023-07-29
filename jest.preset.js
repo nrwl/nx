@@ -1,7 +1,4 @@
-const nxPreset = require('@nrwl/jest/preset').default;
-
-process.env.npm_config_registry = `http://localhost:4872`;
-process.env.YARN_REGISTRY = `http://localhost:4872`;
+const nxPreset = require('@nx/jest/preset').default;
 
 module.exports = {
   ...nxPreset,
@@ -11,6 +8,8 @@ module.exports = {
     '^.+\\.(ts|js|html)$': 'ts-jest',
   },
   resolver: '../../scripts/patched-jest-resolver.js',
+  // Fixes https://github.com/jestjs/jest/issues/11956
+  runtime: '@side/jest-runtime',
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
   maxWorkers: 1,

@@ -8,24 +8,10 @@
   "presets": [
     {
       "name": "Default minimum setup",
-      "keys": ["uiFramework", "outputDir", "configDir"]
+      "keys": ["outputDir", "configDir"]
     }
   ],
   "properties": {
-    "uiFramework": {
-      "type": "string",
-      "description": "Storybook framework npm package.",
-      "enum": [
-        "@storybook/react",
-        "@storybook/html",
-        "@storybook/web-components",
-        "@storybook/vue",
-        "@storybook/vue3",
-        "@storybook/svelte"
-      ],
-      "default": "@storybook/react",
-      "x-priority": "important"
-    },
     "outputDir": {
       "type": "string",
       "description": "Directory where to store built files.",
@@ -82,6 +68,32 @@
     "docs": {
       "type": "boolean",
       "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation."
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package.",
+      "enum": [
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
+      "x-deprecated": "Upgrade to Storybook 7."
+    },
+    "webpackStatsJson": {
+      "type": ["boolean", "string"],
+      "description": "Write Webpack Stats JSON to disk.",
+      "default": false
+    },
+    "debugWebpack": {
+      "type": "boolean",
+      "description": "Display final webpack configurations for debugging purposes."
+    },
+    "disableTelemetry": {
+      "type": "boolean",
+      "description": "Disables Storybook's telemetry."
     }
   },
   "definitions": {
@@ -117,6 +129,6 @@
     }
   },
   "additionalProperties": true,
-  "required": ["uiFramework", "configDir"],
+  "required": ["configDir"],
   "examplesFile": "../../../docs/build-storybook-executor-examples.md"
 }

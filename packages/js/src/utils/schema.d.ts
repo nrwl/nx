@@ -1,20 +1,16 @@
 // nx-ignore-next-line
-const { Linter } = require('@nrwl/linter');
-import type {
-  AssetGlob,
-  FileInputOutput,
-} from '@nrwl/workspace/src/utilities/assets';
+const { Linter } = require('@nx/linter'); // use require to import to avoid circular dependency
+import type { AssetGlob, FileInputOutput } from './assets/assets';
 import { TransformerEntry } from './typescript/types';
 
 export type Compiler = 'tsc' | 'swc';
-export type Bundler = 'none' | 'rollup' | 'esbuild' | 'vite' | 'webpack';
+export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
 
 export interface LibraryGeneratorSchema {
   name: string;
   directory?: string;
   skipFormat?: boolean;
   tags?: string;
-  simpleModuleName?: boolean;
   skipTsConfig?: boolean;
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
@@ -31,6 +27,9 @@ export interface LibraryGeneratorSchema {
   compiler?: Compiler;
   bundler?: Bundler;
   skipTypeCheck?: boolean;
+  minimal?: boolean;
+  rootProject?: boolean;
+  simpleName?: boolean;
 }
 
 export interface ExecutorOptions {
@@ -43,7 +42,17 @@ export interface ExecutorOptions {
   watch: boolean;
   clean?: boolean;
   transformers: TransformerEntry[];
+  /**
+   * @deprecated Configure the project to use the `@nx/dependency-checks` ESLint
+   * rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).
+   * It will be removed in v17.
+   */
   updateBuildableProjectDepsInPackageJson?: boolean;
+  /**
+   * @deprecated Configure the project to use the `@nx/dependency-checks` ESLint
+   * rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).
+   * It will be removed in v17.
+   */
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   external?: 'all' | 'none' | string[];
   externalBuildTargets?: string[];
@@ -51,11 +60,12 @@ export interface ExecutorOptions {
 }
 
 export interface NormalizedExecutorOptions extends ExecutorOptions {
-  root?: string;
-  sourceRoot?: string;
+  rootDir: string;
   projectRoot: string;
   mainOutputPath: string;
   files: Array<FileInputOutput>;
+  root?: string;
+  sourceRoot?: string;
 }
 
 export interface SwcExecutorOptions extends ExecutorOptions {

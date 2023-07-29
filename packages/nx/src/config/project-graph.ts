@@ -11,9 +11,15 @@ import { NxJsonConfiguration } from './nx-json';
 export interface FileData {
   file: string;
   hash: string;
-  /** @deprecated this field will be removed in v13. Use {@link path.extname} to parse extension */
-  ext?: string;
-  deps?: string[];
+  deps?: (string | [string, string])[];
+}
+
+export function fileDataDepTarget(dep: string | [string, string]) {
+  return typeof dep === 'string' ? dep : dep[0];
+}
+
+export function fileDataDepType(dep: string | [string, string]) {
+  return typeof dep === 'string' ? 'static' : dep[1];
 }
 
 /**
@@ -30,16 +36,6 @@ export interface ProjectGraph {
   nodes: Record<string, ProjectGraphProjectNode>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
-  // this is optional otherwise it might break folks who use project graph creation
-  allWorkspaceFiles?: FileData[];
-  version?: string;
-}
-
-export interface ProjectGraphV4<T = any> {
-  nodes: Record<string, ProjectGraphNode>;
-  dependencies: Record<string, ProjectGraphDependency[]>;
-  // this is optional otherwise it might break folks who use project graph creation
-  allWorkspaceFiles?: FileData[];
   version?: string;
 }
 
@@ -61,9 +57,7 @@ export enum DependencyType {
   implicit = 'implicit',
 }
 
-/**
- * A node describing a project or an external node in a workspace
- */
+/** @deprecated this type will be removed in v16. Use {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} instead */
 export type ProjectGraphNode =
   | ProjectGraphProjectNode
   | ProjectGraphExternalNode;
@@ -78,11 +72,6 @@ export interface ProjectGraphProjectNode {
    * Additional metadata about a project
    */
   data: ProjectConfiguration & {
-    /**
-     * Files associated to the project
-     */
-    files: FileData[];
-
     description?: string;
   };
 }
@@ -128,7 +117,7 @@ export interface ProjectGraphDependency {
 export interface ProjectGraphProcessorContext {
   /**
    * Workspace information such as projects and configuration
-   * @deprecated use projectsConfigurations or nxJsonConfiguration
+   * @deprecated use {@link projectsConfigurations} or {@link nxJsonConfiguration} instead
    */
   workspace: Workspace;
 

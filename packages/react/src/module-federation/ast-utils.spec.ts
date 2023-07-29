@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { applyChangesToString, stripIndents } from '@nrwl/devkit';
+import { applyChangesToString, stripIndents } from '@nx/devkit';
 import {
   addRemoteRoute,
   addRemoteDefinition,

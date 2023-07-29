@@ -3,8 +3,9 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+} from '@nx/devkit';
+
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
 export async function changeNpmScriptExecutor(tree: Tree) {
   forEachExecutorOptions(

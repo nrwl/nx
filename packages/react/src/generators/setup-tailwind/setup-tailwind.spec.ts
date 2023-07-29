@@ -4,8 +4,8 @@ import {
   readProjectConfiguration,
   stripIndents,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './setup-tailwind';
 
 describe('setup-tailwind', () => {
@@ -32,7 +32,7 @@ describe('setup-tailwind', () => {
       project: 'example',
     });
 
-    expect(tree.read(`apps/example/${stylesPath}`).toString()).toEqual(
+    expect(tree.read(`apps/example/${stylesPath}`).toString()).toContain(
       stripIndents`
         @tailwind base;
         @tailwind components;
@@ -49,7 +49,7 @@ describe('setup-tailwind', () => {
       sourceRoot: 'apps/example/src',
       targets: {
         build: {
-          executor: '@nrwl/webpack:webpack',
+          executor: '@nx/webpack:webpack',
           options: {},
         },
       },

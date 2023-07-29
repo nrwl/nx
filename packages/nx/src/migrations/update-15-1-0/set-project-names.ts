@@ -1,13 +1,13 @@
 import { Tree } from '../../generators/tree';
 import { readNxJson } from '../../generators/utils/nx-json';
-import { globForProjectFiles } from '../../config/workspaces';
 import { dirname } from 'path';
 import { readJson, writeJson } from '../../generators/utils/json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
+import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
-  const projectFiles = globForProjectFiles(tree.root, nxJson);
+  const projectFiles = retrieveProjectConfigurationPaths(tree.root, nxJson);
   const projectJsons = projectFiles.filter((f) => f.endsWith('project.json'));
 
   for (let f of projectJsons) {

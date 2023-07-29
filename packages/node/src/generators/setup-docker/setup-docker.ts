@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   convertNxGenerator,
   formatFiles,
   generateFiles,
@@ -8,10 +7,11 @@ import {
   logger,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
+
 import { SetUpDockerOptions } from './schema';
 
 function normalizeOptions(
@@ -53,15 +53,10 @@ export function updateProjectConfig(tree: Tree, options: SetUpDockerOptions) {
 
   projectConfig.targets[`${options.targetName}`] = {
     dependsOn: [`${options.buildTarget}`],
-    executor: 'nx:run-commands',
-    options: {
-      commands: [
-        `docker build -f ${joinPathFragments(
-          projectConfig.root,
-          'Dockerfile'
-        )} . -t ${options.project}`,
-      ],
-    },
+    command: `docker build -f ${joinPathFragments(
+      projectConfig.root,
+      'Dockerfile'
+    )} . -t ${options.project}`,
   };
 
   updateProjectConfiguration(tree, options.project, projectConfig);

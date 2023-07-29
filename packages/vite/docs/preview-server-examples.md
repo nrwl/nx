@@ -1,3 +1,8 @@
+---
+title: Examples for the Vite preview server executor
+description: This page contains examples for the Vite @nx/vite:preview-server executor.
+---
+
 `project.json`:
 
 ```json
@@ -6,7 +11,7 @@
     "targets": {
         //...
         "preview": {
-            "executor": "@nrwl/vite:preview-server",
+            "executor": "@nx/vite:preview-server",
             "defaultConfiguration": "development",
             "options": {
                 "buildTarget": "my-app:build",
@@ -36,7 +41,7 @@ You can always set the port in your `vite.config.ts` file. However, you can also
     "targets": {
         //...
         "preview": {
-            "executor": "@nrwl/vite:preview-server",
+            "executor": "@nx/vite:preview-server",
             "defaultConfiguration": "development",
             "options": {
                 "buildTarget": "my-app:build",
@@ -61,7 +66,7 @@ You can specify a proxy config by pointing to the path of your proxy configurati
     "targets": {
         //...
         "preview": {
-            "executor": "@nrwl/vite:preview-server",
+            "executor": "@nx/vite:preview-server",
             "defaultConfiguration": "development",
             "options": {
                 "buildTarget": "my-app:build",

@@ -3,12 +3,14 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '../../../utils/lint';
-import { libraryGenerator } from '../../library/library';
 import { NormalizedSchema } from '../schema';
 import { updateEslintrcJson } from './update-eslintrc-json';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nx/js');
 
 describe('updateEslint', () => {
   let tree: Tree;
@@ -98,7 +100,7 @@ describe('updateEslint', () => {
     });
     updateJson(tree, 'libs/my-lib/.eslintrc.json', (eslintRcJson) => {
       eslintRcJson.extends = [
-        'plugin:@nrwl/nx/react',
+        'plugin:@nx/react',
         '../../.eslintrc.json',
         './customrc.json',
       ];
@@ -118,7 +120,7 @@ describe('updateEslint', () => {
     ).toEqual(
       expect.objectContaining({
         extends: [
-          'plugin:@nrwl/nx/react',
+          'plugin:@nx/react',
           '../../../.eslintrc.json',
           './customrc.json',
         ],
@@ -197,5 +199,34 @@ describe('updateEslint', () => {
         ]),
       })
     );
+  });
+
+  it('should update .eslintrc.json parserOptions.project as a string', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      linter: Linter.EsLint,
+      setParserOptionsProject: true,
+    });
+
+    // Add another parser project to eslint.json
+    const storybookProject = '.storybook/tsconfig.json';
+    updateJson(tree, '/libs/my-lib/.eslintrc.json', (eslintRcJson) => {
+      eslintRcJson.overrides[0].parserOptions.project = `libs/my-lib/${storybookProject}`;
+      return eslintRcJson;
+    });
+
+    // This step is usually handled elsewhere
+    tree.rename(
+      'libs/my-lib/.eslintrc.json',
+      'libs/shared/my-destination/.eslintrc.json'
+    );
+    const projectConfig = readProjectConfiguration(tree, 'my-lib');
+
+    updateEslintrcJson(tree, schema, projectConfig);
+
+    expect(
+      readJson(tree, '/libs/shared/my-destination/.eslintrc.json').overrides[0]
+        .parserOptions
+    ).toEqual({ project: `libs/shared/my-destination/${storybookProject}` });
   });
 });

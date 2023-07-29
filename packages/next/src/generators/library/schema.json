@@ -38,10 +38,6 @@
             "label": "SASS(.scss)       [ http://sass-lang.com          ]"
           },
           {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
-          },
-          {
             "value": "less",
             "label": "LESS              [ http://lesscss.org            ]"
           },
@@ -60,6 +56,10 @@
           {
             "value": "none",
             "label": "None"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com        ] (DEPRECATED)"
           }
         ]
       }
@@ -72,9 +72,8 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "none"],
-      "description": "Test runner to use for unit tests.",
-      "default": "jest"
+      "enum": ["jest", "vitest", "none"],
+      "description": "Test runner to use for unit tests."
     },
     "tags": {
       "type": "string",
@@ -144,11 +143,11 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
+    "skipPackageJson": {
       "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
     }
   },
   "required": ["name"],

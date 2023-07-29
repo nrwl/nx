@@ -10,7 +10,7 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nrwl/angular:remote appName --host=host --port=4201",
+        "command": "nx g @nx/angular:remote appName --host=host --port=4201",
         "description": "Create an Angular app with configuration in place for Module Federation. If host is provided, attach this remote app to host app's configuration."
       }
     ],
@@ -18,7 +18,8 @@
       "name": {
         "type": "string",
         "description": "The name to give to the remote Angular app.",
-        "$default": { "$source": "argv", "index": 0 }
+        "$default": { "$source": "argv", "index": 0 },
+        "pattern": "^[a-zA-Z].*$"
       },
       "host": {
         "type": "string",
@@ -96,13 +97,13 @@
       },
       "unitTestRunner": {
         "type": "string",
-        "enum": ["karma", "jest", "none"],
+        "enum": ["jest", "none"],
         "description": "Test runner to use for unit tests.",
         "default": "jest"
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["protractor", "cypress", "none"],
+        "enum": ["cypress", "none"],
         "description": "Test runner to use for end to end (E2E) tests.",
         "default": "cypress"
       },

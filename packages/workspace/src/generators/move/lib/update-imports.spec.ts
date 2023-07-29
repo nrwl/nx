@@ -1,9 +1,16 @@
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '../../library/library';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
 import { updateImports } from './update-imports';
 import { normalizeSchema } from './normalize-schema';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nx/js');
 
 describe('updateImports', () => {
   let tree: Tree;
@@ -25,6 +32,7 @@ describe('updateImports', () => {
     // source and destination to make sure that the workspace has libraries with those names.
     await libraryGenerator(tree, {
       name: 'my-destination',
+      config: 'project',
     });
     await libraryGenerator(tree, {
       name: 'my-source',
@@ -247,7 +255,7 @@ describe('updateImports', () => {
     tree.write(
       importerFilePath,
       `import { MyClass } from '@proj/my-source';
-  
+
 export MyExtendedClass extends MyClass {};`
     );
     schema.updateImportPath = false;
@@ -286,6 +294,37 @@ export MyExtendedClass extends MyClass {};`
     const tsConfig = readJson(tree, '/tsconfig.base.json');
     expect(tsConfig.compilerOptions.paths).toEqual({
       '@proj/my-destination': ['libs/my-destination/src/index.ts'],
+    });
+  });
+
+  it('should update project ref in the root tsconfig.base.json for secondary entry points', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-source',
+    });
+    updateJson(tree, '/tsconfig.base.json', (json) => {
+      json.compilerOptions.paths['@proj/my-source/testing'] = [
+        'libs/my-source/testing/src/index.ts',
+      ];
+      json.compilerOptions.paths['@proj/different-alias'] = [
+        'libs/my-source/some-path/src/index.ts',
+      ];
+      return json;
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(
+      tree,
+      normalizeSchema(tree, schema, projectConfig),
+      projectConfig
+    );
+
+    const tsConfig = readJson(tree, '/tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths).toEqual({
+      '@proj/my-destination': ['libs/my-destination/src/index.ts'],
+      '@proj/my-destination/testing': [
+        'libs/my-destination/testing/src/index.ts',
+      ],
+      '@proj/different-alias': ['libs/my-destination/some-path/src/index.ts'],
     });
   });
 

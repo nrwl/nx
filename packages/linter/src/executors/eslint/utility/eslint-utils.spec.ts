@@ -1,16 +1,9 @@
-// Force module scoping
-export default {};
-
 jest.mock('eslint', () => ({
   ESLint: jest.fn(),
 }));
 
-const { ESLint } = require('eslint');
-(<jest.SpyInstance>ESLint).mockImplementation(() => ({
-  lintFiles: (args: string[]) => args,
-}));
-
-const { lint } = require('./eslint-utils');
+import { ESLint } from 'eslint';
+import { resolveAndInstantiateESLint } from './eslint-utils';
 
 describe('eslint-utils', () => {
   beforeEach(() => {
@@ -18,7 +11,7 @@ describe('eslint-utils', () => {
   });
 
   it('should create the ESLint instance with the proper parameters', async () => {
-    await lint('./.eslintrc.json', <any>{
+    await resolveAndInstantiateESLint('./.eslintrc.json', <any>{
       fix: true,
       cache: true,
       cacheLocation: '/root/cache',
@@ -40,7 +33,7 @@ describe('eslint-utils', () => {
   });
 
   it('should create the ESLint instance with the proper parameters', async () => {
-    await lint(undefined, <any>{
+    await resolveAndInstantiateESLint(undefined, <any>{
       fix: true,
       cache: true,
       cacheLocation: '/root/cache',
@@ -63,7 +56,7 @@ describe('eslint-utils', () => {
 
   describe('noEslintrc', () => {
     it('should create the ESLint instance with "useEslintrc" set to false', async () => {
-      await lint(undefined, <any>{
+      await resolveAndInstantiateESLint(undefined, <any>{
         fix: true,
         cache: true,
         cacheLocation: '/root/cache',
@@ -88,13 +81,13 @@ describe('eslint-utils', () => {
   describe('rulesdir', () => {
     it('should create the ESLint instance with "rulePaths" set to the given value for rulesdir', async () => {
       const extraRuleDirectories = ['./some-rules', '../some-more-rules'];
-      await lint(undefined, {
+      await resolveAndInstantiateESLint(undefined, {
         fix: true,
         cache: true,
         cacheLocation: '/root/cache',
         cacheStrategy: 'content',
         rulesdir: extraRuleDirectories,
-      }).catch(() => {});
+      } as any).catch(() => {});
 
       expect(ESLint).toHaveBeenCalledWith({
         overrideConfigFile: undefined,
@@ -113,13 +106,13 @@ describe('eslint-utils', () => {
 
   describe('resolvePluginsRelativeTo', () => {
     it('should create the ESLint instance with "resolvePluginsRelativeTo" set to the given value for resolvePluginsRelativeTo', async () => {
-      await lint(undefined, {
+      await resolveAndInstantiateESLint(undefined, {
         fix: true,
         cache: true,
         cacheLocation: '/root/cache',
         cacheStrategy: 'content',
         resolvePluginsRelativeTo: './some-path',
-      }).catch(() => {});
+      } as any).catch(() => {});
 
       expect(ESLint).toHaveBeenCalledWith({
         overrideConfigFile: undefined,
@@ -138,9 +131,9 @@ describe('eslint-utils', () => {
 
   describe('reportUnusedDisableDirectives', () => {
     it('should create the ESLint instance with "reportUnusedDisableDirectives" set to the given value for reportUnusedDisableDirectives', async () => {
-      await lint(undefined, {
+      await resolveAndInstantiateESLint(undefined, {
         reportUnusedDisableDirectives: 'error',
-      }).catch(() => {});
+      } as any).catch(() => {});
 
       expect(ESLint).toHaveBeenCalledWith({
         cache: false,
@@ -158,12 +151,60 @@ describe('eslint-utils', () => {
     });
 
     it('should create a ESLint instance with no "reportUnusedDisableDirectives" if it is undefined', async () => {
-      await lint(undefined, {});
+      await resolveAndInstantiateESLint(undefined, {} as any);
 
       expect(ESLint).toHaveBeenCalledWith(
         expect.objectContaining({
           reportUnusedDisableDirectives: undefined,
         })
+      );
+    });
+  });
+
+  describe('ESLint Flat Config', () => {
+    it('should throw if a non eslint.config.js file is used with ESLint Flat Config', async () => {
+      await expect(
+        resolveAndInstantiateESLint('./.eslintrc.json', {} as any, true)
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"When using the new Flat Config with ESLint, all configs must be named eslint.config.js and .eslintrc files may not be used. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+      );
+    });
+
+    it('should throw if invalid options are used with ESLint Flat Config', async () => {
+      await expect(
+        resolveAndInstantiateESLint(
+          undefined,
+          {
+            useEslintrc: false,
+          } as any,
+          true
+        )
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"For Flat Config, the \`useEslintrc\` option is not applicable. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+      );
+
+      await expect(
+        resolveAndInstantiateESLint(
+          undefined,
+          {
+            resolvePluginsRelativeTo: './some-path',
+          } as any,
+          true
+        )
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"For Flat Config, ESLint removed \`resolvePluginsRelativeTo\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
+      );
+
+      await expect(
+        resolveAndInstantiateESLint(
+          undefined,
+          {
+            ignorePath: './some-path',
+          } as any,
+          true
+        )
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"For Flat Config, ESLint removed \`ignorePath\` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new"`
       );
     });
   });

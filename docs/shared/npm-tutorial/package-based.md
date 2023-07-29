@@ -195,7 +195,7 @@ Note that the cache for the `build` script was already populated when we ran it 
 
 To run the `build` target for all the packages in the workspace, use:
 
-```{% command="npx nx run-many --target=build" %}
+```{% command="npx nx run-many -t build" %}
     ✔  nx run is-even:build  [existing outputs match the cache, left as is]
     ✔  nx run is-odd:build  [existing outputs match the cache, left as is]
 
@@ -208,7 +208,7 @@ To run the `build` target for all the packages in the workspace, use:
 
 Notice that both builds are replayed from cache. We can skip the cache by adding the `--skip-nx-cache` option:
 
-```{% command="npx nx run-many --target=build --skip-nx-cache" %}
+```{% command="npx nx run-many -t build --skip-nx-cache" %}
     ✔  nx run is-even:build (1s)
     ✔  nx run is-odd:build (1s)
 
@@ -221,7 +221,7 @@ Notice that using this method, the `is-even` build ran before the `is-odd` build
 
 You can also only run tasks on packages that got changed by using the command:
 
-```{% command="npx nx affected --target=build" %}
+```{% command="npx nx affected -t build" %}
 
  >  NX   Affected criteria defaulted to --base=main --head=HEAD
 

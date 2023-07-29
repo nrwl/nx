@@ -1,5 +1,5 @@
-import { readJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateNgccTarget from './update-ngcc-target';
 
 describe('update-ngcc-postinstall-target migration', () => {

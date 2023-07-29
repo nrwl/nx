@@ -1,5 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { addProjectConfiguration, readJson, Tree } from '@nx/devkit';
 import { useReactJsxInTsconfig } from './use-react-jsx-in-tsconfig';
 
 describe('Update tsconfig for React apps', () => {

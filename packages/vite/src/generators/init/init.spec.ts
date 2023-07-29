@@ -4,13 +4,13 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
 import { initGenerator } from './init';
 
-describe('@nrwl/vite:init', () => {
+describe('@nx/vite:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -23,12 +23,45 @@ describe('@nrwl/vite:init', () => {
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+        { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
         uiFramework: 'react',
       });
+      const packageJson = readJson(tree, 'package.json');
+
+      expect(packageJson).toMatchSnapshot();
+    });
+
+    it('should support --testEnvironment=jsdom', async () => {
+      await initGenerator(tree, {
+        testEnvironment: 'jsdom',
+        uiFramework: 'none',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+
+      expect(packageJson).toMatchSnapshot();
+    });
+
+    it('should support --testEnvironment=happy-dom', async () => {
+      await initGenerator(tree, {
+        testEnvironment: 'happy-dom',
+        uiFramework: 'none',
+      });
+
+      const packageJson = readJson(tree, 'package.json');
+
+      expect(packageJson).toMatchSnapshot();
+    });
+
+    it('should support --testEnvironment=edge-runtime', async () => {
+      await initGenerator(tree, {
+        testEnvironment: 'edge-runtime',
+        uiFramework: 'none',
+      });
+
       const packageJson = readJson(tree, 'package.json');
 
       expect(packageJson).toMatchSnapshot();
@@ -43,7 +76,7 @@ describe('@nrwl/vite:init', () => {
         return json;
       });
 
-      initGenerator(tree, { uiFramework: 'react' });
+      await initGenerator(tree, { uiFramework: 'react' });
 
       const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
         .production;

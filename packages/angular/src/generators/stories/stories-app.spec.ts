@@ -1,14 +1,17 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import type { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { applicationGenerator } from '../application/application';
-import { scamGenerator } from '../scam/scam';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
+import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from '../component/component';
+import { scamGenerator } from '../scam/scam';
+import { generateTestApplication } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
+jest.mock('@nx/cypress/src/utils/cypress-version');
+
+// TODO(v18): remove Cypress
+
 describe('angularStories generator: applications', () => {
   let tree: Tree;
   const appName = 'test-app';
@@ -19,23 +22,23 @@ describe('angularStories generator: applications', () => {
   beforeEach(async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: appName,
     });
   });
 
-  it('should generate stories file', () => {
-    angularStoriesGenerator(tree, { name: appName });
+  it('should generate stories file with interaction tests', async () => {
+    await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.exists(`apps/${appName}/src/app/app.component.stories.ts`)
-    ).toBeTruthy();
+      tree.read(`apps/${appName}/src/app/app.component.stories.ts`, 'utf-8')
+    ).toMatchSnapshot();
   });
 
   it('should generate stories file for scam component', async () => {
     await scamGenerator(tree, { name: 'my-scam', project: appName });
 
-    angularStoriesGenerator(tree, { name: appName });
+    await angularStoriesGenerator(tree, { name: appName });
 
     expect(
       tree.exists(
@@ -47,7 +50,7 @@ describe('angularStories generator: applications', () => {
   it('should ignore paths', async () => {
     await scamGenerator(tree, { name: 'my-scam', project: appName });
 
-    angularStoriesGenerator(tree, {
+    await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [`apps/${appName}/src/app/my-scam/**`],
     });
@@ -62,7 +65,7 @@ describe('angularStories generator: applications', () => {
   it('should ignore paths when full path to component is provided', async () => {
     await scamGenerator(tree, { name: 'my-scam', project: appName });
 
-    angularStoriesGenerator(tree, {
+    await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [`apps/${appName}/src/app/my-scam/my-scam.component.ts`],
     });
@@ -81,7 +84,7 @@ describe('angularStories generator: applications', () => {
       project: appName,
     });
 
-    angularStoriesGenerator(tree, {
+    await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [
         `apps/${appName}/src/app/component-a/component-a.component.ts`,
@@ -89,10 +92,11 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree.exists(
-        `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`
+      tree.read(
+        `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`,
+        'utf-8'
       )
-    ).toBeTruthy();
+    ).toMatchSnapshot();
     expect(
       tree.exists(
         `apps/${appName}/src/app/component-a/component-a.component.stories.ts`
@@ -107,23 +111,13 @@ describe('angularStories generator: applications', () => {
       inlineScam: true,
     });
 
-    angularStoriesGenerator(tree, { name: appName });
+    await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.exists(
-        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
+      tree.read(
+        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`,
+        'utf-8'
       )
-    ).toBeTruthy();
-  });
-
-  it('should generate cypress spec file', () => {
-    angularStoriesGenerator(tree, {
-      name: appName,
-      generateCypressSpecs: true,
-    });
-
-    expect(
-      tree.exists(`apps/${appName}-e2e/src/e2e/app.component.cy.ts`)
-    ).toBeTruthy();
+    ).toMatchSnapshot();
   });
 });

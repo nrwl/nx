@@ -3,9 +3,9 @@ import {
   getProjects,
   readJson,
   readProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { reactNativeApplicationGenerator } from './application';
 
 describe('app', () => {
@@ -60,6 +60,33 @@ describe('app', () => {
     expect(tsconfig.extends).toEqual('../../tsconfig.base.json');
 
     expect(appTree.exists('apps/my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.read('apps/my-app/jest.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "module.exports = {
+        displayName: 'my-app',
+        preset: 'react-native',
+        resolver: '@nx/jest/plugins/resolver',
+        moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
+        setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+        moduleNameMapper: {
+          '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock',
+        },
+        coverageDirectory: '../../coverage/apps/my-app',
+      };
+      "
+    `);
+  });
+
+  it('should generate targets', async () => {
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'myApp',
+      displayName: 'myApp',
+      linter: Linter.EsLint,
+      e2eTestRunner: 'none',
+      install: false,
+    });
+    const targets = readProjectConfiguration(appTree, 'my-app').targets;
+    expect(targets.test).toBeDefined();
   });
 
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -184,7 +211,7 @@ describe('app', () => {
 
   describe('--skipPackageJson', () => {
     it('should not add or update dependencies when true', async () => {
-      const packageJsonBefore = appTree.read('package.json', 'utf-8');
+      const packageJsonBefore = readJson(appTree, 'package.json');
 
       await reactNativeApplicationGenerator(appTree, {
         name: 'myApp',
@@ -195,7 +222,7 @@ describe('app', () => {
         skipPackageJson: true,
       });
 
-      expect(appTree.read('package.json', 'utf-8')).toEqual(packageJsonBefore);
+      expect(readJson(appTree, 'package.json')).toEqual(packageJsonBefore);
     });
   });
 });

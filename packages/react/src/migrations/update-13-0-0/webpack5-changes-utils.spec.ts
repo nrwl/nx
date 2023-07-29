@@ -1,6 +1,6 @@
-import { addProjectConfiguration, Tree, updateJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { allReactProjectsWithStorybookConfiguration } from '@nrwl/react/src/migrations/update-13-0-0/webpack5-changes-utils';
+import { addProjectConfiguration, Tree, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { allReactProjectsWithStorybookConfiguration } from './webpack5-changes-utils';
 
 describe('webpack5ChangesUtils', () => {
   let tree: Tree;

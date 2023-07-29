@@ -2,9 +2,9 @@
 
 exports[`ensureViteConfigIsCorrect should add build and test options if defineConfig is empty 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 
-    /// <reference types=\\"vitest\\" />
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -20,17 +20,17 @@ import { join } from 'path';
         name: 'my-app',
         fileName: 'index',
         // Change this to the formats you want to support.
-        // Don't forgot to update your package.json as well.
+        // Don't forget to update your package.json as well.
         formats: ['es', 'cjs']
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
       }
     },plugins: [
       dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
+      entryRoot: 'src',
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
       react(),
@@ -51,7 +51,7 @@ import { join } from 'path';
 
 exports[`ensureViteConfigIsCorrect should add build option but not update test option if test already setup 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -67,12 +67,12 @@ import { defineConfig } from 'vite';
         name: 'my-app',
         fileName: 'index',
         // Change this to the formats you want to support.
-        // Don't forgot to update your package.json as well.
+        // Don't forget to update your package.json as well.
         formats: ['es', 'cjs']
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
       }
     },plugins: [
                     ...[
@@ -82,14 +82,13 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
+      entryRoot: 'src',
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
 
       test: {
-                  ...{
         globals: true,
         cache: {
           dir: '../../node_modules/.vitest',
@@ -97,8 +96,6 @@ import { defineConfig } from 'vite';
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
-               },
 
     });
     "
@@ -106,7 +103,7 @@ import { defineConfig } from 'vite';
 
 exports[`ensureViteConfigIsCorrect should add build options if build options don't exist 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -122,12 +119,12 @@ import { defineConfig } from 'vite';
         name: 'my-app',
         fileName: 'index',
         // Change this to the formats you want to support.
-        // Don't forgot to update your package.json as well.
+        // Don't forget to update your package.json as well.
         formats: ['es', 'cjs']
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
       }
     },plugins: [
                     ...[
@@ -137,14 +134,13 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
+      entryRoot: 'src',
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
 
       test: {
-                  ...{
         globals: true,
         cache: {
           dir: '../../node_modules/.vitest',
@@ -152,8 +148,6 @@ import { defineConfig } from 'vite';
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
-               },
 
     });
     "
@@ -161,7 +155,7 @@ import { defineConfig } from 'vite';
 
 exports[`ensureViteConfigIsCorrect should add build options if defineConfig is not used 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -176,12 +170,12 @@ import { defineConfig } from 'vite';
         name: 'my-app',
         fileName: 'index',
         // Change this to the formats you want to support.
-        // Don't forgot to update your package.json as well.
+        // Don't forget to update your package.json as well.
         formats: ['es', 'cjs']
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]
+        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
       }
     },test: {
         globals: true,
@@ -199,8 +193,8 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
+      entryRoot: 'src',
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
@@ -210,7 +204,7 @@ import { defineConfig } from 'vite';
 
 exports[`ensureViteConfigIsCorrect should add build options if it is using conditional config - do nothing for test 1`] = `
 "
-    /// <reference types=\\"vitest\\" />
+    /// <reference types="vitest" />
     import { defineConfig } from 'vite';
     export default defineConfig(({ command, mode, ssrBuild }) => {
       if (command === 'serve') {
@@ -224,7 +218,7 @@ exports[`ensureViteConfigIsCorrect should add build options if it is using condi
         ...{
           my: 'option',
         },
-        ...\\"\\\\n    // Configuration for building your library.\\\\n    // See: https://vitejs.dev/guide/build.html#library-mode\\\\n    build: {\\\\n      lib: {\\\\n        // Could also be a dictionary or array of multiple entry points.\\\\n        entry: 'src/index.ts',\\\\n        name: 'my-app',\\\\n        fileName: 'index',\\\\n        // Change this to the formats you want to support.\\\\n        // Don't forgot to update your package.json as well.\\\\n        formats: ['es', 'cjs']\\\\n      },\\\\n      rollupOptions: {\\\\n        // External packages that should not be bundled into your library.\\\\n        external: [\\\\\\"'react', 'react-dom', 'react/jsx-runtime'\\\\\\"]\\\\n      }\\\\n    },\\"
+        ..."\\n    // Configuration for building your library.\\n    // See: https://vitejs.dev/guide/build.html#library-mode\\n    build: {\\n      lib: {\\n        // Could also be a dictionary or array of multiple entry points.\\n        entry: 'src/index.ts',\\n        name: 'my-app',\\n        fileName: 'index',\\n        // Change this to the formats you want to support.\\n        // Don't forget to update your package.json as well.\\n        formats: ['es', 'cjs']\\n      },\\n      rollupOptions: {\\n        // External packages that should not be bundled into your library.\\n        external: [\\"'react', 'react-dom', 'react/jsx-runtime'\\"]\\n      }\\n    },"
      }
       }
     })
@@ -233,7 +227,7 @@ exports[`ensureViteConfigIsCorrect should add build options if it is using condi
 
 exports[`ensureViteConfigIsCorrect should add new build options if some build options already exist 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -247,14 +241,13 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
+      entryRoot: 'src',
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
 
       test: {
-                  ...{
         globals: true,
         cache: {
           dir: '../../node_modules/.vitest',
@@ -262,14 +255,12 @@ import { defineConfig } from 'vite';
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
-               },
 
       build: {
                   ...{
         my: 'option',
       },
-                  ...{\\"lib\\":{\\"entry\\":\\"src/index.ts\\",\\"name\\":\\"my-app\\",\\"fileName\\":\\"index\\",\\"formats\\":[\\"es\\",\\"cjs\\"]},\\"rollupOptions\\":{\\"external\\":[\\"'react', 'react-dom', 'react/jsx-runtime'\\"]}}
+                  ...{"lib":{"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es","cjs"]},"rollupOptions":{"external":["'react', 'react-dom', 'react/jsx-runtime'"]}}
                }
 
     });
@@ -279,18 +270,19 @@ import { defineConfig } from 'vite';
 exports[`ensureViteConfigIsCorrect should not do anything if cannot understand syntax of vite config 1`] = `"console.log('Unknown syntax')"`;
 
 exports[`ensureViteConfigIsCorrect should not do anything if project has everything setup already 1`] = `
-"import dts from 'vite-plugin-dts';
-import { join } from 'path';
-import { defineConfig } from 'vite';
+"
+    /// <reference types="vitest" />
+    import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
+    import dts from 'vite-plugin-dts';
+    import { joinPathFragments } from '@nx/devkit';
 
     export default defineConfig({
       plugins: [
-                    ...[
         dts({
-          tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-          // Faster builds by skipping tests. Set this to false to enable type checking.
+          entryRoot: 'src',
+          tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
           skipDiagnostics: true,
         }),
         react(),
@@ -298,24 +290,17 @@ import { defineConfig } from 'vite';
           root: '../../../',
         }),
       ],
-                    dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
-      skipDiagnostics: true,
-    }),
-                ],
     
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
-                  ...{
         lib: {
           // Could also be a dictionary or array of multiple entry points.
           entry: 'src/index.ts',
           name: 'pure-libs-react-vite',
           fileName: 'index',
           // Change this to the formats you want to support.
-          // Don't forgot to update your package.json as well.
+          // Don't forget to update your package.json as well.
           formats: ['es', 'cjs'],
         },
         rollupOptions: {
@@ -323,11 +308,8 @@ import { defineConfig } from 'vite';
           external: ['react', 'react-dom', 'react/jsx-runtime'],
         },
       },
-                  ...{\\"lib\\":{\\"entry\\":\\"src/index.ts\\",\\"name\\":\\"my-app\\",\\"fileName\\":\\"index\\",\\"formats\\":[\\"es\\",\\"cjs\\"]},\\"rollupOptions\\":{\\"external\\":[\\"'react', 'react-dom', 'react/jsx-runtime'\\"]}}
-               },
     
       test: {
-                  ...{
         globals: true,
         cache: {
           dir: '../../../node_modules/.vitest',
@@ -335,15 +317,13 @@ import { defineConfig } from 'vite';
         environment: 'jsdom',
         include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
-               },
     });
     "
 `;
 
 exports[`ensureViteConfigIsCorrect should update both test and build options - keep existing settings 1`] = `
 "import dts from 'vite-plugin-dts';
-import { join } from 'path';
+import { joinPathFragments } from '@nx/devkit';
 import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
@@ -357,8 +337,8 @@ import { defineConfig } from 'vite';
         }),
       ],
                     dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
+      entryRoot: 'src',
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
                 ],
@@ -367,14 +347,14 @@ import { defineConfig } from 'vite';
                   ...{
         my: 'option',
       },
-                  ...{\\"globals\\":true,\\"cache\\":{\\"dir\\":\\"../node_modules/.vitest\\"},\\"environment\\":\\"jsdom\\",\\"include\\":[\\"src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}\\"]}
+                  ...{"globals":true,"cache":{"dir":"../node_modules/.vitest"},"environment":"jsdom","include":["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"]}
                },
 
       build: {
                   ...{
         my: 'option',
       },
-                  ...{\\"lib\\":{\\"entry\\":\\"src/index.ts\\",\\"name\\":\\"my-app\\",\\"fileName\\":\\"index\\",\\"formats\\":[\\"es\\",\\"cjs\\"]},\\"rollupOptions\\":{\\"external\\":[\\"'react', 'react-dom', 'react/jsx-runtime'\\"]}}
+                  ...{"lib":{"entry":"src/index.ts","name":"my-app","fileName":"index","formats":["es","cjs"]},"rollupOptions":{"external":["'react', 'react-dom', 'react/jsx-runtime'"]}}
                }
 
     });

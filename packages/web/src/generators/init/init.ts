@@ -1,39 +1,32 @@
-import { cypressInitGenerator } from '@nrwl/cypress';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { jestInitGenerator } from '@nrwl/jest';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   nxVersion,
   tsLibVersion,
   typesNodeVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 
 function updateDependencies(tree: Tree, schema: Schema) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/web'], []);
+  removeDependenciesFromPackageJson(tree, ['@nx/web'], []);
 
   const devDependencies = {
-    '@nrwl/web': nxVersion,
+    '@nx/web': nxVersion,
     '@types/node': typesNodeVersion,
   };
-
-  if (schema.bundler === 'webpack') {
-    devDependencies['@nrwl/webpack'] = nxVersion;
-  }
 
   return addDependenciesToPackageJson(
     tree,
     {
-      'core-js': '^3.6.5',
-      'regenerator-runtime': '0.13.7',
       tslib: tsLibVersion,
     },
     devDependencies
@@ -41,16 +34,27 @@ function updateDependencies(tree: Tree, schema: Schema) {
 }
 
 export async function webInitGenerator(tree: Tree, schema: Schema) {
-  let tasks: GeneratorCallback[] = [];
+  const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(tree, {
+    js: false,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(tree, {
+    const { jestInitGenerator } = await ensurePackage('@nx/jest', nxVersion);
+    const jestTask = await jestInitGenerator(tree, {
       skipPackageJson: schema.skipPackageJson,
     });
     tasks.push(jestTask);
   }
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    const cypressTask = cypressInitGenerator(tree, {
+    const { cypressInitGenerator } = await ensurePackage(
+      '@nx/cypress',
+      nxVersion
+    );
+    const cypressTask = await cypressInitGenerator(tree, {
       skipPackageJson: schema.skipPackageJson,
     });
     tasks.push(cypressTask);
@@ -59,7 +63,6 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
     const installTask = updateDependencies(tree, schema);
     tasks.push(installTask);
   }
-  addBabelInputs(tree);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

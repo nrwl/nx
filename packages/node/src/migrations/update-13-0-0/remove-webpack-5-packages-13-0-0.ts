@@ -4,7 +4,7 @@ import {
   readJson,
   removeDependenciesFromPackageJson,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 const packages = [
   'webpack',

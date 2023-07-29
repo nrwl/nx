@@ -15,10 +15,10 @@
       "schema": "./src/executors/package/schema.json",
       "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\nThis executor is similar to the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds."
     },
-    "file-server": {
-      "implementation": "./src/executors/file-server/file-server.impl",
-      "schema": "./src/executors/file-server/schema.json",
-      "description": "Serves a static web application from a folder."
+    "browser-esbuild": {
+      "implementation": "./src/executors/browser-esbuild/browser-esbuild.impl",
+      "schema": "./src/executors/browser-esbuild/schema.json",
+      "description": "Builds your application with esbuild and adds support for incremental builds."
     }
   },
   "builders": {
@@ -62,10 +62,10 @@
       "schema": "./src/builders/module-federation-dev-ssr/schema.json",
       "description": "The module-federation-dev-ssr executor is reserved exclusively for use with host Module Federation applications that use SSR. It allows the user to specify which remote applications should be served with the host."
     },
-    "file-server": {
-      "implementation": "./src/executors/file-server/compat",
-      "schema": "./src/executors/file-server/schema.json",
-      "description": "Serve a web application from a folder."
+    "browser-esbuild": {
+      "implementation": "./src/executors/browser-esbuild/compat",
+      "schema": "./src/executors/browser-esbuild/schema.json",
+      "description": "Builds your application with esbuild and adds support for incremental builds."
     }
   }
 }

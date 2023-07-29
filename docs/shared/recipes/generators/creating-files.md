@@ -10,13 +10,14 @@ First, you define a folder to store your static or dynamic templates used to gen
 happynrwl/
 ├── apps/
 ├── libs/
-├── tools/
-│   ├── generators
-│   |   └── my-generator/
-│   |   |    └── files
-│   |   |        └── NOTES.md
-│   |   |    ├── index.ts
-│   |   |    └── schema.json
+│   └── my-plugin
+│       └── src
+│           └── generators
+│               └── my-generator/
+│                    ├── files
+│                    │   └── NOTES.md
+│                    ├── index.ts
+│                    └── schema.json
 ├── nx.json
 ├── package.json
 └── tsconfig.base.json
@@ -40,8 +41,8 @@ import {
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
-} from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/workspace/generators';
+} from '@nx/devkit';
+import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: any) {
   await libraryGenerator(tree, { name: schema.name });

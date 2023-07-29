@@ -1,6 +1,7 @@
 {
   "name": "tsc",
   "implementation": "/packages/js/src/executors/tsc/tsc.impl.ts",
+  "batchImplementation": "./src/executors/tsc/tsc.batch-impl",
   "schema": {
     "version": 2,
     "outputCapture": "direct-nodejs",
@@ -96,14 +97,16 @@
       },
       "updateBuildableProjectDepsInPackageJson": {
         "type": "boolean",
-        "description": "Whether to update the buildable project dependencies in `package.json`.",
-        "default": true
+        "description": "Whether to update the buildable project dependencies in the build output package.json.",
+        "default": false,
+        "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
       },
       "buildableProjectDepsInPackageJsonType": {
         "type": "string",
         "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
         "enum": ["dependencies", "peerDependencies"],
-        "default": "peerDependencies"
+        "default": "peerDependencies",
+        "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
       },
       "external": {
         "description": "A list projects to be treated as external. This feature is experimental",
@@ -120,7 +123,7 @@
       },
       "generateLockfile": {
         "type": "boolean",
-        "description": "Generate a lockfile (e.g. yarn.lock) that matches the workspace lockfile to ensure package versions match.",
+        "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
         "default": false,
         "x-priority": "internal"
       }
@@ -171,7 +174,7 @@
         ]
       }
     },
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Using TypeScript Transformer Plugins\" %}\n\n`@nrwl/js:tsc` can run the [TypeScript Transformers](https://github.com/madou/typescript-transformer-handbook) by using the `transformers` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"transformers\": [\n        \"@nestjs/swagger/plugin\",\n        {\n          \"name\": \"@automapper/classes/transformer-plugin\",\n          \"options\": {}\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Inline libraries\" %}\n\n`@nrwl/js:tsc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"all\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=all\n```\n\n`@nrwl/js:tsc` can also inline buildable libraries by setting `external: 'none'`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nrwl/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"none\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=none\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Using TypeScript Transformer Plugins\" %}\n\n`@nx/js:tsc` can run the [TypeScript Transformers](https://github.com/madou/typescript-transformer-handbook) by using the `transformers` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"transformers\": [\n        \"@nestjs/swagger/plugin\",\n        {\n          \"name\": \"@automapper/classes/transformer-plugin\",\n          \"options\": {}\n        }\n      ]\n    }\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Inline libraries\" %}\n\n`@nx/js:tsc` can inline non-buildable libraries by opt-in to **Inlining** mode with `external` option.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"all\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=all\n```\n\n`@nx/js:tsc` can also inline buildable libraries by setting `external: 'none'`\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"external\": \"none\"\n    }\n  }\n}\n```\n\n```shell\nnpx nx build ts-lib --external=none\n```\n\n{% /tab %}\n{% tab label=\"Batch mode execution\" %}\n\nThe `@nx/js:tsc` executor supports running multiple tasks in a single process. When running in batch mode, the executor uses the [TypeScript APIs for incremental builds](https://www.typescriptlang.org/docs/handbook/project-references.html#build-mode-for-typescript). This results in a much faster build time when compared to the default implementation (the bigger the task graph to run, the more the performance improvements).\n\n{% callout type=\"warning\" title=\"Experimental feature\" %}\nExecuting tasks in batch mode is an experimental feature.\n{% /callout %}\n\n{% callout type=\"info\" title=\"Requirements\" %}\nBuilding a project with the `@nx/js:tsc` executor in batch mode requires all dependent projects to be buildable and built using the `@nx/js:tsc` executor.\n{% /callout %}\n\nTo run your builds using the batch implementation, set the `NX_BATCH_MODE` environment variable to `true`:\n\n```shell\nNX_BATCH_MODE=true nx build ts-lib\n```\n\nFor optimal performance, you could set the `clean` option to `false`. Otherwise, the executor cleans the output folder before running the build, which results in the loss of the [`.tsbuildinfo` file](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile) and, consequently, the loss of important optimizations performed by TypeScript. This is not a requirement. Even if the `clean` option is not set to `false` there are other important optimizations that are performed by the batch implementation.\n\n```json {% fileName=\"libs/ts-lib/project.json\" %}\n{\n  \"build\": {\n    \"executor\": \"@nx/js:tsc\",\n    \"options\": {\n      \"outputPath\": \"dist/libs/ts-lib\",\n      \"main\": \"libs/ts-lib/src/index.ts\",\n      \"tsConfig\": \"libs/ts-lib/tsconfig.lib.json\",\n      \"assets\": [\"libs/ts-lib/*.md\"],\n      \"clean\": false\n    }\n  }\n}\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "description": "Build a project using TypeScript.",

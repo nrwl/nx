@@ -1,0 +1,69 @@
+name: Issue Statistics
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+permissions:
+  issues: read
+  pull-requests: read
+
+jobs:
+  issues-report:
+    if: ${{ github.repository_owner == 'nrwl' }}
+    runs-on: ubuntu-latest
+    name: Report status
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8.2
+
+      - name: Use Node.js ${{ matrix.node_version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v3
+        with:
+          lookup-only: true
+          path: '**/node_modules'
+          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install packages
+        run: pnpm install --frozen-lockfile
+
+      - name: Download artifact
+        id: download-artifact
+        uses: dawidd6/action-download-artifact@v2 # Needed since we are downloading artifact from a different workflow run, official actions/download-artifact doesn't support this.
+        with:
+          name: cached-issue-data
+          path: ${{ github.workspace }}/scripts/issues-scraper/cached
+          search_artifacts: true
+        continue-on-error: true
+
+      - name: Collect Issue Data
+        id: collect
+        run: npx ts-node ./scripts/issues-scraper/index.ts
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: cached-issue-data
+          path: ./scripts/issues-scraper/cached/data.json
+
+      - name: Send GitHub Action trigger data to Slack workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: ${{ steps.collect.outputs.SLACK_MESSAGE }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_ISSUES_REPORT_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK

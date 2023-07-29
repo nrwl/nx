@@ -92,9 +92,9 @@
         "default": "node"
       },
       "target": {
-        "description": "The ES target, Nest suggest using es6 or higher.",
+        "description": "The ES target, Nest suggest using es2021 or higher.",
         "type": "string",
-        "default": "es6",
+        "default": "es2021",
         "enum": [
           "es5",
           "es6",
@@ -104,13 +104,14 @@
           "es2017",
           "es2018",
           "es2019",
-          "es2020"
+          "es2020",
+          "es2021"
         ]
       },
       "strict": {
         "description": "Whether to enable tsconfig strict mode or not.",
         "type": "boolean",
-        "default": false
+        "default": true
       },
       "standaloneConfig": {
         "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
@@ -121,6 +122,17 @@
       "setParserOptionsProject": {
         "type": "boolean",
         "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "simpleName": {
+        "description": "Don't include the directory in the name of the module of the library.",
+        "type": "boolean",
         "default": false
       }
     },

@@ -1,75 +1,75 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`preset should create files (preset = angular-monorepo) 1`] = `
-Array [
-  "tsconfig.app.json",
-  "tsconfig.spec.json",
-  "src",
+[
   "project.json",
+  "src",
+  "tsconfig.app.json",
   "tsconfig.editor.json",
   "tsconfig.json",
   ".eslintrc.json",
   "jest.config.ts",
+  "tsconfig.spec.json",
 ]
 `;
 
 exports[`preset should create files (preset = angular-monorepo) 2`] = `
-Array [
+[
+  "assets",
   "favicon.ico",
   "index.html",
-  "main.ts",
   "styles.css",
-  "assets",
   "app",
+  "main.ts",
   "test-setup.ts",
 ]
 `;
 
 exports[`preset should create files (preset = angular-monorepo) 3`] = `
-Array [
-  "app.module.ts",
+[
   "app.component.css",
   "app.component.html",
   "app.component.spec.ts",
   "app.component.ts",
+  "app.module.ts",
   "nx-welcome.component.ts",
 ]
 `;
 
 exports[`preset should create files (preset = react-standalone bundler = vite) 1`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "buildTarget": "proj:build:development",
       "hmr": true,
     },
-    "production": Object {
+    "production": {
       "buildTarget": "proj:build:production",
       "hmr": false,
     },
   },
   "defaultConfiguration": "development",
-  "executor": "@nrwl/vite:dev-server",
-  "options": Object {
+  "executor": "@nx/vite:dev-server",
+  "options": {
     "buildTarget": "proj:build",
   },
 }
 `;
 
 exports[`preset should create files (preset = react-standalone bundler = webpack) 1`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "buildTarget": "proj:build:development",
     },
-    "production": Object {
+    "production": {
       "buildTarget": "proj:build:production",
       "hmr": false,
     },
   },
   "defaultConfiguration": "development",
-  "executor": "@nrwl/webpack:dev-server",
-  "options": Object {
+  "executor": "@nx/webpack:dev-server",
+  "options": {
     "buildTarget": "proj:build",
     "hmr": true,
   },

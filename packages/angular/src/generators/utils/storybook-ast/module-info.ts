@@ -1,12 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   logger,
   normalizePath,
   stripIndents,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
-import { tsquery } from '@phenomnomnominal/tsquery';
+} from '@nx/devkit';
+import { findNodes } from '@nx/js';
 import { extname } from 'path';
 import type {
   ClassDeclaration,
@@ -14,9 +13,11 @@ import type {
   SourceFile,
   VariableDeclaration,
 } from 'typescript';
-import { SyntaxKind } from 'typescript';
 import { getDecoratorMetadata } from '../../../utils/nx-devkit/ast-utils';
 import type { EntryPoint } from './entry-point';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 export function getModuleDeclaredComponents(
   file: SourceFile,
@@ -79,6 +80,8 @@ export function getModuleFilePaths(
 }
 
 function hasNgModule(tree: Tree, filePath: string): boolean {
+  ensureTypescript();
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const fileContent = tree.read(filePath, 'utf-8');
   const ast = tsquery.ast(fileContent);
   const ngModule = tsquery(
@@ -99,19 +102,22 @@ function getDeclaredComponentsInDeclarations(
 }
 
 function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const cmps = declarationsArray
     .getChildren()
-    .find((node) => node.kind === SyntaxKind.SyntaxList)
+    .find((node) => node.kind === tsModule.SyntaxKind.SyntaxList)
     .getChildren()
     .map((node) => {
-      if (node.kind === SyntaxKind.Identifier) {
+      if (node.kind === tsModule.SyntaxKind.Identifier) {
         return node;
       }
       // if the node is a destructuring, follow the variable
-      if (node.kind === SyntaxKind.SpreadElement) {
+      if (node.kind === tsModule.SyntaxKind.SpreadElement) {
         const declarationVariableNode = node
           .getChildren()
-          .find((node) => node.kind === SyntaxKind.Identifier);
+          .find((node) => node.kind === tsModule.SyntaxKind.Identifier);
 
         // try to find the variable declaration in the same component
         const declarationVariable = getVariableDeclaration(
@@ -121,7 +127,7 @@ function getDeclaredComponentNodes(declarationsArray: Node): Node[] {
         if (
           declarationVariable &&
           declarationVariable.initializer.kind ===
-            SyntaxKind.ArrayLiteralExpression
+            tsModule.SyntaxKind.ArrayLiteralExpression
         ) {
           const nodes = getDeclaredComponentNodes(
             declarationVariable.initializer
@@ -156,9 +162,12 @@ function getDeclarationsArray(
   moduleFilePath: string,
   projectName: string
 ): Node | undefined {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   let declarationArray = declarationsPropertyAssignment
     .getChildren()
-    .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression);
+    .find((node) => node.kind === tsModule.SyntaxKind.ArrayLiteralExpression);
 
   if (declarationArray) {
     return declarationArray;
@@ -182,7 +191,7 @@ function getDeclarationsArray(
 
   if (!declarationArray) {
     logger.warn(
-      stripIndents`No stories generated because the declarations in ${moduleFilePath} is not an array literal or the variable could not be found. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command.`
+      stripIndents`No stories generated because the declarations in ${moduleFilePath} is not an array literal or the variable could not be found. Hint: you can always generate stories later with the 'nx generate @nx/angular:stories --name=${projectName}' command.`
     );
   }
 
@@ -196,9 +205,12 @@ function getModuleDeclaredComponentsFromVariable(
   file: SourceFile,
   declarationsPropertyAssignment: Node
 ): Node | undefined {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   let declarationsVariable = declarationsPropertyAssignment
     .getChildren()
-    .filter((node) => node.kind === SyntaxKind.Identifier)[1];
+    .filter((node) => node.kind === tsModule.SyntaxKind.Identifier)[1];
 
   if (!declarationsVariable) {
     return undefined;
@@ -216,7 +228,7 @@ function getModuleDeclaredComponentsFromVariable(
 
   const declarationArray = variableDeclaration
     .getChildren()
-    .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression);
+    .find((node) => node.kind === tsModule.SyntaxKind.ArrayLiteralExpression);
 
   return declarationArray;
 }
@@ -229,9 +241,14 @@ function getModuleDeclaredComponentsFromClass(
   file: SourceFile,
   declarationsPropertyAssignment: Node
 ): Node | undefined {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const propertyAccessExpression = declarationsPropertyAssignment
     .getChildren()
-    .filter((node) => node.kind === SyntaxKind.PropertyAccessExpression)[0];
+    .filter(
+      (node) => node.kind === tsModule.SyntaxKind.PropertyAccessExpression
+    )[0];
 
   if (!propertyAccessExpression) {
     return undefined;
@@ -240,7 +257,7 @@ function getModuleDeclaredComponentsFromClass(
   // Should contain 2 identifiers [SomeClass, components]
   const [clazz, componentsProperty] = propertyAccessExpression
     .getChildren()
-    .filter((node) => node.kind === SyntaxKind.Identifier);
+    .filter((node) => node.kind === tsModule.SyntaxKind.Identifier);
 
   if (!clazz || !componentsProperty) {
     return undefined;
@@ -254,18 +271,18 @@ function getModuleDeclaredComponentsFromClass(
   }
 
   const declarationArray = classDeclaration.members
-    .filter((node) => node.kind === SyntaxKind.PropertyDeclaration)
+    .filter((node) => node.kind === tsModule.SyntaxKind.PropertyDeclaration)
     .find((propertyDeclaration) =>
       propertyDeclaration
         .getChildren()
         .find(
           (node) =>
-            node.kind === SyntaxKind.Identifier &&
+            node.kind === tsModule.SyntaxKind.Identifier &&
             node.getText() === componentsProperty.getText()
         )
     )
     .getChildren()
-    .find((node) => node.kind === SyntaxKind.ArrayLiteralExpression);
+    .find((node) => node.kind === tsModule.SyntaxKind.ArrayLiteralExpression);
 
   return declarationArray;
 }
@@ -274,14 +291,21 @@ function getClassDeclaration(
   className: string,
   file: SourceFile
 ): ClassDeclaration | undefined {
-  const classDeclaration = findNodes(file, SyntaxKind.ClassDeclaration).find(
-    (classDeclaration) =>
-      classDeclaration
-        .getChildren()
-        .find(
-          (node) =>
-            node.kind === SyntaxKind.Identifier && node.getText() === className
-        )
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
+  const classDeclaration = findNodes(
+    file,
+    tsModule.SyntaxKind.ClassDeclaration
+  ).find((classDeclaration) =>
+    classDeclaration
+      .getChildren()
+      .find(
+        (node) =>
+          node.kind === tsModule.SyntaxKind.Identifier &&
+          node.getText() === className
+      )
   ) as ClassDeclaration;
 
   return classDeclaration;
@@ -291,15 +315,20 @@ function getVariableDeclaration(
   variableName: string,
   file: SourceFile
 ): VariableDeclaration | undefined {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   const variableDeclaration = findNodes(
     file,
-    SyntaxKind.VariableDeclaration
+    tsModule.SyntaxKind.VariableDeclaration
   ).find((variableDeclaration) =>
     variableDeclaration
       .getChildren()
       .find(
         (node) =>
-          node.kind === SyntaxKind.Identifier && node.getText() === variableName
+          node.kind === tsModule.SyntaxKind.Identifier &&
+          node.getText() === variableName
       )
   ) as VariableDeclaration;
 
@@ -311,21 +340,25 @@ function getNgModuleDeclarationsPropertyAssignment(
   moduleFilePath: string,
   projectName: string
 ): Node | undefined {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   const syntaxList = ngModuleDecorator.getChildren().find((node) => {
-    return node.kind === SyntaxKind.SyntaxList;
+    return node.kind === tsModule.SyntaxKind.SyntaxList;
   });
   const declarationsPropertyAssignment = syntaxList
     .getChildren()
     .find((node) => {
       return (
-        node.kind === SyntaxKind.PropertyAssignment &&
+        node.kind === tsModule.SyntaxKind.PropertyAssignment &&
         node.getChildren()[0].getText() === 'declarations'
       );
     });
 
   if (!declarationsPropertyAssignment) {
     logger.warn(
-      stripIndents`No stories generated because there were no components declared in ${moduleFilePath}. Hint: you can always generate stories later with the 'nx generate @nrwl/angular:stories --name=${projectName}' command.`
+      stripIndents`No stories generated because there were no components declared in ${moduleFilePath}. Hint: you can always generate stories later with the 'nx generate @nx/angular:stories --name=${projectName}' command.`
     );
   }
 

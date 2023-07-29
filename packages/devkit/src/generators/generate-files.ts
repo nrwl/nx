@@ -1,41 +1,10 @@
 import { readFileSync, readdirSync, statSync } from 'fs';
 import * as path from 'path';
 import type { Tree } from 'nx/src/generators/tree';
-import { logger } from 'nx/src/utils/logger';
+import { requireNx } from '../../nx';
+import { isBinaryPath } from '../utils/binary-extensions';
 
-const binaryExts = new Set([
-  // // Image types originally from https://github.com/sindresorhus/image-type/blob/5541b6a/index.js
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.gif',
-  '.webp',
-  '.flif',
-  '.cr2',
-  '.tif',
-  '.bmp',
-  '.jxr',
-  '.psd',
-  '.ico',
-  '.bpg',
-  '.jp2',
-  '.jpm',
-  '.jpx',
-  '.heic',
-  '.cur',
-  '.tgz',
-
-  // Java files
-  '.jar',
-  '.keystore',
-
-  // Font files
-  '.ttf',
-  '.otf',
-  '.woff',
-  '.woff2',
-  '.eot',
-]);
+const { logger } = requireNx();
 
 /**
  * Generates a folder of files based on provided templates.
@@ -82,7 +51,7 @@ export function generateFiles(
         substitutions
       );
 
-      if (binaryExts.has(path.extname(filePath))) {
+      if (isBinaryPath(filePath)) {
         newContent = readFileSync(filePath);
       } else {
         const template = readFileSync(filePath, 'utf-8');

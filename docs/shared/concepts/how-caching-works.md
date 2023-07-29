@@ -3,7 +3,7 @@
 Before running any task, Nx computes its computation hash. As long as the computation hash is the same, the output of
 running the task is the same.
 
-By default, the computation hash for - say - `nx test remixapp` includes:
+By default, the computation hash for something like `nx test remixapp` includes:
 
 - All the source files of `remixapp` and its dependencies
 - Relevant global configuration
@@ -11,7 +11,7 @@ By default, the computation hash for - say - `nx test remixapp` includes:
 - Runtime values provisioned by the user such as the version of Node
 - CLI Command flags
 
-![computation-hashing](../images/caching/nx-hashing.svg)
+![computation-hashing](/shared/images/caching/nx-hashing.svg)
 
 > This behavior is customizable. For instance, lint checks may only depend on the source code of the project and global
 > configs. Builds can depend on the dts files of the compiled libs instead of their source.
@@ -22,7 +22,7 @@ locally, and then if it is missing, and if a remote cache is configured, it chec
 If Nx finds the computation, Nx retrieves it and replays it. Nx places the right files in the right folders and
 prints the terminal output. From the user’s point of view, the command ran the same, just a lot faster.
 
-![cache](../images/caching/cache.svg)
+![cache](/shared/images/caching/cache.svg)
 
 If Nx doesn’t find a corresponding computation hash, Nx runs the task, and after it completes, it takes the
 outputs and the terminal logs and stores them locally (and if configured remotely as well). All of this happens
@@ -38,7 +38,7 @@ instance, Nx:
 
 As your workspace grows, the task graph looks more like this:
 
-![cache](../images/caching/task-graph-big.svg)
+![cache](/shared/images/caching/task-graph-big.svg)
 
 All of these optimizations are crucial for making Nx usable for any non-trivial workspace. Only the minimum amount of
 work happens. The rest is either left as is or restored from the cache.
@@ -72,15 +72,60 @@ We can define a more precise configuration as follows:
 }
 ```
 
-{% callout type="note" title="{projectRoot}" %}
-`{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
+<!-- Prettier causes the callout block to break -->
+<!-- prettier-ignore-start -->
+
+{% callout type="note" title="Special Syntax Explained" %}
+
+- `{projectRoot}` is a key word that is replaced by the path to the current project's root directory.
+- `{workspaceRoot}` is a key word that is replaced by the root path of your workspace.
+- The `^` symbol means "of dependencies", i.e. `"^production"` means match the files defined for the `"production"` `namedInput`, but for all projects which the current project depends on.
+- The rest of the string is parsed with the [minimatch](https://github.com/isaacs/minimatch) library
 {% /callout %}
+<!-- prettier-ignore-end -->
 
 With this configuration, the build script will only consider the non-test files of `remixapp`, `header` and `footer`.
 The test script will consider all the source files for the project under test and only non-test files of its
 dependencies. The test script will also consider the jest config file at the root of the workspace.
 
-For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/more-concepts/customizing-inputs)
+For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/concepts/more-concepts/customizing-inputs)
+
+### Filesets
+
+By default a value in `inputs` refers to either a `namedInput` or a `fileset`.
+
+```json {% fileName="project.json"%}
+{
+  "targets": {
+    "some-target": {
+      "inputs": ["{workspaceRoot}/cache-file-input"]
+    }
+  }
+}
+```
+
+**is equivalent to**
+
+```json {% fileName="project.json"%}
+{
+  "targets": {
+    "some-target": {
+      "inputs": [{ "fileset": "{workspaceRoot}/cache-file-input" }]
+    }
+  }
+}
+```
+
+<!-- prettier-ignore-start -->
+{% callout type="note" title="Ignored Files" %}
+
+By default any file that is ignored by either a `.gitignore` or `.nxignore` file will not be considered
+as an input to the cache. 
+
+You could consider using a runtime hash input if a file ignored by one of these files is needed as an
+input to the hash.
+{% /callout %}
+<!-- prettier-ignore-end -->
 
 ## Runtime Hash Inputs
 
@@ -107,7 +152,7 @@ commands are identical from the caching perspective.
 
 ```shell
 npx nx build remixapp
-npx nx run-many --target=build --projects=remixapp
+npx nx run-many -t build -p remixapp
 ```
 
 In other words, Nx does not cache what the developer types into the terminal.
@@ -117,7 +162,7 @@ from
 cache or run. This means that from the caching point of view, the following command:
 
 ```shell
-npx nx run-many --target=build --projects=header,footer
+npx nx run-many -t build -p header footer
 ```
 
 is identical to the following two commands:
@@ -198,3 +243,9 @@ The cache is stored in `node_modules/.cache/nx` by default. To change the cache 
   }
 }
 ```
+
+## Outputs vs Output Path
+
+Several executors have a property in `options` called `outputPath`. On its own, this property does not influence caching or what is stored at the end of a run. Frequently though, this property would point to your build artifacts. In these cases, you can include `"{options.outputPath}"` in the `outputs` array for your target to avoid duplicating the value.
+
+The properties inside `options` are never considered for determining where artifacts are located, and are just passed into the executor when running a task. If there are artifacts that save to disk they **_must_** be included in the `outputs` array or they will not be restored when there is a cache hit for that particular target.

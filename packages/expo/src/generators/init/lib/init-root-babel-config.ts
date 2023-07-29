@@ -1,4 +1,4 @@
-import { Tree, writeJson } from '@nrwl/devkit';
+import { Tree, writeJson } from '@nx/devkit';
 
 export function initRootBabelConfig(tree: Tree) {
   if (tree.exists('/babel.config.json') || tree.exists('/babel.config.js')) {

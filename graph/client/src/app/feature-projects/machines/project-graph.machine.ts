@@ -24,6 +24,7 @@ export const initialContext: ProjectGraphContext = {
     libsDir: '',
     appsDir: '',
   },
+  fileMap: {},
   graphActor: null,
   lastPerfReport: {
     numEdges: 0,
@@ -64,6 +65,7 @@ export const projectGraphMachine = createMachine<
               type: 'notifyGraphInitGraph',
               projects: ctx.projects,
               dependencies: ctx.dependencies,
+              fileMap: ctx.fileMap,
               affectedProjects: ctx.affectedProjects,
               workspaceLayout: ctx.workspaceLayout,
               groupByFolder: ctx.groupByFolder,
@@ -140,6 +142,7 @@ export const projectGraphMachine = createMachine<
               projects: ctx.projects,
               dependencies: ctx.dependencies,
               affectedProjects: ctx.affectedProjects,
+              fileMap: ctx.fileMap,
               workspaceLayout: ctx.workspaceLayout,
               groupByFolder: ctx.groupByFolder,
               collapseEdges: ctx.collapseEdges,
@@ -160,6 +163,7 @@ export const projectGraphMachine = createMachine<
               projects: ctx.projects,
               dependencies: ctx.dependencies,
               affectedProjects: ctx.affectedProjects,
+              fileMap: ctx.fileMap,
               workspaceLayout: ctx.workspaceLayout,
               groupByFolder: ctx.groupByFolder,
               collapseEdges: ctx.collapseEdges,
@@ -249,6 +253,7 @@ export const projectGraphMachine = createMachine<
 
         ctx.projects = event.projects;
         ctx.dependencies = event.dependencies;
+        ctx.fileMap = event.fileMap;
         ctx.graphActor = spawn(graphActor, 'graphActor');
         // ctx.routeSetterActor = spawn(createRouteMachine(), {
         //   name: 'route',

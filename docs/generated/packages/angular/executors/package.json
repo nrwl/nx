@@ -20,9 +20,7 @@
       {
         "name": "Updating Project Dependencies for Publishable Library",
         "keys": [
-          "project",
-          "updateBuildableProjectDepsInPackageJson",
-          "buildableProjectDepsInPackageJsonType"
+          "project"
         ]
       }
     ],
@@ -45,8 +43,9 @@
       },
       "updateBuildableProjectDepsInPackageJson": {
         "type": "boolean",
-        "description": "Whether to update the buildable project dependencies in package.json.",
-        "default": true
+        "description": "Whether to update the buildable project dependencies in the build output package.json.",
+        "default": false,
+        "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
       },
       "buildableProjectDepsInPackageJsonType": {
         "type": "string",
@@ -55,7 +54,8 @@
           "dependencies",
           "peerDependencies"
         ],
-        "default": "peerDependencies"
+        "default": "peerDependencies",
+        "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
       },
       "tailwindConfig": {
         "type": "string",

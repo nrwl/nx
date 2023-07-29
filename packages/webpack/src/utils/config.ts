@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { Configuration } from 'webpack';
 
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';

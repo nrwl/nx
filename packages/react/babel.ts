@@ -23,7 +23,7 @@ module.exports = function (api: any, options: NxReactBabelOptions) {
    */
   const isNextJs = api.caller((caller) => caller?.pagesDir);
 
-  const presets: any[] = [['@nrwl/js/babel', options]];
+  const presets: any[] = [[require.resolve('@nx/js/babel'), options]];
 
   /**
    * Next.js already includes the preset-react, and including it

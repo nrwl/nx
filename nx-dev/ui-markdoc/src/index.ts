@@ -1,4 +1,11 @@
-import { Node, parse, renderers, transform } from '@markdoc/markdoc';
+import {
+  Node,
+  parse,
+  RenderableTreeNode,
+  renderers,
+  Tokenizer,
+  transform,
+} from '@markdoc/markdoc';
 import { load as yamlLoad } from 'js-yaml';
 import React, { ReactNode } from 'react';
 import { Fence } from './lib/nodes/fence.component';
@@ -10,10 +17,12 @@ import { CustomLink } from './lib/nodes/link.component';
 import { link } from './lib/nodes/link.schema';
 import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
-import { Card, Cards } from './lib/tags/cards.component';
-import { card, cards } from './lib/tags/cards.schema';
+import { Card, Cards, TitleCard } from './lib/tags/cards.component';
+import { card, cards, titleCard } from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
+import { StackblitzButton } from './lib/tags/stackblitz-button.component';
+import { stackblitzButton } from './lib/tags/stackblitz-button.schema';
 import { Graph } from './lib/tags/graph.component';
 import { graph } from './lib/tags/graph.schema';
 import { Iframe } from './lib/tags/iframe.component';
@@ -30,6 +39,14 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { YouTube } from './lib/tags/youtube.components';
 import { youtube } from './lib/tags/youtube.schema';
+import {
+  TerminalCommand,
+  terminalCommand,
+} from './lib/tags/terminal-command.component';
+import { VideoLink, videoLink } from './lib/tags/video-link.component';
+
+// TODO fix this export
+export { GithubRepository } from './lib/tags/github-repository.component';
 
 export const getMarkdocCustomConfig = (
   documentFilePath: string
@@ -46,6 +63,7 @@ export const getMarkdocCustomConfig = (
       card,
       cards,
       'github-repository': githubRepository,
+      'stackblitz-button': stackblitzButton,
       graph,
       iframe,
       'install-nx-console': installNxConsole,
@@ -55,7 +73,10 @@ export const getMarkdocCustomConfig = (
       'side-by-side': sideBySide,
       tab,
       tabs,
+      'title-card': titleCard,
       youtube,
+      'terminal-command': terminalCommand,
+      'video-link': videoLink,
     },
   },
   components: {
@@ -65,6 +86,7 @@ export const getMarkdocCustomConfig = (
     CustomLink,
     Fence,
     GithubRepository,
+    StackblitzButton,
     Graph,
     Heading,
     Iframe,
@@ -75,22 +97,34 @@ export const getMarkdocCustomConfig = (
     SideBySide,
     Tab,
     Tabs,
+    TitleCard,
     YouTube,
+    TerminalCommand,
+    VideoLink,
   },
 });
 
-export const parseMarkdown: (markdown: string) => Node = (markdown) =>
-  parse(markdown);
+const tokenizer = new Tokenizer({
+  // Per https://markdoc.dev/docs/syntax#comments this will be on by default in a future version
+  allowComments: true,
+});
+
+export const parseMarkdown: (markdown: string) => Node = (markdown) => {
+  const tokens = tokenizer.tokenize(markdown);
+  return parse(tokens);
+};
 
 export const renderMarkdown: (
   documentContent: string,
   options: { filePath: string }
-) => { metadata: Record<string, any>; node: ReactNode } = (
-  documentContent: string,
-  options: { filePath: string } = { filePath: '' }
-): { metadata: Record<string, any>; node: ReactNode } => {
+) => {
+  metadata: Record<string, any>;
+  node: ReactNode;
+  treeNode: RenderableTreeNode;
+} = (documentContent, options = { filePath: '' }) => {
   const ast = parseMarkdown(documentContent);
   const configuration = getMarkdocCustomConfig(options.filePath);
+  const treeNode = transform(ast, configuration.config);
 
   return {
     metadata: ast.attributes['frontmatter']
@@ -99,5 +133,6 @@ export const renderMarkdown: (
     node: renderers.react(transform(ast, configuration.config), React, {
       components: configuration.components,
     }),
+    treeNode,
   };
 };

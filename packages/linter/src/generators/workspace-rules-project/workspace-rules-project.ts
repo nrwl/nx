@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   ensurePackage,
@@ -12,22 +11,28 @@ import {
   Tree,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
+import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { join } from 'path';
-import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
-import { swcCoreVersion, swcNodeVersion } from 'nx/src/utils/versions';
 import { nxVersion } from '../../utils/versions';
+import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
 
 export const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
 
-export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
-  await ensurePackage(tree, '@nrwl/jest/', nxVersion);
-  const { addPropertyToJestConfig, jestProjectGenerator } = await import(
-    '@nrwl/jest'
-  );
+export interface LintWorkspaceRulesProjectGeneratorOptions {
+  skipFormat?: boolean;
+}
+
+export async function lintWorkspaceRulesProjectGenerator(
+  tree: Tree,
+  options: LintWorkspaceRulesProjectGeneratorOptions = {}
+) {
+  const { addPropertyToJestConfig, configurationGenerator } = ensurePackage<
+    typeof import('@nx/jest')
+  >('@nx/jest', nxVersion);
 
   // Noop if the workspace rules project already exists
   try {
@@ -64,7 +69,7 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
   }
 
   // Add jest to the project and return installation task
-  const installTask = await jestProjectGenerator(tree, {
+  const installTask = await configurationGenerator(tree, {
     project: WORKSPACE_RULES_PROJECT_NAME,
     supportTsx: false,
     skipSerializers: true,
@@ -98,11 +103,7 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
   );
 
   // Add swc dependencies
-  addDependenciesToPackageJson(
-    tree,
-    {},
-    { '@swc-node/register': swcNodeVersion, '@swc/core': swcCoreVersion }
-  );
+  addSwcRegisterDependencies(tree);
 
   // Add extra config to the jest.config.ts file to allow ESLint 8 exports mapping to work with jest
   addPropertyToJestConfig(
@@ -114,7 +115,9 @@ export async function lintWorkspaceRulesProjectGenerator(tree: Tree) {
     }
   );
 
-  await formatFiles(tree);
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return installTask;
 }

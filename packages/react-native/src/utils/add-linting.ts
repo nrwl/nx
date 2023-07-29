@@ -1,13 +1,16 @@
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/linter';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   joinPathFragments,
+  runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+} from '@nx/devkit';
+import {
+  extendReactEslintJson,
+  extraEslintDependencies,
+} from '@nx/react/src/utils/lint';
 import type { Linter as ESLintLinter } from 'eslint';
 
 interface NormalizedSchema {

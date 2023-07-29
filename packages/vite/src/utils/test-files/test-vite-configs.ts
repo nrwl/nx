@@ -153,12 +153,14 @@ export const hasEverything = `
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
     import viteTsConfigPaths from 'vite-tsconfig-paths';
+    import dts from 'vite-plugin-dts';
+    import { joinPathFragments } from '@nx/devkit';
 
     export default defineConfig({
       plugins: [
         dts({
-          tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-          // Faster builds by skipping tests. Set this to false to enable type checking.
+          entryRoot: 'src',
+          tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
           skipDiagnostics: true,
         }),
         react(),
@@ -176,7 +178,7 @@ export const hasEverything = `
           name: 'pure-libs-react-vite',
           fileName: 'index',
           // Change this to the formats you want to support.
-          // Don't forgot to update your package.json as well.
+          // Don't forget to update your package.json as well.
           formats: ['es', 'cjs'],
         },
         rollupOptions: {
@@ -206,7 +208,7 @@ export const buildOption = `
         name: 'my-app',
         fileName: 'index',
         // Change this to the formats you want to support.
-        // Don't forgot to update your package.json as well.
+        // Don't forget to update your package.json as well.
         formats: ['es', 'cjs']
       },
       rollupOptions: {
@@ -245,11 +247,11 @@ export const testOptionObject = {
 };
 
 export const dtsPlugin = `dts({
-      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
+      entryRoot: 'src',
+      tsConfigFilePath: joinPathFragments(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),`;
-export const dtsImportLine = `import dts from 'vite-plugin-dts';\nimport { join } from 'path';`;
+export const dtsImportLine = `import dts from 'vite-plugin-dts';\nimport { joinPathFragments } from '@nx/devkit';`;
 
 export const pluginOption = `
     plugins: [

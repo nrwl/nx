@@ -1,6 +1,6 @@
 import { basename, dirname, relative, resolve } from 'path';
 import { statSync } from 'fs';
-import { normalizePath } from '@nrwl/devkit';
+import { normalizePath } from '@nx/devkit';
 
 import type {
   AssetGlobPattern,

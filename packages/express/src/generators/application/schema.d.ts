@@ -1,5 +1,5 @@
 import { UnitTestRunner } from '../../utils/test-runners';
-import type { Linter } from '@nrwl/linter';
+import type { Linter } from '@nx/linter';
 
 export interface Schema {
   name: string;
@@ -10,6 +10,8 @@ export interface Schema {
   tags?: string;
   linter: Linter;
   frontendProject?: string;
+  swcJest?: boolean;
+  /** @deprecated use `swcJest` instead */
   babelJest?: boolean;
   js: boolean;
   pascalCaseFiles: boolean;

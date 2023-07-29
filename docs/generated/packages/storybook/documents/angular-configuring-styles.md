@@ -1,3 +1,8 @@
+---
+title: Angular - Configuring styles and preprocessor options
+description: This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.
+---
+
 # Configuring styles and preprocessor options for Angular projects with a Storybook configuration
 
 {% callout type="note" title="Note" %}

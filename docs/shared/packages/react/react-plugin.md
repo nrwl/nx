@@ -8,16 +8,16 @@ It provides:
 
 ## Setting Up React
 
-To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react`.
+To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react-standalone`.
 
 To add the React plugin to an existing workspace, run one of the following:
 
 ```shell
 # For npm users
-npm install -D @nrwl/react
+npm install -D @nx/react
 
 # For yarn users
-yarn add -D @nrwl/react
+yarn add -D @nx/react
 ```
 
 ### Creating Applications and Libraries
@@ -25,7 +25,7 @@ yarn add -D @nrwl/react
 You can add a new application with the following:
 
 ```shell
-nx g @nrwl/react:app my-new-app
+nx g @nx/react:app my-new-app
 ```
 
 To start the application in development mode, run `nx serve my-new-app`.
@@ -33,28 +33,29 @@ To start the application in development mode, run `nx serve my-new-app`.
 And add a new library as follows:
 
 ```shell
-nx g @nrwl/react:lib my-new-lib
+nx g @nx/react:lib my-new-lib
 
 # If you want the library to be buildable or publishable to npm
-nx g @nrwl/react:lib my-new-lib --buildable
-nx g @nrwl/react:lib my-new-lib \
+nx g @nx/react:lib my-new-lib --bundler=vite
+nx g @nx/react:lib my-new-lib --bundler=rollup
+nx g @nx/react:lib my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
 ```
 
-Read more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).
+Read more about [building and publishing libraries here](/concepts/more-concepts/buildable-and-publishable-libraries).
 
 ### Creating Components
 
 Adding a component to an existing project can be done with:
 
 ```shell
-nx g @nrwl/react:component my-new-component \
+nx g @nx/react:component my-new-component \
 --project=my-new-app
 
 # Note: If you want to export the component
 # from the library use  --export
-nx g @nrwl/react:component my-new-component \
+nx g @nx/react:component my-new-component \
 --project=my-new-lib \
 --export
 ```
@@ -66,7 +67,7 @@ Replace `my-new-app` and `my-new-lib` with the name of your projects.
 If you want to add a new hook, run the following
 
 ```shell
-nx g @nrwl/react:hook my-new-hook --project=my-new-lib
+nx g @nx/react:hook my-new-hook --project=my-new-lib
 ```
 
 Replace `my-new-lib` with the name of your project.
@@ -100,7 +101,7 @@ React applications can be build with:
 nx build my-new-app
 ```
 
-And if you generated a library with `--buildable`, then you can build a library as well:
+And if you generated a library with `--bundler` specified, then you can build a library as well:
 
 ```shell
 nx build my-new-lib

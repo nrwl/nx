@@ -6,7 +6,7 @@ import {
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { maybeJs } from './maybe-js';
 import { NormalizedSchema } from '../schema';
@@ -20,10 +20,12 @@ export async function addRollupBuildTarget(
   host: Tree,
   options: NormalizedSchema
 ) {
-  await ensurePackage(host, '@nrwl/rollup', nxVersion);
-  const { rollupInitGenerator } = await import('@nrwl/rollup');
+  const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
+    '@nx/rollup',
+    nxVersion
+  );
 
-  // These are used in `@nrwl/react/plugins/bundle-rollup`
+  // These are used in `@nx/react/plugins/bundle-rollup`
   addDependenciesToPackageJson(
     host,
     {},
@@ -36,7 +38,7 @@ export async function addRollupBuildTarget(
   const { targets } = readProjectConfiguration(host, options.name);
 
   const { libsDir } = getWorkspaceLayout(host);
-  const external: string[] = [];
+  const external: string[] = ['react', 'react-dom'];
 
   if (options.style === '@emotion/styled') {
     external.push('@emotion/react/jsx-runtime');
@@ -45,7 +47,7 @@ export async function addRollupBuildTarget(
   }
 
   targets.build = {
-    executor: '@nrwl/rollup:rollup',
+    executor: '@nx/rollup:rollup',
     outputs: ['{options.outputPath}'],
     options: {
       outputPath:
@@ -56,7 +58,7 @@ export async function addRollupBuildTarget(
       project: `${options.projectRoot}/package.json`,
       entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
       external,
-      rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+      rollupConfig: `@nx/react/plugins/bundle-rollup`,
       compiler: options.compiler ?? 'babel',
       assets: [
         {
@@ -76,5 +78,5 @@ export async function addRollupBuildTarget(
     targets,
   });
 
-  return rollupInitGenerator(host, options);
+  return rollupInitGenerator(host, { ...options, skipFormat: true });
 }

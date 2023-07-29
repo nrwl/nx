@@ -3,7 +3,7 @@ import {
   getProjects,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 
 /**

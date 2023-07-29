@@ -1,6 +1,0 @@
-{
-  "$schema": "http://json-schema.org/schema",
-  "name": "<%= name %>",
-  "version": "0.0.1",
-  "generators": {}
-}

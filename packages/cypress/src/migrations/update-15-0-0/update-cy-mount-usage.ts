@@ -11,9 +11,9 @@ import {
   TargetConfiguration,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import { gte } from 'semver';
 import * as ts from 'typescript';

@@ -5,8 +5,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema, Schema } from '../schema';
 import { normalizeSchema } from './normalize-schema';
 
@@ -42,6 +42,25 @@ describe('normalizeSchema', () => {
     };
 
     const result = normalizeSchema(tree, schema, projectConfiguration);
+
+    expect(result).toEqual(expected);
+  });
+
+  it('should normalize destination and derive projectName correctly', () => {
+    const expected: NormalizedSchema = {
+      destination: 'my/library',
+      importPath: '@proj/my/library',
+      newProjectName: 'my-library',
+      projectName: 'my-library',
+      relativeToRootDestination: 'libs/my/library',
+      updateImportPath: true,
+    };
+
+    const result = normalizeSchema(
+      tree,
+      { ...schema, destination: './my/library' },
+      projectConfiguration
+    );
 
     expect(result).toEqual(expected);
   });

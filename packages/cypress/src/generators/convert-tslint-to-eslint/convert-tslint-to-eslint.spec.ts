@@ -5,15 +5,25 @@ import {
   readProjectConfiguration,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { exampleRootTslintJson } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { exampleRootTslintJson } from '@nx/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
 
 /**
  * Don't run actual child_process implementation of installPackagesTask()
  */
-jest.mock('child_process');
+jest.mock('child_process', () => {
+  return {
+    ...jest.requireActual<any>('child_process'),
+    execSync: jest.fn((command: string) => {
+      if (command.includes('pnpm --version')) {
+        return '8.2.0';
+      }
+      return;
+    }),
+  };
+});
 
 const projectName = 'e2e-app-1';
 const projectRoot = `apps/${projectName}`;
@@ -143,7 +153,13 @@ describe('convert-tslint-to-eslint', () => {
     /**
      * The root level .eslintrc.json should now have been generated
      */
-    expect(readJson(host, '.eslintrc.json')).toMatchSnapshot();
+    const eslintJson = readJson(host, '.eslintrc.json');
+    expect(eslintJson.overrides[3].rules['no-console'][1].allow).toContain(
+      'log'
+    );
+    // Remove no-console config because it is not deterministic across node versions
+    delete eslintJson.overrides[3].rules['no-console'][1].allow;
+    expect(eslintJson).toMatchSnapshot();
 
     /**
      * The project level .eslintrc.json should now have been generated

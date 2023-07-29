@@ -1,4 +1,4 @@
-import { convertNxExecutor } from '@nrwl/devkit';
+import { convertNxExecutor } from '@nx/devkit';
 
 import { delegateBuildExecutor } from './delegate-build.impl';
 

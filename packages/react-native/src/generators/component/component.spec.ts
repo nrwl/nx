@@ -1,5 +1,5 @@
-import { logger, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { logger, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { createApp, createLib } from '../../utils/testing-generators';
 import { reactNativeComponentGenerator } from './component';
 

@@ -5,14 +5,15 @@ import {
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from './schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
-import { jestInitGenerator } from '@nrwl/jest';
-import { detoxInitGenerator } from '@nrwl/detox';
-import { babelPresetReactVersion } from '@nrwl/react/src/utils/versions';
+
+import { jestInitGenerator } from '@nx/jest';
+import { detoxInitGenerator } from '@nx/detox';
+import { babelPresetReactVersion } from '@nx/react/src/utils/versions';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   babelRuntimeVersion,
@@ -20,11 +21,10 @@ import {
   metroVersion,
   nxVersion,
   reactDomVersion,
-  reactNativeAsyncStorageAsyncStorageVersion,
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
   reactNativeCommunityCliIos,
-  reactNativeConfigVersion,
+  reactNativeMetroConfigVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactNativeVersion,
@@ -41,9 +41,14 @@ import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
-  addBabelInputs(host);
-
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(
+    await jsInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+    })
+  );
 
   if (!schema.skipPackageJson) {
     const installTask = updateDependencies(host);
@@ -53,12 +58,15 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   }
 
   if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = jestInitGenerator(host, schema);
+    const jestTask = await jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, {});
+    const detoxTask = await detoxInitGenerator(host, {
+      ...schema,
+      skipFormat: true,
+    });
     tasks.push(detoxTask);
   }
 
@@ -79,10 +87,11 @@ export function updateDependencies(host: Tree) {
       'react-native': reactNativeVersion,
     },
     {
-      '@nrwl/react-native': nxVersion,
+      '@nx/react-native': nxVersion,
       '@types/node': typesNodeVersion,
       '@types/react': typesReactVersion,
       '@types/react-native': typesReactNativeVersion,
+      '@react-native/metro-config': reactNativeMetroConfigVersion,
       '@react-native-community/cli': reactNativeCommunityCli,
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliAndroid,
@@ -91,6 +100,7 @@ export function updateDependencies(host: Tree) {
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
       'jest-react-native': jestReactNativeVersion,
       metro: metroVersion,
+      'metro-config': metroVersion,
       'metro-resolver': metroVersion,
       'metro-babel-register': metroVersion,
       'metro-react-native-babel-preset': metroVersion,
@@ -98,13 +108,9 @@ export function updateDependencies(host: Tree) {
       'react-test-renderer': reactTestRendererVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
-      'react-native-config': reactNativeConfigVersion,
-      '@react-native-async-storage/async-storage':
-        reactNativeAsyncStorageAsyncStorageVersion,
       '@babel/preset-react': babelPresetReactVersion,
       ...(isPnpm
         ? {
-            'metro-config': metroVersion, // metro-config is used by metro.config.js
             '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
           }
         : {}),
@@ -113,7 +119,7 @@ export function updateDependencies(host: Tree) {
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/react-native'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
 }
 
 export default reactNativeInitGenerator;

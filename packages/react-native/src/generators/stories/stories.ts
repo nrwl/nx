@@ -1,17 +1,18 @@
 import {
   convertNxGenerator,
   ensurePackage,
+  formatFiles,
   getProjects,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import componentStoryGenerator from '../component-story/component-story';
 import { StorybookStoriesSchema } from './schema';
 import {
   containsComponentDeclaration,
   projectRootPath,
-} from '@nrwl/react/src/generators/stories/stories';
+} from '@nx/react/src/generators/stories/stories';
 import minimatch = require('minimatch');
 import { nxVersion } from '../../utils/versions';
 
@@ -20,10 +21,8 @@ export async function createAllStories(
   projectName: string,
   ignorePaths?: string[]
 ) {
-  await ensurePackage(tree, '@nrwl/storybook', nxVersion);
-  const { isTheFileAStory } = await import(
-    '@nrwl/storybook/src/utils/utilities'
-  );
+  ensurePackage('@nx/storybook', nxVersion);
+  const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
 
   const projects = getProjects(tree);
   const projectConfiguration = projects.get(projectName);
@@ -65,6 +64,7 @@ export async function createAllStories(
       await componentStoryGenerator(tree, {
         componentPath: relativeCmpDir,
         project: projectName,
+        skipFormat: true,
       });
     })
   );
@@ -75,6 +75,10 @@ export async function storiesGenerator(
   schema: StorybookStoriesSchema
 ) {
   await createAllStories(host, schema.project, schema.ignorePaths);
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default storiesGenerator;

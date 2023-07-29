@@ -5,7 +5,7 @@
   "projectType": "library",
   "targets": {
     "test": {
-      "executor": "@nrwl/jest:jest",
+      "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "packages/vite/jest.config.ts",
         "passWithNoTests": true
@@ -13,12 +13,11 @@
       "outputs": ["{workspaceRoot}/coverage/packages/vite"]
     },
     "build-base": {
-      "executor": "@nrwl/js:swc",
+      "executor": "@nx/js:swc",
       "options": {
         "outputPath": "build/packages/vite",
         "tsConfig": "packages/vite/tsconfig.lib.json",
         "main": "packages/vite/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/vite",
@@ -60,11 +59,14 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/vite"],
       "options": {
-        "command": "node ./scripts/copy-readme.js vite"
+        "commands": [
+          "node ./scripts/copy-readme.js vite",
+          "node ./scripts/add-dependency-to-build.js vite @nrwl/vite"
+        ]
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
           "packages/vite/**/*.ts",

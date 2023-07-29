@@ -1,5 +1,3 @@
-// nx-ignore-next-line
-import type { ProjectGraphDependency } from '@nrwl/devkit';
 import * as cy from 'cytoscape';
 
 export interface TaskEdgeDataDefinition extends cy.NodeDataDefinition {

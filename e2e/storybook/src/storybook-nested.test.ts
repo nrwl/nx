@@ -1,68 +1,48 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
   getSelectedPackageManager,
   killPorts,
   readJson,
   runCLI,
-  runCommand,
   runCommandUntil,
   runCreateWorkspace,
   tmpProjPath,
   uniq,
-  updateFile,
-  updateJson,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
+import { createFileSync } from 'fs-extra';
 
-describe('Storybook generators for nested workspaces', () => {
-  const previousPM = process.env.SELECTED_PM;
-  const wsName = uniq('react');
-  const appName = uniq('app');
-  const packageManager = getSelectedPackageManager() || 'yarn';
+describe('Storybook generators and executors for standalone workspaces - using React + Vite', () => {
+  const appName = uniq('react');
 
   beforeAll(() => {
-    process.env.SELECTED_PM = 'yarn';
-
     // create a workspace with a single react app at the root
-    runCreateWorkspace(wsName, {
+    runCreateWorkspace(appName, {
       preset: 'react-standalone',
       appName,
       style: 'css',
-      packageManager,
       bundler: 'vite',
+      packageManager: getSelectedPackageManager(),
     });
 
     runCLI(
-      `generate @nrwl/react:storybook-configuration ${appName} --generateStories --no-interactive`
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
 
-    // TODO(jack): Overriding enhanced-resolve to 5.10.0 now until the package is fixed.
-    // See: https://github.com/webpack/enhanced-resolve/issues/362
-    updateJson('package.json', (json) => {
-      json['overrides'] = {
-        'enhanced-resolve': '5.10.0',
-      };
-
-      return json;
-    });
-
-    runCommand(getPackageManagerCommand().install);
+    runCLI(`report`);
   });
 
   afterAll(() => {
     cleanupProject();
-    process.env.SELECTED_PM = previousPM;
   });
 
   describe('Storybook generated files', () => {
     it('should generate storybook files', () => {
       checkFilesExist(
-        '.storybook/main.js',
-        '.storybook/main.root.js',
-        '.storybook/preview.js',
-        '.storybook/tsconfig.json'
+        '.storybook/main.ts',
+        '.storybook/preview.ts',
+        'tsconfig.storybook.json'
       );
     });
 
@@ -70,109 +50,72 @@ describe('Storybook generators for nested workspaces', () => {
       const tsconfig = readJson(`tsconfig.json`);
       expect(tsconfig['ts-node']?.compilerOptions?.module).toEqual('commonjs');
     });
-
-    it('should generate correct files for nested app', () => {
-      const nestedAppName = uniq('other-app');
-      runCLI(`generate @nrwl/react:app ${nestedAppName} --no-interactive`);
-      runCLI(
-        `generate @nrwl/react:storybook-configuration ${nestedAppName} --generateStories --no-interactive`
-      );
-      checkFilesExist(
-        `${nestedAppName}/.storybook/main.js`,
-        `${nestedAppName}/.storybook/tsconfig.json`
-      );
-    });
   });
 
-  // TODO: Re-enable this test when Nx uses only Storybook 7 (Nx 16)
-  // This fails for Node 18 because Storybook 6.5 uses webpack even in non-webpack projects
-  // https://github.com/storybookjs/builder-vite/issues/414#issuecomment-1287536049
-  // https://github.com/storybookjs/storybook/issues/20209
-  // Error: error:0308010C:digital envelope routines::unsupported
-  xdescribe('serve storybook', () => {
+  describe('serve storybook', () => {
     afterEach(() => killPorts());
 
-    it('should run a React based Storybook setup', async () => {
-      // serve the storybook
+    it('should serve a React based Storybook setup that uses Vite', async () => {
       const p = await runCommandUntil(`run ${appName}:storybook`, (output) => {
         return /Storybook.*started/gi.test(output);
       });
       p.kill();
-    }, 1000000);
+    }, 100_000);
   });
 
-  // TODO: Re-enable this test when Nx uses only Storybook 7 (Nx 16)
-  // This fails for Node 18 because Storybook 6.5 uses webpack even in non-webpack projects
-  // https://github.com/storybookjs/builder-vite/issues/414#issuecomment-1287536049
-  // https://github.com/storybookjs/storybook/issues/20209
-  // Error: error:0308010C:digital envelope routines::unsupported
-  xdescribe('build storybook', () => {
-    it('should build and lint a React based storybook', () => {
-      // build
+  describe('build storybook', () => {
+    it('should build a React based storybook that uses Vite', () => {
       runCLI(`run ${appName}:build-storybook --verbose`);
       checkFilesExist(`dist/storybook/${appName}/index.html`);
+    }, 100_000);
 
-      // lint
-      const output = runCLI(`run ${appName}:lint`);
-      expect(output).toContain('All files pass linting.');
-    }, 1000000);
-
-    it('should build a React based storybook that references another lib', () => {
-      const reactLib = uniq('test-lib-react');
-      runCLI(`generate @nrwl/react:lib ${reactLib} --no-interactive`);
-      // create a React component we can reference
-      writeFileSync(
-        tmpProjPath(`${reactLib}/src/lib/mytestcmp.tsx`),
-        `
-            import React from 'react';
-
-            /* eslint-disable-next-line */
-            export interface MyTestCmpProps {}
-
-            export const MyTestCmp = (props: MyTestCmpProps) => {
-              return (
-                <div>
-                  <h1>Welcome to test cmp!</h1>
-                </div>
-              );
-            };
-
-            export default MyTestCmp;
-        `
+    it('should build a React based storybook that references another lib and uses Vite', () => {
+      runCLI(
+        `generate @nx/react:lib my-lib --bundler=vite --unitTestRunner=none --no-interactive`
       );
-      // update index.ts and export it
+
+      // create a component and a story in the first lib to reference the cmp from the 2nd lib
+      createFileSync(tmpProjPath(`src/app/test-button.tsx`));
       writeFileSync(
-        tmpProjPath(`${reactLib}/src/index.ts`),
+        tmpProjPath(`src/app/test-button.tsx`),
         `
-            export * from './lib/mytestcmp';
+          import { MyLib } from 'my-lib';
+
+          export function TestButton() {
+            return (
+              <div>
+                <MyLib />
+              </div>
+            );
+          }
+
+          export default TestButton;
         `
       );
 
       // create a story in the first lib to reference the cmp from the 2nd lib
+      createFileSync(tmpProjPath(`src/app/test-button.stories.tsx`));
       writeFileSync(
-        tmpProjPath(`${reactLib}/src/lib/myteststory.stories.tsx`),
+        tmpProjPath(`src/app/test-button.stories.tsx`),
         `
-            import React from 'react';
+        import type { Meta } from '@storybook/react';
+        import { TestButton } from './test-button';
 
-            import { MyTestCmp, MyTestCmpProps } from '@${wsName}/${reactLib}';
+        const Story: Meta<typeof TestButton> = {
+          component: TestButton,
+          title: 'TestButton',
+        };
+        export default Story;
 
-            export default {
-              component: MyTestCmp,
-              title: 'MyTestCmp',
-            };
-
-            export const primary = () => {
-              /* eslint-disable-next-line */
-              const props: MyTestCmpProps = {};
-
-              return <MyTestCmp />;
-            };
-        `
+        export const Primary = {
+          args: {},
+        };
+              `
       );
 
       // build React lib
-      runCLI(`run ${reactLib}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${reactLib}/index.html`);
-    }, 1000000);
+      runCLI(`run ${appName}:build-storybook --verbose`);
+      checkFilesExist(`dist/storybook/${appName}/index.html`);
+    }, 150_000);
   });
 });

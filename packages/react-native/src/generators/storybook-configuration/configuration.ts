@@ -1,13 +1,19 @@
 import {
+  addDependenciesToPackageJson,
   convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { nxVersion } from '../../utils/versions';
+} from '@nx/devkit';
+import {
+  nxVersion,
+  reactNativeAsyncStorageVersion,
+  reactNativeSafeAreaContextVersion,
+} from '../../utils/versions';
 
 import storiesGenerator from '../stories/stories';
 import { addResolverMainFieldsToMetroConfig } from './lib/add-resolver-main-fields-to-metro-config';
@@ -20,6 +26,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   await storiesGenerator(host, {
     project: schema.name,
     ignorePaths: schema.ignorePaths,
+    skipFormat: true,
   });
 }
 
@@ -27,8 +34,9 @@ export async function storybookConfigurationGenerator(
   host: Tree,
   schema: StorybookConfigureSchema
 ): Promise<GeneratorCallback> {
-  await ensurePackage(host, '@nrwl/storybook', nxVersion);
-  const { configurationGenerator } = await import('@nrwl/storybook');
+  const { configurationGenerator } = ensurePackage<
+    typeof import('@nx/storybook')
+  >('@nx/storybook', nxVersion);
 
   const installTask = await configurationGenerator(host, {
     name: schema.name,
@@ -38,7 +46,18 @@ export async function storybookConfigurationGenerator(
     linter: schema.linter,
     standaloneConfig: schema.standaloneConfig,
     tsConfiguration: schema.tsConfiguration,
+    skipFormat: true,
   });
+
+  const installRequiredPackagesTask = await addDependenciesToPackageJson(
+    host,
+    {},
+    {
+      '@react-native-async-storage/async-storage':
+        reactNativeAsyncStorageVersion,
+      'react-native-safe-area-context': reactNativeSafeAreaContextVersion,
+    }
+  );
 
   addStorybookTask(host, schema.name);
   createStorybookFiles(host, schema);
@@ -50,18 +69,17 @@ export async function storybookConfigurationGenerator(
   }
 
   await formatFiles(host);
-  return installTask;
+  return runTasksInSerial(installTask, installRequiredPackagesTask);
 }
 
 function addStorybookTask(host: Tree, projectName: string) {
   const projectConfig = readProjectConfiguration(host, projectName);
   projectConfig.targets['storybook'] = {
-    executor: '@nrwl/react-native:storybook',
+    executor: '@nx/react-native:storybook',
     options: {
-      searchDir: [projectConfig.root],
+      searchDir: [projectConfig.sourceRoot],
       outputFile: './.storybook/story-loader.js',
       pattern: '**/*.stories.@(js|jsx|ts|tsx|md)',
-      silent: false,
     },
   };
 

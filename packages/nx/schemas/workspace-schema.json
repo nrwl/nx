@@ -65,9 +65,22 @@
                                   "type": "object",
                                   "properties": {
                                     "projects": {
-                                      "type": "string",
-                                      "description": "The projects that the targets belong to.",
-                                      "enum": ["self", "dependencies"]
+                                      "oneOf": [
+                                        {
+                                          "type": "string",
+                                          "description": "A project name"
+                                        },
+                                        {
+                                          "type": "array",
+                                          "description": "An array of project names",
+                                          "items": {
+                                            "type": "string"
+                                          }
+                                        }
+                                      ]
+                                    },
+                                    "dependencies": {
+                                      "type": "boolean"
                                     },
                                     "target": {
                                       "type": "string",
@@ -80,8 +93,24 @@
                                       "default": "ignore"
                                     }
                                   },
-                                  "additionalProperties": false,
-                                  "required": ["projects", "target"]
+                                  "oneOf": [
+                                    {
+                                      "required": ["projects", "target"]
+                                    },
+                                    {
+                                      "required": ["dependencies", "target"]
+                                    },
+                                    {
+                                      "required": ["target"],
+                                      "not": {
+                                        "anyOf": [
+                                          { "required": ["projects"] },
+                                          { "required": ["dependencies"] }
+                                        ]
+                                      }
+                                    }
+                                  ],
+                                  "additionalProperties": false
                                 }
                               ]
                             }

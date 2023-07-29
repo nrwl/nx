@@ -2,9 +2,13 @@ import {
   addDependenciesToPackageJson,
   getPackageManagerCommand,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Preset } from '../utils/presets';
-import { nxVersion } from '../../utils/versions';
+import {
+  angularCliVersion,
+  nxVersion,
+  typescriptVersion,
+} from '../../utils/versions';
 import { getNpmPackageVersion } from '../utils/get-npm-package-version';
 import { NormalizedSchema } from './new';
 import { join } from 'path';
@@ -20,10 +24,7 @@ export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
   ) {
     return;
   }
-  const { dependencies, dev } = getPresetDependencies(
-    options.preset,
-    options.presetVersion
-  );
+  const { dependencies, dev } = getPresetDependencies(options);
   return addDependenciesToPackageJson(
     host,
     dependencies,
@@ -67,61 +68,106 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
   function getDefaultArgs(opts: NormalizedSchema) {
     return [
       `g`,
-      `@nrwl/workspace:preset`,
+      `@nx/workspace:preset`,
       `--name=${opts.appName}`,
       opts.style ? `--style=${opts.style}` : null,
       opts.linter ? `--linter=${opts.linter}` : null,
-      opts.npmScope ? `--npmScope=${opts.npmScope}` : `--npmScope=${opts.name}`,
       opts.preset ? `--preset=${opts.preset}` : null,
       opts.bundler ? `--bundler=${opts.bundler}` : null,
       opts.framework ? `--framework=${opts.framework}` : null,
       opts.docker ? `--docker=${opts.docker}` : null,
+      opts.js ? `--js` : null,
+      opts.nextAppDir ? '--nextAppDir=true' : '--nextAppDir=false',
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
+      opts.standaloneApi !== undefined
+        ? `--standaloneApi=${opts.standaloneApi}`
+        : null,
       parsedArgs.interactive ? '--interactive=true' : '--interactive=false',
+      opts.routing !== undefined ? `--routing=${opts.routing}` : null,
+      opts.e2eTestRunner !== undefined
+        ? `--e2eTestRunner=${opts.e2eTestRunner}`
+        : null,
     ].filter((e) => !!e);
   }
 }
 
-function getPresetDependencies(preset: string, version?: string) {
+function getPresetDependencies({
+  preset,
+  presetVersion,
+  bundler,
+  e2eTestRunner,
+}: NormalizedSchema) {
   switch (preset) {
     case Preset.TS:
-      return { dependencies: {}, dev: { '@nrwl/js': nxVersion } };
+    case Preset.TsStandalone:
+      return { dependencies: {}, dev: { '@nx/js': nxVersion } };
 
     case Preset.AngularMonorepo:
     case Preset.AngularStandalone:
-      return { dependencies: { '@nrwl/angular': nxVersion }, dev: {} };
+      return {
+        dependencies: { '@nx/angular': nxVersion },
+        dev: {
+          '@angular-devkit/core': angularCliVersion,
+          typescript: typescriptVersion,
+        },
+      };
 
     case Preset.Express:
-      return { dependencies: {}, dev: { '@nrwl/express': nxVersion } };
+      return { dependencies: {}, dev: { '@nx/express': nxVersion } };
 
     case Preset.Nest:
-      return { dependencies: {}, dev: { '@nrwl/nest': nxVersion } };
+      return {
+        dependencies: {},
+        dev: { '@nx/nest': nxVersion, typescript: typescriptVersion },
+      };
 
     case Preset.NextJs:
-      return { dependencies: { '@nrwl/next': nxVersion }, dev: {} };
+    case Preset.NextJsStandalone:
+      return { dependencies: { '@nx/next': nxVersion }, dev: {} };
 
     case Preset.ReactMonorepo:
-      return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
-
     case Preset.ReactStandalone:
-      return { dependencies: {}, dev: { '@nrwl/react': nxVersion } };
+      return {
+        dependencies: {},
+        dev: {
+          '@nx/react': nxVersion,
+          '@nx/cypress': e2eTestRunner !== 'none' ? nxVersion : undefined,
+          '@nx/jest': bundler !== 'vite' ? nxVersion : undefined,
+          '@nx/vite': bundler === 'vite' ? nxVersion : undefined,
+          '@nx/webpack': bundler === 'webpack' ? nxVersion : undefined,
+        },
+      };
 
     case Preset.ReactNative:
-      return { dependencies: {}, dev: { '@nrwl/react-native': nxVersion } };
+      return { dependencies: {}, dev: { '@nx/react-native': nxVersion } };
 
     case Preset.Expo:
-      return { dependencies: {}, dev: { '@nrwl/expo': nxVersion } };
+      return { dependencies: {}, dev: { '@nx/expo': nxVersion } };
 
     case Preset.WebComponents:
-      return { dependencies: {}, dev: { '@nrwl/web': nxVersion } };
+      return {
+        dependencies: {},
+        dev: { '@nx/web': nxVersion, typescript: typescriptVersion },
+      };
 
-    case Preset.NodeServer:
-      return { dependencies: {}, dev: { '@nrwl/node': nxVersion } };
+    case Preset.NodeStandalone:
+    case Preset.NodeMonorepo:
+      return {
+        dependencies: {},
+        dev: {
+          '@nx/node': nxVersion,
+          '@nx/webpack': bundler === 'webpack' ? nxVersion : undefined,
+        },
+      };
 
     default: {
       return {
         dev: {},
-        dependencies: { [preset]: version ?? getNpmPackageVersion(preset) },
+        dependencies: {
+          [preset]:
+            process.env['NX_E2E_PRESET_VERSION'] ??
+            getNpmPackageVersion(preset, presetVersion),
+        },
       };
     }
   }

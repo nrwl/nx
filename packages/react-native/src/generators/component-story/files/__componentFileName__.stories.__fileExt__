@@ -1,24 +1,32 @@
-<% if (hasActions) { %>
-  import { action } from '@storybook/addon-actions';
-<% } %>
-import { storiesOf } from '@storybook/react-native';
-import React from 'react';
-import {
-  <%= componentName %>
-  <% if ( propsTypeName ) { %>, <%= propsTypeName %> <% } %>
-} from './<%= componentImportFileName %>';
+<% if ( !isPlainJs ) { %>import type { Meta } from '@storybook/react-native';<% } %>
+import<% if ( !isPlainJs ) { %> { <% } %> <%= componentName %> <% if ( !isPlainJs ) { %> } <% } %> from './<%= componentImportFileName %>';
 
-<% if (hasActions) { %>
-  const actions = {<% for (let argType of argTypes) { %>
-    <%= argType.name %>: action('<%- argType.actionText %>'),
-  <% } %>};
+<% if ( isPlainJs ) { %>
+export default {
+  component: <%= componentName %>,
+  title: '<%= componentName %>',<% if ( argTypes && argTypes.length > 0 ) { %> 
+  argTypes: {<% for (let argType of argTypes) { %>
+    <%= argType.name %>: { <%- argType.type %> : "<%- argType.actionText %>" },<% } %>
+}
+   <% } %> 
+};
 <% } %>
 
-const props <% if ( propsTypeName ) { %>:<%= propsTypeName %><% } %> = {<% for (let prop of props) { %>
-    <%= prop.name %>: <%- prop.defaultValue %>,
-<% } %>};
 
-storiesOf('<%= componentName %>', module)
-  .add('Primary', () => (
-    <<%= componentName %> {...props} <% if (hasActions) { %> {...actions} <% } %>/>
-  ));
+<% if ( !isPlainJs ) { %>
+const Story: Meta<typeof <%= componentName %>> = {
+  component: <%= componentName %>,
+  title: '<%= componentName %>',<% if ( argTypes && argTypes.length > 0 ) { %> 
+  argTypes: {<% for (let argType of argTypes) { %>
+    <%= argType.name %>: { <%- argType.type %> : "<%- argType.actionText %>" },<% } %>
+}
+   <% } %> 
+};
+export default Story;
+<% } %>
+
+export const Primary = {
+  args: {<% for (let prop of props) { %>
+    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+  },
+};

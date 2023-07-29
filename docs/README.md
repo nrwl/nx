@@ -36,13 +36,24 @@ Your content goes here.
 
 #### Cards
 
-Cards allow to show content in a grid system with a title, a description, a type and an url (internal/external).
+Cards allow showing content in a grid system with a title, a description, a type and an url (internal/external).
 
 ```markdown
 {% cards %}
 {% card title="string" description="string" type="documentation|external|video" url="string" /%}
 {% card title="string" description="string" type="documentation|external|video" url="string" /%}
 // as many as cards you want
+{% /cards %}
+```
+
+Title cards allow to only show a title in a card with a title and an url.
+
+```markdown
+{% cards cols="4" %}
+{% title-card title="string" url="string" /%}
+{% title-card title="string" url="string" /%}
+{% title-card title="string" url="string" /%}
+{% title-card title="string" url="string" /%}
 {% /cards %}
 ```
 
@@ -93,6 +104,14 @@ We can display a special button inviting the reader to go to a GitHub repository
 
 ```markdown
 {% github-repository url="https://github.com/nrwl/nx-examples" /%}
+```
+
+#### Stackblitz Buttons
+
+You can add an "open in stackblitz" button as follows:
+
+```markdown
+{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/angular-standalone?file=README.md" /%}
 ```
 
 #### Install Nx Console
@@ -149,6 +168,14 @@ Embed a YouTube video directly with the following shortcode, control the title a
 src="https://www.youtube.com/embed/rNImFxo9gYs"
 title="Nx Console Run UI Form"
 width="100%" /%}
+```
+
+#### Youtube Section Link
+
+Have a more decent button-like widget that you can place below sections of a tutorial with a link to a specific point in a Youtube video.
+
+```markdown
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
 ```
 
 #### Graph

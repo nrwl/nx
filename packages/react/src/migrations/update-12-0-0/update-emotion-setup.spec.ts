@@ -1,5 +1,5 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { addProjectConfiguration, readJson, Tree } from '@nrwl/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { addProjectConfiguration, readJson, Tree } from '@nx/devkit';
 import { updateEmotionSetup } from './update-emotion-setup';
 
 describe('Update babel config for emotion', () => {

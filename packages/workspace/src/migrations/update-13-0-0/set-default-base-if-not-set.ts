@@ -1,4 +1,4 @@
-import { formatFiles, readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
+import { formatFiles, readNxJson, Tree, updateNxJson } from '@nx/devkit';
 import { output } from '../../utilities/output';
 
 export async function setDefaultBaseIfNotSet(host: Tree) {

@@ -54,6 +54,9 @@ describe('project graph utils', () => {
           data: {},
         },
       },
+      externalNodes: {
+        'npm:chalk': {},
+      },
       dependencies: {
         'demo-app': [
           {

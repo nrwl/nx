@@ -6,23 +6,31 @@ import {
   joinPathFragments,
   normalizePath,
   Tree,
-} from '@nrwl/devkit';
-import * as ts from 'typescript';
+} from '@nx/devkit';
+import type * as ts from 'typescript';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
 import { getDefaultsForComponent } from '../../utils/component-props';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 export interface CreateComponentStoriesFileSchema {
   project: string;
   componentPath: string;
+  interactionTests?: boolean;
+  skipFormat?: boolean;
 }
 
 export function createComponentStoriesFile(
   host: Tree,
-  { project, componentPath }: CreateComponentStoriesFileSchema
+  { project, componentPath, interactionTests }: CreateComponentStoriesFileSchema
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const proj = getProjects(host).get(project);
   const sourceRoot = proj.sourceRoot;
 
@@ -35,12 +43,6 @@ export function createComponentStoriesFile(
 
   const isPlainJs =
     componentFilePath.endsWith('.jsx') || componentFilePath.endsWith('.js');
-  let fileExt = 'tsx';
-  if (componentFilePath.endsWith('.jsx')) {
-    fileExt = 'jsx';
-  } else if (componentFilePath.endsWith('.js')) {
-    fileExt = 'js';
-  }
 
   const componentFileName = componentFilePath
     .slice(componentFilePath.lastIndexOf('/') + 1)
@@ -55,10 +57,10 @@ export function createComponentStoriesFile(
     throw new Error(`Failed to read ${componentFilePath}`);
   }
 
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     componentFilePath,
     contents,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
@@ -74,8 +76,8 @@ export function createComponentStoriesFile(
           declaration,
           componentDirectory,
           name,
+          interactionTests,
           isPlainJs,
-          fileExt,
           componentNodes.length > 1
         );
       });
@@ -91,8 +93,8 @@ export function createComponentStoriesFile(
       cmpDeclaration,
       componentDirectory,
       name,
-      isPlainJs,
-      fileExt
+      interactionTests,
+      isPlainJs
     );
   }
 }
@@ -103,8 +105,8 @@ export function findPropsAndGenerateFile(
   cmpDeclaration: ts.Node,
   componentDirectory: string,
   name: string,
+  interactionTests: boolean,
   isPlainJs: boolean,
-  fileExt: string,
   fromNodeArray?: boolean
 ) {
   const { propsTypeName, props, argTypes } = getDefaultsForComponent(
@@ -114,9 +116,10 @@ export function findPropsAndGenerateFile(
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, './files'),
+    joinPathFragments(__dirname, `./files${isPlainJs ? '/jsx' : '/tsx'}`),
     normalizePath(componentDirectory),
     {
+      tmpl: '',
       componentFileName: fromNodeArray
         ? `${name}--${(cmpDeclaration as any).name.text}`
         : name,
@@ -125,8 +128,7 @@ export function findPropsAndGenerateFile(
       props,
       argTypes,
       componentName: (cmpDeclaration as any).name.text,
-      isPlainJs,
-      fileExt,
+      interactionTests,
     }
   );
 }
@@ -135,8 +137,14 @@ export async function componentStoryGenerator(
   host: Tree,
   schema: CreateComponentStoriesFileSchema
 ) {
-  createComponentStoriesFile(host, schema);
-  await formatFiles(host);
+  createComponentStoriesFile(host, {
+    ...schema,
+    interactionTests: schema.interactionTests ?? true,
+  });
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 export default componentStoryGenerator;

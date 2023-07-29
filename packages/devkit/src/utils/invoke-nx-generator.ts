@@ -1,12 +1,19 @@
-import { logger, stripIndent } from 'nx/src/utils/logger';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { stripIndent } from 'nx/src/utils/logger';
 import type {
   FileChange,
   Tree,
   TreeWriteOptions,
 } from 'nx/src/generators/tree';
-import { Generator, GeneratorCallback } from 'nx/src/config/misc-interfaces';
+import type {
+  Generator,
+  GeneratorCallback,
+} from 'nx/src/config/misc-interfaces';
 import { join, relative } from 'path';
 import type { Mode } from 'fs';
+import { requireNx } from '../../nx';
+
+const { logger } = requireNx();
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}
@@ -97,7 +104,21 @@ class DevkitTreeFromAngularDevkitTree implements Tree {
     private tree,
     private _root: string,
     private skipWritingConfigInOldFormat?: boolean
-  ) {}
+  ) {
+    /**
+     * When using the UnitTestTree from @angular-devkit/schematics/testing, the root is just `/`.
+     * This causes a massive issue if `getProjects()` is used in the underlying generator because it
+     * causes fast-glob to be set to work on the user's entire file system.
+     *
+     * Therefore, in this case, patch the root to match what Nx Devkit does and use /virtual instead.
+     */
+    try {
+      const { UnitTestTree } = require('@angular-devkit/schematics/testing');
+      if (tree instanceof UnitTestTree && _root === '/') {
+        this._root = '/virtual';
+      }
+    } catch {}
+  }
 
   get root(): string {
     return this._root;

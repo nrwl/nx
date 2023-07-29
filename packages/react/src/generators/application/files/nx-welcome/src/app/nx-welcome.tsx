@@ -238,6 +238,7 @@ export function NxWelcome({ title }: { title: string }) {
     #other-links {}
     .button-pill {
       padding: 1.5rem 2rem;
+      margin-bottom: 2rem;
       transition-duration: 300ms;
       transition-property: background-color, border-color, color, fill, stroke,
       opacity, box-shadow, transform, filter, backdrop-filter,
@@ -273,10 +274,10 @@ export function NxWelcome({ title }: { title: string }) {
     .button-pill:hover {
       color: rgba(255, 255, 255, 1) !important;
     }
-    #nx-console:hover {
+    .nx-console:hover {
       background-color: rgba(0, 122, 204, 1);
     }
-    #nx-console svg {
+    .nx-console svg {
       color: rgba(0, 122, 204, 1);
     }
     #nx-repo:hover {
@@ -643,8 +644,7 @@ export function NxWelcome({ title }: { title: string }) {
             </div>
             <div id="other-links">
               <a
-                id="nx-console"
-                className="button-pill rounded shadow"
+                className="button-pill nx-console rounded shadow"
                 href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project"
                 target="_blank"
                 rel="noreferrer"
@@ -659,24 +659,49 @@ export function NxWelcome({ title }: { title: string }) {
                   <path d="M23.15 2.587L18.21.21a1.494 1.494 0 0 0-1.705.29l-9.46 8.63-4.12-3.128a.999.999 0 0 0-1.276.057L.327 7.261A1 1 0 0 0 .326 8.74L3.899 12 .326 15.26a1 1 0 0 0 .001 1.479L1.65 17.94a.999.999 0 0 0 1.276.057l4.12-3.128 9.46 8.63a1.492 1.492 0 0 0 1.704.29l4.942-2.377A1.5 1.5 0 0 0 24 20.06V3.939a1.5 1.5 0 0 0-.85-1.352zm-5.146 14.861L10.826 12l7.178-5.448v10.896z" />
                 </svg>
                 <span>
-                  Install Nx Console
-                  <span>Plugin for VSCode</span>
+                  Install Nx Console for VSCode
+                  <span>The official VSCode plugin for Nx.</span>
+                </span>
+              </a>
+              <a
+                className="button-pill nx-console rounded shadow"
+                href="https://plugins.jetbrains.com/plugin/21060-nx-console"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <svg
+                  fill="currentColor"
+                  role="img"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <title>IntelliJ</title>
+                  <path d="M0 0v24h24V0zm3.723 3.111h5v1.834h-1.39v6.277h1.39v1.834h-5v-1.834h1.444V4.945H3.723zm11.055 0H17v6.5c0 .612-.055 1.111-.222 1.556-.167.444-.39.777-.723 1.11-.277.279-.666.557-1.11.668a3.933 3.933 0 0 1-1.445.278c-.778 0-1.444-.167-1.944-.445a4.81 4.81 0 0 1-1.279-1.056l1.39-1.555c.277.334.555.555.833.722.277.167.611.278.945.278.389 0 .721-.111 1-.389.221-.278.333-.667.333-1.278zM2.222 19.5h9V21h-9z"></path>
+                </svg>
+                <span>
+                  Install Nx Console for JetBrains
+                  <span>
+                    Available for WebStorm, Intellij IDEA Ultimate and more!
+                  </span>
                 </span>
               </a>
               <div id="nx-cloud" className="rounded shadow">
                 <div>
                   <svg
-                    viewBox="0 0 120 120"
-                    fill="none"
+                    id="nx-cloud-logo"
+                    role="img"
                     xmlns="http://www.w3.org/2000/svg"
+                    stroke="currentColor"
+                    fill="transparent"
+                    viewBox="0 0 24 24"
                   >
                     <path
-                      d="M120 15V30C103.44 30 90 43.44 90 60C90 76.56 76.56 90 60 90C43.44 90 30 103.44 30 120H15C6.72 120 0 113.28 0 105V15C0 6.72 6.72 0 15 0H105C113.28 0 120 6.72 120 15Z"
-                      fill="#0E2039"
+                      strokeWidth="2"
+                      d="M23 3.75V6.5c-3.036 0-5.5 2.464-5.5 5.5s-2.464 5.5-5.5 5.5-5.5 2.464-5.5 5.5H3.75C2.232 23 1 21.768 1 20.25V3.75C1 2.232 2.232 1 3.75 1h16.5C21.768 1 23 2.232 23 3.75Z"
                     />
                     <path
-                      d="M120 30V105C120 113.28 113.28 120 105 120H30C30 103.44 43.44 90 60 90C76.56 90 90 76.56 90 60C90 43.44 103.44 30 120 30Z"
-                      fill="white"
+                      strokeWidth="2"
+                      d="M23 6v14.1667C23 21.7307 21.7307 23 20.1667 23H6c0-3.128 2.53867-5.6667 5.6667-5.6667 3.128 0 5.6666-2.5386 5.6666-5.6666C17.3333 8.53867 19.872 6 23 6Z"
                     />
                   </svg>
                   <h2>
@@ -743,9 +768,9 @@ export function NxWelcome({ title }: { title: string }) {
               </summary>
               <pre>
                 <span># Generate UI lib</span>
-                nx g @nrwl/react:lib ui
+                nx g @nx/react:lib ui
                 <span># Add a component</span>
-                nx g @nrwl/react:component button --project ui
+                nx g @nx/react:component button --project ui
               </pre>
             </details>
             <details>

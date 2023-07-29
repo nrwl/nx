@@ -1,17 +1,25 @@
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import {
-  ImplicitJsonSubsetDependency,
-  NxJsonConfiguration,
-} from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import { findMatchingProjects } from './find-matching-projects';
-import { stripIndents } from './strip-indents';
+import { output } from './output';
+import { ProjectGraphProjectNode } from '../config/project-graph';
 
 export function assertWorkspaceValidity(
-  projectsConfigurations,
+  projectsConfigurations: ProjectsConfigurations,
   nxJson: NxJsonConfiguration
 ) {
   const projectNames = Object.keys(projectsConfigurations.projects);
-  const projectNameSet = new Set(projectNames);
+  const projectGraphNodes = projectNames.reduce((graph, project) => {
+    const projectConfiguration = projectsConfigurations.projects[project];
+    graph[project] = {
+      name: project,
+      type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
+      data: {
+        ...projectConfiguration,
+      },
+    };
+    return graph;
+  }, {} as Record<string, ProjectGraphProjectNode>);
 
   const projects = {
     ...projectsConfigurations.projects,
@@ -19,49 +27,37 @@ export function assertWorkspaceValidity(
 
   const invalidImplicitDependencies = new Map<string, string[]>();
 
-  Object.entries<'*' | string[] | ImplicitJsonSubsetDependency>(
-    nxJson.implicitDependencies || {}
-  )
-    .reduce((acc, entry) => {
-      function recur(value, acc = [], path: string[]) {
-        if (value === '*') {
-          // do nothing since '*' is calculated and always valid.
-        } else if (typeof value === 'string') {
-          // This is invalid because the only valid string is '*'
-          throw new Error(stripIndents`
-         Configuration Error 
-         nx.json is not configured properly. "${path.join(
-           ' > '
-         )}" is improperly configured to implicitly depend on "${value}" but should be an array of project names or "*".
-          `);
-        } else if (Array.isArray(value)) {
-          acc.push([entry[0], value]);
-        } else {
-          Object.entries(value).forEach(([k, v]) => {
-            recur(v, acc, [...path, k]);
-          });
-        }
-      }
+  if (nxJson.implicitDependencies) {
+    output.warn({
+      title:
+        'Using `implicitDependencies` for global implicit dependencies configuration is no longer supported.',
+      bodyLines: [
+        'Use "namedInputs" instead. You can run "nx repair" to automatically migrate your configuration.',
+        'For more information about the usage of "namedInputs" see https://nx.dev/deprecated/global-implicit-dependencies#global-implicit-dependencies',
+      ],
+    });
+  }
 
-      recur(entry[1], acc, [entry[0]]);
-      return acc;
-    }, [])
-    .reduce((map, [filename, projectNames]: [string, string[]]) => {
-      detectAndSetInvalidProjectGlobValues(
-        map,
-        filename,
-        projectNames,
-        projects,
-        projectNames,
-        projectNameSet
-      );
-      return map;
-    }, invalidImplicitDependencies);
+  const projectsWithNonArrayImplicitDependencies = new Map<string, unknown>();
 
   projectNames
     .filter((projectName) => {
       const project = projects[projectName];
-      return !!project.implicitDependencies;
+
+      // Report if for whatever reason, a project is configured to use implicitDependencies but it is not an array
+      if (
+        !!project.implicitDependencies &&
+        !Array.isArray(project.implicitDependencies)
+      ) {
+        projectsWithNonArrayImplicitDependencies.set(
+          projectName,
+          project.implicitDependencies
+        );
+      }
+      return (
+        !!project.implicitDependencies &&
+        Array.isArray(project.implicitDependencies)
+      );
     })
     .reduce((map, projectName) => {
       const project = projects[projectName];
@@ -70,25 +66,43 @@ export function assertWorkspaceValidity(
         projectName,
         project.implicitDependencies,
         projects,
-        projectNames,
-        projectNameSet
+        projectGraphNodes
       );
       return map;
     }, invalidImplicitDependencies);
 
-  if (invalidImplicitDependencies.size === 0) {
+  if (
+    projectsWithNonArrayImplicitDependencies.size === 0 &&
+    invalidImplicitDependencies.size === 0
+  ) {
+    // No issues
     return;
   }
 
-  let message = `The following implicitDependencies specified in project configurations are invalid:\n`;
-  message += [...invalidImplicitDependencies.keys()]
-    .map((key) => {
-      const projectNames = invalidImplicitDependencies.get(key);
-      return `  ${key}\n${projectNames
-        .map((projectName) => `    ${projectName}`)
-        .join('\n')}`;
-    })
-    .join('\n\n');
+  let message = '';
+
+  if (projectsWithNonArrayImplicitDependencies.size > 0) {
+    message += `The following implicitDependencies should be an array of strings:\n`;
+    projectsWithNonArrayImplicitDependencies.forEach(
+      (implicitDependencies, projectName) => {
+        message += `  ${projectName}.implicitDependencies: "${implicitDependencies}"\n`;
+      }
+    );
+    message += '\n';
+  }
+
+  if (invalidImplicitDependencies.size > 0) {
+    message += `The following implicitDependencies point to non-existent project(s):\n`;
+    message += [...invalidImplicitDependencies.keys()]
+      .map((key) => {
+        const projectNames = invalidImplicitDependencies.get(key);
+        return `  ${key}\n${projectNames
+          .map((projectName) => `    ${projectName}`)
+          .join('\n')}`;
+      })
+      .join('\n\n');
+  }
+
   throw new Error(`Configuration Error\n${message}`);
 }
 
@@ -97,8 +111,7 @@ function detectAndSetInvalidProjectGlobValues(
   sourceName: string,
   desiredImplicitDeps: string[],
   projectConfigurations: ProjectsConfigurations['projects'],
-  projectNames: string[],
-  projectNameSet: Set<string>
+  projects: Record<string, ProjectGraphProjectNode>
 ) {
   const invalidProjectsOrGlobs = desiredImplicitDeps.filter((implicit) => {
     const projectName = implicit.startsWith('!')
@@ -107,7 +120,7 @@ function detectAndSetInvalidProjectGlobValues(
 
     return !(
       projectConfigurations[projectName] ||
-      findMatchingProjects([implicit], projectNames, projectNameSet).length
+      findMatchingProjects([implicit], projects).length
     );
   });
 

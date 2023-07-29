@@ -1,10 +1,7 @@
-export {
-  fetchCommunityPlugins,
-  listCommunityPlugins,
-} from './community-plugins';
+export { fetchCommunityPlugins } from './community-plugins';
 export { fetchCorePlugins, listCorePlugins } from './core-plugins';
 export {
-  getInstalledPluginsFromPackageJson,
+  getInstalledPluginsAndCapabilities,
   listInstalledPlugins,
 } from './installed-plugins';
 export {

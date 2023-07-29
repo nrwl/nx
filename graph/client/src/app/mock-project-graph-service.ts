@@ -1,13 +1,15 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 // nx-ignore-next-line
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-} from 'nx/src/command-line/dep-graph';
+} from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { ProjectGraphService } from '../app/interfaces';
 
 export class MockProjectGraphService implements ProjectGraphService {
@@ -24,13 +26,6 @@ export class MockProjectGraphService implements ProjectGraphService {
         data: {
           root: 'apps/app1',
           tags: [],
-          files: [
-            {
-              file: 'some/file.ts',
-              hash: 'ecccd8481d2e5eae0e59928be1bc4c2d071729d7',
-              deps: ['existing-lib-1'],
-            },
-          ],
         },
       },
       {
@@ -39,7 +34,6 @@ export class MockProjectGraphService implements ProjectGraphService {
         data: {
           root: 'libs/lib1',
           tags: [],
-          files: [],
         },
       },
     ],
@@ -53,13 +47,26 @@ export class MockProjectGraphService implements ProjectGraphService {
       ],
       'existing-lib-1': [],
     },
+    fileMap: {
+      'existing-app-1': [
+        {
+          file: 'some/file.ts',
+          hash: 'ecccd8481d2e5eae0e59928be1bc4c2d071729d7',
+          deps: ['existing-lib-1'],
+        },
+      ],
+      'exiting-lib-1': [],
+    },
     affected: [],
     focus: null,
     exclude: [],
     groupByFolder: false,
   };
 
-  private taskGraphsResponse: TaskGraphClientResponse = { taskGraphs: {} };
+  private taskGraphsResponse: TaskGraphClientResponse = {
+    taskGraphs: {},
+    errors: {},
+  };
 
   constructor(updateFrequency: number = 5000) {
     setInterval(() => this.updateResponse(), updateFrequency);
@@ -87,7 +94,6 @@ export class MockProjectGraphService implements ProjectGraphService {
       data: {
         root: type === 'app' ? `apps/${name}` : `libs/${name}`,
         tags: [],
-        files: [],
       },
     };
   }

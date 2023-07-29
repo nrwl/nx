@@ -1,7 +1,7 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 
 /**
- * Same as the @nrwl/react library schema, except it removes keys: style, component, routing, appProject
+ * Same as the @nx/react library schema, except it removes keys: style, component, routing, appProject
  */
 export interface Schema {
   name: string;

@@ -9,12 +9,12 @@ import type { NxArgs } from '../utils/command-line-utils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
-import ignore from 'ignore';
 import {
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
+import { getIgnoreObject } from '../utils/ignore';
 
 export interface Change {
   type: string;
@@ -42,17 +42,6 @@ export function isDeletedFileChange(
   return change.type === 'WholeFileDeleted';
 }
 
-export function readFileIfExisting(path: string) {
-  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
-}
-
-function getIgnoredGlobs() {
-  const ig = ignore();
-  ig.add(readFileIfExisting(`${workspaceRoot}/.gitignore`));
-  ig.add(readFileIfExisting(`${workspaceRoot}/.nxignore`));
-  return ig;
-}
-
 export function calculateFileChanges(
   files: string[],
   allWorkspaceFiles: FileData[],
@@ -61,7 +50,7 @@ export function calculateFileChanges(
     f: string,
     r: void | string
   ) => string = defaultReadFileAtRevision,
-  ignore = getIgnoredGlobs()
+  ignore = getIgnoreObject() as ReturnType<typeof ignore>
 ): FileChange[] {
   files = files.filter((f) => !ignore.ignores(f));
 
@@ -157,12 +146,15 @@ export function defaultFileRead(filePath: string): string | null {
 }
 
 export function readPackageJson(): any {
-  return readJsonFile(`${workspaceRoot}/package.json`);
+  try {
+    return readJsonFile(`${workspaceRoot}/package.json`);
+  } catch {
+    return {}; // if package.json doesn't exist
+  }
 }
 // Original Exports
 export { FileData };
-
-// TODO(v16): Remove these exports
+// TODO(17): Remove these exports
 export {
   readNxJson,
   readAllWorkspaceConfiguration,

@@ -3,59 +3,37 @@
 exports[`Host App Generator --ssr should generate the correct files 1`] = `
 "import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
 import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
 import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    NxWelcomeComponent
-  ],
+  declarations: [AppComponent, NxWelcomeComponent],
   imports: [
-    BrowserModule.withServerTransition({ appId: 'serverApp' }),
-    RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
+    BrowserModule,
+    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: [AppComponent],
 })
-export class AppModule { }
+export class AppModule {}
 "
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 2`] = `
 "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
 import { AppModule } from './app/app.module';
 
-function bootstrap() {
-  platformBrowserDynamic()
+platformBrowserDynamic()
   .bootstrapModule(AppModule)
   .catch((err) => console.error(err));
-};
-
-
- if (document.readyState !== 'loading') {
-   bootstrap();
- } else {
-   document.addEventListener('DOMContentLoaded', bootstrap);
- }"
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 3`] = `
-"/***************************************************************************************************
- * Initialize the server environment - for example, adding DOM built-in types to the global scope.
- *
- * NOTE:
- * This import must come before any imports (direct or transitive) that rely on DOM built-ins being
- * available, such as \`@angular/elements\`.
- */
-import '@angular/platform-server/init';
-
-export { AppServerModule } from './app/app.server.module';
-export { renderModule } from '@angular/platform-server';"
+"export { AppServerModule } from './app/app.server.module';
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 4`] = `
@@ -124,54 +102,64 @@ function run(): void {
 
 run();
 
-export * from './bootstrap.server';"
+export * from './bootstrap.server';
+"
 `;
 
-exports[`Host App Generator --ssr should generate the correct files 5`] = `"import('./src/main.server');"`;
+exports[`Host App Generator --ssr should generate the correct files 5`] = `
+"import('./src/main.server');
+"
+`;
 
 exports[`Host App Generator --ssr should generate the correct files 6`] = `
 "module.exports = {
   name: 'test',
-  remotes: []
-}"
+  remotes: [],
+};
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 7`] = `
-"const { withModuleFederationForSSR } = require('@nrwl/angular/module-federation');
+"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederationForSSR(config)"
+module.exports = withModuleFederationForSSR(config);
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 8`] = `
 "import { NxWelcomeComponent } from './nx-welcome.component';
-    import { Route } from '@angular/router';
+import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-    {
-      path: '',
-      component: NxWelcomeComponent
-    },]"
+  {
+    path: '',
+    component: NxWelcomeComponent,
+  },
+];
+"
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 9`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
+      "buildOptimizer": false,
       "extractLicenses": false,
       "optimization": false,
       "sourceMap": true,
+      "vendorChunk": true,
     },
-    "production": Object {
+    "production": {
       "outputHashing": "media",
     },
   },
   "defaultConfiguration": "production",
-  "dependsOn": Array [
+  "dependsOn": [
     "build",
   ],
-  "executor": "@nrwl/angular:webpack-server",
-  "options": Object {
-    "customWebpackConfig": Object {
+  "executor": "@nx/angular:webpack-server",
+  "options": {
+    "customWebpackConfig": {
       "path": "apps/test/webpack.server.config.js",
     },
     "main": "apps/test/server.ts",
@@ -182,71 +170,274 @@ Object {
 `;
 
 exports[`Host App Generator --ssr should generate the correct files 10`] = `
-Object {
-  "configurations": Object {
-    "development": Object {
+{
+  "configurations": {
+    "development": {
       "browserTarget": "test:build:development",
       "serverTarget": "test:server:development",
     },
-    "production": Object {
+    "production": {
       "browserTarget": "test:build:production",
       "serverTarget": "test:server:production",
     },
   },
   "defaultConfiguration": "development",
-  "executor": "@nrwl/angular:module-federation-dev-ssr",
+  "executor": "@nx/angular:module-federation-dev-ssr",
+}
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 1`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 2`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { config } from './app/app.config.server';
+
+const bootstrap = () => bootstrapApplication(AppComponent, config);
+
+export default bootstrap;
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 3`] = `
+"import 'zone.js/dist/zone-node';
+
+import { APP_BASE_HREF } from '@angular/common';
+import { ngExpressEngine } from '@nguniversal/express-engine';
+import * as express from 'express';
+import * as cors from 'cors';
+import { existsSync } from 'fs';
+import { join } from 'path';
+
+import bootstrap from './bootstrap.server';
+
+// The Express app is exported so that it can be used by serverless Functions.
+export function app(): express.Express {
+  const server = express();
+  const browserBundles = join(process.cwd(), 'dist/apps/test/browser');
+
+  server.use(cors());
+  const indexHtml = existsSync(join(browserBundles, 'index.original.html'))
+    ? 'index.original.html'
+    : 'index';
+
+  // Our Universal express-engine (found @ https://github.com/angular/universal/tree/main/modules/express-engine)
+  server.engine(
+    'html',
+    ngExpressEngine({
+      bootstrap,
+    })
+  );
+
+  server.set('view engine', 'html');
+  server.set('views', browserBundles);
+
+  // Serve static files from /browser
+  server.get(
+    '*.*',
+    express.static(browserBundles, {
+      maxAge: '1y',
+    })
+  );
+
+  // All regular routes use the Universal engine
+  server.get('*', (req, res) => {
+    // keep it async to avoid blocking the server thread
+
+    res.render(indexHtml, {
+      providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }],
+      req,
+    });
+  });
+
+  return server;
+}
+
+function run(): void {
+  const port = process.env['PORT'] || 4000;
+
+  // Start up the Node server
+  const server = app();
+  server.listen(port, () => {
+    console.log(\`Node Express server listening on http://localhost:\${port}\`);
+  });
+}
+
+run();
+
+export default bootstrap;
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 4`] = `
+"import('./src/main.server');
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 5`] = `
+"module.exports = {
+  name: 'test',
+  remotes: [],
+};
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 6`] = `
+"const { withModuleFederationForSSR } = require('@nx/angular/module-federation');
+const config = require('./module-federation.config');
+module.exports = withModuleFederationForSSR(config);
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 7`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { Route } from '@angular/router';
+
+export const appRoutes: Route[] = [
+  {
+    path: '',
+    component: NxWelcomeComponent,
+  },
+];
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 8`] = `
+"import { ApplicationConfig } from '@angular/core';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
+import { appRoutes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+};
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 9`] = `
+"import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering } from '@angular/platform-server';
+import { appConfig } from './app.config';
+
+const serverConfig: ApplicationConfig = {
+  providers: [provideServerRendering()],
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 10`] = `
+{
+  "configurations": {
+    "development": {
+      "buildOptimizer": false,
+      "extractLicenses": false,
+      "optimization": false,
+      "sourceMap": true,
+      "vendorChunk": true,
+    },
+    "production": {
+      "outputHashing": "media",
+    },
+  },
+  "defaultConfiguration": "production",
+  "dependsOn": [
+    "build",
+  ],
+  "executor": "@nx/angular:webpack-server",
+  "options": {
+    "customWebpackConfig": {
+      "path": "apps/test/webpack.server.config.js",
+    },
+    "main": "apps/test/server.ts",
+    "outputPath": "dist/apps/test/server",
+    "tsConfig": "apps/test/tsconfig.server.json",
+  },
+}
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone 11`] = `
+{
+  "configurations": {
+    "development": {
+      "browserTarget": "test:build:development",
+      "serverTarget": "test:server:development",
+    },
+    "production": {
+      "browserTarget": "test:build:production",
+      "serverTarget": "test:server:production",
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nx/angular:module-federation-dev-ssr",
 }
 `;
 
 exports[`Host App Generator should generate a host app with a remote 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`Host App Generator should generate a host app with a remote 2`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
-"const { withModuleFederation } = require('@nrwl/angular/module-federation');
+"const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
-module.exports = withModuleFederation(config);"
+module.exports = withModuleFederation(config);
+"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
-import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
+import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
-import { appRoutes } from './app/app.routes';
 
-bootstrapApplication(AppComponent, {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-}).catch((err) => console.error(err));"
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
+"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 2`] = `
+"declare module 'remote1/Routes';
 "
-declare module 'remote1/Routes';"
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 3`] = `
-"import { NxWelcomeComponent } from './nx-welcome.component';
+"import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { Component } from '@angular/core';
+import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
   standalone: true,
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
 })
 export class AppComponent {
   title = 'host';
-}"
+}
+"
 `;
 
 exports[`Host App Generator should generate the correct app component spec file 1`] = `
@@ -289,7 +480,8 @@ describe('AppComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain('Welcome host');
   }));
-});"
+});
+"
 `;
 
 exports[`Host App Generator should generate the correct app component spec file with a directory 1`] = `
@@ -330,7 +522,10 @@ describe('AppComponent', () => {
     tick();
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome test-dashboard');
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome test-dashboard'
+    );
   }));
-});"
+});
+"
 `;

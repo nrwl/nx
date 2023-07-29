@@ -1,10 +1,10 @@
-import { readJson, readNxJson } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import { readJson, readNxJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import remote from './remote';
 
 describe('remote generator', () => {
-  it('should install @nrwl/web for the file-server executor', async () => {
+  it('should install @nx/web for the file-server executor', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await remote(tree, {
       name: 'test',
@@ -17,7 +17,7 @@ describe('remote generator', () => {
     });
 
     const packageJson = readJson(tree, 'package.json');
-    expect(packageJson.devDependencies['@nrwl/web']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/web']).toBeDefined();
   });
 
   it('should not set the remote as the default project', async () => {

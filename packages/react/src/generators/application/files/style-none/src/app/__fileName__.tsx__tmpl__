@@ -12,7 +12,7 @@ export class App extends Component {
 export function App() {
 <% } %>
   return (
-    <>
+    <div>
       <% if (!minimal) { %>
       <NxWelcome title="<%= projectName %>"/>
       <% } else { %>
@@ -21,8 +21,7 @@ export function App() {
         Welcome <%= projectName %> 👋
       </h1>
      <% } %>
-      <div />
-    </>);
+    </div>);
 <% if (classComponent) { %>
   }
 }

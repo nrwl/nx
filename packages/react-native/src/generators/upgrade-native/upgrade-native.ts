@@ -2,14 +2,15 @@
  * This function is a destructive command that replace React Native iOS and Android code with latest.
  * It would replace the Android and iOS folder entirely.
  */
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import {
   convertNxGenerator,
-  Tree,
-  joinPathFragments,
   GeneratorCallback,
+  joinPathFragments,
   readProjectConfiguration,
-} from '@nrwl/devkit';
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
 import { existsSync } from 'fs';
 
 import { runPodInstall } from '../../utils/pod-install-task';

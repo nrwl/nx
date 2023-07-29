@@ -1,8 +1,9 @@
 import { Socket } from 'net';
+import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { ProjectGraph } from '../../../config/project-graph';
 import { findAllProjectNodeDependencies } from '../../../utils/project-graph-utils';
 import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
-import { currentProjectGraphCache } from '../project-graph-incremental-recomputation';
+import { currentProjectGraph } from '../project-graph-incremental-recomputation';
 import { handleResult } from '../server';
 import { getProjectsAndGlobalChanges } from './changed-projects';
 
@@ -55,13 +56,18 @@ export function notifyFileWatcherSockets(
             changedFiles.push(...projectFiles);
           }
         } else {
-          const watchedProjects = new Set<string>(config.watchProjects);
+          const watchedProjects = new Set<string>(
+            findMatchingProjects(
+              config.watchProjects,
+              currentProjectGraph.nodes
+            )
+          );
 
           if (config.includeDependentProjects) {
-            for (const project of config.watchProjects) {
+            for (const project of watchedProjects) {
               for (const dep of findAllProjectNodeDependencies(
                 project,
-                currentProjectGraphCache as ProjectGraph
+                currentProjectGraph
               )) {
                 watchedProjects.add(dep);
               }
@@ -84,13 +90,15 @@ export function notifyFileWatcherSockets(
         }
 
         if (changedProjects.length > 0 || changedFiles.length > 0) {
-          return handleResult(socket, {
-            description: 'File watch changed',
-            response: JSON.stringify({
-              changedProjects,
-              changedFiles,
-            }),
-          });
+          return handleResult(socket, 'FILE-WATCH-CHANGED', () =>
+            Promise.resolve({
+              description: 'File watch changed',
+              response: JSON.stringify({
+                changedProjects,
+                changedFiles,
+              }),
+            })
+          );
         }
       })
     );

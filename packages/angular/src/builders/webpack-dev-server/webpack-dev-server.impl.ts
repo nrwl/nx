@@ -2,9 +2,9 @@ import {
   joinPathFragments,
   parseTargetString,
   readCachedProjectGraph,
-} from '@nrwl/devkit';
-import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nx/devkit';
+import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
+import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
@@ -17,7 +17,14 @@ import type { Schema } from './schema';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { getRootTsConfigPath } from 'nx/src/utils/typescript';
+import { getRootTsConfigPath } from '@nx/js';
+
+type BuildTargetOptions = {
+  tsConfig: string;
+  buildLibsFromSource?: boolean;
+  customWebpackConfig?: { path?: string };
+  indexFileTransformer?: string;
+};
 
 export function executeWebpackDevServerBuilder(
   rawOptions: Schema,
@@ -38,27 +45,25 @@ export function executeWebpackDevServerBuilder(
   const buildTarget =
     browserTargetProjectConfiguration.targets[parsedBrowserTarget.target];
 
-  const buildTargetConfiguration = parsedBrowserTarget.configuration
-    ? buildTarget.configurations[parsedBrowserTarget.configuration]
-    : buildTarget.defaultConfiguration
-    ? buildTarget.configurations[buildTarget.defaultConfiguration]
-    : undefined;
+  const buildTargetOptions: BuildTargetOptions = {
+    ...buildTarget.options,
+    ...(parsedBrowserTarget.configuration
+      ? buildTarget.configurations[parsedBrowserTarget.configuration]
+      : buildTarget.defaultConfiguration
+      ? buildTarget.configurations[buildTarget.defaultConfiguration]
+      : {}),
+  };
 
   const buildLibsFromSource =
     options.buildLibsFromSource ??
-    buildTargetConfiguration?.buildLibsFromSource ??
-    buildTarget.options.buildLibsFromSource ??
+    buildTargetOptions.buildLibsFromSource ??
     true;
 
-  const customWebpackConfig: { path: string } =
-    buildTargetConfiguration?.customWebpackConfig ??
-    buildTarget.options.customWebpackConfig;
-
   let pathToWebpackConfig: string;
-  if (customWebpackConfig && customWebpackConfig.path) {
+  if (buildTargetOptions.customWebpackConfig?.path) {
     pathToWebpackConfig = joinPathFragments(
       context.workspaceRoot,
-      customWebpackConfig.path
+      buildTargetOptions.customWebpackConfig.path
     );
 
     if (pathToWebpackConfig && !existsSync(pathToWebpackConfig)) {
@@ -68,15 +73,11 @@ export function executeWebpackDevServerBuilder(
     }
   }
 
-  const indexFileTransformer: string =
-    buildTargetConfiguration?.indexFileTransformer ??
-    buildTarget.options.indexFileTransformer;
-
   let pathToIndexFileTransformer: string;
-  if (indexFileTransformer) {
+  if (buildTargetOptions.indexFileTransformer) {
     pathToIndexFileTransformer = joinPathFragments(
       context.workspaceRoot,
-      indexFileTransformer
+      buildTargetOptions.indexFileTransformer
     );
 
     if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
@@ -88,14 +89,10 @@ export function executeWebpackDevServerBuilder(
 
   let dependencies: DependentBuildableProjectNode[];
   if (!buildLibsFromSource) {
-    const buildTargetTsConfigPath =
-      buildTargetConfiguration?.tsConfig ?? buildTarget.options.tsConfig;
     const { tsConfigPath, dependencies: foundDependencies } =
-      createTmpTsConfigForBuildableLibs(
-        buildTargetTsConfigPath,
-        context,
-        parsedBrowserTarget.target
-      );
+      createTmpTsConfigForBuildableLibs(buildTargetOptions.tsConfig, context, {
+        target: parsedBrowserTarget.target,
+      });
     dependencies = foundDependencies;
 
     // We can't just pass the tsconfig path in memory to the angular builder
@@ -115,7 +112,7 @@ export function executeWebpackDevServerBuilder(
     // otherwise the build will fail if customWebpack function/file is referencing
     // local libs. This synchronize the behavior with webpack-browser and
     // webpack-server implementation.
-    buildTargetConfiguration.tsConfig = tsConfigPath;
+    buildTargetOptions.tsConfig = tsConfigPath;
   }
 
   return from(import('@angular-devkit/build-angular')).pipe(
@@ -132,6 +129,7 @@ export function executeWebpackDevServerBuilder(
             // This will occur when workspaceDependencies = []
             if (workspaceDependencies.length > 0) {
               baseWebpackConfig.plugins.push(
+                // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
                 new WebpackNxBuildCoordinationPlugin(
                   `nx run-many --target=${
                     parsedBrowserTarget.target
@@ -148,7 +146,7 @@ export function executeWebpackDevServerBuilder(
           return mergeCustomWebpackConfig(
             baseWebpackConfig,
             pathToWebpackConfig,
-            buildTargetConfiguration,
+            buildTargetOptions,
             context.target
           );
         },
@@ -157,7 +155,7 @@ export function executeWebpackDevServerBuilder(
           ? {
               indexHtml: resolveIndexHtmlTransformer(
                 pathToIndexFileTransformer,
-                buildTargetConfiguration.tsConfig,
+                buildTargetOptions.tsConfig,
                 context.target
               ),
             }

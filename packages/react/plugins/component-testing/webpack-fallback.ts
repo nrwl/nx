@@ -1,6 +1,6 @@
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import { getCSSModuleLocalIdent } from '@nrwl/webpack';
+import { getCSSModuleLocalIdent } from '@nx/webpack';
 
 export function buildBaseWebpackConfig({
   tsConfigPath = 'tsconfig.cy.json',
@@ -71,7 +71,7 @@ export function buildBaseWebpackConfig({
       test: /\.(js|jsx|mjs|ts|tsx)$/,
       loader: require.resolve('babel-loader'),
       options: {
-        presets: [`@nrwl/react/babel`],
+        presets: [`@nx/react/babel`],
         rootMode: 'upward',
         babelrc: true,
       },

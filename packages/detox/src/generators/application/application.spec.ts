@@ -3,8 +3,8 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from 'packages/linter/src/generators/utils/linter';
 
 import detoxApplicationGenerator from './application';
@@ -342,17 +342,11 @@ describe('detox application generator', () => {
             'cd ../../../my-dir/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
-        'android.eas': {
-          binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.apk',
-          build:
-            'npx nx run my-dir-my-app:download --platform android --output=my-dir/my-app/dist/',
-          type: 'ios.app',
-        },
         'android.local': {
           binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.apk',
           build:
-            'npx nx run my-dir-my-app:build --platform android --profile preview --wait --local --no-interactive --output=my-dir/my-app/dist/',
-          type: 'ios.app',
+            'npx nx run my-dir-my-app:build --platform android --profile preview --wait --local --no-interactive --output=../../../my-dir/my-app/dist/MyDirMyApp.apk',
+          type: 'android.apk',
         },
         'android.release': {
           binaryPath:
@@ -368,16 +362,10 @@ describe('detox application generator', () => {
             "cd ../../../my-dir/my-app/ios && xcodebuild -workspace MyDirMyApp.xcworkspace -scheme MyDirMyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
-        'ios.eas': {
-          binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.app',
-          build:
-            'npx nx run my-dir-my-app:download --platform ios --distribution simulator --output=my-dir/my-app/dist/',
-          type: 'ios.app',
-        },
         'ios.local': {
           binaryPath: '../../../my-dir/my-app/dist/MyDirMyApp.app',
           build:
-            'npx nx run my-dir-my-app:build --platform ios --profile preview --wait --local --no-interactive --output=my-dir/my-app/dist/',
+            'npx nx run my-dir-my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../../../my-dir/my-app/dist/MyDirMyApp.tar.gz',
           type: 'ios.app',
         },
         'ios.release': {

@@ -3,7 +3,7 @@ import {
   readProjectConfiguration,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 
 import { StorybookConfigureSchema } from '../schema';

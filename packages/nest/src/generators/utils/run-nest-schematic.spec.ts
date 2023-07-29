@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { runNestSchematic } from './run-nest-schematic';
 import { createTreeWithNestApplication } from './testing';
 import type { NestSchematic, NormalizedOptions } from './types';

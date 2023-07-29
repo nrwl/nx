@@ -1,5 +1,10 @@
 const path = require('path');
-const { createGlobPatternsForDependencies } = require('@nrwl/next/tailwind');
+// Ignore @nx/next dependency since it is the installed version not the one in the workspace
+// nx-ignore-next-line
+const { createGlobPatternsForDependencies } = require('@nx/next/tailwind');
+
+if (!createGlobPatternsForDependencies(__dirname).length)
+  throw Error('GRAPH ISSUE: No dependency found when many are expected.');
 
 module.exports = {
   experimental: {

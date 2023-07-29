@@ -1,15 +1,18 @@
-import type { Tree } from '@nrwl/devkit';
-import { names } from '@nrwl/devkit';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import type { Tree } from '@nx/devkit';
+import { names } from '@nx/devkit';
+import { insertImport } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { SourceFile } from 'typescript';
-import { createSourceFile, ScriptTarget } from 'typescript';
 import {
   addImportToModule,
+  addProviderToAppConfig,
   addProviderToBootstrapApplication,
   addProviderToModule,
 } from '../../../utils/nx-devkit/ast-utils';
 import type { NormalizedNgRxGeneratorOptions } from './normalize-options';
 import { addProviderToRoute } from '../../../utils/nx-devkit/route-utils';
+
+let tsModule: typeof import('typescript');
 
 function addRootStoreImport(
   tree: Tree,
@@ -21,7 +24,10 @@ function addRootStoreImport(
   storeForRoot: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
+    const parentContents = tree.read(parentPath, 'utf-8');
+    if (parentContents.includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideRootStore);
+    } else if (parentContents.includes('bootstrapApplication')) {
       addProviderToBootstrapApplication(tree, parentPath, provideRootStore);
     } else {
       addProviderToRoute(tree, parentPath, route, provideRootStore);
@@ -42,7 +48,10 @@ function addRootEffectsImport(
   effectsForEmptyRoot: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
+    const parentContents = tree.read(parentPath, 'utf-8');
+    if (parentContents.includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideRootEffects);
+    } else if (parentContents.includes('bootstrapApplication')) {
       addProviderToBootstrapApplication(tree, parentPath, provideRootEffects);
     } else {
       addProviderToRoute(tree, parentPath, route, provideRootEffects);
@@ -89,7 +98,10 @@ function addStoreForFeatureImport(
   storeForFeature: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
+    const parentContents = tree.read(parentPath, 'utf-8');
+    if (parentContents.includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideStoreForFeature);
+    } else if (parentContents.includes('bootstrapApplication')) {
       addProviderToBootstrapApplication(
         tree,
         parentPath,
@@ -119,7 +131,10 @@ function addEffectsForFeatureImport(
   effectsForFeature: string
 ) {
   if (isParentStandalone) {
-    if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
+    const parentContents = tree.read(parentPath, 'utf-8');
+    if (parentContents.includes('ApplicationConfig')) {
+      addProviderToAppConfig(tree, parentPath, provideEffectsForFeature);
+    } else if (parentContents.includes('bootstrapApplication')) {
       addProviderToBootstrapApplication(
         tree,
         parentPath,
@@ -143,12 +158,15 @@ export function addImportsToModule(
   tree: Tree,
   options: NormalizedNgRxGeneratorOptions
 ): void {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const parentPath = options.module ?? options.parent;
   const sourceText = tree.read(parentPath, 'utf-8');
-  let sourceFile = createSourceFile(
+  let sourceFile = tsModule.createSourceFile(
     parentPath,
     sourceText,
-    ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
@@ -252,8 +270,8 @@ export function addImportsToModule(
       if (options.facade) {
         sourceFile = addImport(sourceFile, facadeName, facadePath);
         if (isParentStandalone) {
-          if (tree.read(parentPath, 'utf-8').includes('bootstrapApplication')) {
-            addProviderToBootstrapApplication(tree, parentPath, facadeName);
+          if (tree.read(parentPath, 'utf-8').includes('ApplicationConfig')) {
+            addProviderToAppConfig(tree, parentPath, facadeName);
           } else {
             addProviderToRoute(tree, parentPath, options.route, facadeName);
           }

@@ -31,7 +31,7 @@ than 1 admin to your workspace, to reduce the chance of losing access to it.
 
 ## Setting up third-party auth providers
 
-For instructions on how to set up third-party auth providers please refer to these guides:
+For instructions on how to set up third-party auth providers, please refer to these guides:
 
 - [GitHub Auth](/nx-cloud/private-cloud/auth-github)
 - [GitLab Auth](/nx-cloud/private-cloud/auth-gitlab)
@@ -40,23 +40,18 @@ For instructions on how to set up third-party auth providers please refer to the
 
 ## Inviting users
 
-Once that's done, you can either login with your admin user (see instructions below on how to log-in with admin), or
-directly via GitHub by hitting the "Log In" button:
+Once that's done, you can either sign in with your admin user by using the form, or
+directly via the configured third-party authentication providers by clicking the "_Sign In with configured third-party provider_" button:
 
-![Main user login](/nx-cloud/private/images/main_user_login.png)
+![Main user login](/nx-cloud/private/images/main-user-login.webp)
 
-You can then go to your organisation's members page and start inviting people based on their GitHub username:
-
-![Invite members](/nx-cloud/private/images/invite_members.png)
-
+You can then go to your organisation's settings and then to the members page and start inviting people based on their GitHub username.
 When you invite someone, Nx Cloud will generate a unique invite URL, which you can send to that person directly.
 
 ## Migrating from an admin-only set up to auth via a configured provider
 
-If you already have an admin user that manages an existing Nx Cloud workspace, you can still login, even after you set up
-GitHub auth. You'll find the admin log-in button here:
-
-![Admin hidden login](/nx-cloud/private/images/admin_hidden_login.png)
+If you already have an admin user that manages an existing Nx Cloud workspace, you can still login by using the login form, even after you set up
+GitHub auth.
 
 ## Finding usernames
 

@@ -8,29 +8,28 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 }));
 
 describe('explicit project dependencies', () => {
-  let ctx: ProjectGraphProcessorContext;
-
   it(`should add implicit deps`, () => {
     const builder = new ProjectGraphBuilder();
     builder.addNode({
       name: 'proj1',
-      data: { files: [] },
+      data: {},
     } as any);
     builder.addNode({
       name: 'proj2',
-      data: { files: [] },
+      data: {},
     } as any);
 
     buildImplicitProjectDependencies(
       {
         filesToProcess: {},
         fileMap: {},
-        workspace: {
+        projectsConfigurations: {
+          version: 2,
           projects: {
-            proj1: { implicitDependencies: ['proj2'] },
+            proj1: { root: '', implicitDependencies: ['proj2'] },
           },
         },
-      } as any,
+      } as Partial<ProjectGraphProcessorContext> as ProjectGraphProcessorContext,
       builder
     );
 
@@ -47,11 +46,11 @@ describe('explicit project dependencies', () => {
     const builder = new ProjectGraphBuilder();
     builder.addNode({
       name: 'proj1',
-      data: { files: [] },
+      data: {},
     } as any);
     builder.addNode({
       name: 'proj2',
-      data: { files: [] },
+      data: {},
     } as any);
     builder.addImplicitDependency('proj1', 'proj2');
 
@@ -59,12 +58,13 @@ describe('explicit project dependencies', () => {
       {
         filesToProcess: {},
         fileMap: {},
-        workspace: {
+        projectsConfigurations: {
+          version: 2,
           projects: {
-            proj1: { implicitDependencies: ['!proj2'] },
+            proj1: { root: '', implicitDependencies: ['!proj2'] },
           },
         },
-      } as any,
+      } as Partial<ProjectGraphProcessorContext> as ProjectGraphProcessorContext,
       builder
     );
 

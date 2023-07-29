@@ -41,6 +41,11 @@
       "x-completion-glob": "tsconfig.*.json",
       "x-priority": "important"
     },
+    "allowJs": {
+      "type": "boolean",
+      "description": "Allow JavaScript files to be compiled.",
+      "default": false
+    },
     "format": {
       "type": "array",
       "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
@@ -52,10 +57,19 @@
     },
     "external": {
       "type": "array",
-      "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.).",
-      "items": {
-        "type": "string"
-      }
+      "description": "A list of external modules that will not be bundled (`react`, `react-dom`, etc.). Can also be set to `all` (bundle nothing) or `none` (bundle everything).",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["all", "none"]
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
     },
     "watch": {
       "type": "boolean",
@@ -65,13 +79,15 @@
     "updateBuildableProjectDepsInPackageJson": {
       "type": "boolean",
       "description": "Update buildable project dependencies in `package.json`.",
-      "default": true
+      "default": false,
+      "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
     },
     "buildableProjectDepsInPackageJsonType": {
       "type": "string",
       "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
       "enum": ["dependencies", "peerDependencies"],
-      "default": "peerDependencies"
+      "default": "peerDependencies",
+      "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
     },
     "rollupConfig": {
       "oneOf": [
@@ -110,6 +126,11 @@
       "default": "babel",
       "description": "Which compiler to use."
     },
+    "babelUpwardRootMode": {
+      "type": "boolean",
+      "description": "Whether to set rootmode to upward. See https://babeljs.io/docs/en/options#rootmode",
+      "default": false
+    },
     "javascriptEnabled": {
       "type": "boolean",
       "description": "Sets `javascriptEnabled` option for less loader",
@@ -117,16 +138,31 @@
     },
     "generateExportsField": {
       "type": "boolean",
-      "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
+      "alias": "exports",
+      "description": "Update the output package.json file's 'exports' field. This field is used by Node and bundles.",
+      "default": false,
+      "x-priority": "important"
+    },
+    "additionalEntryPoints": {
+      "type": "array",
+      "description": "Additional entry-points to add to exports field in the package.json file.",
+      "items": {
+        "type": "string"
+      },
+      "x-priority": "important"
+    },
+    "skipTypeCheck": {
+      "type": "boolean",
+      "description": "Whether to skip TypeScript type checking.",
       "default": false
     },
     "skipTypeField": {
       "type": "boolean",
-      "description": "Prevents 'type' field from being added to compiled package.json file. Only use this if you are having an issue with this field.",
+      "description": "Prevents 'type' field from being added to compiled package.json file. Use this if you are having an issue with this field.",
       "default": false
     }
   },
-  "required": ["tsConfig", "project", "main", "outputPath"],
+  "required": ["tsConfig", "main", "outputPath"],
   "definitions": {
     "assetPattern": {
       "oneOf": [
@@ -154,5 +190,6 @@
         }
       ]
     }
-  }
+  },
+  "examplesFile": "../../docs/rollup-examples.md"
 }

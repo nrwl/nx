@@ -1,8 +1,17 @@
+/**
+ * WARNING: Do not add development dependencies to top-level imports.
+ * Instead, `require` them inline during the build phase.
+ */
 import type { NextConfig } from 'next';
+import type { NextConfigFn } from '../src/utils/config';
+import type { NextBuildBuilderOptions } from '../src/utils/types';
+import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
+    babelUpwardRootMode?: boolean;
   };
 }
 
@@ -27,14 +36,174 @@ function regexEqual(x, y) {
  * To this function that hard-codes the libsDir.
  */
 function getWithNxContext(): WithNxContext {
-  const { workspaceRoot, workspaceLayout } = require('@nrwl/devkit');
+  const { workspaceRoot, workspaceLayout } = require('@nx/devkit');
   return {
     workspaceRoot,
     libsDir: workspaceLayout().libsDir,
   };
 }
 
-export function withNx(
+function getNxContext(
+  graph: ProjectGraph,
+  target: Target
+): {
+  node: ProjectGraphProjectNode;
+  options: NextBuildBuilderOptions;
+  projectName: string;
+  targetName: string;
+  configurationName?: string;
+} {
+  const { parseTargetString } = require('@nx/devkit');
+  const projectNode = graph.nodes[target.project];
+  const targetConfig = projectNode.data.targets[target.target];
+  const targetOptions = targetConfig.options;
+  if (target.configuration) {
+    Object.assign(
+      targetOptions,
+      targetConfig.configurations[target.configuration]
+    );
+  }
+
+  if (targetOptions.devServerTarget) {
+    // Executors such as @nx/cypress:cypress define the devServerTarget option.
+    return getNxContext(
+      graph,
+      parseTargetString(targetOptions.devServerTarget, graph)
+    );
+  } else if (targetOptions.buildTarget) {
+    // Executors such as @nx/next:server or @nx/next:export define the buildTarget option.
+    return getNxContext(
+      graph,
+      parseTargetString(targetOptions.buildTarget, graph)
+    );
+  }
+
+  // Default case, return info for current target.
+  // This could be a build using @nx/next:build or run-commands without using our executors.
+  return {
+    node: graph.nodes[target.project],
+    options: targetOptions,
+    projectName: target.project,
+    targetName: target.target,
+    configurationName: target.configuration,
+  };
+}
+
+/**
+ * Try to read output dir from project, and default to '.next' if executing outside of Nx (e.g. dist is added to a docker image).
+ */
+function withNx(
+  _nextConfig = {} as WithNxOptions,
+  context: WithNxContext = getWithNxContext()
+): NextConfigFn {
+  return async (phase: string) => {
+    const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
+    if (phase === PHASE_PRODUCTION_SERVER) {
+      // If we are running an already built production server, just return the configuration.
+      // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
+      const { nx, ...validNextConfig } = _nextConfig;
+      return {
+        distDir: '.next',
+        ...validNextConfig,
+      };
+    } else {
+      const {
+        createProjectGraphAsync,
+        joinPathFragments,
+        offsetFromRoot,
+        workspaceRoot,
+      } = require('@nx/devkit');
+
+      // Otherwise, add in webpack and eslint configuration for build or test.
+      let dependencies: DependentBuildableProjectNode[] = [];
+
+      const graph = await createProjectGraphAsync();
+
+      const originalTarget = {
+        project: process.env.NX_TASK_TARGET_PROJECT,
+        target: process.env.NX_TASK_TARGET_TARGET,
+        configuration: process.env.NX_TASK_TARGET_CONFIGURATION,
+      };
+
+      const {
+        node: projectNode,
+        options,
+        projectName: project,
+        targetName,
+        configurationName,
+      } = getNxContext(graph, originalTarget);
+      const projectDirectory = projectNode.data.root;
+
+      if (options.buildLibsFromSource === false && targetName) {
+        const {
+          calculateProjectDependencies,
+        } = require('@nx/js/src/utils/buildable-libs-utils');
+        const result = calculateProjectDependencies(
+          graph,
+          workspaceRoot,
+          project,
+          targetName,
+          configurationName
+        );
+        dependencies = result.dependencies;
+      }
+
+      // Get next config
+      const nextConfig = getNextConfig(_nextConfig, context);
+
+      // For Next.js 13.1 and greater, make sure workspace libs are transpiled.
+      forNextVersion('>=13.1.0', () => {
+        if (!graph.dependencies[project]) return;
+
+        const { readTsConfigPaths } = require('@nx/js');
+        const {
+          findAllProjectNodeDependencies,
+        } = require('nx/src/utils/project-graph-utils');
+        const paths = readTsConfigPaths();
+        const deps = findAllProjectNodeDependencies(project);
+        nextConfig.transpilePackages ??= [];
+
+        for (const dep of deps) {
+          const alias = getAliasForProject(graph.nodes[dep], paths);
+          if (alias) {
+            nextConfig.transpilePackages.push(alias);
+          }
+        }
+      });
+
+      // process.env.NX_NEXT_OUTPUT_PATH is set when running @nx/next:build
+      options.outputPath =
+        process.env.NX_NEXT_OUTPUT_PATH || options.outputPath;
+
+      // outputPath may be undefined if using run-commands or other executors other than @nx/next:build.
+      // In this case, the user should set distDir in their next.config.js.
+      if (options.outputPath) {
+        const outputDir = `${offsetFromRoot(projectDirectory)}${
+          options.outputPath
+        }`;
+        nextConfig.distDir =
+          nextConfig.distDir && nextConfig.distDir !== '.next'
+            ? joinPathFragments(outputDir, nextConfig.distDir)
+            : joinPathFragments(outputDir, '.next');
+      }
+
+      const userWebpackConfig = nextConfig.webpack;
+
+      const { createWebpackConfig } = require('../src/utils/config');
+      nextConfig.webpack = (a, b) =>
+        createWebpackConfig(
+          workspaceRoot,
+          projectDirectory,
+          options.fileReplacements,
+          options.assets
+        )(userWebpackConfig ? userWebpackConfig(a, b) : a, b);
+
+      return nextConfig;
+    }
+  };
+}
+
+export function getNextConfig(
   nextConfig = {} as WithNxOptions,
   context: WithNxContext = getWithNxContext()
 ): NextConfig {
@@ -55,8 +224,10 @@ export function withNx(
        * Update babel to support our monorepo setup.
        * The 'upward' mode allows the root babel.config.json and per-project .babelrc files to be picked up.
        */
-      options.defaultLoaders.babel.options.babelrc = true;
-      options.defaultLoaders.babel.options.rootMode = 'upward';
+      if (nx?.babelUpwardRootMode) {
+        options.defaultLoaders.babel.options.babelrc = true;
+        options.defaultLoaders.babel.options.rootMode = 'upward';
+      }
 
       /*
        * Modify the Next.js webpack config to allow workspace libs to use css modules.
@@ -219,7 +390,39 @@ function addNxEnvVariables(config: any) {
   }
 }
 
-// Support for older generated code: `const withNx = require('@nrwl/next/plugins/with-nx');`
+export function getAliasForProject(
+  node: ProjectGraphProjectNode,
+  paths: Record<string, string[]>
+): null | string {
+  // Match workspace libs to their alias in tsconfig paths.
+  for (const [alias, lookup] of Object.entries(paths)) {
+    const lookupContainsDepNode = lookup.some(
+      (lookupPath) =>
+        lookupPath.startsWith(node?.data?.root) ||
+        lookupPath.startsWith('./' + node?.data?.root)
+    );
+    if (lookupContainsDepNode) {
+      return alias;
+    }
+  }
+
+  return null;
+}
+
+// Runs a function if the Next.js version satisfies the range.
+export function forNextVersion(range: string, fn: () => void) {
+  const semver = require('semver');
+  const nextJsVersion = require('next/package.json').version;
+  if (semver.satisfies(nextJsVersion, range)) {
+    fn();
+  }
+}
+
+// Support for older generated code: `const withNx = require('@nx/next/plugins/with-nx');`
 module.exports = withNx;
 // Support for newer generated code: `const { withNx } = require(...);`
 module.exports.withNx = withNx;
+module.exports.getNextConfig = getNextConfig;
+module.exports.getAliasForProject = getAliasForProject;
+
+export { withNx };

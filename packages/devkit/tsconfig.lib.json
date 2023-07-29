@@ -11,7 +11,9 @@
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
+    "internal-testing-utils.ts",
     "jest.config.ts"
   ],
+  "files": ["./index.d.ts"],
   "include": ["**/*.ts"]
 }

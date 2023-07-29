@@ -1,33 +1,33 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nrwl/linter:init --linter eslint should generate the global eslint config 1`] = `
+exports[`@nx/linter:init --linter eslint should generate the global eslint config 1`] = `
 "{
-  \\"root\\": true,
-  \\"ignorePatterns\\": [
-    \\"**/*\\"
+  "root": true,
+  "ignorePatterns": [
+    "**/*"
   ],
-  \\"plugins\\": [
-    \\"@nrwl/nx\\"
+  "plugins": [
+    "@nx"
   ],
-  \\"overrides\\": [
+  "overrides": [
     {
-      \\"files\\": [
-        \\"*.ts\\",
-        \\"*.tsx\\",
-        \\"*.js\\",
-        \\"*.jsx\\"
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx"
       ],
-      \\"rules\\": {
-        \\"@nrwl/nx/enforce-module-boundaries\\": [
-          \\"error\\",
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
           {
-            \\"enforceBuildableLibDependency\\": true,
-            \\"allow\\": [],
-            \\"depConstraints\\": [
+            "enforceBuildableLibDependency": true,
+            "allow": [],
+            "depConstraints": [
               {
-                \\"sourceTag\\": \\"*\\",
-                \\"onlyDependOnLibsWithTags\\": [
-                  \\"*\\"
+                "sourceTag": "*",
+                "onlyDependOnLibsWithTags": [
+                  "*"
                 ]
               }
             ]
@@ -36,24 +36,24 @@ exports[`@nrwl/linter:init --linter eslint should generate the global eslint con
       }
     },
     {
-      \\"files\\": [
-        \\"*.ts\\",
-        \\"*.tsx\\"
+      "files": [
+        "*.ts",
+        "*.tsx"
       ],
-      \\"extends\\": [
-        \\"plugin:@nrwl/nx/typescript\\"
+      "extends": [
+        "plugin:@nx/typescript"
       ],
-      \\"rules\\": {}
+      "rules": {}
     },
     {
-      \\"files\\": [
-        \\"*.js\\",
-        \\"*.jsx\\"
+      "files": [
+        "*.js",
+        "*.jsx"
       ],
-      \\"extends\\": [
-        \\"plugin:@nrwl/nx/javascript\\"
+      "extends": [
+        "plugin:@nx/javascript"
       ],
-      \\"rules\\": {}
+      "rules": {}
     }
   ]
 }

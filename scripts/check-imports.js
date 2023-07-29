@@ -33,8 +33,9 @@ function check() {
     'packages/workspace/src/command-line/report.spec.ts',
     'packages/workspace/src/core/file-command-line-utils.ts',
     'packages/workspace/src/generators/preset/preset.ts',
+    'packages/workspace/src/generators/new/generate-preset.ts',
+    'packages/workspace/src/generators/new/new.spec.ts',
     'packages/workspace/src/generators/init/init.ts',
-    'packages/workspace/src/utils/update-task.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-8-3-0.spec.ts',
     'packages/workspace/src/migrations/update-8-3-0/update-ng-cli-8-1.ts',
     'packages/workspace/src/migrations/update-8-12-0/update-package-json-deps.spec.ts',
@@ -45,6 +46,9 @@ function check() {
     // which is @angular/core/testing. and the tests check for this
     'packages/cypress/src/migrations/update-15-1-0/cypress-11.spec.ts',
     'packages/cypress/src/migrations/update-15-1-0/cypress-11.ts',
+    // this migration looks for projects depending on @angular/core, it doesn't require it
+    'packages/cypress/src/migrations/update-16-4-0/warn-incompatible-angular-cypress.spec.ts',
+    'packages/cypress/src/migrations/update-16-4-0/warn-incompatible-angular-cypress.ts',
   ];
 
   const files = [

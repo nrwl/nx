@@ -4,6 +4,6 @@ import { loadStories } from '<%= offsetFromRoot %>../.storybook/story-loader';
 
 configure(() => loadStories(), module);
 
-const StorybookUIRoot = getStorybookUI();
+const StorybookUIRoot = getStorybookUI({});
 
 export default StorybookUIRoot;

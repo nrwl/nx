@@ -1,7 +1,8 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
-import { join } from 'path';
+import { ExecutorContext, names } from '@nx/devkit';
+import { join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
+import { existsSync } from 'fs-extra';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import {
@@ -9,6 +10,9 @@ import {
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
 import { ExpoRunOptions } from './schema';
+import { prebuildAsync } from '../prebuild/prebuild.impl';
+import { podInstall } from '../../utils/pod-install-task';
+import { installAsync } from '../install/install.impl';
 
 export interface ExpoRunOutput {
   success: boolean;
@@ -25,17 +29,20 @@ export default async function* runExecutor(
   }
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
-  if (options.sync) {
-    displayNewlyAddedDepsMessage(
-      context.projectName,
-      await syncDeps(
-        context.projectName,
-        projectRoot,
-        context.root,
-        context.projectGraph
-      )
-    );
+
+  if (!existsSync(join(context.root, projectRoot, options.platform))) {
+    await prebuildAsync(context.root, projectRoot, {
+      install: options.install,
+      platform: options.platform,
+      clean: options.clean,
+    });
+  }
+
+  if (options.install) {
+    await installAsync(context.root, {});
+    if (options.platform === 'ios') {
+      podInstall(join(context.root, projectRoot, 'ios'));
+    }
   }
 
   try {
@@ -56,10 +63,11 @@ function runCliRun(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
-      ['run:' + options.platform, ...createRunOptions(options)],
+      require.resolve('@expo/cli/build/bin/cli'),
+      ['run:' + options.platform, ...createRunOptions(options), '--no-install'], // pass in no-install to prevent node_modules install
       {
-        cwd: projectRoot,
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: process.env,
       }
     );
 
@@ -80,7 +88,7 @@ function runCliRun(
   });
 }
 
-const nxOptions = ['sync', 'platform'];
+const nxOptions = ['sync', 'platform', 'install', 'clean'];
 const iOSOptions = ['xcodeConfiguration', 'schema'];
 const androidOptions = ['variant'];
 /*
@@ -102,7 +110,7 @@ function createRunOptions(options: ExpoRunOptions) {
       if (k === 'xcodeConfiguration') {
         acc.push('--configuration', v);
       } else if (typeof v === 'boolean') {
-        // no need to pass in the flag when it is true, pass the --no-<flag> when it is false
+        // no need to pass in the flag when it is true, pass the --no-<flag> when it is false. e.g. --no-build-cache, --no-bundler
         if (v === false) {
           acc.push(`--no-${names(k).fileName}`);
         }

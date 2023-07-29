@@ -12,7 +12,7 @@ import {
   stripIndents,
   TaskGraph,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getSummary } from './summary';
 import { readFileSync } from 'fs';
 import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
@@ -71,6 +71,7 @@ export async function jestConfigParser(
     ci: options.ci,
     color: options.color,
     detectOpenHandles: options.detectOpenHandles,
+    forceExit: options.forceExit,
     logHeapUsage: options.logHeapUsage,
     detectLeaks: options.detectLeaks,
     json: options.json,
@@ -94,6 +95,7 @@ export async function jestConfigParser(
     useStderr: options.useStderr,
     watch: options.watch,
     watchAll: options.watchAll,
+    randomize: options.randomize,
   };
 
   if (!multiProjects) {
@@ -228,7 +230,7 @@ export async function batchJest(
         resultOutput +=
           '\n\r' +
           jestReporterUtils.getResultHeader(
-            testResult,
+            testResult as any,
             globalConfig as any,
             configs[i] as any
           );
@@ -243,7 +245,8 @@ export async function batchJest(
       success: aggregatedResults.numFailedTests === 0,
       // TODO(caleb): getSummary assumed endTime is Date.now().
       // might need to make own method to correctly set the endtime base on tests instead of _now_
-      terminalOutput: resultOutput + '\n\r\n\r' + getSummary(aggregatedResults),
+      terminalOutput:
+        resultOutput + '\n\r\n\r' + getSummary(aggregatedResults as any),
     };
   }
 

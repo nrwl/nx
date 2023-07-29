@@ -8,35 +8,29 @@ import { ProjectsConfigurations } from '../../config/workspace-json-project-json
 import { join } from 'path';
 import { workspaceRoot } from '../workspace-root';
 import { existsSync } from 'fs';
-import { ExecutorsJson, GeneratorsJson } from '../../config/misc-interfaces';
+import { getPluginCapabilities } from './plugin-capabilities';
 
-export function getLocalWorkspacePlugins(
+export async function getLocalWorkspacePlugins(
   projectsConfiguration: ProjectsConfigurations
-): Map<string, PluginCapabilities> {
+): Promise<Map<string, PluginCapabilities>> {
   const plugins: Map<string, PluginCapabilities> = new Map();
   for (const project of Object.values(projectsConfiguration.projects)) {
     const packageJsonPath = join(workspaceRoot, project.root, 'package.json');
     if (existsSync(packageJsonPath)) {
       const packageJson: PackageJson = readJsonFile(packageJsonPath);
-      const capabilities: Partial<PluginCapabilities> = {};
-      const generatorsPath = packageJson.generators ?? packageJson.schematics;
-      const executorsPath = packageJson.executors ?? packageJson.builders;
-      if (generatorsPath) {
-        const file = readJsonFile<GeneratorsJson>(
-          join(workspaceRoot, project.root, generatorsPath)
-        );
-        capabilities.generators = file.generators ?? file.schematics;
-      }
-      if (executorsPath) {
-        const file = readJsonFile<ExecutorsJson>(
-          join(workspaceRoot, project.root, executorsPath)
-        );
-        capabilities.executors = file.executors ?? file.builders;
-      }
-      if (capabilities.executors || capabilities.generators) {
+      const capabilities = await getPluginCapabilities(
+        workspaceRoot,
+        packageJson.name
+      );
+      if (
+        capabilities &&
+        (capabilities.executors ||
+          capabilities.generators ||
+          capabilities.projectGraphExtension ||
+          capabilities.projectInference)
+      ) {
         plugins.set(packageJson.name, {
-          executors: capabilities.executors ?? {},
-          generators: capabilities.generators ?? {},
+          ...capabilities,
           name: packageJson.name,
         });
       }

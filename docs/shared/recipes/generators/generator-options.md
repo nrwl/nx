@@ -14,8 +14,8 @@ export interface GeneratorOptions {
 Import the TypeScript schema into your generator file and replace the `any` in your generator function with the interface.
 
 ```typescript
-import { Tree, formatFiles, installPackagesTask } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/workspace/generators';
+import { Tree, formatFiles, installPackagesTask } from '@nx/devkit';
+import { libraryGenerator } from '@nx/js';
 
 export default async function (tree: Tree, schema: GeneratorOptions) {
   await libraryGenerator(tree, { name: `${schema.name}-${schema.type || ''}` });
@@ -101,6 +101,35 @@ Dynamic options can prompt the user to select from a list of options. To define 
 ```
 
 Running the generator without providing a value for the type will prompt the user to make a selection.
+
+## Selecting a project
+
+There's a special dynamic option property that populates a selection list with your workspace's projects. Add `"x-dropdown": "projects"` to your object to provide the prompt.
+
+```json
+{
+  "$schema": "http://json-schema.org/schema",
+  "id": "my-generator",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Component name",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "project": {
+      "type": "string",
+      "description": "The project where the component will be located.",
+      "x-prompt": "Which project will this component be located in?",
+      "x-dropdown": "projects"
+    }
+  },
+  "required": ["name", "project"]
+}
+```
 
 ## All configurable schema options
 
@@ -287,7 +316,9 @@ Any additional properties will be considered invalid.
     "items": [],
     "multiselect": false
   },
-  "x-deprecated": false
+  "x-deprecated": false,
+  "x-priority": "important",
+  "x-dropdown": "projects"
 }
 ```
 
@@ -769,6 +800,35 @@ This indicates that the property `setupFile` is deprecated without a reason. The
 
 This indicates that users should use the `tsconfig` property rather than specify this property.
 
+#### `x-priority`
+
+Indicates the priority of a property. Can either be `important` or `internal`. This will be used to sort the properties on `nx.dev`, in Nx Console and when calling a generator with `--help`. `important` properties are displayed right after `required` ones while `internal` properties are shown at the end or hidden.
+
+```json
+{
+  "directory": {
+    "description": "The directory of the new application.",
+    "type": "string",
+    "x-priority": "important"
+  }
+}
+```
+
+#### `x-dropdown`
+
+Populates the list of projects in your workspace to a selection prompt.
+
+```json
+{
+  "project": {
+    "description": "The project where the component will be located.",
+    "type": "string",
+    "x-prompt": "Which project will this component be located in?",
+    "x-dropdown": "projects"
+  }
+}
+```
+
 #### `number` specific: `multipleOf`
 
 Make sure that the number can be divided by the specified number. Example:
@@ -843,7 +903,7 @@ Make sure that the number is less than the specified number.
 {
   "value": {
     "type": "number",
-    "maximum": 201
+    "exclusiveMaximum": 201
   }
 }
 ```

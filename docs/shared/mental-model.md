@@ -47,7 +47,7 @@ A task is an invocation of a target. If you invoke the same target twice, you cr
 
 Nx uses the [project graph](#the-project-graph), but the task graph and project graph aren’t isomorphic, meaning they
 aren’t directly connected. In the case above, `app1` and `app2` depend on `lib`, but
-running `nx run-many --target=test --projects=app1,app2,lib`, the created task graph will look like this:
+running `nx run-many -t test -p app1 app2 lib`, the created task graph will look like this:
 {% side-by-side %}
 
 **Project Graph**
@@ -73,7 +73,7 @@ Let’s look at the test target relying on its dependencies.
 ```json
 {
   "test": {
-    "executor": "@nrwl/jest:jest",
+    "executor": "@nx/jest:jest",
     "outputs": ["{workspaceRoot}/coverage/apps/app1"],
     "dependsOn": ["^test"],
     "options": {
@@ -118,21 +118,21 @@ execution time.
 
 When you run `nx test app1`, you are telling Nx to run the `app1:test` task plus all the tasks it depends on.
 
-When you run `nx run-many --target=test --projects=app1,lib`, you are telling Nx to do the same for two
+When you run `nx run-many -t test -p app1 lib`, you are telling Nx to do the same for two
 tasks `app1:test`
 and `lib:test`.
 
-When you run `nx run-many --target=test --all`, you are telling Nx to do this for all the projects.
+When you run `nx run-many -t test --all`, you are telling Nx to do this for all the projects.
 
 As your workspace grows, retesting all projects becomes too slow. To address this Nx implements code change analysis to
 get the min set of projects that need to be retested. How does it work?
 
-When you run `nx affected --target=test`, Nx looks at the files you changed in your PR, it will look at the nature of
+When you run `nx affected -t test`, Nx looks at the files you changed in your PR, it will look at the nature of
 change (what exactly did you update in those files), and it uses this to figure the list of projects in the workspace
 that can be affected by this change. It then runs the `run-many` command with that list.
 
-For instance, if my PR changes `lib`, and I then run `nx affected --target=test`, Nx figures out that `app1` and `app2`
-depend on `lib`, so it will invoke `nx run-many --target=test --projects=app1,app2,lib`.
+For instance, if my PR changes `lib`, and I then run `nx affected -t test`, Nx figures out that `app1` and `app2`
+depend on `lib`, so it will invoke `nx run-many -t test -p app1 app2 lib`.
 
 ![affected](/shared/mental-model/affected.svg)
 

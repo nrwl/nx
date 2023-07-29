@@ -1,4 +1,3 @@
-import * as ts from 'typescript';
 import { Schema } from './schema';
 import {
   applyChangesToString,
@@ -9,9 +8,10 @@ import {
   joinPathFragments,
   toJS,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 export async function reactNativeComponentGenerator(
   host: Tree,
@@ -53,7 +53,11 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
   }
 }
 
+let tsModule: typeof import('typescript');
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const workspace = getProjects(host);
   const isApp = workspace.get(options.project).projectType === 'application';
 
@@ -64,10 +68,10 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     );
     const indexSource = host.read(indexFilePath, 'utf-8');
     if (indexSource !== null) {
-      const indexSourceFile = ts.createSourceFile(
+      const indexSourceFile = tsModule.createSourceFile(
         indexFilePath,
         indexSource,
-        ts.ScriptTarget.Latest,
+        tsModule.ScriptTarget.Latest,
         true
       );
       const changes = applyChangesToString(

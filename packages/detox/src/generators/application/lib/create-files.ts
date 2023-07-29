@@ -5,8 +5,8 @@ import {
   offsetFromRoot,
   toJS,
   Tree,
-} from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
+} from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 

@@ -1,4 +1,4 @@
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -11,7 +11,7 @@ import {
   Tree,
   updateNxJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import initGenerator from '../init/init';
 
 import type { Schema } from './schema';
@@ -23,15 +23,27 @@ import {
   typesExpressVersion,
 } from '../../utils/versions';
 import { addStaticRouter } from '../../utils/ast-utils';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 function readEntryFile(
   host: Tree,
   path: string
 ): { content: string; source: ts.SourceFile } {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   const content = host.read(path, 'utf-8');
   return {
     content,
-    source: ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true),
+    source: tsModule.createSourceFile(
+      path,
+      content,
+      tsModule.ScriptTarget.Latest,
+      true
+    ),
   };
 }
 
@@ -41,7 +53,7 @@ interface AppComponentInfo {
 }
 
 export async function setupSsrGenerator(tree: Tree, options: Schema) {
-  await initGenerator(tree, {});
+  await initGenerator(tree, { skipFormat: true });
   const projectConfig = readProjectConfiguration(tree, options.project);
   const projectRoot = projectConfig.root;
   const appImportCandidates: AppComponentInfo[] = [
@@ -96,13 +108,14 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     ...projectConfig.targets,
     server: {
       dependsOn: ['build'],
-      executor: '@nrwl/webpack:webpack',
+      executor: '@nx/webpack:webpack',
       outputs: ['{options.outputPath}'],
       defaultConfiguration: 'production',
       options: {
         target: 'node',
         main: `${projectRoot}/server.ts`,
         outputPath: joinPathFragments(originalOutputPath, 'server'),
+        outputFileName: 'server.js',
         tsConfig: `${projectRoot}/tsconfig.server.json`,
         compiler: 'babel',
         externalDependencies: 'all',
@@ -128,7 +141,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     },
     'serve-browser': projectConfig.targets.serve,
     'serve-server': {
-      executor: '@nrwl/js:node',
+      executor: '@nx/js:node',
       defaultConfiguration: 'development',
       options: {
         buildTarget: `${options.project}:server:development`,
@@ -144,7 +157,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       },
     },
     serve: {
-      executor: '@nrwl/webpack:ssr-dev-server',
+      executor: '@nx/webpack:ssr-dev-server',
       defaultConfiguration: 'development',
       options: {
         browserTarget: `${options.project}:build:development`,

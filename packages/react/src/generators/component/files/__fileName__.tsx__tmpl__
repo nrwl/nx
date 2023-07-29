@@ -34,7 +34,7 @@ const Styled<%= className %> = styled.div`
 <% }%>
 <% if (classComponent) { %>
 export class <%= className %> extends Component<<%= className %>Props> {
-  render() {
+  override render() {
     return (
       <<%= wrapper %><%- extras %>>
         <%= styledModule === 'styled-jsx' ? `<style jsx>{\`div { color: pink; }\`}</style>` : `` %>

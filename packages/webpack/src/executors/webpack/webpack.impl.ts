@@ -1,14 +1,20 @@
 import 'dotenv/config';
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
-import type { Configuration } from 'webpack';
-import { of } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators';
+import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
+import type { Configuration, Stats } from 'webpack';
+import { from, of } from 'rxjs';
+import {
+  bufferCount,
+  mergeMap,
+  mergeScan,
+  switchMap,
+  tap,
+} from 'rxjs/operators';
 import { resolve } from 'path';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 
 import { getWebpackConfig } from './lib/get-webpack-config';
 import { runWebpack } from './lib/run-webpack';
@@ -23,7 +29,7 @@ import { normalizeOptions } from './lib/normalize-options';
 async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
   context: ExecutorContext
-): Promise<Configuration> {
+): Promise<Configuration | Configuration[]> {
   if (options.isolatedConfig && !options.webpackConfig) {
     throw new Error(
       `Using "isolatedConfig" without a "webpackConfig" is not supported.`
@@ -48,14 +54,11 @@ async function getWebpackConfigs(
     : getWebpackConfig(context, options);
 
   if (customWebpack) {
-    return await customWebpack(
-      {},
-      {
-        options,
-        context,
-        configuration: context.configurationName, // backwards compat
-      }
-    );
+    return await customWebpack(config, {
+      options,
+      context,
+      configuration: context.configurationName, // backwards compat
+    });
   } else {
     // If the user has no webpackConfig specified then we always have to apply
     return config;
@@ -93,7 +96,9 @@ export async function* webpackExecutor(
       ? options.optimization.scripts
       : false;
 
-  process.env.NODE_ENV ||= isScriptOptimizeOn ? 'production' : 'development';
+  (process.env as any).NODE_ENV ||= isScriptOptimizeOn
+    ? 'production'
+    : 'development';
 
   if (options.compiler === 'swc') {
     try {
@@ -116,7 +121,8 @@ export async function* webpackExecutor(
   }
 
   if (!options.buildLibsFromSource && context.targetName) {
-    const { dependencies } = calculateProjectDependencies(
+    const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
       context.projectGraph,
       context.root,
       context.projectName,
@@ -136,18 +142,40 @@ export async function* webpackExecutor(
     deleteOutputDir(context.root, options.outputPath);
   }
 
+  if (options.generatePackageJson && metadata.projectType !== 'application') {
+    logger.warn(
+      stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+    );
+  }
+
   const configs = await getWebpackConfigs(options, context);
+
   return yield* eachValueFrom(
     of(configs).pipe(
-      switchMap((config) => {
-        return runWebpack(config).pipe(
-          tap((stats) => {
-            console.info(stats.toString());
-          })
+      mergeMap((config) => (Array.isArray(config) ? from(config) : of(config))),
+      // Run build sequentially and bail when first one fails.
+      mergeScan(
+        (acc, config) => {
+          if (!acc.hasErrors()) {
+            return runWebpack(config).pipe(
+              tap((stats) => {
+                console.info(stats.toString(config.stats));
+              })
+            );
+          } else {
+            return of();
+          }
+        },
+        { hasErrors: () => false } as Stats,
+        1
+      ),
+      // Collect build results as an array.
+      bufferCount(Array.isArray(configs) ? configs.length : 1),
+      switchMap(async (results) => {
+        const success = results.every(
+          (result) => Boolean(result) && !result.hasErrors()
         );
-      }),
-      switchMap(async (result) => {
-        const success = result && !result.hasErrors();
         return {
           success,
           outfile: resolve(

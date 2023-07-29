@@ -1,15 +1,23 @@
-import { joinPathFragments, Tree, writeJson } from '@nrwl/devkit';
+import { joinPathFragments, Tree, writeJson } from '@nx/devkit';
 import {
   overrideCollectionResolutionForTesting,
   wrapAngularDevkitSchematic,
-} from '@nrwl/devkit/ngcli-adapter';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit/ngcli-adapter';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
 } from './utilities';
 import { nxVersion, storybookVersion } from './versions';
 import * as targetVariations from './test-configs/different-target-variations.json';
+
+// nested code imports graph from the repo, which might have innacurate graph version
+jest.mock('nx/src/project-graph/project-graph', () => ({
+  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
+}));
 
 const componentSchematic = wrapAngularDevkitSchematic(
   '@schematics/angular',
@@ -20,7 +28,7 @@ const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
   'library'
 );
 const runAngularStorybookSchematic = wrapAngularDevkitSchematic(
-  '@nrwl/angular',
+  '@nx/angular',
   'storybook-configuration'
 );
 
@@ -30,7 +38,7 @@ describe('testing utilities', () => {
 
     beforeEach(async () => {
       overrideCollectionResolutionForTesting({
-        '@nrwl/storybook': joinPathFragments(
+        '@nx/storybook': joinPathFragments(
           __dirname,
           '../../../../generators.json'
         ),
@@ -49,7 +57,7 @@ describe('testing utilities', () => {
 
       writeJson(appTree, 'package.json', {
         devDependencies: {
-          '@nrwl/storybook': nxVersion,
+          '@nx/storybook': nxVersion,
           '@storybook/addon-knobs': storybookVersion,
           '@storybook/angular': storybookVersion,
         },
@@ -59,6 +67,7 @@ describe('testing utilities', () => {
       await runAngularStorybookSchematic(appTree, {
         name: 'test-ui-lib',
         configureCypress: true,
+        configureStaticServe: false,
       });
 
       appTree.write(
@@ -66,24 +75,42 @@ describe('testing utilities', () => {
         `
       import { Story, Meta } from '@storybook/react';
       import { Button } from './button';
-      
+
       export default {
         component: Button,
         title: 'Button',
       } as Meta;
-      
+
       const Template: Story = (args) => <Button {...args} />;
-      
+
       export const Primary = Template.bind({});
       Primary.args = {};
     `
       );
 
       appTree.write(
+        `test-ui-lib/src/lib/button/button.other.stories.ts`,
+        `
+        import type { Meta } from '@storybook/react';
+        import { Button } from './button';
+        
+        const Story: Meta<typeof Button> = {
+          component: Button,
+          title: 'Layout/Texts/Button',
+        };
+        export default Story;
+        
+        export const Primary = {
+          args: {},
+        };
+        `
+      );
+
+      appTree.write(
         `test-ui-lib/src/lib/button/button.component.other.ts`,
         `
         import { Button } from './button';
-        
+
         // test test
       `
       );
@@ -92,7 +119,7 @@ describe('testing utilities', () => {
         `test-ui-lib/src/lib/button/button.component.react-native.ts`,
         `
        import { storiesOf } from '@storybook/react-native';
-        
+
         // test test
       `
       );
@@ -101,7 +128,7 @@ describe('testing utilities', () => {
         `test-ui-lib/src/lib/button/button.component.new-syntax.ts`,
         `
        import { ComponentStory } from '@storybook/react';
-        
+
         // test test
       `
       );
@@ -142,6 +169,14 @@ describe('testing utilities', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
           'test-ui-lib/src/lib/button/button.component.stories.ts'
+        );
+        expect(fileIsStory).toBeTruthy();
+      });
+
+      it('should verify it is story when using Meta', () => {
+        const fileIsStory = isTheFileAStory(
+          appTree,
+          'test-ui-lib/src/lib/button/button.other.stories.ts'
         );
         expect(fileIsStory).toBeTruthy();
       });

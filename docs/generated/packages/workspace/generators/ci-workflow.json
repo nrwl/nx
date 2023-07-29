@@ -40,7 +40,7 @@
         "pattern": "^[a-zA-Z].*$"
       }
     },
-    "required": ["ci"],
+    "required": ["ci", "name"],
     "presets": []
   },
   "description": "Generate a CI workflow.",

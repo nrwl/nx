@@ -3,6 +3,8 @@
  *
  * Changes made:
  * - Use custom cacheCompilerHost instead of the one provided by ng-packagr.
+ * - Support ngcc for Angular < 16.
+ * - Support Angular Compiler `incrementalDriver` for Angular < 16.
  */
 
 import type {
@@ -16,11 +18,10 @@ import {
   isPackage,
   PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
-import { NgccProcessor } from 'ng-packagr/lib/ngc/ngcc-processor';
-import { ngccTransformCompilerHost } from 'ng-packagr/lib/ts/ngcc-transform-compiler-host';
 import * as log from 'ng-packagr/lib/utils/log';
 import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import * as ts from 'typescript';
+import { getInstalledAngularVersionInfo } from '../../../utilities/angular-version-utils';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
 import {
   augmentProgramWithVersioning,
@@ -33,7 +34,7 @@ export async function compileSourceFiles(
   moduleResolutionCache: ts.ModuleResolutionCache,
   extraOptions?: Partial<CompilerOptions>,
   stylesheetProcessor?: StylesheetProcessor,
-  ngccProcessor?: NgccProcessor,
+  ngccProcessor?: any,
   watch?: boolean
 ) {
   const { NgtscProgram, formatDiagnostics } = await ngCompilerCli();
@@ -46,19 +47,24 @@ export async function compileSourceFiles(
   const ngPackageNode: PackageNode = graph.find(isPackage);
   const inlineStyleLanguage = ngPackageNode.data.inlineStyleLanguage;
 
-  const tsCompilerHost = ngccTransformCompilerHost(
-    cacheCompilerHost(
-      graph,
-      entryPoint,
-      tsConfigOptions,
-      moduleResolutionCache,
-      stylesheetProcessor,
-      inlineStyleLanguage
-    ),
+  let tsCompilerHost = cacheCompilerHost(
+    graph,
+    entryPoint,
     tsConfigOptions,
-    ngccProcessor,
-    moduleResolutionCache
+    moduleResolutionCache,
+    stylesheetProcessor,
+    inlineStyleLanguage
   );
+
+  if (ngccProcessor) {
+    tsCompilerHost =
+      require('ng-packagr/lib/ts/ngcc-transform-compiler-host').ngccTransformCompilerHost(
+        tsCompilerHost,
+        tsConfigOptions,
+        ngccProcessor,
+        moduleResolutionCache
+      );
+  }
 
   const cache = entryPoint.cache;
   const sourceFileCache = cache.sourcesFileCache;
@@ -162,9 +168,15 @@ export async function compileSourceFiles(
     }
 
     // Collect sources that are required to be emitted
+    const angularVersion = getInstalledAngularVersionInfo();
+    const incrementalCompilation: typeof angularCompiler.incrementalCompilation =
+      angularVersion.major < 16
+        ? (angularCompiler as any).incrementalDriver
+        : angularCompiler.incrementalCompilation;
+
     if (
       !ignoreForEmit.has(sourceFile) &&
-      !angularCompiler.incrementalDriver.safeToSkipEmit(sourceFile)
+      !incrementalCompilation.safeToSkipEmit(sourceFile)
     ) {
       // If required to emit, diagnostics may have also changed
       if (!ignoreForDiagnostics.has(sourceFile)) {

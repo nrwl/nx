@@ -23,6 +23,6 @@
     "production": {}
   },
   "cli": {
-    "version": ">= 0.55.1"
+    "version": "<%= easCliVersion %>"
   }
 }

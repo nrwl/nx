@@ -1,9 +1,9 @@
 import { Linter } from '../utils/linter';
-import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintInitGenerator } from './init';
 
-describe('@nrwl/linter:init', () => {
+describe('@nx/linter:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -18,6 +18,10 @@ describe('@nrwl/linter:init', () => {
         });
 
         expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('.eslintignore', 'utf-8')).toMatchInlineSnapshot(`
+          "node_modules
+          "
+        `);
       });
 
       it('should add the root eslint config to the lint targetDefaults for lint', async () => {
@@ -26,7 +30,11 @@ describe('@nrwl/linter:init', () => {
         });
 
         expect(readJson(tree, 'nx.json').targetDefaults.lint).toEqual({
-          inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
+          inputs: [
+            'default',
+            '{workspaceRoot}/.eslintrc.json',
+            '{workspaceRoot}/.eslintignore',
+          ],
         });
       });
 

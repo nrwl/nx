@@ -1,4 +1,5 @@
 import {
+  expandDependencyConfigSyntaxSugar,
   getOutputsForTargetAndConfiguration,
   transformLegacyOutputs,
   validateOutputs,
@@ -15,7 +16,6 @@ describe('utils', () => {
         targets: {
           build: { ...build, executor: '' },
         },
-        files: [],
       },
     };
   }
@@ -298,7 +298,6 @@ describe('utils', () => {
                   executor: '',
                 },
               },
-              files: [],
             },
           })
         ).toEqual([
@@ -396,5 +395,75 @@ describe('utils', () => {
       const result = transformLegacyOutputs('myapp', e);
       expect(result).toEqual(['{projectRoot}/dist']);
     }
+  });
+
+  describe('expandDependencyConfigSyntaxSugar', () => {
+    it('should expand syntax for simple target names', () => {
+      const result = expandDependencyConfigSyntaxSugar('build', {
+        dependencies: {},
+        nodes: {},
+      });
+      expect(result).toEqual({
+        target: 'build',
+      });
+    });
+
+    it('should assume target of self if simple target also matches project name', () => {
+      const result = expandDependencyConfigSyntaxSugar('build', {
+        dependencies: {},
+        nodes: {
+          build: {
+            name: 'build',
+            type: 'lib',
+            data: {
+              root: 'libs/build',
+            },
+          },
+        },
+      });
+      expect(result).toEqual({
+        target: 'build',
+      });
+    });
+
+    it('should expand syntax for simple target names targetting dependencies', () => {
+      const result = expandDependencyConfigSyntaxSugar('^build', {
+        dependencies: {},
+        nodes: {},
+      });
+      expect(result).toEqual({
+        target: 'build',
+        dependencies: true,
+      });
+    });
+
+    it('should expand syntax for strings like project:target if project is a valid project', () => {
+      const result = expandDependencyConfigSyntaxSugar('project:build', {
+        dependencies: {},
+        nodes: {
+          project: {
+            name: 'project',
+            type: 'app',
+            data: {
+              root: 'libs/project',
+            },
+          },
+        },
+      });
+      expect(result).toEqual({
+        target: 'build',
+        projects: ['project'],
+      });
+    });
+
+    it('should expand syntax for strings like target:with:colons', () => {
+      const result = expandDependencyConfigSyntaxSugar('target:with:colons', {
+        dependencies: {},
+        nodes: {},
+      });
+      expect(result).toEqual({
+        target: 'target:with:colons',
+      });
+    });
   });
 });

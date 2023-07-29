@@ -1,14 +1,11 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 /* nx-ignore-next-line */
 import type { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useRef, useState } from 'react';
 import { GraphService } from './graph';
 import { TaskGraphRecord, TooltipEvent } from './interfaces';
-import {
-  ProjectEdgeNodeTooltip,
-  ProjectNodeToolTip,
-  TaskNodeTooltip,
-  Tooltip,
-} from '@nrwl/graph/ui-tooltips';
+import { TaskNodeTooltip, Tooltip } from '@nx/graph/ui-tooltips';
 import { GraphTooltipService } from './tooltip-service';
 
 type Theme = 'light' | 'dark' | 'system';
@@ -71,7 +68,7 @@ export function NxTaskGraphViz({
             taskGraphs,
           });
           graph.handleTaskEvent({
-            type: 'notifyTaskGraphTasksSelected',
+            type: 'notifyTaskGraphSetTasks',
             taskIds: [taskId],
           });
           setGraph(graph);

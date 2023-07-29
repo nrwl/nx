@@ -9,50 +9,49 @@ module.exports = {
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
-    }
+    },
   },
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
+    '^.+\\\\.[tj]sx?$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one'
+  coverageDirectory: '../../coverage/libs/lib-one',
 };
 "
 `;
 
 exports[`Jest Migration (v14.0.0) should produce the same results when running multiple times 1`] = `
-Object {
-  "files": Array [
+{
+  "files": [
     "*.ts",
     "*.tsx",
     "*.js",
     "*.jsx",
   ],
-  "parserOptions": Object {
-    "project": Array [
+  "parserOptions": {
+    "project": [
       "libs/my-next-proj/tsconfig.*?.json",
     ],
   },
-  "rules": Object {},
+  "rules": {},
 }
 `;
 
 exports[`Jest Migration (v14.0.0) should produce the same results when running multiple times 2`] = `
 "/* eslint-disable */
-
 module.exports = {
   displayName: 'lib-one',
   preset: '../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
-    }
+    },
   },
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
+    '^.+\\\\.[tj]sx?$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one'
+  coverageDirectory: '../../coverage/libs/lib-one',
 };
 "
 `;
@@ -66,30 +65,30 @@ module.exports = {
   globals: {
     'ts-jest': {
       tsconfig: '<rootDir>/tsconfig.spec.json',
-    }
+    },
   },
   transform: {
-    '^.+\\\\\\\\.[tj]sx?$': 'ts-jest'
+    '^.+\\\\.[tj]sx?$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/lib-one'
+  coverageDirectory: '../../coverage/libs/lib-one',
 };
 "
 `;
 
 exports[`Jest Migration (v14.0.0) should update the excludes of next js apps using the project parser settings 1`] = `
-Object {
-  "files": Array [
+{
+  "files": [
     "*.ts",
     "*.tsx",
     "*.js",
     "*.jsx",
   ],
-  "parserOptions": Object {
-    "project": Array [
+  "parserOptions": {
+    "project": [
       "libs/lib-one/tsconfig.*?.json",
     ],
   },
-  "rules": Object {},
+  "rules": {},
 }
 `;

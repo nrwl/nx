@@ -13,7 +13,8 @@
     "export": {
       "implementation": "./src/executors/export/export.impl",
       "schema": "./src/executors/export/schema.json",
-      "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`."
+      "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+      "x-deprecated": "Use static exports in next.config.js instead. See: https://nextjs.org/docs/pages/building-your-application/deploying/static-exports."
     }
   },
   "builders": {
@@ -30,7 +31,8 @@
     "export": {
       "implementation": "./src/executors/export/compat",
       "schema": "./src/executors/export/schema.json",
-      "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`."
+      "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+      "x-deprecated": "Use static exports in next.config.js instead. See: https://nextjs.org/docs/pages/building-your-application/deploying/static-exports."
     }
   }
 }

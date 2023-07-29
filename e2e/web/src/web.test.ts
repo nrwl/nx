@@ -5,17 +5,20 @@ import {
   createFile,
   isNotWindows,
   killPorts,
+  listFiles,
   newProject,
   readFile,
-  removeFile,
   rmDist,
   runCLI,
   runCLIAsync,
   runCypressTests,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
+import { join } from 'path';
+import { copyFileSync } from 'fs';
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
@@ -24,30 +27,17 @@ describe('Web Components Applications', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
-
-    runCLI(`build ${appName} --outputHashing none --compiler babel`);
-    checkFilesExist(
-      `dist/apps/${appName}/index.html`,
-      `dist/apps/${appName}/runtime.js`,
-      `dist/apps/${appName}/main.js`,
-      `dist/apps/${appName}/styles.css`
-    );
-
-    expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
-      '<link rel="stylesheet" href="styles.css">'
-    );
 
     const testResults = await runCLIAsync(`test ${appName}`);
 
     expect(testResults.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
-
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
     expect(lintE2eResults).toContain('All files pass linting.');
@@ -57,6 +47,55 @@ describe('Web Components Applications', () => {
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
     }
+
+    copyFileSync(
+      join(__dirname, 'test-fixtures/inlined.png'),
+      join(tmpProjPath(), `apps/${appName}/src/app/inlined.png`)
+    );
+    copyFileSync(
+      join(__dirname, 'test-fixtures/emitted.png'),
+      join(tmpProjPath(), `apps/${appName}/src/app/emitted.png`)
+    );
+    updateFile(
+      `apps/${appName}/src/app/app.element.ts`,
+      `
+      // @ts-ignore
+      import inlined from './inlined.png';
+      // @ts-ignore
+      import emitted from './emitted.png';
+      export class AppElement extends HTMLElement {
+        public static observedAttributes = [];
+        connectedCallback() {
+          this.innerHTML = \`
+            <img src="\${inlined} "/>
+            <img src="\${emitted} "/>
+          \`;
+        }
+      }
+      customElements.define('app-root', AppElement);
+    `
+    );
+    runCLI(`build ${appName} --outputHashing none --compiler babel`);
+    checkFilesExist(
+      `dist/apps/${appName}/index.html`,
+      `dist/apps/${appName}/runtime.js`,
+      `dist/apps/${appName}/emitted.png`,
+      `dist/apps/${appName}/main.js`,
+      `dist/apps/${appName}/styles.css`
+    );
+    checkFilesDoNotExist(`dist/apps/${appName}/inlined.png`);
+
+    expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
+      '<img src="data:image/png;base64'
+    );
+    // Should not be a JS module but kept as a PNG
+    expect(readFile(`dist/apps/${appName}/emitted.png`)).not.toContain(
+      'export default'
+    );
+
+    expect(readFile(`dist/apps/${appName}/index.html`)).toContain(
+      '<link rel="stylesheet" href="styles.css">'
+    );
   }, 500000);
 
   it('should remove previous output before building', async () => {
@@ -64,10 +103,10 @@ describe('Web Components Applications', () => {
     const libName = uniq('lib');
 
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive --compiler swc`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler swc`
     );
     runCLI(
-      `generate @nrwl/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
+      `generate @nx/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
     );
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -86,7 +125,7 @@ describe('Web Components Applications', () => {
     checkFilesExist(`dist/apps/_should_not_remove.txt`);
 
     // Asset that React runtime is imported
-    expect(readFile(`dist/libs/${libName}/index.js`)).toMatch(
+    expect(readFile(`dist/libs/${libName}/index.esm.js`)).toMatch(
       /react\/jsx-runtime/
     );
 
@@ -100,10 +139,10 @@ describe('Web Components Applications', () => {
     checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
   }, 120000);
 
-  it('should emit decorator metadata when it is enabled in tsconfig', async () => {
+  it('should emit decorator metadata when --compiler=babel and it is enabled in tsconfig', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
     );
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
@@ -155,10 +194,52 @@ describe('Web Components Applications', () => {
     );
   }, 120000);
 
+  it('should emit decorator metadata when using --compiler=swc', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
+    );
+
+    updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
+      const newContent = `${content}
+        function enumerable(value: boolean) {
+          return function (
+            target: any,
+            propertyKey: string,
+            descriptor: PropertyDescriptor
+          ) {
+            descriptor.enumerable = value;
+          };
+        }
+        function sealed(target: any) {
+          return target;
+        }
+
+        @sealed
+        class Foo {
+          @enumerable(false) bar() {}
+        }
+      `;
+      return newContent;
+    });
+
+    updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
+      const newContent = `${content}
+        // bust babel and nx cache
+      `;
+      return newContent;
+    });
+    runCLI(`build ${appName} --outputHashing none`);
+
+    expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
+      /Foo=(_ts|_)_decorate\(\[sealed\],Foo\)/g
+    );
+  }, 120000);
+
   it('should support custom webpackConfig option', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     updateProjectConfig(appName, (config) => {
@@ -170,7 +251,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), (config, context) => {
         return config;
       });
@@ -185,7 +266,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), async (config, context) => {
         return config;
       });
@@ -200,7 +281,7 @@ describe('Web Components Applications', () => {
     updateFile(
       `apps/${appName}/webpack.config.js`,
       `
-      const { composePlugins, withNx, withWeb } = require('@nrwl/webpack');
+      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
       module.exports = composePlugins(withNx(), withWeb(), Promise.resolve((config, context) => {
         return config;
       }));
@@ -257,7 +338,7 @@ describe('CLI - Environment Variables', () => {
       `;
 
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
     );
 
     const content = readFile(main);
@@ -282,7 +363,7 @@ describe('CLI - Environment Variables', () => {
     const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
 
     runCLI(
-      `generate @nrwl/web:app ${appName2} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
     );
 
     const content2 = readFile(main2);
@@ -316,7 +397,7 @@ describe('Build Options', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     const srcPath = `apps/${appName}/src`;
@@ -395,22 +476,22 @@ describe('index.html interpolation', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;
     const indexContent = `<!DOCTYPE html>
-    <html lang="en">
+    <html lang='en'>
       <head>
-        <meta charset="utf-8" />
+        <meta charset='utf-8' />
         <title>BestReactApp</title>
-        <base href="/" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/x-icon" href="favicon.ico" />
+        <base href='/' />
+        <meta name='viewport' content='width=device-width, initial-scale=1' />
+        <link rel='icon' type='image/x-icon' href='favicon.ico' />
       </head>
       <body>
-        <div id="root"></div>
+        <div id='root'></div>
         <div>Nx Variable: %NX_VARIABLE%</div>
         <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
         <div>Deploy Url: %DEPLOY_URL%</div>

@@ -3,7 +3,7 @@ import {
   ProjectConfiguration,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { NormalizedGeneratorOptions } from '../schema';
 
 export function updateApplicationStyles(

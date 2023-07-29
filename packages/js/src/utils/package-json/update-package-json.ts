@@ -1,31 +1,30 @@
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
   createLockFile,
-  createPackageJson,
+  getLockFileName,
+} from 'nx/src/plugins/js/lock-file/lock-file';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
+import {
   ExecutorContext,
   getOutputsForTargetAndConfiguration,
   joinPathFragments,
-  normalizePath,
+  ProjectFileMap,
   ProjectGraphProjectNode,
   readJsonFile,
   workspaceRoot,
   writeJsonFile,
-} from '@nrwl/devkit';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { basename, dirname, join, parse, relative } from 'path';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
+} from '@nx/devkit';
+import { DependentBuildableProjectNode } from '../buildable-libs-utils';
+import { basename, join, parse } from 'path';
 import { writeFileSync } from 'fs-extra';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { existsSync } from 'fs';
+import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
-function getMainFileDirRelativeToProjectRoot(
-  main: string,
-  projectRoot: string
-): string {
-  const mainFileDir = dirname(main);
-  const relativeDir = normalizePath(relative(projectRoot, mainFileDir));
-  return relativeDir === '' ? `./` : `./${relativeDir}/`;
-}
+import { getMainFileDirRelativeToProjectRoot } from '../get-main-file-dir';
 
 export type SupportedFormat = 'cjs' | 'esm';
 
@@ -48,16 +47,26 @@ export function updatePackageJson(
   options: UpdatePackageJsonOption,
   context: ExecutorContext,
   target: ProjectGraphProjectNode,
-  dependencies: DependentBuildableProjectNode[]
+  dependencies: DependentBuildableProjectNode[],
+  fileMap: ProjectFileMap = null
 ): void {
   let packageJson: PackageJson;
+  if (fileMap == null) {
+    fileMap = readProjectFileMapCache()?.projectFileMap || {};
+  }
 
   if (options.updateBuildableProjectDepsInPackageJson) {
-    packageJson = createPackageJson(context.projectName, context.projectGraph, {
-      root: context.root,
-      // By default we remove devDependencies since this is a production build.
-      isProduction: true,
-    });
+    packageJson = createPackageJson(
+      context.projectName,
+      context.projectGraph,
+      {
+        target: context.targetName,
+        root: context.root,
+        // By default we remove devDependencies since this is a production build.
+        isProduction: true,
+      },
+      fileMap
+    );
 
     if (options.excludeLibsInPackageJson) {
       dependencies = dependencies.filter((dep) => dep.node.type !== 'lib');
@@ -138,10 +147,13 @@ function addMissingDependencies(
         );
 
         const depPackageJsonPath = join(root, outputs[0], 'package.json');
-        const version = readJsonFile(depPackageJsonPath).version;
 
-        packageJson[propType] ??= {};
-        packageJson[propType][packageName] = version;
+        if (existsSync(depPackageJsonPath)) {
+          const version = readJsonFile(depPackageJsonPath).version;
+
+          packageJson[propType] ??= {};
+          packageJson[propType][packageName] = version;
+        }
       }
     }
   });

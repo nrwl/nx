@@ -3,29 +3,33 @@ import {
   formatFiles,
   GeneratorCallback,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
+
 import {
-  findExistingTargetsInProject,
   addOrChangeBuildTarget,
   addOrChangeServeTarget,
-  editTsConfig,
-  moveAndEditIndexHtml,
-  createOrEditViteConfig,
-  handleUnsupportedUserProvidedTargets,
-  handleUnknownExecutors,
-  UserProvidedTargetName,
-  TargetFlags,
   addPreviewTarget,
+  createOrEditViteConfig,
   deleteWebpackConfig,
+  editTsConfig,
+  findExistingTargetsInProject,
+  handleUnknownExecutors,
+  handleUnsupportedUserProvidedTargets,
+  moveAndEditIndexHtml,
+  TargetFlags,
+  UserProvidedTargetName,
 } from '../../utils/generator-utils';
 
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
-import { Schema } from './schema';
+import { ViteConfigurationGeneratorSchema } from './schema';
 
-export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
+export async function viteConfigurationGenerator(
+  tree: Tree,
+  schema: ViteConfigurationGeneratorSchema
+) {
   const tasks: GeneratorCallback[] = [];
 
   const { targets, projectType, root } = readProjectConfiguration(
@@ -37,6 +41,10 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   let testTargetName = 'test';
 
   schema.includeLib ??= projectType === 'library';
+
+  // Setting default to jsdom since it is the most common use case (React, Web).
+  // The @nx/js:lib generator specifically sets this to node to be more generic.
+  schema.testEnvironment ??= 'jsdom';
 
   /**
    * This is for when we are converting an existing project
@@ -69,7 +77,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
      */
     if (!validFoundTargetName.build && projectContainsUnsupportedExecutor) {
       throw new Error(
-        `The project ${schema.project} cannot be converted to use the @nrwl/vite executors.`
+        `The project ${schema.project} cannot be converted to use the @nx/vite executors.`
       );
     }
 
@@ -79,7 +87,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
       alreadyHasNxViteTargets.test
     ) {
       throw new Error(
-        `The project ${schema.project} is already configured to use the @nrwl/vite executors.
+        `The project ${schema.project} is already configured to use the @nx/vite executors.
         Please try a different project, or remove the existing targets 
         and re-run this generator to reset the existing Vite Configuration.
         `
@@ -139,7 +147,7 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
     deleteWebpackConfig(
       tree,
       root,
-      targets[buildTargetName]?.options?.webpackConfig
+      targets?.[buildTargetName]?.options?.webpackConfig
     );
 
     editTsConfig(tree, schema);
@@ -148,6 +156,8 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
     includeLib: schema.includeLib,
+    compiler: schema.compiler,
+    testEnvironment: schema.testEnvironment,
   });
   tasks.push(initTask);
 
@@ -174,11 +184,14 @@ export async function viteConfigurationGenerator(tree: Tree, schema: Schema) {
       coverageProvider: 'c8',
       skipViteConfig: true,
       testTarget: testTargetName,
+      skipFormat: true,
     });
     tasks.push(vitestTask);
   }
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }

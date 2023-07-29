@@ -3,24 +3,31 @@ import {
   ChangeType,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getSourceNodes } from '../../../utilities/typescript/get-source-nodes';
 
 import { Schema } from '../schema';
-import {
+import type {
   ArrayLiteralExpression,
-  createSourceFile,
-  isArrayLiteralExpression,
-  isPropertyAssignment,
-  isStringLiteral,
   PropertyAssignment,
-  ScriptTarget,
   StringLiteral,
 } from 'typescript';
 import { join } from 'path';
+import { ensureTypescript } from '../../../utilities/typescript';
+
+let tsModule: typeof import('typescript');
 
 function isUsingUtilityFunction(host: Tree) {
   return host.read('jest.config.ts').toString().includes('getJestProjects()');
+}
+
+/**
+ * in a standalone project, the root jest.config.ts is a project config instead
+ * of multi-project config.
+ * in that case we do not need to edit it to remove it
+ **/
+function isMonorepoConfig(tree: Tree) {
+  return tree.read('jest.config.ts', 'utf-8').includes('projects:');
 }
 
 /**
@@ -31,12 +38,23 @@ export function updateJestConfig(
   schema: Schema,
   projectConfig: ProjectConfiguration
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+  const {
+    createSourceFile,
+    ScriptTarget,
+    isPropertyAssignment,
+    isArrayLiteralExpression,
+    isStringLiteral,
+  } = tsModule;
   const projectToRemove = schema.projectName;
 
   if (
     !tree.exists('jest.config.ts') ||
     !tree.exists(join(projectConfig.root, 'jest.config.ts')) ||
-    isUsingUtilityFunction(tree)
+    isUsingUtilityFunction(tree) ||
+    !isMonorepoConfig(tree)
   ) {
     return;
   }

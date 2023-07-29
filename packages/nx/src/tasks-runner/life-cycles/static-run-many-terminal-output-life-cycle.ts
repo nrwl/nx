@@ -16,7 +16,7 @@ import { formatFlags, formatTargetsAndProjects } from './formatting-utils';
 export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   failedTasks = [] as Task[];
   cachedTasks = [] as Task[];
-  allCompletedTasks = new Set<Task>();
+  allCompletedTasks = new Map<string, Task>();
 
   constructor(
     private readonly projectNames: string[],
@@ -123,14 +123,14 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
   }
 
   private skippedTasks() {
-    return this.tasks.filter((t) => !this.allCompletedTasks.has(t));
+    return this.tasks.filter((t) => !this.allCompletedTasks.has(t.id));
   }
 
   endTasks(
     taskResults: { task: Task; status: TaskStatus; code: number }[]
   ): void {
     for (let t of taskResults) {
-      this.allCompletedTasks.add(t.task);
+      this.allCompletedTasks.set(t.task.id, t.task);
       if (t.status === 'failure') {
         this.failedTasks.push(t.task);
       } else if (t.status === 'local-cache') {

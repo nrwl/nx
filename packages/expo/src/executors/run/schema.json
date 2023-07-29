@@ -39,6 +39,7 @@
       "type": "boolean",
       "description": "Syncs npm dependencies to package.json (for React Native autolink).",
       "default": true,
+      "x-deprecated": "Add sync-deps to dependsOn in project.json for this target instead",
       "x-priority": "internal"
     },
     "port": {
@@ -53,12 +54,19 @@
     },
     "install": {
       "type": "boolean",
-      "description": "Should install missing dependencies before building."
+      "description": "Installing npm packages and CocoaPods before building.",
+      "default": true
     },
     "buildCache": {
       "type": "boolean",
       "description": "Should use derived data for builds."
+    },
+    "clean": {
+      "type": "boolean",
+      "description": "Delete the native folders and regenerate them before applying changes",
+      "default": false
     }
   },
-  "required": ["platform"]
+  "required": ["platform"],
+  "examplesFile": "../../../docs/run-examples.md"
 }

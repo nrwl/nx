@@ -1,3 +1,8 @@
+---
+title: Storybook best practices for making the most out of Nx
+description: The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.
+---
+
 # Storybook best practices for making the most out of Nx
 
 ## Purpose of this guide
@@ -26,7 +31,7 @@ First, let’s see what Nx offers, when you are in the process of developing a p
 
 #### Configuration generation
 
-You can generate the Storybook configuration files and settings using the Nx [`@nrwl/storybook:configuration` generator](/packages/storybook/generators/configuration). You can read more about configuring Storybook with Nx in our [`@nrwl/storybook` package overview page](/packages/storybook#generating-storybook-configuration). With Nx, you configure Storybook for each individual project.
+You can generate the Storybook configuration files and settings using the Nx [`@nx/storybook:configuration` generator](/packages/storybook/generators/configuration). You can read more about configuring Storybook with Nx in our [`@nx/storybook` package overview page](/packages/storybook#generating-storybook-configuration). With Nx, you configure Storybook for each individual project.
 
 #### Stories generation
 
@@ -86,7 +91,7 @@ In the following section, we are going to see how to set up Storybook in these c
 
 ### Philosophy
 
-Setting up Storybook on Nx reflects - and takes advantage of - the [mental model](/concepts/mental-model) of Nx, and especially the architecture of [Applications and Libraries](/more-concepts/applications-and-libraries). What that means, in essence, is that you still maintain the individual Storybook instances (per project) which you use for testing and local development, but you also keep one extra “container” for publishing, that serves as a single entry point. Let’s see this in more detail.
+Setting up Storybook on Nx reflects - and takes advantage of - the [mental model](/concepts/mental-model) of Nx, and especially the architecture of [Applications and Libraries](/concepts/more-concepts/applications-and-libraries). What that means, in essence, is that you still maintain the individual Storybook instances (per project) which you use for testing and local development, but you also keep one extra “container” for publishing, that serves as a single entry point. Let’s see this in more detail.
 
 #### Local development and testing
 
@@ -116,7 +121,7 @@ Since each Storybook, in this case, is attached to a project, so is the serving 
 
 #### Publishing
 
-When you are publishing your Storybook, you can follow the same principles described in the [Applications and Libraries Mental Model](/more-concepts/applications-and-libraries#mental-model) documentation page. The general idea is to have one central Storybook container, into which you are going to gather your stories from multiple libraries.
+When you are publishing your Storybook, you can follow the same principles described in the [Applications and Libraries Mental Model](/concepts/more-concepts/applications-and-libraries#mental-model) documentation page. The general idea is to have one central Storybook container, into which you are going to gather your stories from multiple libraries.
 
 You can think of the central Storybook container as a grouping of similar-concept or same-scope UI parts of your workspace. In the same way you are scoping libraries, you can group your stories as well.
 
@@ -126,7 +131,7 @@ Then, according to your use-case, you can have one central Storybook for your wh
 In order to achieve some things mentioned above, you may use [Storybook Composition](/packages/storybook/documents/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
 {% /callout %}
 
-Before moving on to the examples section, it could be useful to read the [Library Types](/more-concepts/library-types) documentation page and the [Grouping libraries](/more-concepts/grouping-libraries) documentation page. These could help you decide which way fits your use case better.
+Before moving on to the examples section, it could be useful to read the [Library Types](/concepts/more-concepts/library-types) documentation page and the [Grouping libraries](/concepts/more-concepts/grouping-libraries) documentation page. These could help you decide which way fits your use case better.
 
 ## Examples / Use cases
 

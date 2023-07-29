@@ -1,14 +1,13 @@
 import {
+  formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { join } from 'path';
-import { getGeneratorDirectoryForInstalledAngularVersion } from '../utils/version-utils';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/linter';
+import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
 import { extendAngularEslintJson } from './lib/create-eslint-configuration';
 import type { AddLintingGeneratorSchema } from './schema';
@@ -17,16 +16,6 @@ export async function addLintingGenerator(
   tree: Tree,
   options: AddLintingGeneratorSchema
 ): Promise<GeneratorCallback> {
-  const generatorDirectory =
-    getGeneratorDirectoryForInstalledAngularVersion(tree);
-  if (generatorDirectory) {
-    let previousGenerator = await import(
-      join(__dirname, generatorDirectory, 'add-linting')
-    );
-    await previousGenerator.default(tree, options);
-    return;
-  }
-
   const tasks: GeneratorCallback[] = [];
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
   const lintTask = await lintProjectGenerator(tree, {
@@ -53,8 +42,12 @@ export async function addLintingGenerator(
   );
 
   if (!options.skipPackageJson) {
-    const installTask = await addAngularEsLintDependencies(tree);
+    const installTask = addAngularEsLintDependencies(tree);
     tasks.push(installTask);
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   return runTasksInSerial(...tasks);

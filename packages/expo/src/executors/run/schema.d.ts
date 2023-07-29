@@ -4,20 +4,25 @@
  * - ios: https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/run/ios/options/resolveOptions.ts
  */
 export interface ExpoRunOptions {
+  // nx options
   platform: 'ios' | 'android';
+  /**
+   * @deprecated TODO(v17) Add sync-deps to dependsOn in project.json for this target instead
+   */
   sync: boolean; // default is true
+  install?: boolean; // default is true
+  clean?: boolean; // default is false
 
   // ios only
-  scheme?: string | boolean; //  Xcode scheme to build.
+  scheme?: string; //  Xcode scheme to build.
   xcodeConfiguration?: XcodeConfiguration; // Xcode configuration to build. Default `Debug`
 
   // android only
   variant?: string;
 
   // shared between ios and android
-  device?: string | boolean;
+  device?: string;
   port: number; // default is 8081
   bundler: boolean; // default is true
-  install?: boolean;
   buildCache?: boolean;
 }

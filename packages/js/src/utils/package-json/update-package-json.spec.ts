@@ -1,16 +1,17 @@
+import 'nx/src/utils/testing/mock-fs';
+
 import {
   getUpdatedPackageJsonContent,
   updatePackageJson,
   UpdatePackageJsonOption,
 } from './update-package-json';
 import { vol } from 'memfs';
-import { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { DependencyType, ExecutorContext, ProjectGraph } from '@nx/devkit';
+import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
-jest.mock('fs', () => require('memfs').fs);
 
 describe('getUpdatedPackageJsonContent', () => {
   it('should update fields for commonjs only (default)', () => {
@@ -285,6 +286,16 @@ describe('updatePackageJson', () => {
     dependencies: { external1: '~1.0.0', external2: '^4.0.0' },
     devDependencies: { jest: '27' },
   };
+
+  const fileMap = {
+    '@org/lib1': [
+      {
+        file: 'libs/lib1/src/test.ts',
+        hash: '',
+        deps: ['npm:external1', 'npm:external2'],
+      },
+    ],
+  };
   const projectGraph: ProjectGraph = {
     nodes: {
       '@org/lib1': {
@@ -297,7 +308,6 @@ describe('updatePackageJson', () => {
               outputs: ['{workspaceRoot}/dist/libs/lib1'],
             },
           },
-          files: [],
         },
       },
     },
@@ -329,8 +339,16 @@ describe('updatePackageJson', () => {
     },
     dependencies: {
       '@org/lib1': [
-        { source: '@org/lib1', target: 'npm:external1', type: 'static' },
-        { source: '@org/lib1', target: 'npm:external2', type: 'static' },
+        {
+          source: '@org/lib1',
+          target: 'npm:external1',
+          type: DependencyType.static,
+        },
+        {
+          source: '@org/lib1',
+          target: 'npm:external2',
+          type: DependencyType.static,
+        },
       ],
     },
   };
@@ -352,14 +370,14 @@ describe('updatePackageJson', () => {
       main: 'libs/lib1/main.ts',
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies);
+    updatePackageJson(options, context, undefined, dependencies, fileMap);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
-      Object {
+      {
         "main": "./main.js",
         "name": "@org/lib1",
         "types": "./main.d.ts",
@@ -405,22 +423,26 @@ describe('updatePackageJson', () => {
       updateBuildableProjectDepsInPackageJson: true,
     };
     const dependencies: DependentBuildableProjectNode[] = [];
-    updatePackageJson(options, context, undefined, dependencies);
+    updatePackageJson(options, context, undefined, dependencies, fileMap);
 
     expect(vol.existsSync('dist/libs/lib1/package.json')).toEqual(true);
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
     expect(distPackageJson).toMatchInlineSnapshot(`
-      Object {
-        "dependencies": Object {
-          "external1": "1.0.0",
-          "external2": "4.5.6",
+      {
+        "dependencies": {
+          "external1": "~1.0.0",
+          "external2": "^4.0.0",
+          "lib2": "^0.0.1",
+        },
+        "devDependencies": {
+          "jest": "27",
         },
         "main": "./main.js",
         "name": "@org/lib1",
         "types": "./main.d.ts",
-        "version": "0.0.1",
+        "version": "0.0.3",
       }
     `);
   });

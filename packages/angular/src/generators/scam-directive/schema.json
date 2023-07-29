@@ -6,7 +6,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/angular:scam-directive --project=my-lib --flat=false my-sample",
+      "command": "nx g @nx/angular:scam-directive --project=my-lib --flat=false my-sample",
       "description": "Generate a `MySampleDirective` directive in a `my-sample` folder in the `my-lib` library"
     }
   ],
@@ -22,8 +22,10 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "x-dropdown": "projects",
-      "x-priority": "important"
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-dropdown": "projects"
     },
     "name": {
       "type": "string",
@@ -77,5 +79,5 @@
       "x-priority": "important"
     }
   },
-  "required": ["name"]
+  "required": ["name", "project"]
 }

@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": <% if(installedAngularInfo.major === 14) { %>"es2020"<% } else { %>"es2022"<% } %><% if(installedAngularInfo.major === 15) { %>,
+    "useDefineForClassFields": false<% } %>
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "extends": "<%= rootTsConfig %>"
+}

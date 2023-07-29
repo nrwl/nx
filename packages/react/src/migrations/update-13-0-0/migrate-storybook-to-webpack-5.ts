@@ -1,4 +1,4 @@
-import { Tree, logger, updateJson, readJson } from '@nrwl/devkit';
+import { Tree, logger, updateJson, readJson } from '@nx/devkit';
 import {
   migrateToWebPack5,
   workspaceHasStorybookForReact,

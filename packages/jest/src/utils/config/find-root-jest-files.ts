@@ -1,4 +1,4 @@
-import { Tree } from '@nrwl/devkit';
+import { Tree } from '@nx/devkit';
 
 export function findRootJestConfig(tree: Tree): string | null {
   if (tree.exists('jest.config.js')) {

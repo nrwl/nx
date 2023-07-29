@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { readNxJson, updateJson, updateNxJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { readNxJson, updateJson, updateNxJson } from '@nx/devkit';
 import { NormalizedSchema } from './normalized-schema';
 
 /**
@@ -19,11 +19,11 @@ export function setLibraryStrictDefault(host: Tree, isStrict: boolean) {
 
   nxJson.generators = nxJson.generators || {};
 
-  nxJson.generators['@nrwl/angular:library'] =
-    nxJson.generators['@nrwl/angular:library'] || {};
+  nxJson.generators['@nx/angular:library'] =
+    nxJson.generators['@nx/angular:library'] || {};
 
-  nxJson.generators['@nrwl/angular:library'].strict =
-    nxJson.generators['@nrwl/angular:library'].strict ?? isStrict;
+  nxJson.generators['@nx/angular:library'].strict =
+    nxJson.generators['@nx/angular:library'].strict ?? isStrict;
   updateNxJson(host, nxJson);
 }
 

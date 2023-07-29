@@ -1,5 +1,4 @@
 import {
-  generateFiles,
   GeneratorCallback,
   getProjects,
   installPackagesTask,
@@ -8,19 +7,16 @@ import {
   Tree,
   updateJson,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { lte } from 'semver';
-import { join } from 'path';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { storybookVersion } from '../../../utils/versions';
-import { createProjectStorybookDir } from '../../../generators/configuration/util-functions';
+import { createProjectStorybookDir } from '../../../generators/configuration/lib/util-functions';
 import { StorybookConfigureSchema } from '../../../generators/configuration/schema';
 import { findStorybookAndBuildTargetsAndCompiler } from '../../../utils/utilities';
 
 export function migrateDefaultsGenerator(tree: Tree) {
   migrateAllStorybookInstances(tree);
-
-  migrateRootLevelStorybookInstance(tree);
   return upgradeStorybookPackagesInPackageJson(tree);
 }
 
@@ -181,9 +177,15 @@ function migrateProjectLevelStorybookInstance(
     return;
   }
 
-  const { targets } = readProjectConfiguration(tree, projectName);
+  const { projectType, targets, root } = readProjectConfiguration(
+    tree,
+    projectName
+  );
   const { nextBuildTarget, compiler } =
     findStorybookAndBuildTargetsAndCompiler(targets);
+
+  const mainDir =
+    !!nextBuildTarget && projectType === 'application' ? 'components' : 'src';
 
   createProjectStorybookDir(
     tree,
@@ -191,29 +193,13 @@ function migrateProjectLevelStorybookInstance(
     uiFramework,
     false,
     false,
+    root,
+    projectType,
+    false,
+    false,
+    mainDir,
     !!nextBuildTarget,
     compiler === 'swc'
-  );
-}
-
-function migrateRootLevelStorybookInstance(tree: Tree) {
-  const old_folder_exists_already = tree.exists('.old_storybook');
-  const new_config_exists_already = tree.exists(`.storybook/main.js`);
-
-  if (old_folder_exists_already || new_config_exists_already) {
-    return;
-  }
-
-  moveOldFiles(tree, '.storybook');
-
-  generateFiles(
-    tree,
-    join(__dirname, '../../../generators/configuration/root-files/.storybook'),
-    '.storybook',
-    {
-      mainName: 'main',
-      tmpl: '',
-    }
   );
 }
 

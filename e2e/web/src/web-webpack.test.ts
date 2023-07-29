@@ -4,7 +4,7 @@ import {
   runCLI,
   runCommandUntil,
   uniq,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Web Components Applications with bundler set as webpack', () => {
   beforeEach(() => newProject());
@@ -13,7 +13,7 @@ describe('Web Components Applications with bundler set as webpack', () => {
   it('should support https for dev-server', async () => {
     const appName = uniq('app');
     runCLI(
-      `generate @nrwl/web:app ${appName} --bundler=webpack --no-interactive`
+      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
     await runCommandUntil(`serve ${appName} --port=5000 --ssl`, (output) => {

@@ -1,7 +1,7 @@
 {
   "name": "nx/nest",
   "version": "0.1",
-  "extends": ["@nrwl/workspace"],
+  "extends": ["@nx/workspace"],
   "schematics": {
     "application": {
       "factory": "./src/generators/application/application#applicationSchematic",

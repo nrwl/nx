@@ -1,0 +1,42 @@
+{
+  "generators": {
+    "set-generate-package-json": {
+      "cli": "nx",
+      "version": "15.8.7-beta.0",
+      "description": "Set generatePackageJson to true to maintain existing behavior of generating package.json in output path.",
+      "factory": "./src/migrations/update-15-8-7/set-generate-package-json"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/esbuild with @nx/esbuild",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-0-1-set-thirdparty-true": {
+      "version": "16.0.1-beta.0",
+      "description": "Set thirdParty to true to maintain the existing behavior of bundling dependencies.",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-16-0-1-set-thirdparty-true/update-16-0-1-set-thirdparty-true"
+    }
+  },
+  "packageJsonUpdates": {
+    "15.7.0": {
+      "version": "15.7.0-beta.0",
+      "packages": {
+        "esbuild": {
+          "version": "0.17.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.5",
+      "packages": {
+        "esbuild": {
+          "version": "0.17.17",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

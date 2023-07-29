@@ -1,15 +1,12 @@
 import { workspaceRoot } from '../../utils/workspace-root';
-import { ChildProcess, spawn, spawnSync } from 'child_process';
-import { openSync, readFileSync, statSync } from 'fs';
+import { ChildProcess, spawn } from 'child_process';
+import { readFileSync, statSync } from 'fs';
+import { FileHandle, open } from 'fs/promises';
 import { ensureDirSync, ensureFileSync } from 'fs-extra';
-import { connect, Socket } from 'net';
+import { connect } from 'net';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import { output } from '../../utils/output';
-import {
-  safelyCleanUpExistingProcess,
-  writeDaemonJsonProcessCache,
-} from '../cache';
 import { FULL_OS_SOCKET_PATH, killSocketOrPath } from '../socket-utils';
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
@@ -17,13 +14,16 @@ import {
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
-import { ProjectGraph } from '../../config/project-graph';
+import { FileData, ProjectGraph } from '../../config/project-graph';
 import { isCI } from '../../utils/is-ci';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
-import { Workspaces } from '../../config/workspaces';
+import { hasNxJson } from '../../config/nx-json';
 import { Message, SocketMessenger } from './socket-messenger';
+import { safelyCleanUpExistingProcess } from '../cache';
+import { Hash } from '../../hasher/task-hasher';
+import { Task, TaskGraph } from '../../config/task-graph';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -36,6 +36,12 @@ export type ChangedFile = {
   path: string;
   type: 'create' | 'update' | 'delete';
 };
+
+enum DaemonStatus {
+  CONNECTING,
+  DISCONNECTED,
+  CONNECTED,
+}
 
 export class DaemonClient {
   constructor(private readonly nxJson: NxJsonConfiguration) {
@@ -50,7 +56,11 @@ export class DaemonClient {
   private currentReject;
 
   private _enabled: boolean | undefined;
-  private _connected: boolean;
+  private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
+  private _waitForDaemonReady: Promise<void> | null = null;
+  private _daemonReady: () => void | null = null;
+  private _out: FileHandle = null;
+  private _err: FileHandle = null;
 
   enabled() {
     if (this._enabled === undefined) {
@@ -89,13 +99,23 @@ export class DaemonClient {
   }
 
   reset() {
+    this.socketMessenger?.close();
     this.socketMessenger = null;
     this.queue = new PromisedBasedQueue();
     this.currentMessage = null;
     this.currentResolve = null;
     this.currentReject = null;
     this._enabled = undefined;
-    this._connected = false;
+
+    this._out?.close();
+    this._err?.close();
+    this._out = null;
+    this._err = null;
+
+    this._daemonStatus = DaemonStatus.DISCONNECTED;
+    this._waitForDaemonReady = new Promise<void>(
+      (resolve) => (this._daemonReady = resolve)
+    );
   }
 
   async requestShutdown(): Promise<void> {
@@ -105,6 +125,24 @@ export class DaemonClient {
   async getProjectGraph(): Promise<ProjectGraph> {
     return (await this.sendToDaemonViaQueue({ type: 'REQUEST_PROJECT_GRAPH' }))
       .projectGraph;
+  }
+
+  async getAllFileData(): Promise<FileData[]> {
+    return await this.sendToDaemonViaQueue({ type: 'REQUEST_FILE_DATA' });
+  }
+
+  hashTasks(
+    runnerOptions: any,
+    tasks: Task[],
+    taskGraph: TaskGraph
+  ): Promise<Hash[]> {
+    return this.sendToDaemonViaQueue({
+      type: 'HASH_TASKS',
+      runnerOptions,
+      env: process.env,
+      tasks,
+      taskGraph,
+    });
   }
 
   async registerFileWatcher(
@@ -122,27 +160,28 @@ export class DaemonClient {
     ) => void
   ): Promise<UnregisterCallback> {
     await this.getProjectGraph();
-    const messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
-      (message) => {
-        try {
-          const parsedMessage = JSON.parse(message);
-          callback(null, parsedMessage);
-        } catch (e) {
-          callback(e, null);
-        }
-      },
-      () => {
-        callback('closed', null);
-      },
-      (err) => callback(err, null)
-    );
+    let messenger: SocketMessenger | undefined;
 
-    await this.queue.sendToQueue(() =>
-      messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config })
-    );
+    await this.queue.sendToQueue(() => {
+      messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
+        (message) => {
+          try {
+            const parsedMessage = JSON.parse(message);
+            callback(null, parsedMessage);
+          } catch (e) {
+            callback(e, null);
+          }
+        },
+        () => {
+          callback('closed', null);
+        },
+        (err) => callback(err, null)
+      );
+      return messenger.sendMessage({ type: 'REGISTER_FILE_WATCHER', config });
+    });
 
     return () => {
-      messenger.close();
+      messenger?.close();
     };
   }
 
@@ -205,12 +244,13 @@ export class DaemonClient {
         // it's ok for the daemon to terminate if the client doesn't wait on
         // any messages from the daemon
         if (this.queue.isEmpty()) {
-          this._connected = false;
+          this.reset();
         } else {
           output.error({
             title: 'Daemon process terminated and closed the connection',
             bodyLines: [
               'Please rerun the command, which will restart the daemon.',
+              `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
             ],
           });
           process.exit(1);
@@ -252,12 +292,17 @@ export class DaemonClient {
   }
 
   private async sendMessageToDaemon(message: Message): Promise<any> {
-    if (!this._connected) {
-      this._connected = true;
+    if (this._daemonStatus == DaemonStatus.DISCONNECTED) {
+      this._daemonStatus = DaemonStatus.CONNECTING;
+
       if (!(await this.isServerAvailable())) {
         await this.startInBackground();
       }
       this.setUpConnection();
+      this._daemonStatus = DaemonStatus.CONNECTED;
+      this._daemonReady();
+    } else if (this._daemonStatus == DaemonStatus.CONNECTING) {
+      await this._waitForDaemonReady;
     }
 
     return new Promise((resolve, reject) => {
@@ -312,18 +357,24 @@ export class DaemonClient {
   }
 
   async startInBackground(): Promise<ChildProcess['pid']> {
-    await safelyCleanUpExistingProcess();
     ensureDirSync(DAEMON_DIR_FOR_CURRENT_WORKSPACE);
     ensureFileSync(DAEMON_OUTPUT_LOG_FILE);
 
-    const out = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
-    const err = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+    this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+    this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+
+    if (this.nxJson.tasksRunnerOptions.default?.options?.useParcelWatcher) {
+      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = 'false';
+    } else {
+      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = 'true';
+    }
+
     const backgroundProcess = spawn(
       process.execPath,
       [join(__dirname, '../server/start.js')],
       {
         cwd: workspaceRoot,
-        stdio: ['ignore', out, err],
+        stdio: ['ignore', this._out.fd, this._err.fd],
         detached: true,
         windowsHide: true,
         shell: false,
@@ -331,12 +382,6 @@ export class DaemonClient {
       }
     );
     backgroundProcess.unref();
-    //
-
-    // Persist metadata about the background process so that it can be cleaned up later if needed
-    await writeDaemonJsonProcessCache({
-      processId: backgroundProcess.pid,
-    });
 
     /**
      * Ensure the server is actually available to connect to via IPC before resolving
@@ -347,7 +392,7 @@ export class DaemonClient {
         if (await this.isServerAvailable()) {
           clearInterval(id);
           resolve(backgroundProcess.pid);
-        } else if (attempts > 1000) {
+        } else if (attempts > 6000) {
           // daemon fails to start, the process probably exited
           // we print the logs and exit the client
           reject(
@@ -362,14 +407,18 @@ export class DaemonClient {
     });
   }
 
-  stop(): void {
-    spawnSync(process.execPath, ['../server/stop.js'], {
-      cwd: __dirname,
-      stdio: 'inherit',
-    });
+  async stop(): Promise<void> {
+    try {
+      await safelyCleanUpExistingProcess();
+    } catch (err) {
+      output.error({
+        title:
+          err?.message ||
+          'Something unexpected went wrong when stopping the server',
+      });
+    }
 
     removeSocketDir();
-    output.log({ title: 'Daemon Server - Stopped' });
   }
 }
 
@@ -380,12 +429,16 @@ function isDocker() {
     statSync('/.dockerenv');
     return true;
   } catch {
+    try {
+      return readFileSync('/proc/self/cgroup', 'utf8')?.includes('docker');
+    } catch {}
+
     return false;
   }
 }
 
 function nxJsonIsNotPresent() {
-  return !new Workspaces(workspaceRoot).hasNxJson();
+  return !hasNxJson(workspaceRoot);
 }
 
 function daemonProcessException(message: string) {

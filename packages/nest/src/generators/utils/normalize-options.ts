@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { names, readProjectConfiguration } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { names, readProjectConfiguration } from '@nx/devkit';
 import type {
   NestGeneratorOptions,
   NormalizedOptions,

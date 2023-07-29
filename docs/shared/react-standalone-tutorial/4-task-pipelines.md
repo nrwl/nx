@@ -103,8 +103,6 @@ Nx determines if a project has been modified by looking at the task's defined `i
 
 ### Inputs
 
-Inputs for your task caching includes by default any environment details and all the source code of the projects and dependencies affecting your project.
-
 When you run a task, Nx uses the inputs for your task to create a hash that is used as an index for the task results. If the task has already been run with the same inputs, Nx replays the results stored in the cache.
 
 If this index does not exist, Nx runs the command and if the command succeeds, it stores the result in the cache.
@@ -122,21 +120,21 @@ Here are the outputs defined for the `shared-ui` project:
   "name": "shared-ui",
   "targets": {
     "build": {
-      "executor": "@nrwl/vite:build",
+      "executor": "@nx/vite:build",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/shared/ui"
       }
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["shared/ui/**/*.{ts,tsx,js,jsx}"]
       }
     },
     "test": {
-      "executor": "@nrwl/vite:test",
+      "executor": "@nx/vite:test",
       "outputs": ["{projectRoot}/coverage"],
       "options": {
         "passWithNoTests": true
@@ -155,7 +153,7 @@ Another way that Nx saves you from unnecessary work is the `affected` command. `
 Run the command:
 
 ```shell
-git add . && git commit -m "commiting to test affected"
+git add . ; git commit -m "commiting to test affected"
 ```
 
 Then make a change to the styles of your `cart` project:
@@ -231,12 +229,12 @@ The change made to the `cart` project is also affecting the `store` project. Thi
 To run the `test` targets only for affected projects, run the command:
 
 ```shell
-npx nx affected --target=test
+npx nx affected -t test
 ```
 
 This can be particularly helpful in CI pipelines for larger repos, where most commits only affect a small subset of the entire workspace.
 
-{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/nx/affected" /%}
+{% card title="Affected Documentation" description="Checkout Affected documentation for more details" url="/packages/nx/documents/affected" /%}
 
 ## What's Next
 

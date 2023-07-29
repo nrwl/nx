@@ -3,22 +3,21 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
-import applicationGenerator from '../application/application';
 
 describe('Init MF', () => {
   let tree: Tree;
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'app1',
       routing: true,
     });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'remote1',
       routing: true,
     });
@@ -103,7 +102,7 @@ describe('Init MF', () => {
       const updatedMainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
 
       expect(updatedMainContents).toEqual(
-        `import('./bootstrap').catch(err => console.error(err))`
+        `import('./bootstrap').catch((err) => console.error(err));\n`
       );
       expect(updatedMainContents).not.toEqual(mainContents);
     }
@@ -126,15 +125,29 @@ describe('Init MF', () => {
 
       expect(serve.executor).toEqual(
         type === 'host'
-          ? '@nrwl/angular:module-federation-dev-server'
-          : '@nrwl/angular:webpack-dev-server'
+          ? '@nx/angular:module-federation-dev-server'
+          : '@nx/angular:webpack-dev-server'
       );
-      expect(build.executor).toEqual('@nrwl/angular:webpack-browser');
+      expect(build.executor).toEqual('@nx/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
         `apps/${app}/webpack.config.js`
       );
     }
   );
+
+  it('should not generate a webpack prod file for dynamic host', async () => {
+    // ACT
+    await setupMf(tree, {
+      appName: 'app1',
+      mfType: 'host',
+      federationType: 'dynamic',
+    });
+
+    // ASSERT
+    const { build } = readProjectConfiguration(tree, 'app1').targets;
+    expect(tree.exists('apps/app1/webpack.prod.config.js')).toBeFalsy();
+    expect(build.configurations.production.customWebpackConfig).toBeUndefined();
+  });
 
   it('should generate the remote entry module and component correctly', async () => {
     // ACT
@@ -204,7 +217,7 @@ describe('Init MF', () => {
 
   it('should add a remote application and add it to a specified host applications webpack config that contains a remote application already', async () => {
     // ARRANGE
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'remote2',
     });
 
@@ -238,7 +251,7 @@ describe('Init MF', () => {
 
   it('should add a remote application and add it to a specified host applications router config', async () => {
     // ARRANGE
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'remote2',
       routing: true,
     });
@@ -273,7 +286,7 @@ describe('Init MF', () => {
 
   it('should modify the associated cypress project to add the workaround correctly', async () => {
     // ARRANGE
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'testApp',
       routing: true,
     });
@@ -327,7 +340,7 @@ describe('Init MF', () => {
       },
     }));
 
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'ng14',
       routing: true,
       standalone: true,
@@ -344,24 +357,25 @@ describe('Init MF', () => {
     // ASSERT
     expect(tree.read('apps/ng14/src/bootstrap.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import {importProvidersFrom} from \\"@angular/core\\";
-      import {bootstrapApplication} from \\"@angular/platform-browser\\";
-      import {RouterModule} from \\"@angular/router\\";
-      import {RemoteEntryComponent} from \\"./app/remote-entry/entry.component\\";
-      import {appRoutes} from \\"./app/app.routes\\";
-      import {enableProdMode} from '@angular/core';
-      import {environment} from './environments/environment';
-      if(environment.production) {
+      "import { importProvidersFrom } from '@angular/core';
+      import { bootstrapApplication } from '@angular/platform-browser';
+      import { RouterModule } from '@angular/router';
+      import { RemoteEntryComponent } from './app/remote-entry/entry.component';
+      import { appRoutes } from './app/app.routes';
+      import { enableProdMode } from '@angular/core';
+      import { environment } from './environments/environment';
+      if (environment.production) {
         enableProdMode();
       }
 
       bootstrapApplication(RemoteEntryComponent, {
         providers: [
           importProvidersFrom(
-            RouterModule.forRoot(appRoutes, {initialNavigation: 'enabledBlocking'})
-          )
-        ]
-      });"
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' })
+          ),
+        ],
+      });
+      "
     `);
   });
 

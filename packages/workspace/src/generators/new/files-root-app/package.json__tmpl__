@@ -8,9 +8,7 @@
   "dependencies": {
   },
   "devDependencies": {
-    "@nrwl/workspace": "<%= nxVersion %>",
-    "nx": "<%= nxVersion %>",
-    "prettier": "<%= prettierVersion %>",
-    "typescript": "<%= typescriptVersion %>"
+    "@nx/workspace": "<%= nxVersion %>",
+    "nx": "<%= nxVersion %>"
   }
 }

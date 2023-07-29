@@ -1,31 +1,33 @@
-import * as ts from 'typescript';
 import { addInitialRoutes } from '../../../utils/ast-utils';
 import { NormalizedSchema } from '../schema';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../../utils/versions';
+import { reactRouterDomVersion } from '../../../utils/versions';
 import {
   joinPathFragments,
   Tree,
   applyChangesToString,
   addDependenciesToPackageJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+
+let tsModule: typeof import('typescript');
 
 export function addRouting(host: Tree, options: NormalizedSchema) {
   if (!options.routing) {
     return () => {};
   }
 
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const appPath = joinPathFragments(
     options.appProjectRoot,
     maybeJs(options, `src/app/${options.fileName}.tsx`)
   );
   const appFileContent = host.read(appPath, 'utf-8');
-  const appSource = ts.createSourceFile(
+  const appSource = tsModule.createSourceFile(
     appPath,
     appFileContent,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
@@ -35,11 +37,15 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
   );
   host.write(appPath, changes);
 
-  return addDependenciesToPackageJson(
-    host,
-    { 'react-router-dom': reactRouterDomVersion },
-    { '@types/react-router-dom': typesReactRouterDomVersion }
-  );
+  if (!options.skipPackageJson) {
+    return addDependenciesToPackageJson(
+      host,
+      { 'react-router-dom': reactRouterDomVersion },
+      {}
+    );
+  }
+
+  return () => {};
 }
 
 function maybeJs(options: NormalizedSchema, path: string): string {

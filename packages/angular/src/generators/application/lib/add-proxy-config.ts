@@ -1,11 +1,11 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function addProxyConfig(host: Tree, options: NormalizedSchema) {
   const projectConfig = readProjectConfiguration(host, options.name);

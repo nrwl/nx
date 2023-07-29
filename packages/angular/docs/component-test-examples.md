@@ -13,7 +13,7 @@ If you're wanting to create Storybook stories for a component, then check out th
 This generator is used to create a Cypress component test file for a given Angular component.
 
 ```shell
-nx g @nrwl/angular:component-test --project=my-cool-angular-project --componentName=CoolBtnComponent --componentDir=src/cool-btn --componentFileName=cool-btn.component
+nx g @nx/angular:component-test --project=my-cool-angular-project --componentName=CoolBtnComponent --componentDir=src/cool-btn --componentFileName=cool-btn.component
 ```
 
 Test file are generated with the `.cy.ts` suffix. this is to prevent colliding with any existing `.spec.` files contained in the project.

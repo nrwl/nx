@@ -1,10 +1,15 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
-import { join } from 'path';
+import { ExecutorContext, names } from '@nx/devkit';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 
 import { ExpoEasUpdateOptions } from './schema';
+import {
+  displayNewlyAddedDepsMessage,
+  syncDeps,
+} from '../sync-deps/sync-deps.impl';
+import { installAsync } from '../install/install.impl';
 
 export interface ReactNativeUpdateOutput {
   success: boolean;
@@ -18,6 +23,17 @@ export default async function* buildExecutor(
 ): AsyncGenerator<ReactNativeUpdateOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
+  await installAsync(context.root, { packages: ['expo-updates'] });
+  displayNewlyAddedDepsMessage(
+    context.projectName,
+    await syncDeps(
+      context.projectName,
+      projectRoot,
+      context.root,
+      context.projectGraph,
+      ['expo-updates']
+    )
+  );
   ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
@@ -37,9 +53,9 @@ function runCliUpdate(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/eas-cli/bin/run'),
+      require.resolve('eas-cli/bin/run'),
       ['update', ...createUpdateOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot) }
+      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits
@@ -63,7 +79,11 @@ function createUpdateOptions(options: ExpoEasUpdateOptions) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
     if (typeof v === 'boolean') {
-      if (v === true) {
+      if (k === 'interactive') {
+        if (v === false) {
+          acc.push('--non-interactive');
+        }
+      } else if (v === true) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case
         acc.push(`--${names(k).fileName}`);
       }

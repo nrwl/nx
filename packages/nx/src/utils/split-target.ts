@@ -3,10 +3,12 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 export function splitTarget(
   s: string,
-  projectGraph?: ProjectGraph
+  projectGraph: ProjectGraph
 ): [project: string, target?: string, configuration?: string] {
   let [project, ...segments] = splitByColons(s);
-  const validTargets = projectGraph?.nodes?.[project]?.data?.targets;
+  const validTargets = projectGraph.nodes[project]
+    ? projectGraph.nodes[project].data.targets
+    : {};
   const validTargetNames = new Set(Object.keys(validTargets ?? {}));
 
   return [project, ...groupJointSegments(segments, validTargetNames)] as [
@@ -37,7 +39,7 @@ function groupJointSegments(segments: string[], validTargetNames: Set<string>) {
   return segments;
 }
 
-function splitByColons(s: string) {
+export function splitByColons(s: string) {
   const parts = [] as string[];
   let currentPart = '';
   for (let i = 0; i < s.length; ++i) {

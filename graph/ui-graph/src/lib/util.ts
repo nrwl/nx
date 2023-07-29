@@ -1,5 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphDependency } from '@nrwl/devkit';
+import { ProjectGraphDependency } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 
 export function trimBackSlash(value: string): string {
   return value.replace(/\/$/, '');

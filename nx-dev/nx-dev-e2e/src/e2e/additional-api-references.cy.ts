@@ -14,8 +14,6 @@ describe('nx-dev: Additional API references section', () => {
     { title: 'run-many', path: '/cli/run-many' },
     { title: 'affected', path: '/cli/affected' },
     { title: 'affected:graph', path: '/cli/affected-dep-graph' },
-    { title: 'affected:apps', path: '/cli/affected-apps' },
-    { title: 'affected:libs', path: '/cli/affected-libs' },
     { title: 'print-affected', path: '/cli/print-affected' },
     { title: 'format:check', path: '/cli/format-check' },
     { title: 'format:write', path: '/cli/format-write' },
@@ -29,11 +27,11 @@ describe('nx-dev: Additional API references section', () => {
     { title: 'Storybook', path: '/storybook/overview-react' },
     { title: 'Storybook', path: '/storybook/overview-angular' },
     {
-      title: 'Nrwl React Storybook Preset',
+      title: 'Nx React Storybook Addon',
       path: '/storybook/migrate-webpack-final-react',
     },
     {
-      title: 'Storybook Webpack Migration',
+      title: 'Storybook Migration to webpackFinal',
       path: '/storybook/migrate-webpack-final-angular',
     },
     {
@@ -49,7 +47,7 @@ describe('nx-dev: Additional API references section', () => {
       path: '/storybook/storybook-composition-setup',
     },
     {
-      title: 'Module: index',
+      title: 'Module: @nx/devkit',
       path: '/devkit/index',
     },
     {

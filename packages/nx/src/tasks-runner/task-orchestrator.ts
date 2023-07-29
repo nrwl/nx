@@ -1,8 +1,7 @@
-import { Workspaces } from '../config/workspaces';
+import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
-import { Hasher } from '../hasher/hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
@@ -22,16 +21,12 @@ import { DaemonClient } from '../daemon/client/client';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
-  private workspace = new Workspaces(workspaceRoot);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
-  private readonly nxJson = this.workspace.readNxJson();
 
   private tasksSchedule = new TasksSchedule(
     this.hasher,
-    this.nxJson,
     this.projectGraph,
     this.taskGraph,
-    this.workspace,
     this.options
   );
 
@@ -49,7 +44,7 @@ export class TaskOrchestrator {
   // endregion internal state
 
   constructor(
-    private readonly hasher: Hasher,
+    private readonly hasher: TaskHasher,
     private readonly initiatingProject: string | undefined,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
@@ -61,9 +56,12 @@ export class TaskOrchestrator {
   async run() {
     // initial scheduling
     await this.tasksSchedule.scheduleNextTasks();
-    performance.mark('task-execution-begins');
+    performance.mark('task-execution:start');
 
     const threads = [];
+
+    process.stdout.setMaxListeners(this.options.parallel + defaultMaxListeners);
+    process.stderr.setMaxListeners(this.options.parallel + defaultMaxListeners);
 
     // initial seeding of the queue
     for (let i = 0; i < this.options.parallel; ++i) {
@@ -71,11 +69,11 @@ export class TaskOrchestrator {
     }
     await Promise.all(threads);
 
-    performance.mark('task-execution-ends');
+    performance.mark('task-execution:end');
     performance.measure(
-      'command-execution',
-      'task-execution-begins',
-      'task-execution-ends'
+      'task-execution',
+      'task-execution:start',
+      'task-execution:end'
     );
     this.cache.removeOldCacheRecords();
 
@@ -140,6 +138,7 @@ export class TaskOrchestrator {
     task: Task;
     status: 'local-cache' | 'local-cache-kept-existing' | 'remote-cache';
   }> {
+    task.startTime = Date.now();
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
@@ -150,6 +149,7 @@ export class TaskOrchestrator {
     if (shouldCopyOutputsFromCache) {
       await this.cache.copyFilesFromCache(task.hash, cachedResult, outputs);
     }
+    task.endTime = Date.now();
     const status = cachedResult.remote
       ? 'remote-cache'
       : shouldCopyOutputsFromCache
@@ -200,7 +200,7 @@ export class TaskOrchestrator {
       results.push(...batchResults);
     }
 
-    await this.postRunSteps(tasks, results, { groupId });
+    await this.postRunSteps(tasks, results, doNotSkipCache, { groupId });
 
     const tasksCompleted = taskEntries.filter(
       ([taskId]) => this.completedTasks[taskId]
@@ -225,12 +225,17 @@ export class TaskOrchestrator {
   private async runBatch(batch: Batch) {
     try {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
-        batch
+        batch,
+        this.taskGraph
       );
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
         ...result,
-        task: this.taskGraph.tasks[taskId],
+        task: {
+          ...this.taskGraph.tasks[taskId],
+          startTime: result.startTime,
+          endTime: result.endTime,
+        },
         status: (result.success ? 'success' : 'failure') as TaskStatus,
         terminalOutput: result.terminalOutput,
       }));
@@ -270,7 +275,7 @@ export class TaskOrchestrator {
         terminalOutput,
       });
     }
-    await this.postRunSteps([task], results, { groupId });
+    await this.postRunSteps([task], results, doNotSkipCache, { groupId });
   }
 
   private async runTaskInForkedProcess(task: Task) {
@@ -283,7 +288,7 @@ export class TaskOrchestrator {
         this.options
       );
 
-      const pipeOutput = this.pipeOutputCapture(task);
+      const pipeOutput = await this.pipeOutputCapture(task);
 
       // execution
       const { code, terminalOutput } = pipeOutput
@@ -292,6 +297,7 @@ export class TaskOrchestrator {
             {
               temporaryOutputPath,
               streamOutput,
+              taskGraph: this.taskGraph,
             }
           )
         : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
@@ -299,6 +305,7 @@ export class TaskOrchestrator {
             {
               temporaryOutputPath,
               streamOutput,
+              taskGraph: this.taskGraph,
             }
           );
 
@@ -327,39 +334,49 @@ export class TaskOrchestrator {
       status: TaskStatus;
       terminalOutput?: string;
     }[],
+    doNotSkipCache: boolean,
     { groupId }: { groupId: number }
   ) {
     for (const task of tasks) {
       await this.recordOutputsHash(task);
     }
 
-    // cache the results
-    await Promise.all(
-      results
-        .filter(
-          ({ status }) =>
-            status !== 'local-cache' &&
-            status !== 'local-cache-kept-existing' &&
-            status !== 'remote-cache' &&
-            status !== 'skipped'
-        )
-        .map((result) => ({
-          ...result,
-          code:
-            result.status === 'local-cache' ||
-            result.status === 'local-cache-kept-existing' ||
-            result.status === 'remote-cache' ||
-            result.status === 'success'
-              ? 0
-              : 1,
-          outputs: getOutputs(this.projectGraph.nodes, result.task),
-        }))
-        .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
-        .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
-        .map(async ({ task, code, terminalOutput, outputs }) =>
-          this.cache.put(task, terminalOutput, outputs, code)
-        )
-    );
+    if (doNotSkipCache) {
+      // cache the results
+      performance.mark('cache-results-start');
+      await Promise.all(
+        results
+          .filter(
+            ({ status }) =>
+              status !== 'local-cache' &&
+              status !== 'local-cache-kept-existing' &&
+              status !== 'remote-cache' &&
+              status !== 'skipped'
+          )
+          .map((result) => ({
+            ...result,
+            code:
+              result.status === 'local-cache' ||
+              result.status === 'local-cache-kept-existing' ||
+              result.status === 'remote-cache' ||
+              result.status === 'success'
+                ? 0
+                : 1,
+            outputs: getOutputs(this.projectGraph.nodes, result.task),
+          }))
+          .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
+          .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
+          .map(async ({ task, code, terminalOutput, outputs }) =>
+            this.cache.put(task, terminalOutput, outputs, code)
+          )
+      );
+      performance.mark('cache-results-end');
+      performance.measure(
+        'cache-results',
+        'cache-results-start',
+        'cache-results-end'
+      );
+    }
     this.options.lifeCycle.endTasks(
       results.map((result) => {
         const code =
@@ -431,14 +448,9 @@ export class TaskOrchestrator {
 
   // region utils
 
-  private pipeOutputCapture(task: Task) {
+  private async pipeOutputCapture(task: Task) {
     try {
-      const { schema } = getExecutorForTask(
-        task,
-        this.workspace,
-        this.projectGraph,
-        this.nxJson
-      );
+      const { schema } = await getExecutorForTask(task, this.projectGraph);
 
       return (
         schema.outputCapture === 'pipe' ||

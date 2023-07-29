@@ -18,6 +18,13 @@
       "description": "Do not add dependencies to `package.json`.",
       "x-priority": "internal"
     },
+    "testEnvironment": {
+      "type": "string",
+      "enum": ["jsdom", "node", "none"],
+      "description": "The test environment for jest. This controls which jest-environment-* package is installed",
+      "default": "jsdom",
+      "x-priority": "important"
+    },
     "js": {
       "type": "boolean",
       "default": false,

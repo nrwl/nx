@@ -1,0 +1,43 @@
+{
+  "name": "@nx/plugin",
+  "version": "0.0.1",
+  "private": false,
+  "description": "This plugin is used to create Nx plugins! It contains generators for generating common plugin features like generators, executors, migrations and more.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx-plugin"
+  },
+  "keywords": [
+    "Monorepo",
+    "Nx",
+    "CLI"
+  ],
+  "main": "./index",
+  "types": "./index.d.ts",
+  "author": "Nrwl",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@phenomnomnominal/tsquery": "~5.0.1",
+    "dotenv": "~10.0.0",
+    "fs-extra": "^11.1.0",
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

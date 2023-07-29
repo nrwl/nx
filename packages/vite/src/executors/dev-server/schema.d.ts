@@ -1,9 +1,10 @@
 export interface ViteDevServerExecutorOptions {
   buildTarget: string;
+  buildLibsFromSource?: boolean;
   proxyConfig?: string;
   port?: number;
   host?: string | boolean;
-  https?: boolean;
+  https?: boolean | Json;
   hmr?: boolean;
   open?: string | boolean;
   cors?: boolean;

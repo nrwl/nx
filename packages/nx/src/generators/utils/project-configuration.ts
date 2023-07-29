@@ -1,12 +1,11 @@
-import { basename, dirname, join, relative } from 'path';
+import { basename, join, relative } from 'path';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import {
-  buildProjectsConfigurationsFromGlobs,
+  buildProjectsConfigurationsFromProjectPaths,
   deduplicateProjectFiles,
-  globForProjectFiles,
   renamePropertyWithStableKeys,
 } from '../../config/workspaces';
 import { joinPathFragments, normalizePath } from '../../utils/path';
@@ -17,6 +16,7 @@ import { readJson, writeJson } from './json';
 import { PackageJson } from '../../utils/package-json';
 import { readNxJson } from './nx-json';
 import { output } from '../../utils/output';
+import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
 
 export { readNxJson, updateNxJson } from './nx-json';
 export {
@@ -59,6 +59,7 @@ export function addProjectConfiguration(
     );
   }
 
+  delete (projectConfiguration as any).$schema;
   writeJson(tree, projectConfigFile, {
     name: projectName,
     $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
@@ -180,16 +181,18 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
 } {
   const nxJson = readNxJson(tree);
 
-  const globbedFiles = globForProjectFiles(tree.root, nxJson);
+  const globbedFiles = retrieveProjectConfigurationPaths(tree.root, nxJson);
   const createdFiles = findCreatedProjectFiles(tree);
   const deletedFiles = findDeletedProjectFiles(tree);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  return buildProjectsConfigurationsFromGlobs(nxJson, projectFiles, (file) =>
-    readJson(tree, file)
-  ).projects;
+  return buildProjectsConfigurationsFromProjectPaths(
+    nxJson,
+    projectFiles,
+    (file) => readJson(tree, file)
+  );
 }
 
 /**
@@ -211,14 +214,16 @@ function findCreatedProjectFiles(tree: Tree) {
       if (fileName === 'project.json') {
         createdProjectFiles.push(change.path);
       } else if (fileName === 'package.json') {
-        const contents: PackageJson = JSON.parse(change.content.toString());
-        if (contents.nx) {
-          createdProjectFiles.push(change.path);
-        }
+        try {
+          const contents: PackageJson = JSON.parse(change.content.toString());
+          if (contents.nx) {
+            createdProjectFiles.push(change.path);
+          }
+        } catch {}
       }
     }
   }
-  return deduplicateProjectFiles(createdProjectFiles);
+  return deduplicateProjectFiles(createdProjectFiles).map(normalizePath);
 }
 
 /**

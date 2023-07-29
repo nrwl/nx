@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { WorkspaceData, GraphPerfReport } from '../interfaces';
-import { Dropdown } from '@nrwl/graph/ui-components';
+import { Dropdown } from '@nx/graph/ui-components';
 
 export interface DebuggerPanelProps {
   projects: WorkspaceData[];
@@ -25,15 +25,12 @@ export const DebuggerPanel = memo(function ({
       </h4>
       <Dropdown
         data-cy="project-select"
+        defaultValue={selectedProject}
         onChange={(event) => selectedProjectChange(event.currentTarget.value)}
       >
         {projects.map((projectGraph) => {
           return (
-            <option
-              key={projectGraph.id}
-              value={projectGraph.id}
-              selected={projectGraph.id === selectedProject}
-            >
+            <option key={projectGraph.id} value={projectGraph.id}>
               {projectGraph.label}
             </option>
           );

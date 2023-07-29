@@ -4,12 +4,12 @@ const path = require('path');
 const share = mf.share;
 
 /**
- * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+ * We use the NX_TSCONFIG_PATH environment variable when using the @nx/angular:webpack-browser
  * builder as it will generate a temporary tsconfig file which contains any required remappings of
  * shared libraries.
  * A remapping will occur when a library is buildable, as webpack needs to know the location of the
  * built files for the buildable library.
- * This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+ * This NX_TSCONFIG_PATH environment variable is set by the @nx/angular:webpack-browser and it contains
  * the location of the generated temporary tsconfig file.
  */
 const tsConfigPath =
@@ -95,12 +95,12 @@ const path = require('path');
 const share = mf.share;
 
 /**
- * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+ * We use the NX_TSCONFIG_PATH environment variable when using the @nx/angular:webpack-browser
  * builder as it will generate a temporary tsconfig file which contains any required remappings of
  * shared libraries.
  * A remapping will occur when a library is buildable, as webpack needs to know the location of the
  * built files for the buildable library.
- * This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+ * This NX_TSCONFIG_PATH environment variable is set by the @nx/angular:webpack-browser and it contains
  * the location of the generated temporary tsconfig file.
  */
 const tsConfigPath =
@@ -188,12 +188,12 @@ const path = require('path');
 const share = mf.share;
 
 /**
- * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+ * We use the NX_TSCONFIG_PATH environment variable when using the @nx/angular:webpack-browser
  * builder as it will generate a temporary tsconfig file which contains any required remappings of
  * shared libraries.
  * A remapping will occur when a library is buildable, as webpack needs to know the location of the
  * built files for the buildable library.
- * This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+ * This NX_TSCONFIG_PATH environment variable is set by the @nx/angular:webpack-browser and it contains
  * the location of the generated temporary tsconfig file.
  */
 const tsConfigPath =
@@ -270,12 +270,12 @@ const path = require('path');
 const share = mf.share;
 
 /**
- * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+ * We use the NX_TSCONFIG_PATH environment variable when using the @nx/angular:webpack-browser
  * builder as it will generate a temporary tsconfig file which contains any required remappings of
  * shared libraries.
  * A remapping will occur when a library is buildable, as webpack needs to know the location of the
  * built files for the buildable library.
- * This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+ * This NX_TSCONFIG_PATH environment variable is set by the @nx/angular:webpack-browser and it contains
  * the location of the generated temporary tsconfig file.
  */
 const tsConfigPath =
@@ -363,12 +363,12 @@ const path = require('path');
 const share = mf.share;
 
 /**
- * We use the NX_TSCONFIG_PATH environment variable when using the @nrwl/angular:webpack-browser
+ * We use the NX_TSCONFIG_PATH environment variable when using the @nx/angular:webpack-browser
  * builder as it will generate a temporary tsconfig file which contains any required remappings of
  * shared libraries.
  * A remapping will occur when a library is buildable, as webpack needs to know the location of the
  * built files for the buildable library.
- * This NX_TSCONFIG_PATH environment variable is set by the @nrwl/angular:webpack-browser and it contains
+ * This NX_TSCONFIG_PATH environment variable is set by the @nx/angular:webpack-browser and it contains
  * the location of the generated temporary tsconfig file.
  */
 const tsConfigPath =

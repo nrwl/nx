@@ -1,4 +1,4 @@
-import { SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { SectionHeading } from '@nx/nx-dev/ui-common';
 
 export function Newsletter(): JSX.Element {
   const communityLinks = [

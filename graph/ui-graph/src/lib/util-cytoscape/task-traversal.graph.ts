@@ -1,5 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '@nrwl/devkit';
+import type { ProjectGraphProjectNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { TaskGraphRecord } from '../interfaces';
 import { TaskNode } from './task-node';
 import { TaskEdge } from './task-edge';
@@ -22,15 +24,6 @@ export class TaskTraversalGraph {
     this.taskGraphs = taskGraphs;
   }
 
-  selectTask(taskIds: string[]) {
-    taskIds.forEach((taskId) => {
-      this.selectedTasks.add(taskId);
-    });
-    this.createElements(Array.from(this.selectedTasks), this.groupByProject);
-
-    return this.cy.elements();
-  }
-
   setGroupByProject(groupByProject: boolean) {
     this.groupByProject = groupByProject;
 
@@ -42,6 +35,35 @@ export class TaskTraversalGraph {
         elements: [],
       });
     }
+
+    return this.cy.elements();
+  }
+
+  setTasks(taskIds: string[]) {
+    let changed = false;
+    this.selectedTasks.forEach((selectedTask) => {
+      if (!taskIds.includes(selectedTask)) {
+        this.selectedTasks.delete(selectedTask);
+        changed = true;
+      }
+    });
+    for (const taskId of taskIds) {
+      if (!this.selectedTasks.has(taskId)) {
+        this.selectedTasks.add(taskId);
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.createElements(Array.from(this.selectedTasks), this.groupByProject);
+    }
+    return this.cy.elements();
+  }
+
+  selectTask(taskIds: string[]) {
+    taskIds.forEach((taskId) => {
+      this.selectedTasks.add(taskId);
+    });
+    this.createElements(Array.from(this.selectedTasks), this.groupByProject);
 
     return this.cy.elements();
   }

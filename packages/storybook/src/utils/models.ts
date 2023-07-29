@@ -1,5 +1,12 @@
 export interface CommonNxStorybookConfig {
-  uiFramework?: UiFramework; // TODO(katerina): Remove when Storybook 7
+  uiFramework?:
+    | '@storybook/angular'
+    | '@storybook/react'
+    | '@storybook/html'
+    | '@storybook/web-components'
+    | '@storybook/vue'
+    | '@storybook/vue3'
+    | '@storybook/svelte'; // TODO(katerina): Remove when Storybook 7
 }
 
 export type UiFramework7 =
@@ -18,14 +25,5 @@ export type UiFramework7 =
   | '@storybook/vue3-webpack5'
   | '@storybook/vue3-vite'
   | '@storybook/web-components-webpack5'
-  | '@storybook/web-components-vite';
-
-export type UiFramework =
-  | '@storybook/angular'
-  | '@storybook/react'
-  | '@storybook/html'
-  | '@storybook/web-components'
-  | '@storybook/vue'
-  | '@storybook/vue3'
-  | '@storybook/svelte'
+  | '@storybook/web-components-vite'
   | '@storybook/react-native';

@@ -1,4 +1,4 @@
-import { ButtonLink, SectionHeading } from '@nrwl/nx-dev/ui-common';
+import { ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 import Link from 'next/link';
 
 export function MigrationsAndCodeGeneration(): JSX.Element {
@@ -96,8 +96,8 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
                   </span>
                   <br />
                   <br />
-                  - Package.json has been updated.
-                  <br />- Migrations.json has been generated.
+                  - package.json has been updated.
+                  <br />- migrations.json has been generated.
                 </p>
               </div>
               <div className="mt-8 flex">

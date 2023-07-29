@@ -1,38 +1,40 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
-} from '@nrwl/devkit';
-import { getPkgVersionsForAngularMajorVersion } from '../../utils/version-utils';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+} from '@nx/devkit';
+import { versions } from '../utils/version-utils';
 import {
   generateSSRFiles,
   normalizeOptions,
   updateAppModule,
   updateProjectConfig,
+  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
 export async function setupSsr(tree: Tree, schema: Schema) {
+  validateOptions(tree, schema);
   const options = normalizeOptions(tree, schema);
 
-  generateSSRFiles(tree, options);
-  updateAppModule(tree, options);
   updateProjectConfig(tree, options);
+  generateSSRFiles(tree, options);
 
-  const installedAngularVersion = getInstalledAngularVersionInfo(tree);
-  const { angularVersion: ngPlatformServerVersion, ngUniversalVersion } =
-    getPkgVersionsForAngularMajorVersion(installedAngularVersion.major);
+  if (!options.standalone) {
+    updateAppModule(tree, options);
+  }
+
+  const pkgVersions = versions(tree);
 
   addDependenciesToPackageJson(
     tree,
     {
-      '@nguniversal/express-engine': ngUniversalVersion,
-      '@angular/platform-server': ngPlatformServerVersion,
+      '@nguniversal/express-engine': pkgVersions.ngUniversalVersion,
+      '@angular/platform-server': pkgVersions.angularVersion,
     },
     {
-      '@nguniversal/builders': ngUniversalVersion,
+      '@nguniversal/builders': pkgVersions.ngUniversalVersion,
     }
   );
 

@@ -1,5 +1,5 @@
-import { addProjectConfiguration, getProjects, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, getProjects, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import update from './add-eas-build-target';
 
 describe('add-eas-build-target', () => {

@@ -30,6 +30,7 @@ const args: Partial<TaskListProps> = {
             defaultConfiguration: 'production',
           },
         },
+        files: [],
       },
     },
     {
@@ -38,6 +39,7 @@ const args: Partial<TaskListProps> = {
       data: {
         root: 'apps/nested/app',
         targets: { build: { configurations: { production: {} } } },
+        files: [],
       },
     },
     {
@@ -46,6 +48,7 @@ const args: Partial<TaskListProps> = {
       data: {
         root: 'apps/app1-e2e',
         targets: { e2e: { configurations: { production: {} } } },
+        files: [],
       },
     },
     {
@@ -54,6 +57,7 @@ const args: Partial<TaskListProps> = {
       data: {
         root: 'libs/lib1',
         targets: { lint: { configurations: { production: {} } } },
+        files: [],
       },
     },
   ],
@@ -62,6 +66,9 @@ const args: Partial<TaskListProps> = {
     appsDir: 'apps',
     libsDir: 'libs',
   },
-  selectedTask: 'app1:build:production',
+  selectedTarget: 'build',
+  errors: {
+    'app1:build': 'Missing executor',
+  },
 };
 Primary.args = args;

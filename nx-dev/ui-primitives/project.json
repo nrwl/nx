@@ -6,7 +6,7 @@
   "tags": [],
   "targets": {
     "lint": {
-      "executor": "@nrwl/linter:eslint",
+      "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["nx-dev/ui-primitives/**/*.{ts,tsx,js,jsx}"]

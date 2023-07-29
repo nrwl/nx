@@ -1,11 +1,11 @@
-import type { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   formatFiles,
   offsetFromRoot,
   readProjectConfiguration,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
@@ -27,6 +27,82 @@ interface LintProjectOptions {
   skipPackageJson?: boolean;
   unitTestRunner?: string;
   rootProject?: boolean;
+}
+
+export function mapLintPattern(
+  projectRoot: string,
+  extension: string,
+  rootProject?: boolean
+) {
+  const infix = rootProject ? 'src/' : '';
+  return `${projectRoot}/${infix}**/*.${extension}`;
+}
+
+export async function lintProjectGenerator(
+  tree: Tree,
+  options: LintProjectOptions
+) {
+  const installTask = lintInitGenerator(tree, {
+    linter: options.linter,
+    unitTestRunner: options.unitTestRunner,
+    skipPackageJson: options.skipPackageJson,
+    rootProject: options.rootProject,
+  });
+  const projectConfig = readProjectConfiguration(tree, options.project);
+
+  const lintFilePatterns = options.eslintFilePatterns;
+  if (isBuildableLibraryProject(projectConfig)) {
+    lintFilePatterns.push(`${projectConfig.root}/package.json`);
+  }
+
+  projectConfig.targets['lint'] = {
+    executor: '@nx/linter:eslint',
+    outputs: ['{options.outputFile}'],
+    options: {
+      lintFilePatterns: lintFilePatterns,
+    },
+  };
+
+  // we are adding new project which is not the root project or
+  // companion e2e app so we should check if migration to
+  // monorepo style is needed
+  if (!options.rootProject) {
+    const projects = {} as any;
+    getProjects(tree).forEach((v, k) => (projects[k] = v));
+    if (isMigrationToMonorepoNeeded(projects, tree)) {
+      // we only migrate project configurations that have been created
+      const filteredProjects = [];
+      Object.entries(projects).forEach(([name, project]) => {
+        if (name !== options.project) {
+          filteredProjects.push(project);
+        }
+      });
+      migrateConfigToMonorepoStyle(
+        filteredProjects,
+        tree,
+        options.unitTestRunner
+      );
+    }
+  }
+
+  // our root `.eslintrc` is already the project config, so we should not override it
+  // additionally, the companion e2e app would have `rootProject: true`
+  // so we need to check for the root path as well
+  if (!options.rootProject || projectConfig.root !== '.') {
+    createEsLintConfiguration(
+      tree,
+      projectConfig,
+      options.setParserOptionsProject
+    );
+  }
+
+  updateProjectConfiguration(tree, options.project, projectConfig);
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
+
+  return installTask;
 }
 
 function createEsLintConfiguration(
@@ -76,87 +152,34 @@ function createEsLintConfiguration(
         files: ['*.js', '*.jsx'],
         rules: {},
       },
+      ...(isBuildableLibraryProject(projectConfig)
+        ? [
+            {
+              files: ['*.json'],
+              parser: 'jsonc-eslint-parser',
+              rules: {
+                '@nx/dependency-checks': 'error',
+              },
+            },
+          ]
+        : []),
     ],
   });
 }
 
-export function mapLintPattern(
-  projectRoot: string,
-  extension: string,
-  rootProject?: boolean
-) {
-  const infix = rootProject ? 'src/' : '';
-  return `${projectRoot}/${infix}**/*.${extension}`;
-}
-
-export async function lintProjectGenerator(
-  tree: Tree,
-  options: LintProjectOptions
-) {
-  const installTask = lintInitGenerator(tree, {
-    linter: options.linter,
-    unitTestRunner: options.unitTestRunner,
-    skipPackageJson: options.skipPackageJson,
-    rootProject: options.rootProject,
-  });
-  const projectConfig = readProjectConfiguration(tree, options.project);
-
-  projectConfig.targets['lint'] = {
-    executor: '@nrwl/linter:eslint',
-    outputs: ['{options.outputFile}'],
-    options: {
-      lintFilePatterns: options.eslintFilePatterns,
-    },
-  };
-
-  // we are adding new project which is not the root project or
-  // companion e2e app so we should check if migration to
-  // monorepo style is needed
-  if (!options.rootProject) {
-    const projects = {} as any;
-    getProjects(tree).forEach((v, k) => (projects[k] = v));
-    if (isMigrationToMonorepoNeeded(projects, tree)) {
-      // we only migrate project configurations that have been created
-      const filteredProjects = [];
-      Object.entries(projects).forEach(([name, project]) => {
-        if (name !== options.project) {
-          filteredProjects.push(project);
-        }
-      });
-      migrateConfigToMonorepoStyle(
-        filteredProjects,
-        tree,
-        options.unitTestRunner
-      );
-    }
-  }
-
-  // our root `.eslintrc` is already the project config, so we should not override it
-  // additionally, the companion e2e app would have `rootProject: true`
-  // so we need to check for the root path as well
-  if (!options.rootProject || projectConfig.root !== '.') {
-    createEsLintConfiguration(
-      tree,
-      projectConfig,
-      options.setParserOptionsProject
-    );
-  }
-
-  updateProjectConfiguration(tree, options.project, projectConfig);
-
-  if (!options.skipFormat) {
-    await formatFiles(tree);
-  }
-
-  return installTask;
+function isBuildableLibraryProject(
+  projectConfig: ProjectConfiguration
+): boolean {
+  return (
+    projectConfig.projectType === 'library' &&
+    projectConfig.targets?.build &&
+    !!projectConfig.targets.build
+  );
 }
 
 /**
  * Detect based on the state of lint target configuration of the root project
  * if we should migrate eslint configs to monorepo style
- *
- * @param tree
- * @returns
  */
 function isMigrationToMonorepoNeeded(
   projects: Record<string, ProjectConfiguration>,

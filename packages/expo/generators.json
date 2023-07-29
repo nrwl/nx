@@ -1,7 +1,7 @@
 {
   "name": "Nx Expo",
   "version": "0.1",
-  "extends": ["@nrwl/workspace"],
+  "extends": ["@nx/workspace"],
   "schematics": {
     "init": {
       "factory": "./src/generators/init/init#expoInitSchematic",

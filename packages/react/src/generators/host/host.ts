@@ -3,9 +3,10 @@ import {
   GeneratorCallback,
   joinPathFragments,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import applicationGenerator from '../application/application';
 import { normalizeOptions } from '../application/lib/normalize-options';
@@ -15,7 +16,7 @@ import { updateModuleFederationE2eProject } from './lib/update-module-federation
 
 import { Schema } from './schema';
 import remoteGenerator from '../remote/remote';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
 
@@ -29,6 +30,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     routing: true,
     // Only webpack works with module federation for now.
     bundler: 'webpack',
+    skipFormat: true,
   });
   tasks.push(initTask);
 
@@ -42,12 +44,12 @@ export async function hostGenerator(host: Tree, schema: Schema) {
         name: remote,
         directory: options.directory,
         style: options.style,
-        skipFormat: options.skipFormat,
         unitTestRunner: options.unitTestRunner,
         e2eTestRunner: options.e2eTestRunner,
         linter: options.linter,
         devServerPort: remotePort,
         ssr: options.ssr,
+        skipFormat: true,
       });
       remotePort++;
     }
@@ -61,6 +63,7 @@ export async function hostGenerator(host: Tree, schema: Schema) {
     const setupSsrTask = await setupSsrGenerator(host, {
       project: options.projectName,
       serverPort: options.devServerPort,
+      skipFormat: true,
     });
     tasks.push(setupSsrTask);
 

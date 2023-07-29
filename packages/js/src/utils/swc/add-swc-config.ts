@@ -1,6 +1,4 @@
-// TODO(chau): change back to 2015 when https://github.com/swc-project/swc/issues/1108 is solved
-// target: 'es2015'
-import { logger, readJson, Tree, updateJson } from '@nrwl/devkit';
+import { type Tree } from '@nx/devkit';
 import { join } from 'path';
 
 export const defaultExclude = [
@@ -12,7 +10,7 @@ export const defaultExclude = [
   '.*.js$',
 ];
 
-const swcOptionsString = () => `{
+const swcOptionsString = (type: 'commonjs' | 'es6' = 'commonjs') => `{
   "jsc": {
     "target": "es2017",
     "parser": {
@@ -29,7 +27,7 @@ const swcOptionsString = () => `{
     "loose": true
   },
   "module": {
-    "type": "commonjs",
+    "type": "${type}",
     "strict": true,
     "noInterop": true
   },
@@ -37,8 +35,12 @@ const swcOptionsString = () => `{
   "exclude": ${JSON.stringify(defaultExclude)}
 }`;
 
-export function addSwcConfig(tree: Tree, projectDir: string) {
-  const swcrcPath = join(projectDir, '.lib.swcrc');
+export function addSwcConfig(
+  tree: Tree,
+  projectDir: string,
+  type: 'commonjs' | 'es6' = 'commonjs'
+) {
+  const swcrcPath = join(projectDir, '.swcrc');
   if (tree.exists(swcrcPath)) return;
-  tree.write(swcrcPath, swcOptionsString());
+  tree.write(swcrcPath, swcOptionsString(type));
 }

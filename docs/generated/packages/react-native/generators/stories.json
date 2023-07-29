@@ -27,6 +27,12 @@
           "**/**/src/**/*.other.*",
           "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
         ]
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": ["project"],

@@ -1,0 +1,11 @@
+{
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
+  },
+  "workspaceLayout": {
+    "appsDir": "packages",
+    "libsDir": "packages"
+  }
+}

@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, normalizePath } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, normalizePath } from '@nx/devkit';
 import { basename, dirname } from 'path';
 import type { NormalizedSchema } from '../schema';
 
@@ -15,12 +15,10 @@ export function findModuleFromOptions(
   projectRoot: string
 ): string | null {
   if (!options.module) {
-    const pathToCheck = joinPathFragments(options.path, options.name);
-
-    return normalizePath(findModule(tree, pathToCheck, projectRoot));
+    return normalizePath(findModule(tree, options.directory, projectRoot));
   } else {
     const modulePath = joinPathFragments(options.path, options.module);
-    const componentPath = joinPathFragments(options.path, options.name);
+    const componentPath = options.directory;
     const moduleBaseName = basename(modulePath);
 
     const candidateSet = new Set<string>([options.path]);
@@ -39,6 +37,7 @@ export function findModuleFromOptions(
     for (const c of candidatesDirs) {
       const candidateFiles = [
         '',
+        moduleBaseName,
         `${moduleBaseName}.ts`,
         `${moduleBaseName}${moduleExt}`,
       ].map((x) => joinPathFragments(c, x));
@@ -58,7 +57,7 @@ function findModule(
   tree: Tree,
   generateDir: string,
   projectRoot: string
-): string | null {
+): string {
   let dir = generateDir;
   const projectRootParent = dirname(projectRoot);
 
@@ -74,11 +73,15 @@ function findModule(
     if (filteredMatches.length == 1) {
       return filteredMatches[0];
     } else if (filteredMatches.length > 1) {
-      return null;
+      throw new Error(
+        "Found more than one candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
+      );
     }
 
     dir = dirname(dir);
   }
 
-  return null;
+  throw new Error(
+    "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option, or pass '--standalone' to generate a standalone component."
+  );
 }

@@ -1,11 +1,11 @@
-import { TagsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import { TagsApi } from '@nx/nx-dev/data-access-documents/node-only';
+import { DocumentMetadata } from '@nx/nx-dev/models-document';
 import {
   FileMetadata,
   IntrinsicPackageMetadata,
   ProcessedPackageMetadata,
   SchemaMetadata,
-} from '@nrwl/nx-dev/models-package';
+} from '@nx/nx-dev/models-package';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 

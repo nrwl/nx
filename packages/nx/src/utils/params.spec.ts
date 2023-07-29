@@ -32,7 +32,7 @@ describe('params', () => {
     it('should use target options', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -58,7 +58,7 @@ describe('params', () => {
     it('should combine target, configuration', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -88,7 +88,7 @@ describe('params', () => {
         overriddenOpt: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -118,7 +118,7 @@ describe('params', () => {
         overriddenOpt: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOptAlias: 'target value',
         },
@@ -148,7 +148,7 @@ describe('params', () => {
         overriddenOptAlias: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -176,7 +176,7 @@ describe('params', () => {
     it('should handle targets without options', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
       };
 
       const options = combineOptionsForExecutor(
@@ -877,6 +877,38 @@ describe('params', () => {
       `);
     });
 
+    it('should not throw if one of the anyOf conditions is met', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+          },
+
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+
+              b: {
+                type: 'boolean',
+              },
+            },
+
+            anyOf: [
+              {
+                required: ['a'],
+              },
+
+              {
+                required: ['b'],
+              },
+            ],
+          }
+        )
+      ).not.toThrow();
+    });
+
     it('should throw if found an unknown property', () => {
       expect(() =>
         validateOptsAgainstSchema(
@@ -948,6 +980,27 @@ describe('params', () => {
             }
           )
         ).not.toThrow();
+      });
+
+      it('should handle const value', () => {
+        const schema = {
+          properties: {
+            a: {
+              const: 3,
+            },
+          },
+        };
+        expect(() => validateOptsAgainstSchema({ a: 3 }, schema)).not.toThrow();
+        expect(() =>
+          validateOptsAgainstSchema({ a: true }, schema)
+        ).toThrowErrorMatchingInlineSnapshot(
+          `"Property 'a' does not match the schema. 'true' should be '3'."`
+        );
+        expect(() =>
+          validateOptsAgainstSchema({ a: 123 }, schema)
+        ).toThrowErrorMatchingInlineSnapshot(
+          `"Property 'a' does not match the schema. '123' should be '3'."`
+        );
       });
 
       describe('array', () => {
@@ -1501,6 +1554,7 @@ describe('params', () => {
               'x-prompt': 'What is your name?',
             },
           },
+          required: ['name'],
         },
         {
           version: 2,
@@ -1509,7 +1563,12 @@ describe('params', () => {
       );
 
       expect(prompts).toEqual([
-        { type: 'input', name: 'name', message: 'What is your name?' },
+        {
+          type: 'input',
+          name: 'name',
+          message: 'What is your name?',
+          validate: expect.any(Function),
+        },
       ]);
     });
 
@@ -1531,7 +1590,12 @@ describe('params', () => {
       );
 
       expect(prompts).toEqual([
-        { type: 'confirm', name: 'isAwesome', message: 'Is this awesome?' },
+        {
+          type: 'confirm',
+          name: 'isAwesome',
+          message: 'Is this awesome?',
+          validate: expect.any(Function),
+        },
       ]);
     });
 
@@ -1557,6 +1621,7 @@ describe('params', () => {
           type: 'numeral',
           name: 'age',
           message: 'How old are you?',
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1589,6 +1654,8 @@ describe('params', () => {
           name: 'pets',
           message: 'What kind of pets do you have?',
           choices: ['Cat', 'Dog', 'Fish'],
+          limit: expect.any(Number),
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1628,6 +1695,8 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          limit: expect.any(Number),
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1668,6 +1737,8 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          limit: expect.any(Number),
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1699,6 +1770,8 @@ describe('params', () => {
             name: 'project',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
+            validate: expect.any(Function),
           },
         ]);
       });
@@ -1729,6 +1802,8 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
+            validate: expect.any(Function),
           },
         ]);
       });
@@ -1760,6 +1835,8 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
+            validate: expect.any(Function),
           },
         ]);
       });
@@ -1793,6 +1870,8 @@ describe('params', () => {
             name: 'yourProject',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
+            validate: expect.any(Function),
           },
         ]);
       });
@@ -1822,6 +1901,8 @@ describe('params', () => {
           name: 'name',
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
+          limit: expect.any(Number),
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1852,6 +1933,8 @@ describe('params', () => {
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
           initial: 'Joe',
+          limit: expect.any(Number),
+          validate: expect.any(Function),
         },
       ]);
     });
@@ -1876,7 +1959,12 @@ describe('params', () => {
       );
 
       expect(prompts).toEqual([
-        { type: 'input', name: 'name', message: 'What is your name?' },
+        {
+          type: 'input',
+          name: 'name',
+          message: 'What is your name?',
+          validate: expect.any(Function),
+        },
       ]);
     });
   });

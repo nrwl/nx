@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
 
 import {
@@ -11,11 +11,17 @@ import {
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
+import { createBuildableTsConfig } from '../../utils/executor-utils';
 
-export default async function* viteDevServerExecutor(
+export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+
+  createBuildableTsConfig(projectRoot, options, context);
+
   // Retrieve the option for the configured buildTarget.
   const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(
     options.buildTarget,
@@ -58,8 +64,11 @@ export default async function* viteDevServerExecutor(
     };
   }
 
-  // This Promise intentionally never resolves, leaving the process running
-  await new Promise(() => {});
+  await new Promise<void>((resolve) => {
+    process.once('SIGINT', () => resolve());
+    process.once('SIGTERM', () => resolve());
+    process.once('exit', () => resolve());
+  });
 }
 
 async function runViteDevServer(server: ViteDevServer): Promise<void> {
@@ -68,12 +77,11 @@ async function runViteDevServer(server: ViteDevServer): Promise<void> {
 
   const processOnExit = async () => {
     await server.close();
-    process.off('SIGINT', processOnExit);
-    process.off('SIGTERM', processOnExit);
-    process.off('exit', processOnExit);
   };
 
-  process.on('SIGINT', processOnExit);
-  process.on('SIGTERM', processOnExit);
-  process.on('exit', processOnExit);
+  process.once('SIGINT', processOnExit);
+  process.once('SIGTERM', processOnExit);
+  process.once('exit', processOnExit);
 }
+
+export default viteDevServerExecutor;

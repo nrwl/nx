@@ -7,8 +7,8 @@ import {
   joinPathFragments,
   logger,
   Tree,
-} from '@nrwl/devkit';
-import { camelize } from '@nrwl/workspace/src/utils/strings';
+} from '@nx/devkit';
+import { camelize } from '@nx/devkit/src/utils/string-utils';
 import { join } from 'path';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
@@ -25,7 +25,8 @@ export async function lintWorkspaceRuleGenerator(
 ) {
   // Ensure that the workspace rules project has been created
   const projectGeneratorCallback = await lintWorkspaceRulesProjectGenerator(
-    tree
+    tree,
+    { skipFormat: true }
   );
 
   const ruleDir = joinPathFragments(
@@ -108,7 +109,7 @@ export async function lintWorkspaceRuleGenerator(
   logger.info(`NX Reminder: Once you have finished writing your rule logic, you need to actually enable the rule within an appropriate .eslintrc.json in your workspace, for example:
 
        "rules": {
-         "@nrwl/nx/workspace/${options.name}": "error"
+         "@nx/workspace/${options.name}": "error"
        }
 `);
 

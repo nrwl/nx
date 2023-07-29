@@ -9,7 +9,7 @@
   "exclude": [
     "**/*.spec.ts",
     "**/*.test.ts",
-    "./src/utils/typescript/test-fixtures/**/*.ts",
+    "./src/**/test-fixtures/**/*",
     "jest.config.ts"
   ],
   "include": ["**/*.ts"]

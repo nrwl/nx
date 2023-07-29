@@ -1,4 +1,4 @@
-import { SupportedStyles } from '@nrwl/react';
+import { SupportedStyles } from '@nx/react';
 
 export interface Schema {
   name: string;
@@ -9,4 +9,5 @@ export interface Schema {
   withTests?: boolean;
   js?: boolean;
   flat?: boolean;
+  skipFormat?: boolean;
 }

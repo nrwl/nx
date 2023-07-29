@@ -1,4 +1,4 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import { createTreeWithNestApplication } from '../utils/testing';
 import type { ResolverGeneratorOptions } from './resolver';
 import { resolverGenerator } from './resolver';

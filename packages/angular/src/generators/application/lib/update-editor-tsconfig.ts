@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
-import { joinPathFragments, readJson, updateJson } from '@nrwl/devkit';
+import { joinPathFragments, readJson, updateJson } from '@nx/devkit';
 
 interface TsConfig {
   compilerOptions: { types: string[] };

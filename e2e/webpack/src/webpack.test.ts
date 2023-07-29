@@ -1,14 +1,13 @@
 import {
   cleanupProject,
   newProject,
-  readFile,
   rmDist,
   runCLI,
   runCommand,
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Webpack Plugin', () => {
   beforeEach(() => newProject());
@@ -16,15 +15,31 @@ describe('Webpack Plugin', () => {
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nrwl/js:lib ${myPkg} --buildable=false`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
-    // babel (default)
     runCLI(
-      `generate @nrwl/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
     );
+
+    // Test `scriptType` later during during.
+    updateFile(
+      `libs/${myPkg}/webpack.config.js`,
+      `
+const { composePlugins, withNx } = require('@nx/webpack');
+
+module.exports = composePlugins(withNx(), (config) => {
+  console.log('scriptType is ' + config.output.scriptType);
+  return config;
+});
+`
+    );
+
     rmDist();
-    runCLI(`build ${myPkg}`);
+
+    const buildOutput = runCLI(`build ${myPkg}`);
+    // Ensure scriptType is not set if we're in Node (it only applies to Web).
+    expect(buildOutput).toContain('scriptType is undefined');
     let output = runCommand(`node dist/libs/${myPkg}/main.js`);
     expect(output).toMatch(/Hello/);
     expect(output).not.toMatch(/Conflicting/);
@@ -37,7 +52,7 @@ describe('Webpack Plugin', () => {
 
     // swc
     runCLI(
-      `generate @nrwl/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -51,7 +66,7 @@ describe('Webpack Plugin', () => {
 
     // tsc
     runCLI(
-      `generate @nrwl/webpack:webpack-project ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
+      `generate @nx/webpack:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     rmDist();
     runCLI(`build ${myPkg}`);
@@ -59,26 +74,35 @@ describe('Webpack Plugin', () => {
     expect(output).toMatch(/Hello/);
   }, 500000);
 
-  it('should define process.env variables only for --platform=web', async () => {
+  it('should use either BABEL_ENV or NODE_ENV value for Babel environment configuration', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nrwl/js:lib ${myPkg} --bundler=webpack`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
+
+    runCLI(
+      `generate @nx/webpack:configuration ${myPkg} --target=node --compiler=babel --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts`
+    );
+
     updateFile(
-      `libs/${myPkg}/src/index.ts`,
-      `console.log(process.env['NX_TEST_VAR']);\n`
+      `libs/${myPkg}/.babelrc`,
+      `{ "presets": ["@nx/js/babel", "./custom-preset"] } `
+    );
+    updateFile(
+      `libs/${myPkg}/custom-preset.js`,
+      `
+      module.exports = function(api, opts) {
+        console.log('Babel env is ' + api.env());
+        return opts;
+      }
+    `
     );
 
-    process.env.NX_TEST_VAR = 'Hello build time';
-    runCLI(`build ${myPkg} --platform=node`);
-
-    process.env.NX_TEST_VAR = 'Hello run time';
-    expect(runCommand(`node dist/libs/${myPkg}/main.js`)).toMatch(
-      /Hello run time/
-    );
-
-    process.env.NX_TEST_VAR = 'Hello build time';
-    runCLI(`build ${myPkg} --platform=web`);
-
-    expect(readFile(`dist/libs/${myPkg}/main.js`)).toMatch(/Hello build time/);
-    delete process.env.NX_TEST_VAR;
-  }, 300_000);
+    let output = runCLI(`build ${myPkg}`, {
+      env: {
+        NODE_ENV: 'nodeEnv',
+        BABEL_ENV: 'babelEnv',
+      },
+    });
+    expect(output).toContain('Babel env is babelEnv');
+  }, 500_000);
 });

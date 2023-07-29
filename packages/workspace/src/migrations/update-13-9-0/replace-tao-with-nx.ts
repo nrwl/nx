@@ -1,9 +1,4 @@
-import {
-  getPackageManagerCommand,
-  logger,
-  Tree,
-  updateJson,
-} from '@nrwl/devkit';
+import { getPackageManagerCommand, logger, Tree, updateJson } from '@nx/devkit';
 
 export function replaceTaoWithNx(host: Tree) {
   updateJson(host, 'package.json', (json: any) => {

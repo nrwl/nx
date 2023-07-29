@@ -2,7 +2,7 @@ import {
   DocumentMetadata,
   ProcessedDocument,
   RelatedDocument,
-} from '@nrwl/nx-dev/models-document';
+} from '@nx/nx-dev/models-document';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { TagsApi } from './tags.api';

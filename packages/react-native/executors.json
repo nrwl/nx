@@ -20,6 +20,11 @@
       "schema": "./src/executors/build-android/schema.json",
       "description": "Release Build for Android."
     },
+    "build-ios": {
+      "implementation": "./src/executors/build-ios/build-ios.impl",
+      "schema": "./src/executors/build-ios/schema.json",
+      "description": "Build iOS app"
+    },
     "start": {
       "implementation": "./src/executors/start/start.impl",
       "schema": "./src/executors/start/schema.json",
@@ -39,6 +44,11 @@
       "implementation": "./src/executors/storybook/storybook.impl",
       "schema": "./src/executors/storybook/schema.json",
       "description": "Serve React Native Storybook."
+    },
+    "pod-install": {
+      "implementation": "./src/executors/pod-install/pod-install.impl",
+      "schema": "./src/executors/pod-install/schema.json",
+      "description": "Run `pod install` in the `ios` directory."
     }
   },
   "builders": {
@@ -62,6 +72,11 @@
       "schema": "./src/executors/build-android/schema.json",
       "description": "Release Build for Android."
     },
+    "build-ios": {
+      "implementation": "./src/executors/build-ios/compat",
+      "schema": "./src/executors/build-ios/schema.json",
+      "description": "Build iOS app"
+    },
     "start": {
       "implementation": "./src/executors/start/compat",
       "schema": "./src/executors/start/schema.json",
@@ -81,6 +96,11 @@
       "implementation": "./src/executors/storybook/compat",
       "schema": "./src/executors/storybook/schema.json",
       "description": "Serve React Native Storybook."
+    },
+    "pod-install": {
+      "implementation": "./src/executors/pod-install/compat",
+      "schema": "./src/executors/pod-install/schema.json",
+      "description": "Run `pod install` in the `ios` directory."
     }
   }
 }

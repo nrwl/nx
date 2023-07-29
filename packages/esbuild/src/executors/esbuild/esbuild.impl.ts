@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import * as chalk from 'chalk';
-import type { ExecutorContext } from '@nrwl/devkit';
-import { cacheDir, joinPathFragments, logger } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
+import { cacheDir, joinPathFragments, logger, stripIndents } from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -9,19 +9,21 @@ import {
   printDiagnostics,
   runTypeCheck as _runTypeCheck,
   TypeCheckOptions,
-} from '@nrwl/js';
+} from '@nx/js';
 import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
 import { EsBuildExecutorOptions } from './schema';
 import { removeSync, writeJsonSync } from 'fs-extra';
-import { createAsyncIterable } from '@nrwl/devkit/src/utils/async-iterable';
-import { buildEsbuildOptions, getOutfile } from './lib/build-esbuild-options';
+import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
+import {
+  buildEsbuildOptions,
+  getOutExtension,
+  getOutfile,
+} from './lib/build-esbuild-options';
 import { getExtraDependencies } from './lib/get-extra-dependencies';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { join } from 'path';
-
-const CJS_FILE_EXTENSION = '.cjs' as const;
 
 const BUILD_WATCH_FAILED = `[ ${chalk.red(
   'watch'
@@ -30,28 +32,34 @@ const BUILD_WATCH_SUCCEEDED = `[ ${chalk.green(
   'watch'
 )} ] build succeeded, watching for changes...`;
 
+// since the workspace has esbuild 0.17+ installed, there's no definition
+// of esbuild without 'context', therefore, the esbuild import in the else
+// branch below has type never, getting the type to cast later
+type EsBuild = typeof esbuild;
+
 export async function* esbuildExecutor(
   _options: EsBuildExecutorOptions,
   context: ExecutorContext
 ) {
-  const options = normalizeOptions(_options);
+  process.env.NODE_ENV ??= context.configurationName ?? 'production';
+
+  const options = normalizeOptions(_options, context);
   if (options.deleteOutputPath) removeSync(options.outputPath);
 
   const assetsResult = await copyAssets(options, context);
 
   const externalDependencies: DependentBuildableProjectNode[] =
-    options.external.map((name) => {
+    options.external.reduce((acc, name) => {
       const externalNode = context.projectGraph.externalNodes[`npm:${name}`];
-      if (!externalNode)
-        throw new Error(
-          `Cannot find external dependency ${name}. Check your package.json file.`
-        );
-      return {
-        name,
-        outputs: [],
-        node: externalNode,
-      };
-    });
+      if (externalNode) {
+        acc.push({
+          name,
+          outputs: [],
+          node: externalNode,
+        });
+      }
+      return acc;
+    }, []);
 
   if (!options.thirdParty) {
     const thirdPartyDependencies = getExtraDependencies(
@@ -64,112 +72,96 @@ export async function* esbuildExecutor(
     }
   }
 
-  const cpjOptions: CopyPackageJsonOptions = {
-    ...options,
-    // TODO(jack): make types generate with esbuild
-    skipTypings: true,
-    outputFileExtensionForCjs: CJS_FILE_EXTENSION,
-    excludeLibsInPackageJson: !options.thirdParty,
-    updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
-  };
+  let packageJsonResult;
+  if (options.generatePackageJson) {
+    if (context.projectGraph.nodes[context.projectName].type !== 'app') {
+      logger.warn(
+        stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+      );
+    }
 
-  // If we're bundling third-party packages, then any extra deps from external should be the only deps in package.json
-  if (options.thirdParty && externalDependencies.length > 0) {
-    cpjOptions.overrideDependencies = externalDependencies;
-  } else {
-    cpjOptions.extraDependencies = externalDependencies;
+    const cpjOptions: CopyPackageJsonOptions = {
+      ...options,
+      // TODO(jack): make types generate with esbuild
+      skipTypings: true,
+      outputFileExtensionForCjs: getOutExtension('cjs', options),
+      excludeLibsInPackageJson: !options.thirdParty,
+      updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
+    };
+
+    // If we're bundling third-party packages, then any extra deps from external should be the only deps in package.json
+    if (options.thirdParty && externalDependencies.length > 0) {
+      cpjOptions.overrideDependencies = externalDependencies;
+    } else {
+      cpjOptions.extraDependencies = externalDependencies;
+    }
+
+    packageJsonResult = await copyPackageJson(cpjOptions, context);
   }
-
-  const packageJsonResult = await copyPackageJson(cpjOptions, context);
 
   if (options.watch) {
     return yield* createAsyncIterable<{ success: boolean; outfile?: string }>(
       async ({ next, done }) => {
         let hasTypeErrors = false;
-
-        const results = await Promise.all(
+        const disposeFns = await Promise.all(
           options.format.map(async (format, idx) => {
             const esbuildOptions = buildEsbuildOptions(
               format,
               options,
               context
             );
-            const watch =
-              // Only emit info on one of the watch processes.
-              idx === 0
-                ? {
-                    onRebuild: async (
-                      error: esbuild.BuildFailure,
-                      result: esbuild.BuildResult
-                    ) => {
-                      if (!options.skipTypeCheck) {
-                        const { errors } = await runTypeCheck(options, context);
-                        hasTypeErrors = errors.length > 0;
-                      }
-                      const success = !error && !hasTypeErrors;
+            const ctx = await esbuild.context({
+              ...esbuildOptions,
+              plugins: [
+                // Only emit info on one of the watch processes.
+                idx === 0
+                  ? {
+                      name: 'nx-watch-plugin',
+                      setup(build: esbuild.PluginBuild) {
+                        build.onEnd(async (result: esbuild.BuildResult) => {
+                          if (!options.skipTypeCheck) {
+                            const { errors } = await runTypeCheck(
+                              options,
+                              context
+                            );
+                            hasTypeErrors = errors.length > 0;
+                          }
+                          const success =
+                            result.errors.length === 0 && !hasTypeErrors;
 
-                      if (!success) {
-                        logger.info(BUILD_WATCH_FAILED);
-                      } else {
-                        logger.info(BUILD_WATCH_SUCCEEDED);
-                      }
+                          if (!success) {
+                            logger.info(BUILD_WATCH_FAILED);
+                          } else {
+                            logger.info(BUILD_WATCH_SUCCEEDED);
+                          }
 
-                      next({
-                        success,
-                        // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
-                        outfile: join(
-                          context.root,
-                          getOutfile(format, options, context)
-                        ),
-                      });
-                    },
-                  }
-                : true;
-            try {
-              const result = await esbuild.build({ ...esbuildOptions, watch });
+                          next({
+                            success,
+                            // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+                            outfile: join(
+                              context.root,
+                              getOutfile(format, options, context)
+                            ),
+                          });
+                        });
+                      },
+                    }
+                  : null,
+              ].filter(Boolean),
+            });
 
-              next({
-                success: true,
-                // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
-                outfile: join(
-                  context.root,
-                  getOutfile(format, options, context)
-                ),
-              });
-
-              return result;
-            } catch {
-              next({ success: false });
-            }
+            await ctx.watch();
+            return () => ctx.dispose();
           })
         );
-        const processOnExit = () => {
+
+        registerCleanupCallback(() => {
           assetsResult?.stop();
           packageJsonResult?.stop();
-          results.forEach((r) => r?.stop());
-          done();
-          process.off('SIGINT', processOnExit);
-          process.off('SIGTERM', processOnExit);
-          process.off('exit', processOnExit);
-        };
-
-        process.on('SIGINT', processOnExit);
-        process.on('SIGTERM', processOnExit);
-        process.on('exit', processOnExit);
-
-        if (!options.skipTypeCheck) {
-          const { errors } = await runTypeCheck(options, context);
-          hasTypeErrors = errors.length > 0;
-        }
-
-        const success =
-          results.every((r) => r.errors?.length === 0) && !hasTypeErrors;
-
-        if (!success) {
-          logger.info(BUILD_WATCH_FAILED);
-        } else {
-          logger.info(BUILD_WATCH_SUCCEEDED);
-        }
+          disposeFns.forEach((fn) => fn());
+          done(); // return from async iterable
+        });
       }
     );
   } else {
@@ -202,6 +194,7 @@ export async function* esbuildExecutor(
       yield {
         success: buildResult.errors.length === 0,
         // Need to call getOutfile directly in the case of bundle=false and outfile is not set for esbuild.
+        // This field is needed for `@nx/js:node` executor to work.
         outfile: join(context.root, getOutfile(format, options, context)),
       };
     }
@@ -215,7 +208,7 @@ function getTypeCheckOptions(
   const { watch, tsConfig, outputPath } = options;
 
   const typeCheckOptions: TypeCheckOptions = {
-    // TODO(jack): Add support for d.ts declaration files -- once the `@nrwl/js:tsc` changes are in we can use the same logic.
+    // TODO(jack): Add support for d.ts declaration files -- once the `@nx/js:tsc` changes are in we can use the same logic.
     mode: 'noEmit',
     tsConfigPath: tsConfig,
     // outDir: outputPath,
@@ -246,6 +239,19 @@ async function runTypeCheck(
   }
 
   return { errors, warnings };
+}
+
+function registerCleanupCallback(callback: () => void) {
+  const wrapped = () => {
+    callback();
+    process.off('SIGINT', wrapped);
+    process.off('SIGTERM', wrapped);
+    process.off('exit', wrapped);
+  };
+
+  process.on('SIGINT', wrapped);
+  process.on('SIGTERM', wrapped);
+  process.on('exit', wrapped);
 }
 
 export default esbuildExecutor;

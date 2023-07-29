@@ -1,9 +1,8 @@
 import * as chalk from 'chalk';
-import { ExecutorContext, logger, names } from '@nrwl/devkit';
+import { ExecutorContext, logger, names } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
-import { join } from 'path';
+import { resolve as pathResolve } from 'path';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ExpoStartOptions } from './schema';
 
 export interface ExpoStartOutput {
@@ -19,7 +18,6 @@ export default async function* startExecutor(
 ): AsyncGenerator<ExpoStartOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
     const baseUrl = `http://localhost:${options.port}`;
@@ -45,9 +43,9 @@ function startAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
+      require.resolve('@expo/cli/build/bin/cli'),
       ['start', ...createStartOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot) }
+      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits
@@ -68,12 +66,16 @@ function startAsync(
 }
 
 // options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/start/index.ts
+const nxOptions = ['sync'];
 function createStartOptions(options: ExpoStartOptions) {
   return Object.keys(options).reduce((acc, k) => {
+    if (nxOptions.includes(k)) {
+      return acc;
+    }
     const v = options[k];
     if (k === 'dev') {
       if (v === false) {
-        acc.push(`--no-dev`);
+        acc.push(`--no-dev`); // only no-dev flag is supported
       }
     } else {
       if (typeof v === 'boolean') {

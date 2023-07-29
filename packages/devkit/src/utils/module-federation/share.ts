@@ -6,15 +6,15 @@ import type {
 import { AdditionalSharedConfig, SharedFunction } from './models';
 import { dirname, join, normalize } from 'path';
 import { readRootPackageJson } from './package-json';
-import { readTsPathMappings } from './typescript';
+import { readTsPathMappings, getRootTsConfigPath } from './typescript';
 import {
   collectPackageSecondaryEntryPoints,
   collectWorkspaceLibrarySecondaryEntryPoints,
 } from './secondary-entry-points';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
-import { logger } from 'nx/src/utils/logger';
-import { getRootTsConfigPath } from 'nx/src/utils/typescript';
-import { ProjectGraph } from 'nx/src/config/project-graph';
+import type { ProjectGraph } from 'nx/src/config/project-graph';
+import { requireNx } from '../../../nx';
+
+const { workspaceRoot, logger } = requireNx();
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to

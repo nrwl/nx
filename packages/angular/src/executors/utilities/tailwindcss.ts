@@ -1,5 +1,5 @@
-import { logger } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import * as postcssImport from 'postcss-import';
@@ -61,8 +61,13 @@ function getTailwindConfigPath(
   projectRoot: string,
   workspaceRoot: string
 ): string | undefined {
-  // valid tailwind config files https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/resolveConfigPath.js#L46
-  const tailwindConfigFiles = ['tailwind.config.js', 'tailwind.config.cjs'];
+  // valid tailwind config files https://github.com/tailwindlabs/tailwindcss/blob/master/src/util/resolveConfigPath.js#L4
+  const tailwindConfigFiles = [
+    'tailwind.config.js',
+    'tailwind.config.cjs',
+    'tailwind.config.mjs',
+    'tailwind.config.ts',
+  ];
 
   for (const basePath of [projectRoot, workspaceRoot]) {
     for (const configFile of tailwindConfigFiles) {

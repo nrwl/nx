@@ -1,7 +1,15 @@
-import { convertNxGenerator, getProjects, Tree } from '@nrwl/devkit';
-import type { SupportedStyles } from '@nrwl/react';
-import { componentGenerator as reactComponentGenerator } from '@nrwl/react';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import {
+  convertNxGenerator,
+  formatFiles,
+  getProjects,
+  joinPathFragments,
+  readProjectConfiguration,
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
+import type { SupportedStyles } from '@nx/react';
+import { componentGenerator as reactComponentGenerator } from '@nx/react';
+
 import { addStyleDependencies } from '../../utils/styles';
 
 interface Schema {
@@ -12,6 +20,7 @@ interface Schema {
   flat?: boolean;
   pascalCaseFiles?: boolean;
   pascalCaseDirectory?: boolean;
+  skipFormat?: boolean;
 }
 
 function getDirectory(host: Tree, options: Schema) {
@@ -30,14 +39,23 @@ function getDirectory(host: Tree, options: Schema) {
  * extra dependencies for css, sass, less, styl style options.
  */
 export async function componentGenerator(host: Tree, options: Schema) {
+  const project = readProjectConfiguration(host, options.project);
   const componentInstall = await reactComponentGenerator(host, {
     ...options,
     directory: getDirectory(host, options),
     classComponent: false,
     routing: false,
+    skipFormat: true,
   });
 
-  const styledInstall = addStyleDependencies(host, options.style);
+  const styledInstall = addStyleDependencies(host, {
+    style: options.style,
+    swc: !host.exists(joinPathFragments(project.root, '.babelrc')),
+  });
+
+  if (!options.skipFormat) {
+    await formatFiles(host);
+  }
 
   return runTasksInSerial(styledInstall, componentInstall);
 }

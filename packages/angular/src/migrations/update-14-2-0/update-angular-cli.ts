@@ -1,4 +1,4 @@
-import { formatFiles, Tree, updateJson } from '@nrwl/devkit';
+import { formatFiles, Tree, updateJson } from '@nx/devkit';
 
 const angularCliVersion = '~14.0.0';
 

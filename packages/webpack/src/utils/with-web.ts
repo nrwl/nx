@@ -8,11 +8,11 @@ import {
 import { SubresourceIntegrityPlugin } from 'webpack-subresource-integrity';
 import * as path from 'path';
 import { basename, join } from 'path';
-import { getOutputHashFormat } from '@nrwl/webpack/src/utils/hash-format';
-import { PostcssCliResources } from '@nrwl/webpack/src/utils/webpack/plugins/postcss-cli-resources';
-import { normalizeExtraEntryPoints } from '@nrwl/webpack/src/utils/webpack/normalize-entry';
+import { getOutputHashFormat } from './hash-format';
+import { PostcssCliResources } from './webpack/plugins/postcss-cli-resources';
+import { normalizeExtraEntryPoints } from './webpack/normalize-entry';
 
-import { NxWebpackPlugin } from './config';
+import { NxWebpackExecutionContext, NxWebpackPlugin } from './config';
 import {
   ExtraEntryPointClass,
   NormalizedWebpackExecutorOptions,
@@ -21,12 +21,10 @@ import { getClientEnvironment } from './get-client-environment';
 import { ScriptsWebpackPlugin } from './webpack/plugins/scripts-webpack-plugin';
 import { getCSSModuleLocalIdent } from './get-css-module-local-ident';
 import { WriteIndexHtmlPlugin } from '../plugins/write-index-html-plugin';
-import { ExecutorContext } from '@nrwl/devkit';
 import CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 import autoprefixer = require('autoprefixer');
 import postcssImports = require('postcss-import');
-import { NxWebpackExecutionContext } from '@nrwl/webpack/src/utils/config';
 
 interface PostcssOptions {
   (loader: any): any;
@@ -48,6 +46,7 @@ export interface WithWebOptions {
   stylePreprocessorOptions?: any;
   styles?: Array<ExtraEntryPointClass | string>;
   subresourceIntegrity?: boolean;
+  ssr?: boolean;
 }
 
 // Omit deprecated options
@@ -111,11 +110,13 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
         })
       );
     }
-    plugins.push(
-      new webpack.DefinePlugin(
-        getClientEnvironment(process.env.NODE_ENV).stringified
-      )
-    );
+    if (!pluginOptions.ssr) {
+      plugins.push(
+        new webpack.DefinePlugin(
+          getClientEnvironment(process.env.NODE_ENV).stringified
+        )
+      );
+    }
 
     const entry: { [key: string]: string[] } = {};
     const globalStylePaths: string[] = [];
@@ -402,29 +403,44 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
 
     config.plugins.push(...plugins);
 
-    config.resolve.mainFields = [
-      'browser',
-      ...(config.resolve.mainFields ?? []),
-    ];
+    config.resolve.mainFields = ['browser', 'module', 'main'];
 
     config.module = {
       ...config.module,
       rules: [
         ...(config.module.rules ?? []),
+        // Images: Inline small images, and emit a separate file otherwise.
         {
-          test: /\.(bmp|png|jpe?g|gif|webp|avif)$/,
+          test: /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/,
           type: 'asset',
           parser: {
             dataUrlCondition: {
               maxSize: 10_000, // 10 kB
             },
           },
+          generator: {
+            filename: `[name]${hashFormat.file}[ext]`,
+          },
         },
+        // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
         {
-          test: /\.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2|ani)$/,
-          loader: require.resolve('file-loader'),
-          options: {
-            name: `[name]${hashFormat.file}.[ext]`,
+          test: /\.svg$/,
+          type: 'asset',
+          parser: {
+            dataUrlCondition: {
+              maxSize: 10_000, // 10 kB
+            },
+          },
+          generator: {
+            filename: `[name]${hashFormat.file}[ext]`,
+          },
+        },
+        // Fonts: Emit separate file and export the URL.
+        {
+          test: /\.(eot|otf|ttf|woff|woff2)$/,
+          type: 'asset/resource',
+          generator: {
+            filename: `[name]${hashFormat.file}[ext]`,
           },
         },
         ...rules,
@@ -561,7 +577,6 @@ function getCommonLoadersForGlobalStyle(
 
 function postcssOptionsCreator(
   options: MergedOptions,
-
   {
     includePaths,
     forCssModules = false,

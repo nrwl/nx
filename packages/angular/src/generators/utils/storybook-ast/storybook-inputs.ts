@@ -1,14 +1,16 @@
-import type { Tree } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
-import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript';
+import type { Tree } from '@nx/devkit';
+import { findNodes, getSourceNodes } from '@nx/js';
 import type { PropertyDeclaration } from 'typescript';
-import { SyntaxKind } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
-export type KnobType = 'text' | 'boolean' | 'number' | 'select';
+let tsModule: typeof import('typescript');
+
+export type ArgType = 'text' | 'boolean' | 'number' | 'select';
+
 export interface InputDescriptor {
   name: string;
-  type: KnobType;
+  type: ArgType;
   defaultValue?: string;
 }
 
@@ -16,15 +18,18 @@ export function getInputPropertyDeclarations(
   tree: Tree,
   path: string
 ): PropertyDeclaration[] {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const file = getTsSourceFile(tree, path);
 
   const decorators = getSourceNodes(file).filter(
-    (node) => node.kind === SyntaxKind.Decorator
+    (node) => node.kind === tsModule.SyntaxKind.Decorator
   );
 
   return decorators
     .filter((decorator) =>
-      findNodes(decorator, SyntaxKind.Identifier).some(
+      findNodes(decorator, tsModule.SyntaxKind.Identifier).some(
         (node) => node.getText() === 'Input'
       )
     )
@@ -39,13 +44,16 @@ export function getComponentProps(
   ) => string | undefined = getArgsDefaultValue,
   useDecoratorName = true
 ): InputDescriptor[] {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const props = getInputPropertyDeclarations(tree, componentPath).map(
     (node) => {
       const decoratorContent = findNodes(
-        findNodes(node, SyntaxKind.Decorator).find((n) =>
+        findNodes(node, tsModule.SyntaxKind.Decorator).find((n) =>
           n.getText().startsWith('@Input')
         ),
-        SyntaxKind.StringLiteral
+        tsModule.SyntaxKind.StringLiteral
       );
       const name =
         useDecoratorName && decoratorContent.length
@@ -54,7 +62,7 @@ export function getComponentProps(
             : node.name.getText()
           : node.name.getText();
 
-      const type = getKnobType(node);
+      const type = getArgType(node);
       const defaultValue = getArgsDefaultValueFn(node);
 
       return {
@@ -68,24 +76,27 @@ export function getComponentProps(
   return props;
 }
 
-export function getKnobType(property: PropertyDeclaration): KnobType {
+export function getArgType(property: PropertyDeclaration): ArgType {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   if (property.type) {
     const typeName = property.type.getText();
-    const typeNameToKnobType: Record<string, KnobType> = {
+    const typeNameToArgType: Record<string, ArgType> = {
       string: 'text',
       number: 'number',
       boolean: 'boolean',
     };
-    return typeNameToKnobType[typeName] || 'text';
+    return typeNameToArgType[typeName] || 'text';
   }
   if (property.initializer) {
-    const initializerKindToKnobType: Record<number, KnobType> = {
-      [SyntaxKind.StringLiteral]: 'text',
-      [SyntaxKind.NumericLiteral]: 'number',
-      [SyntaxKind.TrueKeyword]: 'boolean',
-      [SyntaxKind.FalseKeyword]: 'boolean',
+    const initializerKindToArgType: Record<number, ArgType> = {
+      [tsModule.SyntaxKind.StringLiteral]: 'text',
+      [tsModule.SyntaxKind.NumericLiteral]: 'number',
+      [tsModule.SyntaxKind.TrueKeyword]: 'boolean',
+      [tsModule.SyntaxKind.FalseKeyword]: 'boolean',
     };
-    return initializerKindToKnobType[property.initializer.kind] || 'text';
+    return initializerKindToArgType[property.initializer.kind] || 'text';
   }
   return 'text';
 }

@@ -1,4 +1,4 @@
-import { ExecutorContext, parseTargetString, runExecutor } from '@nrwl/devkit';
+import { ExecutorContext, parseTargetString, runExecutor } from '@nx/devkit';
 import { InlineConfig, mergeConfig, preview, PreviewServer } from 'vite';
 import {
   getNxTargetOptions,
@@ -9,22 +9,50 @@ import {
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { VitePreviewServerExecutorOptions } from './schema';
 
-export default async function* vitePreviewServerExecutor(
+interface CustomBuildTargetOptions {
+  outputPath: string;
+}
+
+export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
   context: ExecutorContext
 ) {
+  const target = parseTargetString(options.buildTarget, context.projectGraph);
+  const targetConfiguration =
+    context.projectsConfigurations.projects[target.project]?.targets[
+      target.target
+    ];
+  if (!targetConfiguration) {
+    throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
+  }
+
+  const isCustomBuildTarget =
+    targetConfiguration.executor !== '@nx/vite:build' &&
+    targetConfiguration.executor !== '@nrwl/vite:build';
+
   // Retrieve the option for the configured buildTarget.
-  const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(
+  const buildTargetOptions:
+    | ViteBuildExecutorOptions
+    | CustomBuildTargetOptions = getNxTargetOptions(
     options.buildTarget,
     context
   );
+
+  const outputPath = options.staticFilePath ?? buildTargetOptions.outputPath;
+
+  if (!outputPath) {
+    throw new Error(
+      `Could not infer the "outputPath". It should either be a property of the "${options.buildTarget}" buildTarget or provided explicitly as a "staticFilePath" option.`
+    );
+  }
 
   // Merge the options from the build and preview-serve targets.
   // The latter takes precedence.
   const mergedOptions = {
     ...{ watch: {} },
-    ...buildTargetOptions,
+    ...(isCustomBuildTarget ? {} : buildTargetOptions),
     ...options,
+    outputPath,
   };
 
   // Retrieve the server configuration.
@@ -44,18 +72,16 @@ export default async function* vitePreviewServerExecutor(
 
   const processOnExit = async () => {
     await closeServer(server);
-    process.off('SIGINT', processOnExit);
-    process.off('SIGTERM', processOnExit);
-    process.off('exit', processOnExit);
   };
 
-  process.on('SIGINT', processOnExit);
-  process.on('SIGTERM', processOnExit);
-  process.on('exit', processOnExit);
+  process.once('SIGINT', processOnExit);
+  process.once('SIGTERM', processOnExit);
+  process.once('exit', processOnExit);
 
   // Launch the build target.
-  const target = parseTargetString(options.buildTarget, context.projectGraph);
-  const build = await runExecutor(target, mergedOptions, context);
+  // If customBuildTarget is set to true, do not provide any overrides to it
+  const buildTargetOverrides = isCustomBuildTarget ? {} : mergedOptions;
+  const build = await runExecutor(target, buildTargetOverrides, context);
 
   for await (const result of build) {
     if (result.success) {
@@ -89,7 +115,11 @@ export default async function* vitePreviewServerExecutor(
     }
   }
 
-  await new Promise(() => {});
+  await new Promise<void>((resolve) => {
+    process.once('SIGINT', () => resolve());
+    process.once('SIGTERM', () => resolve());
+    process.once('exit', () => resolve());
+  });
 }
 
 function closeServer(server?: PreviewServer): Promise<void> {
@@ -104,3 +134,5 @@ function closeServer(server?: PreviewServer): Promise<void> {
     }
   });
 }
+
+export default vitePreviewServerExecutor;

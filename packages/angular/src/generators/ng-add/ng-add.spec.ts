@@ -1,8 +1,8 @@
 import * as angularCliMigrator from './migrate-from-angular-cli';
 import * as initGenerator from '../init/init';
 import { ngAddGenerator } from './ng-add';
-import type { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('ngAdd generator', () => {
   let tree: Tree;

@@ -1,0 +1,346 @@
+{
+  "my-custom-place-nested-app": {
+    "name": "my-custom-place-nested-app",
+    "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/my/custom/place/nested-app/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "dependsOn": ["^build"],
+        "inputs": ["production", "^production"],
+        "executor": "@nx/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": {
+          "outputPath": "dist/apps/my/custom/place/nested-app",
+          "mode": "production"
+        },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nx/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "my-custom-place-nested-app:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "my-custom-place-nested-app:build:development",
+            "hmr": true
+          },
+          "production": {
+            "buildTarget": "my-custom-place-nested-app:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "preview": {
+        "executor": "@nx/vite:preview-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "my-custom-place-nested-app:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "my-custom-place-nested-app:build:development"
+          },
+          "production": {
+            "buildTarget": "my-custom-place-nested-app:build:production"
+          }
+        }
+      },
+      "test": {
+        "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+        "executor": "@nx/vite:test",
+        "outputs": ["coverage/apps/my/custom/place/nested-app"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../../../../coverage/apps/my/custom/place/nested-app"
+        },
+        "configurations": {}
+      },
+      "lint": {
+        "inputs": [
+          "default",
+          "{workspaceRoot}/.eslintrc.json",
+          "{workspaceRoot}/.eslintignore"
+        ],
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": [
+            "apps/my/custom/place/nested-app/**/*.{ts,tsx,js,jsx}"
+          ]
+        },
+        "configurations": {}
+      },
+      "serve-static": {
+        "executor": "@nx/web:file-server",
+        "options": { "buildTarget": "my-custom-place-nested-app:build" }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": {
+          "port": 4400,
+          "configDir": "apps/my/custom/place/nested-app/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "inputs": ["default", "^production", "!{projectRoot}/.storybook/**/*"],
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "outputDir": "dist/storybook/my-custom-place-nested-app",
+          "configDir": "apps/my/custom/place/nested-app/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "static-storybook": {
+        "executor": "@nx/web:file-server",
+        "options": {
+          "buildTarget": "my-custom-place-nested-app:build-storybook",
+          "staticFilePath": "dist/storybook/my-custom-place-nested-app"
+        },
+        "configurations": {
+          "ci": {
+            "buildTarget": "my-custom-place-nested-app:build-storybook:ci"
+          }
+        }
+      }
+    },
+    "tags": [],
+    "root": "apps/my/custom/place/nested-app",
+    "implicitDependencies": []
+  },
+  "webpack-app": {
+    "name": "webpack-app",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/webpack-app/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "dependsOn": ["^build"],
+        "inputs": ["production", "^production"],
+        "executor": "@nx/webpack:webpack",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": {
+          "compiler": "babel",
+          "outputPath": "dist/apps/webpack-app",
+          "index": "apps/webpack-app/src/index.html",
+          "baseHref": "/",
+          "main": "apps/webpack-app/src/main.tsx",
+          "tsConfig": "apps/webpack-app/tsconfig.app.json",
+          "assets": [
+            "apps/webpack-app/src/favicon.ico",
+            "apps/webpack-app/src/assets"
+          ],
+          "styles": ["apps/webpack-app/src/styles.css"],
+          "scripts": [],
+          "isolatedConfig": true,
+          "webpackConfig": "apps/webpack-app/webpack.config.js",
+          "fileReplacements": [
+            {
+              "replace": "apps/webpack-app/src/environments/environment.ts",
+              "with": "apps/webpack-app/src/environments/environment.prod.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        },
+        "configurations": {
+          "development": {
+            "extractLicenses": false,
+            "optimization": false,
+            "sourceMap": true,
+            "vendorChunk": true
+          },
+          "production": {
+            "fileReplacements": [
+              {
+                "replace": "apps/webpack-app/src/environments/environment.ts",
+                "with": "apps/webpack-app/src/environments/environment.prod.ts"
+              }
+            ],
+            "optimization": true,
+            "outputHashing": "all",
+            "sourceMap": false,
+            "namedChunks": false,
+            "extractLicenses": true,
+            "vendorChunk": false
+          }
+        }
+      },
+      "serve": {
+        "executor": "@nx/webpack:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "webpack-app:build", "hmr": true },
+        "configurations": {
+          "development": { "buildTarget": "webpack-app:build:development" },
+          "production": {
+            "buildTarget": "webpack-app:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "lint": {
+        "inputs": [
+          "default",
+          "{workspaceRoot}/.eslintrc.json",
+          "{workspaceRoot}/.eslintignore"
+        ],
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/webpack-app/**/*.{ts,tsx,js,jsx}"]
+        },
+        "configurations": {}
+      },
+      "serve-static": {
+        "executor": "@nx/web:file-server",
+        "options": { "buildTarget": "webpack-app:build" }
+      },
+      "test": {
+        "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+        "executor": "@nx/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "apps/webpack-app/jest.config.ts",
+          "passWithNoTests": true
+        },
+        "configurations": { "ci": { "ci": true, "codeCoverage": true } }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": { "port": 4400, "configDir": "apps/webpack-app/.storybook" },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "inputs": ["default", "^production", "!{projectRoot}/.storybook/**/*"],
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "outputDir": "dist/storybook/webpack-app",
+          "configDir": "apps/webpack-app/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "static-storybook": {
+        "executor": "@nx/web:file-server",
+        "options": {
+          "buildTarget": "webpack-app:build-storybook",
+          "staticFilePath": "dist/storybook/webpack-app"
+        },
+        "configurations": {
+          "ci": { "buildTarget": "webpack-app:build-storybook:ci" }
+        }
+      }
+    },
+    "tags": [],
+    "root": "apps/webpack-app",
+    "implicitDependencies": []
+  },
+  "vite-app": {
+    "name": "vite-app",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/vite-app/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "dependsOn": ["^build"],
+        "inputs": ["production", "^production"],
+        "executor": "@nx/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/apps/vite-app", "mode": "production" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nx/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "vite-app:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "vite-app:build:development",
+            "hmr": true
+          },
+          "production": {
+            "buildTarget": "vite-app:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "preview": {
+        "executor": "@nx/vite:preview-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "vite-app:build" },
+        "configurations": {
+          "development": { "buildTarget": "vite-app:build:development" },
+          "production": { "buildTarget": "vite-app:build:production" }
+        }
+      },
+      "test": {
+        "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+        "executor": "@nx/vite:test",
+        "outputs": ["coverage/apps/vite-app"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/vite-app"
+        },
+        "configurations": {}
+      },
+      "lint": {
+        "inputs": [
+          "default",
+          "{workspaceRoot}/.eslintrc.json",
+          "{workspaceRoot}/.eslintignore"
+        ],
+        "executor": "@nx/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/vite-app/**/*.{ts,tsx,js,jsx}"]
+        },
+        "configurations": {}
+      },
+      "serve-static": {
+        "executor": "@nx/web:file-server",
+        "options": { "buildTarget": "vite-app:build" }
+      },
+      "storybook": {
+        "executor": "@nx/storybook:storybook",
+        "options": { "port": 4400, "configDir": "apps/vite-app/.storybook" },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "inputs": ["default", "^production", "!{projectRoot}/.storybook/**/*"],
+        "executor": "@nx/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "outputDir": "dist/storybook/vite-app",
+          "configDir": "apps/vite-app/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "static-storybook": {
+        "executor": "@nx/web:file-server",
+        "options": {
+          "buildTarget": "vite-app:build-storybook",
+          "staticFilePath": "dist/storybook/vite-app"
+        },
+        "configurations": {
+          "ci": { "buildTarget": "vite-app:build-storybook:ci" }
+        }
+      }
+    },
+    "tags": [],
+    "root": "apps/vite-app",
+    "implicitDependencies": []
+  }
+}

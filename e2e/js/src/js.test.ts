@@ -1,10 +1,14 @@
 import {
+  checkFilesDoNotExist,
+  checkFilesExist,
   cleanupProject,
   createFile,
-  expectJestTestsToPass,
   newProject,
+  readFile,
   readJson,
+  rmDist,
   runCLI,
+  runCLIAsync,
   uniq,
   updateFile,
   updateJson,
@@ -22,7 +26,7 @@ describe('js e2e', () => {
   it('should create libs with npm scripts', () => {
     const npmScriptsLib = uniq('npmscriptslib');
     runCLI(
-      `generate @nrwl/js:lib ${npmScriptsLib} --config=npm-scripts --no-interactive`
+      `generate @nx/js:lib ${npmScriptsLib} --config=npm-scripts --no-interactive`
     );
     const libPackageJson = readJson(`libs/${npmScriptsLib}/package.json`);
     expect(libPackageJson.scripts.test).toBeDefined();
@@ -37,10 +41,10 @@ describe('js e2e', () => {
 
   it('should allow wildcard ts path alias', async () => {
     const base = uniq('base');
-    runCLI(`generate @nrwl/js:lib ${base} --buildable --no-interactive`);
+    runCLI(`generate @nx/js:lib ${base} --bundler=tsc --no-interactive`);
 
     const lib = uniq('lib');
-    runCLI(`generate @nrwl/js:lib ${lib} --buildable --no-interactive`);
+    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
 
     updateFile(`libs/${base}/src/index.ts`, () => {
       return `
@@ -87,7 +91,143 @@ export function ${lib}Wildcard() {
     );
   }, 240_000);
 
-  it('should run default jest tests', async () => {
-    await expectJestTestsToPass('@nrwl/js:lib');
-  }, 240_000);
+  it('should create a library that can be linted and tested', async () => {
+    const libName = uniq('mylib');
+    const dirName = uniq('dir');
+
+    runCLI(`generate @nx/js:lib ${libName} --directory ${dirName}`);
+
+    checkFilesExist(
+      `libs/${dirName}/${libName}/src/index.ts`,
+      `libs/${dirName}/${libName}/README.md`
+    );
+
+    // Lint
+    const result = runCLI(`lint ${dirName}-${libName}`);
+
+    expect(result).toContain(`Linting "${dirName}-${libName}"...`);
+    expect(result).toContain('All files pass linting.');
+
+    // Test
+    const testResult = await runCLIAsync(`test ${dirName}-${libName}`);
+    expect(testResult.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+  }, 500_000);
+
+  it('should be able to use and be used by other libs', () => {
+    const consumerLib = uniq('consumer');
+    const producerLib = uniq('producer');
+
+    runCLI(`generate @nx/js:lib ${consumerLib} --bundler=none`);
+    runCLI(`generate @nx/js:lib ${producerLib} --bundler=none`);
+
+    updateFile(
+      `libs/${producerLib}/src/lib/${producerLib}.ts`,
+      'export const a = 0;'
+    );
+
+    updateFile(
+      `libs/${consumerLib}/src/lib/${consumerLib}.ts`,
+      `
+    import { a } from '@${scope}/${producerLib}';
+
+    export function ${consumerLib}() {
+      return a + 1;
+    }`
+    );
+    updateFile(
+      `libs/${consumerLib}/src/lib/${consumerLib}.spec.ts`,
+      `
+    import { ${consumerLib} } from './${consumerLib}';
+
+    describe('', () => {
+      it('should return 1', () => {
+        expect(${consumerLib}()).toEqual(1);
+      });
+    });`
+    );
+
+    runCLI(`test ${consumerLib}`);
+  });
+
+  it('should be able to add build to non-buildable projects', () => {
+    const nonBuildable = uniq('nonbuildable');
+
+    runCLI(`generate @nx/js:lib ${nonBuildable} --bundler=none`);
+    expect(() => runCLI(`build ${nonBuildable}`)).toThrow();
+    checkFilesDoNotExist(`dist/libs/${nonBuildable}/src/index.js`);
+
+    runCLI(`generate @nx/js:setup-build ${nonBuildable} --bundler=tsc`);
+    runCLI(`build ${nonBuildable}`);
+    checkFilesExist(`dist/libs/${nonBuildable}/src/index.js`);
+  });
+
+  it('should build buildable libraries using the task graph and handle more scenarios than current implementation', () => {
+    const lib1 = uniq('lib1');
+    const lib2 = uniq('lib2');
+    runCLI(`generate @nx/js:lib ${lib1} --bundler=tsc --no-interactive`);
+    runCLI(`generate @nx/js:lib ${lib2} --bundler=tsc --no-interactive`);
+
+    // add dep between lib1 and lib2
+    updateFile(
+      `libs/${lib1}/src/index.ts`,
+      `export { ${lib2} } from '@${scope}/${lib2}';`
+    );
+
+    // check current implementation
+    expect(runCLI(`build ${lib1} --skip-nx-cache`)).toContain(
+      'Done compiling TypeScript files'
+    );
+    checkFilesExist(`dist/libs/${lib1}/src/index.js`);
+    checkFilesExist(`dist/libs/${lib2}/src/index.js`);
+
+    // cleanup dist
+    rmDist();
+
+    // check task graph implementation
+    expect(
+      runCLI(`build ${lib1} --skip-nx-cache`, {
+        env: { NX_BUILDABLE_LIBRARIES_TASK_GRAPH: 'true' },
+      })
+    ).toContain('Done compiling TypeScript files');
+    checkFilesExist(`dist/libs/${lib1}/src/index.js`);
+    checkFilesExist(`dist/libs/${lib2}/src/index.js`);
+
+    // change build target name of lib2 and update target dependencies
+    updateJson(`libs/${lib2}/project.json`, (json) => {
+      json.targets['my-custom-build'] = json.targets.build;
+      delete json.targets.build;
+      return json;
+    });
+    const originalNxJson = readFile('nx.json');
+    updateJson('nx.json', (json) => {
+      json.targetDefaults.build = {
+        ...json.targetDefaults.build,
+        dependsOn: [...json.targetDefaults.build.dependsOn, '^my-custom-build'],
+      };
+      return json;
+    });
+
+    // cleanup dist
+    rmDist();
+
+    // check current implementation, it doesn't support a different build target name
+    expect(() => runCLI(`build ${lib1} --skip-nx-cache`)).toThrow();
+
+    // cleanup dist
+    rmDist();
+
+    // check task graph implementation
+    expect(
+      runCLI(`build ${lib1} --skip-nx-cache`, {
+        env: { NX_BUILDABLE_LIBRARIES_TASK_GRAPH: 'true' },
+      })
+    ).toContain('Done compiling TypeScript files');
+    checkFilesExist(`dist/libs/${lib1}/src/index.js`);
+    checkFilesExist(`dist/libs/${lib2}/src/index.js`);
+
+    // restore nx.json
+    updateFile('nx.json', () => originalNxJson);
+  });
 });

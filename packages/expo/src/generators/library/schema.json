@@ -6,7 +6,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "g @nrwl/expo:lib mylib --directory=myapp",
+      "command": "g @nx/expo:lib mylib --directory=myapp",
       "description": "Generate libs/myapp/mylib"
     }
   ],

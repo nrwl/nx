@@ -2,14 +2,14 @@ import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   readJson,
   readNxJson,
   readProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import type { MigrationProjectConfiguration } from '../../utilities';
 import { LibMigrator } from './lib.migrator';
 
@@ -128,7 +128,7 @@ describe('lib migrator', () => {
         `The "build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration (\\"@angular-devkit/build-angular:ng-packagr\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -151,7 +151,7 @@ describe('lib migrator', () => {
         `The "test" target is using a builder "@other/not-supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration (\\"@angular-devkit/build-angular:ng-packagr\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -170,7 +170,7 @@ describe('lib migrator', () => {
         `The "my-build" target is using a builder "@not/supported:builder" that's not currently supported by the automated migration. The target will be skipped.`,
       ]);
       expect(result[0].hint).toMatchInlineSnapshot(
-        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration (\\"@angular-devkit/build-angular:ng-packagr\\", \\"@angular-devkit/build-angular:karma\\" and \\"@angular-eslint/builder:lint\\"), and run the migration again."`
+        `"Make sure to manually migrate the target configuration and any possible associated files. Alternatively, you could revert the migration, change the builder to one of the builders supported by the automated migration ("@angular-devkit/build-angular:ng-packagr", "@angular-devkit/build-angular:karma" and "@angular-eslint/builder:lint"), and run the migration again."`
       );
     });
 
@@ -570,7 +570,7 @@ describe('lib migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
       expect(targets.build).toStrictEqual({
-        executor: '@nrwl/angular:package',
+        executor: '@nx/angular:package',
         options: { project: 'libs/lib1/ng-package.json' },
         configurations: {
           production: { tsConfig: 'libs/lib1/tsconfig.lib.prod.json' },
@@ -602,7 +602,7 @@ describe('lib migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
       expect(targets.myCustomBuildTarget).toStrictEqual({
-        executor: '@nrwl/angular:package',
+        executor: '@nx/angular:package',
         options: { project: 'libs/lib1/ng-package.json' },
         configurations: {
           production: { tsConfig: 'libs/lib1/tsconfig.lib.prod.json' },
@@ -639,7 +639,7 @@ describe('lib migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
       expect(targets.build).toStrictEqual({
-        executor: '@nrwl/angular:package',
+        executor: '@nx/angular:package',
         configurations: {
           production: {
             project: 'libs/lib1/ng-package.json',
@@ -677,7 +677,7 @@ describe('lib migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
       expect(targets.build).toStrictEqual({
-        executor: '@nrwl/angular:package',
+        executor: '@nx/angular:package',
         options: {
           project: 'libs/lib1/ng-package.json',
           tsConfig: 'libs/lib1/tsconfig.lib.json',
@@ -710,7 +710,7 @@ describe('lib migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: ['libs/lib1/**/*.ts', 'libs/lib1/**/*.html'],
         },
@@ -739,7 +739,7 @@ describe('lib migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
       expect(targets.myCustomLintTarget).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           lintFilePatterns: ['libs/lib1/**/*.ts', 'libs/lib1/**/*.html'],
         },
@@ -769,7 +769,7 @@ describe('lib migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           eslintConfig: 'libs/lib1/.eslintrc.json',
           lintFilePatterns: ['libs/lib1/**/*.ts', 'libs/lib1/**/*.html'],
@@ -784,7 +784,7 @@ describe('lib migrator', () => {
         overrides: [
           {
             files: ['*.ts', '*.tsx'],
-            extends: ['plugin:@nrwl/nx/typescript'],
+            extends: ['plugin:@nx/typescript'],
             rules: { '@typescript-eslint/await-thenable': 'error' },
           },
         ],
@@ -811,7 +811,7 @@ describe('lib migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'lib1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         options: {
           eslintConfig: 'libs/lib1/.eslintrc.json',
           hasTypeAwareRules: true,

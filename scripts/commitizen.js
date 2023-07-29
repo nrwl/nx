@@ -39,7 +39,7 @@ const scopeComplete = require('child_process')
 
 /** @type {import('cz-git').CommitizenGitOptions} */
 module.exports = {
-  /** @usage `yarn commit :f` */
+  /** @usage `pnpm commit :f` */
   alias: {
     f: 'docs(core): fix typos',
     b: 'chore(repo): bump dependencies',

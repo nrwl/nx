@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "title": "Vite Prod Builder",
   "cli": "nx",
-  "description": "Build using Vite.",
+  "description": "Builds a Vite.js application for production.",
   "type": "object",
   "presets": [
     {
@@ -17,6 +17,16 @@
       "description": "The output path of the generated files.",
       "x-completion-type": "directory",
       "x-priority": "important"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
+    },
+    "skipTypeCheck": {
+      "type": "boolean",
+      "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
+      "default": false
     },
     "base": {
       "type": "string",
@@ -51,6 +61,11 @@
       },
       "default": []
     },
+    "emptyOutDir": {
+      "description": "When set to false, outputPath will not be emptied during the build process.",
+      "type": "boolean",
+      "default": true
+    },
     "sourcemap": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
       "oneOf": [
@@ -61,6 +76,10 @@
           "type": "string"
         }
       ]
+    },
+    "target": {
+      "description": "Browser compatibility target for the final bundle. For more info: https://vitejs.dev/config/build-options.html#build-target",
+      "type": "string"
     },
     "minify": {
       "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
@@ -119,10 +138,29 @@
       "description": "Force the optimizer to ignore the cache and re-bundle",
       "type": "boolean"
     },
+    "cssCodeSplit": {
+      "description": "Enable/disable CSS code splitting. When enabled, CSS imported in async chunks will be inlined into the async chunk itself and inserted when the chunk is loaded.",
+      "type": "boolean"
+    },
     "watch": {
       "description": "Enable re-building when files change.",
-      "type": "object",
-      "default": null
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "default": false
+    },
+    "generatePackageJson": {
+      "description": "Generate a package.json for the build output.",
+      "type": "boolean"
+    },
+    "includeDevDependenciesInPackageJson": {
+      "description": "Include devDependencies in the generated package.json.",
+      "type": "boolean"
     }
   },
   "definitions": {},

@@ -8,7 +8,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Extra Nx Misc Tests', () => {
   beforeAll(() => newProject());
@@ -17,7 +17,7 @@ describe('Extra Nx Misc Tests', () => {
   describe('Output Style', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
       updateProjectConfig(myapp, (c) => {
         c.targets['inner'] = {
           command: 'echo inner',
@@ -56,7 +56,7 @@ describe('Extra Nx Misc Tests', () => {
         `
       module.exports = {
         processProjectGraph: (graph) => {
-          const Builder = require('@nrwl/devkit').ProjectGraphBuilder;
+          const Builder = require('@nx/devkit').ProjectGraphBuilder;
           const builder = new Builder(graph);
           builder.addNode({
             name: 'plugin-node',
@@ -99,7 +99,7 @@ describe('Extra Nx Misc Tests', () => {
   describe('Run Commands', () => {
     const mylib = uniq('lib');
     beforeAll(() => {
-      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
     });
 
     it('should not override environment variables already set when setting a custom env file path', async () => {
@@ -115,7 +115,7 @@ describe('Extra Nx Misc Tests', () => {
 
       const envFile = `apps/${mylib}/.custom.env`;
       runCLI(
-        `generate @nrwl/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${mylib}`
+        `generate @nx/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${mylib}`
       );
 
       const command =
@@ -200,8 +200,8 @@ describe('Extra Nx Misc Tests', () => {
         runCLI(`run ${mylib}:error`);
         fail('Should error if process errors');
       } catch (e) {
-        expect(e.stdout.toString()).toContain(
-          'Something went wrong in run-commands - Command failed: exit 1'
+        expect(e.stderr.toString()).toContain(
+          'command "exit 1" exited with non-zero status code'
         );
       }
     });
@@ -229,10 +229,10 @@ describe('Extra Nx Misc Tests', () => {
 
       const folder = `dist/libs/${mylib}/some-folder`;
 
-      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
 
       runCLI(
-        `generate @nrwl/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`
+        `generate @nx/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`
       );
 
       const commands = [
@@ -259,5 +259,15 @@ describe('Extra Nx Misc Tests', () => {
       runCLI(`build ${mylib}`);
       checkFilesExist(`${folder}/dummy.txt`);
     }, 120000);
+  });
+
+  describe('generate --quiet', () => {
+    it('should not log tree operations or install tasks', () => {
+      const output = runCLI('generate @nx/react:app --quiet test-project', {
+        verbose: false,
+      });
+      expect(output).not.toContain('CREATE');
+      expect(output).not.toContain('Installed');
+    });
   });
 });

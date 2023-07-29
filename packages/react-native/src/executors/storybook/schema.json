@@ -17,7 +17,7 @@
     "outputFile": {
       "type": "string",
       "description": "The output file that will be written. It is relative to the project directory.",
-      "default": "./.storybook/story-loader.js"
+      "default": "./.storybook/story-loader.ts"
     },
     "pattern": {
       "type": "string",
@@ -27,7 +27,8 @@
     "silent": {
       "type": "boolean",
       "description": "Silences output.",
-      "default": false
+      "default": false,
+      "x-deprecated": "No longer used. It will be silent as default."
     }
   },
   "required": ["searchDir", "outputFile", "pattern"]

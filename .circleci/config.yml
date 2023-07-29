@@ -5,75 +5,69 @@ version: 2.1
 # -------------------------
 orbs:
   nx: nrwl/nx@1.6.1
-  node: circleci/node@5.0.2
+  rust: circleci/rust@1.6.0
   browser-tools: circleci/browser-tools@1.4.0
-
-# -------------------------
-#        DEFAULTS
-# -------------------------
-machine:
-  pre:
-    - mkdir ~/.cache/yarn
-    - mkdir ~/.cache/Cypress
-    - mkdir ~/Library/Caches/Homebrew
-    - mkdir /usr/local/Homebrew
-
-dependencies:
-  cache_directories:
-    - ~/.cache/yarn
-    - ~/.cache/Cypress
-    - /usr/local/Homebrew
-    - ~/Library/Caches/Homebrew
-  override:
-    - yarn install
-    - brew install
-
-defaults: &defaults
-  working_directory: ~/repo
 
 # -------------------------
 #        EXECUTORS
 # -------------------------
+
+defaults: &defaults
+  working_directory: ~/repo
+
 executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/node:lts-browsers
+      - image: cimg/rust:1.70.0-browsers
     resource_class: medium+
 
   macos:
     <<: *defaults
+    resource_class: macos.x86.medium.gen2
     macos:
-      xcode: &_XCODE_VERSION '13.0.0'
+      xcode: '14.2.0'
 
 # -------------------------
 #        COMMANDS
 # -------------------------
 commands:
-  run-yarn-install:
+  run-pnpm-install:
     parameters:
       os:
         type: string
     steps:
       - restore_cache:
-          name: Restore Yarn Package Cache
+          name: Restore pnpm Package Cache
           keys:
-            - node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+            - node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - run:
+                name: Install pnpm package manager (linux)
+                command: |
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.3.1
+      - when:
+          condition:
+            equal: [<< parameters.os >>, macos]
+          steps:
+            - run:
+                name: Install pnpm package manager (macos)
+                command: |
+                  npm install -g @pnpm/exe@8.3.1
       - run:
-          name: Install dependencies
-          command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
+          name: Install Dependencies
+          command: |
+            pnpm install --frozen-lockfile
       - save_cache:
-          name: Save Yarn Package Cache
-          key: node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
+          name: Save pnpm Package Cache
+          key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
           paths:
-            - node_modules
-            - ~/.cache/yarn
+            - ~/.pnpm-store
             - ~/.cache/Cypress
-  install-pnpm:
-    steps:
-      - run:
-          name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@6.32.4
+            - node_modules
 
   setup:
     parameters:
@@ -107,19 +101,13 @@ commands:
             equal: [<< parameters.os >>, linux]
           steps:
             - run:
-                command: sudo apt-get install -y ca-certificates
+                command: |
+                  sudo apt-get update
+                  sudo apt-get install -y ca-certificates lsof
             - browser-tools/install-chrome
             - browser-tools/install-chromedriver
-      - node/install:
-          # Use LTS version
-          node-version: ''
-      - run-yarn-install:
+      - run-pnpm-install:
           os: << parameters.os >>
-      - when:
-          condition:
-            equal: [<< parameters.os >>, linux]
-          steps:
-            - install-pnpm
 
 # -------------------------
 #          JOBS
@@ -144,8 +132,10 @@ jobs:
       GIT_COMMITTER_NAME: Test
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>
       SELECTED_PM: << parameters.pm >>
-      NX_E2E_RUN_CYPRESS: 'false'
+      NX_E2E_RUN_CYPRESS: 'true'
       NX_VERBOSE_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
+      NX_PERF_LOGGING: 'false'
     steps:
       - run:
           name: Configure git metadata (needed for lerna smoke tests)
@@ -155,12 +145,12 @@ jobs:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-<< parameters.os >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"<< parameters.os >>\";" >> $BASH_ENV
       - setup:
           os: << parameters.os >>
       - run:
           name: Agent
-          command: npx nx-cloud start-agent
+          command: pnpm nx-cloud start-agent
           no_output_timeout: 60m
 
   # -------------------------
@@ -172,19 +162,21 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
       NX_VERBOSE_LOGGING: 'false'
       NX_DAEMON: 'true'
+      NX_PERF_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
     steps:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-linux-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"linux\";" >> $BASH_ENV
       - setup:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
+      - run: pnpm nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
           name: Check Documentation
-          command: npx nx documentation --no-dte
+          command: pnpm nx documentation --no-dte
           no_output_timeout: 20m
       - run:
           name: Run Checks/Lint/Test/Build
@@ -192,18 +184,18 @@ jobs:
           command: |
             pids=()
 
-            npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
+            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
-            npx nx run-many -t root-lint check-imports check-commit check-lock-files depcheck --parallel=1 --no-dte &
+            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
             pids+=($!)
 
-            yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
+            pnpm nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
             pids+=($!)
-            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
+            pnpm nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
             pids+=($!)
-            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular --parallel=1) &
+            (pnpm nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
+            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
@@ -217,18 +209,23 @@ jobs:
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
       NX_DAEMON: 'true'
+      NX_PERF_LOGGING: 'false'
+      SELECTED_PM: 'npm' # explicitly define npm for macOS tests
+      NX_SKIP_NX_CACHE: 'true' # TODO: Figure out what is going on with the cache and renable it
     steps:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-macos-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"macos\";" >> $BASH_ENV
       - setup:
           os: macos
+      - rust/install
+      - nx/set-shas:
+          main-branch-name: 'master'
       - run:
           name: Run E2E Tests for macOS
-          # FIXME: remove --exclude=e2e-detox once we have a fix for the detox tests
           command: |
-            npx nx run-many -t e2e-macos --parallel=1 --exclude=e2e-detox
+            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
           no_output_timeout: 45m
 
 # -------------------------

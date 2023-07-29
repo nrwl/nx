@@ -3,22 +3,25 @@ import {
   checkFilesExist,
   cleanupProject,
   e2eCwd,
+  expectCodeIsFormatted,
   expectNoAngularDevkit,
   expectNoTsJestInJestConfig,
   getSelectedPackageManager,
   packageManagerLockFile,
   readJson,
+  runCommand,
   runCreateWorkspace,
   uniq,
-} from '@nrwl/e2e/utils';
-import { existsSync, mkdirSync } from 'fs-extra';
+} from '@nx/e2e/utils';
+import { readFileSync } from 'fs';
+import { existsSync, mkdirSync, rmSync } from 'fs-extra';
 
 describe('create-nx-workspace', () => {
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject());
 
-  it('should create a workspace with a single angular app at the root', () => {
+  it('should create a workspace with a single angular app at the root without routing', () => {
     const wsName = uniq('angular');
 
     runCreateWorkspace(wsName, {
@@ -26,10 +29,34 @@ describe('create-nx-workspace', () => {
       appName: wsName,
       style: 'css',
       packageManager,
+      standaloneApi: false,
+      routing: false,
     });
 
     checkFilesExist('package.json');
     checkFilesExist('project.json');
+    checkFilesExist('src/app/app.module.ts');
+    checkFilesDoNotExist('src/app/app.routes.ts');
+    expectCodeIsFormatted();
+  });
+
+  it('should create a workspace with a single angular app at the root using standalone APIs', () => {
+    const wsName = uniq('angular');
+
+    runCreateWorkspace(wsName, {
+      preset: 'angular-standalone',
+      appName: wsName,
+      style: 'css',
+      packageManager,
+      standaloneApi: true,
+      routing: true,
+    });
+
+    checkFilesExist('package.json');
+    checkFilesExist('project.json');
+    checkFilesExist('src/app/app.routes.ts');
+    checkFilesDoNotExist('src/app/app.module.ts');
+    expectCodeIsFormatted();
   });
 
   it('should create a workspace with a single react app with vite at the root', () => {
@@ -46,6 +73,8 @@ describe('create-nx-workspace', () => {
     checkFilesExist('package.json');
     checkFilesExist('project.json');
     checkFilesExist('vite.config.ts');
+    checkFilesDoNotExist('tsconfig.base.json');
+    expectCodeIsFormatted();
   });
 
   it('should create a workspace with a single react app with webpack at the root', () => {
@@ -62,12 +91,14 @@ describe('create-nx-workspace', () => {
     checkFilesExist('package.json');
     checkFilesExist('project.json');
     checkFilesExist('webpack.config.js');
+    checkFilesDoNotExist('tsconfig.base.json');
+    expectCodeIsFormatted();
   });
 
   it('should be able to create an empty workspace built for apps', () => {
     const wsName = uniq('apps');
     runCreateWorkspace(wsName, {
-      preset: 'empty',
+      preset: 'apps',
       packageManager,
     });
 
@@ -77,9 +108,6 @@ describe('create-nx-workspace', () => {
       'apps/.gitkeep',
       'libs/.gitkeep'
     );
-    const foreignLockFiles = Object.keys(packageManagerLockFile)
-      .filter((pm) => pm !== packageManager)
-      .map((pm) => packageManagerLockFile[pm]);
 
     expectNoAngularDevkit();
   });
@@ -92,16 +120,18 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+    checkFilesDoNotExist('tsconfig.base.json');
   });
 
   it('should be able to create an empty workspace with ts/js capabilities', () => {
     const wsName = uniq('ts');
     runCreateWorkspace(wsName, {
-      preset: 'npm',
+      preset: 'ts',
       packageManager,
     });
 
     expectNoAngularDevkit();
+    expectCodeIsFormatted();
   });
 
   it('should be able to create an angular workspace', () => {
@@ -112,7 +142,10 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       packageManager,
+      standaloneApi: false,
+      routing: true,
     });
+    expectCodeIsFormatted();
   });
 
   it('should fail correctly when preset errors', () => {
@@ -121,16 +154,16 @@ describe('create-nx-workspace', () => {
     // Due to a validation error Angular will throw.
     const wsName = uniq('angular-1-test');
     const appName = uniq('app');
-    try {
+    expect(() =>
       runCreateWorkspace(wsName, {
         preset: 'angular-monorepo',
         style: 'css',
         appName,
         packageManager,
-      });
-    } catch (e) {
-      expect(e).toBeTruthy();
-    }
+        standaloneApi: false,
+        routing: false,
+      })
+    ).toThrow();
   });
 
   it('should be able to create a react workspace with webpack', () => {
@@ -148,7 +181,8 @@ describe('create-nx-workspace', () => {
     expectNoAngularDevkit();
     expectNoTsJestInJestConfig(appName);
     const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nrwl/webpack']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/webpack']).toBeDefined();
+    expectCodeIsFormatted();
   });
 
   it('should be able to create a react workspace with vite', () => {
@@ -165,8 +199,9 @@ describe('create-nx-workspace', () => {
 
     expectNoAngularDevkit();
     const packageJson = readJson('package.json');
-    expect(packageJson.devDependencies['@nrwl/webpack']).not.toBeDefined();
-    expect(packageJson.devDependencies['@nrwl/vite']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/webpack']).not.toBeDefined();
+    expect(packageJson.devDependencies['@nx/vite']).toBeDefined();
+    expectCodeIsFormatted();
   });
 
   it('should be able to create an next workspace', () => {
@@ -176,10 +211,48 @@ describe('create-nx-workspace', () => {
       preset: 'next',
       style: 'css',
       appName,
+      nextAppDir: false,
       packageManager,
     });
 
+    checkFilesExist(`apps/${appName}/pages/index.tsx`);
+
     expectNoAngularDevkit();
+    expectCodeIsFormatted();
+  });
+
+  it('should be able to create a nextjs standalone workspace using app router', () => {
+    const wsName = uniq('next');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'nextjs-standalone',
+      style: 'css',
+      nextAppDir: true,
+      appName,
+      packageManager,
+    });
+
+    checkFilesExist('app/page.tsx');
+
+    expectNoAngularDevkit();
+    expectCodeIsFormatted();
+  });
+
+  it('should be able to create a nextjs standalone workspace using pages router', () => {
+    const wsName = uniq('next');
+    const appName = uniq('app');
+    runCreateWorkspace(wsName, {
+      preset: 'nextjs-standalone',
+      style: 'css',
+      nextAppDir: false,
+      appName,
+      packageManager,
+    });
+
+    checkFilesExist('pages/index.tsx');
+
+    expectNoAngularDevkit();
+    expectCodeIsFormatted();
   });
 
   it('should be able to create an web-components workspace', () => {
@@ -193,6 +266,7 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+    expectCodeIsFormatted();
   });
 
   it('should be able to create an express workspace', () => {
@@ -200,12 +274,13 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
       preset: 'express',
-      style: 'css',
+      docker: false,
       appName,
       packageManager,
     });
 
     expectNoAngularDevkit();
+    expectCodeIsFormatted();
   });
 
   it('should be able to create react-native workspace', () => {
@@ -218,6 +293,7 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+    expectCodeIsFormatted();
   });
 
   it('should be able to create an expo workspace', () => {
@@ -230,12 +306,13 @@ describe('create-nx-workspace', () => {
     });
 
     expectNoAngularDevkit();
+    expectCodeIsFormatted();
   });
 
   it('should be able to create a workspace with a custom base branch and HEAD', () => {
     const wsName = uniq('branch');
     runCreateWorkspace(wsName, {
-      preset: 'empty',
+      preset: 'apps',
       base: 'main',
       packageManager,
     });
@@ -244,7 +321,7 @@ describe('create-nx-workspace', () => {
   it('should be able to create a workspace with custom commit information', () => {
     const wsName = uniq('branch');
     runCreateWorkspace(wsName, {
-      preset: 'empty',
+      preset: 'apps',
       extraArgs:
         '--commit.name="John Doe" --commit.email="myemail@test.com" --commit.message="Custom commit message!"',
       packageManager,
@@ -256,44 +333,22 @@ describe('create-nx-workspace', () => {
     const appName = uniq('app');
     runCreateWorkspace(wsName, {
       preset: 'nest',
+      docker: false,
       appName,
       packageManager,
     });
+    expectCodeIsFormatted();
   });
 
   it('should respect package manager preference', () => {
     const wsName = uniq('pm');
-    const appName = uniq('app');
 
     process.env.YARN_REGISTRY = `http://localhost:4872`;
     process.env.SELECTED_PM = 'npm';
 
     runCreateWorkspace(wsName, {
-      preset: 'react-monorepo',
-      style: 'css',
-      appName,
+      preset: 'apps',
       packageManager: 'npm',
-      bundler: 'webpack',
-    });
-
-    checkFilesDoNotExist('yarn.lock');
-    checkFilesExist('package-lock.json');
-    process.env.SELECTED_PM = packageManager;
-  });
-
-  it('should store package manager preference for angular cli', () => {
-    const wsName = uniq('pm');
-    const appName = uniq('app');
-
-    process.env.YARN_REGISTRY = `http://localhost:4872`;
-    process.env.SELECTED_PM = 'npm';
-
-    runCreateWorkspace(wsName, {
-      preset: 'angular-monorepo',
-      appName,
-      style: 'css',
-      packageManager: 'npm',
-      cli: 'angular',
     });
 
     checkFilesDoNotExist('yarn.lock');
@@ -303,8 +358,8 @@ describe('create-nx-workspace', () => {
 
   it('should return error when ci workflow is selected but no cloud is set up', () => {
     const wsName = uniq('github');
-    const create = runCreateWorkspace(wsName, {
-      preset: 'npm',
+    runCreateWorkspace(wsName, {
+      preset: 'apps',
       packageManager,
       ci: 'circleci',
     });
@@ -316,7 +371,7 @@ describe('create-nx-workspace', () => {
     function setupProject(envPm: 'npm' | 'yarn' | 'pnpm') {
       process.env.SELECTED_PM = envPm;
       runCreateWorkspace(uniq('pm'), {
-        preset: 'empty',
+        preset: 'apps',
         packageManager: envPm,
         useDetectedPm: true,
       });
@@ -361,9 +416,9 @@ describe('create-nx-workspace', () => {
   });
 });
 
-describe('create-nx-workspace custom parent folder', () => {
+describe('create-nx-workspace parent folder', () => {
   const tmpDir = `${e2eCwd}/${uniq('with space')}`;
-  const wsName = uniq('empty');
+  const wsName = uniq('parent');
   const packageManager = getSelectedPackageManager() || 'pnpm';
 
   afterEach(() => cleanupProject({ cwd: `${tmpDir}/${wsName}` }));
@@ -378,5 +433,61 @@ describe('create-nx-workspace custom parent folder', () => {
     });
 
     expect(existsSync(`${tmpDir}/${wsName}/package.json`)).toBeTruthy();
+  });
+});
+
+describe('create-nx-workspace yarn berry', () => {
+  const tmpDir = `${e2eCwd}/${uniq('yarn-berry')}`;
+  let wsName: string;
+
+  beforeAll(() => {
+    mkdirSync(tmpDir, { recursive: true });
+    runCommand('corepack prepare yarn@stable --activate', { cwd: tmpDir });
+    runCommand('yarn set version stable', { cwd: tmpDir });
+    // previous command creates a package.json file which we don't want
+    rmSync(`${tmpDir}/package.json`);
+    process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
+  });
+
+  afterEach(() => cleanupProject({ cwd: `${tmpDir}/${wsName}` }));
+
+  it('should create a workspace with yarn berry', () => {
+    wsName = uniq('apps');
+
+    runCreateWorkspace(wsName, {
+      preset: 'apps',
+      packageManager: 'yarn',
+      cwd: tmpDir,
+    });
+
+    expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toMatchInlineSnapshot(`
+      "nodeLinker: node-modules
+
+      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      "
+    `);
+  });
+
+  it('should create a js workspace with yarn berry', () => {
+    wsName = uniq('ts');
+
+    runCreateWorkspace(wsName, {
+      preset: 'ts',
+      packageManager: 'yarn',
+      cwd: tmpDir,
+    });
+
+    expect(existsSync(`${tmpDir}/${wsName}/.yarnrc.yml`)).toBeTruthy();
+    expect(
+      readFileSync(`${tmpDir}/${wsName}/.yarnrc.yml`, { encoding: 'utf-8' })
+    ).toMatchInlineSnapshot(`
+      "nodeLinker: node-modules
+
+      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      "
+    `);
   });
 });

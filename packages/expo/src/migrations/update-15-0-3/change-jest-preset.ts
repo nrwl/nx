@@ -6,13 +6,13 @@ import {
   stripIndents,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import {
   addPropertyToJestConfig,
   removePropertyFromJestConfig,
-} from '@nrwl/jest';
-import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+} from '@nx/jest';
+import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
 import { join } from 'path';
 
 /**

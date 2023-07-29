@@ -4,7 +4,7 @@ import {
   logger,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * Rename blacklistRE to blockList in metro.config.js

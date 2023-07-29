@@ -1,12 +1,17 @@
 #!/usr/bin/env node
 import * as yargs from 'yargs';
 import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
-import { URL } from 'url';
+import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { URL } from 'node:url';
 import { join } from 'path';
 
-import * as version from '@lerna/version/index';
-import * as publish from '@lerna/publish/index';
+import { parse } from 'semver';
+
+const version = require('lerna/commands/version');
+const publish = require('lerna/commands/publish');
+
+const lernaJsonPath = join(__dirname, '../lerna.json');
+const originalLernaJson = readFileSync(lernaJsonPath);
 
 function hideFromGitIndex(uncommittedFiles: string[]) {
   execSync(`git update-index --assume-unchanged ${uncommittedFiles.join(' ')}`);
@@ -19,22 +24,40 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
 (async () => {
   const options = parseArgs();
-  if (!options.local && !options.force) {
-    console.log('Authenticating to NPM');
-    execSync('npm adduser', {
-      stdio: [0, 1, 2],
+
+  if (options.clearLocalRegistry) {
+    rmSync(join(__dirname, '../build/local-registry/storage'), {
+      recursive: true,
+      force: true,
     });
   }
 
-  if (options.clearLocalRegistry) {
-    execSync('yarn local-registry clear');
-  }
+  const currentLatestVersion = execSync('npm view nx version')
+    .toString()
+    .trim();
 
-  const buildCommand = 'yarn build';
+  const parsedVersion = parse(options.version);
+  const parsedCurrentLatestVersion = parse(currentLatestVersion);
+
+  const distTag =
+    parsedVersion?.prerelease.length > 0
+      ? 'next'
+      : parsedVersion?.major < parsedCurrentLatestVersion.major
+      ? 'previous'
+      : 'latest';
+
+  const buildCommand = 'pnpm build';
   console.log(`> ${buildCommand}`);
   execSync(buildCommand, {
     stdio: [0, 1, 2],
   });
+  execSync(`ls -lah build/packages/nx/src/native`, {
+    stdio: [0, 1, 2],
+  });
+
+  if (options.local) {
+    updateLernaJsonVersion(currentLatestVersion);
+  }
 
   if (options.local) {
     // Force all projects to be not private
@@ -54,21 +77,32 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     }
   }
 
+  if (!options.local && process.env.NPM_TOKEN) {
+    // Delete all .node files that were built during the previous steps
+    // Always run before the artifacts step because we still need the .node files for native-packages
+    execSync('find ./build -name "*.node" -delete', {
+      stdio: [0, 1, 2],
+    });
+
+    execSync('npx nx run-many --target=artifacts', {
+      stdio: [0, 1, 2],
+    });
+  }
+
   const versionOptions = {
     bump: options.version ? options.version : undefined,
     conventionalCommits: true,
     conventionalPrerelease: options.tag === 'next',
     preid: options.preid,
     forcePublish: true,
-    createRelease: options.tag !== 'next' ? 'github' : undefined,
-    noChangelog: options.tag === 'next',
+    createRelease: 'github',
     tagVersionPrefix: '',
     exact: true,
     gitRemote: options.gitRemote,
-    gitTagVersion: options.tag !== 'next',
+    gitTagVersion: !process.env.NPM_TOKEN,
     message: 'chore(misc): publish %v',
     loglevel: options.loglevel ?? 'info',
-    yes: false,
+    yes: !!process.env.NPM_TOKEN,
   };
 
   if (options.local) {
@@ -80,12 +114,6 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     versionOptions.bump = options.version ? options.version : 'minor';
   }
 
-  const lernaJsonPath = join(__dirname, '../lerna.json');
-  let originalLernaJson: Buffer | undefined;
-
-  if (options.local || options.tag === 'next') {
-    originalLernaJson = readFileSync(lernaJsonPath);
-  }
   if (options.local) {
     /**
      * Hide changes from Lerna
@@ -104,24 +132,31 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
 
   const publishOptions: Record<string, boolean | string | undefined> = {
     gitReset: false,
-    distTag: options.tag,
+    distTag: distTag,
   };
 
-  if (!options.skipPublish) {
+  if (!options.local && !process.env.NPM_TOKEN) {
+    execSync('git status --ahead-behind');
+
+    await version(versionOptions);
+    console.log(
+      'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
+    );
+  } else if (!options.skipPublish) {
     await publish({ ...versionOptions, ...publishOptions });
   } else {
     await version(versionOptions);
     console.warn('Not Publishing because --dryRun was passed');
   }
 
-  if (originalLernaJson) {
-    writeFileSync(lernaJsonPath, originalLernaJson);
+  if (options.local) {
+    restoreOriginalLernaJson();
   }
 })();
 
 function parseArgs() {
   const parsedArgs = yargs
-    .scriptName('yarn nx-release')
+    .scriptName('pnpm nx-release')
     .wrap(144)
     .strictOptions()
     .version(false)
@@ -161,17 +196,6 @@ function parseArgs() {
         'Alternate git remote name to publish tags to (useful for testing changelog)',
       default: 'origin',
     })
-    .option('tag', {
-      type: 'string',
-      description: 'NPM Tag',
-      choices: ['next', 'latest', 'previous'],
-    })
-    .option('preid', {
-      type: 'string',
-      description: 'The kind of prerelease tag. (1.0.0-[preid].0)',
-      choices: ['alpha', 'beta', 'rc'],
-      default: 'beta',
-    })
     .option('loglevel', {
       type: 'string',
       description: 'Log Level',
@@ -182,23 +206,23 @@ function parseArgs() {
       `By default, this will locally publish a minor version bump as latest. Great for local development. Most developers should only need this.`
     )
     .example(
-      '$0 --local false',
-      `This will really publish a new beta version to npm as next. The version is inferred by the changes.`
+      '$0 --local false 2.3.4-beta.0',
+      `This will really publish a new version to npm as next.`
     )
     .example(
-      '$0 --local false --tag latest',
-      `This will really publish a new stable version to npm as latest, tag, commit, push, and create a release on GitHub.`
+      '$0 --local false 2.3.4',
+      `Given the current latest major version on npm is 2, this will really publish a new version to npm as latest.`
     )
     .example(
-      '$0 --local false --preid rc',
-      `This will really publish a new rc version to npm as next.`
+      '$0 --local false 1.3.4-beta.0',
+      `Given the current latest major version on npm is 2, this will really publish a new version to npm as previous.`
     )
     .group(
       ['local', 'clearLocalRegistry'],
       'Local Publishing Options for most developers'
     )
     .group(
-      ['preid', 'tag', 'gitRemote', 'force'],
+      ['gitRemote', 'force'],
       'Real Publishing Options for actually publishing to NPM'
     )
     .check((args) => {
@@ -210,7 +234,7 @@ function parseArgs() {
         }
         if (!args.force && registryIsLocalhost) {
           throw new Error(
-            'Registry is still set to localhost! Run "yarn local-registry disable" or pass --force'
+            'Registry is still set to localhost! Run "pnpm local-registry disable" or pass --force'
           );
         }
       } else {
@@ -226,6 +250,18 @@ function parseArgs() {
   parsedArgs.tag ??= parsedArgs.local ? 'latest' : 'next';
 
   return parsedArgs;
+}
+
+function updateLernaJsonVersion(version: string) {
+  const json = JSON.parse(readFileSync(lernaJsonPath).toString());
+
+  json.version = version;
+
+  writeFileSync(lernaJsonPath, JSON.stringify(json));
+}
+
+function restoreOriginalLernaJson() {
+  writeFileSync(lernaJsonPath, originalLernaJson);
 }
 
 function getRegistry() {

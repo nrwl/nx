@@ -1,14 +1,19 @@
+---
+title: Manually set up your project to use Vite.js
+description: This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.
+---
+
 # Manually set up your project to use Vite.js
 
 {% callout type="note" title="Use our generator!" %}
-It is recommended that you use the [`@nrwl/vite:configuration`](/packages/vite/generators/configuration) generator to do convert an existing project to use [Vite](https://vitejs.dev/).
+It is recommended that you use the [`@nx/vite:configuration`](/packages/vite/generators/configuration) generator to do convert an existing project to use [Vite](https://vitejs.dev/).
 {% /callout %}
 
-You can use the `@nrwl/vite:dev-server`,`@nrwl/vite:build` and `@nrwl/vite:test` executors to serve, build and test your project using [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/). To do this, you need to make a few adjustments to your project. It is recommended that you use the [`@nrwl/vite:configuration`](/packages/vite/generators/configuration) generator to do this, but you can also do it manually.
+You can use the `@nx/vite:dev-server`,`@nx/vite:build` and `@nx/vite:test` executors to serve, build and test your project using [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/). To do this, you need to make a few adjustments to your project. It is recommended that you use the [`@nx/vite:configuration`](/packages/vite/generators/configuration) generator to do this, but you can also do it manually.
 
 A reason you may need to do this manually, is if our generator does not support conversion for your project, or if you want to experiment with custom options.
 
-The list of steps below assumes that your project can be converted to use the `@nrwl/vite` executors. However, if it's not supported by the [`@nrwl/vite:configuration`](/packages/vite/generators/configuration) generator, it's likely that your project will not work as expected when converted. So, proceed with caution and always commit your code before making any changes.
+The list of steps below assumes that your project can be converted to use the `@nx/vite` executors. However, if it's not supported by the [`@nx/vite:configuration`](/packages/vite/generators/configuration) generator, it's likely that your project will not work as expected when converted. So, proceed with caution and always commit your code before making any changes.
 
 ## 1. Change the executors in your `project.json`
 
@@ -16,7 +21,7 @@ The list of steps below assumes that your project can be converted to use the `@
 
 This applies to applications, not libraries.
 
-In your app's `project.json` file, change the executor of your `serve` target to use `@nrwl/vite:dev-server` and set it up with the following options:
+In your app's `project.json` file, change the executor of your `serve` target to use `@nx/vite:dev-server` and set it up with the following options:
 
 ```json
 //...
@@ -24,7 +29,7 @@ In your app's `project.json` file, change the executor of your `serve` target to
     "targets": {
         //...
         "serve": {
-            "executor": "@nrwl/vite:dev-server",
+            "executor": "@nx/vite:dev-server",
             "defaultConfiguration": "development",
             "options": {
                 "buildTarget": "my-app:build",
@@ -38,12 +43,12 @@ In your app's `project.json` file, change the executor of your `serve` target to
 ```
 
 {% callout type="note" title="Other options" %}
-Any extra options that you may need to add to your server's configuration can be added in your project's `vite.config.ts` file. You can find all the options that are supported in the [Vite.js documentation](https://vitejs.dev/config/). You can see which of these options you can add in your `project.json` in the [`@nrwl/vite:dev-server`](/packages/vite/executors/dev-server#options) documentation.
+Any extra options that you may need to add to your server's configuration can be added in your project's `vite.config.ts` file. You can find all the options that are supported in the [Vite.js documentation](https://vitejs.dev/config/). You can see which of these options you can add in your `project.json` in the [`@nx/vite:dev-server`](/packages/vite/executors/dev-server#options) documentation.
 {% /callout %}
 
 ### The `build` target
 
-In your project's `project.json` file, change the executor of your `build` target to use `@nrwl/vite:build` and set it up with the following options:
+In your project's `project.json` file, change the executor of your `build` target to use `@nx/vite:build` and set it up with the following options:
 
 ```json
 //...
@@ -51,7 +56,7 @@ In your project's `project.json` file, change the executor of your `build` targe
     "targets": {
         //...
         "build": {
-        "executor": "@nrwl/vite:build",
+        "executor": "@nx/vite:build",
         ...
         "options": {
             "outputPath": "dist/apps/my-app"
@@ -78,7 +83,61 @@ You need to use the [`vite-tsconfig-paths` plugin](https://www.npmjs.com/package
 
 If you are using React, you need to use the [`@vitejs/plugin-react` plugin](https://www.npmjs.com/package/@vitejs/plugin-react).
 
+### DTS plugin
+
+If you are building a library, you need to use the [`vite-plugin-dts` plugin](https://www.npmjs.com/package/vite-plugin-dts) to generate the `.d.ts` files for your library.
+
+#### Skip diagnostics
+
+If you are building a library, you can set the `skipDiagnostics` option to `true` to speed up the build. This means that type diagnostic will be skipped during the build process. However, if there are some files with type errors which interrupt the build process, these files will not be emitted and `.d.ts` declaration files will not be generated.
+
+If you choose to skip diagnostics, here is what your `'vite-plugin-dts'` plugin setup will look like:
+
+```ts {% fileName="libs/my-lib/vite.config.ts" %}
+...
+import dts from 'vite-plugin-dts';
+import { join } from 'path';
+...
+...
+export default defineConfig({
+  plugins: [
+    ...,
+    dts({
+      entryRoot: 'src',
+      tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
+      skipDiagnostics: true,
+    }),
+```
+
+#### Do not skip diagnostics
+
+If you are building a library, and you want to make sure that all the files are type checked, you can set the `skipDiagnostics` option to `false` to make sure that all the files are type checked. This means that type diagnostic will be run during the build process.
+
+If you choose to enable diagnostics, here is what your `'vite-plugin-dts'` plugin setup will look like:
+
+```ts {% fileName="libs/my-lib/vite.config.ts" %}
+...
+import dts from 'vite-plugin-dts';
+...
+...
+export default defineConfig({
+  plugins: [
+    ...,
+    dts({
+      root: '../../',
+      entryRoot: 'libs/my-lib/src',
+      tsConfigFilePath: 'libs/my-lib/tsconfig.lib.json',
+      include: ['libs/my-lib/src/**/*.ts'],
+      outputDir: 'dist/libs/my-lib',
+      skipDiagnostics: false,
+    }),
+```
+
+You can read more about the configuration options in the [`vite-plugin-dts` plugin documentation](https://www.npmjs.com/package/vite-plugin-dts)).
+
 ### How your `vite.config.ts` looks like
+
+#### For applications
 
 Add a `vite.config.ts` file to the root of your project. If you are not using React, you can skip adding the `react` plugin, of course.
 
@@ -97,7 +156,9 @@ export default defineConfig({
 });
 ```
 
-If you are converting a library (rather than an application) to use vite, your `vite.config.ts` file should look like this:
+#### For libraries
+
+If you are setting up a library (rather than an application) to use vite, your `vite.config.ts` file should look like this:
 
 ```ts {% fileName="libs/my-lib/vite.config.ts" %}
 import { defineConfig } from 'vite';
@@ -109,13 +170,13 @@ import { join } from 'path';
 export default defineConfig({
   plugins: [
     dts({
+      entryRoot: 'src',
       tsConfigFilePath: join(__dirname, 'tsconfig.lib.json'),
-      // Faster builds by skipping tests. Set this to false to enable type checking.
       skipDiagnostics: true,
     }),
     react(),
     viteTsConfigPaths({
-      root: '../../../',
+      root: '../../',
     }),
   ],
 
@@ -128,7 +189,7 @@ export default defineConfig({
       name: 'pure-libs-rlv1',
       fileName: 'index',
       // Change this to the formats you want to support.
-      // Don't forgot to update your package.json as well.
+      // Don't forget to update your package.json as well.
       formats: ['es', 'cjs'],
     },
     rollupOptions: {

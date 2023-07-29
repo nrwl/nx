@@ -6,10 +6,10 @@ import {
   joinPathFragments,
   names,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
 
 import { normalizeOptions } from '../application/lib/normalize-options';
 import applicationGenerator from '../application/application';
@@ -45,11 +45,12 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     ...options,
     // Only webpack works with module federation for now.
     bundler: 'webpack',
+    skipFormat: true,
   });
   tasks.push(initAppTask);
 
   if (schema.host) {
-    updateHostWithRemote(host, schema.host, options.name);
+    updateHostWithRemote(host, schema.host, options.projectName);
   }
 
   // Module federation requires bootstrap code to be dynamically imported.
@@ -67,6 +68,7 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
     const setupSsrTask = await setupSsrGenerator(host, {
       project: options.projectName,
       serverPort: options.devServerPort,
+      skipFormat: true,
     });
     tasks.push(setupSsrTask);
 

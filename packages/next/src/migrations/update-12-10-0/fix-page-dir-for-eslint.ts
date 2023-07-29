@@ -5,7 +5,7 @@ import {
   readJson,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export async function fixPageDirForEslint(host: Tree) {
   const projects = getProjects(host);

@@ -1,10 +1,10 @@
-import { PackageSchemaList } from '@nrwl/nx-dev-feature-package-schema-viewer';
-import { DocumentsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
-import { getPackagesSections } from '@nrwl/nx-dev/data-access-menu';
-import { sortCorePackagesFirst } from '@nrwl/nx-dev/data-access-packages';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
-import { ProcessedPackageMetadata } from '@nrwl/nx-dev/models-package';
-import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
+import { PackageSchemaList } from '@nx/nx-dev/feature-package-schema-viewer';
+import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
+import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
+import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
@@ -103,7 +103,7 @@ function getData(packageName: string): {
     id: [packageName, 'documents'].join('-'),
     manifest: nxPackagesApi.getPackageDocuments(packageName),
     prefix: '',
-    publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+    publicDocsRoot: 'public/documentation',
     tagsApi,
   });
 

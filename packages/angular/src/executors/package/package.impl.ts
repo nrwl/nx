@@ -1,12 +1,12 @@
-import type { ExecutorContext } from '@nrwl/devkit';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
+import type { ExecutorContext } from '@nx/devkit';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { from } from 'rxjs';
@@ -72,7 +72,8 @@ export function createLibraryExecutor(
     context: ExecutorContext
   ) {
     const { target, dependencies, topLevelDependencies } =
-      calculateProjectDependencies(
+      calculateProjectBuildableDependencies(
+        context.taskGraph,
         context.projectGraph,
         context.root,
         context.projectName,

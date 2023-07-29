@@ -1,4 +1,4 @@
-import * as devkit from '@nrwl/devkit';
+import * as devkit from '@nx/devkit';
 import {
   addProjectConfiguration,
   joinPathFragments,
@@ -6,9 +6,9 @@ import {
   readProjectConfiguration,
   Tree,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { exampleRootTslintJson } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { exampleRootTslintJson } from '@nx/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
 
 const appProjectName = 'nest-app-1';
@@ -174,7 +174,13 @@ describe('convert-tslint-to-eslint', () => {
     /**
      * The root level .eslintrc.json should now have been generated
      */
-    expect(readJson(host, '.eslintrc.json')).toMatchSnapshot();
+    const eslintJson = readJson(host, '.eslintrc.json');
+    expect(eslintJson.overrides[3].rules['no-console'][1].allow).toContain(
+      'log'
+    );
+    // Remove no-console config because it is not deterministic across node versions
+    delete eslintJson.overrides[3].rules['no-console'][1].allow;
+    expect(eslintJson).toMatchSnapshot();
 
     /**
      * The project level .eslintrc.json should now have been generated
@@ -215,7 +221,13 @@ describe('convert-tslint-to-eslint', () => {
     /**
      * The root level .eslintrc.json should now have been generated
      */
-    expect(readJson(host, '.eslintrc.json')).toMatchSnapshot();
+    const eslintJson = readJson(host, '.eslintrc.json');
+    expect(eslintJson.overrides[3].rules['no-console'][1].allow).toContain(
+      'log'
+    );
+    // Remove no-console config because it is not deterministic across node versions
+    delete eslintJson.overrides[3].rules['no-console'][1].allow;
+    expect(eslintJson).toMatchSnapshot();
 
     /**
      * The project level .eslintrc.json should now have been generated

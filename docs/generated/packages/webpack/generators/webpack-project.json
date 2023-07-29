@@ -21,7 +21,7 @@
         "type": "string",
         "enum": ["babel", "swc", "tsc"],
         "description": "The compiler to use to build source.",
-        "default": "babel"
+        "default": "swc"
       },
       "main": {
         "type": "string",
@@ -36,7 +36,7 @@
       "target": {
         "type": "string",
         "description": "Target platform for the build, same as the Webpack config option.",
-        "enum": ["node", "web"],
+        "enum": ["node", "web", "webworker"],
         "default": "web"
       },
       "skipFormat": {
@@ -66,6 +66,11 @@
         "type": "string",
         "description": "Path relative to workspace root to a custom webpack file that takes a config object and returns an updated config.",
         "x-priority": "internal"
+      },
+      "babelConfig": {
+        "type": "string",
+        "description": "Optionally specify a path relative to workspace root to the babel configuration file of your project.",
+        "x-completion-type": "file"
       }
     },
     "required": [],

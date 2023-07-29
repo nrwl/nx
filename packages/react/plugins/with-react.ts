@@ -1,6 +1,6 @@
 import type { Configuration } from 'webpack';
-import type { WithWebOptions } from '@nrwl/webpack';
-import type { NxWebpackExecutionContext } from '@nrwl/webpack';
+import type { WithWebOptions } from '@nx/webpack';
+import type { NxWebpackExecutionContext } from '@nx/webpack';
 
 const processed = new Set();
 
@@ -13,6 +13,7 @@ function addHotReload(config: Configuration) {
     // add `react-refresh/babel` to babel loader plugin
     const babelLoader = config.module.rules.find(
       (rule) =>
+        rule &&
         typeof rule !== 'string' &&
         rule.loader?.toString().includes('babel-loader')
     );
@@ -55,7 +56,7 @@ export function withReact(pluginOptions: WithReactOptions = {}) {
     config: Configuration,
     context: NxWebpackExecutionContext
   ): Configuration {
-    const { withWeb } = require('@nrwl/webpack');
+    const { withWeb } = require('@nx/webpack');
 
     if (processed.has(config)) return config;
 

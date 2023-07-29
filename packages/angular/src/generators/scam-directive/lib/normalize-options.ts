@@ -1,35 +1,28 @@
-import type { Tree } from '@nrwl/devkit';
-import {
-  joinPathFragments,
-  readNxJson,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { normalizeNameAndPaths } from '../../utils/path';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export function normalizeOptions(
   tree: Tree,
   options: Schema
 ): NormalizedSchema {
-  const project = options.project ?? readNxJson(tree).defaultProject;
-  const { projectType, root, sourceRoot } = readProjectConfiguration(
+  const { directory, fileName, filePath, name, path } = normalizeNameAndPaths(
     tree,
-    project
+    {
+      ...options,
+      type: 'directive',
+    }
   );
-  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
-  const path =
-    options.path ??
-    joinPathFragments(
-      projectSourceRoot,
-      projectType === 'application' ? 'app' : 'lib'
-    );
 
   return {
     ...options,
     export: options.export ?? true,
     flat: options.flat ?? true,
     inlineScam: options.inlineScam ?? true,
+    directory,
+    fileName,
+    filePath,
     path,
-    project,
-    projectSourceRoot,
+    name,
   };
 }

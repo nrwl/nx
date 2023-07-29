@@ -9,8 +9,11 @@ import {
 } from 'fs-extra';
 import type { Mode } from 'fs';
 import { logger } from '../utils/logger';
+import { output } from '../utils/output';
 import { dirname, join, relative, sep } from 'path';
 import * as chalk from 'chalk';
+import { gt } from 'semver';
+import { nxVersion } from '../utils/versions';
 
 /**
  * Options to set when writing a file in the Virtual file system tree.
@@ -127,7 +130,19 @@ export class FsTree implements Tree {
     };
   } = {};
 
-  constructor(readonly root: string, private readonly isVerbose: boolean) {}
+  /**
+   * Signifies if operations on the tree instance
+   * are allowed. Set to false after changes are written
+   * to disk, to prevent someone trying to use the tree to update
+   * files when the tree is no longer effective.
+   */
+  private locked = false;
+
+  constructor(
+    readonly root: string,
+    private readonly isVerbose: boolean,
+    private readonly logOperationId?: string
+  ) {}
 
   read(filePath: string): Buffer | null;
   read(filePath: string, encoding: BufferEncoding): string | null;
@@ -155,7 +170,19 @@ export class FsTree implements Tree {
     content: Buffer | string,
     options?: TreeWriteOptions
   ): void {
+    this.assertUnlocked();
     filePath = this.normalize(filePath);
+
+    // Remove any recorded changes where a parent directory has been
+    // deleted when writing a new file within the directory.
+    let parent = dirname(this.rp(filePath));
+    while (parent !== '.') {
+      if (this.recordedChanges[parent]?.isDeleted) {
+        delete this.recordedChanges[parent];
+      }
+      parent = dirname(parent);
+    }
+
     if (
       this.fsExists(this.rp(filePath)) &&
       Buffer.from(content).equals(this.fsReadFile(filePath))
@@ -164,6 +191,7 @@ export class FsTree implements Tree {
       delete this.recordedChanges[this.rp(filePath)];
       return;
     }
+
     try {
       this.recordedChanges[this.rp(filePath)] = {
         content: Buffer.from(content),
@@ -187,6 +215,7 @@ export class FsTree implements Tree {
   }
 
   delete(filePath: string): void {
+    this.assertUnlocked();
     filePath = this.normalize(filePath);
     if (this.filesForDir(this.rp(filePath)).length > 0) {
       this.filesForDir(this.rp(filePath)).forEach(
@@ -198,8 +227,11 @@ export class FsTree implements Tree {
       isDeleted: true,
     };
 
-    // Delete directories when
-    if (this.children(dirname(this.rp(filePath))).length < 1) {
+    // Delete directory when is not root and there are no children
+    if (
+      filePath !== '' &&
+      this.children(dirname(this.rp(filePath))).length < 1
+    ) {
       this.delete(dirname(this.rp(filePath)));
     }
   }
@@ -220,11 +252,22 @@ export class FsTree implements Tree {
   }
 
   rename(from: string, to: string): void {
+    this.assertUnlocked();
     from = this.normalize(from);
     to = this.normalize(to);
-    const content = this.read(this.rp(from));
-    this.delete(this.rp(from));
-    this.write(this.rp(to), content);
+    if (from === to) {
+      return;
+    }
+
+    if (this.isFile(from)) {
+      const content = this.read(this.rp(from));
+      this.write(this.rp(to), content);
+      this.delete(this.rp(from));
+    } else {
+      for (const child of this.children(from)) {
+        this.rename(join(from, child), join(to, child));
+      }
+    }
   }
 
   isFile(filePath: string): boolean {
@@ -246,7 +289,7 @@ export class FsTree implements Tree {
 
     res = [...res, ...this.directChildrenOfDir(this.rp(dirPath))];
     res = res.filter((q) => {
-      const r = this.recordedChanges[join(this.rp(dirPath), q)];
+      const r = this.recordedChanges[this.normalize(join(this.rp(dirPath), q))];
       return !r?.isDeleted;
     });
     // Dedupe
@@ -282,6 +325,7 @@ export class FsTree implements Tree {
   }
 
   changePermissions(filePath: string, mode: Mode): void {
+    this.assertUnlocked();
     filePath = this.normalize(filePath);
     const filePathChangeKey = this.rp(filePath);
     if (this.recordedChanges[filePathChangeKey]) {
@@ -307,6 +351,25 @@ export class FsTree implements Tree {
         isDeleted: false,
         options: { mode },
       };
+    }
+  }
+
+  // Marks FsTree as final.
+  lock() {
+    this.locked = true;
+  }
+
+  private assertUnlocked() {
+    if (this.locked) {
+      output.error({
+        title: `File changes have already been written to disk. Further changes were attempted ${
+          this.logOperationId ? ` while running ${this.logOperationId}.` : '.'
+        }`,
+        bodyLines: [
+          'The file system can no longer be modified. This commonly happens when a generator attempts to make further changes in its callback, or an asynchronous operation is still running after the generator completes.',
+        ],
+      });
+      throw new Error('Tree changed after commit to disk.');
     }
   }
 
@@ -355,8 +418,12 @@ export class FsTree implements Tree {
     }
     Object.keys(this.recordedChanges).forEach((f) => {
       if (f.startsWith(`${path}/`)) {
-        const [_, file] = f.split(`${path}/`);
-        res[file.split('/')[0]] = true;
+        // Remove the current folder's path from the directory
+        const file = f.substring(path.length + 1);
+        // Split the path on segments, and take the first one
+        const basePath = file.split('/')[0];
+        // Mark it as a child of the current directory
+        res[basePath] = true;
       }
     });
 

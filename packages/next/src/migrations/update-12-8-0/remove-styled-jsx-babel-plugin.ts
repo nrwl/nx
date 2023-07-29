@@ -5,7 +5,7 @@ import {
   readJson,
   joinPathFragments,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export async function removeStyledJsxBabelConfig(host: Tree) {
   const projects = getProjects(host);

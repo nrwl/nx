@@ -1,14 +1,16 @@
+import { E2eTestRunner } from '../../utils/test-runners';
 import {
   getProjects,
   readNxJson,
   readProjectConfiguration,
   stripIndents,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import host from '../host/host';
-import remote from './remote';
-import { E2eTestRunner } from '@nrwl/angular/src/utils/test-runners';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import {
+  generateTestHostApplication,
+  generateTestRemoteApplication,
+} from '../utils/testing';
 
 describe('MF Remote App Generator', () => {
   it('should generate a remote mf app with no host', async () => {
@@ -16,7 +18,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'test',
       port: 4201,
     });
@@ -29,12 +31,12 @@ describe('MF Remote App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'host',
     });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'test',
       host: 'host',
     });
@@ -50,7 +52,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT
     try {
-      await remote(tree, {
+      await generateTestRemoteApplication(tree, {
         name: 'test',
         host: 'host',
       });
@@ -65,13 +67,13 @@ describe('MF Remote App Generator', () => {
   it('should generate a remote mf app and automatically find the next port available', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'existing',
       port: 4201,
     });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'test',
     });
 
@@ -85,7 +87,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'test',
     });
 
@@ -99,7 +101,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'test',
       port: 4201,
     });
@@ -114,7 +116,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'test',
       standalone: true,
     });
@@ -145,7 +147,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'remote1',
       e2eTestRunner: E2eTestRunner.None,
     });
@@ -160,7 +162,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'test',
       inlineTemplate: true,
     });
@@ -172,10 +174,10 @@ describe('MF Remote App Generator', () => {
 
       @Component({
         selector: 'proj-root',
-        template: '<router-outlet></router-outlet>'
-
+        template: '<router-outlet></router-outlet>',
       })
-      export class AppComponent {}"
+      export class AppComponent {}
+      "
     `);
   });
 
@@ -184,7 +186,7 @@ describe('MF Remote App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'test',
       standalone: true,
     });
@@ -204,7 +206,7 @@ describe('MF Remote App Generator', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       // ACT
-      await remote(tree, {
+      await generateTestRemoteApplication(tree, {
         name: 'test',
         ssr: true,
       });
@@ -262,7 +264,7 @@ describe('MF Remote App Generator', () => {
 
     // ACT & ASSERT
     await expect(
-      remote(tree, {
+      generateTestRemoteApplication(tree, {
         name: 'test',
         standalone: true,
       })

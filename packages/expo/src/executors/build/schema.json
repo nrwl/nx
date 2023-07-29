@@ -7,6 +7,24 @@
   "title": "Expo EAS Build executor",
   "description": "Start an EAS build for your expo project.",
   "type": "object",
+  "presets": [
+    {
+      "name": "Build for a specific platform",
+      "keys": ["platform"]
+    },
+    {
+      "name": "Build using a specific profile",
+      "keys": ["profile"]
+    },
+    {
+      "name": "Run build locally",
+      "keys": ["local"]
+    },
+    {
+      "name": "Clear cache before the build",
+      "keys": ["clearCache"]
+    }
+  ],
   "properties": {
     "platform": {
       "enum": ["ios", "android", "all"],
@@ -25,15 +43,20 @@
       "examples": ["production", "development", "preview"],
       "x-priority": "important"
     },
-    "nonInteractive": {
+    "interactive": {
       "type": "boolean",
-      "description": "Run command in non-interactive mode",
-      "default": false
+      "description": "Run command in interactive mode",
+      "default": true
     },
     "local": {
       "type": "boolean",
       "description": "Run build locally [experimental]",
       "default": false
+    },
+    "output": {
+      "type": "string",
+      "description": "Output path for local build",
+      "examples": ["../../dist/MyApp.tar.gz", "../../dist"]
     },
     "wait": {
       "type": "boolean",

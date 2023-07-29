@@ -1,5 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import { ProjectGraphDependency, ProjectGraphNode } from '@nrwl/devkit';
+import { ProjectGraphDependency, ProjectGraphProjectNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { getEnvironmentConfig } from './hooks/use-environment-config';
 import { To, useParams, useSearchParams } from 'react-router-dom';
 
@@ -23,7 +25,11 @@ export const useRouteConstructor = (): ((
       return {
         ...to,
         pathname,
-        search: retainSearchParams ? searchParams.toString() : '',
+        search: to.search
+          ? to.search.toString()
+          : retainSearchParams
+          ? searchParams.toString()
+          : '',
       };
     } else if (typeof to === 'string') {
       if (environment === 'dev') {
@@ -83,17 +89,20 @@ export function hasPath(
   return false;
 }
 
-export function getProjectsByType(type: string, projects: ProjectGraphNode[]) {
+export function getProjectsByType(
+  type: string,
+  projects: ProjectGraphProjectNode[]
+): ProjectGraphProjectNode[] {
   return projects
     .filter((project) => project.type === type)
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export function groupProjectsByDirectory(
-  projects: ProjectGraphNode[],
+  projects: ProjectGraphProjectNode[],
   workspaceLayout: { appsDir: string; libsDir: string }
-): Record<string, ProjectGraphNode[]> {
-  let groups: Record<string, ProjectGraphNode[]> = {};
+): Record<string, ProjectGraphProjectNode[]> {
+  let groups: Record<string, ProjectGraphProjectNode[]> = {};
 
   projects.forEach((project) => {
     const workspaceRoot =
@@ -114,4 +123,16 @@ export function groupProjectsByDirectory(
   });
 
   return groups;
+}
+
+export function createTaskName(
+  project: string,
+  target: string,
+  configuration?: string
+) {
+  if (configuration) {
+    return `${project}:${target}:${configuration}`;
+  } else {
+    return `${project}:${target}`;
+  }
 }

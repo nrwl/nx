@@ -9,10 +9,10 @@ import {
   Tree,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { extname } from 'path';
 import { JestExecutorOptions } from '../../executors/jest/schema';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
 
 const allowedExt = ['.ts', '.js'];
 

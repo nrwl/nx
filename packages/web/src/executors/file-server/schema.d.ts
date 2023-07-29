@@ -13,4 +13,8 @@ export interface Schema {
   watch?: boolean;
   spa: boolean;
   staticFilePath?: string;
+  cors?: boolean;
+  gzip?: boolean;
+  brotli?: boolean;
+  cacheSeconds?: number;
 }

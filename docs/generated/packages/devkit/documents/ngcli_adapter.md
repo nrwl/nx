@@ -2,7 +2,7 @@
 
 ## Table of contents
 
-### Ng CLI Adapter Classes
+### Classes
 
 - [NxScopedHost](../../devkit/documents/ngcli_adapter#nxscopedhost)
 
@@ -12,7 +12,7 @@
 - [overrideCollectionResolutionForTesting](../../devkit/documents/ngcli_adapter#overridecollectionresolutionfortesting)
 - [wrapAngularDevkitSchematic](../../devkit/documents/ngcli_adapter#wrapangulardevkitschematic)
 
-## Ng CLI Adapter Classes
+## Classes
 
 ### NxScopedHost
 
@@ -68,12 +68,12 @@ Example:
 
 ```typescript
 overrideCollectionResolutionForTesting({
-  '@nrwl/workspace': path.join(
+  '@nx/workspace': path.join(
     __dirname,
     '../../../../workspace/generators.json'
   ),
-  '@nrwl/angular': path.join(__dirname, '../../../../angular/generators.json'),
-  '@nrwl/linter': path.join(__dirname, '../../../../linter/generators.json'),
+  '@nx/angular': path.join(__dirname, '../../../../angular/generators.json'),
+  '@nx/linter': path.join(__dirname, '../../../../linter/generators.json'),
 });
 ```
 
@@ -91,7 +91,7 @@ overrideCollectionResolutionForTesting({
 
 ### wrapAngularDevkitSchematic
 
-▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/documents/index#tree), `generatorOptions`: { [k: string]: `any`; }) => `Promise`<`any`\>
+▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: [`Tree`](../../devkit/documents/nx_devkit#tree), `generatorOptions`: { `[k: string]`: `any`; }) => `Promise`<`any`\>
 
 #### Parameters
 
@@ -108,10 +108,10 @@ overrideCollectionResolutionForTesting({
 
 ##### Parameters
 
-| Name               | Type                                        |
-| :----------------- | :------------------------------------------ |
-| `host`             | [`Tree`](../../devkit/documents/index#tree) |
-| `generatorOptions` | `Object`                                    |
+| Name               | Type                                            |
+| :----------------- | :---------------------------------------------- |
+| `host`             | [`Tree`](../../devkit/documents/nx_devkit#tree) |
+| `generatorOptions` | `Object`                                        |
 
 ##### Returns
 

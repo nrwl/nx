@@ -1,4 +1,4 @@
-import { removeDependenciesFromPackageJson, Tree } from '@nrwl/devkit';
+import { removeDependenciesFromPackageJson, Tree } from '@nx/devkit';
 
 export async function removeReactReduxTypesFromPackageJson(host: Tree) {
   return removeDependenciesFromPackageJson(

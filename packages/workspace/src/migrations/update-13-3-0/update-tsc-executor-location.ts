@@ -6,7 +6,7 @@ import {
   installPackagesTask,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 
 export async function updateTscExecutorLocation(

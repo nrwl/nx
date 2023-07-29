@@ -2,7 +2,8 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { resolve } from 'path';
 
 /**
- * This function add addtional rules to expo's webpack config to make expo web working
+ * @deprecated TODO(v17) use bundler: 'metro' instead, will be removed in 16.0.0
+ * This function add additional rules to expo's webpack config to make expo web working
  */
 export async function withNxWebpack(config) {
   // add additional rule to load files under libs
@@ -12,11 +13,11 @@ export async function withNxWebpack(config) {
       test: /\.(mjs|[jt]sx?)$/,
       exclude: /node_modules/,
       use: {
-        loader: require.resolve('@nrwl/webpack/src/utils/web-babel-loader.js'),
+        loader: require.resolve('@nx/webpack/src/utils/web-babel-loader.js'),
         options: {
           presets: [
             [
-              '@nrwl/react/babel',
+              '@nx/react/babel',
               {
                 runtime: 'automatic',
               },
@@ -25,6 +26,13 @@ export async function withNxWebpack(config) {
         },
       },
     });
+  }
+
+  if (!config.resolve) {
+    config.resolve = {};
+  }
+  if (!config.resolve.plugins) {
+    config.resolve.plugins = [];
   }
 
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];

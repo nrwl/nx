@@ -9,7 +9,7 @@
     "directory": "packages/nx"
   },
   "scripts": {
-    "postinstall": "node ./bin/compute-project-graph"
+    "postinstall": "node ./bin/post-install"
   },
   "keywords": [
     "Monorepo",
@@ -34,7 +34,7 @@
   "dependencies": {
     "@parcel/watcher": "2.0.4",
     "@yarnpkg/lockfile": "^1.1.0",
-    "@yarnpkg/parsers": "^3.0.0-rc.18",
+    "@yarnpkg/parsers": "3.0.0-rc.46",
     "@zkochan/js-yaml": "0.0.6",
     "axios": "^1.0.0",
     "chalk": "^4.1.0",
@@ -55,7 +55,7 @@
     "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
-    "semver": "7.3.4",
+    "semver": "7.5.3",
     "string-width": "^4.2.3",
     "strong-log-transformer": "^2.1.0",
     "tar-stream": "~2.2.0",
@@ -64,7 +64,8 @@
     "tslib": "^2.3.0",
     "v8-compile-cache": "2.3.0",
     "yargs": "^17.6.2",
-    "yargs-parser": "21.1.1"
+    "yargs-parser": "21.1.1",
+    "node-machine-id": "1.1.12"
   },
   "peerDependencies": {
     "@swc-node/register": "^1.4.2",
@@ -78,34 +79,73 @@
       "optional": true
     }
   },
+  "optionalDependencies": {
+    "@nx/nx-darwin-x64": "*",
+    "@nx/nx-darwin-arm64": "*",
+    "@nx/nx-linux-x64-gnu": "*",
+    "@nx/nx-linux-x64-musl": "*",
+    "@nx/nx-win32-x64-msvc": "*",
+    "@nx/nx-linux-arm64-gnu": "*",
+    "@nx/nx-linux-arm64-musl": "*",
+    "@nx/nx-linux-arm-gnueabihf": "*",
+    "@nx/nx-win32-arm64-msvc": "*",
+    "@nx/nx-freebsd-x64": "*"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json",
     "packageGroup": [
-      "@nrwl/angular",
-      "@nrwl/cli",
-      "@nrwl/cypress",
-      "@nrwl/detox",
-      "@nrwl/devkit",
-      "@nrwl/esbuild",
-      "@nrwl/eslint-plugin-nx",
-      "@nrwl/expo",
-      "@nrwl/express",
-      "@nrwl/jest",
+      "@nx/js",
       "@nrwl/js",
+      "@nx/jest",
+      "@nrwl/jest",
+      "@nx/linter",
       "@nrwl/linter",
+      "@nx/workspace",
+      "@nrwl/workspace",
+      "@nx/angular",
+      "@nrwl/angular",
+      "@nx/cypress",
+      "@nrwl/cypress",
+      "@nx/detox",
+      "@nrwl/detox",
+      "@nx/devkit",
+      "@nrwl/devkit",
+      "@nx/esbuild",
+      "@nrwl/esbuild",
+      "@nx/eslint-plugin",
+      "@nrwl/eslint-plugin-nx",
+      "@nx/expo",
+      "@nrwl/expo",
+      "@nx/express",
+      "@nrwl/express",
+      "@nx/nest",
       "@nrwl/nest",
+      "@nx/next",
       "@nrwl/next",
+      "@nx/node",
       "@nrwl/node",
+      "@nx/playwright",
+      "@nx/plugin",
       "@nrwl/nx-plugin",
+      "@nx/react",
       "@nrwl/react",
+      "@nx/react-native",
       "@nrwl/react-native",
+      "@nx/rollup",
       "@nrwl/rollup",
+      "@nx/storybook",
       "@nrwl/storybook",
       "@nrwl/tao",
+      "@nx/vite",
       "@nrwl/vite",
+      "@nx/web",
       "@nrwl/web",
+      "@nx/webpack",
       "@nrwl/webpack",
-      "@nrwl/workspace",
+      {
+        "package": "nx-cloud",
+        "version": "latest"
+      },
       {
         "package": "@nrwl/nx-cloud",
         "version": "latest"
@@ -116,5 +156,22 @@
   "builders": "./executors.json",
   "publishConfig": {
     "access": "public"
+  },
+  "napi": {
+    "name": "nx",
+    "package": {
+      "name": "@nx/nx"
+    },
+    "triples": {
+      "additional": [
+        "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl",
+        "aarch64-pc-windows-msvc",
+        "armv7-unknown-linux-gnueabihf",
+        "x86_64-unknown-linux-musl",
+        "x86_64-unknown-freebsd"
+      ]
+    }
   }
 }

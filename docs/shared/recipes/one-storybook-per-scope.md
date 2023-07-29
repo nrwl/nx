@@ -3,7 +3,7 @@
 This guide extends the
 [Using Storybook in a Nx workspace - Best practices](/packages/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one Storybook per scope (eg. theme, app, framework) for your workspace.
 
-Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/more-concepts/library-types) documentation page, and also in the [Code Organization and Naming Conventions](/more-concepts/monorepo-nx-enterprise#code-organization-&-naming-conventions) documentation section.
+Sometimes, you have multiple apps and libraries, and each of these is associated with a specific scope. You can read more about grouping libraries and scoping them in the [Library Types](/concepts/more-concepts/library-types) documentation page, and also in the [Code Organization and Naming Conventions](/concepts/more-concepts/monorepo-nx-enterprise#code-organization-&-naming-conventions) documentation section.
 
 In this case, you can have one Storybook instance per scope. If you follow the folder organization convention described above, it is easy to configure Storybook to import all the stories under a specific folder, for example, which are associated with a specific app or scope.
 
@@ -15,7 +15,6 @@ Say, for example, that you have a client app, an admin app, and a number of UI l
 
 ```text
 happynrwl/
-├── .storybook/
 ├── apps/
 │   ├── client/
 │   ├── client-e2e/
@@ -88,9 +87,9 @@ Let's assume in this case that all our libraries are using Angular.
 Let's generate three Angular libraries, one for each scope, and let's call them `storybook-host-client`, `storybook-host-admin`, and `storybook-host-shared`. We can do this by running the following commands:
 
 ```shell
-nx g @nrwl/angular:lib storybook-host-client
-nx g @nrwl/angular:lib storybook-host-admin
-nx g @nrwl/angular:lib storybook-host-shared
+nx g @nx/angular:lib storybook-host-client
+nx g @nx/angular:lib storybook-host-admin
+nx g @nx/angular:lib storybook-host-shared
 ```
 
 ### Generate the Storybook configuration for the libraries
@@ -98,9 +97,9 @@ nx g @nrwl/angular:lib storybook-host-shared
 Now, we need to generate Storybook configuration for all these new libraries. We don't want to generate `stories` or a new Cypress project for these libraries, so we can run the following commands:
 
 ```shell
-nx g @nrwl/storybook:configuration storybook-host-client --uiFramework=@storybook/angular
-nx g @nrwl/storybook:configuration storybook-host-admin --uiFramework=@storybook/angular
-nx g @nrwl/storybook:configuration storybook-host-shared --uiFramework=@storybook/angular
+nx g @nx/storybook:configuration storybook-host-client --uiFramework=@storybook/angular
+nx g @nx/storybook:configuration storybook-host-admin --uiFramework=@storybook/angular
+nx g @nx/storybook:configuration storybook-host-shared --uiFramework=@storybook/angular
 ```
 
 ### Import the stories
@@ -112,12 +111,10 @@ Thanks to our folder structure, we can easily configure Storybook to import all 
 For example, `libs/storybook-host-admin/.storybook/main.js`:
 
 ```javascript {% fileName="libs/storybook-host-admin/.storybook/main.js" %}
-const rootMain = require('../../../.storybook/main');
 module.exports = {
-  ...rootMain,
-  core: { ...rootMain.core, builder: 'webpack5' },
+  core: { builder: 'webpack5' },
   stories: ['../../admin/ui/**/src/lib/**/*.stories.ts'],
-  addons: [...rootMain.addons],
+  addons: ['@storybook/addon-essentials'],
 };
 ```
 

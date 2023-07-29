@@ -1,15 +1,15 @@
 /**
  * These minimal smoke tests are here to ensure that we do not break assumptions on the lerna side
- * when making updates to nx or @nrwl/devkit.
+ * when making updates to nx or @nx/devkit.
  */
 
 import {
-  cleanupLernaWorkspace,
+  cleanupProject,
   newLernaWorkspace,
   runLernaCLI,
   tmpProjPath,
   updateJson,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -32,13 +32,15 @@ expect.addSnapshotSerializer({
 
 describe('Lerna Smoke Tests', () => {
   beforeAll(() => newLernaWorkspace());
-  afterAll(() => cleanupLernaWorkspace());
+  afterAll(() => cleanupProject({ skipReset: true }));
 
   // `lerna repair` builds on top of `nx repair` and runs all of its generators
   describe('lerna repair', () => {
     // If this snapshot fails it means that nx repair generators are making assumptions which don't hold true for lerna workspaces
     it('should complete successfully on a new lerna workspace', async () => {
-      expect(runLernaCLI(`repair`)).toMatchInlineSnapshot(`
+      let result = runLernaCLI(`repair`);
+      result = result.replace(/.*\/node_modules\/.*\n/, ''); // yarn adds "$ /node_modules/.bin/lerna repair" to the output
+      expect(result).toMatchInlineSnapshot(`
 
         >  Lerna   No changes were necessary. This workspace is up to date!
 
@@ -59,11 +61,15 @@ describe('Lerna Smoke Tests', () => {
         },
       }));
 
-      expect(runLernaCLI(`run print-name`)).toMatchInlineSnapshot(`
+      let result = runLernaCLI(`run print-name`);
+      result = result
+        .replace(/.*\/node_modules\/.*\n/, '') // yarn adds "$ /node_modules/.bin/lerna run print-name" to the output
+        .replace(/.*package-1@0.*\n/, '') // yarn output doesn't contain "> package-1@0.0.0 print-name"
+        .replace('$ echo test-package-1', '> echo test-package-1');
+      expect(result).toMatchInlineSnapshot(`
 
         > package-1:print-name
 
-        > package-1@0.0.0 print-name
         > echo test-package-1
         test-package-1
 

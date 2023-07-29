@@ -28,8 +28,13 @@
       },
       "skipPackageJson": {
         "type": "boolean",
-        "description": "Do not add dependencies to `package.json`.",
-        "default": false
+        "default": false,
+        "description": "Do not add dependencies to `package.json`."
+      },
+      "js": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use JavaScript instead of TypeScript"
       }
     },
     "required": [],

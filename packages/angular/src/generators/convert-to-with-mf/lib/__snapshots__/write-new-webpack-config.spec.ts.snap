@@ -1,8 +1,8 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`writeNewWebpackConfig should convert config that is both remote and host correctly 1`] = `
-Array [
-  "const { withModuleFederation } = require('@nrwl/angular/module-federation');
+[
+  "const { withModuleFederation } = require('@nx/angular/module-federation');
   const config = require('./module-federation.config');
   module.exports = withModuleFederation(config);",
   "
@@ -17,8 +17,8 @@ Array [
 `;
 
 exports[`writeNewWebpackConfig should convert config that is neither remote and host correctly 1`] = `
-Array [
-  "const { withModuleFederation } = require('@nrwl/angular/module-federation');
+[
+  "const { withModuleFederation } = require('@nx/angular/module-federation');
   const config = require('./module-federation.config');
   module.exports = withModuleFederation(config);",
   "
@@ -29,8 +29,8 @@ Array [
 `;
 
 exports[`writeNewWebpackConfig should convert host config correctly 1`] = `
-Array [
-  "const { withModuleFederation } = require('@nrwl/angular/module-federation');
+[
+  "const { withModuleFederation } = require('@nx/angular/module-federation');
   const config = require('./module-federation.config');
   module.exports = withModuleFederation(config);",
   "
@@ -42,8 +42,8 @@ Array [
 `;
 
 exports[`writeNewWebpackConfig should convert remote config correctly 1`] = `
-Array [
-  "const { withModuleFederation } = require('@nrwl/angular/module-federation');
+[
+  "const { withModuleFederation } = require('@nx/angular/module-federation');
   const config = require('./module-federation.config');
   module.exports = withModuleFederation(config);",
   "

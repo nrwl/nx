@@ -1,9 +1,17 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, readProjectConfiguration } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
 import type { Schema } from '../schema';
-import { tsquery } from '@phenomnomnominal/tsquery';
 
 export function updateAppModule(tree: Tree, schema: Schema) {
+  const angularMajorVersion = getInstalledAngularMajorVersion(tree);
+  if (angularMajorVersion >= 16) {
+    return;
+  }
+
+  ensureTypescript();
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   // read the content of app module
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const pathToAppModule = joinPathFragments(

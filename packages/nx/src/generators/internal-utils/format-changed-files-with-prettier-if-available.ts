@@ -21,28 +21,28 @@ export async function formatChangedFilesWithPrettierIfAvailable(
   );
   await Promise.all(
     Array.from(files).map(async (file) => {
-      const systemPath = path.join(tree.root, file.path);
-      let options: any = {
-        filepath: systemPath,
-      };
-
-      const resolvedOptions = await prettier.resolveConfig(systemPath, {
-        editorconfig: true,
-      });
-      if (!resolvedOptions) {
-        return;
-      }
-      options = {
-        ...options,
-        ...resolvedOptions,
-      };
-
-      const support = await prettier.getFileInfo(systemPath, options);
-      if (support.ignored || !support.inferredParser) {
-        return;
-      }
-
       try {
+        const systemPath = path.join(tree.root, file.path);
+        let options: any = {
+          filepath: systemPath,
+        };
+
+        const resolvedOptions = await prettier.resolveConfig(systemPath, {
+          editorconfig: true,
+        });
+        if (!resolvedOptions) {
+          return;
+        }
+        options = {
+          ...options,
+          ...resolvedOptions,
+        };
+
+        const support = await prettier.getFileInfo(systemPath, options);
+        if (support.ignored || !support.inferredParser) {
+          return;
+        }
+
         tree.write(
           file.path,
           prettier.format(file.content.toString('utf-8'), options)

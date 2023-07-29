@@ -6,6 +6,8 @@ import {
 } from '../config/workspace-json-project-json';
 import { output } from './output';
 
+const LIST_CHOICE_DISPLAY_LIMIT = 10;
+
 type PropertyDescription = {
   type?: string | string[];
   required?: string[];
@@ -20,6 +22,7 @@ type PropertyDescription = {
   description?: string;
   format?: string;
   visible?: boolean;
+  hidden?: boolean;
   default?:
     | string
     | number
@@ -32,11 +35,13 @@ type PropertyDescription = {
     | { $source: 'projectName' }
     | { $source: 'unparsed' };
   additionalProperties?: boolean;
+  const?: any;
   'x-prompt'?:
     | string
     | { message: string; type: string; items?: any[]; multiselect?: boolean };
   'x-deprecated'?: boolean | string;
   'x-dropdown'?: 'projects';
+  'x-priority'?: 'important' | 'internal';
 
   // Numbers Only
   multipleOf?: number;
@@ -79,7 +84,7 @@ export async function handleErrors(isVerbose: boolean, fn: Function) {
   try {
     return await fn();
   } catch (err) {
-    err ??= new Error('Unknown error caught');
+    err ||= new Error('Unknown error caught');
     if (err.constructor.name === 'UnsuccessfulWorkflowExecution') {
       logger.error('The generator workflow failed. See above.');
     } else {
@@ -232,7 +237,7 @@ export function validateObject(
         errors.push(e);
       }
     }
-    if (errors.length > 0) {
+    if (errors.length === schema.anyOf.length) {
       throw new Error(
         `Options did not match schema. Please fix any of the following errors:\n${errors
           .map((e) => ' - ' + e.message)
@@ -337,7 +342,7 @@ function validateProperty(
 
   if (schema.allOf) {
     if (!Array.isArray(schema.allOf))
-      throw new Error(`Invalid schema file. anyOf must be an array.`);
+      throw new Error(`Invalid schema file. allOf must be an array.`);
 
     if (
       !schema.allOf.every((r) => {
@@ -357,6 +362,12 @@ function validateProperty(
 
   const isPrimitive = typeof value !== 'object';
   if (isPrimitive) {
+    if (schema.const !== undefined && value !== schema.const) {
+      throw new SchemaError(
+        `Property '${propName}' does not match the schema. '${value}' should be '${schema.const}'.`
+      );
+    }
+
     if (Array.isArray(schema.type)) {
       const passes = schema.type.some((t) => {
         try {
@@ -746,13 +757,14 @@ function getGeneratorDefaults(
   return defaults;
 }
 
-interface Prompt {
+type Prompt = ConstructorParameters<typeof import('enquirer').Prompt>[0] & {
   name: string;
   type: 'input' | 'autocomplete' | 'multiselect' | 'confirm' | 'numeral';
   message: string;
   initial?: any;
+  limit?: number;
   choices?: (string | { name: string; message: string })[];
-}
+};
 
 export function getPromptsForSchema(
   opts: Options,
@@ -780,10 +792,19 @@ export function getPromptsForSchema(
       }
 
       question.message = v['x-prompt'].message;
+      question.validate = (s) => {
+        try {
+          validateProperty(k, s, v, schema.definitions || {});
+          return true;
+        } catch (e) {
+          return e.message;
+        }
+      };
 
       if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
         question.type = 'autocomplete';
         question.choices = [...v.enum];
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
       } else if (
         v.type === 'string' &&
         (v.$default?.$source === 'projectName' ||
@@ -794,17 +815,15 @@ export function getPromptsForSchema(
       ) {
         question.type = 'autocomplete';
         question.choices = Object.keys(projectsConfigurations.projects);
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
       } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
-        question.message = v['x-prompt'].message;
         question.type = 'numeral';
       } else if (
         v['x-prompt'].type == 'confirmation' ||
         v['x-prompt'].type == 'confirm'
       ) {
-        question.message = v['x-prompt'].message;
         question.type = 'confirm';
       } else if (v['x-prompt'].items) {
-        question.message = v['x-prompt'].message;
         question.type =
           v['x-prompt'].multiselect || v.type === 'array'
             ? 'multiselect'
@@ -821,9 +840,11 @@ export function getPromptsForSchema(
               };
             }
           });
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
+      } else if (v.type === 'boolean') {
+        question.type = 'confirm';
       } else {
-        question.message = v['x-prompt'].message;
-        question.type = v.type === 'boolean' ? 'confirm' : 'input';
+        question.type = 'input';
       }
       prompts.push(question);
     }

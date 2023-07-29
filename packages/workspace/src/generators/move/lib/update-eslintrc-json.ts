@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import { NormalizedSchema } from '../schema';
 
@@ -64,14 +64,20 @@ export function updateEslintrcJson(
       );
     }
 
-    eslintRcJson.overrides?.forEach((o) => {
-      if (o.parserOptions?.project) {
-        o.parserOptions.project = o.parserOptions.project.map((p) =>
-          p.replace(project.root, schema.relativeToRootDestination)
-        );
+    eslintRcJson.overrides?.forEach(
+      (o: { parserOptions?: { project?: string | string[] } }) => {
+        if (o.parserOptions?.project) {
+          o.parserOptions.project = Array.isArray(o.parserOptions.project)
+            ? o.parserOptions.project.map((p) =>
+                p.replace(project.root, schema.relativeToRootDestination)
+              )
+            : o.parserOptions.project.replace(
+                project.root,
+                schema.relativeToRootDestination
+              );
+        }
       }
-    });
-
+    );
     return eslintRcJson;
   });
 }

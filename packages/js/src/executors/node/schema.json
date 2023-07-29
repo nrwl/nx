@@ -27,12 +27,14 @@
     "host": {
       "type": "string",
       "default": "localhost",
-      "description": "The host to inspect the process on."
+      "description": "The host to inspect the process on.",
+      "x-priority": "important"
     },
     "port": {
       "type": "number",
       "default": 9229,
-      "description": "The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes."
+      "description": "The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes.",
+      "x-priority": "important"
     },
     "inspect": {
       "oneOf": [
@@ -45,7 +47,8 @@
         }
       ],
       "description": "Ensures the app is starting with debugging.",
-      "default": "inspect"
+      "default": "inspect",
+      "x-priority": "important"
     },
     "runtimeArgs": {
       "type": "array",
@@ -53,7 +56,8 @@
       "default": [],
       "items": {
         "type": "string"
-      }
+      },
+      "x-priority": "important"
     },
     "args": {
       "type": "array",
@@ -61,14 +65,28 @@
       "default": [],
       "items": {
         "type": "string"
-      }
+      },
+      "x-priority": "important"
     },
     "watch": {
       "type": "boolean",
       "description": "Enable re-building when files change.",
-      "default": true
+      "default": true,
+      "x-priority": "important"
+    },
+    "debounce": {
+      "type": "number",
+      "description": "Delay in milliseconds to wait before restarting. Useful to batch multiple file changes events together. Set to zero (0) to disable.",
+      "default": 500,
+      "x-priority": "important"
+    },
+    "runBuildTargetDependencies": {
+      "type": "boolean",
+      "description": "Whether to run dependencies before running the build. Set this to true if the project does not build libraries from source (e.g. 'buildLibsFromSource: false').",
+      "default": false
     }
   },
   "additionalProperties": false,
-  "required": ["buildTarget"]
+  "required": ["buildTarget"],
+  "examplesFile": "../../../docs/node-examples.md"
 }

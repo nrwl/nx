@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
+  ensurePackage,
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
@@ -13,36 +14,38 @@ import {
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
+  runTasksInSerial,
   TargetConfiguration,
   toJS,
   Tree,
   updateJson,
   updateProjectConfiguration,
   updateTsConfigsToJs,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/linter';
+import { configurationGenerator } from '@nx/jest';
 
+import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nx/js';
 import { join } from 'path';
 
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { jestProjectGenerator } from '@nrwl/jest';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-
-import { Schema } from './schema';
 import { initGenerator } from '../init/init';
-import { getRelativePathToRootTsConfig } from '@nrwl/workspace/src/utilities/typescript';
 import {
-  esbuildVersion,
   expressTypingsVersion,
   expressVersion,
+  fastifyAutoloadVersion,
+  fastifyPluginVersion,
+  fastifySensibleVersion,
   fastifyVersion,
   koaTypingsVersion,
   koaVersion,
   nxVersion,
 } from '../../utils/versions';
-
-import * as shared from '@nrwl/workspace/src/utils/create-ts-config';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
+
+import { Schema } from './schema';
+import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+import { esbuildVersion } from '@nx/js/src/utils/versions';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -54,8 +57,9 @@ function getWebpackBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: `@nrwl/webpack:webpack`,
+    executor: `@nx/webpack:webpack`,
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
       target: 'node',
       compiler: 'tsc',
@@ -76,10 +80,9 @@ function getWebpackBuildConfig(
       ),
     },
     configurations: {
+      development: {},
       production: {
-        optimization: true,
-        extractLicenses: true,
-        inspect: false,
+        ...(options.docker && { generateLockfile: true }),
       },
     },
   };
@@ -90,25 +93,40 @@ function getEsBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: '@nrwl/esbuild:esbuild',
+    executor: '@nx/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
+      platform: 'node',
       outputPath: joinPathFragments(
         'dist',
         options.rootProject ? options.name : options.appProjectRoot
       ),
+      // Use CJS for Node apps for widest compatibility.
       format: ['cjs'],
+      bundle: false,
       main: joinPathFragments(
         project.sourceRoot,
         'main' + (options.js ? '.js' : '.ts')
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
-      esbuildOptions: { sourcemap: true },
+      generatePackageJson: true,
+      esbuildOptions: {
+        sourcemap: true,
+        // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
+        outExtension: { '.js': '.js' },
+      },
     },
     configurations: {
+      development: {},
       production: {
-        esbuildOptions: { sourcemap: false },
+        ...(options.docker && { generateLockfile: true }),
+        esbuildOptions: {
+          sourcemap: false,
+          // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
+          outExtension: { '.js': '.js' },
+        },
       },
     },
   };
@@ -116,11 +134,15 @@ function getEsBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/js:node',
+    executor: '@nx/js:node',
+    defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.name}:build`,
     },
     configurations: {
+      development: {
+        buildTarget: `${options.name}:build:development`,
+      },
       production: {
         buildTarget: `${options.name}:build:production`,
       },
@@ -214,7 +236,7 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
         JSON.stringify(
           {
             '/api': {
-              target: 'http://localhost:3333',
+              target: `http://localhost:${options.port}`,
               secure: false,
             },
           },
@@ -229,7 +251,7 @@ function addProxy(tree: Tree, options: NormalizedSchema) {
       const proxyModified = {
         ...JSON.parse(proxyFileContent),
         [`/${options.name}-api`]: {
-          target: 'http://localhost:3333',
+          target: `http://localhost:${options.port}`,
           secure: false,
         },
       };
@@ -252,11 +274,16 @@ export async function addLintingToApplication(
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
     ],
     eslintFilePatterns: [
-      `${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
+      mapLintPattern(
+        options.appProjectRoot,
+        options.js ? 'js' : 'ts',
+        options.rootProject
+      ),
     ],
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
+    rootProject: options.rootProject,
   });
 
   return lintTask;
@@ -268,10 +295,10 @@ function addProjectDependencies(
 ): GeneratorCallback {
   const bundlers = {
     webpack: {
-      '@nrwl/webpack': nxVersion,
+      '@nx/webpack': nxVersion,
     },
     esbuild: {
-      '@nrwl/esbuild': nxVersion,
+      '@nx/esbuild': nxVersion,
       esbuild: esbuildVersion,
     },
   };
@@ -279,21 +306,33 @@ function addProjectDependencies(
   const frameworkDependencies = {
     express: {
       express: expressVersion,
-      '@types/express': expressTypingsVersion,
     },
     koa: {
       koa: koaVersion,
-      '@types/koa': koaTypingsVersion,
     },
     fastify: {
       fastify: fastifyVersion,
+      'fastify-plugin': fastifyPluginVersion,
+      '@fastify/autoload': fastifyAutoloadVersion,
+      '@fastify/sensible': fastifySensibleVersion,
     },
+  };
+  const frameworkDevDependencies = {
+    express: {
+      '@types/express': expressTypingsVersion,
+    },
+    koa: {
+      '@types/koa': koaTypingsVersion,
+    },
+    fastify: {},
   };
   return addDependenciesToPackageJson(
     tree,
-    {},
     {
       ...frameworkDependencies[options.framework],
+    },
+    {
+      ...frameworkDevDependencies[options.framework],
       ...bundlers[options.bundler],
     }
   );
@@ -304,7 +343,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
     if (options.rootProject) {
       return {
         compilerOptions: {
-          ...shared.tsConfigBaseOptions,
+          ...tsConfigBaseOptions,
           ...json.compilerOptions,
           esModuleInterop: true,
         },
@@ -328,8 +367,13 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   const options = normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [];
 
+  if (options.framework === 'nest') {
+    const { applicationGenerator } = ensurePackage('@nx/nest', nxVersion);
+    return await applicationGenerator(tree, { ...options, skipFormat: true });
+  }
+
   const initTask = await initGenerator(tree, {
-    ...options,
+    ...schema,
     skipFormat: true,
   });
   tasks.push(initTask);
@@ -341,26 +385,28 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   updateTsConfigOptions(tree, options);
 
-  if (options.linter !== Linter.None) {
-    const lintTask = await addLintingToApplication(tree, {
-      ...options,
-      skipFormat: true,
-    });
+  if (options.linter === Linter.EsLint) {
+    const lintTask = await addLintingToApplication(tree, options);
     tasks.push(lintTask);
   }
 
   if (options.unitTestRunner === 'jest') {
-    const jestTask = await jestProjectGenerator(tree, {
+    const jestTask = await configurationGenerator(tree, {
       ...options,
       project: options.name,
       setupFile: 'none',
       skipSerializers: true,
       supportTsx: options.js,
       testEnvironment: 'node',
-      compiler: 'tsc',
+      compiler: options.swcJest ? 'swc' : 'tsc',
       skipFormat: true,
     });
     tasks.push(jestTask);
+  } else {
+    // No need for default spec file if unit testing is not setup.
+    tree.delete(
+      joinPathFragments(options.appProjectRoot, 'src/app/app.spec.ts')
+    );
   }
 
   if (options.e2eTestRunner === 'jest') {
@@ -370,6 +416,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       name: options.rootProject ? 'e2e' : `${options.name}-e2e`,
       project: options.name,
       port: options.port,
+      isNest: options.isNest,
+      skipFormat: true,
     });
     tasks.push(e2eTask);
   }
@@ -386,6 +434,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     const dockerTask = await setupDockerGenerator(tree, {
       ...options,
       project: options.name,
+      skipFormat: true,
     });
 
     tasks.push(dockerTask);

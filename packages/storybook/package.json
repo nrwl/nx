@@ -1,5 +1,5 @@
 {
-  "name": "@nrwl/storybook",
+  "name": "@nx/storybook",
   "version": "0.0.1",
   "private": false,
   "description": "The Nx Plugin for Storybook contains executors and generators for allowing your workspace to use the powerful Storybook integration testing & documenting capabilities.",
@@ -15,7 +15,7 @@
     "Storybook",
     "Cypress"
   ],
-  "main": "./index.js",
+  "main": "./index",
   "typings": "./index.d.ts",
   "author": "Isaac Mann",
   "license": "MIT",
@@ -30,12 +30,15 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@nrwl/cypress": "file:../cypress",
-    "@nrwl/devkit": "file:../devkit",
-    "@nrwl/linter": "file:../linter",
-    "@nrwl/workspace": "file:../workspace",
     "dotenv": "~10.0.0",
-    "semver": "7.3.4"
+    "@phenomnomnominal/tsquery": "~5.0.1",
+    "semver": "7.5.3",
+    "tslib": "^2.3.0",
+    "@nx/cypress": "file:../cypress",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/workspace": "file:../workspace"
   },
   "publishConfig": {
     "access": "public"

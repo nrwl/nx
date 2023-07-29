@@ -1,26 +1,25 @@
-import { Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
-import { logger } from '@nrwl/devkit';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
+import { logger } from '@nx/devkit';
 
 import libraryGenerator from '../library/library';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import storybookConfigurationGenerator from './configuration';
 
+// nested code imports graph from the repo, which might have innacurate graph version
+jest.mock('nx/src/project-graph/project-graph', () => ({
+  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
+  createProjectGraphAsync: jest
+    .fn()
+    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
+}));
+
 describe('react-native:storybook-configuration', () => {
   let appTree;
 
   beforeEach(async () => {
-    // jest.spyOn(fileUtils, 'readPackageJson').mockReturnValue({
-    //   devDependencies: {
-    //     '@storybook/addon-essentials': '*',
-    //     '@storybook/react-native': '*',
-    //     '@storybook/addon-ondevice-actions': '*',
-    //     '@storybook/addon-ondevice-knobs': '*',
-    //   },
-    // });
-
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});
   });
@@ -41,7 +40,7 @@ describe('react-native:storybook-configuration', () => {
         appTree.exists('libs/test-ui-lib/.storybook/main.js')
       ).toBeTruthy();
       expect(
-        appTree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
+        appTree.exists('libs/test-ui-lib/tsconfig.storybook.json')
       ).toBeTruthy();
     });
 
@@ -75,7 +74,7 @@ describe('react-native:storybook-configuration', () => {
         appTree.exists('apps/test-ui-app/.storybook/main.js')
       ).toBeTruthy();
       expect(
-        appTree.exists('apps/test-ui-app/.storybook/tsconfig.json')
+        appTree.exists('apps/test-ui-app/tsconfig.storybook.json')
       ).toBeTruthy();
     });
 
@@ -87,7 +86,7 @@ describe('react-native:storybook-configuration', () => {
       });
 
       // Currently the auto-generate stories feature only picks up components under the 'lib' directory.
-      // In our 'createTestAppLib' function, we call @nrwl/react-native:component to generate a component
+      // In our 'createTestAppLib' function, we call @nx/react-native:component to generate a component
       // under the specified 'lib' directory
       expect(
         appTree.exists(

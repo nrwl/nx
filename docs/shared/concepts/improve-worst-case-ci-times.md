@@ -13,9 +13,9 @@ The CI setups we'll discuss are:
 Most organizations start their CI as a single job that is responsible for running any tasks that are required. The script for this CI setup using Nx would look something like this:
 
 ```yaml
-- nx affected --target=lint
-- nx affected --target=test
-- nx affected --target=build
+- nx affected -t lint
+- nx affected -t test
+- nx affected -t build
 ```
 
 This script will run all lint, test and build targets for projects that are affected by the current PR.
@@ -46,21 +46,21 @@ To improve the performance of the worst case CI time, you have to implement some
 
 ```yaml {% fileName="lint-agent.yml" %}
 # Run lint for all projects defined in PROJECTS
-- nx run-many --projects=$PROJECTS --target=lint
+- nx run-many --projects=$PROJECTS -t lint
 ```
 
 ```yaml {% fileName="test-agent.yml" %}
 # Run test for all projects defined in PROJECTS
-- nx run-many --projects=$PROJECTS --target=test
+- nx run-many --projects=$PROJECTS -t test
 ```
 
 ```yaml {% fileName="build-agent.yml" %}
 # Run build for all projects defined in PROJECTS
-- nx run-many --projects=$PROJECTS --target=build
+- nx run-many --projects=$PROJECTS -t build
 ```
 
 Here's a visualization of how this approach works:
-![CI using binning](../images/dte/binning.svg)
+![CI using binning](/shared/images/dte/binning.svg)
 
 ### 🎉 Pro: Faster
 
@@ -90,7 +90,7 @@ The setup looks like this:
 # Coordinate the agents to run the tasks
 - npx nx-cloud start-ci-run
 # Run any commands you want here
-- nx affected --target=lint & nx affected --target=test & nx affected --target=build
+- nx affected -t lint test build
 # Stop any run away agents
 - npx nx-cloud stop-all-agents
 ```
@@ -101,7 +101,7 @@ The setup looks like this:
 ```
 
 The visualization for distributed task execution looks like this:
-![CI using DTE](../images/dte/3agents.svg)
+![CI using DTE](/shared/images/dte/3agents.svg)
 
 ### 🎉 Pro: Fastest
 

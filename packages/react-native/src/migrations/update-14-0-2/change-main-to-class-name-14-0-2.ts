@@ -5,7 +5,7 @@ import {
   names,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 
 /**

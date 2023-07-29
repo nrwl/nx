@@ -79,8 +79,8 @@ We can now restrict projects within the same group to depend on each other based
 {
   // ... more ESLint config here
 
-  // nx-enforce-module-boundaries should already exist at the top-level of your config
-  "nx-enforce-module-boundaries": [
+  // @nx/enforce-module-boundaries should already exist at the top-level of your config
+  "@nx/enforce-module-boundaries": [
     "error",
     {
       "allow": [],
@@ -132,8 +132,8 @@ Matching just a single source tag is sometimes not enough for solving complex re
 {
   // ... more ESLint config here
 
-  // nx-enforce-module-boundaries should already exist at the top-level of your config
-  "nx-enforce-module-boundaries": [
+  // @nx/enforce-module-boundaries should already exist at the top-level of your config
+  "@nx/enforce-module-boundaries": [
     "error",
     {
       "allow": [],

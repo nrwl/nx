@@ -2,7 +2,10 @@ const fs = require('fs');
 
 const p = process.argv[2];
 
-let r = fs.readFileSync(`packages/${p}/README.md`).toString();
+const sourceReadmePath = !p.endsWith('-legacy')
+  ? `packages/${p}/README.md`
+  : `packages-legacy/${p.replace('-legacy', '')}/README.md`;
+let r = fs.readFileSync(sourceReadmePath).toString();
 r = r.replace(
   `{{links}}`,
   fs.readFileSync('scripts/readme-fragments/links.md')

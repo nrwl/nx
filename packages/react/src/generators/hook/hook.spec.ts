@@ -1,6 +1,6 @@
 import { createApp, createLib } from '../../utils/testing-generators';
-import { logger, readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { logger, readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { hookGenerator } from './hook';
 
 describe('hook', () => {

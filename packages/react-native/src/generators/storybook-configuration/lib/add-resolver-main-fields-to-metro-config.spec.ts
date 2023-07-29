@@ -1,5 +1,5 @@
-import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { formatFile } from '../../../utils/format-file';
 
@@ -21,7 +21,7 @@ describe('addResolverMainFieldsToMetroConfig', () => {
     tree.write(
       'apps/products/metro.config.js',
       formatFile`
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 
@@ -58,7 +58,7 @@ module.exports = (async () => {
       formatFile`${tree.read('apps/products/metro.config.js', 'utf-8')}`
     ).toEqual(
       formatFile`
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 
@@ -93,7 +93,7 @@ module.exports = (async () => {
     tree.write(
       'apps/products/metro.config.js',
       `
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {
@@ -128,7 +128,7 @@ module.exports = (async () => {
 
     expect(tree.read('apps/products/metro.config.js', 'utf-8')).toEqual(
       `
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {

@@ -1,10 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
 import {
   updateProjectConfiguration,
   readProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function removeScaffoldedE2e(
   host: Tree,

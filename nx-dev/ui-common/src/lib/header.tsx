@@ -1,7 +1,7 @@
 import { Popover, Transition } from '@headlessui/react';
 import { Bars4Icon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
-import { ThemeSwitcher } from '@nrwl/nx-dev/ui-theme';
+import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -38,9 +38,9 @@ export function Header(): JSX.Element {
       href: '/recipes',
     },
     {
-      name: 'VSCode integration',
+      name: 'Nx Console',
       description:
-        'The official native VSCode extension bringing Nx to your editor.',
+        'The official VSCode & JetBrains plugin bringing Nx to your editor.',
       href: '/core-features/integrate-with-editors#vscode',
     },
     {
@@ -65,12 +65,12 @@ export function Header(): JSX.Element {
     {
       name: 'Community',
       description: "Check how to reach out and be part of Nx' community.",
-      href: '/getting-started/intro',
+      href: '/community',
     },
     {
-      name: 'Plugins registry',
+      name: 'Extending Nx',
       description: 'Add capabilities to your workspace with plugins.',
-      href: '/community#plugin-directory',
+      href: '/extending-nx/intro/getting-started',
     },
     {
       name: 'Nx Conf',
@@ -186,7 +186,7 @@ export function Header(): JSX.Element {
               Community
             </Link>
             <Link
-              href="/community#plugin-directory"
+              href="/extending-nx/registry"
               title="Check Nx available plugins"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >

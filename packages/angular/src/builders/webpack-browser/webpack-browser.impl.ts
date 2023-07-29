@@ -1,35 +1,71 @@
-import { joinPathFragments } from '@nrwl/devkit';
+import {
+  joinPathFragments,
+  ProjectGraph,
+  readCachedProjectGraph,
+} from '@nx/devkit';
+import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { existsSync } from 'fs';
+import { readNxJson } from 'nx/src/config/configuration';
+import { isNpmProject } from 'nx/src/project-graph/operators';
+import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { from, Observable } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
-import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { switchMap } from 'rxjs/operators';
+import type { BrowserBuilderSchema } from './schema';
+import { validateOptions } from './validate-options';
 
-export type BrowserBuilderSchema =
-  import('@angular-devkit/build-angular/src/builders/browser/schema').Schema & {
-    customWebpackConfig?: {
-      path: string;
-    };
-    indexFileTransformer?: string;
-    buildLibsFromSource?: boolean;
-  };
+function shouldSkipInitialTargetRun(
+  projectGraph: ProjectGraph,
+  project: string,
+  target: string
+): boolean {
+  const nxJson = readNxJson();
+  const defaultDependencyConfigs = Object.entries(
+    nxJson.targetDefaults ?? {}
+  ).reduce((acc, [targetName, dependencyConfig]) => {
+    acc[targetName] = dependencyConfig.dependsOn;
+    return acc;
+  }, {});
+  const projectDependencyConfigs = getDependencyConfigs(
+    { project, target },
+    defaultDependencyConfigs,
+    projectGraph
+  );
 
-function buildApp(
+  // if the task runner already ran the target, skip the initial run
+  return projectDependencyConfigs.some(
+    (d) => d.target === target && d.projects === 'dependencies'
+  );
+}
+
+export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
+  validateOptions(options);
+  options.buildLibsFromSource ??= true;
+
   const {
     buildLibsFromSource,
     customWebpackConfig,
     indexFileTransformer,
-    ...delegateOptions
+    ...delegateBuilderOptions
   } = options;
 
-  // If there is a path to an indexFileTransformer
-  // check it exists and apply it to the build
+  const pathToWebpackConfig =
+    customWebpackConfig?.path &&
+    joinPathFragments(context.workspaceRoot, customWebpackConfig.path);
+  if (pathToWebpackConfig && !existsSync(pathToWebpackConfig)) {
+    throw new Error(
+      `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
+    );
+  }
+
   const pathToIndexFileTransformer =
     indexFileTransformer &&
     joinPathFragments(context.workspaceRoot, indexFileTransformer);
@@ -39,66 +75,67 @@ function buildApp(
     );
   }
 
-  // If there is a path to custom webpack config
-  // Invoke our own support for custom webpack config
-  if (customWebpackConfig && customWebpackConfig.path) {
-    const pathToWebpackConfig = joinPathFragments(
-      context.workspaceRoot,
-      customWebpackConfig.path
-    );
-
-    if (existsSync(pathToWebpackConfig)) {
-      return buildAppWithCustomWebpackConfiguration(
-        delegateOptions,
+  let dependencies: DependentBuildableProjectNode[];
+  let projectGraph: ProjectGraph;
+  if (!buildLibsFromSource) {
+    projectGraph = readCachedProjectGraph();
+    const { tsConfigPath, dependencies: foundDependencies } =
+      createTmpTsConfigForBuildableLibs(
+        delegateBuilderOptions.tsConfig,
         context,
-        pathToWebpackConfig,
-        pathToIndexFileTransformer
+        { projectGraph }
       );
-    } else {
-      throw new Error(
-        `Custom Webpack Config File Not Found!\nTo use a custom webpack config, please ensure the path to the custom webpack file is correct: \n${pathToWebpackConfig}`
-      );
-    }
+    dependencies = foundDependencies;
+    delegateBuilderOptions.tsConfig = tsConfigPath;
   }
 
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeBrowserBuilder }) =>
-      executeBrowserBuilder(delegateOptions, context, {
-        ...(pathToIndexFileTransformer
-          ? {
-              indexHtml: resolveIndexHtmlTransformer(
-                pathToIndexFileTransformer,
-                options.tsConfig,
-                context.target
-              ),
-            }
-          : {}),
-      })
-    )
-  );
-}
+      executeBrowserBuilder(delegateBuilderOptions, context as any, {
+        webpackConfiguration: (baseWebpackConfig) => {
+          if (!buildLibsFromSource && delegateBuilderOptions.watch) {
+            const workspaceDependencies = dependencies
+              .filter((dep) => !isNpmProject(dep.node))
+              .map((dep) => dep.node.name);
+            // default for `nx run-many` is --all projects
+            // by passing an empty string for --projects, run-many will default to
+            // run the target for all projects.
+            // This will occur when workspaceDependencies = []
+            if (workspaceDependencies.length > 0) {
+              const skipInitialRun = shouldSkipInitialTargetRun(
+                projectGraph,
+                context.target.project,
+                context.target.target
+              );
 
-function buildAppWithCustomWebpackConfiguration(
-  options: import('@angular-devkit/build-angular/src/builders/browser/schema').Schema,
-  context: import('@angular-devkit/architect').BuilderContext,
-  pathToWebpackConfig: string,
-  pathToIndexFileTransformer?: string
-) {
-  return from(import('@angular-devkit/build-angular')).pipe(
-    switchMap(({ executeBrowserBuilder }) =>
-      executeBrowserBuilder(options, context as any, {
-        webpackConfiguration: (baseWebpackConfig) =>
-          mergeCustomWebpackConfig(
+              baseWebpackConfig.plugins.push(
+                // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
+                new WebpackNxBuildCoordinationPlugin(
+                  `nx run-many --target=${
+                    context.target.target
+                  } --projects=${workspaceDependencies.join(',')}`,
+                  skipInitialRun
+                )
+              );
+            }
+          }
+
+          if (!pathToWebpackConfig) {
+            return baseWebpackConfig;
+          }
+
+          return mergeCustomWebpackConfig(
             baseWebpackConfig,
             pathToWebpackConfig,
-            options,
+            delegateBuilderOptions,
             context.target
-          ),
+          );
+        },
         ...(pathToIndexFileTransformer
           ? {
               indexHtml: resolveIndexHtmlTransformer(
                 pathToIndexFileTransformer,
-                options.tsConfig,
+                delegateBuilderOptions.tsConfig,
                 context.target
               ),
             }
@@ -106,23 +143,6 @@ function buildAppWithCustomWebpackConfiguration(
       })
     )
   );
-}
-
-export function executeWebpackBrowserBuilder(
-  options: BrowserBuilderSchema,
-  context: import('@angular-devkit/architect').BuilderContext
-): Observable<import('@angular-devkit/architect').BuilderOutput> {
-  options.buildLibsFromSource ??= true;
-
-  if (!options.buildLibsFromSource) {
-    const { tsConfigPath } = createTmpTsConfigForBuildableLibs(
-      options.tsConfig,
-      context
-    );
-    options.tsConfig = tsConfigPath;
-  }
-
-  return buildApp(options, context);
 }
 
 export default require('@angular-devkit/architect').createBuilder(

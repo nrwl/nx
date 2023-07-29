@@ -3,6 +3,8 @@ import type { Server, Socket } from 'net';
 import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
 import type { AsyncSubscription } from '@parcel/watcher';
+import { deleteDaemonJsonProcessCache } from '../cache';
+import type { Watcher } from '../../native';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
@@ -13,16 +15,38 @@ export function getSourceWatcherSubscription() {
   return sourceWatcherSubscription;
 }
 
-export function getOutputsWatcherSubscription() {
-  return outputsWatcherSubscription;
-}
-
 export function storeSourceWatcherSubscription(s: AsyncSubscription) {
   sourceWatcherSubscription = s;
 }
 
+export function getOutputsWatcherSubscription() {
+  return outputsWatcherSubscription;
+}
+
 export function storeOutputsWatcherSubscription(s: AsyncSubscription) {
   outputsWatcherSubscription = s;
+}
+
+let processJsonSubscription: AsyncSubscription | undefined;
+
+export function storeProcessJsonSubscription(s: AsyncSubscription) {
+  processJsonSubscription = s;
+}
+
+let watcherInstance: Watcher | undefined;
+export function storeWatcherInstance(instance: Watcher) {
+  watcherInstance = instance;
+}
+export function getWatcherInstance() {
+  return watcherInstance;
+}
+
+let outputWatcherInstance: Watcher | undefined;
+export function storeOutputWatcherInstance(instance: Watcher) {
+  outputWatcherInstance = instance;
+}
+export function getOutputWatcherInstance() {
+  return outputWatcherInstance;
 }
 
 interface HandleServerProcessTerminationParams {
@@ -36,6 +60,7 @@ export async function handleServerProcessTermination({
 }: HandleServerProcessTerminationParams) {
   try {
     server.close();
+    deleteDaemonJsonProcessCache();
     if (sourceWatcherSubscription) {
       await sourceWatcherSubscription.unsubscribe();
       serverLogger.watcherLog(
@@ -48,6 +73,27 @@ export async function handleServerProcessTermination({
         `Unsubscribed from changes within: ${workspaceRoot} (outputs)`
       );
     }
+    if (processJsonSubscription) {
+      await processJsonSubscription.unsubscribe();
+      serverLogger.watcherLog(
+        `Unsubscribed from changes within: ${workspaceRoot} (server-process.json)`
+      );
+    }
+
+    if (watcherInstance) {
+      await watcherInstance.stop();
+      serverLogger.watcherLog(
+        `Stopping the watcher for ${workspaceRoot} (sources)`
+      );
+    }
+
+    if (outputWatcherInstance) {
+      await outputWatcherInstance.stop();
+      serverLogger.watcherLog(
+        `Stopping the watcher for ${workspaceRoot} (outputs)`
+      );
+    }
+
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {
     process.exit(0);

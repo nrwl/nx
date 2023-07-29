@@ -1,71 +1,117 @@
 # Intro to Nx
 
-Nx is a smart, fast and extensible build system with first class monorepo support and powerful integrations.
+Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. Find out more about [why you should use Nx](/getting-started/why-nx).
+
+If instead you want to jump right into it, run the following command. It will guide you through the setup:
+
+{% tabs %}
+{% tab label="npm" %}
+
+{% terminal-command command="npx create-nx-workspace"  /%}
+
+{% /tab %}
+{% tab label="yarn" %}
+
+{% terminal-command command="npx create-nx-workspace --pm yarn"  /%}
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+{% terminal-command command="npx create-nx-workspace --pm pnpm"  /%}
+
+{% /tab %}
+{% /tabs %}
+
+You can use Nx to quickly scaffold a new project or even an entire monorepo. It can be incrementally adopted and will grow with your project as it scales.
+
+{% cards cols="3" %}
+
+{% title-card title="New Monorepo" url="#get-started-with-the-basics" /%}
+{% title-card title="Choose a Stack" url="#learn-about-nx-and-your-favorite-stack" /%}
+{% title-card title="Add to an Existing Project" url="#adding-nx-to-an-existing-project" /%}
+
+{% /cards %}
+
+## Get Started with the Basics
+
+Its modular architecture lets you adopt Nx for package-based monorepos in combination with NPM, Yarn or PNPM, or create a fully integrated monorepo using Nx plugins. Learn more with the tutorials below.
 
 {% personas %}
-{% persona type="javascript" title="New Package-Based Repo" url="/getting-started/package-based-repo-tutorial" %}
+{% persona type="javascript" title="New Package-Based Repo" url="/getting-started/tutorials/package-based-repo-tutorial" %}
 Create a monorepo with Yarn, NPM or PNPM. Nx makes it fast, but lets you run things your way.
 
-- [Get started with your package-based repo](/getting-started/package-based-repo-tutorial)
+- [Get started with your package-based repo](/getting-started/tutorials/package-based-repo-tutorial)
 
 {% /persona %}
 
-{% persona type="integrated" title="New Integrated Repo" url="/getting-started/integrated-repo-tutorial" %}
+{% persona type="integrated" title="New Integrated Repo" url="/getting-started/tutorials/integrated-repo-tutorial" %}
 
 Get a pre-configured setup. Nx configures your favorite frameworks and lets you focus on shipping features.
 
-- [Get started with your integrated repo](/getting-started/integrated-repo-tutorial)
-
-{% /persona %}
-
-{% persona type="react" title="Create a Standalone React app" url="/getting-started/react-standalone-tutorial" %}
-
-A modern React setup with built-in support for Vite, ESLint, Cypress and more. Think CRA but modern, always up-to-date and scalable.
-
-- [Create a Standalone React app](/getting-started/react-standalone-tutorial)
-
-{% /persona %}
-
-{% persona type="angular" title="Create a Standalone Angular app" url="/getting-started/angular-standalone-tutorial" %}
-
-A modern Angular development experience powered by advanced generators and integrations with modern tooling.
-
-- [Create a Standalone Angular app](/getting-started/angular-standalone-tutorial)
+- [Get started with your integrated repo](/getting-started/tutorials/integrated-repo-tutorial)
 
 {% /persona %}
 
 {% /personas %}
 
-## Adopting Nx
+{% /cards %}
 
-Coming from an existing project and want to adopt Nx? We have a few recipes to help you get started.
+## Learn About Nx and Your Favorite Stack
 
-{% cards cols="4" %}
+Nx works well not just for monorepos. Nx plugins help you scaffold new projects with pre-configured tooling and modularize your codebase with local libraries.
 
-{% card title="Add to Existing Monorepo" description="Add Nx to your existing NPM/YARN/PNPM workspace" type="documentation" url="/recipes/adopting-nx/adding-to-monorepo" /%}
+{% cards cols="3" %}
 
-{% card title="Add to any Project" description="Add Nx to an standalone project" type="documentation" url="/recipes/adopting-nx/adding-to-existing-project" /%}
+{% persona type="react" title="Create a React app" url="/getting-started/tutorials/react-standalone-tutorial" %}
 
-{% card title="Migrate from CRA" description="Migrate from a CRA setup and automatically switch to Vite" type="documentation" url="/recipes/adopting-nx/migration-cra" /%}
+A modern React setup with built-in support for Vite, ESLint, Cypress, and more. Think CRA but modern, always up-to-date and scalable.
 
-{% card title="Migrate from Angular CLI" description="Automatically migrate from the Angular CLI" type="documentation" url="/recipes/adopting-nx/migration-angular" /%}
+- [Create a React app](/getting-started/tutorials/react-standalone-tutorial)
+
+{% /persona %}
+
+{% persona type="angular" title="Create an Angular app" url="/getting-started/tutorials/angular-standalone-tutorial" %}
+
+A modern Angular development experience powered by advanced generators and integrations with modern tooling.
+
+- [Create an Angular app](/getting-started/tutorials/angular-standalone-tutorial)
+
+{% /persona %}
+
+{% persona type="node" title="Create a Node server" url="/getting-started/tutorials/node-server-tutorial" %}
+
+A modern Node server with scaffolding for Express, Fastify or Koa. There's also Docker support built-in.
+
+- [Create a Node server](/getting-started/tutorials/node-server-tutorial)
+
+{% /persona %}
 
 {% /cards %}
 
-## Why Nx?
+## Adding Nx to an Existing Project
 
-Nx has two main goals:
+If you have an existing project and want to adopt Nx or migrate to Nx just run the following command which guides you through the migration process:
 
-- **Speed up your existing workflow with minimum effort.**
-- **Provide a first-rate developer experience no matter the size of the repo.**
+{% terminal-command command="npx nx@latest init"  /%}
 
-It achieves speed that via [computation caching](/core-features/cache-task-results), by only [run tasks affected by a given change](/core-features/run-tasks#run-tasks-affected-by-a-pr) and by being able to [distribute your task execution](/core-features/distribute-task-execution) across multiple agents in CI.
+Alternatively, here are some recipes that give you more details based on the technology stack you're using:
 
-High quality DX is implemented via [code generators](/plugin-features/use-code-generators), [IDE extensions](/core-features/integrate-with-editors#integrate-with-editors) and by helping you [keep your codebase evergreen](/core-features/automate-updating-dependencies).
+{% cards cols="2" %}
 
-## How does Nx compare to other tools?
+{% persona type="extend" title="Add to Existing Monorepo" url="/recipes/adopting-nx/adding-to-monorepo" %}
+Add Nx to your existing NPM/YARN/PNPM workspace
+{% /persona %}
 
-If you know other tools in the monorepo space, here is how Nx compares:
+{% persona title="Add to any Project" type="extend" url="/recipes/adopting-nx/adding-to-existing-project" %}
+Add Nx to a project
+{% /persona %}
 
-- [Monorepo.tools](https://monorepo.tools)
-- [Nx and Turborepo](/more-concepts/turbo-and-nx)
+{% persona title="Migrate from CRA" type="react" url="/recipes/react/migration-cra" %}
+Migrate from a CRA setup and automatically switch to Vite
+{% /persona %}
+
+{% persona title="Migrate from Angular CLI" type="angular" url="/recipes/angular/migration/angular" %}
+Automatically migrate from the Angular CLI
+{% /persona %}
+
+{% /cards %}

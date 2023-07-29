@@ -1,25 +1,25 @@
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
-  getWorkspaceLayout,
+  joinPathFragments,
   names,
-} from '@nrwl/devkit';
-import { Tree } from 'nx/src/generators/tree';
-import { getImportPath, joinPathFragments } from 'nx/src/utils/path';
-import * as ts from 'typescript';
+  Tree,
+} from '@nx/devkit';
+import type * as ts from 'typescript';
 
 import { NormalizedSchema } from '../schema';
 import {
   addBrowserRouter,
-  addInitialRoutes,
   addRoute,
   findComponentImportPath,
 } from '../../../utils/ast-utils';
+import { addInitialRoutes } from '../../../utils/ast-utils';
 import { maybeJs } from './maybe-js';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../../utils/versions';
+import { reactRouterDomVersion } from '../../../utils/versions';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { getImportPath } from '@nx/js/src/utils/get-import-path';
+
+let tsModule: typeof import('typescript');
 
 export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
   if (!options.appMain || !options.appSourceRoot) {
@@ -43,8 +43,10 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
 
   const routerTask = addDependenciesToPackageJson(
     host,
-    { 'react-router-dom': reactRouterDomVersion },
-    { '@types/react-router-dom': typesReactRouterDomVersion }
+    {
+      'react-router-dom': reactRouterDomVersion,
+    },
+    {}
   );
 
   // addBrowserRouterToMain
@@ -75,13 +77,12 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
   {
     const { content: componentContent, source: componentSource } =
       readComponent(host, appComponentPath);
-    const { npmScope } = getWorkspaceLayout(host);
     const changes = applyChangesToString(
       componentContent,
       addRoute(appComponentPath, componentSource, {
         routePath: options.routePath,
         componentName: names(options.name).className,
-        moduleName: getImportPath(npmScope, options.projectDirectory),
+        moduleName: getImportPath(host, options.projectDirectory),
       })
     );
     host.write(appComponentPath, changes);
@@ -97,13 +98,16 @@ function readComponent(
   if (!host.exists(path)) {
     throw new Error(`Cannot find ${path}`);
   }
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
 
   const content = host.read(path, 'utf-8');
 
-  const source = ts.createSourceFile(
+  const source = tsModule.createSourceFile(
     path,
     content,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 

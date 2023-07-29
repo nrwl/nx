@@ -6,7 +6,7 @@
 Create a component named `my-component`:
 
 ```bash
-nx g @nrwl/angular:component my-component
+nx g @nx/angular:component my-component
 ```
 
 {% /tab %}
@@ -16,7 +16,7 @@ nx g @nrwl/angular:component my-component
 Create a standalone component named `my-component`:
 
 ```bash
-nx g @nrwl/angular:component my-component --standalone
+nx g @nx/angular:component my-component --standalone
 ```
 
 {% /tab %}
@@ -26,7 +26,7 @@ nx g @nrwl/angular:component my-component --standalone
 Create a component named `my-component` with inline styles and inline template:
 
 ```bash
-nx g @nrwl/angular:component my-component --inlineStyle --inlineTemplate
+nx g @nx/angular:component my-component --inlineStyle --inlineTemplate
 ```
 
 {% /tab %}
@@ -36,7 +36,7 @@ nx g @nrwl/angular:component my-component --inlineStyle --inlineTemplate
 Create a component named `my-component` with OnPush Change Detection Strategy:
 
 ```bash
-nx g @nrwl/angular:component my-component --changeDetection=OnPush
+nx g @nx/angular:component my-component --changeDetection=OnPush
 ```
 
 {% /tab %}

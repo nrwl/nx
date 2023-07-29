@@ -64,6 +64,11 @@
       "rollupConfig": {
         "type": "string",
         "description": "Path relative to workspace root to a custom rollup file that takes a config object and returns an updated config."
+      },
+      "buildTarget": {
+        "description": "The build target to add.",
+        "type": "string",
+        "default": "build"
       }
     },
     "required": [],

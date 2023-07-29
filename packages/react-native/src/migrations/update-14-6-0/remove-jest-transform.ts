@@ -5,10 +5,10 @@ import {
   readProjectConfiguration,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
-import { removePropertyFromJestConfig } from '@nrwl/jest';
-import { JestExecutorOptions } from '@nrwl/jest/src/executors/jest/schema';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
+import { removePropertyFromJestConfig } from '@nx/jest';
+import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
 import { join } from 'path';
 
 /**

@@ -1,7 +1,7 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { convertNxGenerator, formatFiles } from '@nrwl/devkit';
-import { initGenerator as nodeInitGenerator } from '@nrwl/node';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { convertNxGenerator, formatFiles, runTasksInSerial } from '@nx/devkit';
+import { initGenerator as nodeInitGenerator } from '@nx/node';
+
 import { addDependencies, normalizeOptions } from './lib';
 import type { InitGeneratorOptions } from './schema';
 
@@ -10,14 +10,24 @@ export async function initGenerator(
   rawOptions: InitGeneratorOptions
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(rawOptions);
-  const nodeInitTask = await nodeInitGenerator(tree, options);
-  const installPackagesTask = addDependencies(tree);
+  const tasks: GeneratorCallback[] = [];
+
+  const nodeInitTask = await nodeInitGenerator(tree, {
+    ...options,
+    skipFormat: true,
+  });
+  tasks.push(nodeInitTask);
+
+  if (!options.skipPackageJson) {
+    const installPackagesTask = addDependencies(tree);
+    tasks.push(installPackagesTask);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(nodeInitTask, installPackagesTask);
+  return runTasksInSerial(...tasks);
 }
 
 export default initGenerator;

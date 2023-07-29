@@ -1,39 +1,26 @@
-import { sync as globSync } from 'fast-glob';
-import { existsSync, readFileSync } from 'fs';
-import ignore, { Ignore } from 'ignore';
+import { existsSync } from 'fs';
 import * as path from 'path';
 import { basename, dirname, join } from 'path';
-import { performance } from 'perf_hooks';
-
 import { workspaceRoot } from '../utils/workspace-root';
-import { readJsonFile } from '../utils/fileutils';
+import { readJsonFile, readYamlFile } from '../utils/fileutils';
 import { logger, NX_PREFIX } from '../utils/logger';
-import { loadNxPlugins, readPluginPackageJson } from '../utils/nx-plugin';
-import * as yaml from 'js-yaml';
+import { loadNxPlugins, loadNxPluginsSync } from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration, TargetDefaults } from './nx-json';
+import { readNxJson } from './nx-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
   TargetConfiguration,
 } from './workspace-json-project-json';
-import {
-  CustomHasher,
-  Executor,
-  ExecutorConfig,
-  ExecutorsJson,
-  Generator,
-  GeneratorsJson,
-  GeneratorsJsonEntry,
-  TaskGraphExecutor,
-} from './misc-interfaces';
 import { PackageJson } from '../utils/package-json';
 import { output } from '../utils/output';
 import { joinPathFragments } from '../utils/path';
 import {
-  mergeAngularJsonAndGlobProjects,
+  mergeAngularJsonAndProjects,
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
+import { retrieveProjectConfigurationPaths } from '../project-graph/utils/retrieve-workspace-files';
 
 export class Workspaces {
   private cachedProjectsConfig: ProjectsConfigurations;
@@ -44,27 +31,10 @@ export class Workspaces {
     return path.relative(this.root, cwd).replace(/\\/g, '/') || null;
   }
 
-  calculateDefaultProjectName(
-    cwd: string,
-    projects: ProjectsConfigurations,
-    nxJson: NxJsonConfiguration
-  ) {
-    const relativeCwd = this.relativeCwd(cwd);
-    if (relativeCwd) {
-      const matchingProject = Object.keys(projects.projects).find((p) => {
-        const projectRoot = projects.projects[p].root;
-        return (
-          relativeCwd == projectRoot ||
-          relativeCwd.startsWith(`${projectRoot}/`)
-        );
-      });
-      if (matchingProject) return matchingProject;
-    }
-    return nxJson.defaultProject;
-  }
-
+  /**
+   * @deprecated
+   */
   readProjectsConfigurations(opts?: {
-    _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations {
     if (
@@ -73,10 +43,11 @@ export class Workspaces {
     ) {
       return this.cachedProjectsConfig;
     }
-    const nxJson = this.readNxJson();
-    const projectsConfigurations = buildProjectsConfigurationsFromGlobs(
+    const nxJson = readNxJson(this.root);
+    const projectPaths = retrieveProjectConfigurationPaths(this.root, nxJson);
+    let projectsConfigurations = buildProjectsConfigurationsFromProjectPaths(
       nxJson,
-      globForProjectFiles(this.root, nxJson, opts?._ignorePluginInference),
+      projectPaths,
       (path) => readJsonFile(join(this.root, path))
     );
     if (
@@ -85,14 +56,18 @@ export class Workspaces {
         opts?._includeProjectsFromAngularJson
       )
     ) {
-      projectsConfigurations.projects = mergeAngularJsonAndGlobProjects(
-        projectsConfigurations.projects
+      projectsConfigurations = mergeAngularJsonAndProjects(
+        projectsConfigurations,
+        this.root
       );
     }
-    this.cachedProjectsConfig = this.mergeTargetDefaultsIntoProjectDescriptions(
-      projectsConfigurations,
-      nxJson
-    );
+    this.cachedProjectsConfig = {
+      version: 2,
+      projects: this.mergeTargetDefaultsIntoProjectDescriptions(
+        projectsConfigurations,
+        nxJson
+      ),
+    };
     return this.cachedProjectsConfig;
   }
 
@@ -103,15 +78,15 @@ export class Workspaces {
     _ignorePluginInference?: boolean;
     _includeProjectsFromAngularJson?: boolean;
   }): ProjectsConfigurations & NxJsonConfiguration {
-    const nxJson = this.readNxJson();
+    const nxJson = readNxJson(this.root);
     return { ...this.readProjectsConfigurations(opts), ...nxJson };
   }
 
   private mergeTargetDefaultsIntoProjectDescriptions(
-    config: ProjectsConfigurations,
+    projects: Record<string, ProjectConfiguration>,
     nxJson: NxJsonConfiguration
   ) {
-    for (const proj of Object.values(config.projects)) {
+    for (const proj of Object.values(projects)) {
       if (proj.targets) {
         for (const targetName of Object.keys(proj.targets)) {
           const projectTargetDefinition = proj.targets[targetName];
@@ -131,325 +106,12 @@ export class Workspaces {
         }
       }
     }
-    return config;
-  }
-
-  isNxExecutor(nodeModule: string, executor: string) {
-    return !this.readExecutor(nodeModule, executor).isNgCompat;
-  }
-
-  isNxGenerator(collectionName: string, generatorName: string) {
-    return !this.readGenerator(collectionName, generatorName).isNgCompat;
-  }
-
-  readExecutor(
-    nodeModule: string,
-    executor: string
-  ): ExecutorConfig & { isNgCompat: boolean } {
-    try {
-      const { executorsFilePath, executorConfig, isNgCompat } =
-        this.readExecutorsJson(nodeModule, executor);
-      const executorsDir = path.dirname(executorsFilePath);
-      const schemaPath = path.join(executorsDir, executorConfig.schema || '');
-      const schema = normalizeExecutorSchema(readJsonFile(schemaPath));
-
-      const implementationFactory = this.getImplementationFactory<Executor>(
-        executorConfig.implementation,
-        executorsDir
-      );
-
-      const batchImplementationFactory = executorConfig.batchImplementation
-        ? this.getImplementationFactory<TaskGraphExecutor>(
-            executorConfig.batchImplementation,
-            executorsDir
-          )
-        : null;
-
-      const hasherFactory = executorConfig.hasher
-        ? this.getImplementationFactory<CustomHasher>(
-            executorConfig.hasher,
-            executorsDir
-          )
-        : null;
-
-      return {
-        schema,
-        implementationFactory,
-        batchImplementationFactory,
-        hasherFactory,
-        isNgCompat,
-      };
-    } catch (e) {
-      throw new Error(
-        `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
-      );
-    }
-  }
-
-  readGenerator(
-    collectionName: string,
-    generatorName: string
-  ): {
-    resolvedCollectionName: string;
-    normalizedGeneratorName: string;
-    schema: any;
-    implementationFactory: () => Generator<unknown>;
-    isNgCompat: boolean;
-    /**
-     * @deprecated(v16): This will be removed in v16, use generatorConfiguration.aliases
-     */
-    aliases: string[];
-    generatorConfiguration: GeneratorsJsonEntry;
-  } {
-    try {
-      const {
-        generatorsFilePath,
-        generatorsJson,
-        resolvedCollectionName,
-        normalizedGeneratorName,
-      } = this.readGeneratorsJson(collectionName, generatorName);
-      const generatorsDir = path.dirname(generatorsFilePath);
-      const generatorConfig =
-        generatorsJson.generators?.[normalizedGeneratorName] ||
-        generatorsJson.schematics?.[normalizedGeneratorName];
-      const isNgCompat = !generatorsJson.generators?.[normalizedGeneratorName];
-      const schemaPath = path.join(generatorsDir, generatorConfig.schema || '');
-      const schema = readJsonFile(schemaPath);
-      if (!schema.properties || typeof schema.properties !== 'object') {
-        schema.properties = {};
-      }
-      generatorConfig.implementation =
-        generatorConfig.implementation || generatorConfig.factory;
-      const implementationFactory = this.getImplementationFactory<Generator>(
-        generatorConfig.implementation,
-        generatorsDir
-      );
-      const normalizedGeneratorConfiguration: GeneratorsJsonEntry = {
-        ...generatorConfig,
-        aliases: generatorConfig.aliases ?? [],
-        hidden: !!generatorConfig.hidden,
-      };
-      return {
-        resolvedCollectionName,
-        normalizedGeneratorName,
-        schema,
-        implementationFactory,
-        isNgCompat,
-        aliases: generatorConfig.aliases || [],
-        generatorConfiguration: normalizedGeneratorConfiguration,
-      };
-    } catch (e) {
-      throw new Error(
-        `Unable to resolve ${collectionName}:${generatorName}.\n${e.message}`
-      );
-    }
-  }
-
-  hasNxJson(): boolean {
-    const nxJson = path.join(this.root, 'nx.json');
-    return existsSync(nxJson);
-  }
-
-  readNxJson(): NxJsonConfiguration {
-    const nxJson = path.join(this.root, 'nx.json');
-    if (existsSync(nxJson)) {
-      const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
-      if (nxJsonConfiguration.extends) {
-        const extendedNxJsonPath = require.resolve(
-          nxJsonConfiguration.extends,
-          {
-            paths: [dirname(nxJson)],
-          }
-        );
-        const baseNxJson =
-          readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
-        return this.mergeTargetDefaultsAndTargetDependencies({
-          ...baseNxJson,
-          ...nxJsonConfiguration,
-        });
-      } else {
-        return this.mergeTargetDefaultsAndTargetDependencies(
-          nxJsonConfiguration
-        );
-      }
-    } else {
-      try {
-        return this.mergeTargetDefaultsAndTargetDependencies(
-          readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'))
-        );
-      } catch (e) {
-        return {};
-      }
-    }
-  }
-
-  private mergeTargetDefaultsAndTargetDependencies(
-    nxJson: NxJsonConfiguration
-  ) {
-    if (!nxJson.targetDefaults) {
-      nxJson.targetDefaults = {};
-    }
-    if (nxJson.targetDependencies) {
-      for (const targetName of Object.keys(nxJson.targetDependencies)) {
-        if (!nxJson.targetDefaults[targetName]) {
-          nxJson.targetDefaults[targetName] = {};
-        }
-        if (!nxJson.targetDefaults[targetName].dependsOn) {
-          nxJson.targetDefaults[targetName].dependsOn = [];
-        }
-        nxJson.targetDefaults[targetName].dependsOn = [
-          ...nxJson.targetDefaults[targetName].dependsOn,
-          ...nxJson.targetDependencies[targetName],
-        ];
-      }
-    }
-    return nxJson;
-  }
-
-  private getImplementationFactory<T>(
-    implementation: string,
-    directory: string
-  ): () => T {
-    const [implementationModulePath, implementationExportName] =
-      implementation.split('#');
-    return () => {
-      const module = require(path.join(directory, implementationModulePath));
-      return implementationExportName
-        ? module[implementationExportName]
-        : module.default ?? module;
-    };
-  }
-
-  private readExecutorsJson(nodeModule: string, executor: string) {
-    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
-      nodeModule,
-      this.resolvePaths()
-    );
-    const executorsFile = packageJson.executors ?? packageJson.builders;
-
-    if (!executorsFile) {
-      throw new Error(
-        `The "${nodeModule}" package does not support Nx executors.`
-      );
-    }
-
-    const executorsFilePath = require.resolve(
-      path.join(path.dirname(packageJsonPath), executorsFile)
-    );
-    const executorsJson = readJsonFile<ExecutorsJson>(executorsFilePath);
-    const executorConfig: {
-      implementation: string;
-      batchImplementation?: string;
-      schema: string;
-      hasher?: string;
-    } =
-      executorsJson.executors?.[executor] || executorsJson.builders?.[executor];
-    if (!executorConfig) {
-      throw new Error(
-        `Cannot find executor '${executor}' in ${executorsFilePath}.`
-      );
-    }
-    const isNgCompat = !executorsJson.executors?.[executor];
-    return { executorsFilePath, executorConfig, isNgCompat };
-  }
-
-  private readGeneratorsJson(
-    collectionName: string,
-    generator: string
-  ): {
-    generatorsFilePath: string;
-    generatorsJson: GeneratorsJson;
-    normalizedGeneratorName: string;
-    resolvedCollectionName: string;
-  } {
-    let generatorsFilePath;
-    if (collectionName.endsWith('.json')) {
-      generatorsFilePath = require.resolve(collectionName, {
-        paths: this.resolvePaths(),
-      });
-    } else {
-      const { json: packageJson, path: packageJsonPath } =
-        readPluginPackageJson(collectionName, this.resolvePaths());
-      const generatorsFile = packageJson.generators ?? packageJson.schematics;
-
-      if (!generatorsFile) {
-        throw new Error(
-          `The "${collectionName}" package does not support Nx generators.`
-        );
-      }
-
-      generatorsFilePath = require.resolve(
-        path.join(path.dirname(packageJsonPath), generatorsFile)
-      );
-    }
-    const generatorsJson = readJsonFile<GeneratorsJson>(generatorsFilePath);
-
-    let normalizedGeneratorName =
-      findFullGeneratorName(generator, generatorsJson.generators) ||
-      findFullGeneratorName(generator, generatorsJson.schematics);
-
-    if (!normalizedGeneratorName) {
-      for (let parent of generatorsJson.extends || []) {
-        try {
-          return this.readGeneratorsJson(parent, generator);
-        } catch (e) {}
-      }
-
-      throw new Error(
-        `Cannot find generator '${generator}' in ${generatorsFilePath}.`
-      );
-    }
-    return {
-      generatorsFilePath,
-      generatorsJson,
-      normalizedGeneratorName,
-      resolvedCollectionName: collectionName,
-    };
-  }
-
-  private resolvePaths() {
-    return this.root ? [this.root, __dirname] : [__dirname];
-  }
-}
-
-function normalizeExecutorSchema(
-  schema: Partial<ExecutorConfig['schema']>
-): ExecutorConfig['schema'] {
-  const version = (schema.version ??= 1);
-  return {
-    version,
-    outputCapture:
-      schema.outputCapture ?? version < 2 ? 'direct-nodejs' : 'pipe',
-    properties:
-      !schema.properties || typeof schema.properties !== 'object'
-        ? {}
-        : schema.properties,
-    ...schema,
-  };
-}
-
-function findFullGeneratorName(
-  name: string,
-  generators: {
-    [name: string]: { aliases?: string[] };
-  }
-) {
-  if (generators) {
-    for (let [key, data] of Object.entries<{ aliases?: string[] }>(
-      generators
-    )) {
-      if (
-        key === name ||
-        (data.aliases && (data.aliases as string[]).includes(name))
-      ) {
-        return key;
-      }
-    }
+    return projects;
   }
 }
 
 /**
- * Pulled from toFileName in names from @nrwl/devkit.
+ * Pulled from toFileName in names from @nx/devkit.
  * Todo: Should refactor, not duplicate.
  */
 export function toProjectName(fileName: string): string {
@@ -457,15 +119,15 @@ export function toProjectName(fileName: string): string {
   return parts[parts.length - 1].toLowerCase();
 }
 
-let projectGlobCache: string[];
-let projectGlobCacheKey: string;
-
+/**
+ * @deprecated Use getGlobPatternsFromPluginsAsync instead.
+ */
 export function getGlobPatternsFromPlugins(
   nxJson: NxJsonConfiguration,
   paths: string[],
   root = workspaceRoot
 ): string[] {
-  const plugins = loadNxPlugins(nxJson?.plugins, paths, root);
+  const plugins = loadNxPluginsSync(nxJson?.plugins, paths, root);
 
   const patterns = [];
   for (const plugin of plugins) {
@@ -473,7 +135,27 @@ export function getGlobPatternsFromPlugins(
       continue;
     }
     for (const filePattern of plugin.projectFilePatterns) {
-      patterns.push('**/' + filePattern);
+      patterns.push('*/**/' + filePattern);
+    }
+  }
+
+  return patterns;
+}
+
+export async function getGlobPatternsFromPluginsAsync(
+  nxJson: NxJsonConfiguration,
+  paths: string[],
+  root = workspaceRoot
+): Promise<string[]> {
+  const plugins = await loadNxPlugins(nxJson?.plugins, paths, root);
+
+  const patterns = [];
+  for (const plugin of plugins) {
+    if (!plugin.projectFilePatterns) {
+      continue;
+    }
+    for (const filePattern of plugin.projectFilePatterns) {
+      patterns.push('*/**/' + filePattern);
     }
   }
 
@@ -500,10 +182,10 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
 
     if (existsSync(join(root, 'pnpm-workspace.yaml'))) {
       try {
-        const obj = yaml.load(
-          readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8')
-        ) as { packages: string[] };
-        patterns.push(...normalizePatterns(obj.packages || []));
+        const { packages } = readYamlFile<{ packages: string[] }>(
+          join(root, 'pnpm-workspace.yaml')
+        );
+        patterns.push(...normalizePatterns(packages || []));
       } catch (e: unknown) {
         output.warn({
           title: `${NX_PREFIX} Unable to parse pnpm-workspace.yaml`,
@@ -530,7 +212,9 @@ export function getGlobPatternsFromPackageManagerWorkspaces(
     // TODO(@AgentEnder): update logic after better way to determine root project inclusion
     // Include the root project
     return packageJson.nx ? patterns.concat('package.json') : patterns;
-  } catch {}
+  } catch {
+    return [];
+  }
 }
 
 function normalizePatterns(patterns: string[]): string[] {
@@ -547,121 +231,15 @@ function removeRelativePath(pattern: string): string {
   return pattern.startsWith('./') ? pattern.substring(2) : pattern;
 }
 
-export function globForProjectFiles(
-  root,
-  nxJson?: NxJsonConfiguration,
-  ignorePluginInference = false
-) {
-  // Deal w/ Caching
-  const cacheKey = [root, ...(nxJson?.plugins || [])].join(',');
-  if (
-    process.env.NX_PROJECT_GLOB_CACHE !== 'false' &&
-    projectGlobCache &&
-    cacheKey === projectGlobCacheKey
-  ) {
-    return projectGlobCache;
-  }
-  projectGlobCacheKey = cacheKey;
-
-  const _globPatternsFromPackageManagerWorkspaces =
-    getGlobPatternsFromPackageManagerWorkspaces(root);
-
-  const globPatternsFromPackageManagerWorkspaces =
-    _globPatternsFromPackageManagerWorkspaces ?? [];
-
-  const globsToInclude = globPatternsFromPackageManagerWorkspaces.filter(
-    (glob) => !glob.startsWith('!')
-  );
-
-  const globsToExclude = globPatternsFromPackageManagerWorkspaces
-    .filter((glob) => glob.startsWith('!'))
-    .map((glob) => glob.substring(1))
-    .map((glob) => (glob.startsWith('/') ? glob.substring(1) : glob));
-
-  const projectGlobPatterns: string[] = [
-    'project.json',
-    '**/project.json',
-    ...globsToInclude,
-  ];
-
-  if (!ignorePluginInference) {
-    projectGlobPatterns.push(
-      ...getGlobPatternsFromPlugins(nxJson, [root], root)
-    );
-  }
-
-  const combinedProjectGlobPattern = '{' + projectGlobPatterns.join(',') + '}';
-
-  performance.mark('start-glob-for-projects');
-  /**
-   * This configures the files and directories which we always want to ignore as part of file watching
-   * and which we know the location of statically (meaning irrespective of user configuration files).
-   * This has the advantage of being ignored directly within globSync
-   *
-   * Other ignored entries will need to be determined dynamically by reading and evaluating the user's
-   * .gitignore and .nxignore files below.
-   */
-
-  const ALWAYS_IGNORE = [
-    'node_modules',
-    '**/node_modules',
-    'dist',
-    '.git',
-    ...globsToExclude,
-  ];
-
-  /**
-   * TODO: This utility has been implemented multiple times across the Nx codebase,
-   * discuss whether it should be moved to a shared location.
-   */
-  const ig = ignore();
-  try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
-
-  const globResults = globSync(combinedProjectGlobPattern, {
-    ignore: ALWAYS_IGNORE,
-    absolute: false,
-    cwd: root,
-    dot: true,
-    suppressErrors: true,
-  });
-
-  projectGlobCache = deduplicateProjectFiles(globResults, ig);
-
-  // TODO @vsavkin remove after Nx 16
-  if (
-    projectGlobCache.length === 0 &&
-    _globPatternsFromPackageManagerWorkspaces === undefined &&
-    nxJson?.extends === 'nx/presets/npm.json'
-  ) {
-    output.warn({
-      title:
-        'Nx could not find any projects. Check if you need to configure workspaces in package.json or pnpm-workspace.yaml',
-    });
-  }
-
-  performance.mark('finish-glob-for-projects');
-  performance.measure(
-    'glob-for-project-files',
-    'start-glob-for-projects',
-    'finish-glob-for-projects'
-  );
-  return projectGlobCache;
-}
-
-export function deduplicateProjectFiles(
-  files: string[],
-  ig?: Ignore
-): string[] {
+/**
+ * @description Loops through files and reduces them to 1 file per project.
+ * @param files Array of files that may represent projects
+ */
+export function deduplicateProjectFiles(files: string[]): string[] {
   const filtered = new Map();
   files.forEach((file) => {
     const projectFolder = dirname(file);
     const projectFile = basename(file);
-    if (ig?.ignores(file)) return; // file is in .gitignore or .nxignoreb
     if (filtered.has(projectFolder) && projectFile !== 'project.json') return;
     filtered.set(projectFolder, projectFile);
   });
@@ -678,6 +256,13 @@ function buildProjectConfigurationFromPackageJson(
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = path.split('\\').join('/');
   const directory = dirname(normalizedPath);
+
+  if (!packageJson.name && directory === '.') {
+    throw new Error(
+      'Nx requires the root package.json to specify a name if it is being used as an Nx project.'
+    );
+  }
+
   let name = packageJson.name ?? toProjectName(normalizedPath);
   if (nxJson?.npmScope) {
     const npmPrefix = `@${nxJson.npmScope}/`;
@@ -710,12 +295,12 @@ export function inferProjectFromNonStandardFile(
   };
 }
 
-export function buildProjectsConfigurationsFromGlobs(
+export function buildProjectsConfigurationsFromProjectPaths(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
     readJsonFile<T>(string) // making this an arg allows us to reuse in devkit
-): ProjectsConfigurations {
+): Record<string, ProjectConfiguration> {
   const projects: Record<string, ProjectConfiguration> = {};
 
   for (const file of projectFiles) {
@@ -767,19 +352,15 @@ export function buildProjectsConfigurationsFromGlobs(
         if (!projects[name]) {
           projects[name] = config;
         } else {
-          logger.error(
+          logger.warn(
             `Skipping project inferred from ${file} since project ${name} already exists.`
           );
-          throw new Error();
         }
       }
     }
   }
 
-  return {
-    version: 2,
-    projects: projects,
-  };
+  return projects;
 }
 
 export function mergeTargetConfigurations(
@@ -874,8 +455,8 @@ function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
           `${NX_PREFIX} The {workspaceRoot} token is only valid at the beginning of an option. (${key})`
         );
       }
-      value = value.replace('{projectRoot}', project.root);
-      result[opt] = value.replace('{projectName}', project.name);
+      value = value.replace(/\{projectRoot\}/g, project.root);
+      result[opt] = value.replace(/\{projectName\}/g, project.name);
     } else if (typeof value === 'object' && value) {
       result[opt] = resolvePathTokensInOptions(
         value,

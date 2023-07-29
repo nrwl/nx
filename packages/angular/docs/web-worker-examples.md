@@ -7,7 +7,7 @@
 The basic usage of the `web-worker` generator is defined below. You must provide a name for the web worker and the project to assign it to.
 
 ```bash
-nx g @nrwl/angular:web-worker myWebWorker --project=myapp
+nx g @nx/angular:web-worker myWebWorker --project=myapp
 ```
 
 {% /tab %}

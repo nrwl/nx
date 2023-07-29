@@ -21,7 +21,7 @@
       "check": {
         "type": "boolean",
         "description": "Check which installed packages need to be updated",
-        "default": true
+        "default": false
       },
       "fix": {
         "type": "boolean",

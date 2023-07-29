@@ -1,14 +1,11 @@
-import { DocumentsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
-import { getPackagesSections } from '@nrwl/nx-dev/data-access-menu';
-import { sortCorePackagesFirst } from '@nrwl/nx-dev/data-access-packages';
-import { DocViewer } from '@nrwl/nx-dev/feature-doc-viewer';
-import {
-  ProcessedDocument,
-  RelatedDocument,
-} from '@nrwl/nx-dev/models-document';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
-import { ProcessedPackageMetadata } from '@nrwl/nx-dev/models-package';
-import { DocumentationHeader, SidebarContainer } from '@nrwl/nx-dev/ui-common';
+import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
+import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
+import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
+import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
+import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
+import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
@@ -16,16 +13,19 @@ import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../../../lib/packages.api';
 import { tagsApi } from '../../../../lib/tags.api';
+import { fetchGithubStarCount } from '../../../../lib/githubStars.api';
 
 export default function PackageDocument({
   document,
   menu,
   relatedDocuments,
+  widgetData,
 }: {
   document: ProcessedDocument;
   menu: MenuItem[];
   pkg: ProcessedPackageMetadata;
   relatedDocuments: RelatedDocument[];
+  widgetData: { githubStarsCount: number };
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -82,6 +82,7 @@ export default function PackageDocument({
           <DocViewer
             document={vm.document}
             relatedDocuments={vm.relatedDocuments}
+            widgetData={widgetData}
           />
         </div>
       </main>
@@ -114,7 +115,7 @@ export async function getStaticProps({
       id: [params.name, 'documents'].join('-'),
       manifest: nxPackagesApi.getPackageDocuments(params.name),
       prefix: '',
-      publicDocsRoot: 'nx-dev/nx-dev/public/documentation',
+      publicDocsRoot: 'public/documentation',
       tagsApi,
     });
     const document = documents.getDocument(segments);
@@ -123,6 +124,9 @@ export async function getStaticProps({
       props: {
         pkg: nxPackagesApi.getPackage([params.name]),
         document,
+        widgetData: {
+          githubStarsCount: await fetchGithubStarCount(),
+        },
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item

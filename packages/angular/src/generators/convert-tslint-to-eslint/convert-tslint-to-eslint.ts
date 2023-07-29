@@ -1,13 +1,8 @@
-import { conversionGenerator as cypressConversionGenerator } from '@nrwl/cypress';
-import {
-  convertNxGenerator,
-  formatFiles,
-  GeneratorCallback,
-  logger,
-  Tree,
-} from '@nrwl/devkit';
-import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nrwl/linter';
+import { conversionGenerator as cypressConversionGenerator } from '@nx/cypress';
+import { formatFiles, GeneratorCallback, logger, Tree } from '@nx/devkit';
+import { ConvertTSLintToESLintSchema, ProjectConverter } from '@nx/linter';
 import type { Linter } from 'eslint';
+import type { AngularProjectConfiguration } from '../../utils/types';
 import { addLintingGenerator } from '../add-linting/add-linting';
 
 export async function conversionGenerator(
@@ -19,8 +14,8 @@ export async function conversionGenerator(
    * to perform in order to convert a project from TSLint to ESLint, as well as some
    * extensibility points for adjusting the behavior on a per package basis.
    *
-   * E.g. @nrwl/angular projects might need to make different changes to the final
-   * ESLint config when compared with @nrwl/next projects.
+   * E.g. @nx/angular projects might need to make different changes to the final
+   * ESLint config when compared with @nx/next projects.
    *
    * See the ProjectConverter implementation for a full breakdown of what it does.
    */
@@ -32,14 +27,14 @@ export async function conversionGenerator(
       await addLintingGenerator(host, {
         projectName,
         projectRoot: projectConfig.root,
-        prefix: (projectConfig as any).prefix || 'app',
+        prefix: (projectConfig as AngularProjectConfiguration).prefix || 'app',
         /**
          * We set the parserOptions.project config just in case the converted config uses
          * rules which require type-checking. Later in the conversion we check if it actually
          * does and remove the config again if it doesn't, so that it is most efficient.
          */
         setParserOptionsProject: true,
-        skipFormat: options.skipFormat,
+        skipFormat: true,
       });
     },
   });
@@ -87,7 +82,7 @@ export async function conversionGenerator(
   /**
    * Store user preferences for the collection
    */
-  projectConverter.setDefaults('@nrwl/angular', defaults);
+  projectConverter.setDefaults('@nx/angular', defaults);
 
   /**
    * If the Angular project is an app which has an e2e project, try and convert that as well.
@@ -104,7 +99,7 @@ export async function conversionGenerator(
          * step of this parent generator, if applicable
          */
         removeTSLintIfNoMoreTSLintTargets: false,
-        skipFormat: options.skipFormat,
+        skipFormat: true,
       });
     } catch {
       logger.warn(
@@ -136,8 +131,6 @@ export async function conversionGenerator(
     await uninstallTSLintTask();
   };
 }
-
-export const conversionSchematic = convertNxGenerator(conversionGenerator);
 
 /**
  * In the case of Angular lint rules, we need to apply them to correct override depending upon whether

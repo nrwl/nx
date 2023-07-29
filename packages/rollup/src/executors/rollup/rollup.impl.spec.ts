@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import * as rollup from 'rollup';
 import { RollupExecutorOptions } from './schema';
 import { createRollupOptions } from './rollup.impl';
@@ -39,7 +39,11 @@ describe('rollupExecutor', () => {
   describe('createRollupOptions', () => {
     it('should create rollup options for valid config', () => {
       const result: any = createRollupOptions(
-        normalizeRollupExecutorOptions(testOptions, '/root', '/root/src'),
+        normalizeRollupExecutorOptions(
+          testOptions,
+          { root: '/root' } as any,
+          '/root/src'
+        ),
         [],
         context,
         { name: 'example' },
@@ -52,15 +56,15 @@ describe('rollupExecutor', () => {
           dir: '/root/dist/ui',
           format: 'esm',
           name: 'Example',
-          chunkFileNames: '[name].js',
-          entryFileNames: '[name].js',
+          chunkFileNames: '[name].esm.js',
+          entryFileNames: '[name].esm.js',
         },
         {
           dir: '/root/dist/ui',
           format: 'cjs',
           name: 'Example',
-          chunkFileNames: '[name].cjs',
-          entryFileNames: '[name].cjs',
+          chunkFileNames: '[name].cjs.js',
+          entryFileNames: '[name].cjs.js',
         },
       ]);
     });
@@ -74,7 +78,7 @@ describe('rollupExecutor', () => {
       const result: any = createRollupOptions(
         normalizeRollupExecutorOptions(
           { ...testOptions, rollupConfig: 'custom-rollup.config.ts' },
-          '/root',
+          { root: '/root' } as any,
           '/root/src'
         ),
         [],
@@ -110,7 +114,7 @@ describe('rollupExecutor', () => {
               'custom-rollup-2.config.ts',
             ],
           },
-          '/root',
+          { root: '/root' } as any,
           '/root/src'
         ),
         [],
@@ -129,7 +133,11 @@ describe('rollupExecutor', () => {
     it(`should always use forward slashes for asset paths`, () => {
       createRollupOptions(
         {
-          ...normalizeRollupExecutorOptions(testOptions, '/root', '/root/src'),
+          ...normalizeRollupExecutorOptions(
+            testOptions,
+            { root: '/root' } as any,
+            '/root/src'
+          ),
           assets: [
             {
               glob: 'README.md',
@@ -150,9 +158,13 @@ describe('rollupExecutor', () => {
       });
     });
 
-    it(`should treat npm dependencies as external`, () => {
+    it(`should treat npm dependencies as external if external is all`, () => {
       const options = createRollupOptions(
-        normalizeRollupExecutorOptions(testOptions, '/root', '/root/src'),
+        normalizeRollupExecutorOptions(
+          { ...testOptions, external: 'all' },
+          { root: '/root' } as any,
+          '/root/src'
+        ),
         [],
         context,
         { name: 'example' },
@@ -165,6 +177,48 @@ describe('rollupExecutor', () => {
       expect(external('lodash', '', false)).toBe(true);
       expect(external('lodash/fp', '', false)).toBe(true);
       expect(external('rxjs', '', false)).toBe(false);
+    });
+
+    it(`should not treat npm dependencies as external if external is none`, () => {
+      const options = createRollupOptions(
+        normalizeRollupExecutorOptions(
+          { ...testOptions, external: 'none' },
+          { root: '/root' } as any,
+          '/root/src'
+        ),
+        [],
+        context,
+        { name: 'example' },
+        '/root/src',
+        ['lodash']
+      );
+
+      const external = options[0].external as rollup.IsExternal;
+
+      expect(external('lodash', '', false)).toBe(false);
+      expect(external('lodash/fp', '', false)).toBe(false);
+      expect(external('rxjs', '', false)).toBe(false);
+    });
+
+    it(`should set external based on options`, () => {
+      const options = createRollupOptions(
+        normalizeRollupExecutorOptions(
+          { ...testOptions, external: ['rxjs'] },
+          { root: '/root' } as any,
+          '/root/src'
+        ),
+        [],
+        context,
+        { name: 'example' },
+        '/root/src',
+        ['lodash']
+      );
+
+      const external = options[0].external as rollup.IsExternal;
+
+      expect(external('lodash', '', false)).toBe(false);
+      expect(external('lodash/fp', '', false)).toBe(false);
+      expect(external('rxjs', '', false)).toBe(true);
     });
   });
 });

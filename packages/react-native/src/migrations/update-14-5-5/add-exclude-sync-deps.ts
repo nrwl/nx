@@ -3,7 +3,7 @@ import {
   getProjects,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
  * This function changes include field from string to array for sync-deps target

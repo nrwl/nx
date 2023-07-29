@@ -1,4 +1,5 @@
 import scamGenerator from './scam';
-import { convertNxGenerator } from '@nrwl/devkit';
+import { warnForSchematicUsage } from '../utils/warn-for-schematic-usage';
+import { convertNxGenerator } from '@nx/devkit';
 
-export default convertNxGenerator(scamGenerator);
+export default warnForSchematicUsage(convertNxGenerator(scamGenerator));

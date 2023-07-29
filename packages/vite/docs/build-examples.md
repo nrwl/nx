@@ -1,3 +1,8 @@
+---
+title: Examples for the Vite builder executor
+description: This page contains examples for the Vite @nx/vite:build executor.
+---
+
 `project.json`:
 
 ```json
@@ -6,7 +11,7 @@
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/vite:build",
+            "executor": "@nx/vite:build",
             //...
             //...
             "options": {
@@ -36,7 +41,7 @@ Nx will automatically look in the root of your application for a `vite.config.ts
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/vite:build",
+            "executor": "@nx/vite:build",
             //...
             "options": {
                 "outputPath": "dist/apps/my-app",
@@ -58,7 +63,7 @@ or even
     "targets": {
         //...
         "build": {
-            "executor": "@nrwl/vite:build",
+            "executor": "@nx/vite:build",
             //...
             "options": {
                 "outputPath": "dist/apps/my-app",

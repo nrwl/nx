@@ -5,11 +5,33 @@
   "projectType": "library",
   "implicitDependencies": ["graph-client"],
   "targets": {
+    "build-native": {
+      "outputs": ["{projectRoot}/src/native/*.node"],
+      "executor": "@monodon/rust:napi",
+      "options": {
+        "dist": "packages/nx/src/native",
+        "jsFile": "packages/nx/src/native/index.js",
+        "release": true
+      },
+      "configurations": {
+        "local": {
+          "release": false
+        }
+      }
+    },
+    "artifacts": {
+      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages/nx/native-packages"
+    },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/nx/bin/nx.ts",
         "assets": [
+          {
+            "input": "packages/nx",
+            "glob": ".npmignore",
+            "output": "/"
+          },
           {
             "input": "packages/nx",
             "glob": "**/files/**",
@@ -23,7 +45,11 @@
           {
             "input": "packages/nx",
             "glob": "**/*.json",
-            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "ignore": [
+              "**/tsconfig*.json",
+              "**/project.json",
+              "**/__fixtures__/**"
+            ],
             "output": "/"
           },
           {
@@ -46,16 +72,16 @@
       }
     },
     "echo": {
-      "executor": "nx:command",
-      "options": {
-        "command": "echo hi"
-      }
+      "command": "echo hi"
     },
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/nx"],
       "options": {
         "commands": [
+          {
+            "command": "node ./scripts/copy-local-native.js nx"
+          },
           {
             "command": "node ./scripts/copy-graph-client.js"
           },
@@ -66,9 +92,6 @@
             "command": "node ./scripts/copy-readme.js nx"
           },
           {
-            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/cli"
-          },
-          {
             "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
           }
         ],
@@ -76,6 +99,7 @@
       }
     },
     "lint": {},
-    "test": {}
+    "test": {},
+    "test-native": {}
   }
 }

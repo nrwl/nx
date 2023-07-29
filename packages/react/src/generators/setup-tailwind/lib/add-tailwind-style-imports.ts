@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import * as chalk from 'chalk';
 
 import { SetupTailwindOptions } from '../schema';

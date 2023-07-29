@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { readProjectConfiguration } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { readProjectConfiguration } from '@nx/devkit';
 import type { Schema } from '../schema';
 
 export function getRemotesWithPorts(host: Tree, options: Schema) {

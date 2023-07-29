@@ -7,7 +7,7 @@
     "lint": {},
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/js/src/index.ts",
         "assets": [
@@ -50,7 +50,10 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/js"],
       "options": {
-        "command": "node ./scripts/copy-readme.js js"
+        "commands": [
+          "node ./scripts/copy-readme.js js",
+          "node ./scripts/add-dependency-to-build.js js @nrwl/js"
+        ]
       }
     }
   },

@@ -1,0 +1,106 @@
+{
+  "executors": {
+    "run-android": {
+      "implementation": "@nx/react-native/src/executors/run-android/run-android.impl",
+      "schema": "@nx/react-native/src/executors/run-android/schema.json",
+      "description": "Runs Android application."
+    },
+    "run-ios": {
+      "implementation": "@nx/react-native/src/executors/run-ios/run-ios.impl",
+      "schema": "@nx/react-native/src/executors/run-ios/schema.json",
+      "description": "Runs iOS application."
+    },
+    "bundle": {
+      "implementation": "@nx/react-native/src/executors/bundle/bundle.impl",
+      "schema": "@nx/react-native/src/executors/bundle/schema.json",
+      "description": "Builds the JavaScript bundle for offline use."
+    },
+    "build-android": {
+      "implementation": "@nx/react-native/src/executors/build-android/build-android.impl",
+      "schema": "@nx/react-native/src/executors/build-android/schema.json",
+      "description": "Release Build for Android."
+    },
+    "build-ios": {
+      "implementation": "@nx/react-native/src/executors/build-ios/build-ios.impl",
+      "schema": "@nx/react-native/src/executors/build-ios/schema.json",
+      "description": "Build iOS app"
+    },
+    "start": {
+      "implementation": "@nx/react-native/src/executors/start/start.impl",
+      "schema": "@nx/react-native/src/executors/start/schema.json",
+      "description": "Starts the Javascript server that communicates with connected devices."
+    },
+    "sync-deps": {
+      "implementation": "@nx/react-native/src/executors/sync-deps/sync-deps.impl",
+      "schema": "@nx/react-native/src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to `package.json` (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "@nx/react-native/src/executors/ensure-symlink/ensure-symlink.impl",
+      "schema": "@nx/react-native/src/executors/ensure-symlink/schema.json",
+      "description": "Ensure workspace `node_modules` is symlink under app's `node_modules` folder."
+    },
+    "storybook": {
+      "implementation": "@nx/react-native/src/executors/storybook/storybook.impl",
+      "schema": "@nx/react-native/src/executors/storybook/schema.json",
+      "description": "Serve React Native Storybook."
+    },
+    "pod-install": {
+      "implementation": "@nx/react-native/src/executors/pod-install/pod-install.impl",
+      "schema": "@nx/react-native/src/executors/pod-install/schema.json",
+      "description": "Run `pod install` in the `ios` directory."
+    }
+  },
+  "builders": {
+    "run-android": {
+      "implementation": "@nx/react-native/src/executors/run-android/compat",
+      "schema": "@nx/react-native/src/executors/run-android/schema.json",
+      "description": "Runs Android application."
+    },
+    "run-ios": {
+      "implementation": "@nx/react-native/src/executors/run-ios/compat",
+      "schema": "@nx/react-native/src/executors/run-ios/schema.json",
+      "description": "Runs iOS application."
+    },
+    "bundle": {
+      "implementation": "@nx/react-native/src/executors/bundle/compat",
+      "schema": "@nx/react-native/src/executors/bundle/schema.json",
+      "description": "Builds the JavaScript bundle for offline use."
+    },
+    "build-android": {
+      "implementation": "@nx/react-native/src/executors/build-android/compat",
+      "schema": "@nx/react-native/src/executors/build-android/schema.json",
+      "description": "Release Build for Android."
+    },
+    "build-ios": {
+      "implementation": "@nx/react-native/src/executors/build-ios/compat",
+      "schema": "@nx/react-native/src/executors/build-ios/schema.json",
+      "description": "Build iOS app"
+    },
+    "start": {
+      "implementation": "@nx/react-native/src/executors/start/compat",
+      "schema": "@nx/react-native/src/executors/start/schema.json",
+      "description": "Starts the Javascript server that communicates with connected devices."
+    },
+    "sync-deps": {
+      "implementation": "@nx/react-native/src/executors/sync-deps/compat",
+      "schema": "@nx/react-native/src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to `package.json` (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "@nx/react-native/src/executors/ensure-symlink/compat",
+      "schema": "@nx/react-native/src/executors/ensure-symlink/schema.json",
+      "description": "Ensure workspace `node_modules` is symlink under app's `node_modules` folder."
+    },
+    "storybook": {
+      "implementation": "@nx/react-native/src/executors/storybook/compat",
+      "schema": "@nx/react-native/src/executors/storybook/schema.json",
+      "description": "Serve React Native Storybook."
+    },
+    "pod-install": {
+      "implementation": "@nx/react-native/src/executors/pod-install/compat",
+      "schema": "@nx/react-native/src/executors/pod-install/schema.json",
+      "description": "Run `pod install` in the `ios` directory."
+    }
+  }
+}

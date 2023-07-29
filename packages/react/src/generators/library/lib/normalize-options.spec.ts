@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import { Linter } from '@nrwl/linter';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Tree } from '@nx/devkit';
+import { Linter } from '@nx/linter';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { normalizeOptions } from './normalize-options';
 
 describe('normalizeOptions', () => {

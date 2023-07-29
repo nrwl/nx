@@ -1,23 +1,61 @@
-import type { Tree } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import type { Tree } from '@nx/devkit';
+import { names, readProjectConfiguration, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
-import libraryGenerator from '../library/library';
+import { angularDevkitVersion } from '../../utils/versions';
+import { applicationGenerator } from '../application/application';
+import type { Schema as ApplicationOptions } from '../application/schema';
+import { componentGenerator } from '../component/component';
+import { host } from '../host/host';
+import type { Schema as HostOptions } from '../host/schema';
+import { libraryGenerator } from '../library/library';
+import type { Schema as LibraryOptions } from '../library/schema';
+import { remote } from '../remote/remote';
+import type { Schema as RemoteOptions } from '../remote/schema';
+
+export async function generateTestApplication(
+  tree: Tree,
+  options: ApplicationOptions
+): Promise<void> {
+  addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
+  await applicationGenerator(tree, options);
+}
+
+export async function generateTestHostApplication(
+  tree: Tree,
+  options: HostOptions
+): Promise<void> {
+  addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
+  await host(tree, options);
+}
+
+export async function generateTestRemoteApplication(
+  tree: Tree,
+  options: RemoteOptions
+): Promise<void> {
+  addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
+  await remote(tree, options);
+}
+
+export async function generateTestLibrary(
+  tree: Tree,
+  options: LibraryOptions
+): Promise<void> {
+  addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
+  await libraryGenerator(tree, options);
+}
 
 export async function createStorybookTestWorkspaceForLib(
   libName: string
 ): Promise<Tree> {
   let tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-  const moduleGenerator = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'module'
-  );
-  const componentGenerator = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'component'
-  );
+  addAngularPluginPeerDeps(tree);
+  tree.write('.gitignore', '');
 
   await libraryGenerator(tree, {
     name: libName,
@@ -66,7 +104,7 @@ export class TestButtonComponent {
   );
 
   // create a module with component that gets exported in a barrel file
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'barrel',
     project: libName,
   });
@@ -97,7 +135,7 @@ export class BarrelModule {}`
   );
 
   // create a module with components that get Angular exported and declared by variable
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'variable-declare',
     project: libName,
   });
@@ -137,7 +175,7 @@ export class VariableDeclareModule {}`
   );
 
   // create a module with components that get Angular exported and declared by variable
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'variable-spread-declare',
     project: libName,
   });
@@ -184,7 +222,7 @@ export class VariableSpreadDeclareModule {}`
   );
 
   // create a module where declared components are pulled from a static member of the module
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'static-member-declarations',
     project: libName,
   });
@@ -221,7 +259,7 @@ export class StaticMemberDeclarationsModule {
   );
 
   // create another button in a nested subpath
-  await moduleGenerator(tree, {
+  generateModule(tree, {
     name: 'nested',
     project: libName,
     path: `libs/${libName}/src/lib`,
@@ -240,4 +278,45 @@ export class StaticMemberDeclarationsModule {
   });
 
   return tree;
+}
+
+function addAngularPluginPeerDeps(tree: Tree): void {
+  updateJson(tree, 'package.json', (json) => ({
+    ...json,
+    devDependencies: {
+      ...json.devDependencies,
+      '@angular-devkit/core': angularDevkitVersion,
+      '@angular-devkit/schematics': angularDevkitVersion,
+      '@schematics/angular': angularDevkitVersion,
+    },
+  }));
+}
+
+function generateModule(
+  tree: Tree,
+  options: { name: string; project: string; path?: string }
+): void {
+  const project = readProjectConfiguration(tree, options.project);
+
+  if (options.path === undefined) {
+    const sourceRoot = project.sourceRoot ?? `${project.root}/src`;
+    const projectDirName =
+      project.projectType === 'application' ? 'app' : 'lib';
+    options.path = `${sourceRoot}/${projectDirName}`;
+  }
+
+  const moduleNames = names(options.name);
+  const moduleFilePath = `${options.path}/${moduleNames.fileName}/${moduleNames.fileName}.module.ts`;
+
+  tree.write(
+    moduleFilePath,
+    `import { NgModule } from '@angular/core';
+  import { CommonModule } from '@angular/common';
+  
+  @NgModule({
+    declarations: [],
+    imports: [CommonModule],
+  })
+  export class ${moduleNames.className}Module {}`
+  );
 }

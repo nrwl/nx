@@ -1,12 +1,14 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import host from './host';
-import remote from '../remote/remote';
-import { E2eTestRunner } from '../../utils/test-runners';
+import { stripIndents, updateJson } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
   readProjectConfiguration,
 } from 'nx/src/generators/utils/project-configuration';
-import { stripIndents, updateJson } from '@nrwl/devkit';
+import { E2eTestRunner } from '../../utils/test-runners';
+import {
+  generateTestHostApplication,
+  generateTestRemoteApplication,
+} from '../utils/testing';
 
 describe('Host App Generator', () => {
   it('should generate a host app with no remotes', async () => {
@@ -14,7 +16,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'test',
     });
 
@@ -26,12 +28,12 @@ describe('Host App Generator', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'remote',
     });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'test',
       remotes: ['remote'],
     });
@@ -49,7 +51,7 @@ describe('Host App Generator', () => {
 
     // ACT
 
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'hostApp',
       remotes: ['remote1', 'remote2'],
     });
@@ -59,14 +61,13 @@ describe('Host App Generator', () => {
     expect(tree.exists('apps/remote2/project.json')).toBeTruthy();
     expect(
       tree.read('apps/host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1','remote2'`);
+    ).toContain(`'remote1', 'remote2'`);
     expect(tree.read('apps/host-app/src/app/app.component.html', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "<ul class=\\"remote-menu\\">
-      <li><a routerLink='/'>Home</a></li>
-
-      <li><a routerLink='remote1'>Remote1</a></li>
-      <li><a routerLink='remote2'>Remote2</a></li>
+      "<ul class="remote-menu">
+        <li><a routerLink="/">Home</a></li>
+        <li><a routerLink="remote1">Remote1</a></li>
+        <li><a routerLink="remote2">Remote2</a></li>
       </ul>
       <router-outlet></router-outlet>
       "
@@ -76,12 +77,12 @@ describe('Host App Generator', () => {
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'remote1',
     });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'hostApp',
       remotes: ['remote1', 'remote2', 'remote3'],
     });
@@ -92,18 +93,18 @@ describe('Host App Generator', () => {
     expect(tree.exists('apps/remote3/project.json')).toBeTruthy();
     expect(
       tree.read('apps/host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1','remote2','remote3'`);
+    ).toContain(`'remote1', 'remote2', 'remote3'`);
   });
 
   it('should generate a host, integrate existing remotes and generate any remotes that dont exist, in a directory', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await remote(tree, {
+    await generateTestRemoteApplication(tree, {
       name: 'remote1',
     });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'hostApp',
       directory: 'foo',
       remotes: ['remote1', 'remote2', 'remote3'],
@@ -115,7 +116,7 @@ describe('Host App Generator', () => {
     expect(tree.exists('apps/foo/remote3/project.json')).toBeTruthy();
     expect(
       tree.read('apps/foo/host-app/module-federation.config.js', 'utf-8')
-    ).toContain(`'remote1','foo-remote2','foo-remote3'`);
+    ).toContain(`'remote1', 'foo-remote2', 'foo-remote3'`);
   });
 
   it('should generate a host with remotes using standalone components', async () => {
@@ -123,7 +124,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'host',
       remotes: ['remote1'],
       standalone: true,
@@ -143,7 +144,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'host',
       remotes: ['remote1'],
       standalone: true,
@@ -160,7 +161,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'dashboard',
       remotes: ['remote1'],
       directory: 'test',
@@ -178,7 +179,7 @@ describe('Host App Generator', () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     // ACT
-    await host(tree, {
+    await generateTestHostApplication(tree, {
       name: 'dashboard',
       remotes: ['remote1'],
       e2eTestRunner: E2eTestRunner.None,
@@ -196,7 +197,7 @@ describe('Host App Generator', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       // ACT
-      await host(tree, {
+      await generateTestHostApplication(tree, {
         name: 'test',
         ssr: true,
       });
@@ -228,6 +229,49 @@ describe('Host App Generator', () => {
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
     });
+
+    it('should generate the correct files for standalone', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+      // ACT
+      await generateTestHostApplication(tree, {
+        name: 'test',
+        standalone: true,
+        ssr: true,
+      });
+
+      // ASSERT
+      const project = readProjectConfiguration(tree, 'test');
+      expect(tree.exists(`apps/test/src/app/app.module.ts`)).toBeFalsy();
+      expect(
+        tree.read(`apps/test/src/bootstrap.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/bootstrap.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/main.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read(`apps/test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/module-federation.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/webpack.server.config.js`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.config.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`apps/test/src/app/app.config.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(project.targets.server).toMatchSnapshot();
+      expect(project.targets['serve-ssr']).toMatchSnapshot();
+    });
   });
 
   it('should error correctly when Angular version does not support standalone', async () => {
@@ -242,7 +286,7 @@ describe('Host App Generator', () => {
 
     // ACT & ASSERT
     await expect(
-      host(tree, {
+      generateTestHostApplication(tree, {
         name: 'test',
         standalone: true,
       })

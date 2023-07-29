@@ -1,13 +1,20 @@
-import { extractLayoutDirectory, joinPathFragments, Tree } from '@nrwl/devkit';
+import {
+  extractLayoutDirectory,
+  getWorkspaceLayout,
+  joinPathFragments,
+  names,
+  Tree,
+} from '@nx/devkit';
+
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
+
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
-
-import { names, getWorkspaceLayout } from '@nrwl/devkit';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import {
   normalizeDirectory,
-  normalizePrefix,
+  normalizeNewProjectPrefix,
   normalizeProjectName,
 } from '../../utils/project';
 
@@ -24,11 +31,8 @@ export function normalizeOptions(
     ? 'e2e'
     : `${names(options.name).fileName}-e2e`;
 
-  const {
-    appsDir: defaultAppsDir,
-    npmScope,
-    standaloneAsDefault,
-  } = getWorkspaceLayout(host);
+  const { appsDir: defaultAppsDir, standaloneAsDefault } =
+    getWorkspaceLayout(host);
   const appsDir = layoutDirectory ?? defaultAppsDir;
   const appProjectRoot = options.rootProject
     ? '.'
@@ -41,7 +45,11 @@ export function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const prefix = normalizePrefix(options.prefix, npmScope);
+  const prefix = normalizeNewProjectPrefix(
+    options.prefix,
+    getNpmScope(host),
+    'app'
+  );
 
   options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
 
@@ -54,12 +62,13 @@ export function normalizeOptions(
     routing: false,
     inlineStyle: false,
     inlineTemplate: false,
-    skipTests: false,
+    skipTests: options.unitTestRunner === UnitTestRunner.None,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
     e2eTestRunner: E2eTestRunner.Cypress,
     linter: Linter.EsLint,
     strict: true,
+    bundler: options.bundler ?? 'webpack',
     ...options,
     prefix,
     name: appProjectName,

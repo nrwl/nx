@@ -1,4 +1,4 @@
-import type { Linter } from '@nrwl/linter';
+import type { Linter } from '@nx/linter';
 import { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
@@ -21,12 +21,12 @@ export interface Schema {
   skipFormat?: boolean;
   skipPackageJson?: boolean;
   skipTsConfig?: boolean;
-  standaloneConfig?: boolean;
   strict?: boolean;
   style: SupportedStyles;
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   minimal?: boolean;
+  simpleName?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

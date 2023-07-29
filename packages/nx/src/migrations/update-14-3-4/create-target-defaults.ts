@@ -1,3 +1,5 @@
+import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
+import { NxJsonConfiguration } from '../../config/nx-json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { Tree } from '../../generators/tree';
 import { readNxJson, updateNxJson } from '../../generators/utils/nx-json';
@@ -8,7 +10,9 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const nxJson = readNxJson(tree);
+  const nxJson: NxJsonConfiguration & {
+    targetDependencies?: Record<string, TargetDependencyConfig[]>;
+  } = readNxJson(tree);
 
   if (nxJson.targetDependencies) {
     nxJson.targetDefaults = {};

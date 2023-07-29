@@ -38,10 +38,6 @@
             "label": "SASS(.scss)       [ http://sass-lang.com          ]"
           },
           {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
-          },
-          {
             "value": "less",
             "label": "LESS              [ http://lesscss.org            ]"
           },
@@ -56,13 +52,17 @@
           {
             "value": "styled-jsx",
             "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+          },
+          {
+            "value": "none",
+            "label": "None"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com        ] (DEPRECATED)"
           }
         ]
       }
-    },
-    "server": {
-      "description": "The server script path to be used with next.",
-      "type": "string"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -72,12 +72,6 @@
     },
     "skipFormat": {
       "description": "Skip formatting files.",
-      "type": "boolean",
-      "default": false,
-      "x-priority": "internal"
-    },
-    "skipWorkspaceJson": {
-      "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. `babel`, `style`).",
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
@@ -109,12 +103,6 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
-    },
     "swc": {
       "description": "Enable the Rust-based compiler SWC to compile JS/TS files.",
       "type": "boolean",
@@ -124,6 +112,25 @@
       "description": "Use a custom Express server for the Next.js application.",
       "type": "boolean",
       "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "appDir": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable the App Router for this project.",
+      "x-prompt": "Would you like to use the App Router (recommended)?"
+    },
+    "rootProject": {
+      "description": "Create an application at the root of the workspace.",
+      "type": "boolean",
+      "default": false,
+      "hidden": true,
+      "x-priority": "internal"
     }
   },
   "required": [],

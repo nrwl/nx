@@ -9,7 +9,7 @@ import {
   joinPathFragments,
   toJS,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
 

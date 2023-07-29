@@ -6,6 +6,7 @@ import { logger } from './logger';
 import { output } from './output';
 import { Schema } from './params';
 import { nxVersion } from './versions';
+import { readModulePackageJson } from './package-json';
 
 export function printHelp(
   header: string,
@@ -97,6 +98,11 @@ function generateGeneratorOverviewOutput({
     // The `:` char
     1;
 
+  let installedVersion: string;
+  try {
+    installedVersion = readModulePackageJson(pluginName).packageJson.version;
+  } catch {}
+
   ui.div(
     ...[
       {
@@ -107,9 +113,7 @@ function generateGeneratorOverviewOutput({
       {
         text:
           pluginName +
-          (pluginName.startsWith('@nrwl/')
-            ? chalk.dim(` (v${nxVersion})`)
-            : ''),
+          (installedVersion ? chalk.dim(` (v${installedVersion})`) : ''),
         padding: [1, 0, 0, 2],
       },
     ]
@@ -214,8 +218,10 @@ function generateOptionsOutput(schema: Schema): string {
     }
   >();
   let requiredSpaceToRenderAllFlagsAndAliases = 0;
-
-  for (const [optionName, optionConfig] of Object.entries(schema.properties)) {
+  const sorted = Object.entries(schema.properties).sort((a, b) =>
+    compareByPriority(a, b, schema)
+  );
+  for (const [optionName, optionConfig] of sorted) {
     const renderedFlagAndAlias =
       `--${optionName}` +
       (optionConfig.alias ? `, -${optionConfig.alias}` : '');
@@ -240,11 +246,13 @@ function generateOptionsOutput(schema: Schema): string {
         : ''
     }`;
 
-    optionsToRender.set(optionName, {
-      renderedFlagAndAlias,
-      renderedDescription,
-      renderedTypesAndDefault,
-    });
+    optionConfig.hidden ??= optionConfig.visible === false;
+    if (!optionConfig.hidden)
+      optionsToRender.set(optionName, {
+        renderedFlagAndAlias,
+        renderedDescription,
+        renderedTypesAndDefault,
+      });
   }
 
   ui.div({
@@ -323,16 +331,63 @@ function generateLinkOutput({
   name: string;
   type: 'generators' | 'executors';
 }): string {
+  const nxPackagePrefix = '@nx/';
   const nrwlPackagePrefix = '@nrwl/';
-  if (!pluginName.startsWith(nrwlPackagePrefix)) {
+  if (
+    !pluginName.startsWith(nxPackagePrefix) &&
+    !pluginName.startsWith(nrwlPackagePrefix)
+  ) {
     return '';
   }
 
   const link = `https://nx.dev/packages/${pluginName.substring(
-    nrwlPackagePrefix.length
+    pluginName.startsWith(nxPackagePrefix)
+      ? nxPackagePrefix.length
+      : nrwlPackagePrefix.length
   )}/${type}/${name}`;
 
   return `\n\n${chalk.dim(
     'Find more information and examples at:'
   )} ${chalk.bold(link)}`;
+}
+
+/**
+ * sorts properties in the following order
+ * - required
+ * - x-priority: important
+ * - everything else
+ * - x-priority: internal
+ * - deprecated
+ * if two properties have equal priority, they are sorted by name
+ */
+function compareByPriority(
+  a: [string, Schema['properties'][0]],
+  b: [string, Schema['properties'][0]],
+  schema: Schema
+): number {
+  function getPriority([name, property]: [
+    string,
+    Schema['properties'][0]
+  ]): number {
+    if (schema.required?.includes(name)) {
+      return 0;
+    }
+    if (property['x-priority'] === 'important') {
+      return 1;
+    }
+    if (property['x-deprecated']) {
+      return 4;
+    }
+    if (property['x-priority'] === 'internal') {
+      return 3;
+    }
+    return 2;
+  }
+
+  const aPriority = getPriority(a);
+  const bPriority = getPriority(b);
+  if (aPriority === bPriority) {
+    return a[0].localeCompare(b[0]);
+  }
+  return aPriority - bPriority;
 }

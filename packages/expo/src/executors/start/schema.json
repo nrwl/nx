@@ -88,16 +88,12 @@
       "type": "boolean",
       "description": "Allows this command to run while offline"
     },
-    "sentTo": {
-      "type": "string",
-      "description": "An email address to send a link to",
-      "alias": "s",
-      "x-deprecated": true
-    },
-    "webpack": {
+    "sync": {
       "type": "boolean",
-      "description": "Start a Webpack dev server for the web app.",
-      "x-deprecated": true
+      "description": "Syncs npm dependencies to package.json (for React Native autolink).",
+      "x-deprecated": "Add sync-deps to dependsOn in project.json for this target instead",
+      "default": true
     }
-  }
+  },
+  "examplesFile": "../../../docs/start-examples.md"
 }

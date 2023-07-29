@@ -24,7 +24,7 @@ export function DebouncedTextInput({
 
   function onTextFilterKeyUp(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === 'Enter') {
-      updateTextFilter(event.currentTarget.value);
+      onTextInputChange(event.currentTarget.value);
     }
   }
 

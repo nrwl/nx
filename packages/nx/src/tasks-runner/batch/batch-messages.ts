@@ -1,29 +1,42 @@
-import { TaskGraph } from '../../config/task-graph';
+import type { TaskResult } from '../../config/misc-interfaces';
+import type { TaskGraph } from '../../config/task-graph';
 
 export enum BatchMessageType {
-  Tasks,
-  Complete,
+  RunTasks,
+  CompleteTask,
+  CompleteBatchExecution,
 }
 
-export interface BatchTasksMessage {
-  type: BatchMessageType.Tasks;
-  executorName: string;
-  taskGraph: TaskGraph;
-}
 /**
  * Results of running the batch. Mapped from task id to results
  */
 export interface BatchResults {
-  [taskId: string]: {
-    success: boolean;
-    terminalOutput?: string;
-    startTime?: number;
-    endTime?: number;
-  };
+  [taskId: string]: TaskResult;
 }
-export interface BatchCompleteMessage {
-  type: BatchMessageType.Complete;
+export interface BatchTaskResult {
+  task: string;
+  result: TaskResult;
+}
+
+export interface RunTasksMessage {
+  type: BatchMessageType.RunTasks;
+  executorName: string;
+  batchTaskGraph: TaskGraph;
+  fullTaskGraph: TaskGraph;
+}
+
+export interface CompleteTaskMessage {
+  type: BatchMessageType.CompleteTask;
+  task: string;
+  result: TaskResult;
+}
+
+export interface CompleteBatchExecutionMessage {
+  type: BatchMessageType.CompleteBatchExecution;
   results: BatchResults;
 }
 
-export type BatchMessage = BatchTasksMessage | BatchCompleteMessage;
+export type BatchMessage =
+  | RunTasksMessage
+  | CompleteTaskMessage
+  | CompleteBatchExecutionMessage;

@@ -2,9 +2,9 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import * as nxDevkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import * as nxDevkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateBuildTargets } from './update-build-targets';
 import { array } from 'yargs';
@@ -27,7 +27,7 @@ describe('updateBuildTargets', () => {
       root: 'libs/my-source',
       targets: {
         storybook: {
-          executor: '@nrwl/storybook:storybook',
+          executor: '@nx/storybook:storybook',
         },
       },
     });
@@ -76,7 +76,7 @@ describe('updateBuildTargets', () => {
 
     expect(myProject).toBeDefined();
     expect(myProject.targets.storybook.executor).toBe(
-      '@nrwl/storybook:storybook'
+      '@nx/storybook:storybook'
     );
 
     expect(e2eProject).toBeDefined();

@@ -1,4 +1,4 @@
-import { Tag } from '@nrwl/graph/ui-components';
+import { Tag } from '@nx/graph/ui-components';
 import { ReactNode } from 'react';
 
 export interface ProjectNodeToolTipProps {

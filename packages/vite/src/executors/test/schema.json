@@ -56,6 +56,11 @@
     "reportsDirectory": {
       "type": "string",
       "description": "Directory to write coverage report to."
+    },
+    "testFiles": {
+      "aliases": ["testFile"],
+      "type": "array",
+      "items": { "type": "string" }
     }
   },
   "required": [],

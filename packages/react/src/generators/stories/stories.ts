@@ -4,25 +4,35 @@ import {
   findExportDeclarationsForJsx,
   getComponentNode,
 } from '../../utils/ast-utils';
-import * as ts from 'typescript';
 import {
+  addDependenciesToPackageJson,
   convertNxGenerator,
+  ensurePackage,
+  formatFiles,
+  GeneratorCallback,
   getProjects,
   joinPathFragments,
   logger,
   ProjectConfiguration,
+  runTasksInSerial,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, join } from 'path';
 import minimatch = require('minimatch');
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { nxVersion } from '../../utils/versions';
+
+let tsModule: typeof import('typescript');
 
 export interface StorybookStoriesSchema {
   project: string;
-  generateCypressSpecs: boolean;
+  interactionTests?: boolean;
   js?: boolean;
-  cypressProject?: string;
   ignorePaths?: string[];
+  skipFormat?: boolean;
+  cypressProject?: string;
+  generateCypressSpecs?: boolean;
 }
 
 export async function projectRootPath(
@@ -30,7 +40,7 @@ export async function projectRootPath(
   config: ProjectConfiguration
 ): Promise<string> {
   const { findStorybookAndBuildTargetsAndCompiler } = await import(
-    '@nrwl/storybook/src/utils/utilities'
+    '@nx/storybook/src/utils/utilities'
   );
   let projectDir: string;
   if (config.projectType === 'application') {
@@ -55,15 +65,19 @@ export function containsComponentDeclaration(
   tree: Tree,
   componentPath: string
 ): boolean {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   const contents = tree.read(componentPath, 'utf-8');
   if (contents === null) {
     throw new Error(`Failed to read ${componentPath}`);
   }
 
-  const sourceFile = ts.createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     componentPath,
     contents,
-    ts.ScriptTarget.Latest,
+    tsModule.ScriptTarget.Latest,
     true
   );
 
@@ -76,16 +90,16 @@ export function containsComponentDeclaration(
 export async function createAllStories(
   tree: Tree,
   projectName: string,
-  generateCypressSpecs: boolean,
+  interactionTests: boolean,
   js: boolean,
+  projects: Map<string, ProjectConfiguration>,
+  projectConfiguration: ProjectConfiguration,
+  generateCypressSpecs?: boolean,
   cypressProject?: string,
   ignorePaths?: string[]
 ) {
-  const { isTheFileAStory } = await import(
-    '@nrwl/storybook/src/utils/utilities'
-  );
-  const projects = getProjects(tree);
-  const projectConfiguration = projects.get(projectName);
+  const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
+
   const { sourceRoot, root } = projectConfiguration;
   let componentPaths: string[] = [];
 
@@ -135,6 +149,8 @@ export async function createAllStories(
       await componentStoryGenerator(tree, {
         componentPath: relativeCmpDir,
         project: projectName,
+        skipFormat: true,
+        interactionTests,
       });
 
       if (generateCypressSpecs && e2eProject) {
@@ -143,6 +159,7 @@ export async function createAllStories(
           componentPath: relativeCmpDir,
           js,
           cypressProject,
+          skipFormat: true,
         });
       }
     })
@@ -153,14 +170,36 @@ export async function storiesGenerator(
   host: Tree,
   schema: StorybookStoriesSchema
 ) {
+  const projects = getProjects(host);
+  const projectConfiguration = projects.get(schema.project);
+  schema.interactionTests = schema.interactionTests ?? true;
   await createAllStories(
     host,
     schema.project,
-    schema.generateCypressSpecs,
+    schema.interactionTests,
     schema.js,
+    projects,
+    projectConfiguration,
+    schema.generateCypressSpecs,
     schema.cypressProject,
     schema.ignorePaths
   );
+
+  const tasks: GeneratorCallback[] = [];
+
+  if (schema.interactionTests) {
+    const { interactionTestsDependencies, addInteractionsInAddons } =
+      ensurePackage<typeof import('@nx/storybook')>('@nx/storybook', nxVersion);
+    tasks.push(
+      addDependenciesToPackageJson(host, {}, interactionTestsDependencies())
+    );
+    addInteractionsInAddons(host, projectConfiguration);
+  }
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
+  return runTasksInSerial(...tasks);
 }
 
 export default storiesGenerator;

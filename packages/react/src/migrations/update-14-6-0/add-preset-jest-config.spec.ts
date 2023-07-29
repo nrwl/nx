@@ -2,8 +2,8 @@ import {
   addProjectConfiguration,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addBabelJestPresetTransformerOption } from './add-preset-jest-config';
 
 function setup(

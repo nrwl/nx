@@ -1,18 +1,16 @@
-import * as devkit from '@nrwl/devkit';
+import * as devkit from '@nx/devkit';
 import {
   getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 // nx-ignore-next-line
-import { applicationGenerator as angularApplicationGenerator } from '@nrwl/angular/generators';
+import { applicationGenerator as angularApplicationGenerator } from '@nx/angular/generators';
 import { Schema } from './schema';
 import { applicationGenerator } from './application';
-import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
-import { join } from 'path';
 
 describe('app', () => {
   let tree: Tree;
@@ -20,20 +18,7 @@ describe('app', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
 
-    overrideCollectionResolutionForTesting({
-      '@nrwl/cypress': join(__dirname, '../../../../cypress/generators.json'),
-      '@nrwl/jest': join(__dirname, '../../../../jest/generators.json'),
-      '@nrwl/workspace': join(
-        __dirname,
-        '../../../../workspace/generators.json'
-      ),
-      '@nrwl/angular': join(__dirname, '../../../../angular/generators.json'),
-    });
     jest.clearAllMocks();
-  });
-
-  afterEach(() => {
-    overrideCollectionResolutionForTesting(null);
   });
 
   describe('not nested', () => {
@@ -47,8 +32,9 @@ describe('app', () => {
       expect(project.targets).toEqual(
         expect.objectContaining({
           build: {
-            executor: '@nrwl/webpack:webpack',
+            executor: '@nx/webpack:webpack',
             outputs: ['{options.outputPath}'],
+            defaultConfiguration: 'production',
             options: {
               target: 'node',
               compiler: 'tsc',
@@ -60,19 +46,20 @@ describe('app', () => {
               assets: ['my-node-app/src/assets'],
             },
             configurations: {
-              production: {
-                optimization: true,
-                extractLicenses: true,
-                inspect: false,
-              },
+              development: {},
+              production: {},
             },
           },
           serve: {
-            executor: '@nrwl/js:node',
+            executor: '@nx/js:node',
+            defaultConfiguration: 'development',
             options: {
               buildTarget: 'my-node-app:build',
             },
             configurations: {
+              development: {
+                buildTarget: 'my-node-app:build:development',
+              },
               production: {
                 buildTarget: 'my-node-app:build:production',
               },
@@ -81,7 +68,7 @@ describe('app', () => {
         })
       );
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-node-app/**/*.ts'],
@@ -114,18 +101,18 @@ describe('app', () => {
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
       expect(tsconfig).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "esModuleInterop": true,
           },
           "extends": "../tsconfig.base.json",
-          "files": Array [],
-          "include": Array [],
-          "references": Array [
-            Object {
+          "files": [],
+          "include": [],
+          "references": [
+            {
               "path": "./tsconfig.app.json",
             },
-            Object {
+            {
               "path": "./tsconfig.spec.json",
             },
           ],
@@ -142,36 +129,36 @@ describe('app', () => {
       ]);
       const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
+        {
+          "extends": [
             "../.eslintrc.json",
           ],
-          "ignorePatterns": Array [
+          "ignorePatterns": [
             "!**/*",
           ],
-          "overrides": Array [
-            Object {
-              "files": Array [
+          "overrides": [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
           ],
         }
@@ -201,7 +188,7 @@ describe('app', () => {
       expect(project.root).toEqual('my-dir/my-node-app');
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
+        executor: '@nx/linter:eslint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-dir/my-node-app/**/*.ts'],
@@ -290,14 +277,14 @@ describe('app', () => {
       const project = readProjectConfiguration(tree, 'my-node-app');
       expect(project.targets.test).toBeUndefined();
       expect(project.targets.lint).toMatchInlineSnapshot(`
-        Object {
-          "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
+        {
+          "executor": "@nx/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
               "my-node-app/**/*.ts",
             ],
           },
-          "outputs": Array [
+          "outputs": [
             "{options.outputFile}",
           ],
         }
@@ -336,8 +323,8 @@ describe('app', () => {
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
 
       expect(readJson(tree, 'my-frontend/proxy.conf.json')).toEqual({
-        '/api': { target: 'http://localhost:3333', secure: false },
-        '/billing-api': { target: 'http://localhost:3333', secure: false },
+        '/api': { target: 'http://localhost:3000', secure: false },
+        '/billing-api': { target: 'http://localhost:3000', secure: false },
       });
     });
 
@@ -356,7 +343,33 @@ describe('app', () => {
     });
   });
 
-  describe('--babelJest', () => {
+  describe('--swcJest', () => {
+    it('should use @swc/jest for jest', async () => {
+      await applicationGenerator(tree, {
+        name: 'myNodeApp',
+        tags: 'one,two',
+        swcJest: true,
+      } as Schema);
+
+      expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        export default {
+          displayName: 'my-node-app',
+          preset: '../jest.preset.js',
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': '@swc/jest',
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../coverage/my-node-app',
+        };
+        "
+      `);
+    });
+  });
+
+  describe('--babelJest (deprecated)', () => {
     it('should use babel for jest', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
@@ -372,15 +385,16 @@ describe('app', () => {
           preset: '../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': 'babel-jest'
+            '^.+\\\\.[tj]s$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-node-app'
+          coverageDirectory: '../coverage/my-node-app',
         };
         "
       `);
     });
   });
+
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await applicationGenerator(tree, {
@@ -457,6 +471,27 @@ describe('app', () => {
       await applicationGenerator(tree, { name: 'myNodeApp', skipFormat: true });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
+    });
+  });
+
+  describe.each([
+    ['fastify' as const, true],
+    ['express' as const, false],
+    ['koa' as const, false],
+    ['nest' as const, false],
+  ])('--unitTestRunner', (framework, checkSpecFile) => {
+    it('should generate test target and spec file by default', async () => {
+      await applicationGenerator(tree, {
+        name: 'api',
+        framework,
+      });
+
+      const project = readProjectConfiguration(tree, 'api');
+      expect(project.targets.test).toBeDefined();
+
+      if (checkSpecFile) {
+        expect(tree.exists(`api/src/app/app.spec.ts`)).toBeTruthy();
+      }
     });
   });
 });

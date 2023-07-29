@@ -9,13 +9,13 @@ import { useEnvironmentConfig } from './hooks/use-environment-config';
 import { getGraphService } from './machines/graph.service';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { ThemePanel } from './feature-projects/panels/theme-panel';
-import { Dropdown } from '@nrwl/graph/ui-components';
+import { Dropdown } from '@nx/graph/ui-components';
 import { useCurrentPath } from './hooks/use-current-path';
 import { ExperimentalFeature } from './ui-components/experimental-feature';
 import { RankdirPanel } from './feature-projects/panels/rankdir-panel';
 import { getProjectGraphService } from './machines/get-services';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
-import { Tooltip } from '@nrwl/graph/ui-tooltips';
+import { Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
 
 export function Shell(): JSX.Element {
@@ -114,7 +114,9 @@ export function Shell(): JSX.Element {
                   }}
                 >
                   {routes.map((route) => (
-                    <option value={route.route}>{route.label}</option>
+                    <option key={route.label} value={route.route}>
+                      {route.label}
+                    </option>
                   ))}
                 </Dropdown>
 
@@ -184,12 +186,12 @@ export function Shell(): JSX.Element {
           <Tooltip
             openAction="hover"
             content="Download Graph as PNG"
-            placement="right"
+            placement="left"
           >
             <button
               type="button"
               className={classNames(
-                !nodesVisible ? 'opacity-0' : '',
+                !nodesVisible ? 'invisible opacity-0' : '',
                 'fixed bottom-4 right-4 z-50 block h-16 w-16 transform rounded-full bg-blue-500 text-white shadow-sm transition duration-300 dark:bg-sky-500'
               )}
               data-cy="downloadImageButton"

@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
@@ -28,7 +28,8 @@ function getTargets(options: NormalizedSchema) {
   const architect: { [key: string]: TargetConfiguration } = {};
 
   architect.start = {
-    executor: '@nrwl/expo:start',
+    executor: '@nx/expo:start',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {
       port: 8081,
     },
@@ -42,113 +43,75 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect['run-ios'] = {
-    executor: '@nrwl/expo:run',
+    executor: '@nx/expo:run',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {
       platform: 'ios',
     },
   };
 
   architect['run-android'] = {
-    executor: '@nrwl/expo:run',
+    executor: '@nx/expo:run',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {
       platform: 'android',
     },
   };
 
   architect['build'] = {
-    executor: '@nrwl/expo:build',
+    executor: '@nx/expo:build',
+    options: {},
+  };
+
+  architect['submit'] = {
+    executor: '@nx/expo:submit',
     options: {},
   };
 
   architect['build-list'] = {
-    executor: '@nrwl/expo:build-list',
+    executor: '@nx/expo:build-list',
     options: {},
   };
 
+  /**
+   * @deprecated TODO(v17) this executor is no longer used, to be removed in v17
+   */
   architect['download'] = {
-    executor: '@nrwl/expo:download',
+    executor: '@nx/expo:download',
     options: {
       output: `${options.appProjectRoot}/dist`,
     },
   };
 
-  // @deprecated, no longer supported in @expo/cli
-  architect['build-ios'] = {
-    executor: '@nrwl/expo:build-ios',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['build-android'] = {
-    executor: '@nrwl/expo:build-android',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['build-web'] = {
-    executor: '@nrwl/expo:build-web',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['build-status'] = {
-    executor: '@nrwl/expo:build-web',
-    options: {},
-  };
-
   architect['sync-deps'] = {
-    executor: '@nrwl/expo:sync-deps',
+    executor: '@nx/expo:sync-deps',
     options: {},
   };
 
   architect['ensure-symlink'] = {
-    executor: '@nrwl/expo:ensure-symlink',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['publish'] = {
-    executor: '@nrwl/expo:publish',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['publish-set'] = {
-    executor: '@nrwl/expo:publish-set',
-    options: {},
-  };
-
-  // @deprecated, no longer supported in @expo/cli
-  architect['rollback'] = {
-    executor: '@nrwl/expo:rollback',
+    executor: '@nx/expo:ensure-symlink',
     options: {},
   };
 
   architect['prebuild'] = {
-    executor: '@nrwl/expo:prebuild',
+    executor: '@nx/expo:prebuild',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {},
   };
 
-  // @deprecated, no longer supported in @expo/cli
-  architect['eject'] = {
-    executor: 'nx:run-commands',
-    options: {
-      command: `nx prebuild ${options.name}`,
-    },
-  };
-
   architect['install'] = {
-    executor: '@nrwl/expo:install',
+    executor: '@nx/expo:install',
     options: {},
   };
 
   architect['update'] = {
-    executor: '@nrwl/expo:update',
+    executor: '@nx/expo:update',
     options: {},
   };
 
   architect['export'] = {
-    executor: '@nrwl/expo:export',
+    executor: '@nx/expo:export',
+    dependsOn: ['ensure-symlink', 'sync-deps'],
     options: {
       platform: 'all',
       outputDir: `${offsetFromRoot(options.appProjectRoot)}dist/${
@@ -158,9 +121,9 @@ function getTargets(options: NormalizedSchema) {
   };
 
   architect['export-web'] = {
-    executor: '@nrwl/expo:export',
+    executor: '@nx/expo:export',
     options: {
-      bundler: 'webpack',
+      bundler: 'metro',
     },
   };
 

@@ -15,6 +15,9 @@ const packagesToUpdate = [
   '@angular/router',
   '@angular/material',
   '@angular/cdk',
+  '@nguniversal/builders',
+  '@nguniversal/common',
+  '@nguniversal/express-engine',
   '@schematics/angular',
   'ng-packagr',
 ];
@@ -30,6 +33,7 @@ export async function fetchVersionsFromRegistry(
     const latestVersion = distTags['latest'];
     if (targetVersion === 'latest') {
       packageVersionMap.set(pkgName, latestVersion);
+      console.log(`     ${pkgName}: ${latestVersion}`);
     } else {
       const nextVersion = distTags['next'];
       const coercedNextVersion = coerce(nextVersion) as SemVer;
@@ -38,12 +42,9 @@ export async function fetchVersionsFromRegistry(
         ? nextVersion
         : latestVersion;
       packageVersionMap.set(pkgName, versionToUse);
+      console.log(`     ${pkgName}: ${versionToUse}`);
     }
   }
-  console.log(
-    `✅ - Fetched versions from registry (${packageVersionMap.get(
-      '@angular/cli'
-    )})`
-  );
+  console.log('✅ - Finished fetching versions from registry');
   return packageVersionMap;
 }

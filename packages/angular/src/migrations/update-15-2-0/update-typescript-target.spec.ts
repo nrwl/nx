@@ -4,23 +4,32 @@ import {
   Tree,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import applicationGenerator from '../../generators/application/application';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { generateTestApplication } from '../../generators/utils/testing';
+import { UnitTestRunner } from '../../utils/test-runners';
 import updateTypescriptTarget from './update-typescript-target';
-import { UnitTestRunner } from '@nrwl/angular/src/utils/test-runners';
 
 describe('Migration to update target and add useDefineForClassFields', () => {
   let tree: Tree;
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'test',
     });
-    await applicationGenerator(tree, {
+    await generateTestApplication(tree, {
       name: 'karma',
-      unitTestRunner: UnitTestRunner.Karma,
+      unitTestRunner: UnitTestRunner.None,
     });
+
+    const karmaProject = readProjectConfiguration(tree, 'karma');
+    karmaProject.targets.test = {
+      executor: '@angular-devkit/build-angular:karma',
+      options: {
+        tsConfig: 'apps/karma/tsconfig.spec.json',
+      },
+    };
+    updateProjectConfiguration(tree, 'karma', karmaProject);
 
     // Create tsconfigs
     const compilerOptions = { target: 'es2015', module: 'es2020' };
@@ -46,7 +55,7 @@ describe('Migration to update target and add useDefineForClassFields', () => {
       'tsconfig.base.json'
     ).compilerOptions;
     expect(compilerOptions).toMatchInlineSnapshot(`
-      Object {
+      {
         "module": "es2020",
         "target": "es2015",
       }
@@ -76,7 +85,7 @@ describe('Migration to update target and add useDefineForClassFields', () => {
       'apps/karma/tsconfig.spec.json'
     ).compilerOptions;
     expect(compilerOptions).toMatchInlineSnapshot(`
-      Object {
+      {
         "module": "es2020",
         "target": "ES2022",
         "useDefineForClassFields": false,

@@ -1,12 +1,11 @@
-import type { Tree } from 'nx/src/generators/tree';
-import { execSync } from 'child_process';
+import { type ExecSyncOptions, execSync } from 'child_process';
 import { join } from 'path';
-import {
-  detectPackageManager,
-  getPackageManagerCommand,
-} from 'nx/src/utils/package-manager';
+import { requireNx } from '../../nx';
+
+import type { Tree } from 'nx/src/generators/tree';
 import type { PackageManager } from 'nx/src/utils/package-manager';
-import { joinPathFragments } from 'nx/src/utils/path';
+const { detectPackageManager, getPackageManagerCommand, joinPathFragments } =
+  requireNx();
 
 /**
  * Runs `npm install` or `yarn install`. It will skip running the install if
@@ -39,9 +38,13 @@ export function installPackagesTask(
   if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
     global['__packageJsonInstallCache__'] = packageJsonValue;
     const pmc = getPackageManagerCommand(packageManager);
-    execSync(pmc.install, {
+    const execSyncOptions: ExecSyncOptions = {
       cwd: join(tree.root, cwd),
-      stdio: [0, 1, 2],
-    });
+      stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+    };
+    if (pmc.preInstall) {
+      execSync(pmc.preInstall, execSyncOptions);
+    }
+    execSync(pmc.install, execSyncOptions);
   }
 }

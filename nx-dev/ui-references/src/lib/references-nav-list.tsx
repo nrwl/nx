@@ -1,5 +1,5 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
-import { MenuItem } from '@nrwl/nx-dev/models-menu';
+import { MenuItem } from '@nx/nx-dev/models-menu';
 
 export function ReferencesNavList({
   header,

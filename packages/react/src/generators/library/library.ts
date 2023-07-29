@@ -5,10 +5,12 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
+
+import { addTsConfigPath } from '@nx/js';
 
 import { nxVersion } from '../../utils/versions';
 import componentGenerator from '../component/component';
@@ -20,7 +22,6 @@ import { addRollupBuildTarget } from './lib/add-rollup-build-target';
 import { addLinting } from './lib/add-linting';
 import { updateAppRoutes } from './lib/update-app-routes';
 import { createFiles } from './lib/create-files';
-import { updateBaseTsConfig } from './lib/update-base-tsconfig';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
@@ -38,13 +39,10 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     options.style = 'none';
   }
 
-  extractTsConfigBase(host);
-
   const initTask = await initGenerator(host, {
     ...options,
     e2eTestRunner: 'none',
     skipFormat: true,
-    skipBabelConfig: options.bundler === 'vite',
     skipHelperLibs: options.bundler === 'vite',
   });
   tasks.push(initTask);
@@ -62,14 +60,11 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   createFiles(host, options);
 
-  if (!options.skipTsConfig) {
-    updateBaseTsConfig(host, options);
-  }
-
   // Set up build target
   if (options.buildable && options.bundler === 'vite') {
-    await ensurePackage(host, '@nrwl/vite', nxVersion);
-    const { viteConfigurationGenerator } = await import('@nrwl/vite');
+    const { viteConfigurationGenerator } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,
@@ -77,6 +72,9 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       includeLib: true,
       inSourceTests: options.inSourceTests,
       includeVitest: options.unitTestRunner === 'vitest',
+      compiler: options.compiler,
+      skipFormat: true,
+      testEnvironment: 'jsdom',
     });
     tasks.push(viteTask);
   } else if (options.buildable && options.bundler === 'rollup') {
@@ -86,16 +84,19 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   // Set up test target
   if (options.unitTestRunner === 'jest') {
-    await ensurePackage(host, '@nrwl/jest', nxVersion);
-    const { jestProjectGenerator } = await import('@nrwl/jest');
+    const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
+      '@nx/jest',
+      nxVersion
+    );
 
-    const jestTask = await jestProjectGenerator(host, {
+    const jestTask = await configurationGenerator(host, {
       ...options,
       project: options.name,
       setupFile: 'none',
       supportTsx: true,
       skipSerializers: true,
       compiler: options.compiler,
+      skipFormat: true,
     });
     tasks.push(jestTask);
     const jestConfigPath = joinPathFragments(
@@ -112,20 +113,24 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    await ensurePackage(host, '@nrwl/vite', nxVersion);
-    const { vitestGenerator } = await import('@nrwl/vite');
+    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
+      '@nx/vite',
+      nxVersion
+    );
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.name,
       coverageProvider: 'c8',
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
+      testEnvironment: 'jsdom',
     });
     tasks.push(vitestTask);
   }
 
   if (options.component) {
     const componentTask = await componentGenerator(host, {
-      name: options.name,
+      name: options.fileName,
       project: options.name,
       flat: true,
       style: options.style,
@@ -137,6 +142,8 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
       js: options.js,
       pascalCaseFiles: options.pascalCaseFiles,
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
+      globalCss: options.globalCss,
     });
     tasks.push(componentTask);
   }
@@ -156,6 +163,18 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
   const routeTask = updateAppRoutes(host, options);
   tasks.push(routeTask);
   setDefaults(host, options);
+
+  extractTsConfigBase(host);
+
+  if (!options.skipTsConfig) {
+    addTsConfigPath(host, options.importPath, [
+      joinPathFragments(
+        options.projectRoot,
+        './src',
+        'index.' + (options.js ? 'js' : 'ts')
+      ),
+    ]);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

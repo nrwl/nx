@@ -1,9 +1,35 @@
-import { FileData, ProjectFileMap } from '../config/project-graph';
+import {
+  FileData,
+  ProjectFileMap,
+  ProjectGraph,
+} from '../config/project-graph';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './utils/find-project-for-path';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../config/workspace-json-project-json';
+import { daemonClient } from '../daemon/client/client';
+import { readProjectsConfigurationFromProjectGraph } from './project-graph';
+import { fileHasher } from '../hasher/file-hasher';
+
+export async function createProjectFileMapUsingProjectGraph(
+  graph: ProjectGraph
+): Promise<ProjectFileMap> {
+  const configs = readProjectsConfigurationFromProjectGraph(graph);
+
+  let files;
+  if (daemonClient.enabled()) {
+    files = await daemonClient.getAllFileData();
+  } else {
+    await fileHasher.ensureInitialized();
+    files = fileHasher.allFileData();
+  }
+
+  return createProjectFileMap(configs, files).projectFileMap;
+}
 
 export function createProjectFileMap(
   projectsConfigurations: ProjectsConfigurations,
@@ -19,8 +45,8 @@ export function createProjectFileMap(
     projectFileMap[projectName] ??= [];
   }
   for (const f of allWorkspaceFiles) {
-    const matchingProjectFiles =
-      projectFileMap[findProjectForPath(f.file, projectRootMappings)];
+    const projectFileMapKey = findProjectForPath(f.file, projectRootMappings);
+    const matchingProjectFiles = projectFileMap[projectFileMapKey];
     if (matchingProjectFiles) {
       matchingProjectFiles.push(f);
     }
@@ -29,16 +55,14 @@ export function createProjectFileMap(
 }
 
 export function updateProjectFileMap(
-  projectsConfigurations: ProjectsConfigurations,
+  projectsConfigurations: Record<string, ProjectConfiguration>,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   updatedFiles: Map<string, string>,
   deletedFiles: string[]
 ): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
   const projectRootMappings =
-    createProjectRootMappingsFromProjectConfigurations(
-      projectsConfigurations.projects
-    );
+    createProjectRootMappingsFromProjectConfigurations(projectsConfigurations);
 
   for (const f of updatedFiles.keys()) {
     const matchingProjectFiles =

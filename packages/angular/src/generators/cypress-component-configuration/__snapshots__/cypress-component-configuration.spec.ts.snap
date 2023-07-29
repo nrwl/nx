@@ -1,25 +1,58 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Cypress Component Testing Configuration should setup angular specific configs: component.ts 1`] = `
+"import { mount } from 'cypress/angular';
+// ***********************************************************
+// This example support/component.ts is processed and
+// loaded automatically before your test files.
+//
+// This is a great place to put global configuration and
+// behavior that modifies Cypress.
+//
+// You can change the location of this file or turn off
+// automatically serving support files with the
+// 'supportFile' configuration option.
+//
+// You can read more here:
+// https://on.cypress.io/configuration
+// ***********************************************************
+
+// Import commands.ts using ES2015 syntax:
+import './commands';
+
+// add component testing only related command here, such as mount
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Cypress {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface Chainable<Subject> {
+      mount: typeof mount;
+    }
+  }
+}
+
+Cypress.Commands.add('mount', mount);
+"
+`;
+
 exports[`Cypress Component Testing Configuration should work with complex component 1`] = `
 "import { TestBed } from '@angular/core/testing';
 import { SomethingOneComponent } from './something-one.component';
 
 describe(SomethingOneComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingOneComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingOneComponent,);
-  })
-
-})
+    cy.mount(SomethingOneComponent);
+  });
+});
 "
 `;
 
@@ -28,21 +61,19 @@ exports[`Cypress Component Testing Configuration should work with complex compon
 import { SomethingTwoComponent } from './something-two.component';
 
 describe(SomethingTwoComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingTwoComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingTwoComponent,);
-  })
-
-})
+    cy.mount(SomethingTwoComponent);
+  });
+});
 "
 `;
 
@@ -51,21 +82,19 @@ exports[`Cypress Component Testing Configuration should work with complex compon
 import { SomethingThreeComponent } from './something-three.component';
 
 describe(SomethingThreeComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingThreeComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingThreeComponent,);
-  })
-
-})
+    cy.mount(SomethingThreeComponent);
+  });
+});
 "
 `;
 
@@ -74,21 +103,19 @@ exports[`Cypress Component Testing Configuration should work with complex standa
 import { SomethingOneComponent } from './something-one.component';
 
 describe(SomethingOneComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingOneComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingOneComponent,);
-  })
-
-})
+    cy.mount(SomethingOneComponent);
+  });
+});
 "
 `;
 
@@ -97,21 +124,19 @@ exports[`Cypress Component Testing Configuration should work with complex standa
 import { SomethingTwoComponent } from './something-two.component';
 
 describe(SomethingTwoComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingTwoComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingTwoComponent,);
-  })
-
-})
+    cy.mount(SomethingTwoComponent);
+  });
+});
 "
 `;
 
@@ -120,21 +145,19 @@ exports[`Cypress Component Testing Configuration should work with complex standa
 import { SomethingThreeComponent } from './something-three.component';
 
 describe(SomethingThreeComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingThreeComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingThreeComponent,);
-  })
-
-})
+    cy.mount(SomethingThreeComponent);
+  });
+});
 "
 `;
 
@@ -143,21 +166,19 @@ exports[`Cypress Component Testing Configuration should work with secondary entr
 import { FancyButtonComponent } from './fancy-button.component';
 
 describe(FancyButtonComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(FancyButtonComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(FancyButtonComponent,);
-  })
-
-})
+    cy.mount(FancyButtonComponent);
+  });
+});
 "
 `;
 
@@ -166,21 +187,19 @@ exports[`Cypress Component Testing Configuration should work with secondary entr
 import { StandaloneFancyButtonComponent } from './standalone-fancy-button.component';
 
 describe(StandaloneFancyButtonComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(StandaloneFancyButtonComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(StandaloneFancyButtonComponent,);
-  })
-
-})
+    cy.mount(StandaloneFancyButtonComponent);
+  });
+});
 "
 `;
 
@@ -189,21 +208,19 @@ exports[`Cypress Component Testing Configuration should work with simple compone
 import { SomethingOneComponent } from './something-one.component';
 
 describe(SomethingOneComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingOneComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingOneComponent,);
-  })
-
-})
+    cy.mount(SomethingOneComponent);
+  });
+});
 "
 `;
 
@@ -212,21 +229,19 @@ exports[`Cypress Component Testing Configuration should work with simple compone
 import { SomethingTwoComponent } from './something-two.component';
 
 describe(SomethingTwoComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingTwoComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingTwoComponent,);
-  })
-
-})
+    cy.mount(SomethingTwoComponent);
+  });
+});
 "
 `;
 
@@ -235,21 +250,19 @@ exports[`Cypress Component Testing Configuration should work with simple compone
 import { SomethingThreeComponent } from './something-three.component';
 
 describe(SomethingThreeComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingThreeComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingThreeComponent,);
-  })
-
-})
+    cy.mount(SomethingThreeComponent);
+  });
+});
 "
 `;
 
@@ -258,21 +271,19 @@ exports[`Cypress Component Testing Configuration should work with standalone com
 import { SomethingOneComponent } from './something-one.component';
 
 describe(SomethingOneComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingOneComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingOneComponent,);
-  })
-
-})
+    cy.mount(SomethingOneComponent);
+  });
+});
 "
 `;
 
@@ -281,21 +292,19 @@ exports[`Cypress Component Testing Configuration should work with standalone com
 import { SomethingTwoComponent } from './something-two.component';
 
 describe(SomethingTwoComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingTwoComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingTwoComponent,);
-  })
-
-})
+    cy.mount(SomethingTwoComponent);
+  });
+});
 "
 `;
 
@@ -304,20 +313,18 @@ exports[`Cypress Component Testing Configuration should work with standalone com
 import { SomethingThreeComponent } from './something-three.component';
 
 describe(SomethingThreeComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(SomethingThreeComponent, {
-      add: { 
+      add: {
         imports: [],
-        providers: []
-      }
-    }) 
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(SomethingThreeComponent,);
-  })
-
-})
+    cy.mount(SomethingThreeComponent);
+  });
+});
 "
 `;

@@ -12,10 +12,22 @@
       "default": "react",
       "x-prompt": "What UI framework plugin should Vite use?"
     },
+    "compiler": {
+      "type": "string",
+      "description": "Compiler to use for Vite when UI Framework is React.",
+      "enum": ["babel", "swc"],
+      "default": "babel"
+    },
     "includeLib": {
       "type": "boolean",
       "description": "Add dependencies needed to build libraries.",
       "default": false
+    },
+    "testEnvironment": {
+      "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
+      "type": "string",
+      "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
+      "default": "jsdom"
     }
   },
   "examplesFile": "../../../docs/init-examples.md"

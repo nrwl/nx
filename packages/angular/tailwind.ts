@@ -1,4 +1,4 @@
-import { createGlobPatternsForDependencies as workspaceGenerateGlobs } from '@nrwl/workspace/src/utilities/generate-globs';
+import { createGlobPatternsForDependencies as jsGenerateGlobs } from '@nx/js/src/utils/generate-globs';
 
 /**
  * Generates a set of glob patterns based off the source root of the app and its dependencies
@@ -10,8 +10,8 @@ export function createGlobPatternsForDependencies(
   fileGlobPattern: string = '/**/!(*.stories|*.spec).{ts,html}'
 ) {
   try {
-    return workspaceGenerateGlobs(dirPath, fileGlobPattern);
-  } catch {
+    return jsGenerateGlobs(dirPath, fileGlobPattern);
+  } catch (e) {
     /**
      * It should not be possible to reach this point when the utility is invoked as part of the normal
      * lifecycle of Nx executors. However, other tooling, such as the VSCode Tailwind IntelliSense plugin
@@ -22,7 +22,8 @@ export function createGlobPatternsForDependencies(
      * fundamently unavailable in this tailwind-specific context.
      */
     console.warn(
-      '\n[createGlobPatternsForDependencies] WARNING: There was no ProjectGraph available to read from, returning an empty array of glob patterns\n'
+      '\nWARNING: There was an error creating glob patterns, returning an empty array\n' +
+        `${e.message}\n`
     );
     return [];
   }

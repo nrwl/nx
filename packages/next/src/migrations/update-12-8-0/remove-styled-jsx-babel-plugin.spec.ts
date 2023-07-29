@@ -1,6 +1,6 @@
-import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import { readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/linter';
 import { libraryGenerator } from '../../generators/library/library';
 import { removeStyledJsxBabelConfig } from './remove-styled-jsx-babel-plugin';
 

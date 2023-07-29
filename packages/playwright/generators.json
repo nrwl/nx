@@ -1,0 +1,28 @@
+{
+  "name": "Nx Playwright",
+  "version": "0.1",
+  "schematics": {
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration#configurationSchematic",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add Nx Playwright configuration to your project"
+    },
+    "init": {
+      "factory": "./src/generators/init/init#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initializes a Playwright project in the current workspace"
+    }
+  },
+  "generators": {
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add Nx Playwright configuration to your project"
+    },
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initializes a Playwright project in the current workspace"
+    }
+  }
+}

@@ -54,6 +54,26 @@ describe('Run Commands', () => {
     expect(readFile(f)).toEqual('123');
   });
 
+  it.each([
+    [`--key=123`, `args.key`, `123`],
+    [`--key="123.10"`, `args.key`, `123.10`],
+    [`--nested.key="123.10"`, `args.nested.key`, `123.10`],
+  ])(
+    'should interpolate %s into %s as %s',
+    async (cmdLineArg, argKey, expected) => {
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          command: `echo {${argKey}} >> ${f}`,
+          __unparsed__: [cmdLineArg],
+        },
+        context
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual(expected);
+    }
+  );
+
   it('should run commands serially', async () => {
     const f = fileSync().name;
     const result = await runCommands(
@@ -281,6 +301,27 @@ describe('Run Commands', () => {
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toBe(childFolder);
     });
+
+    it('should terminate properly with an error if the cwd is not valid', async () => {
+      const root = dirSync().name;
+      const cwd = 'bla';
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "command does not run"`,
+            },
+          ],
+          cwd,
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: false }));
+    }, 1000);
 
     it('should run the task in the specified absolute cwd', async () => {
       const root = dirSync().name;

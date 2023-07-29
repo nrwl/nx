@@ -8,6 +8,7 @@ import {
   writeFileSync,
   mkdirSync,
   statSync,
+  existsSync,
 } from 'fs';
 import { dirname } from 'path';
 import * as tar from 'tar-stream';
@@ -50,6 +51,28 @@ export function readJsonFile<T extends object = any>(
     e.message = e.message.replace('JSON', path);
     throw e;
   }
+}
+
+interface YamlReadOptions {
+  /**
+   * Compatibility with JSON.parse behaviour. If true, then duplicate keys in a mapping will override values rather than throwing an error.
+   */
+  json?: boolean;
+}
+
+/**
+ * Reads a YAML file and returns the object the YAML content represents.
+ *
+ * @param path A path to a file.
+ * @returns
+ */
+export function readYamlFile<T extends object = any>(
+  path: string,
+  options?: YamlReadOptions
+): T {
+  const content = readFileSync(path, 'utf-8');
+  const { load } = require('js-yaml');
+  return load(content, { ...options, filename: path }) as T;
 }
 
 /**
@@ -153,4 +176,8 @@ export async function extractFileFromTarball(
 
     createReadStream(tarballPath).pipe(createGunzip()).pipe(tarExtractStream);
   });
+}
+
+export function readFileIfExisting(path: string) {
+  return existsSync(path) ? readFileSync(path, 'utf-8') : '';
 }

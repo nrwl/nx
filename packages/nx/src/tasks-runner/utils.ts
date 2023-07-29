@@ -15,6 +15,9 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
+import { splitByColons, splitTarget } from '../utils/split-target';
+import { getExecutorInformation } from '../command-line/run/executor-utils';
+import { CustomHasher } from '../config/misc-interfaces';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -26,20 +29,21 @@ export function getDependencyConfigs(
   defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
-  const dependencyConfigs = expandDependencyConfigSyntaxSugar(
+  const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
-      defaultDependencyConfigs[target] ??
-      []
+    defaultDependencyConfigs[target] ??
+    []
+  ).map((config) =>
+    typeof config === 'string'
+      ? expandDependencyConfigSyntaxSugar(config, projectGraph)
+      : config
   );
   for (const dependencyConfig of dependencyConfigs) {
-    if (
-      dependencyConfig.projects !== 'dependencies' &&
-      dependencyConfig.projects !== 'self'
-    ) {
+    if (dependencyConfig.projects && dependencyConfig.dependencies) {
       output.error({
         title: `dependsOn is improperly configured for ${project}:${target}`,
         bodyLines: [
-          `dependsOn.projects is "${dependencyConfig.projects}" but should be "self" or "dependencies"`,
+          `dependsOn.projects and dependsOn.dependencies cannot be used together.`,
         ],
       });
       process.exit(1);
@@ -48,20 +52,39 @@ export function getDependencyConfigs(
   return dependencyConfigs;
 }
 
-function expandDependencyConfigSyntaxSugar(
-  deps: (TargetDependencyConfig | string)[]
-): TargetDependencyConfig[] {
-  return deps.map((d) => {
-    if (typeof d === 'string') {
-      if (d.startsWith('^')) {
-        return { projects: 'dependencies', target: d.substring(1) };
-      } else {
-        return { projects: 'self', target: d };
-      }
-    } else {
-      return d;
-    }
-  });
+export function expandDependencyConfigSyntaxSugar(
+  dependencyConfigString: string,
+  graph: ProjectGraph
+): TargetDependencyConfig {
+  const [dependencies, targetString] = dependencyConfigString.startsWith('^')
+    ? [true, dependencyConfigString.substring(1)]
+    : [false, dependencyConfigString];
+
+  // Support for `project:target` syntax doesn't make sense for
+  // dependencies, so we only support `target` syntax for dependencies.
+  if (dependencies) {
+    return {
+      target: targetString,
+      dependencies: true,
+    };
+  }
+
+  // Support for both `project:target` and `target:with:colons` syntax
+  const [maybeProject, ...segments] = splitByColons(targetString);
+
+  // if no additional segments are provided, then the string references
+  // a target of the same project
+  if (!segments.length) {
+    return { target: maybeProject };
+  }
+
+  return {
+    // Only the first segment could be a project. If it is, the rest is a target.
+    // If its not, then the whole targetString was a target with colons in its name.
+    target: maybeProject in graph.nodes ? segments.join(':') : targetString,
+    // If the first segment is a project, then we have a specific project. Otherwise, we don't.
+    projects: maybeProject in graph.nodes ? [maybeProject] : undefined,
+  };
 }
 
 export function getOutputs(
@@ -141,7 +164,8 @@ export function getOutputsForTargetAndConfiguration(
       validateOutputs(targetConfiguration.outputs);
     } catch (error) {
       if (error instanceof InvalidOutputsError) {
-        // TODO(v16): start warning for invalid outputs
+        // TODO(@FrozenPandaz): In v17, throw this error and do not transform.
+        console.warn(error.message);
         targetConfiguration.outputs = transformLegacyOutputs(
           node.data.root,
           error
@@ -160,7 +184,10 @@ export function getOutputsForTargetAndConfiguration(
           options,
         });
       })
-      .filter((output) => !!output && !output.match(/{.*}/));
+      .filter(
+        (output) =>
+          !!output && !output.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+      );
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
@@ -212,50 +239,29 @@ export function interpolate(template: string, data: any): string {
   });
 }
 
-export function getExecutorNameForTask(
+export async function getExecutorNameForTask(
   task: Task,
-  nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
 ) {
   const project = projectGraph.nodes[task.target.project].data;
-
-  const projectRoot = join(workspaceRoot, project.root);
-  if (existsSync(join(projectRoot, 'package.json'))) {
-    project.targets = mergeNpmScriptsWithTargets(projectRoot, project.targets);
-  }
-  project.targets = mergePluginTargetsWithNxTargets(
-    project.root,
-    project.targets,
-    loadNxPlugins(nxJson.plugins)
-  );
-
   return project.targets[task.target.target].executor;
 }
 
-export function getExecutorForTask(
+export async function getExecutorForTask(
   task: Task,
-  workspace: Workspaces,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
-) {
-  const executor = getExecutorNameForTask(task, nxJson, projectGraph);
-  const [nodeModule, executorName] = executor.split(':');
-
-  return workspace.readExecutor(nodeModule, executorName);
-}
-
-export function getCustomHasher(
-  task: Task,
-  workspace: Workspaces,
-  nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
 ) {
-  const factory = getExecutorForTask(
-    task,
-    workspace,
-    projectGraph,
-    nxJson
-  ).hasherFactory;
+  const executor = await getExecutorNameForTask(task, projectGraph);
+  const [nodeModule, executorName] = executor.split(':');
+
+  return getExecutorInformation(nodeModule, executorName, workspaceRoot);
+}
+
+export async function getCustomHasher(
+  task: Task,
+  projectGraph: ProjectGraph
+): Promise<CustomHasher> | null {
+  const factory = (await getExecutorForTask(task, projectGraph)).hasherFactory;
   return factory ? factory() : null;
 }
 

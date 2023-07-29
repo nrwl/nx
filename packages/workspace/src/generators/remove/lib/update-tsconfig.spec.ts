@@ -3,16 +3,18 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
 import { updateTsconfig } from './update-tsconfig';
-import { libraryGenerator } from '../../library/library';
+
+// nx-ignore-next-line
+const { libraryGenerator } = require('@nx/js');
 
 let graph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => {
+jest.mock('@nx/devkit', () => {
   return {
-    ...jest.requireActual('@nrwl/devkit'),
+    ...jest.requireActual('@nx/devkit'),
     createProjectGraphAsync: jest.fn().mockImplementation(() => graph),
   };
 });

@@ -1,7 +1,7 @@
 export type SupportedStyles =
   | 'css'
   | 'scss'
-  | 'styl'
+  | 'styl' // @TODO(17): deprecated, going to be removed in Nx 17
   | 'less'
   | 'styled-components'
   | '@emotion/styled'

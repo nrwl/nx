@@ -1,4 +1,4 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/linter';
 import { SupportedStyles } from '../../../typings';
 
 export interface Schema {
@@ -15,9 +15,8 @@ export interface Schema {
   remotes?: string[];
   setParserOptionsProject?: boolean;
   skipFormat?: boolean;
-  skipWorkspaceJson?: boolean;
+  skipNxJson?: boolean;
   ssr?: boolean;
-  standaloneConfig?: boolean;
   strict?: boolean;
   style: SupportedStyles;
   tags?: string;

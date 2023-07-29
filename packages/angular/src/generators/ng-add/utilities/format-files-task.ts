@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import { getPackageManagerCommand } from '@nrwl/devkit';
-import { execSync } from 'child_process';
+import type { Tree } from '@nx/devkit';
+import { getPackageManagerCommand } from '@nx/devkit';
+import { runNxSync } from 'nx/src/utils/child-process';
 
 export function formatFilesTask(tree: Tree): void {
   if (
@@ -11,8 +11,7 @@ export function formatFilesTask(tree: Tree): void {
     return;
   }
 
-  const pmc = getPackageManagerCommand();
   try {
-    execSync(`${pmc.exec} nx format`, { cwd: tree.root, stdio: [0, 1, 2] });
+    runNxSync(`format`, { cwd: tree.root, stdio: [0, 1, 2] });
   } catch {}
 }

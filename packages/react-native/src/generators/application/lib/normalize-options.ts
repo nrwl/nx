@@ -1,10 +1,4 @@
-import {
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nrwl/devkit';
-import { join } from 'path';
+import { getWorkspaceLayout, joinPathFragments, names, Tree } from '@nx/devkit';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -35,8 +29,8 @@ export function normalizeOptions(
   const appProjectName = projectDirectory.replace(/\//g, '-');
 
   const appProjectRoot = joinPathFragments(appsDir, projectDirectory);
-  const iosProjectRoot = join(appProjectRoot, 'ios');
-  const androidProjectRoot = join(appProjectRoot, 'android');
+  const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');
+  const androidProjectRoot = joinPathFragments(appProjectRoot, 'android');
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

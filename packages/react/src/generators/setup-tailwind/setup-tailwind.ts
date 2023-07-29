@@ -1,4 +1,4 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   convertNxGenerator,
@@ -7,9 +7,8 @@ import {
   joinPathFragments,
   logger,
   readProjectConfiguration,
-  updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+  runTasksInSerial,
+} from '@nx/devkit';
 
 import {
   autoprefixerVersion,

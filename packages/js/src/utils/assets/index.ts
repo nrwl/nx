@@ -1,6 +1,6 @@
-import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
+import { AssetGlob } from './assets';
 import { CopyAssetsHandler, FileEvent } from './copy-assets-handler';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 
 export interface CopyAssetsOptions {
   outputPath: string;
@@ -31,18 +31,19 @@ export async function copyAssets(
     callback:
       typeof options?.watch === 'object' ? options.watch.onCopy : undefined,
   });
+  const result: CopyAssetsResult = {
+    success: true,
+  };
+
   if (options.watch) {
-    const dispose = await assetHandler.watchAndProcessOnAssetChange();
-    return {
-      success: true,
-      stop: dispose,
-    };
-  } else {
-    try {
-      await assetHandler.processAllAssetsOnce();
-    } catch {
-      return { success: false };
-    }
-    return { success: true };
+    result.stop = await assetHandler.watchAndProcessOnAssetChange();
   }
+
+  try {
+    await assetHandler.processAllAssetsOnce();
+  } catch {
+    result.success = false;
+  }
+
+  return result;
 }

@@ -1,8 +1,7 @@
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
-import ts = require('typescript');
-import { tsquery } from '@phenomnomnominal/tsquery';
+import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
+import { findNodes } from '@nx/js';
 import { TargetFlags } from './generator-utils';
+import type { Node, ReturnStatement } from 'typescript';
 
 export function ensureViteConfigIsCorrect(
   tree: Tree,
@@ -66,6 +65,7 @@ function handleBuildOrTestNode(
   configContentObject: {},
   name: 'build' | 'test'
 ): string | undefined {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const buildNode = tsquery.query(
     updatedFileContent,
     `PropertyAssignment:has(Identifier[name="${name}"])`
@@ -75,7 +75,7 @@ function handleBuildOrTestNode(
     return tsquery.replace(
       updatedFileContent,
       `PropertyAssignment:has(Identifier[name="${name}"])`,
-      (node: ts.Node) => {
+      (node: Node) => {
         const found = tsquery.query(node, 'ObjectLiteralExpression');
         return `${name}: {
                   ...${found?.[0].getText()},
@@ -159,13 +159,14 @@ function handleBuildOrTestNode(
 
 function transformCurrentBuildObject(
   index: number,
-  returnStatements: ts.ReturnStatement[],
+  returnStatements: ReturnStatement[],
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
   if (!returnStatements?.[index]) {
     return undefined;
   }
+  const { tsquery } = require('@phenomnomnominal/tsquery');
   const currentBuildObject = tsquery
     .query(returnStatements[index], 'ObjectLiteralExpression')?.[0]
     .getText();
@@ -176,7 +177,7 @@ function transformCurrentBuildObject(
   const newReturnObject = tsquery.replace(
     returnStatements[index].getText(),
     'ObjectLiteralExpression',
-    (_node: ts.Node) => {
+    (_node: Node) => {
       return `{
         ...${currentBuildObject},
         ...${JSON.stringify(buildConfigObject)}
@@ -201,10 +202,12 @@ function transformCurrentBuildObject(
 }
 
 function transformConditionalConfig(
-  conditionalConfig: ts.Node[],
+  conditionalConfig: Node[],
   appFileContent: string,
   buildConfigObject: {}
 ): string | undefined {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const { SyntaxKind } = require('typescript');
   const functionBlock = tsquery.query(conditionalConfig[0], 'Block');
 
   const ifStatement = tsquery.query(functionBlock?.[0], 'IfStatement');
@@ -223,11 +226,8 @@ function transformConditionalConfig(
     (binaryExpression) => binaryExpression.getText() === `command === 'serve'`
   );
 
-  const elseKeywordExists = findNodes(
-    ifStatement?.[0],
-    ts.SyntaxKind.ElseKeyword
-  );
-  const returnStatements: ts.ReturnStatement[] = tsquery.query(
+  const elseKeywordExists = findNodes(ifStatement?.[0], SyntaxKind.ElseKeyword);
+  const returnStatements: ReturnStatement[] = tsquery.query(
     ifStatement[0],
     'ReturnStatement'
   );
@@ -282,6 +282,8 @@ function handlePluginNode(
   dtsImportLine: string,
   pluginOption: string
 ): string | undefined {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+
   const file = tsquery.ast(appFileContent);
   const pluginsNode = tsquery.query(
     file,
@@ -294,7 +296,7 @@ function handlePluginNode(
     appFileContent = tsquery.replace(
       file.getText(),
       'PropertyAssignment:has(Identifier[name="plugins"])',
-      (node: ts.Node) => {
+      (node: Node) => {
         const found = tsquery.query(node, 'ArrayLiteralExpression');
         return `plugins: [
                     ...${found?.[0].getText()},
@@ -382,6 +384,8 @@ function handlePluginNode(
 }
 
 function handleCacheDirNode(appFileContent: string, cacheDir: string): string {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+
   const file = tsquery.ast(appFileContent);
   const cacheDirNode = tsquery.query(
     file,

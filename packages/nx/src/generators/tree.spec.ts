@@ -1,15 +1,26 @@
 import { lstatSync, Mode, readFileSync, writeFileSync } from 'fs';
 import { removeSync, ensureDirSync } from 'fs-extra';
-import { dirSync } from 'tmp';
+import { dirSync, file } from 'tmp';
 import * as path from 'path';
-import { FileChange, FsTree, flushChanges, TreeWriteOptions } from './tree';
+import {
+  FileChange,
+  FsTree,
+  flushChanges,
+  TreeWriteOptions,
+  printChanges,
+} from './tree';
 
+let error = console.error;
+let log = console.log;
 describe('tree', () => {
   describe('FsTree', () => {
     let dir: string;
     let tree: FsTree;
 
     beforeEach(() => {
+      console.error = jest.fn();
+      console.log = jest.fn();
+
       dir = dirSync().name;
       ensureDirSync(path.join(dir, 'parent/child'));
       writeFileSync(path.join(dir, 'root-file.txt'), 'root content');
@@ -26,11 +37,16 @@ describe('tree', () => {
         'child content'
       );
 
-      tree = new FsTree(dir, false);
+      tree = new FsTree(dir, true);
     });
 
     afterEach(() => {
       removeSync(dir);
+    });
+
+    afterAll(() => {
+      console.error = error;
+      console.log = log;
     });
 
     it('should return no changes, when no changes are made', () => {
@@ -103,6 +119,50 @@ describe('tree', () => {
       expect(
         readFileSync(path.join(dir, 'parent/parent-file.txt'), 'utf-8')
       ).toEqual('new content');
+    });
+
+    it('should log error when read and write files error occurs', () => {
+      expect(tree.read('error.txt')).toBeNull();
+      expect(console.error).toHaveBeenCalledTimes(1);
+
+      // @ts-ignore test writing invalid content
+      tree.write('error/error.txt', 1);
+      expect(console.error).toHaveBeenCalledTimes(2);
+    });
+
+    it('should detect whether files exist', () => {
+      tree.write('root-file.txt', 'new content');
+      tree.write('parent/parent-file.txt', 'new content');
+      expect(tree.exists('parent')).toBeTruthy();
+      expect(tree.exists('/parent')).toBeTruthy();
+      expect(tree.exists('parent/parent-file.txt')).toBeTruthy();
+      expect(tree.exists('/parent/parent-file.txt')).toBeTruthy();
+      expect(tree.exists('unknown.txt')).toBeFalsy();
+    });
+
+    it('should detect whether is file', () => {
+      tree.write('root-file.txt', 'new content');
+      expect(tree.isFile('root-file.txt')).toBeTruthy();
+      expect(tree.isFile('/root-file.txt')).toBeTruthy();
+      expect(tree.isFile('parent')).toBeFalsy();
+      expect(tree.isFile('/parent')).toBeFalsy();
+      expect(tree.isFile('parent/parent-file.txt')).toBeTruthy();
+      expect(tree.isFile('unknown.txt')).toBeFalsy();
+    });
+
+    it('should overwrite files', () => {
+      tree.write('root-file.txt', 'new content');
+      expect(tree.read('root-file.txt').toString()).toEqual('new content');
+      tree.overwrite('root-file.txt', 'overwrite content');
+      expect(tree.read('root-file.txt').toString()).toEqual(
+        'overwrite content'
+      );
+
+      flushChanges(dir, tree.listChanges());
+
+      expect(readFileSync(path.join(dir, 'root-file.txt'), 'utf-8')).toEqual(
+        'overwrite content'
+      );
     });
 
     it('should not record a change if writing the file with no changes to the content', () => {
@@ -262,12 +322,12 @@ describe('tree', () => {
           type: 'CREATE',
           content: 'new child content',
         },
-        { path: 'root-file.txt', type: 'DELETE', content: null },
         {
           path: 'renamed-root-file.txt',
           type: 'CREATE',
           content: 'root content',
         },
+        { path: 'root-file.txt', type: 'DELETE', content: null },
       ]);
 
       flushChanges(dir, tree.listChanges());
@@ -302,6 +362,13 @@ describe('tree', () => {
         lstatSync(path.join(dir, 'parent/new-child')).isDirectory();
         fail('Should not reach');
       } catch (e) {}
+    });
+
+    it('should mark deleted folders as present if a file is created within it', () => {
+      tree.write('tools/some-file.txt', 'some content');
+      tree.delete('tools');
+      tree.write('tools/some-file2.txt', 'some content');
+      expect(tree.exists('tools')).toBe(true);
     });
 
     describe('children', () => {
@@ -355,6 +422,14 @@ describe('tree', () => {
         ]);
       });
 
+      it('should support nested dirs with same name as parent', () => {
+        tree.write('/parent-a/parent-a/parent-a-file.txt', 'parent content');
+        expect(tree.children('/parent-a')).toEqual(['parent-a']);
+        expect(tree.children('/parent-a/parent-a')).toEqual([
+          'parent-a-file.txt',
+        ]);
+      });
+
       describe('at the root', () => {
         it('should return a list of children', () => {
           expect(tree.children('')).toEqual(['parent', 'root-file.txt']);
@@ -384,8 +459,58 @@ describe('tree', () => {
       });
     });
 
+    it('should be able to rename nested files', () => {
+      tree.write('a/b/hello.txt', '');
+
+      tree.rename('a/b/hello.txt', 'a/b/bye.txt');
+
+      expect(tree.exists('a/b/hello.txt')).toBe(false);
+      expect(tree.exists('a/b/bye.txt')).toBe(true);
+      expect(tree.children('a/b').length).toBe(1);
+      expect(tree.children('a').length).toBe(1);
+    });
+
     it('should be able to rename dirs', () => {
-      // not supported yet
+      tree.write('a/b/hello.txt', 'something');
+
+      tree.rename('a', 'z');
+
+      expect(tree.exists('a/b/hello.txt')).toBe(false);
+      expect(tree.exists('z/b/hello.txt')).toBe(true);
+      expect(tree.exists('a/b')).toBe(false);
+      expect(tree.exists('z/b')).toBe(true);
+      expect(tree.children('a/b').length).toBe(0);
+      expect(tree.children('a').length).toBe(0);
+      expect(tree.children('z/b').length).toBe(1);
+      expect(tree.children('z').length).toBe(1);
+    });
+
+    it('should do nothing when renaming to the same path', () => {
+      tree.write('a/b/hello.txt', 'something');
+
+      tree.rename('a', 'a');
+
+      expect(tree.exists('a/b/hello.txt')).toBe(true);
+      expect(tree.exists('a/b')).toBe(true);
+      expect(tree.children('a/b').length).toBe(1);
+      expect(tree.children('a').length).toBe(1);
+    });
+
+    it('should print files changes', () => {
+      tree.write('root-file.txt', 'new content');
+      tree.write('new-file.txt', 'new content');
+      tree.delete('parent/parent-file.txt');
+
+      printChanges(tree.listChanges());
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringMatching(/CREATE.+new-file\.txt/)
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringMatching(/UPDATE.+root-file\.txt/)
+      );
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringMatching(/DELETE.+parent\/parent-file\.txt/)
+      );
     });
 
     describe('changePermissions', () => {

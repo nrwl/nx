@@ -1,0 +1,6 @@
+<% if(displayBlock){ if(style != 'sass') { %>:host {
+  display: block;
+}
+<% } else { %>\:host
+  display: block;
+<% }} %>

@@ -1,12 +1,17 @@
-import { findNodes } from 'nx/src/utils/typescript';
-import * as ts from 'typescript';
-import { ChangeType, StringChange } from '@nrwl/devkit';
+import { findNodes } from '@nx/js';
+import type * as ts from 'typescript';
+import { ChangeType, StringChange } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
+let tsModule: typeof import('typescript');
 export function addImport(
   source: ts.SourceFile,
   statement: string
 ): StringChange[] {
-  const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+  const allImports = findNodes(source, tsModule.SyntaxKind.ImportDeclaration);
   if (allImports.length > 0) {
     const lastImport = allImports[allImports.length - 1];
     return [
