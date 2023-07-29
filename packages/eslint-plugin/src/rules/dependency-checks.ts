@@ -331,7 +331,7 @@ export default createESLintRule<Options, MessageIds>({
       ) {
         validateMissingDependencies(node);
       },
-      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
+      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
         node: AST.JSONProperty
       ) {
         const packageName = (node.key as any).value;

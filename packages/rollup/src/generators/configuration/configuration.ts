@@ -55,7 +55,10 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
 
   const buildOptions: RollupExecutorOptions = {
     main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
-    outputPath: joinPathFragments('dist', project.root),
+    outputPath: joinPathFragments(
+      'dist',
+      project.root === '.' ? project.name : project.root
+    ),
     compiler: options.compiler ?? 'babel',
     tsConfig,
     project: `${project.root}/package.json`,

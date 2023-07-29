@@ -138,8 +138,18 @@
     },
     "generateExportsField": {
       "type": "boolean",
-      "description": "Generate package.json with 'exports' field. This field defines entry points in the package and is used by Node and the TypeScript compiler.",
-      "default": false
+      "alias": "exports",
+      "description": "Update the output package.json file's 'exports' field. This field is used by Node and bundles.",
+      "default": false,
+      "x-priority": "important"
+    },
+    "additionalEntryPoints": {
+      "type": "array",
+      "description": "Additional entry-points to add to exports field in the package.json file.",
+      "items": {
+        "type": "string"
+      },
+      "x-priority": "important"
     },
     "skipTypeCheck": {
       "type": "boolean",

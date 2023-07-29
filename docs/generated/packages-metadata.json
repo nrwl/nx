@@ -2417,6 +2417,17 @@
         "originalFilePath": "shared/packages/storybook/custom-builder-configs"
       },
       {
+        "id": "storybook-interaction-tests",
+        "name": "Setting up Storybook Interaction Tests with Nx",
+        "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+        "file": "generated/packages/storybook/documents/storybook-interaction-tests",
+        "itemList": [],
+        "isExternal": false,
+        "path": "storybook/documents/storybook-interaction-tests",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/interaction-tests"
+      },
+      {
         "id": "storybook-composition-setup",
         "name": "Setting up Storybook Composition with Nx",
         "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",

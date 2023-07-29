@@ -43,6 +43,7 @@ import {
   TerminalCommand,
   terminalCommand,
 } from './lib/tags/terminal-command.component';
+import { VideoLink, videoLink } from './lib/tags/video-link.component';
 
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
@@ -75,6 +76,7 @@ export const getMarkdocCustomConfig = (
       'title-card': titleCard,
       youtube,
       'terminal-command': terminalCommand,
+      'video-link': videoLink,
     },
   },
   components: {
@@ -98,6 +100,7 @@ export const getMarkdocCustomConfig = (
     TitleCard,
     YouTube,
     TerminalCommand,
+    VideoLink,
   },
 });
 

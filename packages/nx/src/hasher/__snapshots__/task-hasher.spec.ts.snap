@@ -44,6 +44,52 @@ exports[`TaskHasher dependentTasksOutputFiles should work with dependent tasks w
 }
 `;
 
+exports[`TaskHasher hashTarget should hash entire subtree in a deterministic way 1`] = `
+{
+  "details": {
+    "command": "81188892120010785",
+    "implicitDeps": {},
+    "nodes": {
+      "ProjectConfiguration": "8474322003863204060",
+      "TsConfig": "8767608672024750088",
+      "appA:{projectRoot}/**/*": "3244421341483603138",
+      "npm:@nx/webpack": "$@nx/webpack0.0.0$",
+      "npm:packageA": "$packageA0.0.0$",
+      "npm:packageB": "$packageB0.0.0$",
+      "npm:packageC": "$packageC0.0.0$",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "12756041818139421941",
+}
+`;
+
+exports[`TaskHasher hashTarget should hash entire subtree in a deterministic way 2`] = `
+{
+  "details": {
+    "command": "9096392622609675764",
+    "implicitDeps": {},
+    "nodes": {
+      "ProjectConfiguration": "17724470359684527282",
+      "TsConfig": "8767608672024750088",
+      "appB:{projectRoot}/**/*": "3244421341483603138",
+      "npm:@nx/webpack": "$@nx/webpack0.0.0$",
+      "npm:packageA": "$packageA0.0.0$",
+      "npm:packageB": "$packageB0.0.0$",
+      "npm:packageC": "$packageC0.0.0$",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "15326312070983573452",
+}
+`;
+
 exports[`TaskHasher hashTarget should hash entire subtree of dependencies 1`] = `
 {
   "details": {
@@ -63,7 +109,7 @@ exports[`TaskHasher hashTarget should hash entire subtree of dependencies 1`] = 
     },
     "runtime": {},
   },
-  "value": "17607022607820563118",
+  "value": "14419327228911184578",
 }
 `;
 
@@ -83,7 +129,7 @@ exports[`TaskHasher hashTarget should hash executor dependencies of @nx packages
     },
     "runtime": {},
   },
-  "value": "15096054768893599383",
+  "value": "379625642227035180",
 }
 `;
 
@@ -105,7 +151,7 @@ exports[`TaskHasher hashTarget should use externalDependencies to override nx:ru
     },
     "runtime": {},
   },
-  "value": "18142315317355318287",
+  "value": "14779270419297346086",
 }
 `;
 
@@ -239,7 +285,7 @@ exports[`TaskHasher should hash missing dependent npm project versions 1`] = `
     },
     "runtime": {},
   },
-  "value": "3668827038634092448",
+  "value": "13210933885500739919",
 }
 `;
 
@@ -321,7 +367,7 @@ exports[`TaskHasher should hash npm project versions 1`] = `
     },
     "runtime": {},
   },
-  "value": "3668827038634092448",
+  "value": "13210933885500739919",
 }
 `;
 

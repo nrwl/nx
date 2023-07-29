@@ -1067,12 +1067,7 @@
           "description": "Understand how to use Nx functionalities, what arguments and options are available for each component.",
           "itemList": [
             {
-              "name": "Commands",
-              "id": "commands",
-              "file": "shared/reference/commands"
-            },
-            {
-              "name": "nx.json",
+              "name": "Nx Configuration",
               "id": "nx-json",
               "file": "shared/reference/nx-json"
             },
@@ -1940,6 +1935,12 @@
               "name": "How to configure Webpack and Vite for Storybook",
               "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
               "file": "shared/packages/storybook/custom-builder-configs"
+            },
+            {
+              "id": "storybook-interaction-tests",
+              "name": "Setting up Storybook Interaction Tests with Nx",
+              "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+              "file": "shared/packages/storybook/interaction-tests"
             },
             {
               "id": "storybook-composition-setup",
