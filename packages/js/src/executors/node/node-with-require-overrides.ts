@@ -1,5 +1,5 @@
 const Module = require('module');
-const url = require('url');
+const url = require('node:url');
 const originalLoader = Module._load;
 
 const dynamicImport = new Function('specifier', 'return import(specifier)');

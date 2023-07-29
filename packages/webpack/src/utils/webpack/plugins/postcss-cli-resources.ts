@@ -1,7 +1,7 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
 import type { Declaration } from 'postcss';
-import * as url from 'url';
+import * as url from 'node:url';
 import { LoaderContext } from 'webpack';
 
 function wrapUrl(url: string): string {
