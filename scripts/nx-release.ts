@@ -46,10 +46,13 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
       ? 'previous'
       : 'latest';
 
-  const buildCommand = 'pnpm build';
+  const buildCommand = 'pnpm build --verbose';
   console.log(`> ${buildCommand}`);
   execSync(buildCommand, {
     stdio: [0, 1, 2],
+    env: {
+      ...process.env,
+    },
   });
   execSync(`ls -lah build/packages/nx/src/native`, {
     stdio: [0, 1, 2],

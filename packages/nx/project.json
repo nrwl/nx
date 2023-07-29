@@ -5,6 +5,7 @@
   "projectType": "library",
   "implicitDependencies": ["graph-client"],
   "targets": {
+    "debug": {},
     "build-native": {
       "outputs": ["{projectRoot}/src/native/*.node"],
       "executor": "@monodon/rust:napi",
@@ -93,6 +94,9 @@
           },
           {
             "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
+          },
+          {
+            "command": "ls -lah build/packages/nx/src/native"
           }
         ],
         "parallel": false

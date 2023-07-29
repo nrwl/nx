@@ -210,8 +210,9 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
-      NX_SKIP_NX_CACHE: 'true' # TODO: Figure out what is going on with the cache and renable it
+      # NX_SKIP_NX_CACHE: 'true' # TODO: Figure out what is going on with the cache and renable it
     steps:
       - run:
           name: Set dynamic nx run variable
@@ -225,7 +226,8 @@ jobs:
       - run:
           name: Run E2E Tests for macOS
           command: |
-            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD --outputStyle stream -- -t woeifjwoiejf
+            cat ./node_modules/.cache/nx/d/daemon.log
           no_output_timeout: 45m
 
 # -------------------------

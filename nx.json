@@ -57,6 +57,17 @@
     ]
   },
   "targetDefaults": {
+    "debug": {
+      "dependsOn": ["build-native"],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "echo NX_SOURCE",
+          "ls -lah packages/nx/src/native"
+        ],
+        "parallel": false
+      }
+    },
     "build": {
       "dependsOn": ["build-base", "build-native"],
       "inputs": [
@@ -71,8 +82,14 @@
       "inputs": ["native"]
     },
     "build-base": {
-      "dependsOn": ["^build-base", "build-native"],
-      "inputs": ["production", "^production"],
+      "dependsOn": ["^build-base", "build-native", "debug"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*.node"
+        }
+      ],
       "executor": "@nx/js:tsc",
       "options": {
         "outputPath": "build/{projectRoot}",
