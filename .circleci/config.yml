@@ -208,7 +208,7 @@ jobs:
     executor: macos
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
-      NX_DAEMON: 'true'
+      NX_DAEMON: 'false' # TODO: Fix the hashing issue and re-enable this
       NX_PERF_LOGGING: 'false'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
       NX_SKIP_NX_CACHE: 'true' # TODO: Figure out what is going on with the cache and renable it
