@@ -63,6 +63,12 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         type: 'boolean',
         description: 'Show only affected projects',
       })
+      .option('exclude', {
+        type: 'string',
+        alias: ['e'],
+        description: 'Exclude projects that match a given pattern.',
+        coerce: parseCSV,
+      })
       .option('projects', {
         type: 'string',
         alias: ['p'],
@@ -80,11 +86,11 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       .implies('base', 'affected')
       .implies('head', 'affected')
       .example(
-        '$0 show projects --patterns "apps/*"',
+        '$0 show projects --projects "apps/*"',
         'Show all projects in the apps directory'
       )
       .example(
-        '$0 show projects --patterns "shared-*"',
+        '$0 show projects --projects "shared-*"',
         'Show all projects that start with "shared-"'
       )
       .example(

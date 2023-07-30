@@ -107,7 +107,7 @@ Base of the current branch (usually main)
 
 Type: `string`
 
-Exclude certain projects from being processed
+Exclude projects that match a given pattern.
 
 ##### files
 
