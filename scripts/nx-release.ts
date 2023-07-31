@@ -51,9 +51,6 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
   execSync(buildCommand, {
     stdio: [0, 1, 2],
   });
-  execSync(`ls -lah build/packages/nx/src/native`, {
-    stdio: [0, 1, 2],
-  });
 
   if (options.local) {
     updateLernaJsonVersion(currentLatestVersion);
