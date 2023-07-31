@@ -211,6 +211,7 @@ export default {
       addProjectConfiguration(tree, 'my-project', {
         root: '.',
         name: 'my-project',
+        projectType: 'application',
         sourceRoot: 'src',
         targets: {
           test: {
@@ -261,6 +262,7 @@ projects: getJestProjects()
         root: '.',
         name: 'my-project',
         sourceRoot: 'src',
+        projectType: 'application',
         targets: {
           test: {
             executor: '@nx/jest:jest',

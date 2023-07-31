@@ -19,6 +19,32 @@ import {
 
 let proj: string;
 
+describe('@nx/workspace:convert-to-monorepo', () => {
+  beforeEach(() => {
+    proj = newProject();
+  });
+
+  afterEach(() => cleanupProject());
+
+  it('should convert a standalone project to a monorepo', async () => {
+    const reactApp = uniq('reactapp');
+    runCLI(
+      `generate @nx/react:app ${reactApp} --rootProject=true --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --no-interactive`
+    );
+
+    runCLI('generate @nx/workspace:convert-to-monorepo --no-interactive');
+
+    checkFilesExist(
+      `apps/${reactApp}/src/main.tsx`,
+      `apps/e2e/cypress.config.ts`
+    );
+
+    expect(() => runCLI(`build ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`e2e e2e`)).not.toThrow();
+  });
+});
+
 describe('Workspace Tests', () => {
   beforeAll(() => {
     proj = newProject();

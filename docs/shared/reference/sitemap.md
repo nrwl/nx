@@ -613,6 +613,7 @@
       - [preset](/packages/workspace/generators/preset)
       - [move](/packages/workspace/generators/move)
       - [remove](/packages/workspace/generators/remove)
+      - [convert-to-monorepo](/packages/workspace/generators/convert-to-monorepo)
       - [new](/packages/workspace/generators/new)
       - [workspace-generator](/packages/workspace/generators/workspace-generator)
       - [run-commands](/packages/workspace/generators/run-commands)

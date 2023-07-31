@@ -2884,6 +2884,15 @@
         "path": "/packages/workspace/generators/remove",
         "type": "generator"
       },
+      "/packages/workspace/generators/convert-to-monorepo": {
+        "description": "Convert a Nx project to a monorepo.",
+        "file": "generated/packages/workspace/generators/convert-to-monorepo.json",
+        "hidden": false,
+        "name": "convert-to-monorepo",
+        "originalFilePath": "/packages/workspace/src/generators/convert-to-monorepo/schema.json",
+        "path": "/packages/workspace/generators/convert-to-monorepo",
+        "type": "generator"
+      },
       "/packages/workspace/generators/new": {
         "description": "Create a workspace.",
         "file": "generated/packages/workspace/generators/new.json",

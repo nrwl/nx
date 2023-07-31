@@ -7898,6 +7898,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "convert-to-monorepo",
+                "path": "/packages/workspace/generators/convert-to-monorepo",
+                "name": "convert-to-monorepo",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "new",
                 "path": "/packages/workspace/generators/new",
                 "name": "new",
