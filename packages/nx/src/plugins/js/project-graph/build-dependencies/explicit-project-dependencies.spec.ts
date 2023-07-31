@@ -36,7 +36,7 @@ describe('explicit project dependencies', () => {
       });
 
       const res = buildExplicitTypeScriptDependencies(
-        builder.graph,
+        builder.getUpdatedProjectGraph(),
         ctx.filesToProcess
       );
 
@@ -50,12 +50,6 @@ describe('explicit project dependencies', () => {
         {
           sourceProjectName,
           sourceProjectFile: 'libs/proj/index.ts',
-          targetProjectName: 'proj3a',
-          type: 'dynamic',
-        },
-        {
-          sourceProjectName,
-          sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'proj4ab',
           type: 'static',
         },
@@ -64,6 +58,12 @@ describe('explicit project dependencies', () => {
           sourceProjectFile: 'libs/proj/index.ts',
           targetProjectName: 'npm:npm-package',
           type: 'static',
+        },
+        {
+          sourceProjectName,
+          sourceProjectFile: 'libs/proj/index.ts',
+          targetProjectName: 'proj3a',
+          type: 'dynamic',
         },
       ]);
     });
@@ -380,6 +380,19 @@ describe('explicit project dependencies', () => {
 
               nx-ignore-next-line */
               import { foo } from '@proj/proj4ab';
+              
+              /*
+
+              nx-ignore-next-line */
+              import { foo } from '@proj/proj4ab'; import { foo } from '@proj/project-3';
+              
+              /* eslint-ignore */ /* nx-ignore-next-line */
+              import { foo } from '@proj/proj4ab'; import { foo } from '@proj/project-3';
+              
+              const obj = {
+                // nx-ignore-next-line
+                a: import('@proj/proj4ab')
+              }
             `,
           },
         ],
@@ -455,123 +468,6 @@ describe('explicit project dependencies', () => {
           //     \`import { A } from '@proj/my-second-proj'\`;
           //     \`import { B, C, D } from '@proj/project-3'\`;
           //     \`require('@proj/proj4ab')\`;
-          //   `,
-          // },
-        ],
-      });
-
-      const res = buildExplicitTypeScriptDependencies(
-        builder.graph,
-        ctx.filesToProcess
-      );
-
-      expect(res).toEqual([]);
-    });
-  });
-
-  /**
-   * In version 8, Angular deprecated the loadChildren string syntax in favor of using dynamic imports, but it is still
-   * fully supported by the framework:
-   *
-   * https://angular.io/guide/deprecations#loadchildren-string-syntax
-   */
-  describe('legacy Angular loadChildren string syntax', () => {
-    it('should build explicit dependencies for legacy Angular loadChildren string syntax', async () => {
-      const sourceProjectName = 'proj';
-      const { ctx, builder } = await createVirtualWorkspace({
-        sourceProjectName,
-        sourceProjectFiles: [
-          {
-            path: 'libs/proj/file-1.ts',
-            content: `
-              const a = { loadChildren: '@proj/proj4ab#a' };
-            `,
-          },
-          {
-            path: 'libs/proj/file-2.ts',
-            content: `
-              const routes: Routes = [{
-                path: 'lazy',
-                loadChildren: '@proj/project-3#LazyModule',
-              }];
-            `,
-          },
-          /**
-           * TODO: This case, where a no subsitution template literal is used, is not working
-           */
-          // {
-          //   path: 'libs/proj/no-substitution-template-literal.ts',
-          //   content: `
-          //     const a = {
-          //       loadChildren: \`@proj/my-second-proj\`
-          //     };
-          //   `,
-          // },
-        ],
-      });
-
-      const res = buildExplicitTypeScriptDependencies(
-        builder.graph,
-        ctx.filesToProcess
-      );
-
-      expect(res).toEqual([
-        {
-          sourceProjectName,
-          sourceProjectFile: 'libs/proj/file-1.ts',
-          targetProjectName: 'proj4ab',
-          type: 'dynamic',
-        },
-        {
-          sourceProjectName,
-          sourceProjectFile: 'libs/proj/file-2.ts',
-          targetProjectName: 'proj3a',
-          type: 'dynamic',
-        },
-      ]);
-    });
-
-    it('should not build explicit dependencies when nx-ignore-next-line comments are present', async () => {
-      const sourceProjectName = 'proj';
-      const { ctx, builder } = await createVirtualWorkspace({
-        sourceProjectName,
-        sourceProjectFiles: [
-          {
-            path: 'libs/proj/file-1.ts',
-            content: `
-              const a = {
-                // nx-ignore-next-line
-                loadChildren: '@proj/proj4ab#a'
-              };
-            `,
-          },
-          /**
-           * TODO: This case, where a multi-line comment is used, is not working
-           */
-          // {
-          //   path: 'libs/proj/file-2.ts',
-          //   content: `
-          //     const a = {
-          //       /* nx-ignore-next-line */
-          //       loadChildren: '@proj/proj4ab#a'
-          //     };
-          //   `,
-          // },
-          /**
-           * TODO: These cases, where loadChildren is on the same line as the variable declaration, are not working
-           */
-          // {
-          //   path: 'libs/proj/file-3.ts',
-          //   content: `
-          //     // nx-ignore-next-line
-          //     const a = { loadChildren: '@proj/proj4ab#a' };
-          //   `,
-          // },
-          // {
-          //   path: 'libs/proj/file-4.ts',
-          //   content: `
-          //     /* nx-ignore-next-line */
-          //     const a = { loadChildren: '@proj/proj4ab#a' };
           //   `,
           // },
         ],

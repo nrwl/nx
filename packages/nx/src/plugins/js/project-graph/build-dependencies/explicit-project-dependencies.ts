@@ -5,6 +5,8 @@ import {
   ProjectFileMap,
   ProjectGraph,
 } from '../../../../config/project-graph';
+import { join, relative } from 'path';
+import { workspaceRoot } from '../../../../utils/workspace-root';
 
 export type ExplicitDependency = {
   sourceProjectName: string;
@@ -18,10 +20,7 @@ export function buildExplicitTypeScriptDependencies(
   filesToProcess: ProjectFileMap
 ): ExplicitDependency[] {
   let results: ExplicitDependency[];
-  if (
-    process.env.NX_NATIVE_TS_DEPS &&
-    process.env.NX_NATIVE_TS_DEPS !== 'false'
-  ) {
+  if (process.env.NX_NATIVE_TS_DEPS !== 'false') {
     results = buildExplicitTypeScriptDependenciesWithSwc(filesToProcess, graph);
   } else {
     results = buildExplicitTypeScriptDependenciesWithTs(filesToProcess, graph);
@@ -109,7 +108,7 @@ function buildExplicitTypeScriptDependenciesWithSwc(
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {
       if (moduleExtensions.some((ext) => file.endsWith(ext))) {
-        filesToProcess[project].push(file);
+        filesToProcess[project].push(join(workspaceRoot, file));
       }
     }
   }
@@ -127,7 +126,7 @@ function buildExplicitTypeScriptDependenciesWithSwc(
     for (const importExpr of staticImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
-        file,
+        relative(workspaceRoot, file),
         sourceProject,
         DependencyType.static,
         targetProjectLocator
@@ -143,7 +142,7 @@ function buildExplicitTypeScriptDependenciesWithSwc(
     for (const importExpr of dynamicImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
-        file,
+        relative(workspaceRoot, file),
         sourceProject,
         DependencyType.dynamic,
         targetProjectLocator

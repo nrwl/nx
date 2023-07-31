@@ -1,7 +1,6 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::path::Path;
-use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -9,7 +8,8 @@ use rayon::prelude::*;
 use tracing::debug;
 use tracing::trace;
 
-use swc_common::{BytePos, SourceFile, SourceMap, Spanned};
+use swc_common::comments::SingleThreadedComments;
+use swc_common::{BytePos, SourceMap, Spanned};
 use swc_ecma_ast::EsVersion::EsNext;
 use swc_ecma_parser::error::Error;
 use swc_ecma_parser::lexer::Lexer;
@@ -449,6 +449,8 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
         .load_file(Path::new(file_path))
         .unwrap();
 
+    let comments = SingleThreadedComments::default();
+
     let tsx = file_path.ends_with(".tsx") || file_path.ends_with(".jsx");
     let lexer = Lexer::new(
         Syntax::Typescript(TsConfig {
@@ -460,14 +462,14 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
         }),
         EsNext,
         (&*cm).into(),
-        None,
+        Some(&comments),
     );
 
     // State
     let mut state = State::new(lexer);
 
-    let mut static_import_expressions: Vec<String> = vec![];
-    let mut dynamic_import_expressions: Vec<String> = vec![];
+    let mut static_import_expressions: Vec<(String, BytePos)> = vec![];
+    let mut dynamic_import_expressions: Vec<(String, BytePos)> = vec![];
 
     loop {
         let current_token = state.next();
@@ -476,6 +478,8 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
         if current_token.is_none() {
             break;
         }
+
+        let mut pos: Option<BytePos> = None;
 
         if let Some(current) = &current_token {
             let word = match &current.token {
@@ -487,35 +491,29 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
             let import = match word {
                 // This is an import keyword
                 Keyword(keyword) if *keyword == Import => {
-                    if is_code_ignored(&cm, current.span.lo) {
-                        continue;
-                    }
-
+                    pos = Some(current.span.lo);
                     find_specifier_in_import(&mut state)
                 }
                 Keyword(keyword) if *keyword == Export => {
-                    if is_code_ignored(&cm, current.span.lo) {
-                        continue;
-                    }
+                    pos = Some(current.span.lo);
 
                     find_specifier_in_export(&mut state)
                 }
                 Ident(ident) if ident == "require" => {
-                    if is_code_ignored(&cm, current.span.lo) {
-                        continue;
-                    }
+                    pos = Some(current.span.lo);
                     find_specifier_in_require(&mut state)
                 }
                 _ => None,
             };
 
             if let Some((specifier, import_type)) = import {
+                let pos = pos.expect("Always exists when there is an import");
                 match import_type {
                     ImportType::Static => {
-                        static_import_expressions.push(specifier);
+                        static_import_expressions.push((specifier, pos));
                     }
                     ImportType::Dynamic => {
-                        dynamic_import_expressions.push(specifier);
+                        dynamic_import_expressions.push((specifier, pos));
                     }
                 }
             }
@@ -539,10 +537,41 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
         errs.clear();
     }
 
-    if file_path == "nx-dev/ui-markdoc/src/lib/tags/graph.component.tsx" {
-        trace!("{:?}", static_import_expressions);
-        trace!("{:?}", dynamic_import_expressions);
+    // Create a HashMap of comments by the lines where they end
+    let (leading_comments, _) = comments.take_all();
+    let mut lines_with_nx_ignore_comments: HashSet<usize> = HashSet::new();
+    let leading_comments = leading_comments.borrow();
+    for (_, comments) in leading_comments.iter() {
+        for comment in comments {
+            let comment_text = comment.text.trim();
+
+            if comment_text.contains("nx-ignore-next-line") {
+                let line_where_comment_ends = cm
+                    .lookup_line(comment.span.hi)
+                    .expect("Comments end on a line");
+
+                lines_with_nx_ignore_comments.insert(line_where_comment_ends);
+            }
+        }
     }
+
+    let code_is_not_ignored = |(specifier, pos): (String, BytePos)| {
+        let line_with_code = cm.lookup_line(pos).expect("All code is on a line");
+        if lines_with_nx_ignore_comments.contains(&(line_with_code - 1)) {
+            None
+        } else {
+            Some(specifier)
+        }
+    };
+
+    let static_import_expressions = static_import_expressions
+        .into_iter()
+        .filter_map(code_is_not_ignored)
+        .collect();
+    let dynamic_import_expressions = dynamic_import_expressions
+        .into_iter()
+        .filter_map(code_is_not_ignored)
+        .collect();
 
     Some(ImportResult {
         file: file_path.clone(),
@@ -550,22 +579,6 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
         static_import_expressions,
         dynamic_import_expressions,
     })
-}
-
-fn is_code_ignored(cm: &Rc<SourceFile>, pos: BytePos) -> bool {
-    let line_with_dep = cm.lookup_line(pos).expect("The dep is on a line");
-
-    if line_with_dep == 0 {
-        return false;
-    }
-
-    if let Some(line_before_dep) = cm.get_line(line_with_dep - 1) {
-        let trimmed_line = line_before_dep.trim();
-        if trimmed_line == "// nx-ignore-next-line" || trimmed_line == "/* nx-ignore-next-line */" {
-            return true;
-        }
-    }
-    false
 }
 
 #[napi]
@@ -588,6 +601,55 @@ mod find_imports {
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
     use swc_common::comments::NoopComments;
+
+    #[test]
+    fn should_not_include_ignored_imports() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+  // nx-ignore-next-line
+  import 'a';
+
+/* nx-ignore-next-line */
+import 'a1';
+
+/*      nx-ignore-next-line */
+import 'a2';
+
+/**
+  * nx-ignore-next-line
+  */
+import 'a3';
+
+/*
+  nx-ignore-next-line
+  */
+import 'a4'; import 'a5';
+
+/* prettier-ignore */ /* nx-ignore-next-line */
+import 'a4'; import 'a5';
+
+/* nx-ignore-next-line */ /* prettier-ignore */
+import 'a4'; import 'a5';
+
+                "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]));
+
+        let result = results.get(0).unwrap();
+
+        assert!(result.static_import_expressions.is_empty());
+        assert!(result.dynamic_import_expressions.is_empty());
+    }
 
     #[test]
     fn should_find_imports() {
