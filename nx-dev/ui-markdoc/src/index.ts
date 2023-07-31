@@ -37,8 +37,7 @@ import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
-import { YouTube } from './lib/tags/youtube.components';
-import { youtube } from './lib/tags/youtube.schema';
+import { YouTube, youtube } from './lib/tags/youtube.component';
 import {
   TerminalCommand,
   terminalCommand,
