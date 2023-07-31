@@ -50,7 +50,7 @@
     "chalk": "^4.1.0",
     "find-cache-dir": "^3.3.2",
     "ignore": "^5.0.4",
-    "magic-string": "~0.26.2",
+    "magic-string": "~0.30.2",
     "minimatch": "3.0.5",
     "semver": "7.5.3",
     "tslib": "^2.3.0",

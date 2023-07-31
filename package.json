@@ -204,7 +204,7 @@
     "license-webpack-plugin": "^4.0.2",
     "lines-and-columns": "~2.0.3",
     "loader-utils": "2.0.3",
-    "magic-string": "~0.26.2",
+    "magic-string": "~0.30.2",
     "markdown-factory": "^0.0.6",
     "memfs": "^3.0.1",
     "metro-config": "0.76.7",
