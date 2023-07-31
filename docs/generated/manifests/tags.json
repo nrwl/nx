@@ -612,6 +612,20 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/repo-types/package-based-in-integrated",
+      "id": "package-based-in-integrated",
+      "name": "Add a Package-based Project in an Integrated Repo",
+      "path": "/recipes/tips-n-tricks/package-based-in-integrated"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/repo-types/integrated-in-package-based",
+      "id": "integrated-in-package-based",
+      "name": "Add an Integrated Project in a Package-based Repo",
+      "path": "/recipes/tips-n-tricks/integrated-in-package-based"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/repo-types/standalone-to-integrated",
       "id": "standalone-to-integrated",
       "name": "Convert from a Standalone Repository to an Integrated Repository",
