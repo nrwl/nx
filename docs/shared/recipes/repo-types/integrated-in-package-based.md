@@ -5,7 +5,7 @@ In a package-based repository, you've intentionally opted out of some of Nx's fe
 To add an integrated project:
 
 1. Install the plugin you want to use (i.e. `npm install @nx/react`)
-2. Generate an application using that plugin (i.e. `nx g @nx/react:app`)
+2. Generate an application or library using that plugin (i.e. `nx g @nx/react:app`)
 
 The integrated project is now ready to use. Next, we'll discuss some of the changes that were applied to your codebase.
 
@@ -15,15 +15,15 @@ All the dependencies that are required for an integrated project are maintained 
 
 ## tsconfig.base.json
 
-Even if the project you added only uses javascript, a `tsconfig.base.json` file is generated in the root of the repo. This file is needed for the tooling that Nx provides.
-
-## .eslintrc.json
-
-Most Nx plugins will set up `eslint` for you so you can [Enforce Module Boundaries](/core-features/enforce-project-boundaries) between projects.
+Even if the project you added only uses javascript, a `tsconfig.base.json` file is generated in the root of the repo. This file is needed for the tooling that Nx provides.  Nx creates a typescript `path` alias for each library and then uses that path (rather than npm/yarn/pnpm workspaces) to allow local projects to reference the library.
 
 ## project.json
 
 The project itself will have a `project.json` file that defines all the tasks that can be run on the project. This includes tasks like `build`, `serve` and `test`. See [Use Task Executors](/plugin-features/use-task-executors) for more information.
+
+## Other Configuration Files
+
+Depending on the type of integrated project you created, there may be other configuration files.  These could include files like `.eslintrc.json`, `jest.config.ts` and a project-level `tsconfig.json`.
 
 ## Code Generators
 

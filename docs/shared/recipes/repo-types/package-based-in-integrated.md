@@ -4,9 +4,8 @@ An integrated repo offers a lot of features at the cost of some flexibility, but
 
 A package-based project in an integrated repository is a project that has at least one of these characteristics:
 
-1. Maintains its own dependencies with a separate package.json file
-2. Runs tasks without the use of an Nx plugin
-3. Scaffolds code without the use of Nx generators
+1. Maintains its own dependencies with a separate `package.json` file
+2. Defines tasks in a `package.json` file that don't use Nx executors
 
 For this example, we'll implement all three, but you can also have a project that has only one of these characteristics and falls back to an integrated style for the others.
 
@@ -20,11 +19,13 @@ For Nx to be aware of your project, it needs:
 2. A `package.json` file in the project folder with a `name` specified
 3. Some scripts defined in the project's `package.json` file for Nx to run
 
-## Maintain Separate Dependencies
+## Setup NPM/Yarn/PNPM Workspaces
 
-If you choose to have this project define its own dependencies separately from the root `package.json` file, simply define those `dependencies` and `devDependencies` in the project's `package.json` file.
+If you choose to have this project define its dependencies separately from the root `package.json` file, simply define those `dependencies` and `devDependencies` in the project's `package.json` file.
 
 With [npm](https://docs.npmjs.com/cli/v7/using-npm/workspaces)/[yarn](https://classic.yarnpkg.com/lang/en/docs/workspaces/)/[pnpm](https://pnpm.io/workspaces) workspaces set up, you can run the install command at the root of the repository and every project will have its dependencies installed.
+
+When you manage dependencies this way, you can still hoist dependencies to the root-level `package.json` file, but you have to make the explicit decision for each dependency.
 
 There are difficulties with code sharing when you maintain separate dependencies. See the [Dependency Management Strategies](/more-concepts/dependency-management) guide for more information.
 
@@ -32,9 +33,46 @@ There are difficulties with code sharing when you maintain separate dependencies
 
 Any task you define in the scripts section of the project's `package.json` can be executed by Nx. These scripts can be cached and orchestrated in the same way a `target` defined in `project.json` is. If you want to define some tasks in `project.json` and some tasks in `package.json`, Nx will read both and merge the configurations.
 
-## Scaffold Code Without the Use of Nx Generators
+A typical set up where the `test` task depends on the `build` task could look like this:
 
-Whatever tools you want to use to help scaffold out code should work just fine in an Nx repo. You can even call other code mod tools from within an Nx generator (see [Using jscodeshift Codemods](/plugins/recipes/composing-generators#using-jscodeshift-codemods)).
+{% tabs %}
+{% tab label="package.json" %}
+
+```jsonc {% fileName="package.json"%}
+{
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "nx": {
+    "targets": {
+      "test": {
+        "dependsOn": ["build"]
+      }
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="project.json" %}
+
+```jsonc {% fileName="project.json"%}
+{
+  "targets": {
+    "build": {
+      "command": "tsc"
+    },
+    "test": {
+      "command": "jest",
+      "dependsOn": ["build"]
+    }
+  }
+}
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## Updating Dependencies
 
