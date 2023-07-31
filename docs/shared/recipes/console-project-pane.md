@@ -11,4 +11,4 @@ Clicking the ![continue-light.svg](/shared/images/nx-console/continue-light.svg)
 {% youtube
 src="https://www.youtube.com/embed/ve_N3unDqAg"
 title="Nx Console Projects Pane"
-width="100%" /%}
+/%}

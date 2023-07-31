@@ -5,7 +5,7 @@ There are often tasks in a codebase that apply to the whole codebase rather than
 {% youtube
 src="https://www.youtube.com/embed/PRURABLaS8s"
 title="Run root-level NPM scripts with Nx"
-width="100%" /%}
+/%}
 
 ## Example
 

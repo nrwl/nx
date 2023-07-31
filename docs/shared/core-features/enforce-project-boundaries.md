@@ -7,7 +7,7 @@ To help with that Nx uses code analysis to make sure projects can only depend on
 {% youtube
 src="https://www.youtube.com/embed/q0en5vlOsWY"
 title="Applying Module Boundaries"
-width="100%" /%}
+/%}
 
 ## Project APIs
 

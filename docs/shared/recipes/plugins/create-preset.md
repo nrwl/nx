@@ -7,7 +7,7 @@ This preset option is pointing to a special generator function (remember, a gene
 {% youtube
 src="https://www.youtube.com/embed/yGUrF0-uqaU"
 title="Develop a Nx Preset for your Nx Plugin"
-width="100%" /%}
+/%}
 
 ## What is a preset?
 

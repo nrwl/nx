@@ -32,7 +32,7 @@ Here's the source code of the final result for this tutorial.
 {% youtube
 src="https://www.youtube.com/embed/OQ-Zc5tcxJE"
 title="Tutorial: Standalone React Application"
-width="100%" /%}
+/%}
 
 ## Creating a new React App
 
