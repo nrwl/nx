@@ -74,7 +74,7 @@ function vitePreprocessor(userConfigPath?: string): CypressPreprocessor {
 
     cache.set(filePath, outputPath);
 
-    const { build } = require('vite');
+    const { build } = await import('vite');
 
     const watcher = (await build({
       configFile: userConfigPath,
