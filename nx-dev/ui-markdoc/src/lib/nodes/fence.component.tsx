@@ -27,9 +27,18 @@ function CodeWrapper(options: {
   command: string;
   path: string;
   isMessageBelow: boolean;
+  language: string;
+  children: string; // intentionally typed as such
 }): ({ children }: { children: ReactNode }) => JSX.Element {
   return ({ children }: { children: ReactNode }) =>
-    options.command ? (
+    options.language === 'shell' ? (
+      <TerminalOutput
+        command={options.children}
+        path=""
+        content={null}
+        isMessageBelow={false}
+      />
+    ) : options.command ? (
       <TerminalOutput
         content={children}
         command={options.command}
@@ -51,12 +60,14 @@ export function Fence({
   path,
   fileName,
   language,
+  enableCopy,
 }: {
   children: string;
   command: string;
   path: string;
   fileName: string;
   language: string;
+  enableCopy: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   useEffect(() => {
@@ -76,23 +87,25 @@ export function Fence({
     <div className="my-8 w-full">
       <div className="code-block group relative w-full">
         <div>
-          <CopyToClipboard
-            text={command && command !== '' ? command : children}
-            onCopy={() => {
-              setCopied(true);
-            }}
-          >
-            <button
-              type="button"
-              className="not-prose absolute top-0 right-0 z-10 flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800/60"
+          {enableCopy && enableCopy === true && (
+            <CopyToClipboard
+              text={command && command !== '' ? command : children}
+              onCopy={() => {
+                setCopied(true);
+              }}
             >
-              {copied ? (
-                <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
-              ) : (
-                <ClipboardDocumentIcon className="h-5 w-5" />
-              )}
-            </button>
-          </CopyToClipboard>
+              <button
+                type="button"
+                className="not-prose absolute top-0 right-0 z-10 flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 opacity-0 transition-opacity group-hover:opacity-100 dark:border-slate-700 dark:bg-slate-800/60"
+              >
+                {copied ? (
+                  <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
+                ) : (
+                  <ClipboardDocumentIcon className="h-5 w-5" />
+                )}
+              </button>
+            </CopyToClipboard>
+          )}
           <SyntaxHighlighter
             useInlineStyles={false}
             language={resolveLanguage(language)}
@@ -102,6 +115,8 @@ export function Fence({
               command,
               path,
               isMessageBelow: showRescopeMessage,
+              language,
+              children,
             })}
           />
           {showRescopeMessage && (

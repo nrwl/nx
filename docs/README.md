@@ -67,6 +67,16 @@ You can add specific languages and a filename on the code snippet displayed.
 ‎```
 ````
 
+#### Terminal command
+
+To display a terminal command, use:
+
+````
+‎```shell
+‎ npx nx build
+‎```
+````
+
 #### Terminal Output
 
 You can display your terminal output with a dedicated component the same way you would show code.
@@ -84,6 +94,14 @@ You can optionally also pass a `path` like
 ‎ My terminal output here!
 ‎```
 ````
+
+#### Terminal Video Output
+
+You can have a more dynamic visualization of a terminal output by using the following component:
+
+```
+{% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" /%}
+```
 
 #### Custom iframes
 
