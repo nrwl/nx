@@ -13,7 +13,7 @@ export const youtube: Schema = {
     },
     width: {
       type: 'String',
-      default: '50%',
+      default: '100%',
     },
     caption: {
       // Added caption attribute here
@@ -23,21 +23,26 @@ export const youtube: Schema = {
   },
 };
 
-export function YouTube(props: any): JSX.Element {
+export function YouTube(props: {
+  title: string;
+  caption: string;
+  src: string;
+  width: string;
+}): JSX.Element {
   return (
     <div className="text-center">
       {' '}
       {/* Center alignment applied to the container */}
       <iframe
-        {...props}
+        src={props.src}
         title={props.title}
-        width={props.width || '50%'}
+        width={props.width || '100%'}
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         loading="lazy"
         className="rounded-lg shadow-lg mb-1"
       />
       {props.caption && (
-        <p className="w-1/2 mx-auto pt-0 text-slate-500 dark:text-slate-400">
+        <p className="md:w-1/2 mx-auto pt-0 text-slate-500 dark:text-slate-400">
           {props.caption}
         </p>
       )}
