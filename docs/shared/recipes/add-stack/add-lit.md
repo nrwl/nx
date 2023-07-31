@@ -16,8 +16,8 @@ Because we are not using an Nx plugin for Lit, there are few items we'll have to
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/core-features/enforce-project-boundaries" %}✅ Enforce Project Boundaries{% /pill %}
-{% pill url="/plugin-features/use-task-executors" %}🚫 Use Task Executors{% /pill %}
-{% pill url="/plugin-features/use-code-generators" %}🚫 Use Code Generators{% /pill %}
+{% pill url="/core-features/plugin-features/use-task-executors" %}🚫 Use Task Executors{% /pill %}
+{% pill url="/core-features/plugin-features/use-code-generators" %}🚫 Use Code Generators{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
 
 ## Install Lit and Other Dependencies
