@@ -1,3 +1,5 @@
+import { detectPackageManager } from '@nx/devkit';
+import { execSync } from 'child_process';
 import { accessSync } from 'fs';
 
 /**
@@ -6,8 +8,16 @@ import { accessSync } from 'fs';
  * @returns
  */
 export function packageExists(name: string): boolean {
+  const pm = detectPackageManager();
+  if (pm === 'yarn') {
+    try {
+      execSync(`yarn info ${name}`);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
   try {
-    // TODO(meeroslav): This will not work once we start using yarn Berry with PnP
     accessSync(`./node_modules/.bin/${name}`);
     return true;
   } catch (e) {
