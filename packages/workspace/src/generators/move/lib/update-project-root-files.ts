@@ -116,7 +116,10 @@ export function updateFilesForNonRootProjects(
       join(schema.relativeToRootDestination, file),
       'utf-8'
     );
-    const newContent = oldContent.replace(regex, newRelativeRoot);
+    let newContent = oldContent.replace(regex, newRelativeRoot);
+    if (file == 'tsconfig.json') {
+      newContent = newContent.replace('tsconfig.json', 'tsconfig.base.json');
+    }
     tree.write(join(schema.relativeToRootDestination, file), newContent);
   }
 }
