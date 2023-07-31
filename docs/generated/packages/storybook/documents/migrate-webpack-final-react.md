@@ -14,7 +14,7 @@ Nx 12.7 comes with a dedicated Storybook addon for React which dramatically simp
 {% youtube
 src="https://www.youtube.com/embed/oUE74McS_NY"
 title="New in Nx 12.7: React Storybook Preset"
-width="100%" /%}
+/%}
 
 Here are the main differences to the previous versions of Nx:
 

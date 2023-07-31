@@ -3,7 +3,7 @@
 {% youtube
 src="https://www.youtube.com/embed/hzTMKuE3CDw"
 title="Tutorial: Getting Started with Package-Based Repos"
-width="100%" /%}
+/%}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/package-based" /%}
 

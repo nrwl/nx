@@ -27,7 +27,7 @@ Also, if you prefer learning with a video, join Juri and walk through the tutori
 {% youtube
 src="https://www.youtube.com/embed/ZAO0yXupIIE"
 title="Tutorial: Standalone Angular Application"
-width="100%" /%}
+/%}
 
 ## Creating a new Angular App
 

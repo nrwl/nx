@@ -126,7 +126,7 @@ Learn more about the advantages of Nx in the following guides:
 {% youtube
 src="https://www.youtube.com/embed/vRj9SNVYKrE"
 title="Nx Console Updates 17.15.0"
-width="100%" /%}
+/%}
 
 Nx Console no longer supports the Angular CLI. Angular CLI users will receive a notice, asking if they want to switch to Nx.
 

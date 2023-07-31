@@ -8,7 +8,7 @@ Nx provides tooling around creating, and running custom generators from within y
 src="https://www.youtube.com/embed/myqfGDWC2go"
 title="Scaffold new Pkgs in a PNPM Workspaces Monorepo"
 caption="Demoes how to use Nx generators in a PNPM workspace to automate the creation of libraries"
-width="100%" /%}
+/%}
 
 ## Creating a generator
 
