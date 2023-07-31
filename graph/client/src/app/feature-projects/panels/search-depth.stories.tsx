@@ -1,7 +1,7 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { SearchDepth } from './search-depth';
 
-export default {
+const meta: Meta<typeof SearchDepth> = {
   component: SearchDepth,
   title: 'Project Graph/SearchDepth',
   argTypes: {
@@ -11,14 +11,14 @@ export default {
     decrementDepthFilter: { action: 'decrementDepthFilter' },
     incrementDepthFilter: { action: 'incrementDepthFilter' },
   },
-} as ComponentMeta<typeof SearchDepth>;
+};
 
-const Template: ComponentStory<typeof SearchDepth> = (args) => (
-  <SearchDepth {...args} />
-);
+export default meta;
+type Story = StoryObj<typeof SearchDepth>;
 
-export const Primary = Template.bind({});
-Primary.args = {
-  searchDepthEnabled: false,
-  searchDepth: 1,
+export const Primary: Story = {
+  args: {
+    searchDepthEnabled: false,
+    searchDepth: 1,
+  },
 };

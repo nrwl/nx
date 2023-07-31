@@ -1,9 +1,5 @@
 lockfileVersion: '6.0'
 
-settings:
-  autoInstallPeers: true
-  excludeLinksFromLockfile: false
-
 overrides:
   minimist: ^1.2.6
   underscore: ^1.12.1
@@ -341,20 +337,20 @@ devDependencies:
     specifier: ^1.1.0
     version: 1.1.0(@jest/transform@29.5.0)(jest-runtime@29.5.0)(jest@29.4.3)
   '@storybook/addon-essentials':
-    specifier: 7.1.1
+    specifier: ^7.1.1
     version: 7.1.1(react-dom@18.2.0)(react@18.2.0)
   '@storybook/core-server':
-    specifier: 7.1.1
+    specifier: ^7.1.1
     version: 7.1.1
   '@storybook/react':
-    specifier: 7.1.1
+    specifier: ^7.1.1
     version: 7.1.1(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.3)
   '@storybook/react-webpack5':
-    specifier: 7.1.1
+    specifier: ^7.1.1
     version: 7.1.1(@babel/core@7.22.9)(@swc/core@1.3.51)(@swc/helpers@0.5.0)(esbuild@0.17.5)(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.3)(webpack-dev-server@4.11.1)
   '@storybook/types':
-    specifier: ^7.0.24
-    version: 7.0.24
+    specifier: ^7.1.1
+    version: 7.1.1
   '@supabase/supabase-js':
     specifier: ^2.26.0
     version: 2.26.0
@@ -5913,7 +5909,6 @@ packages:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.18
-    dev: true
 
   /@jridgewell/sourcemap-codec@1.4.14:
     resolution: {integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==}
@@ -7006,42 +7001,6 @@ packages:
       - typescript
     dev: true
 
-  /@nrwl/js@15.8.0(@swc-node/register@1.5.4)(@swc/core@1.3.51)(nx@15.8.0)(prettier@2.7.1)(typescript@5.1.3):
-    resolution: {integrity: sha512-l2Q7oFpzx6ul7G0nKpMkrvnIEaOY+X8fc2g2Db5WqpnnBdfkrtWXZPg/O4DQ1p9O6BXrZ+Q2AK9bfgnliiwyEg==}
-    dependencies:
-      '@babel/core': 7.22.9
-      '@babel/plugin-proposal-class-properties': 7.18.6(@babel/core@7.22.9)
-      '@babel/plugin-proposal-decorators': 7.21.0(@babel/core@7.22.9)
-      '@babel/plugin-transform-runtime': 7.22.9(@babel/core@7.22.9)
-      '@babel/preset-env': 7.22.5(@babel/core@7.22.9)
-      '@babel/preset-typescript': 7.22.5(@babel/core@7.22.9)
-      '@babel/runtime': 7.22.6
-      '@nrwl/devkit': 15.8.0(nx@15.8.0)(typescript@5.1.3)
-      '@nrwl/workspace': 15.8.0(@swc-node/register@1.5.4)(@swc/core@1.3.51)(eslint@8.15.0)(prettier@2.7.1)(typescript@5.1.3)
-      '@phenomnomnominal/tsquery': 4.1.1(typescript@5.1.3)
-      babel-plugin-const-enum: 1.2.0(@babel/core@7.22.9)
-      babel-plugin-macros: 2.8.0
-      babel-plugin-transform-typescript-metadata: 0.3.2(@babel/core@7.22.9)
-      chalk: 4.1.2
-      fast-glob: 3.2.7
-      fs-extra: 11.1.1
-      ignore: 5.2.0
-      js-tokens: 4.0.0
-      minimatch: 3.0.5
-      source-map-support: 0.5.19
-      tree-kill: 1.2.2
-      tslib: 2.5.3
-    transitivePeerDependencies:
-      - '@babel/traverse'
-      - '@swc-node/register'
-      - '@swc/core'
-      - debug
-      - nx
-      - prettier
-      - supports-color
-      - typescript
-    dev: true
-
   /@nrwl/js@16.6.0-beta.8(@swc-node/register@1.5.4)(@swc/core@1.3.51)(@types/node@18.16.9)(nx@16.6.0-beta.8)(typescript@5.1.3)(verdaccio@5.15.4):
     resolution: {integrity: sha512-tRXayCZWPqXl0hxcsC3mg56IY6svE2GV4DWEYC4qo78ckhvd/TDmUZMvomB4VcR8pIxGR1I8T3B9jr/BxKZK7g==}
     dependencies:
@@ -7068,7 +7027,7 @@ packages:
         optional: true
     dependencies:
       '@nrwl/devkit': 15.8.0(nx@15.8.0)(typescript@5.1.3)
-      '@nrwl/js': 15.8.0(@swc-node/register@1.5.4)(@swc/core@1.3.51)(nx@15.8.0)(prettier@2.7.1)(typescript@5.1.3)
+      '@nrwl/js': 15.8.0(@swc-node/register@1.5.4)(@swc/core@1.3.51)(eslint@8.15.0)(nx@16.6.0-beta.8)(prettier@2.7.1)(typescript@5.1.3)
       '@phenomnomnominal/tsquery': 4.1.1(typescript@5.1.3)
       eslint: 8.15.0
       tmp: 0.2.1
@@ -9138,10 +9097,6 @@ packages:
       '@storybook/client-logger': 7.1.1
     dev: true
 
-  /@storybook/channels@7.0.24:
-    resolution: {integrity: sha512-NZVLwMhtzy6cZrNRjshFvMAD9mQTmJDNwhohodSkM/YFCDVFhmxQk9tgizVGh9MwY3CYGJ1SI96RUejGosb49Q==}
-    dev: true
-
   /@storybook/channels@7.0.7:
     resolution: {integrity: sha512-Om4ovBLNw8pVrBu83MpOKgAuGO9Dpr1Coh2qp8t64WRPkejX1mxOY9IgH723//zH3igx8LCkf9rvBvcrsyaScQ==}
     dev: true
@@ -9726,15 +9681,6 @@ packages:
       memoizerific: 1.11.3
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-    dev: true
-
-  /@storybook/types@7.0.24:
-    resolution: {integrity: sha512-SZh/XBHP1TT5bmEk0W52nT0v6fUnYwmZVls3da5noutdgOAiwL7TANtl41XrNjG+UDr8x0OE3PVVJi+LhwUaNA==}
-    dependencies:
-      '@storybook/channels': 7.0.24
-      '@types/babel__core': 7.1.20
-      '@types/express': 4.17.14
-      file-system-cache: 2.3.0
     dev: true
 
   /@storybook/types@7.0.7:
@@ -11601,7 +11547,7 @@ packages:
   /acorn-globals@7.0.1:
     resolution: {integrity: sha512-umOSDSDrfHbTNPuNpC2NSnnA3LUrqpevPb4T9jRx4MagXNS0rs+gwiTcAvqCRmsD6utzsrzNt+ebm00SNWiC3Q==}
     dependencies:
-      acorn: 8.8.2
+      acorn: 8.10.0
       acorn-walk: 8.2.0
     dev: true
 
@@ -11653,7 +11599,6 @@ packages:
     resolution: {integrity: sha512-F0SAmZ8iUtS//m8DmCTA0jlh6TDKkHQyK6xc6V4KDTyZKA9dnvX9/3sRTVQrWm79glUAZbnmmNcdYwUIHWVybw==}
     engines: {node: '>=0.4.0'}
     hasBin: true
-    dev: true
 
   /acorn@8.8.1:
     resolution: {integrity: sha512-7zFpHzhnqYKrkYdUjF1HI1bzd0VygEGX8lFk4k5zVMqHEoES+P+7TKI+EvLO9WVMJ8eekdO0aDEK044xTXwPPA==}
@@ -12947,7 +12892,6 @@ packages:
 
   /buffer-from@1.1.2:
     resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
-    dev: true
 
   /buffer-indexof-polyfill@1.0.2:
     resolution: {integrity: sha512-I7wzHwA3t1/lwXQh+A5PbNvJxgfo5r3xulgpYDB5zckTu/Z9oUK9biouBKQUjEqzaz3HnAT6TYoovmE+GqSf7A==}
@@ -13555,7 +13499,6 @@ packages:
 
   /commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
-    dev: true
 
   /commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
@@ -18921,7 +18864,7 @@ packages:
         optional: true
     dependencies:
       abab: 2.0.6
-      acorn: 8.8.2
+      acorn: 8.10.0
       acorn-globals: 6.0.0
       cssom: 0.4.4
       cssstyle: 2.3.0
@@ -20689,7 +20632,7 @@ packages:
   /mlly@1.2.0:
     resolution: {integrity: sha512-+c7A3CV0KGdKcylsI6khWyts/CYrGTrRVo4R/I7u/cUsy0Conxa6LUhiEzVKIw14lc2L5aiO4+SeVe4TeGRKww==}
     dependencies:
-      acorn: 8.8.2
+      acorn: 8.10.0
       pathe: 1.1.0
       pkg-types: 1.0.3
       ufo: 1.1.2
@@ -24708,7 +24651,6 @@ packages:
       chokidar: 3.5.3
       immutable: 4.1.0
       source-map-js: 1.0.2
-    dev: true
 
   /sax@1.2.4:
     resolution: {integrity: sha512-NqVDv9TpANUjFm0N8uM5GxL36UgKi9/atZw+x7YFnQ8ckwFGKrl4xX4yWtrey3UJm5nP1kUbnYgLopqWNSRhWw==}
@@ -25303,7 +25245,6 @@ packages:
     dependencies:
       buffer-from: 1.1.2
       source-map: 0.6.1
-    dev: true
 
   /source-map@0.5.7:
     resolution: {integrity: sha512-LbrmJOMUSdEVxIKvdcJzQC+nQhe8FUZQTXQy6+I75skNgn3OoQ0DZA8YnFa7gp8tqtL3KPf1kmo0R5DoApeSGQ==}
@@ -26203,7 +26144,6 @@ packages:
       acorn: 8.8.2
       commander: 2.20.3
       source-map-support: 0.5.21
-    dev: true
 
   /terser@5.18.0:
     resolution: {integrity: sha512-pdL757Ig5a0I+owA42l6tIuEycRuM7FPY4n62h44mRLRfnOxJkkOHd6i89dOpwZlpF6JXBwaAHF6yWzFrt+QyA==}
@@ -27345,7 +27285,7 @@ packages:
       mlly: 1.2.0
       pathe: 1.1.0
       picocolors: 1.0.0
-      vite: 4.3.9(@types/node@18.16.9)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0)
+      vite: 4.3.9(@types/node@18.16.9)(less@4.1.3)(sass@1.63.2)(stylus@0.59.0)(terser@5.17.7)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -27391,42 +27331,6 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
 
-  /vite@4.3.9(@types/node@18.16.9)(less@4.1.3)(sass@1.55.0)(stylus@0.59.0):
-    resolution: {integrity: sha512-qsTNZjO9NoJNW7KnOrgYwczm0WctJ8m/yqYAMAK9Lxt4SoySUfS5S8ia9K7JHpa3KEeMfyF8LoJ3c5NeBJy6pg==}
-    engines: {node: ^14.18.0 || >=16.0.0}
-    hasBin: true
-    peerDependencies:
-      '@types/node': '>= 14'
-      less: '*'
-      sass: '*'
-      stylus: '*'
-      sugarss: '*'
-      terser: ^5.4.0
-    peerDependenciesMeta:
-      '@types/node':
-        optional: true
-      less:
-        optional: true
-      sass:
-        optional: true
-      stylus:
-        optional: true
-      sugarss:
-        optional: true
-      terser:
-        optional: true
-    dependencies:
-      '@types/node': 18.16.9
-      esbuild: 0.17.19
-      less: 4.1.3
-      postcss: 8.4.24
-      rollup: 3.21.0
-      sass: 1.55.0
-      stylus: 0.59.0
-    optionalDependencies:
-      fsevents: 2.3.2
-    dev: false
-
   /vite@4.3.9(@types/node@18.16.9)(less@4.1.3)(sass@1.63.2)(stylus@0.59.0)(terser@5.17.7):
     resolution: {integrity: sha512-qsTNZjO9NoJNW7KnOrgYwczm0WctJ8m/yqYAMAK9Lxt4SoySUfS5S8ia9K7JHpa3KEeMfyF8LoJ3c5NeBJy6pg==}
     engines: {node: ^14.18.0 || >=16.0.0}
@@ -27462,7 +27366,6 @@ packages:
       terser: 5.17.7
     optionalDependencies:
       fsevents: 2.3.2
-    dev: true
 
   /vitest@0.32.0(less@4.1.3)(sass@1.55.0)(stylus@0.59.0):
     resolution: {integrity: sha512-SW83o629gCqnV3BqBnTxhB10DAwzwEx3z+rqYZESehUB+eWsJxwcBQx7CKy0otuGMJTYh7qCVuUX23HkftGl/Q==}
@@ -28489,3 +28392,7 @@ packages:
     dependencies:
       tslib: 2.5.3
     dev: true
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
