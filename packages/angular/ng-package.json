@@ -17,6 +17,7 @@
     "chokidar",
     "ignore",
     "minimatch",
+    "postcss-preset-env",
     "rxjs-for-await",
     "webpack-merge",
     "ts-node",
