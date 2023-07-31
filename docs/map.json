@@ -998,6 +998,19 @@
           "description": "Discover our selection of examples and benchmarks.",
           "itemList": [
             {
+              "name": "Add a New Project",
+              "id": "add-stack",
+              "description": "Instructions to add a project from a new stack to an Nx workspace",
+              "itemList": [
+                {
+                  "name": "Add a Lit Project",
+                  "id": "add-lit",
+                  "description": "Add a Lit project to your repo",
+                  "file": "shared/recipes/add-stack/add-lit"
+                }
+              ]
+            },
+            {
               "name": "Example Repos",
               "id": "example-repos",
               "description": "Examples of different ways to use Nx",

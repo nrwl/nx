@@ -172,6 +172,8 @@
       - [Add and Deploy Netlify Edge Functions with Deno](/recipes/other/deno-netlify-functions)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)
+    - [Add a New Project](/showcase/add-stack)
+      - [Add a Lit Project](/showcase/add-stack/add-lit)
     - [Example Repos](/showcase/example-repos)
       - [Powering Up React Development With Nx](/showcase/example-repos/react-nx)
       - [Using Apollo GraphQL](/showcase/example-repos/apollo-react)

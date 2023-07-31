@@ -3522,6 +3522,23 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Add a New Project",
+            "path": "/showcase/add-stack",
+            "id": "add-stack",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Add a Lit Project",
+                "path": "/showcase/add-stack/add-lit",
+                "id": "add-lit",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Example Repos",
             "path": "/showcase/example-repos",
             "id": "example-repos",
@@ -3611,6 +3628,31 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a New Project",
+        "path": "/showcase/add-stack",
+        "id": "add-stack",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Add a Lit Project",
+            "path": "/showcase/add-stack/add-lit",
+            "id": "add-lit",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Lit Project",
+        "path": "/showcase/add-stack/add-lit",
+        "id": "add-lit",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
