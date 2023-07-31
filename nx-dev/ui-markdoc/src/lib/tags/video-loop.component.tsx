@@ -1,22 +1,17 @@
-import { Schema } from '@markdoc/markdoc';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
-export const videoLoop: Schema = {
-  render: 'VideoLoop',
-  attributes: {
-    src: {
-      type: 'String',
-      required: true,
-    },
-  },
-};
-
-export function VideoLoop({ src }: { src: string }): JSX.Element {
-  const videoRef = useRef(null);
+export function VideoLoop({
+  src,
+  alt,
+}: {
+  src: string;
+  alt: string;
+}): JSX.Element {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     let observer: IntersectionObserver;
-    let videoElement = videoRef.current as HTMLVideoElement | null;
+    let videoElement = videoRef.current;
 
     if (videoElement) {
       observer = new IntersectionObserver(
@@ -48,6 +43,13 @@ export function VideoLoop({ src }: { src: string }): JSX.Element {
   return (
     <video ref={videoRef} autoPlay muted loop>
       <source src={src} type="video/mp4" />
+      <div className="text-center p-4">
+        <p className="font-bold pb-3">
+          Your browser does not support the video tag. Here is a description of
+          the video:
+        </p>
+        <p>{alt}</p>
+      </div>
     </video>
   );
 }

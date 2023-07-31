@@ -39,9 +39,9 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { YouTube, youtube } from './lib/tags/youtube.component';
 import {
-  TerminalCommand,
-  terminalCommand,
-} from './lib/tags/terminal-command.component';
+  TerminalVideo,
+  terminalVideo,
+} from './lib/tags/terminal-video.component';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
 
 // TODO fix this export
@@ -74,7 +74,7 @@ export const getMarkdocCustomConfig = (
       tabs,
       'title-card': titleCard,
       youtube,
-      'terminal-command': terminalCommand,
+      'terminal-video': terminalVideo,
       'video-link': videoLink,
     },
   },
@@ -98,7 +98,7 @@ export const getMarkdocCustomConfig = (
     Tabs,
     TitleCard,
     YouTube,
-    TerminalCommand,
+    TerminalVideo,
     VideoLink,
   },
 });
