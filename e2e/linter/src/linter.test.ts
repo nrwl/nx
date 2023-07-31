@@ -246,6 +246,21 @@ describe('Linter', () => {
           'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
         );
       }, 1000000);
+
+      it('should print the effective configuration for a file specified using --printConfig', () => {
+        const eslint = readJson('.eslintrc.json');
+        eslint.overrides.push({
+          files: ['src/index.ts'],
+          rules: {
+            'specific-rule': 'off',
+          },
+        });
+        updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
+        const out = runCLI(`lint ${myapp} --printConfig src/index.ts`, {
+          silenceError: true,
+        });
+        expect(out).toContain('"specific-rule": [');
+      }, 1000000);
     });
 
     describe('workspace boundary rules', () => {

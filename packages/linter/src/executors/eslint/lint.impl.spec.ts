@@ -25,6 +25,9 @@ class MockESLint {
   loadFormatter = mockLoadFormatter;
   isPathIgnored = mockIsPathIgnored;
   lintFiles = mockLintFiles;
+  calculateConfigForFile(file: string) {
+    return { file: file };
+  }
 }
 
 const mockResolveAndInstantiateESLint = jest.fn().mockReturnValue(
@@ -65,6 +68,7 @@ function createValidRunBuilderOptions(
     rulesdir: [],
     resolvePluginsRelativeTo: null,
     reportUnusedDisableDirectives: null,
+    printConfig: null,
     ...additionalOptions,
   };
 }
@@ -618,5 +622,31 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
       mockContext
     );
     expect(fs.writeFileSync).not.toHaveBeenCalled();
+  });
+
+  it('should print the ESLint configuration for a specified file if printConfiguration is specified', async () => {
+    setupMocks();
+    jest.spyOn(console, 'log');
+    const result = await lintExecutor(
+      createValidRunBuilderOptions({
+        lintFilePatterns: [],
+        eslintConfig: './.eslintrc.json',
+        fix: true,
+        cache: true,
+        cacheLocation: 'cacheLocation1',
+        format: 'stylish',
+        force: false,
+        silent: false,
+        ignorePath: null,
+        maxWarnings: null,
+        outputFile: null,
+        quiet: false,
+        reportUnusedDisableDirectives: null,
+        printConfig: 'test-source.ts',
+      }),
+      mockContext
+    );
+    expect(console.log).toHaveBeenCalledWith('{\n "file": "test-source.ts"\n}');
+    expect(result).toEqual({ success: true });
   });
 });
