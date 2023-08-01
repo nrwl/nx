@@ -204,6 +204,14 @@ class CLIOutput {
 
     this.addNewline();
   }
+
+  verbose(...args: string[]) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      this.addNewline();
+      this.writeOptionalOutputBody(args);
+      this.addNewline();
+    }
+  }
 }
 
 export const output = new CLIOutput();
