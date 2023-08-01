@@ -17,10 +17,6 @@ jobs:
       - name: Snyk Bot scan
         continue-on-error: true
         run: |
-         rm -rf node_modules
-         rm -f package-lock.json
-         echo "----------NPM install------------"
-         npm install
          echo "----------Download Latest Snyk CLI-----------"
             curl -Lo ./snyk "https://static.snyk.io/cli/latest/snyk-linux"
             chmod +x snyk
