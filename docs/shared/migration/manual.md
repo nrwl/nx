@@ -73,7 +73,7 @@ For example, your generated application should have four [tasks available](/core
 
 These workspace configuration files can seem a little long and intimidating. The Nx Console can help you navigate it more easily with its Workspace JSON panel. By clicking on a project in your workspace, it will navigate you to the right place in the workspace file to begin making edits.
 
-Additionally, there is an `nx.json` file that contains metadata about your projects. [This metadata includes tags](/core-features/enforce-project-boundaries) that can help you impose constraints on your applications and library dependencies.
+Additionally, there is an `nx.json` file that contains metadata about your projects. [This metadata includes tags](/core-features/enforce-module-boundaries) that can help you impose constraints on your applications and library dependencies.
 
 ## Migrating your code
 
@@ -196,4 +196,4 @@ It’s important to remember: don’t just drop your code anywhere! Always gener
 
 If you’re consolidating multiple repositories or libraries into a single Nx workspace, you may have concerns about code boundaries. Previously, you may have had well-established boundaries by separating code into different repositories or having a public API for a library. Nx features a tagging system that allows you to enforce these code boundaries in a granular way. Each project can be tagged, and you can constrain dependencies based on these tags.
 
-[Learn more about tags and dependency constraints](/core-features/enforce-project-boundaries)
+[Learn more about tags and dependency constraints](/core-features/enforce-module-boundaries)

@@ -307,13 +307,13 @@
       "path": "/packages/nx/documents/migrate"
     }
   ],
-  "enforce-project-boundaries": [
+  "enforce-module-boundaries": [
     {
       "description": "",
-      "file": "shared/core-features/enforce-project-boundaries",
-      "id": "enforce-project-boundaries",
-      "name": "Enforce Project Boundaries",
-      "path": "/core-features/enforce-project-boundaries"
+      "file": "shared/core-features/enforce-module-boundaries",
+      "id": "enforce-module-boundaries",
+      "name": "Enforce Module Boundaries",
+      "path": "/core-features/enforce-module-boundaries"
     },
     {
       "description": "",

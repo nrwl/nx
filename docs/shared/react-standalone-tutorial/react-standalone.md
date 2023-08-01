@@ -818,7 +818,7 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 ![ESLint module boundary error](/shared/images/tutorial-react-standalone/react-standalone-module-boundaries.png)
 
-Learn more about how to [enforce module boundaries](/core-features/enforce-project-boundaries).
+Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
 
 ## Next Steps
 

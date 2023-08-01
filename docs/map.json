@@ -312,10 +312,10 @@
               "file": "shared/core-features/automate-updating-dependencies"
             },
             {
-              "name": "Enforce Project Boundaries",
-              "id": "enforce-project-boundaries",
-              "tags": ["enforce-project-boundaries"],
-              "file": "shared/core-features/enforce-project-boundaries"
+              "name": "Enforce Module Boundaries",
+              "id": "enforce-module-boundaries",
+              "tags": ["enforce-module-boundaries"],
+              "file": "shared/core-features/enforce-module-boundaries"
             },
             {
               "name": "Plugin Features",
@@ -425,7 +425,7 @@
                 {
                   "name": "Using Nx at Enterprises",
                   "id": "monorepo-nx-enterprise",
-                  "tags": ["enforce-project-boundaries", "use-code-generators"],
+                  "tags": ["enforce-module-boundaries", "use-code-generators"],
                   "file": "shared/monorepo-nx-enterprise"
                 },
                 {
@@ -468,25 +468,25 @@
                 {
                   "name": "Applications and Libraries",
                   "id": "applications-and-libraries",
-                  "tags": ["enforce-project-boundaries"],
+                  "tags": ["enforce-module-boundaries"],
                   "file": "shared/workspace/applications-and-libraries"
                 },
                 {
                   "name": "Creating Libraries",
                   "id": "creating-libraries",
-                  "tags": ["enforce-project-boundaries"],
+                  "tags": ["enforce-module-boundaries"],
                   "file": "shared/workspace/creating-libraries"
                 },
                 {
                   "name": "Library Types",
                   "id": "library-types",
-                  "tags": ["enforce-project-boundaries"],
+                  "tags": ["enforce-module-boundaries"],
                   "file": "shared/workspace/library-types"
                 },
                 {
                   "name": "Grouping Libraries",
                   "id": "grouping-libraries",
-                  "tags": ["enforce-project-boundaries"],
+                  "tags": ["enforce-module-boundaries"],
                   "file": "shared/workspace/grouping-libraries"
                 },
                 {
@@ -732,25 +732,25 @@
                 {
                   "name": "Ban Dependencies with Certain Tags",
                   "id": "ban-dependencies-with-tags",
-                  "tags": ["enforce-project-boundaries"],
+                  "tags": ["enforce-module-boundaries"],
                   "file": "shared/recipes/ban-dependencies-with-tags"
                 },
                 {
                   "name": "Tag in Multiple Dimensions",
                   "id": "tag-multiple-dimensions",
-                  "tags": ["enforce-project-boundaries"],
+                  "tags": ["enforce-module-boundaries"],
                   "file": "shared/recipes/tag-multiple-dimensions"
                 },
                 {
                   "name": "Ban External Imports",
                   "id": "ban-external-imports",
-                  "tags": ["enforce-project-boundaries"],
+                  "tags": ["enforce-module-boundaries"],
                   "file": "shared/recipes/ban-external-imports"
                 },
                 {
                   "name": "Tags Allow List",
                   "id": "tags-allow-list",
-                  "tags": ["enforce-project-boundaries"],
+                  "tags": ["enforce-module-boundaries"],
                   "file": "shared/recipes/tags-allow-list"
                 }
               ]
@@ -1098,7 +1098,7 @@
             {
               "name": ".nxignore",
               "id": "nxignore",
-              "tags": ["enforce-project-boundaries"],
+              "tags": ["enforce-module-boundaries"],
               "file": "shared/reference/nxignore"
             },
             {
@@ -1257,7 +1257,7 @@
               "name": "nx.json workspaceLayout property",
               "id": "nxjson-workspaceLayout",
               "file": "",
-              "tags": ["enforce-project-boundaries"],
+              "tags": ["enforce-module-boundaries"],
               "path": "/reference/nx-json#workspace-layout",
               "isExternal": true
             },
@@ -1629,13 +1629,13 @@
             {
               "name": "format:check",
               "id": "format-check",
-              "tags": ["enforce-project-boundaries"],
+              "tags": ["enforce-module-boundaries"],
               "file": "generated/cli/format-check"
             },
             {
               "name": "format:write",
               "id": "format-write",
-              "tags": ["enforce-project-boundaries"],
+              "tags": ["enforce-module-boundaries"],
               "file": "generated/cli/format-write"
             },
             {
@@ -1657,7 +1657,7 @@
             {
               "name": "workspace-lint",
               "id": "workspace-lint",
-              "tags": ["enforce-project-boundaries"],
+              "tags": ["enforce-module-boundaries"],
               "file": "generated/cli/workspace-lint"
             },
             {

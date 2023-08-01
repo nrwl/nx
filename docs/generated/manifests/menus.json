@@ -826,9 +826,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Enforce Project Boundaries",
-            "path": "/core-features/enforce-project-boundaries",
-            "id": "enforce-project-boundaries",
+            "name": "Enforce Module Boundaries",
+            "path": "/core-features/enforce-module-boundaries",
+            "id": "enforce-module-boundaries",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -918,9 +918,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Enforce Project Boundaries",
-        "path": "/core-features/enforce-project-boundaries",
-        "id": "enforce-project-boundaries",
+        "name": "Enforce Module Boundaries",
+        "path": "/core-features/enforce-module-boundaries",
+        "id": "enforce-module-boundaries",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
