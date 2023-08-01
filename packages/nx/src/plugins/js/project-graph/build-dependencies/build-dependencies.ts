@@ -24,8 +24,7 @@ export function buildExplicitDependencies(
   // to be able to use at least 2 workers (1 worker per CPU and
   // 1 CPU for the main thread)
   if (
-    (process.env.NX_NATIVE_TS_DEPS &&
-      process.env.NX_NATIVE_TS_DEPS !== 'false') ||
+    process.env.NX_NATIVE_TS_DEPS !== 'false' ||
     jsPluginConfig.analyzeSourceFiles === false ||
     totalNumOfFilesToProcess < 100 ||
     getNumberOfWorkers() <= 2

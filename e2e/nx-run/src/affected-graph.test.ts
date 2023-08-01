@@ -384,7 +384,6 @@ describe('Nx Affected and Graph Tests', () => {
               target: mylib,
               type: 'static',
             },
-            { source: myapp, target: mylib2, type: 'dynamic' },
           ],
           [myappE2e]: [
             {
