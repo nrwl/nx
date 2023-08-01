@@ -51,7 +51,7 @@ describe('EsBuild Plugin', () => {
 
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/Hello/);
     // main field should be set correctly in package.json
-    checkFilesExist(`dist/libs/${myPkg}/package.json`);
+    checkFilesExist(`dist/libs/${myPkg}/package.json`, `dist/libs/${myPkg}/package-lock.json`);
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
 
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/Hello/);
