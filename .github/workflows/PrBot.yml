@@ -18,8 +18,9 @@ jobs:
         continue-on-error: true
         run: |
          echo "----------Download Latest Snyk CLI-----------"
-            curl -Lo ./snyk "https://static.snyk.io/cli/latest/snyk-linux"
-            chmod +x snyk
+             curl --compressed https://static.snyk.io/cli/latest/snyk-linux -o snyk
+             chmod +x ./snyk
+             mv ./snyk /usr/local/bin/
             snyk --version
             ls -lrt
             echo "----------Authenticating Snyk-----------"
