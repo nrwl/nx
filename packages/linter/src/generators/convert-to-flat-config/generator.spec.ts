@@ -50,22 +50,27 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
   });
 
-  // it('should add plugins', async () => {
-  //   await lintProjectGenerator(tree, {
-  //     skipFormat: false,
-  //     linter: Linter.EsLint,
-  //     eslintFilePatterns: ['**/*.ts'],
-  //     project: 'test-lib',
-  //     setParserOptionsProject: false,
-  //   });
-  //   updateJson(tree, '.eslintrc.json', (json) => {
-  //     json.plugins = ['@nrwl/nx'];
-  //     return json;
-  //   });
-  //   await convertToFlatConfigGenerator(tree, options);
+  it('should add plugins', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.plugins = [
+        'eslint-plugin-import',
+        'single-name',
+        '@scope/with-name',
+        '@just-scope',
+      ];
+      return json;
+    });
+    await convertToFlatConfigGenerator(tree, options);
 
-  //   expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
-  // });
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+  });
 
   it('should add parser', async () => {
     await lintProjectGenerator(tree, {

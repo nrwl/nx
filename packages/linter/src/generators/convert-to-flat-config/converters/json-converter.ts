@@ -134,9 +134,66 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
   }
 }
 
+function getPluginImport(pluginName: string): string {
+  if (pluginName.includes('eslint-plugin-')) {
+    return pluginName;
+  }
+  if (!pluginName.startsWith('@')) {
+    return `eslint-plugin-${pluginName}`;
+  }
+  if (!pluginName.includes('/')) {
+    return `${pluginName}/eslint-plugin`;
+  }
+  const [scope, name] = pluginName.split('/');
+  return `${scope}/eslint-plugin-${name}`;
+}
+
 function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
-  // TODO we need to find import for each plugin
-  // configBlocks.push(generateAst({ plugins: config.plugins }, ts.factory));
+  const mappedPlugins: { name: string; varName: string; imp: string }[] = [];
+  config.plugins.forEach((name) => {
+    const imp = getPluginImport(name);
+    const varName = names(imp).propertyName;
+    mappedPlugins.push({ name, varName, imp });
+  });
+  mappedPlugins.forEach(({ varName, imp }) => {
+    const importStatement = ts.factory.createVariableStatement(
+      undefined,
+      ts.factory.createVariableDeclarationList(
+        [
+          ts.factory.createVariableDeclaration(
+            varName,
+            undefined,
+            undefined,
+            ts.factory.createCallExpression(
+              ts.factory.createIdentifier('require'),
+              undefined,
+              [ts.factory.createStringLiteral(imp)]
+            )
+          ),
+        ],
+        ts.NodeFlags.Const
+      )
+    );
+    importsList.push(importStatement);
+  });
+  const pluginsAst = ts.factory.createObjectLiteralExpression(
+    [
+      ts.factory.createPropertyAssignment(
+        'plugins',
+        ts.factory.createObjectLiteralExpression(
+          mappedPlugins.map(({ name, varName }) => {
+            return ts.factory.createPropertyAssignment(
+              ts.factory.createStringLiteral(name),
+              ts.factory.createIdentifier(varName)
+            );
+          }),
+          true
+        )
+      ),
+    ],
+    false
+  );
+  configBlocks.push(pluginsAst);
 }
 
 function addParser(importsList, configBlocks, config: ESLint.ConfigData) {

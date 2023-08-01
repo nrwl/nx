@@ -1,13 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`convert-to-flat-config generator should add global gitignores 1`] = `
-"const { FlatCompat } = require("@eslint/eslintrc");
+"const nxEslintPlugin = require("@nx/eslint-plugin");
+const { FlatCompat } = require("@eslint/eslintrc");
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
 export default [
     { ignores: ["**/*"] },
     { ignores: ["ignore/me"] },
+    { plugins: {
+            "@nx": nxEslintPlugin
+        } },
     {
         files: [
             "*.ts",
@@ -48,7 +52,8 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should add parser 1`] = `
-"const typescriptEslintParser = require("@typescript-eslint/parser");
+"const nxEslintPlugin = require("@nx/eslint-plugin");
+const typescriptEslintParser = require("@typescript-eslint/parser");
 const { FlatCompat } = require("@eslint/eslintrc");
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
@@ -56,6 +61,9 @@ const eslintrc = new FlatCompat({
 export default [
     { ignores: ["**/*"] },
     { ignores: ["node_modules"] },
+    { plugins: {
+            "@nx": nxEslintPlugin
+        } },
     {
         parser: typescriptEslintParser
     },
@@ -98,14 +106,75 @@ export default [
 "
 `;
 
-exports[`convert-to-flat-config generator should run successfully 1`] = `
-"const { FlatCompat } = require("@eslint/eslintrc");
+exports[`convert-to-flat-config generator should add plugins 1`] = `
+"const eslintPluginImport = require("eslint-plugin-import");
+const eslintPluginSingleName = require("eslint-plugin-single-name");
+const scopeEslintPluginWithName = require("@scope/eslint-plugin-with-name");
+const justScopeEslintPlugin = require("@just-scope/eslint-plugin");
+const { FlatCompat } = require("@eslint/eslintrc");
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
 export default [
     { ignores: ["**/*"] },
     { ignores: ["node_modules"] },
+    { plugins: {
+            "eslint-plugin-import": eslintPluginImport,
+            "single-name": eslintPluginSingleName,
+            "@scope/with-name": scopeEslintPluginWithName,
+            "@just-scope": justScopeEslintPlugin
+        } },
+    {
+        files: [
+            "*.ts",
+            "*.tsx",
+            "*.js",
+            "*.jsx"
+        ],
+        rules: { @nx/enforce-module-boundaries: [
+                "error",
+                {
+                    enforceBuildableLibDependency: true,
+                    allow: [],
+                    depConstraints: [{
+                            sourceTag: "*",
+                            onlyDependOnLibsWithTags: ["*"]
+                        }]
+                }
+            ] }
+    },
+    {
+        files: [
+            "*.ts",
+            "*.tsx"
+        ],
+        extends: ["plugin:@nx/typescript"],
+        rules: {}
+    },
+    {
+        files: [
+            "*.js",
+            "*.jsx"
+        ],
+        extends: ["plugin:@nx/javascript"],
+        rules: {}
+    }
+];
+"
+`;
+
+exports[`convert-to-flat-config generator should run successfully 1`] = `
+"const nxEslintPlugin = require("@nx/eslint-plugin");
+const { FlatCompat } = require("@eslint/eslintrc");
+const eslintrc = new FlatCompat({
+    baseDirectory: __dirname
+});
+export default [
+    { ignores: ["**/*"] },
+    { ignores: ["node_modules"] },
+    { plugins: {
+            "@nx": nxEslintPlugin
+        } },
     {
         files: [
             "*.ts",
