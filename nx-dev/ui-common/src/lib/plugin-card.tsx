@@ -1,18 +1,8 @@
 import {
-  ArrowDownCircleIcon,
   ArrowDownIcon,
-  ArrowDownOnSquareIcon,
-  ArrowDownOnSquareStackIcon,
-  ArrowDownTrayIcon,
-  ArrowSmallDownIcon,
-  ChevronDownIcon,
   ClockIcon,
-  CloudArrowDownIcon,
-  DocumentArrowDownIcon,
-  InboxArrowDownIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
-import { lightFormat } from 'date-fns';
 
 export interface PluginCardProps {
   name: string;
@@ -91,7 +81,8 @@ function lastPublishedWidget(lastPublishedDate: string | undefined) {
   return (
     <abbr title="Most Recent Release Date">
       <ClockIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ClockIcon>
-      <span>{lightFormat(new Date(lastPublishedDate), 'yyyy-MM-dd')}</span>
+      {/* yyyy-MM-dd */}
+      <span>{new Date(lastPublishedDate).toISOString().slice(0, 10)}</span>
     </abbr>
   );
 }

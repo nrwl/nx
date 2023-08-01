@@ -44,7 +44,6 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
       m.name !== 'tao'
   );
 
-  console.log(qualityIndicators);
   return {
     props: {
       pluginList: [

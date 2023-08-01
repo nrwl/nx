@@ -1,6 +1,10 @@
-import { Interval, lightFormat } from 'date-fns';
 import { writeFileSync } from 'fs';
 import axios from 'axios';
+
+interface Interval {
+  start: Date;
+  end: Date;
+}
 
 interface PluginRegistry {
   name: string;
@@ -87,9 +91,9 @@ export function stringifyIntervalForUrl(interval: Interval): string {
   return `${stringifyDate(interval.start)}:${stringifyDate(interval.end)}`;
 }
 
-export function stringifyDate(date: number | Date) {
-  const dateFormat = 'yyyy-MM-dd';
-  return lightFormat(date, dateFormat);
+export function stringifyDate(date: Date) {
+  // yyyy-MM-dd
+  return date.toISOString().slice(0, 10);
 }
 
 // Stars
