@@ -66,6 +66,7 @@ export interface Task {
    * Unix timestamp of when a Batch Task ends
    **/
   endTime?: number;
+  inputs?: string[];
 }
 
 /**

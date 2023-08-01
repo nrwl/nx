@@ -19,10 +19,9 @@ import {
 import { pruneExternalNodes } from '../../project-graph/operators';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import {
-  createTaskGraph,
+  createTaskGraphWithPlan,
   mapTargetDefaultsToDependencies,
 } from '../../tasks-runner/create-task-graph';
-import { TargetDefaults, TargetDependencies } from '../../config/nx-json';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
@@ -650,6 +649,7 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
   const taskGraphs: Record<string, TaskGraph> = {};
   const taskGraphErrors: Record<string, string> = {};
 
+  // TODO(cammisuli): improve performance here. Cache results or something.
   for (const projectName in projectGraph.nodes) {
     const project = projectGraph.nodes[projectName];
     const targets = Object.keys(project.data.targets);
@@ -657,8 +657,9 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
     targets.forEach((target) => {
       const taskId = createTaskId(projectName, target);
       try {
-        taskGraphs[taskId] = createTaskGraph(
+        taskGraphs[taskId] = createTaskGraphWithPlan(
           projectGraph,
+          nxJson,
           defaultDependencyConfigs,
           [projectName],
           [target],
@@ -683,8 +684,9 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
         configurations.forEach((configuration) => {
           const taskId = createTaskId(projectName, target, configuration);
           try {
-            taskGraphs[taskId] = createTaskGraph(
+            taskGraphs[taskId] = createTaskGraphWithPlan(
               projectGraph,
+              nxJson,
               defaultDependencyConfigs,
               [projectName],
               [target],
@@ -751,8 +753,9 @@ function createJsonOutput(
       nxJson.targetDefaults
     );
 
-    response.tasks = createTaskGraph(
+    response.tasks = createTaskGraphWithPlan(
       graph,
+      nxJson,
       defaultDependencyConfigs,
       projects,
       targets,

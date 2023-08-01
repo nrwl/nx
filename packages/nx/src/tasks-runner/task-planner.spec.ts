@@ -2,7 +2,10 @@ import { TempFs } from '../utils/testing/temp-fs';
 let tempFs = new TempFs('task-planner');
 
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
-import { InProcessTaskHasher } from '../hasher/task-hasher';
+import {
+  InProcessTaskHasher,
+  LEGACY_FILESET_INPUTS,
+} from '../hasher/task-hasher';
 import { fileHasher } from '../hasher/file-hasher';
 import { DependencyType, ProjectGraph } from '../config/project-graph';
 import { TaskPlanner } from './task-planner';
@@ -38,14 +41,6 @@ describe('task planner', () => {
     { file: 'global1', hash: 'global1.hash' },
     { file: 'global2', hash: 'global2.hash' },
   ];
-
-  const legacyFilesetInputs = [
-    'nx.json',
-
-    // ignore files will change the set of inputs to the hasher
-    '.gitignore',
-    '.nxignore',
-  ].map((d) => ({ fileset: `{workspaceRoot}/${d}` }));
 
   // TODO(cammisuli): This function is temporary until the new file hashing is implemented
   // This should just match snapshots of the planner
@@ -167,7 +162,7 @@ describe('task planner', () => {
         projectGraph,
         taskGraph,
         options.runtimeCacheInputs.map((r) => ({ runtime: r })),
-        legacyFilesetInputs
+        LEGACY_FILESET_INPUTS
       );
 
       await assertNodes(
@@ -250,7 +245,7 @@ describe('task planner', () => {
       projectGraph,
       taskGraph,
       [],
-      legacyFilesetInputs
+      LEGACY_FILESET_INPUTS
     );
 
     await assertNodes(
@@ -344,7 +339,7 @@ describe('task planner', () => {
       projectGraph,
       taskGraph,
       [],
-      legacyFilesetInputs
+      LEGACY_FILESET_INPUTS
     );
 
     await assertNodes(
@@ -421,7 +416,7 @@ describe('task planner', () => {
       projectGraph,
       taskGraph,
       [],
-      legacyFilesetInputs
+      LEGACY_FILESET_INPUTS
     );
 
     const tasks = [
@@ -534,7 +529,7 @@ describe('task planner', () => {
           projectGraph,
           taskGraph,
           [],
-          legacyFilesetInputs
+          LEGACY_FILESET_INPUTS
         );
 
         const tasks = [
@@ -635,7 +630,7 @@ describe('task planner', () => {
       projectGraph,
       taskGraph,
       [],
-      legacyFilesetInputs
+      LEGACY_FILESET_INPUTS
     );
 
     let tasks = [
@@ -711,7 +706,7 @@ describe('task planner', () => {
       projectGraph,
       taskGraph,
       [],
-      legacyFilesetInputs
+      LEGACY_FILESET_INPUTS
     );
 
     let tasks = [
@@ -787,7 +782,7 @@ describe('task planner', () => {
       projectGraph,
       taskGraph,
       [],
-      legacyFilesetInputs
+      LEGACY_FILESET_INPUTS
     );
 
     let tasks = [

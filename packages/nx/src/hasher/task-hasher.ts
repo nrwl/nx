@@ -93,10 +93,17 @@ export class DaemonBasedTaskHasher implements TaskHasher {
   }
 }
 
+export const LEGACY_FILESET_INPUTS = [
+  'nx.json',
+  // ignore files will change the set of inputs to the hasher
+  '.gitignore',
+  '.nxignore',
+].map((d) => ({ fileset: `{workspaceRoot}/${d}` }));
+
 export class InProcessTaskHasher implements TaskHasher {
   static version = '3.0';
-  private taskHasher: TaskHasherImpl;
 
+  private taskHasher: TaskHasherImpl;
   constructor(
     private readonly projectFileMap: ProjectFileMap,
     private readonly allWorkspaceFiles: FileData[],
@@ -110,23 +117,14 @@ export class InProcessTaskHasher implements TaskHasher {
         ? this.options.runtimeCacheInputs
         : []
     ).map((r) => ({ runtime: r }));
-
     if (process.env.NX_CLOUD_ENCRYPTION_KEY) {
       legacyRuntimeInputs.push({ env: 'NX_CLOUD_ENCRYPTION_KEY' });
     }
 
-    const legacyFilesetInputs = [
-      'nx.json',
-
-      // ignore files will change the set of inputs to the hasher
-      '.gitignore',
-      '.nxignore',
-    ].map((d) => ({ fileset: `{workspaceRoot}/${d}` }));
-
     this.taskHasher = new TaskHasherImpl(
       nxJson,
       legacyRuntimeInputs,
-      legacyFilesetInputs,
+      LEGACY_FILESET_INPUTS,
       this.projectFileMap,
       this.allWorkspaceFiles,
       this.projectGraph,

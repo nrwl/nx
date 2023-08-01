@@ -272,13 +272,13 @@ export class TaskPlanner {
   }
 
   private findExternalDependencyNodeName(packageName: string): string {
-    if (this.projectGraph.externalNodes[packageName]) {
+    if (this.projectGraph.externalNodes?.[packageName]) {
       return packageName;
     }
-    if (this.projectGraph.externalNodes[`npm:${packageName}`]) {
+    if (this.projectGraph.externalNodes?.[`npm:${packageName}`]) {
       return `npm:${packageName}`;
     }
-    for (const node of Object.values(this.projectGraph.externalNodes)) {
+    for (const node of Object.values(this.projectGraph.externalNodes ?? {})) {
       if (node.data.packageName === packageName) {
         return node.name;
       }
