@@ -24,6 +24,7 @@ jobs:
          echo "----------Download Latest Snyk CLI-----------"
             curl -Lo ./snyk "https://static.snyk.io/cli/latest/snyk-linux"
             chmod +x snyk
+            snyk --version
             ls -lrt
             echo "----------Authenticating Snyk-----------"
             ./snyk auth ${{ secrets.SNYK_TOKEN }}
