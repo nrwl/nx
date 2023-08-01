@@ -7,6 +7,18 @@ interface Plugin {
   name: string;
   url: string;
   isOfficial: boolean;
+  lastPublishedDate?: string;
+  npmDownloads?: string;
+  githubStars?: string;
+  nxVersion?: string;
+}
+
+interface Filters {
+  term: string;
+  officialStatus: 'official' | 'community' | undefined;
+  minimumDownloads: number | undefined;
+  minimumStars: number | undefined;
+  minimumNxVersion: string | undefined;
 }
 
 export function PluginDirectory({
@@ -14,7 +26,13 @@ export function PluginDirectory({
 }: {
   pluginList: Plugin[];
 }): JSX.Element {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<Filters>({
+    term: '',
+    officialStatus: undefined,
+    minimumDownloads: undefined,
+    minimumStars: undefined,
+    minimumNxVersion: undefined,
+  });
   return (
     <div id="plugin-directory">
       <div className="flex w-full flex-col justify-between gap-8 md:flex-row ">
@@ -34,7 +52,9 @@ export function PluginDirectory({
               name="search"
               className="block w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-slate-500 transition focus:placeholder-slate-400 dark:border-slate-900 dark:bg-slate-700"
               placeholder="Quick search"
-              onChange={(event) => setSearchTerm(event.target.value)}
+              onChange={(event) =>
+                setFilters({ ...filters, term: event.target.value })
+              }
               type="search"
             />
           </div>
@@ -43,11 +63,13 @@ export function PluginDirectory({
       <div className="my-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
         {pluginList
           .filter((plugin) =>
-            !!searchTerm
-              ? plugin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            !!filters.term
+              ? plugin.name
+                  .toLowerCase()
+                  .includes(filters.term.toLowerCase()) ||
                 plugin.description
                   .toLowerCase()
-                  .includes(searchTerm.toLowerCase())
+                  .includes(filters.term.toLowerCase())
               : true
           )
           .map((plugin) => (
@@ -56,6 +78,10 @@ export function PluginDirectory({
               name={plugin.name}
               description={plugin.description}
               isOfficial={plugin.isOfficial}
+              lastPublishedDate={plugin.lastPublishedDate}
+              npmDownloads={plugin.npmDownloads}
+              githubStars={plugin.githubStars}
+              nxVersion={plugin.nxVersion}
               url={plugin.url}
             />
           ))}

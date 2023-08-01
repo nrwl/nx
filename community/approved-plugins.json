@@ -25,8 +25,23 @@
     "url": "https://github.com/nxkit/nxkit"
   },
   {
-    "name": "nx-plugins",
-    "description": "Nx plugin integrations with ESBuild / Vite / Snowpack / Prisma, with derived ESBuild / Snowpack / ... plugins.",
+    "name": "nx-plugin-esbuild",
+    "description": "Nx plugin integrations with ESBuild.",
+    "url": "https://nx-plugins.netlify.app/"
+  },
+  {
+    "name": "nx-plugin-vite",
+    "description": "Nx plugin integrations with Vite.",
+    "url": "https://nx-plugins.netlify.app/"
+  },
+  {
+    "name": "nx-plugin-snowpack",
+    "description": "Nx plugin integrations with Snowpack.",
+    "url": "https://nx-plugins.netlify.app/"
+  },
+  {
+    "name": "nx-plugin-prisma",
+    "description": "Nx plugin integrations with Snowpack.",
     "url": "https://nx-plugins.netlify.app/"
   },
   {
@@ -235,7 +250,7 @@
     "url": "https://github.com/trafilea/nx-shopify"
   },
   {
-    "name": "nx-dotnet",
+    "name": "@nx-dotnet/core",
     "description": "Nx plugin for developing and housing .NET projects within an Nx workspace.",
     "url": "https://github.com/nx-dotnet/nx-dotnet"
   },
