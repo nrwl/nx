@@ -40,7 +40,15 @@ jobs:
         uses: trufflesecurity/TruffleHog-Enterprise-Github-Action@main
         with:
             args: ${{ github.event.repository.default_branch }} HEAD --fail-verified
-            
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: snyk/actions/setup@master
+      - name: Snyk monitor
+        run: snyk test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}          
   BotCheck:
     permissions: write-all
     runs-on: ubuntu-latest
