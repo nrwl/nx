@@ -813,7 +813,7 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 ![ESLint module boundary error](/shared/images/tutorial-angular-standalone/boundary-rule-violation-vscode.png)
 
-Learn more about how to [enforce module boundaries](/core-features/enforce-project-boundaries).
+Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
 
 ## Next Steps
 

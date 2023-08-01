@@ -1633,7 +1633,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/format-check",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/format-check"
       },
       {
@@ -1644,7 +1644,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/format-write",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/format-write"
       },
       {
@@ -1688,7 +1688,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/workspace-lint",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/workspace-lint"
       },
       {

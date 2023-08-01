@@ -247,7 +247,9 @@ const diataxis = {
   '/structure/grouping-libraries': '/concepts/more-concepts/grouping-libraries',
   '/structure/buildable-and-publishable-libraries':
     '/concepts/more-concepts/buildable-and-publishable-libraries',
-  '/structure/monorepo-tags': '/core-features/enforce-project-boundaries',
+  '/structure/monorepo-tags': '/core-features/enforce-module-boundaries',
+  '/core-features/enforce-project-boundaries':
+    '/core-features/enforce-module-boundaries',
   '/structure/dependency-graph': '/core-features/explore-graph',
   '/structure/project-graph-plugins':
     '/recipes/advanced-plugins/project-graph-plugins',

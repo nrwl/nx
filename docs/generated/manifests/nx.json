@@ -1025,14 +1025,14 @@
         "tags": ["automate-updating-dependencies"]
       },
       {
-        "id": "enforce-project-boundaries",
-        "name": "Enforce Project Boundaries",
+        "id": "enforce-module-boundaries",
+        "name": "Enforce Module Boundaries",
         "description": "",
-        "file": "shared/core-features/enforce-project-boundaries",
+        "file": "shared/core-features/enforce-module-boundaries",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/enforce-project-boundaries",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/core-features/enforce-module-boundaries",
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "plugin-features",
@@ -1140,15 +1140,15 @@
     "path": "/core-features/automate-updating-dependencies",
     "tags": ["automate-updating-dependencies"]
   },
-  "/core-features/enforce-project-boundaries": {
-    "id": "enforce-project-boundaries",
-    "name": "Enforce Project Boundaries",
+  "/core-features/enforce-module-boundaries": {
+    "id": "enforce-module-boundaries",
+    "name": "Enforce Module Boundaries",
     "description": "",
-    "file": "shared/core-features/enforce-project-boundaries",
+    "file": "shared/core-features/enforce-module-boundaries",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/enforce-project-boundaries",
-    "tags": ["enforce-project-boundaries"]
+    "path": "/core-features/enforce-module-boundaries",
+    "tags": ["enforce-module-boundaries"]
   },
   "/core-features/plugin-features": {
     "id": "plugin-features",
@@ -1351,7 +1351,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-            "tags": ["enforce-project-boundaries", "use-code-generators"]
+            "tags": ["enforce-module-boundaries", "use-code-generators"]
           },
           {
             "id": "nx-daemon",
@@ -1426,7 +1426,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/applications-and-libraries",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "creating-libraries",
@@ -1436,7 +1436,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/creating-libraries",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "library-types",
@@ -1446,7 +1446,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/library-types",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "grouping-libraries",
@@ -1456,7 +1456,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/grouping-libraries",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "buildable-and-publishable-libraries",
@@ -1652,7 +1652,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-        "tags": ["enforce-project-boundaries", "use-code-generators"]
+        "tags": ["enforce-module-boundaries", "use-code-generators"]
       },
       {
         "id": "nx-daemon",
@@ -1722,7 +1722,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/applications-and-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "creating-libraries",
@@ -1732,7 +1732,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/creating-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "library-types",
@@ -1742,7 +1742,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/library-types",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "grouping-libraries",
@@ -1752,7 +1752,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/grouping-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "buildable-and-publishable-libraries",
@@ -1877,7 +1877,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-    "tags": ["enforce-project-boundaries", "use-code-generators"]
+    "tags": ["enforce-module-boundaries", "use-code-generators"]
   },
   "/concepts/more-concepts/nx-daemon": {
     "id": "nx-daemon",
@@ -1947,7 +1947,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/applications-and-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts/creating-libraries": {
     "id": "creating-libraries",
@@ -1957,7 +1957,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/creating-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts/library-types": {
     "id": "library-types",
@@ -1967,7 +1967,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/library-types",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts/grouping-libraries": {
     "id": "grouping-libraries",
@@ -1977,7 +1977,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/grouping-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts/buildable-and-publishable-libraries": {
     "id": "buildable-and-publishable-libraries",
@@ -2395,7 +2395,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "tag-multiple-dimensions",
@@ -2405,7 +2405,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "ban-external-imports",
@@ -2415,7 +2415,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/enforce-module-boundaries/ban-external-imports",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "tags-allow-list",
@@ -2425,7 +2425,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/enforce-module-boundaries/tags-allow-list",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           }
         ],
         "isExternal": false,
@@ -3573,7 +3573,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "tag-multiple-dimensions",
@@ -3583,7 +3583,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "ban-external-imports",
@@ -3593,7 +3593,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries/ban-external-imports",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "tags-allow-list",
@@ -3603,7 +3603,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries/tags-allow-list",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       }
     ],
     "isExternal": false,
@@ -3618,7 +3618,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/recipes/enforce-module-boundaries/tag-multiple-dimensions": {
     "id": "tag-multiple-dimensions",
@@ -3628,7 +3628,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/recipes/enforce-module-boundaries/ban-external-imports": {
     "id": "ban-external-imports",
@@ -3638,7 +3638,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/ban-external-imports",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/recipes/enforce-module-boundaries/tags-allow-list": {
     "id": "tags-allow-list",
@@ -3648,7 +3648,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/tags-allow-list",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/recipes/ci": {
     "id": "ci",
@@ -4842,7 +4842,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/reference/nxignore",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "environment-variables",
@@ -4897,7 +4897,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/nxignore",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/reference/environment-variables": {
     "id": "environment-variables",
@@ -5346,7 +5346,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/reference/nx-json#workspace-layout",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "nxjson-generator-defaults",
@@ -5431,7 +5431,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/reference/nx-json#workspace-layout",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/reference/nx-json#generators": {
     "id": "nxjson-generator-defaults",

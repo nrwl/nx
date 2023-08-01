@@ -636,7 +636,7 @@ You can annotate your projects with `tags` as follows:
 {% /tab %}
 {% /tabs %}
 
-You can [configure lint rules using these tags](/core-features/enforce-project-boundaries) to, for instance, ensure that libraries
+You can [configure lint rules using these tags](/core-features/enforce-module-boundaries) to, for instance, ensure that libraries
 belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies

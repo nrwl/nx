@@ -56,7 +56,7 @@
     - [Distribute Task Execution](/core-features/distribute-task-execution)
     - [Integrate with Editors](/core-features/integrate-with-editors)
     - [Automate Updating Dependencies](/core-features/automate-updating-dependencies)
-    - [Enforce Project Boundaries](/core-features/enforce-project-boundaries)
+    - [Enforce Module Boundaries](/core-features/enforce-module-boundaries)
     - [Plugin Features](/core-features/plugin-features)
       - [Use Task Executors](/core-features/plugin-features/use-task-executors)
       - [Use Code Generators](/core-features/plugin-features/use-code-generators)
