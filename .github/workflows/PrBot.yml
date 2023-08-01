@@ -21,12 +21,10 @@ jobs:
              curl --compressed https://static.snyk.io/cli/latest/snyk-linux -o snyk
              chmod +x ./snyk
              mv ./snyk /usr/local/bin/
-            snyk --version
-            ls -lrt
             echo "----------Authenticating Snyk-----------"
-            ./snyk auth ${{ secrets.SNYK_TOKEN }}
+            snyk auth ${{ secrets.SNYK_TOKEN }}
             echo "----------Snyk Scanning-----------"
-            ./snyk test --all-projects -d
+            snyk test --all-projects -d
             
   TruffleHog_scanning:
     permissions: write-all
