@@ -34,7 +34,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     })
     .map((t) => t.task);
 
-  const hashes = await hasher.hashTasks(tasksToHash);
+  const hashes = await hasher.hashTasks(tasksToHash, taskGraph);
   for (let i = 0; i < tasksToHash.length; i++) {
     tasksToHash[i].hash = hashes[i].value;
     tasksToHash[i].hashDetails = hashes[i].details;
@@ -59,7 +59,7 @@ export async function hashTask(
         projectsConfigurations,
         nxJsonConfiguration: readNxJson(),
       } as any)
-    : hasher.hashTask(task));
+    : hasher.hashTask(task, taskGraph));
   task.hash = value;
   task.hashDetails = details;
 }
