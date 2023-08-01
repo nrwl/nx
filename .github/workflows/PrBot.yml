@@ -20,13 +20,11 @@ jobs:
          echo "----------Download Latest Snyk CLI-----------"
              npm i -g snyk@latest
              snyk --version
-             #curl --compressed https://static.snyk.io/cli/latest/snyk-linux -o snyk
-             #chmod +x ./snyk
-             #mv ./snyk /usr/local/bin/
-            echo "----------Authenticating Snyk-----------"
-            snyk auth ${{ secrets.SNYK_TOKEN }}
-            echo "----------Snyk Scanning-----------"
-            snyk test --all-projects -d
+             npm install --legacy-peer-deps
+             echo "----------Authenticating Snyk-----------"
+             snyk auth ${{ secrets.SNYK_TOKEN }}
+             echo "----------Snyk Scanning-----------"
+             snyk test --all-projects -d
             
   TruffleHog_scanning:
     permissions: write-all
