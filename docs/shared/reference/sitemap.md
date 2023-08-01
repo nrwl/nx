@@ -141,6 +141,8 @@
       - [Setting up GitLab](/recipes/ci/monorepo-ci-gitlab)
       - [Setting up Bitbucket](/recipes/ci/monorepo-ci-bitbucket-pipelines)
     - [Tips and tricks](/recipes/tips-n-tricks)
+      - [Add a Package-based Project in an Integrated Repo](/recipes/tips-n-tricks/package-based-in-integrated)
+      - [Add an Integrated Project in a Package-based Repo](/recipes/tips-n-tricks/integrated-in-package-based)
       - [Configuring ESLint with Typescript](/recipes/tips-n-tricks/eslint)
       - [Define Environment Variables](/recipes/tips-n-tricks/define-environment-variables)
       - [Configuring Browser Support](/recipes/tips-n-tricks/browser-support)

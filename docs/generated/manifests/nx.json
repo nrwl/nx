@@ -2530,6 +2530,26 @@
         "file": "",
         "itemList": [
           {
+            "id": "package-based-in-integrated",
+            "name": "Add a Package-based Project in an Integrated Repo",
+            "description": "",
+            "file": "shared/recipes/repo-types/package-based-in-integrated",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+            "tags": ["repository-types"]
+          },
+          {
+            "id": "integrated-in-package-based",
+            "name": "Add an Integrated Project in a Package-based Repo",
+            "description": "",
+            "file": "shared/recipes/repo-types/integrated-in-package-based",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+            "tags": ["repository-types"]
+          },
+          {
             "id": "eslint",
             "name": "Configuring ESLint with Typescript",
             "description": "",
@@ -3808,6 +3828,26 @@
     "file": "",
     "itemList": [
       {
+        "id": "package-based-in-integrated",
+        "name": "Add a Package-based Project in an Integrated Repo",
+        "description": "",
+        "file": "shared/recipes/repo-types/package-based-in-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+        "tags": ["repository-types"]
+      },
+      {
+        "id": "integrated-in-package-based",
+        "name": "Add an Integrated Project in a Package-based Repo",
+        "description": "",
+        "file": "shared/recipes/repo-types/integrated-in-package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+        "tags": ["repository-types"]
+      },
+      {
         "id": "eslint",
         "name": "Configuring ESLint with Typescript",
         "description": "",
@@ -3941,6 +3981,26 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks",
     "tags": []
+  },
+  "/recipes/tips-n-tricks/package-based-in-integrated": {
+    "id": "package-based-in-integrated",
+    "name": "Add a Package-based Project in an Integrated Repo",
+    "description": "",
+    "file": "shared/recipes/repo-types/package-based-in-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+    "tags": ["repository-types"]
+  },
+  "/recipes/tips-n-tricks/integrated-in-package-based": {
+    "id": "integrated-in-package-based",
+    "name": "Add an Integrated Project in a Package-based Repo",
+    "description": "",
+    "file": "shared/recipes/repo-types/integrated-in-package-based",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+    "tags": ["repository-types"]
   },
   "/recipes/tips-n-tricks/eslint": {
     "id": "eslint",

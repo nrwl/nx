@@ -810,6 +810,18 @@
               "description": "Various tips and tricks for using Nx.",
               "itemList": [
                 {
+                  "name": "Add a Package-based Project in an Integrated Repo",
+                  "id": "package-based-in-integrated",
+                  "tags": ["repository-types"],
+                  "file": "shared/recipes/repo-types/package-based-in-integrated"
+                },
+                {
+                  "name": "Add an Integrated Project in a Package-based Repo",
+                  "id": "integrated-in-package-based",
+                  "tags": ["repository-types"],
+                  "file": "shared/recipes/repo-types/integrated-in-package-based"
+                },
+                {
                   "name": "Configuring ESLint with Typescript",
                   "id": "eslint",
                   "file": "shared/eslint"

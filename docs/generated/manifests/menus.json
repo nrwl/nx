@@ -2030,6 +2030,22 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Add a Package-based Project in an Integrated Repo",
+                "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+                "id": "package-based-in-integrated",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add an Integrated Project in a Package-based Repo",
+                "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+                "id": "integrated-in-package-based",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configuring ESLint with Typescript",
                 "path": "/recipes/tips-n-tricks/eslint",
                 "id": "eslint",
@@ -3054,6 +3070,22 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Add a Package-based Project in an Integrated Repo",
+            "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+            "id": "package-based-in-integrated",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add an Integrated Project in a Package-based Repo",
+            "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+            "id": "integrated-in-package-based",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configuring ESLint with Typescript",
             "path": "/recipes/tips-n-tricks/eslint",
             "id": "eslint",
@@ -3158,6 +3190,22 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Package-based Project in an Integrated Repo",
+        "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+        "id": "package-based-in-integrated",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add an Integrated Project in a Package-based Repo",
+        "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+        "id": "integrated-in-package-based",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
