@@ -4468,6 +4468,16 @@
             "tags": []
           },
           {
+            "id": "add-solid",
+            "name": "Add a Solid Project",
+            "description": "Add a Solid project to your repo",
+            "file": "shared/recipes/add-stack/add-solid",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-solid",
+            "tags": []
+          },
+          {
             "id": "add-qwik",
             "name": "Add a Qwik Project",
             "description": "Add a Qwik project to your repo",
@@ -4604,6 +4614,16 @@
         "tags": []
       },
       {
+        "id": "add-solid",
+        "name": "Add a Solid Project",
+        "description": "Add a Solid project to your repo",
+        "file": "shared/recipes/add-stack/add-solid",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-solid",
+        "tags": []
+      },
+      {
         "id": "add-qwik",
         "name": "Add a Qwik Project",
         "description": "Add a Qwik project to your repo",
@@ -4726,6 +4746,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-lit",
+    "tags": []
+  },
+  "/showcase/example-repos/add-solid": {
+    "id": "add-solid",
+    "name": "Add a Solid Project",
+    "description": "Add a Solid project to your repo",
+    "file": "shared/recipes/add-stack/add-solid",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-solid",
     "tags": []
   },
   "/showcase/example-repos/add-qwik": {
