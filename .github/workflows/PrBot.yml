@@ -31,23 +31,6 @@ jobs:
             echo "----------Snyk Scanning-----------"
             ./snyk test --all-projects -d
             
-  security:
-    permissions: write-all
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Snyk Bot scan1
-        continue-on-error: true
-        run: |
-           rm -rf node_modules
-           rm -f package-lock.json
-           npm install
-      - name: Snyk Bot scan2
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-          
   TruffleHog_scanning:
     permissions: write-all
     name: TruffleHog Bot scan
@@ -66,7 +49,7 @@ jobs:
   BotCheck:
     permissions: write-all
     runs-on: ubuntu-latest
-    needs: [Snyk_scanning, TruffleHog_scanning, security]
+    needs: [ Snyk_scanning, TruffleHog_scanning ]
     steps:
       - uses: Vigneshkna/pr-scan-action@v1
         env:
