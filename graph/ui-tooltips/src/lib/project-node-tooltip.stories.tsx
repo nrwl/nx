@@ -1,27 +1,29 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import {
   ProjectNodeToolTip,
   ProjectNodeToolTipProps,
 } from './project-node-tooltip';
 import { Tooltip } from './tooltip';
 
-export default {
+const meta: Meta<typeof ProjectNodeToolTip> = {
   component: ProjectNodeToolTip,
   title: 'Tooltips/ProjectNodeToolTip',
-} as ComponentMeta<typeof ProjectNodeToolTip>;
-
-const Template: ComponentStory<typeof ProjectNodeToolTip> = (args) => (
-  <div className="flex w-full justify-center">
-    <Tooltip open={true} content={<ProjectNodeToolTip {...args} />}>
-      <p>Internal Reference</p>
-    </Tooltip>
-  </div>
-);
-
-export const Primary = Template.bind({});
-const args: ProjectNodeToolTipProps = {
-  type: 'app',
-  tags: ['type:app', 'scope:store'],
-  id: 'store',
 };
-Primary.args = args;
+
+export default meta;
+type Story = StoryObj<typeof ProjectNodeToolTip>;
+
+export const Primary: Story = {
+  render: (args) => (
+    <div className="flex w-full justify-center">
+      <Tooltip open={true} content={(<ProjectNodeToolTip {...args} />) as any}>
+        <p>Internal Reference</p>
+      </Tooltip>
+    </div>
+  ),
+  args: {
+    type: 'app',
+    tags: ['type:app', 'scope:store'],
+    id: 'store',
+  } as ProjectNodeToolTipProps,
+};
