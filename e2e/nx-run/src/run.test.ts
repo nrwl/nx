@@ -29,7 +29,7 @@ describe('Nx Running Tests', () => {
     describe('(forwarding params)', () => {
       let proj = uniq('proj');
       beforeAll(() => {
-        runCLI(`generate @nx/js:lib ${proj}`);
+        runCLI(`generate @nx/js:lib ${proj} --no-interactive`);
         updateProjectConfig(proj, (c) => {
           c.targets['echo'] = {
             command: 'echo ECHO:',
@@ -419,8 +419,8 @@ describe('Nx Running Tests', () => {
         mylib1 = uniq('mylib1');
         mylib2 = uniq('mylib1');
         runCLI(`generate @nx/web:app ${myapp}`);
-        runCLI(`generate @nx/js:lib ${mylib1}`);
-        runCLI(`generate @nx/js:lib ${mylib2}`);
+        runCLI(`generate @nx/js:lib ${mylib1} --no-interactive`);
+        runCLI(`generate @nx/js:lib ${mylib2} --no-interactive`);
 
         updateFile(
           `apps/${myapp}/src/main.ts`,
@@ -506,12 +506,14 @@ describe('Nx Running Tests', () => {
       const libD = uniq('libd-rand');
 
       runCLI(`generate @nx/web:app ${appA}`);
-      runCLI(`generate @nx/js:lib ${libA} --bundler=tsc --defaults`);
       runCLI(
-        `generate @nx/js:lib ${libB} --bundler=tsc --defaults --tags=ui-a`
+        `generate @nx/js:lib ${libA} --bundler=tsc --defaults --no-interactive`
       );
       runCLI(
-        `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared`
+        `generate @nx/js:lib ${libB} --bundler=tsc --defaults --tags=ui-a --no-interactive`
+      );
+      runCLI(
+        `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared --no-interactive`
       );
       runCLI(`generate @nx/node:lib ${libD} --defaults --tags=api`);
 

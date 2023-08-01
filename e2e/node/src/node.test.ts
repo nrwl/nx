@@ -359,7 +359,7 @@ describe('Build Node apps', () => {
     runCLI(`generate @nx/node:app ${nodeapp} --bundler=webpack`);
 
     const jslib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jslib} --bundler=tsc`);
+    runCLI(`generate @nx/js:lib ${jslib} --bundler=tsc --no-interactive`);
 
     updateFile(
       `apps/${nodeapp}/src/main.ts`,

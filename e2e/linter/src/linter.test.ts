@@ -33,7 +33,7 @@ describe('Linter', () => {
     beforeAll(() => {
       projScope = newProject();
       runCLI(`generate @nx/react:app ${myapp} --tags=validtag`);
-      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
     });
     afterAll(() => cleanupProject());
 
@@ -198,8 +198,12 @@ describe('Linter', () => {
 
         runCLI(`generate @nx/react:app ${myapp2}`);
         runCLI(`generate @nx/react:lib ${lazylib}`);
-        runCLI(`generate @nx/js:lib ${invalidtaglib} --tags=invalidtag`);
-        runCLI(`generate @nx/js:lib ${validtaglib} --tags=validtag`);
+        runCLI(
+          `generate @nx/js:lib ${invalidtaglib} --tags=invalidtag --no-interactive`
+        );
+        runCLI(
+          `generate @nx/js:lib ${validtaglib} --tags=validtag --no-interactive`
+        );
 
         const eslint = readJson('.eslintrc.json');
         eslint.overrides[0].rules[
@@ -272,9 +276,9 @@ describe('Linter', () => {
       const libC = uniq('tslib-c');
 
       beforeAll(() => {
-        runCLI(`generate @nx/js:lib ${libA}`);
-        runCLI(`generate @nx/js:lib ${libB}`);
-        runCLI(`generate @nx/js:lib ${libC}`);
+        runCLI(`generate @nx/js:lib ${libA} --no-interactive`);
+        runCLI(`generate @nx/js:lib ${libB} --no-interactive`);
+        runCLI(`generate @nx/js:lib ${libC} --no-interactive`);
 
         /**
          * create tslib-a structure
@@ -679,7 +683,9 @@ describe('Linter', () => {
       expect(appEslint.overrides[1].extends).toBeDefined();
       expect(e2eEslint.overrides[0].extends).toBeDefined();
 
-      runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${mylib} --unitTestRunner=jest --no-interactive`
+      );
       verifySuccessfulMigratedSetup(myapp, mylib);
 
       appEslint = readJson(`.eslintrc.json`);

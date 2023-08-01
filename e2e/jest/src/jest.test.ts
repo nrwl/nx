@@ -102,7 +102,9 @@ describe('Jest', () => {
 
   it('should set the NODE_ENV to `test`', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
+    runCLI(
+      `generate @nx/js:lib ${mylib} --unitTestRunner=jest --no-interactive`
+    );
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,
@@ -120,7 +122,9 @@ describe('Jest', () => {
 
   it('should support multiple `coverageReporters` through CLI', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
+    runCLI(
+      `generate @nx/js:lib ${mylib} --unitTestRunner=jest --no-interactive`
+    );
 
     updateFile(
       `libs/${mylib}/src/lib/${mylib}.spec.ts`,

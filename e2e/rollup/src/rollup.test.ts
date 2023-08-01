@@ -17,7 +17,7 @@ describe('Rollup Plugin', () => {
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none --no-interactive`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     // babel (default)
@@ -68,7 +68,7 @@ describe('Rollup Plugin', () => {
 
   it('should support additional entry-points', () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none --no-interactive`);
     runCLI(
       `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
@@ -111,7 +111,7 @@ describe('Rollup Plugin', () => {
 
   it('should be able to build libs generated with @nx/js:lib --bundler rollup', () => {
     const jsLib = uniq('jslib');
-    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup`);
+    runCLI(`generate @nx/js:lib ${jsLib} --bundler rollup --no-interactive`);
     expect(() => runCLI(`build ${jsLib}`)).not.toThrow();
   });
 });

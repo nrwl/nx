@@ -95,7 +95,9 @@ export function ${lib}Wildcard() {
     const libName = uniq('mylib');
     const dirName = uniq('dir');
 
-    runCLI(`generate @nx/js:lib ${libName} --directory ${dirName}`);
+    runCLI(
+      `generate @nx/js:lib ${libName} --directory ${dirName} --no-interactive`
+    );
 
     checkFilesExist(
       `libs/${dirName}/${libName}/src/index.ts`,
@@ -119,8 +121,12 @@ export function ${lib}Wildcard() {
     const consumerLib = uniq('consumer');
     const producerLib = uniq('producer');
 
-    runCLI(`generate @nx/js:lib ${consumerLib} --bundler=none`);
-    runCLI(`generate @nx/js:lib ${producerLib} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${consumerLib} --bundler=none --no-interactive`
+    );
+    runCLI(
+      `generate @nx/js:lib ${producerLib} --bundler=none --no-interactive`
+    );
 
     updateFile(
       `libs/${producerLib}/src/lib/${producerLib}.ts`,
@@ -154,7 +160,9 @@ export function ${lib}Wildcard() {
   it('should be able to add build to non-buildable projects', () => {
     const nonBuildable = uniq('nonbuildable');
 
-    runCLI(`generate @nx/js:lib ${nonBuildable} --bundler=none`);
+    runCLI(
+      `generate @nx/js:lib ${nonBuildable} --bundler=none --no-interactive`
+    );
     expect(() => runCLI(`build ${nonBuildable}`)).toThrow();
     checkFilesDoNotExist(`dist/libs/${nonBuildable}/src/index.js`);
 
