@@ -59,8 +59,8 @@ export interface Hash {
 }
 
 export interface TaskHasher {
-  hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash>;
-  hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
+  hashTask(task: Task, taskGraph?: TaskGraph): Promise<Hash>;
+  hashTasks(tasks: Task[], taskGraph?: TaskGraph): Promise<Hash[]>;
 }
 
 export type Hasher = TaskHasher;
