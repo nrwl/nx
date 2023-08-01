@@ -3,11 +3,9 @@ import {
   addProjectConfiguration,
   convertNxGenerator,
   ensurePackage,
-  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -19,6 +17,7 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
+import { determineProjectNameDirectory } from '@nx/devkit/src/generators/project-name-directory-utils';
 
 import {
   addTsConfigPath,
@@ -46,22 +45,8 @@ export async function libraryGenerator(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    schema.directory
-  );
-  schema.directory = projectDirectory;
-  const libsDir = schema.rootProject
-    ? '.'
-    : layoutDirectory ?? getWorkspaceLayout(tree).libsDir;
-  return projectGenerator(tree, schema, libsDir, join(__dirname, './files'));
-}
+  const filesDir = join(__dirname, './files');
 
-export async function projectGenerator(
-  tree: Tree,
-  schema: LibraryGeneratorSchema,
-  destinationDir: string,
-  filesDir: string
-) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(
     await jsInitGenerator(tree, {
@@ -70,11 +55,11 @@ export async function projectGenerator(
       tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     })
   );
-  const options = normalizeOptions(tree, schema, destinationDir);
+  const options = await normalizeOptions(tree, schema);
 
   createFiles(tree, options, `${filesDir}/lib`);
 
-  addProject(tree, options, destinationDir);
+  addProject(tree, options);
 
   tasks.push(addProjectDependencies(tree, options));
 
@@ -146,16 +131,11 @@ export interface NormalizedSchema extends LibraryGeneratorSchema {
   name: string;
   fileName: string;
   projectRoot: string;
-  projectDirectory: string;
   parsedTags: string[];
   importPath?: string;
 }
 
-function addProject(
-  tree: Tree,
-  options: NormalizedSchema,
-  destinationDir: string
-) {
+function addProject(tree: Tree, options: NormalizedSchema) {
   const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -169,7 +149,7 @@ function addProject(
     options.bundler !== 'none' &&
     options.config !== 'npm-scripts'
   ) {
-    const outputPath = getOutputPath(options, destinationDir);
+    const outputPath = getOutputPath(options);
     projectConfiguration.targets.build = {
       executor: getBuildExecutor(options.bundler),
       outputs: ['{options.outputPath}'],
@@ -458,11 +438,10 @@ function replaceJestConfig(
   });
 }
 
-function normalizeOptions(
+async function normalizeOptions(
   tree: Tree,
-  options: LibraryGeneratorSchema,
-  destinationDir: string
-): NormalizedSchema {
+  options: LibraryGeneratorSchema
+): Promise<NormalizedSchema> {
   /**
    * We are deprecating the compiler and the buildable options.
    * However, we want to keep the existing behavior for now.
@@ -523,13 +502,6 @@ function normalizeOptions(
     options.skipTypeCheck = false;
   }
 
-  const name = names(options.name).fileName;
-  const projectDirectory = options.directory
-    ? `${names(options.directory).fileName}/${name}`
-    : options.rootProject
-    ? '.'
-    : name;
-
   if (!options.unitTestRunner && options.bundler === 'vite') {
     options.unitTestRunner = 'vitest';
   } else if (!options.unitTestRunner && options.config !== 'npm-scripts') {
@@ -540,15 +512,19 @@ function normalizeOptions(
     options.linter = Linter.EsLint;
   }
 
-  const projectName = options.rootProject
-    ? name
-    : projectDirectory.replace(new RegExp('/', 'g'), '-');
+  const { projectName, projectDirectory, projectDirectoryWithoutLayout } =
+    await determineProjectNameDirectory(tree, {
+      name: options.name,
+      projectType: 'library',
+      directory: options.directory,
+      nameDirectoryFormat: options.nameDirectoryFormat,
+      rootProject: options.rootProject,
+    });
+  const name = names(options.name).fileName;
   const fileName = getCaseAwareFileName({
     fileName: options.simpleName ? name : projectName,
     pascalCaseFiles: options.pascalCaseFiles,
   });
-
-  const projectRoot = joinPathFragments(destinationDir, projectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -556,7 +532,7 @@ function normalizeOptions(
 
   const importPath = options.rootProject
     ? readJson(tree, 'package.json').name ?? getImportPath(tree, 'core')
-    : options.importPath || getImportPath(tree, projectDirectory);
+    : options.importPath || getImportPath(tree, projectDirectoryWithoutLayout);
 
   options.minimal ??= false;
 
@@ -564,8 +540,7 @@ function normalizeOptions(
     ...options,
     fileName,
     name: projectName,
-    projectRoot,
-    projectDirectory,
+    projectRoot: projectDirectory,
     parsedTags,
     importPath,
   };
@@ -631,15 +606,12 @@ function getBuildExecutor(bundler: Bundler) {
   }
 }
 
-function getOutputPath(options: NormalizedSchema, destinationDir?: string) {
+function getOutputPath(options: NormalizedSchema) {
   const parts = ['dist'];
-  if (destinationDir) {
-    parts.push(destinationDir);
-  }
-  if (options.projectDirectory === '.') {
+  if (options.projectRoot === '.') {
     parts.push(options.name);
   } else {
-    parts.push(options.projectDirectory);
+    parts.push(options.projectRoot);
   }
   return joinPathFragments(...parts);
 }

@@ -56,6 +56,8 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     testEnvironment: 'node',
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
+    // TODO(leo): add option to this generator's schema
+    nameDirectoryFormat: 'derived',
   });
   tasks.push(libraryInstall);
   createFiles(tree, options);

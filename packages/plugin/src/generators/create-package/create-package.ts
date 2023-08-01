@@ -90,6 +90,8 @@ async function createCliPackage(
     importPath: options.name,
     skipFormat: true,
     skipTsConfig: true,
+    // TODO(leo): add option to this generator's schema
+    nameDirectoryFormat: 'derived',
   });
 
   host.delete(joinPathFragments(options.projectRoot, 'src'));
