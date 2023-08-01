@@ -47,7 +47,7 @@ async viteFinal(config, { configType }) {
 In the `viteFinal` case, you would have to import the `mergeConfig` function from `vite`. So, on the top of your root `.storybook/main.js|ts` file, you would have to add:
 
 ```ts {% fileName=".storybook/main.js" %}
-const { mergeConfig } = require('vite');
+import { mergeConfig } from 'vite';
 ```
 
 ## Project-specific configuration
@@ -57,7 +57,7 @@ const { mergeConfig } = require('vite');
 You can customize the `webpack` configuration for a specific project by adding a `webpackFinal` field in your project-specific `.storybok/main.js|ts` file, like this:
 
 ```ts {% fileName="apps/my-react-webpack-app/.storybook/main.js" %}
-module.exports = {
+export default {
   ...
   webpackFinal: async (config, { configType }) => {
 
@@ -71,9 +71,9 @@ module.exports = {
 If you are using a global, root-level, `webpack` configuration in your project, you can customize or extend that for a specific project like this:
 
 ```ts {% fileName="apps/my-react-webpack-app/.storybook/main.js" %}
-const rootMain = require('../../../.storybook/main');
+import rootMain from '../../../.storybook/main';
 
-module.exports = {
+export default {
   ...rootMain,
   ...
   webpackFinal: async (config, { configType }) => {
@@ -96,10 +96,10 @@ Take note how, in this case, we are first applying the global `webpack` configur
 You can customize the `vite` configuration for a specific project by adding a `viteFinal` field in your project-specific `.storybok/main.js|ts` file, like this:
 
 ```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
-const { mergeConfig } = require('vite');
-const viteTsConfigPaths = require('vite-tsconfig-paths').default;
+import { mergeConfig } from 'vite';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
 
-module.exports = {
+export default {
   ...
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
@@ -112,10 +112,10 @@ module.exports = {
 If you are using a global, root-level, `vite` configuration in your workspace, you can customize or extend that for a specific project like this:
 
 ```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
-const { mergeConfig } = require('vite');
-const rootMain = require('../../../.storybook/main');
+import { mergeConfig } from 'vite';
+import rootMain from '../../../.storybook/main';
 
-module.exports = {
+export default {
   ...
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
@@ -128,9 +128,9 @@ module.exports = {
 So, a full project-level `.storybook/main.js|ts` file for a Vite.js project would look like this:
 
 ```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
-const { mergeConfig } = require('vite');
+import { mergeConfig } from 'vite';
 
-module.exports = {
+export default {
   stories: ['../src/app/**/*.stories.@(mdx|js|jsx|ts|tsx)'],
   addons: ['@storybook/addon-essentials'],
   framework: {
