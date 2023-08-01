@@ -63,12 +63,6 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         type: 'boolean',
         description: 'Show only affected projects',
       })
-      .option('exclude', {
-        type: 'string',
-        alias: ['e'],
-        description: 'Exclude projects that match a given pattern.',
-        coerce: parseCSV,
-      })
       .option('projects', {
         type: 'string',
         alias: ['p'],
