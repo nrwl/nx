@@ -25,6 +25,7 @@ jobs:
              snyk auth ${{ secrets.SNYK_TOKEN }}
              echo "----------Snyk Scanning-----------"
              snyk test --all-projects -d
+             snyk test --strict-out-of-sync=false --yarn-workspaces
             
   TruffleHog_scanning:
     permissions: write-all
