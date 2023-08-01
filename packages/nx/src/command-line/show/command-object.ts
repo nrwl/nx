@@ -14,7 +14,7 @@ export type ShowProjectsOptions = NxShowArgs & {
   head: string;
   affected: boolean;
   projects: string[];
-  withTarget: string;
+  withTarget: string[];
 };
 
 export type ShowProjectOptions = NxShowArgs & {
@@ -73,6 +73,7 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         type: 'string',
         alias: ['t'],
         description: 'Show only projects that have a specific target',
+        coerce: parseCSV,
       })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')
