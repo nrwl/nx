@@ -414,9 +414,9 @@ export function createLoaderFromCompiler(
         babelConfig.options['rootMode'] = 'upward';
         babelConfig.options['babelrc'] = true;
       } else {
-        babelConfig.options['configFile'] =
-          babelConfig.options?.['babelConfig'] ??
-          path.join(options.root, options.projectRoot, '.babelrc');
+        babelConfig.options['configFile'] = options.babelConfig
+          ? path.join(options.root, options.babelConfig)
+          : path.join(options.root, options.projectRoot, '.babelrc');
       }
 
       return babelConfig;
