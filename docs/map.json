@@ -1015,6 +1015,12 @@
               "description": "Examples of different ways to use Nx",
               "itemList": [
                 {
+                  "name": "Add a Lit Project",
+                  "id": "add-lit",
+                  "description": "Add a Lit project to your repo",
+                  "file": "shared/recipes/add-stack/add-lit"
+                },
+                {
                   "name": "Powering Up React Development With Nx",
                   "id": "react-nx",
                   "file": "shared/examples/react-nx"

@@ -168,6 +168,189 @@
         "tags": []
       },
       {
+        "id": "angular-integrated",
+        "name": "From Angular CLI to Integrated",
+        "description": "",
+        "file": "shared/migration/angular-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/angular-integrated",
+        "tags": []
+      },
+      {
+        "id": "angular-manual",
+        "name": "From Angular CLI Manually",
+        "description": "",
+        "file": "shared/migration/angular-manual",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/angular-manual",
+        "tags": []
+      },
+      {
+        "id": "angular-multiple",
+        "name": "From Multiple Angular CLI Repos",
+        "description": "",
+        "file": "shared/migration/angular-multiple",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx-angular/angular-multiple",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/migration-angular": {
+    "id": "migration-angular",
+    "name": "From Angular CLI",
+    "description": "",
+    "file": "shared/migration/migration-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/migration-angular",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/angular-integrated": {
+    "id": "angular-integrated",
+    "name": "From Angular CLI to Integrated",
+    "description": "",
+    "file": "shared/migration/angular-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/angular-integrated",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/angular-manual": {
+    "id": "angular-manual",
+    "name": "From Angular CLI Manually",
+    "description": "",
+    "file": "shared/migration/angular-manual",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/angular-manual",
+    "tags": []
+  },
+  "/recipes/adopting-nx-angular/angular-multiple": {
+    "id": "angular-multiple",
+    "name": "From Multiple Angular CLI Repos",
+    "description": "",
+    "file": "shared/migration/angular-multiple",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx-angular/angular-multiple",
+    "tags": []
+  },
+  "/recipes/add-stack": {
+    "id": "add-stack",
+    "name": "Add a New Project",
+    "description": "Instructions to add a project from a new stack to an Nx workspace",
+    "file": "",
+    "itemList": [
+      {
+        "id": "add-lit",
+        "name": "Add a Lit Project",
+        "description": "Add a Lit project to your repo",
+        "file": "shared/recipes/add-stack/add-lit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/add-stack/add-lit",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/add-stack",
+    "tags": []
+  },
+  "/recipes/add-stack/add-lit": {
+    "id": "add-lit",
+    "name": "Add a Lit Project",
+    "description": "Add a Lit project to your repo",
+    "file": "shared/recipes/add-stack/add-lit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/add-stack/add-lit",
+    "tags": []
+  },
+  "/recipes/executors": {
+    "id": "executors",
+    "name": "Executors",
+    "description": "Use, extend and compose executors.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "use-executor-configurations",
+        "name": "Use Executor Configurations",
+        "description": "",
+        "file": "shared/recipes/use-executor-configurations",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/executors/use-executor-configurations",
+        "tags": ["use-task-executors"]
+      },
+      {
+        "id": "run-commands-executor",
+        "name": "Running Custom Commands",
+        "description": "",
+        "file": "shared/running-custom-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/executors/run-commands-executor",
+        "tags": ["use-task-executors"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/executors",
+    "tags": []
+  },
+  "/recipes/executors/use-executor-configurations": {
+    "id": "use-executor-configurations",
+    "name": "Use Executor Configurations",
+    "description": "",
+    "file": "shared/recipes/use-executor-configurations",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/executors/use-executor-configurations",
+    "tags": ["use-task-executors"]
+  },
+  "/recipes/executors/run-commands-executor": {
+    "id": "run-commands-executor",
+    "name": "Running Custom Commands",
+    "description": "",
+    "file": "shared/running-custom-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/executors/run-commands-executor",
+    "tags": ["use-task-executors"]
+  },
+  "/recipes/environment-variables": {
+    "id": "environment-variables",
+    "name": "Environment Variables",
+    "description": "Using environment variables in an Nx workspace.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "define-environment-variables",
+        "name": "Define Environment Variables",
+        "description": "",
+        "file": "shared/guides/define-environment-variables",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/environment-variables/define-environment-variables",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "use-environment-variables-in-react",
+        "name": "Use Environment Variables in React",
+        "description": "",
+        "file": "shared/guides/use-environment-variables-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/environment-variables/use-environment-variables-in-react",
+        "tags": ["environment-variables"]
+      },
+      {
         "id": "use-environment-variables-in-angular",
         "name": "Use Environment Variables in Angular",
         "description": "",

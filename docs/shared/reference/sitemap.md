@@ -175,6 +175,7 @@
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)
     - [Example Repos](/showcase/example-repos)
+      - [Add a Lit Project](/showcase/example-repos/add-lit)
       - [Powering Up React Development With Nx](/showcase/example-repos/react-nx)
       - [Using Apollo GraphQL](/showcase/example-repos/apollo-react)
       - [Using Prisma with NestJS](/showcase/example-repos/nestjs-prisma)

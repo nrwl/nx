@@ -4458,6 +4458,16 @@
         "file": "",
         "itemList": [
           {
+            "id": "add-lit",
+            "name": "Add a Lit Project",
+            "description": "Add a Lit project to your repo",
+            "file": "shared/recipes/add-stack/add-lit",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-lit",
+            "tags": []
+          },
+          {
             "id": "react-nx",
             "name": "Powering Up React Development With Nx",
             "description": "",
@@ -4574,6 +4584,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "add-lit",
+        "name": "Add a Lit Project",
+        "description": "Add a Lit project to your repo",
+        "file": "shared/recipes/add-stack/add-lit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-lit",
+        "tags": []
+      },
+      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -4676,6 +4696,16 @@
     ],
     "isExternal": false,
     "path": "/showcase/example-repos",
+    "tags": []
+  },
+  "/showcase/example-repos/add-lit": {
+    "id": "add-lit",
+    "name": "Add a Lit Project",
+    "description": "Add a Lit project to your repo",
+    "file": "shared/recipes/add-stack/add-lit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-lit",
     "tags": []
   },
   "/showcase/example-repos/react-nx": {
