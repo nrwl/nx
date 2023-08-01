@@ -54,14 +54,26 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
     const jestTask = await jestInitGenerator(host, schema);
     tasks.push(jestTask);
   }
-  if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
+  if (schema.e2eTestRunner === 'cypress') {
     const { cypressInitGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
     const cypressTask = await cypressInitGenerator(host, {});
     tasks.push(cypressTask);
+  } else if (schema.e2eTestRunner === 'playwright') {
+    const { initGenerator } = ensurePackage<typeof import('@nx/playwright')>(
+      '@nx/playwright',
+      nxVersion
+    );
+    const playwrightTask = await initGenerator(host, {
+      skipFormat: true,
+      skipPackageJson: schema.skipPackageJson,
+    });
+    tasks.push(playwrightTask);
   }
 
+  // @ts-ignore
+  // TODO(jack): remove once the React Playwright PR lands first
   const reactTask = await reactInitGenerator(host, {
     ...schema,
     skipFormat: true,
