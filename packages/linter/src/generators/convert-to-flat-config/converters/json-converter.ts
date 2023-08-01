@@ -45,12 +45,26 @@ export function convertEslintJsonToFlatConfig(
     addParser(importsList, exportElements, config);
   }
 
+  if (config.parserOptions) {
+    exportElements.push(
+      generateAst({ parserOptions: config.parserOptions }, ts.factory)
+    );
+  }
+
   if (config.rules) {
     exportElements.push(generateAst({ rules: config.rules }, ts.factory));
   }
 
   if (config.settings) {
     exportElements.push(generateAst({ settings: config.settings }, ts.factory));
+  }
+
+  if (config.env) {
+    exportElements.push(generateAst({ env: config.env }, ts.factory));
+  }
+
+  if (config.globals) {
+    exportElements.push(generateAst({ globals: config.globals }, ts.factory));
   }
 
   if (config.overrides) {
@@ -228,8 +242,16 @@ function addParser(importsList, configBlocks, config: ESLint.ConfigData) {
     ts.factory.createObjectLiteralExpression(
       [
         ts.factory.createPropertyAssignment(
-          'parser',
-          ts.factory.createIdentifier(parserName)
+          'languageOptions',
+          ts.factory.createObjectLiteralExpression(
+            [
+              ts.factory.createPropertyAssignment(
+                'parser',
+                ts.factory.createIdentifier(parserName)
+              ),
+            ],
+            true
+          )
         ),
       ],
       true

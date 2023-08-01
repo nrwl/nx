@@ -50,6 +50,45 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
   });
 
+  it('should add settings', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.settings = {
+        sharedData: 'Hello',
+      };
+      return json;
+    });
+    await convertToFlatConfigGenerator(tree, options);
+
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should add env configuration', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.env = {
+        browser: true,
+        node: true,
+      };
+      return json;
+    });
+    await convertToFlatConfigGenerator(tree, options);
+
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+  });
+
   it('should add plugins', async () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
