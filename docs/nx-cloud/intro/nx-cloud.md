@@ -2,15 +2,15 @@
 
 Nx partitions a command into smaller tasks and runs them in parallel, in the correct order. Nx Cloud takes it one step further and [runs any command across multiple machines](/core-features/distribute-task-execution), while giving you a consolidated view of the command as if it ran locally.
 
-Nx caches the output of any previously run command such as testing and building, so it can replay the cached results instead of rerunning it. Nx Cloud allows you to [share the computation cache](/core-features/share-your-cache) across everyone in your team and CI.
+Nx caches the output of any previously run command such as testing and building, so it can replay the cached results instead of rerunning it. Nx Cloud allows you to [share the computation cache](/core-features/remote-cache) across everyone in your team and CI.
 
 And it takes five minutes to set up.
 
 {% personas %}
-{% persona type="cache" title="Share Your Cache" url="/core-features/share-your-cache" %}
+{% persona type="cache" title="Share Your Cache" url="/core-features/remote-cache" %}
 Share the computation cache across CI and developer machines
 
-- [Set up distributed caching](/core-features/share-your-cache)
+- [Set up distributed caching](/core-features/remote-cache)
 
 {% /persona %}
 

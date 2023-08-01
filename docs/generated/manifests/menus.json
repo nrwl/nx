@@ -786,17 +786,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Share Your Cache",
-            "path": "/core-features/share-your-cache",
-            "id": "share-your-cache",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Explore the Graph",
-            "path": "/core-features/explore-graph",
-            "id": "explore-graph",
+            "name": "Use Remote Caching",
+            "path": "/core-features/remote-cache",
+            "id": "remote-cache",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -810,9 +802,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Integrate with Editors",
-            "path": "/core-features/integrate-with-editors",
-            "id": "integrate-with-editors",
+            "name": "Explore the Graph",
+            "path": "/core-features/explore-graph",
+            "id": "explore-graph",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -829,6 +821,14 @@
             "name": "Enforce Module Boundaries",
             "path": "/core-features/enforce-module-boundaries",
             "id": "enforce-module-boundaries",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Integrate with Editors",
+            "path": "/core-features/integrate-with-editors",
+            "id": "integrate-with-editors",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -878,17 +878,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Share Your Cache",
-        "path": "/core-features/share-your-cache",
-        "id": "share-your-cache",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Explore the Graph",
-        "path": "/core-features/explore-graph",
-        "id": "explore-graph",
+        "name": "Use Remote Caching",
+        "path": "/core-features/remote-cache",
+        "id": "remote-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -902,9 +894,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Integrate with Editors",
-        "path": "/core-features/integrate-with-editors",
-        "id": "integrate-with-editors",
+        "name": "Explore the Graph",
+        "path": "/core-features/explore-graph",
+        "id": "explore-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -921,6 +913,14 @@
         "name": "Enforce Module Boundaries",
         "path": "/core-features/enforce-module-boundaries",
         "id": "enforce-module-boundaries",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Integrate with Editors",
+        "path": "/core-features/integrate-with-editors",
+        "id": "integrate-with-editors",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

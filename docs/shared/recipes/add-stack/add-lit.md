@@ -10,7 +10,7 @@ Because we are not using an Nx plugin for Lit, there are few items we'll have to
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/core-features/share-your-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/core-features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/core-features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}

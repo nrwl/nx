@@ -62,7 +62,7 @@ A set of preconfigured options for a [target](#target) that should be enabled al
 
 A [cache](#cache) that can be shared between all developers using the repo and the CI system.
 
-> See: [Share Your Cache](/core-features/share-your-cache)
+> See: [Share Your Cache](/core-features/remote-cache)
 
 ### Distributed Task Execution
 
