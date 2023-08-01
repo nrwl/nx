@@ -59,8 +59,19 @@ export interface Hash {
 }
 
 export interface TaskHasher {
-  hashTask(task: Task, taskGraph?: TaskGraph): Promise<Hash>;
-  hashTasks(tasks: Task[], taskGraph?: TaskGraph): Promise<Hash[]>;
+  /**
+   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph)
+   * @param task
+   */
+  hashTask(task: Task): Promise<Hash>;
+  hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash>;
+
+  /**
+   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph)
+   * @param tasks
+   */
+  hashTasks(tasks: Task[]): Promise<Hash[]>;
+  hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
 }
 
 export type Hasher = TaskHasher;
@@ -71,11 +82,11 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     private readonly runnerOptions: any
   ) {}
 
-  async hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]> {
+  async hashTasks(tasks: Task[], taskGraph?: TaskGraph): Promise<Hash[]> {
     return this.daemonClient.hashTasks(this.runnerOptions, tasks, taskGraph);
   }
 
-  async hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash> {
+  async hashTask(task: Task, taskGraph?: TaskGraph): Promise<Hash> {
     return (
       await this.daemonClient.hashTasks(this.runnerOptions, [task], taskGraph)
     )[0];
@@ -124,11 +135,11 @@ export class InProcessTaskHasher implements TaskHasher {
     );
   }
 
-  async hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]> {
+  async hashTasks(tasks: Task[], taskGraph?: TaskGraph): Promise<Hash[]> {
     return await Promise.all(tasks.map((t) => this.hashTask(t, taskGraph)));
   }
 
-  async hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash> {
+  async hashTask(task: Task, taskGraph?: TaskGraph): Promise<Hash> {
     const res = await this.taskHasher.hashTask(task, taskGraph, [
       task.target.project,
     ]);

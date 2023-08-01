@@ -28,6 +28,7 @@ import { Workspaces } from '../config/workspaces';
 import {
   DaemonBasedTaskHasher,
   InProcessTaskHasher,
+  TaskHasher,
 } from '../hasher/task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
@@ -231,7 +232,7 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher;
+  let hasher: TaskHasher;
   if (daemonClient.enabled()) {
     hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
   } else {
@@ -272,7 +273,33 @@ export async function invokeTasksRunner({
       nxJson,
       nxArgs,
       taskGraph,
-      hasher,
+      hasher: {
+        hashTask(task: Task, taskGraph_?: TaskGraph) {
+          if (!taskGraph_) {
+            output.warn({
+              title: `TaskGraph is now required as an argument to hashTasks`,
+              bodyLines: [
+                `The TaskGraph object can be retrieved from the context`,
+              ],
+            });
+            taskGraph_ = taskGraph;
+          }
+          return hasher.hashTask(task, taskGraph_);
+        },
+        hashTasks(task: Task[], taskGraph_?: TaskGraph) {
+          if (!taskGraph_) {
+            output.warn({
+              title: `TaskGraph is now required as an argument to hashTasks`,
+              bodyLines: [
+                `The TaskGraph object can be retrieved from the context`,
+              ],
+            });
+            taskGraph_ = taskGraph;
+          }
+
+          return hasher.hashTasks(task, taskGraph_);
+        },
+      },
       daemon: daemonClient,
     }
   );
