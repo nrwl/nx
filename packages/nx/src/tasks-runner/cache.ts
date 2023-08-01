@@ -89,8 +89,10 @@ export class Cache {
       const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
       // might be left overs from partially-completed cache invocations
-      await this.remove(tdCommit);
-      await this.remove(td);
+      await Promise.all([
+        this.remove(tdCommit),
+        this.remove(td),
+      ]);
 
       await mkdir(td);
       await writeFile(
@@ -114,8 +116,10 @@ export class Cache {
       // creating this file is atomic, whereas creating a folder is not.
       // so if the process gets terminated while we are copying stuff into cache,
       // the cache entry won't be used.
-      await writeFile(join(td, 'code'), code.toString());
-      await writeFile(join(td, 'source'), await this.currentMachineId());
+      await Promise.all([
+        writeFile(join(td, 'code'), code.toString()),
+        writeFile(join(td, 'source'), await this.currentMachineId()),
+      ]);
       await writeFile(tdCommit, 'true');
 
       if (this.options.remoteCache) {

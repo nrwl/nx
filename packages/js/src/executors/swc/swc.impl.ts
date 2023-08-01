@@ -149,20 +149,22 @@ export async function* swcExecutor(
     process.on('SIGTERM', () => disposeFn());
 
     return yield* compileSwcWatch(context, options, async () => {
-      const assetResult = await copyAssets(options, context);
-      const packageJsonResult = await copyPackageJson(
-        {
-          ...options,
-          additionalEntryPoints: createEntryPoints(options, context),
-          format: [
-            determineModuleFormatFromSwcrc(options.swcCliOptions.swcrcPath),
-          ],
-          // As long as d.ts files match their .js counterparts, we don't need to emit them.
-          // TSC can match them correctly based on file names.
-          skipTypings: true,
-        },
-        context
-      );
+      const [assetResult, packageJsonResult] = await Promise.all([
+        copyAssets(options, context),
+        copyPackageJson(
+          {
+            ...options,
+            additionalEntryPoints: createEntryPoints(options, context),
+            format: [
+              determineModuleFormatFromSwcrc(options.swcCliOptions.swcrcPath),
+            ],
+            // As long as d.ts files match their .js counterparts, we don't need to emit them.
+            // TSC can match them correctly based on file names.
+            skipTypings: true,
+          },
+          context
+        ),
+      ]);
       removeTmpSwcrc(options.swcCliOptions.swcrcPath);
       disposeFn = () => {
         assetResult?.stop();
@@ -171,21 +173,23 @@ export async function* swcExecutor(
     });
   } else {
     return yield compileSwc(context, options, async () => {
-      await copyAssets(options, context);
-      await copyPackageJson(
-        {
-          ...options,
-          additionalEntryPoints: createEntryPoints(options, context),
-          format: [
-            determineModuleFormatFromSwcrc(options.swcCliOptions.swcrcPath),
-          ],
-          // As long as d.ts files match their .js counterparts, we don't need to emit them.
-          // TSC can match them correctly based on file names.
-          skipTypings: true,
-          extraDependencies: swcHelperDependency ? [swcHelperDependency] : [],
-        },
-        context
-      );
+      await Promise.all([
+        copyAssets(options, context),
+        copyPackageJson(
+          {
+            ...options,
+            additionalEntryPoints: createEntryPoints(options, context),
+            format: [
+              determineModuleFormatFromSwcrc(options.swcCliOptions.swcrcPath),
+            ],
+            // As long as d.ts files match their .js counterparts, we don't need to emit them.
+            // TSC can match them correctly based on file names.
+            skipTypings: true,
+            extraDependencies: swcHelperDependency ? [swcHelperDependency] : [],
+          },
+          context
+        ),
+      ]);
       removeTmpSwcrc(options.swcCliOptions.swcrcPath);
       postProcessInlinedDependencies(
         options.outputPath,

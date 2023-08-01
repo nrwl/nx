@@ -97,9 +97,13 @@ export async function getStaticProps(): Promise<{ props: ChangeLogProps }> {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
   // do 2 fetches of 100 records, which should be enough releases to display
+  const [githubRelease1, githubRelease2] = await Promise.all([
+    fetchGithubRelease(octokit, 1),
+    fetchGithubRelease(octokit, 2),
+  ]);
   const githubReleases = [
-    ...(await fetchGithubRelease(octokit, 1)),
-    ...(await fetchGithubRelease(octokit, 2)),
+    ...(githubRelease1),
+    ...(githubRelease2),
   ];
 
   const releasesByMinorVersion: {

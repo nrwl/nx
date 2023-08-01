@@ -21,8 +21,10 @@ async function generate() {
       'cli'
     );
     removeSync(commandsOutputDirectory);
-    await generateCnwDocumentation(commandsOutputDirectory);
-    await generateCliDocumentation(commandsOutputDirectory);
+    await Promise.all([
+      generateCnwDocumentation(commandsOutputDirectory),
+      generateCliDocumentation(commandsOutputDirectory),
+    ]);
 
     generateDevkitDocumentation();
     await generatePackageSchemas();
