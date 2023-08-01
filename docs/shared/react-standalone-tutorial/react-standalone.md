@@ -829,7 +829,7 @@ Here's some more things you can dive into next:
 - [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/packages/storybook/documents/overview-react)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)]
-- [Speed up CI: Share your cache](/core-features/share-your-cache)]
+- [Speed up CI: Share your cache](/core-features/remote-cache)]
 - [Speed up CI: Distribute your tasks across machines](/core-features/distribute-task-execution)
 
 Also, make sure you

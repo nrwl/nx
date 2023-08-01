@@ -271,51 +271,59 @@
           "itemList": [
             {
               "name": "Run Tasks",
+              "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
               "tags": ["run-tasks"],
               "id": "run-tasks",
               "file": "shared/core-features/run-tasks"
             },
             {
               "name": "Cache Task Results",
+              "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
               "id": "cache-task-results",
               "tags": ["cache-task-results"],
               "file": "shared/core-features/cache-task-results"
             },
             {
-              "name": "Share Your Cache",
-              "id": "share-your-cache",
-              "tags": ["share-your-cache"],
-              "file": "shared/core-features/share-your-cache"
-            },
-            {
-              "name": "Explore the Graph",
-              "id": "explore-graph",
-              "tags": ["explore-graph"],
-              "file": "shared/core-features/explore-graph"
+              "name": "Use Remote Caching",
+              "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+              "id": "remote-cache",
+              "tags": ["remote-cache"],
+              "file": "shared/core-features/remote-cache"
             },
             {
               "name": "Distribute Task Execution",
+              "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
               "id": "distribute-task-execution",
               "tags": ["distribute-task-execution"],
               "file": "shared/core-features/distribute-task-execution"
             },
             {
-              "name": "Integrate with Editors",
-              "id": "integrate-with-editors",
-              "tags": ["integrate-with-editors"],
-              "file": "shared/core-features/integrate-with-editors"
+              "name": "Explore the Graph",
+              "id": "explore-graph",
+              "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+              "tags": ["explore-graph"],
+              "file": "shared/core-features/explore-graph"
             },
             {
               "name": "Automate Updating Dependencies",
+              "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
               "id": "automate-updating-dependencies",
               "tags": ["automate-updating-dependencies"],
               "file": "shared/core-features/automate-updating-dependencies"
             },
             {
               "name": "Enforce Module Boundaries",
+              "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
               "id": "enforce-module-boundaries",
               "tags": ["enforce-module-boundaries"],
               "file": "shared/core-features/enforce-module-boundaries"
+            },
+            {
+              "name": "Integrate with Editors",
+              "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+              "id": "integrate-with-editors",
+              "tags": ["integrate-with-editors"],
+              "file": "shared/core-features/integrate-with-editors"
             },
             {
               "name": "Plugin Features",
