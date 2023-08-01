@@ -18,11 +18,7 @@
         "default": 9009
       },
       "previewUrl": { "type": "string", "description": "Preview URL." },
-      "host": {
-        "type": "string",
-        "description": "Host to listen on.",
-        "default": "localhost"
-      },
+      "host": { "type": "string", "description": "Host to listen on." },
       "staticDir": {
         "type": "array",
         "description": "Directory where to load static files from, array of strings.",
