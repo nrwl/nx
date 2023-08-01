@@ -12,7 +12,7 @@ import { joinPathFragments, normalizePath } from '../../utils/path';
 
 import type { Tree } from '../tree';
 
-import { readJson, updateJson, writeJson } from './json';
+import { readJson, writeJson } from './json';
 import { PackageJson } from '../../utils/package-json';
 import { readNxJson } from './nx-json';
 import { output } from '../../utils/output';
@@ -85,33 +85,17 @@ export function updateProjectConfiguration(
     'project.json'
   );
 
-  if (tree.exists(projectConfigFile)) {
-    writeJson(tree, projectConfigFile, {
-      name: projectConfiguration.name ?? projectName,
-      $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
-      ...projectConfiguration,
-      root: undefined,
-    });
-  } else {
-    const packageJsonFile = joinPathFragments(
-      projectConfiguration.root,
-      'package.json'
+  if (!tree.exists(projectConfigFile)) {
+    throw new Error(
+      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It doesn't exist or uses package.json configuration.`
     );
-
-    if (!tree.exists(packageJsonFile)) {
-      throw new Error(
-        `Cannot update Project ${projectName} at ${projectConfiguration.root}. Please add "project.json" or "package.json" configuration.`
-      );
-    }
-
-    updateJson(tree, packageJsonFile, (json) => {
-      json.nx = {
-        ...json.nx,
-        ...projectConfiguration,
-      };
-      return json;
-    });
   }
+  writeJson(tree, projectConfigFile, {
+    name: projectConfiguration.name ?? projectName,
+    $schema: getRelativeProjectJsonSchemaPath(tree, projectConfiguration),
+    ...projectConfiguration,
+    root: undefined,
+  });
 }
 
 /**

@@ -1,4 +1,4 @@
-import { Tree, names, readJson } from '@nx/devkit';
+import { Tree, names } from '@nx/devkit';
 import { join } from 'path';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
@@ -106,23 +106,14 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
     .forEach((imp, index) => {
       const localName = index ? `baseConfig${index}` : 'baseConfig';
 
-      const importStatement = ts.factory.createVariableStatement(
+      const importStatement = ts.factory.createImportDeclaration(
         undefined,
-        ts.factory.createVariableDeclarationList(
-          [
-            ts.factory.createVariableDeclaration(
-              localName,
-              undefined,
-              undefined,
-              ts.factory.createCallExpression(
-                ts.factory.createIdentifier('require'),
-                undefined,
-                [ts.factory.createStringLiteral(imp)]
-              )
-            ),
-          ],
-          ts.NodeFlags.Const
-        )
+        ts.factory.createImportClause(
+          false,
+          ts.factory.createIdentifier(localName),
+          undefined
+        ),
+        ts.factory.createStringLiteral(imp)
       );
 
       importsList.push(importStatement);
@@ -170,23 +161,14 @@ function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
     mappedPlugins.push({ name, varName, imp });
   });
   mappedPlugins.forEach(({ varName, imp }) => {
-    const importStatement = ts.factory.createVariableStatement(
+    const importStatement = ts.factory.createImportDeclaration(
       undefined,
-      ts.factory.createVariableDeclarationList(
-        [
-          ts.factory.createVariableDeclaration(
-            varName,
-            undefined,
-            undefined,
-            ts.factory.createCallExpression(
-              ts.factory.createIdentifier('require'),
-              undefined,
-              [ts.factory.createStringLiteral(imp)]
-            )
-          ),
-        ],
-        ts.NodeFlags.Const
-      )
+      ts.factory.createImportClause(
+        false,
+        ts.factory.createIdentifier(varName),
+        undefined
+      ),
+      ts.factory.createStringLiteral(imp)
     );
     importsList.push(importStatement);
   });
@@ -217,23 +199,14 @@ function addParser(importsList, configBlocks, config: ESLint.ConfigData) {
     imp.replace(/^@/, '').split('/').join('-')
   ).propertyName;
 
-  const importStatement = ts.factory.createVariableStatement(
+  const importStatement = ts.factory.createImportDeclaration(
     undefined,
-    ts.factory.createVariableDeclarationList(
-      [
-        ts.factory.createVariableDeclaration(
-          parserName,
-          undefined,
-          undefined,
-          ts.factory.createCallExpression(
-            ts.factory.createIdentifier('require'),
-            undefined,
-            [ts.factory.createStringLiteral(imp)]
-          )
-        ),
-      ],
-      ts.NodeFlags.Const
-    )
+    ts.factory.createImportClause(
+      false,
+      ts.factory.createIdentifier(parserName),
+      undefined
+    ),
+    ts.factory.createStringLiteral(imp)
   );
 
   importsList.push(importStatement);
@@ -259,7 +232,7 @@ function addParser(importsList, configBlocks, config: ESLint.ConfigData) {
   );
 }
 
-const DEFAULT_FLAT_CONFIG = `const { FlatCompat } = require("@eslint/eslintrc");
+const DEFAULT_FLAT_CONFIG = `import { FlatCompat } from "@eslint/eslintrc";
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });

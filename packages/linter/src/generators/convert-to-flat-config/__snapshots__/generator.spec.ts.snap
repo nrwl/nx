@@ -1,8 +1,63 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`convert-to-flat-config generator should add env configuration 1`] = `
+"import nxEslintPlugin from "@nx/eslint-plugin";
+import { FlatCompat } from "@eslint/eslintrc";
+const eslintrc = new FlatCompat({
+    baseDirectory: __dirname
+});
+export default [
+    { ignores: ["**/*"] },
+    { ignores: ["node_modules"] },
+    { plugins: {
+            "@nx": nxEslintPlugin
+        } },
+    { env: {
+            browser: true,
+            node: true
+        } },
+    {
+        files: [
+            "*.ts",
+            "*.tsx",
+            "*.js",
+            "*.jsx"
+        ],
+        rules: { @nx/enforce-module-boundaries: [
+                "error",
+                {
+                    enforceBuildableLibDependency: true,
+                    allow: [],
+                    depConstraints: [{
+                            sourceTag: "*",
+                            onlyDependOnLibsWithTags: ["*"]
+                        }]
+                }
+            ] }
+    },
+    {
+        files: [
+            "*.ts",
+            "*.tsx"
+        ],
+        extends: ["plugin:@nx/typescript"],
+        rules: {}
+    },
+    {
+        files: [
+            "*.js",
+            "*.jsx"
+        ],
+        extends: ["plugin:@nx/javascript"],
+        rules: {}
+    }
+];
+"
+`;
+
 exports[`convert-to-flat-config generator should add global gitignores 1`] = `
-"const nxEslintPlugin = require("@nx/eslint-plugin");
-const { FlatCompat } = require("@eslint/eslintrc");
+"import nxEslintPlugin from "@nx/eslint-plugin";
+import { FlatCompat } from "@eslint/eslintrc";
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
@@ -52,9 +107,9 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should add parser 1`] = `
-"const nxEslintPlugin = require("@nx/eslint-plugin");
-const typescriptEslintParser = require("@typescript-eslint/parser");
-const { FlatCompat } = require("@eslint/eslintrc");
+"import nxEslintPlugin from "@nx/eslint-plugin";
+import typescriptEslintParser from "@typescript-eslint/parser";
+import { FlatCompat } from "@eslint/eslintrc";
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
@@ -65,7 +120,9 @@ export default [
             "@nx": nxEslintPlugin
         } },
     {
-        parser: typescriptEslintParser
+        languageOptions: {
+            parser: typescriptEslintParser
+        }
     },
     {
         files: [
@@ -107,11 +164,11 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should add plugins 1`] = `
-"const eslintPluginImport = require("eslint-plugin-import");
-const eslintPluginSingleName = require("eslint-plugin-single-name");
-const scopeEslintPluginWithName = require("@scope/eslint-plugin-with-name");
-const justScopeEslintPlugin = require("@just-scope/eslint-plugin");
-const { FlatCompat } = require("@eslint/eslintrc");
+"import eslintPluginImport from "eslint-plugin-import";
+import eslintPluginSingleName from "eslint-plugin-single-name";
+import scopeEslintPluginWithName from "@scope/eslint-plugin-with-name";
+import justScopeEslintPlugin from "@just-scope/eslint-plugin";
+import { FlatCompat } from "@eslint/eslintrc";
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
@@ -164,8 +221,8 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should add settings 1`] = `
-"const nxEslintPlugin = require("@nx/eslint-plugin");
-const { FlatCompat } = require("@eslint/eslintrc");
+"import nxEslintPlugin from "@nx/eslint-plugin";
+import { FlatCompat } from "@eslint/eslintrc";
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
@@ -216,8 +273,8 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should run successfully 1`] = `
-"const nxEslintPlugin = require("@nx/eslint-plugin");
-const { FlatCompat } = require("@eslint/eslintrc");
+"import nxEslintPlugin from "@nx/eslint-plugin";
+import { FlatCompat } from "@eslint/eslintrc";
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
@@ -267,8 +324,8 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should run successfully 2`] = `
-"const baseConfig = require('../../.eslintrc.json');
-const { FlatCompat } = require('@eslint/eslintrc');
+"import baseConfig from '../../.eslintrc.json';
+import { FlatCompat } from '@eslint/eslintrc';
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
