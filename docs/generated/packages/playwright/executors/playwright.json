@@ -150,6 +150,11 @@
       "uiPort": {
         "type": "string",
         "description": "Port to serve UI on, 0 for any free port; specifying this option opens UI in a browser tab"
+      },
+      "skipInstall": {
+        "type": "boolean",
+        "description": "Skip running playwright install before running playwright tests. This is to ensure that playwright browsers are installed before running tests.",
+        "default": false
       }
     },
     "required": [],
