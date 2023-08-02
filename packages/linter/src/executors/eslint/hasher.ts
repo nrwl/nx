@@ -17,7 +17,7 @@ export default async function run(
     projectsConfigurations: ProjectsConfigurations;
   }
 ): Promise<Hash> {
-  const res = await context.hasher.hashTask(task);
+  const res = await context.hasher.hashTask(task, context.taskGraph);
   if (task.overrides['hasTypeAwareRules'] === true) {
     return res;
   }

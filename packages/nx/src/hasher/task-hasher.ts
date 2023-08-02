@@ -59,8 +59,19 @@ export interface Hash {
 }
 
 export interface TaskHasher {
+  /**
+   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph)
+   * @param task
+   */
   hashTask(task: Task): Promise<Hash>;
+  hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash>;
+
+  /**
+   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph)
+   * @param tasks
+   */
   hashTasks(tasks: Task[]): Promise<Hash[]>;
+  hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
 }
 
 export type Hasher = TaskHasher;
@@ -68,25 +79,16 @@ export type Hasher = TaskHasher;
 export class DaemonBasedTaskHasher implements TaskHasher {
   constructor(
     private readonly daemonClient: DaemonClient,
-    private readonly taskGraph: TaskGraph,
     private readonly runnerOptions: any
   ) {}
 
-  async hashTasks(tasks: Task[]): Promise<Hash[]> {
-    return this.daemonClient.hashTasks(
-      this.runnerOptions,
-      tasks,
-      this.taskGraph
-    );
+  async hashTasks(tasks: Task[], taskGraph?: TaskGraph): Promise<Hash[]> {
+    return this.daemonClient.hashTasks(this.runnerOptions, tasks, taskGraph);
   }
 
-  async hashTask(task: Task): Promise<Hash> {
+  async hashTask(task: Task, taskGraph?: TaskGraph): Promise<Hash> {
     return (
-      await this.daemonClient.hashTasks(
-        this.runnerOptions,
-        [task],
-        this.taskGraph
-      )
+      await this.daemonClient.hashTasks(this.runnerOptions, [task], taskGraph)
     )[0];
   }
 }
@@ -99,7 +101,6 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly projectFileMap: ProjectFileMap,
     private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
-    private readonly taskGraph: TaskGraph,
     private readonly nxJson: NxJsonConfiguration,
     private readonly options: any,
     private readonly fileHasher: FileHasher
@@ -129,18 +130,19 @@ export class InProcessTaskHasher implements TaskHasher {
       this.projectFileMap,
       this.allWorkspaceFiles,
       this.projectGraph,
-      this.taskGraph,
       this.fileHasher,
       { selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false }
     );
   }
 
-  async hashTasks(tasks: Task[]): Promise<Hash[]> {
-    return await Promise.all(tasks.map((t) => this.hashTask(t)));
+  async hashTasks(tasks: Task[], taskGraph?: TaskGraph): Promise<Hash[]> {
+    return await Promise.all(tasks.map((t) => this.hashTask(t, taskGraph)));
   }
 
-  async hashTask(task: Task): Promise<Hash> {
-    const res = await this.taskHasher.hashTask(task, [task.target.project]);
+  async hashTask(task: Task, taskGraph?: TaskGraph): Promise<Hash> {
+    const res = await this.taskHasher.hashTask(task, taskGraph, [
+      task.target.project,
+    ]);
     const command = this.hashCommand(task);
     return {
       value: hashArray([res.value, command]),
@@ -203,7 +205,6 @@ class TaskHasherImpl {
     private readonly projectFileMap: ProjectFileMap,
     private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
-    private readonly taskGraph: TaskGraph,
     private readonly fileHasher: FileHasher,
     private readonly options: { selectivelyHashTsConfig: boolean }
   ) {
@@ -211,7 +212,11 @@ class TaskHasherImpl {
     this.calculateExternalDependencyHashes();
   }
 
-  async hashTask(task: Task, visited: string[]): Promise<PartialHash> {
+  async hashTask(
+    task: Task,
+    taskGraph: TaskGraph,
+    visited: string[]
+  ): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
       const { selfInputs, depsInputs, depsOutputs, projectInputs } = getInputs(
         task,
@@ -226,6 +231,7 @@ class TaskHasherImpl {
         depsInputs,
         depsOutputs,
         projectInputs,
+        taskGraph,
         visited
       );
 
@@ -245,6 +251,7 @@ class TaskHasherImpl {
     projectName: string,
     task: Task,
     namedInput: string,
+    taskGraph: TaskGraph,
     visited: string[]
   ): Promise<PartialHash> {
     const projectNode = this.projectGraph.nodes[projectName];
@@ -265,6 +272,7 @@ class TaskHasherImpl {
       depsInputs,
       depsOutputs,
       [],
+      taskGraph,
       visited
     );
   }
@@ -276,6 +284,7 @@ class TaskHasherImpl {
     depsInputs: { input: string; dependencies: true }[],
     depsOutputs: ExpandedDepsOutput[],
     projectInputs: { input: string; projects: string[] }[],
+    taskGraph: TaskGraph,
     visited: string[]
   ) {
     const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
@@ -287,9 +296,10 @@ class TaskHasherImpl {
       task,
       depsInputs,
       projectGraphDeps,
+      taskGraph,
       visited
     );
-    const depsOut = await this.hashDepsOutputs(task, depsOutputs);
+    const depsOut = await this.hashDepsOutputs(task, depsOutputs, taskGraph);
     const projects = await this.hashProjectInputs(projectInputs);
 
     return this.combinePartialHashes([
@@ -319,6 +329,7 @@ class TaskHasherImpl {
     task: Task,
     inputs: { input: string }[],
     projectGraphDeps: ProjectGraphDependency[],
+    taskGraph: TaskGraph,
     visited: string[]
   ): Promise<PartialHash[]> {
     return (
@@ -335,6 +346,7 @@ class TaskHasherImpl {
                     d.target,
                     task,
                     input.input || 'default',
+                    taskGraph,
                     visited
                   );
                 } else {
@@ -352,7 +364,8 @@ class TaskHasherImpl {
 
   private async hashDepsOutputs(
     task: Task,
-    depsOutputs: ExpandedDepsOutput[]
+    depsOutputs: ExpandedDepsOutput[],
+    taskGraph: TaskGraph
   ): Promise<PartialHash[]> {
     if (depsOutputs.length === 0) {
       return [];
@@ -363,6 +376,7 @@ class TaskHasherImpl {
         ...(await this.hashDepOuputs(
           task,
           dependentTasksOutputFiles,
+          taskGraph,
           transitive
         ))
       );
@@ -373,16 +387,17 @@ class TaskHasherImpl {
   private async hashDepOuputs(
     task: Task,
     dependentTasksOutputFiles: string,
+    taskGraph: TaskGraph,
     transitive?: boolean
   ): Promise<PartialHash[]> {
     // task has no dependencies
-    if (!this.taskGraph.dependencies[task.id]) {
+    if (!taskGraph.dependencies[task.id]) {
       return [];
     }
 
     const partialHashes: PartialHash[] = [];
-    for (const d of this.taskGraph.dependencies[task.id]) {
-      const childTask = this.taskGraph.tasks[d];
+    for (const d of taskGraph.dependencies[task.id]) {
+      const childTask = taskGraph.tasks[d];
       const outputs = getOutputsForTargetAndConfiguration(
         childTask,
         this.projectGraph.nodes[childTask.target.project]
@@ -413,6 +428,7 @@ class TaskHasherImpl {
           ...(await this.hashDepOuputs(
             childTask,
             dependentTasksOutputFiles,
+            taskGraph,
             transitive
           ))
         );
