@@ -26,6 +26,13 @@ import type { Schema } from './schema';
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
 jest.mock('enquirer');
+jest.mock('@nx/devkit', () => {
+  const original = jest.requireActual('@nx/devkit');
+  return {
+    ...original,
+    ensurePackage: (pkg: string) => jest.requireActual(pkg),
+  };
+});
 
 describe('app', () => {
   let appTree: Tree;
@@ -126,6 +133,23 @@ describe('app', () => {
         appTree.read('apps/my-app-e2e/tsconfig.json', 'utf-8')
       );
       expect(tsconfigE2E).toMatchSnapshot('e2e tsconfig.json');
+    });
+
+    it('should setup playwright', async () => {
+      await generateApp(appTree, 'playwright-app', {
+        e2eTestRunner: E2eTestRunner.Playwright,
+      });
+
+      expect(
+        appTree.exists('apps/playwright-app-e2e/playwright.config.ts')
+      ).toBeTruthy();
+      expect(
+        appTree.exists('apps/playwright-app-e2e/src/example.spec.ts')
+      ).toBeTruthy();
+      expect(
+        readProjectConfiguration(appTree, 'playwright-app-e2e')?.targets?.e2e
+          ?.executor
+      ).toEqual('@nx/playwright:playwright');
     });
 
     it('should setup jest with serializers', async () => {
@@ -868,6 +892,18 @@ describe('app', () => {
       expect(readJson(appTree, 'tsconfig.json').extends).toBeUndefined();
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.options['outputPath']).toBe('dist/my-app');
+    });
+
+    it('should generate playwright with root project', async () => {
+      await generateApp(appTree, 'root-app', {
+        e2eTestRunner: E2eTestRunner.Playwright,
+        rootProject: true,
+      });
+      expect(
+        readProjectConfiguration(appTree, 'e2e').targets.e2e.executor
+      ).toEqual('@nx/playwright:playwright');
+      expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
   });
 
