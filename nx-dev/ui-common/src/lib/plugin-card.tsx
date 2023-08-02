@@ -46,10 +46,10 @@ export function PluginCard({
           target="_blank"
           rel="noreferrer"
           title={name}
-          className="focus:outline-none"
+          className="focus:outline-none flex flex-col grow"
         >
           <span className="absolute inset-0" aria-hidden="true" />
-          <p className="line-clamp-3 mb-2 text-sm">{description}</p>
+          <p className="line-clamp-3 mb-2 text-sm grow">{description}</p>
 
           <div className="flex flex-wrap justify-between items-center py-0.5 text-xs font-medium capitalize">
             <div className="mr-1 my-1">
