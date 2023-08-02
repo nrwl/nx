@@ -14,12 +14,9 @@ export function reactNativeBuildTarget(platform: 'ios.sim' | 'android.emu') {
 export function expoBuildTarget(platform: 'ios.sim' | 'android.emu') {
   return {
     options: {
-      detoxConfiguration: `${platform}.eas`,
+      detoxConfiguration: `${platform}.local`,
     },
     configurations: {
-      local: {
-        detoxConfiguration: `${platform}.local`,
-      },
       bare: {
         detoxConfiguration: `${platform}.debug`,
       },
@@ -58,14 +55,10 @@ export function expoTestTarget(
 
   return {
     options: {
-      detoxConfiguration: `${platform}.eas`,
+      detoxConfiguration: `${platform}.local`,
       buildTarget: `${e2eName}:build-${buildPlatform}`,
     },
     configurations: {
-      local: {
-        detoxConfiguration: `${platform}.local`,
-        buildTarget: `${e2eName}:build-${buildPlatform}:local`,
-      },
       bare: {
         detoxConfiguration: `${platform}.debug`,
         buildTarget: `${e2eName}:build-${buildPlatform}:bare`,

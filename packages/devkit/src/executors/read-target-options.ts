@@ -4,7 +4,8 @@ import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { combineOptionsForExecutor } from 'nx/src/utils/params';
 import { requireNx } from '../../nx';
 
-const { Workspaces } = requireNx();
+const { Workspaces, getExecutorInformation, calculateDefaultProjectName } =
+  requireNx();
 
 /**
  * Reads and combines options for a given target.
@@ -22,13 +23,24 @@ export function readTargetOptions<T = any>(
 
   const ws = new Workspaces(context.root);
   const [nodeModule, executorName] = targetConfiguration.executor.split(':');
-  const { schema } = ws.readExecutor(nodeModule, executorName);
+  const { schema } = getExecutorInformation
+    ? getExecutorInformation(nodeModule, executorName, context.root)
+    : // TODO(v18): remove readExecutor. This is to be backwards compatible with Nx 16.5 and below.
+      (ws as any).readExecutor(nodeModule, executorName);
 
-  const defaultProject = ws.calculateDefaultProjectName(
-    context.cwd,
-    { version: 2, projects: context.projectsConfigurations.projects },
-    context.nxJsonConfiguration
-  );
+  const defaultProject = calculateDefaultProjectName
+    ? calculateDefaultProjectName(
+        context.cwd,
+        context.root,
+        { version: 2, projects: context.projectsConfigurations.projects },
+        context.nxJsonConfiguration
+      )
+    : // TODO(v18): remove calculateDefaultProjectName. This is to be backwards compatible with Nx 16.5 and below.
+      (ws as any).calculateDefaultProjectName(
+        context.cwd,
+        { version: 2, projects: context.projectsConfigurations.projects },
+        context.nxJsonConfiguration
+      );
 
   return combineOptionsForExecutor(
     {},

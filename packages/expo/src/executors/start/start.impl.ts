@@ -1,14 +1,9 @@
 import * as chalk from 'chalk';
 import { ExecutorContext, logger, names } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
-import { join } from 'path';
+import { resolve as pathResolve } from 'path';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ExpoStartOptions } from './schema';
-import {
-  displayNewlyAddedDepsMessage,
-  syncDeps,
-} from '../sync-deps/sync-deps.impl';
 
 export interface ExpoStartOutput {
   baseUrl?: string;
@@ -23,18 +18,6 @@ export default async function* startExecutor(
 ): AsyncGenerator<ExpoStartOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
-  if (options.sync) {
-    displayNewlyAddedDepsMessage(
-      context.projectName,
-      await syncDeps(
-        context.projectName,
-        projectRoot,
-        context.root,
-        context.projectGraph
-      )
-    );
-  }
 
   try {
     const baseUrl = `http://localhost:${options.port}`;
@@ -60,9 +43,9 @@ function startAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
+      require.resolve('@expo/cli/build/bin/cli'),
       ['start', ...createStartOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot), env: process.env }
+      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
     );
 
     // Ensure the child process is killed when the parent exits

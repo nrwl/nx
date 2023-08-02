@@ -4,8 +4,8 @@
 /e2e/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /scripts/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-package.json @nrwl/nx-pipelines-reviewers
-pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
+package.json @nrwl/nx-core-reviewers
+pnpm-lock.yaml @nrwl/nx-core-reviewers
 
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
@@ -99,6 +99,8 @@ pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
 /e2e/cypress/** @nrwl/nx-testing-tools-reviewers
 /packages/jest/** @nrwl/nx-testing-tools-reviewers
 /e2e/jest/** @nrwl/nx-testing-tools-reviewers
+/packages/playwright/** @nrwl/nx-testing-tools-reviewers
+/e2e/playwright/** @nrwl/nx-testing-tools-reviewers
 
 # Linter
 /docs/generated/packages/eslint-plugin/** @nrwl/nx-linter-reviewers @nrwl/nx-docs-reviewers
@@ -159,7 +161,6 @@ pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
 /CODEOWNERS @FrozenPandaz @AgentEnder
 
 # Scripts
-/scripts/depcheck @FrozenPandaz @vsavkin @jaysoo
 /scripts/documentation @nrwl/nx-docs-reviewers
 /scripts/angular-support-upgrades @nrwl/nx-angular-reviewers
 

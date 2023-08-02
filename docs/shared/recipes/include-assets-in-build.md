@@ -9,7 +9,7 @@ There are two ways to identify assets to be copied into the output bundle:
 
 ```jsonc {% fileName="project.json" %}
 "build": {
-  "executor": "@nx/node:package",
+  "executor": "@nx/js:tsc", // or any other Nx executor that supports the `assets` option
   "options": {
     // shortened...
     "assets": [

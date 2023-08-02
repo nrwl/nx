@@ -73,14 +73,15 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
   ];
 
   if (options.bundler === 'webpack') {
-    const { webpackProjectGenerator } = ensurePackage('@nx/webpack', nxVersion);
-    await webpackProjectGenerator(tree, {
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    await configurationGenerator(tree, {
       project: options.projectName,
       main,
       tsConfig,
       compiler: options.compiler ?? 'babel',
       devServer: true,
-      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'
@@ -240,10 +241,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = await ensurePackage(
-      '@nx/linter',
-      nxVersion
-    );
+    const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -259,7 +257,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.e2eTestRunner === 'cypress') {
-    const { cypressProjectGenerator } = await ensurePackage<
+    const { cypressProjectGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
     const cypressTask = await cypressProjectGenerator(host, {
@@ -270,12 +268,35 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(cypressTask);
+  } else if (options.e2eTestRunner === 'playwright') {
+    const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
+      typeof import('@nx/playwright')
+    >('@nx/playwright', nxVersion);
+
+    addProjectConfiguration(host, options.e2eProjectName, {
+      root: options.e2eProjectRoot,
+      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+      projectType: 'application',
+      targets: {},
+      implicitDependencies: [options.projectName],
+    });
+    const playwrightTask = await playwrightConfigGenerator(host, {
+      project: options.e2eProjectName,
+      skipFormat: true,
+      skipPackageJson: false,
+      directory: 'src',
+      js: false,
+      linter: options.linter,
+      setParserOptionsProject: options.setParserOptionsProject,
+    });
+    tasks.push(playwrightTask);
   }
   if (options.unitTestRunner === 'jest') {
-    const { jestProjectGenerator } = await ensurePackage<
-      typeof import('@nx/jest')
-    >('@nx/jest', nxVersion);
-    const jestTask = await jestProjectGenerator(host, {
+    const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
+      '@nx/jest',
+      nxVersion
+    );
+    const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
       setupFile: 'web-components',

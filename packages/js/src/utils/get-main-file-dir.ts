@@ -1,11 +1,11 @@
 import { dirname, relative } from 'path';
 import { normalizePath } from 'nx/src/utils/path';
 
-export function getMainFileDirRelativeToProjectRoot(
-  main: string,
+export function getRelativeDirectoryToProjectRoot(
+  file: string,
   projectRoot: string
 ): string {
-  const mainFileDir = dirname(main);
-  const relativeDir = normalizePath(relative(projectRoot, mainFileDir));
+  const dir = dirname(file);
+  const relativeDir = normalizePath(relative(projectRoot, dir));
   return relativeDir === '' ? `./` : `./${relativeDir}/`;
 }

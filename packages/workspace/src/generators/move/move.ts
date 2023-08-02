@@ -20,12 +20,25 @@ import { updatePackageJson } from './lib/update-package-json';
 import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateReadme } from './lib/update-readme';
 import { updateStorybookConfig } from './lib/update-storybook-config';
+import {
+  maybeExtractEslintConfigIfRootProject,
+  maybeExtractJestConfigBase,
+  maybeExtractTsConfigBase,
+} from './lib/extract-base-configs';
 import { Schema } from './schema';
 
 export async function moveGenerator(tree: Tree, rawSchema: Schema) {
-  const projectConfig = readProjectConfiguration(tree, rawSchema.projectName);
+  let projectConfig = readProjectConfiguration(tree, rawSchema.projectName);
   checkDestination(tree, rawSchema, projectConfig);
   const schema = normalizeSchema(tree, rawSchema, projectConfig);
+
+  if (projectConfig.root === '.') {
+    maybeExtractTsConfigBase(tree);
+    await maybeExtractJestConfigBase(tree);
+    maybeExtractEslintConfigIfRootProject(tree, projectConfig);
+    // Reload config since it has been updated after extracting base configs
+    projectConfig = readProjectConfiguration(tree, rawSchema.projectName);
+  }
 
   removeProjectConfiguration(tree, schema.projectName);
   moveProjectFiles(tree, schema, projectConfig);

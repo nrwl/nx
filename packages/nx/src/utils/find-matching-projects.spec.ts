@@ -2,8 +2,8 @@ import {
   findMatchingProjects,
   getMatchingStringsWithCache,
 } from './find-matching-projects';
-import minimatch = require('minimatch');
 import type { ProjectGraphProjectNode } from '../config/project-graph';
+import minimatch = require('minimatch');
 
 describe('findMatchingProjects', () => {
   let projectGraph: Record<string, ProjectGraphProjectNode> = {

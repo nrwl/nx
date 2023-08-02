@@ -29,7 +29,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@babel/core": "^7.15.0",
+    "@babel/core": "^7.22.9",
     "autoprefixer": "^10.4.9",
     "babel-loader": "^9.1.2",
     "browserslist": "^4.21.4",
@@ -59,8 +59,6 @@
     "stylus-loader": "^7.1.0",
     "terser-webpack-plugin": "^5.3.3",
     "ts-loader": "^9.3.1",
-    "ts-node": "10.9.1",
-    "tsconfig-paths": "^4.1.2",
     "tsconfig-paths-webpack-plugin": "4.0.0",
     "tslib": "^2.3.0",
     "webpack": "^5.80.0",

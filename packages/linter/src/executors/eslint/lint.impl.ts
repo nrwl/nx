@@ -39,6 +39,8 @@ export default async function run(
     ? join(options.cacheLocation, projectName)
     : undefined;
 
+  const { printConfig, ...normalizedOptions } = options;
+
   /**
    * Until ESLint v9 is released and the new so called flat config is the default
    * we only want to support it if the user has explicitly opted into it by converting
@@ -49,7 +51,7 @@ export default async function run(
   );
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
     eslintConfigPath,
-    options,
+    normalizedOptions,
     useFlatConfig
   );
 
@@ -63,10 +65,25 @@ export default async function run(
     throw new Error('ESLint must be version 7.6 or higher.');
   }
 
+  if (printConfig) {
+    try {
+      const fileConfig = await eslint.calculateConfigForFile(printConfig);
+      console.log(JSON.stringify(fileConfig, null, ' '));
+      return {
+        success: true,
+      };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+      };
+    }
+  }
+
   let lintResults: ESLint.LintResult[] = [];
 
   try {
-    lintResults = await eslint.lintFiles(options.lintFilePatterns);
+    lintResults = await eslint.lintFiles(normalizedOptions.lintFilePatterns);
   } catch (err) {
     if (
       err.message.includes(
@@ -98,7 +115,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   if (lintResults.length === 0) {
     const ignoredPatterns = (
       await Promise.all(
-        options.lintFilePatterns.map(async (pattern) =>
+        normalizedOptions.lintFilePatterns.map(async (pattern) =>
           (await eslint.isPathIgnored(pattern)) ? pattern : null
         )
       )
@@ -121,12 +138,12 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   await ESLint.outputFixes(lintResults);
 
   // if quiet, only show errors
-  if (options.quiet) {
+  if (normalizedOptions.quiet) {
     console.debug('Quiet mode enabled - filtering out warnings\n');
     lintResults = ESLint.getErrorResults(lintResults);
   }
 
-  const formatter = await eslint.loadFormatter(options.format);
+  const formatter = await eslint.loadFormatter(normalizedOptions.format);
 
   let totalErrors = 0;
   let totalWarnings = 0;
@@ -140,8 +157,8 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
 
   const formattedResults = await formatter.format(lintResults);
 
-  if (options.outputFile) {
-    const pathToOutputFile = join(context.root, options.outputFile);
+  if (normalizedOptions.outputFile) {
+    const pathToOutputFile = join(context.root, normalizedOptions.outputFile);
     mkdirSync(dirname(pathToOutputFile), { recursive: true });
     writeFileSync(pathToOutputFile, formattedResults);
   } else {
@@ -162,8 +179,9 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
 
   return {
     success:
-      options.force ||
+      normalizedOptions.force ||
       (totalErrors === 0 &&
-        (options.maxWarnings === -1 || totalWarnings <= options.maxWarnings)),
+        (normalizedOptions.maxWarnings === -1 ||
+          totalWarnings <= normalizedOptions.maxWarnings)),
   };
 }

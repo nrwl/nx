@@ -957,7 +957,7 @@
       {
         "id": "run-tasks",
         "name": "Run Tasks",
-        "description": "",
+        "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
         "file": "shared/core-features/run-tasks",
         "itemList": [],
         "isExternal": false,
@@ -967,7 +967,7 @@
       {
         "id": "cache-task-results",
         "name": "Cache Task Results",
-        "description": "",
+        "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
         "file": "shared/core-features/cache-task-results",
         "itemList": [],
         "isExternal": false,
@@ -975,29 +975,19 @@
         "tags": ["cache-task-results"]
       },
       {
-        "id": "share-your-cache",
-        "name": "Share Your Cache",
-        "description": "",
-        "file": "shared/core-features/share-your-cache",
+        "id": "remote-cache",
+        "name": "Use Remote Caching",
+        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+        "file": "shared/core-features/remote-cache",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/share-your-cache",
-        "tags": ["share-your-cache"]
-      },
-      {
-        "id": "explore-graph",
-        "name": "Explore the Graph",
-        "description": "",
-        "file": "shared/core-features/explore-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/explore-graph",
-        "tags": ["explore-graph"]
+        "path": "/core-features/remote-cache",
+        "tags": ["remote-cache"]
       },
       {
         "id": "distribute-task-execution",
         "name": "Distribute Task Execution",
-        "description": "",
+        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
         "file": "shared/core-features/distribute-task-execution",
         "itemList": [],
         "isExternal": false,
@@ -1005,19 +995,19 @@
         "tags": ["distribute-task-execution"]
       },
       {
-        "id": "integrate-with-editors",
-        "name": "Integrate with Editors",
-        "description": "",
-        "file": "shared/core-features/integrate-with-editors",
+        "id": "explore-graph",
+        "name": "Explore the Graph",
+        "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+        "file": "shared/core-features/explore-graph",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/integrate-with-editors",
-        "tags": ["integrate-with-editors"]
+        "path": "/core-features/explore-graph",
+        "tags": ["explore-graph"]
       },
       {
         "id": "automate-updating-dependencies",
         "name": "Automate Updating Dependencies",
-        "description": "",
+        "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
         "file": "shared/core-features/automate-updating-dependencies",
         "itemList": [],
         "isExternal": false,
@@ -1025,14 +1015,55 @@
         "tags": ["automate-updating-dependencies"]
       },
       {
-        "id": "enforce-project-boundaries",
-        "name": "Enforce Project Boundaries",
-        "description": "",
-        "file": "shared/core-features/enforce-project-boundaries",
+        "id": "enforce-module-boundaries",
+        "name": "Enforce Module Boundaries",
+        "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
+        "file": "shared/core-features/enforce-module-boundaries",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/enforce-project-boundaries",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/core-features/enforce-module-boundaries",
+        "tags": ["enforce-module-boundaries"]
+      },
+      {
+        "id": "integrate-with-editors",
+        "name": "Integrate with Editors",
+        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+        "file": "shared/core-features/integrate-with-editors",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/integrate-with-editors",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "plugin-features",
+        "name": "Plugin Features",
+        "description": "Learn what is a plugin, the different type of plugins and how to create one.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "use-task-executors",
+            "name": "Use Task Executors",
+            "description": "",
+            "file": "shared/plugin-features/use-task-executors",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/core-features/plugin-features/use-task-executors",
+            "tags": ["use-task-executors"]
+          },
+          {
+            "id": "use-code-generators",
+            "name": "Use Code Generators",
+            "description": "",
+            "file": "shared/plugin-features/use-code-generators",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/core-features/plugin-features/use-code-generators",
+            "tags": ["use-code-generators"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/core-features/plugin-features",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1042,7 +1073,7 @@
   "/core-features/run-tasks": {
     "id": "run-tasks",
     "name": "Run Tasks",
-    "description": "",
+    "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
     "file": "shared/core-features/run-tasks",
     "itemList": [],
     "isExternal": false,
@@ -1052,74 +1083,74 @@
   "/core-features/cache-task-results": {
     "id": "cache-task-results",
     "name": "Cache Task Results",
-    "description": "",
+    "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
     "file": "shared/core-features/cache-task-results",
     "itemList": [],
     "isExternal": false,
     "path": "/core-features/cache-task-results",
     "tags": ["cache-task-results"]
   },
-  "/core-features/share-your-cache": {
-    "id": "share-your-cache",
-    "name": "Share Your Cache",
-    "description": "",
-    "file": "shared/core-features/share-your-cache",
+  "/core-features/remote-cache": {
+    "id": "remote-cache",
+    "name": "Use Remote Caching",
+    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+    "file": "shared/core-features/remote-cache",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/share-your-cache",
-    "tags": ["share-your-cache"]
-  },
-  "/core-features/explore-graph": {
-    "id": "explore-graph",
-    "name": "Explore the Graph",
-    "description": "",
-    "file": "shared/core-features/explore-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/explore-graph",
-    "tags": ["explore-graph"]
+    "path": "/core-features/remote-cache",
+    "tags": ["remote-cache"]
   },
   "/core-features/distribute-task-execution": {
     "id": "distribute-task-execution",
     "name": "Distribute Task Execution",
-    "description": "",
+    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
     "file": "shared/core-features/distribute-task-execution",
     "itemList": [],
     "isExternal": false,
     "path": "/core-features/distribute-task-execution",
     "tags": ["distribute-task-execution"]
   },
-  "/core-features/integrate-with-editors": {
-    "id": "integrate-with-editors",
-    "name": "Integrate with Editors",
-    "description": "",
-    "file": "shared/core-features/integrate-with-editors",
+  "/core-features/explore-graph": {
+    "id": "explore-graph",
+    "name": "Explore the Graph",
+    "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+    "file": "shared/core-features/explore-graph",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/integrate-with-editors",
-    "tags": ["integrate-with-editors"]
+    "path": "/core-features/explore-graph",
+    "tags": ["explore-graph"]
   },
   "/core-features/automate-updating-dependencies": {
     "id": "automate-updating-dependencies",
     "name": "Automate Updating Dependencies",
-    "description": "",
+    "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
     "file": "shared/core-features/automate-updating-dependencies",
     "itemList": [],
     "isExternal": false,
     "path": "/core-features/automate-updating-dependencies",
     "tags": ["automate-updating-dependencies"]
   },
-  "/core-features/enforce-project-boundaries": {
-    "id": "enforce-project-boundaries",
-    "name": "Enforce Project Boundaries",
-    "description": "",
-    "file": "shared/core-features/enforce-project-boundaries",
+  "/core-features/enforce-module-boundaries": {
+    "id": "enforce-module-boundaries",
+    "name": "Enforce Module Boundaries",
+    "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
+    "file": "shared/core-features/enforce-module-boundaries",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/enforce-project-boundaries",
-    "tags": ["enforce-project-boundaries"]
+    "path": "/core-features/enforce-module-boundaries",
+    "tags": ["enforce-module-boundaries"]
   },
-  "/plugin-features": {
+  "/core-features/integrate-with-editors": {
+    "id": "integrate-with-editors",
+    "name": "Integrate with Editors",
+    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+    "file": "shared/core-features/integrate-with-editors",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/integrate-with-editors",
+    "tags": ["integrate-with-editors"]
+  },
+  "/core-features/plugin-features": {
     "id": "plugin-features",
     "name": "Plugin Features",
     "description": "Learn what is a plugin, the different type of plugins and how to create one.",
@@ -1132,7 +1163,7 @@
         "file": "shared/plugin-features/use-task-executors",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugin-features/use-task-executors",
+        "path": "/core-features/plugin-features/use-task-executors",
         "tags": ["use-task-executors"]
       },
       {
@@ -1142,32 +1173,32 @@
         "file": "shared/plugin-features/use-code-generators",
         "itemList": [],
         "isExternal": false,
-        "path": "/plugin-features/use-code-generators",
+        "path": "/core-features/plugin-features/use-code-generators",
         "tags": ["use-code-generators"]
       }
     ],
     "isExternal": false,
-    "path": "/plugin-features",
+    "path": "/core-features/plugin-features",
     "tags": []
   },
-  "/plugin-features/use-task-executors": {
+  "/core-features/plugin-features/use-task-executors": {
     "id": "use-task-executors",
     "name": "Use Task Executors",
     "description": "",
     "file": "shared/plugin-features/use-task-executors",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugin-features/use-task-executors",
+    "path": "/core-features/plugin-features/use-task-executors",
     "tags": ["use-task-executors"]
   },
-  "/plugin-features/use-code-generators": {
+  "/core-features/plugin-features/use-code-generators": {
     "id": "use-code-generators",
     "name": "Use Code Generators",
     "description": "",
     "file": "shared/plugin-features/use-code-generators",
     "itemList": [],
     "isExternal": false,
-    "path": "/plugin-features/use-code-generators",
+    "path": "/core-features/plugin-features/use-code-generators",
     "tags": ["use-code-generators"]
   },
   "/concepts": {
@@ -1184,7 +1215,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/integrated-vs-package-based",
-        "tags": ["intro"]
+        "tags": ["intro", "repository-types"]
       },
       {
         "id": "mental-model",
@@ -1237,13 +1268,239 @@
         "tags": ["run-tasks"]
       },
       {
-        "id": "more-concept-guides",
-        "name": "More Concept Guides »",
-        "description": "",
+        "id": "more-concepts",
+        "name": "More Concepts",
+        "description": "Get deeper into how Nx works and its different aspects.",
         "file": "",
-        "itemList": [],
+        "itemList": [
+          {
+            "id": "customizing-inputs",
+            "name": "Customizing Inputs",
+            "description": "",
+            "file": "shared/concepts/customizing-inputs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/customizing-inputs",
+            "tags": ["cache-task-results"]
+          },
+          {
+            "id": "incremental-builds",
+            "name": "Incremental Builds",
+            "description": "",
+            "file": "shared/incremental-builds",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/incremental-builds",
+            "tags": ["use-task-executors"]
+          },
+          {
+            "id": "illustrated-dte",
+            "name": "Illustrated Distributed Task Execution",
+            "description": "",
+            "file": "shared/concepts/illustrated-dte-guide",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/illustrated-dte",
+            "tags": ["distribute-task-execution"]
+          },
+          {
+            "id": "turbo-and-nx",
+            "name": "Nx and Turborepo",
+            "description": "",
+            "file": "shared/guides/turbo-and-nx",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/turbo-and-nx",
+            "tags": []
+          },
+          {
+            "id": "why-monorepos",
+            "name": "Monorepos",
+            "description": "",
+            "file": "shared/guides/why-monorepos",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/why-monorepos",
+            "tags": []
+          },
+          {
+            "id": "dependency-management",
+            "name": "Dependency Management",
+            "description": "",
+            "file": "shared/concepts/dependency-management",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/dependency-management",
+            "tags": []
+          },
+          {
+            "id": "code-sharing",
+            "name": "Code Sharing",
+            "description": "",
+            "file": "shared/concepts/code-sharing",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/code-sharing",
+            "tags": []
+          },
+          {
+            "id": "monorepo-nx-enterprise",
+            "name": "Using Nx at Enterprises",
+            "description": "",
+            "file": "shared/monorepo-nx-enterprise",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/monorepo-nx-enterprise",
+            "tags": ["enforce-module-boundaries", "use-code-generators"]
+          },
+          {
+            "id": "nx-daemon",
+            "name": "Nx Daemon",
+            "description": "",
+            "file": "shared/daemon",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/nx-daemon",
+            "tags": []
+          },
+          {
+            "id": "nx-and-angular",
+            "name": "Nx and the Angular CLI",
+            "description": "",
+            "file": "shared/guides/nx-and-angular-cli",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/nx-and-angular",
+            "tags": []
+          },
+          {
+            "id": "folder-structure",
+            "name": "Folder Structure",
+            "description": "",
+            "file": "shared/guides/integrated-repo-folder-structure",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/folder-structure",
+            "tags": []
+          },
+          {
+            "id": "nx-devkit-angular-devkit",
+            "name": "Nx Devkit and Angular Devkit",
+            "description": "",
+            "file": "shared/guides/nx-devkit-angular-devkit",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
+            "tags": ["create-your-own-plugin"]
+          },
+          {
+            "id": "micro-frontend-architecture",
+            "name": "Micro Frontend Architecture",
+            "description": "",
+            "file": "shared/guides/module-federation/micro-frontend-architecture",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/micro-frontend-architecture",
+            "tags": []
+          },
+          {
+            "id": "faster-builds-with-module-federation",
+            "name": "Faster Builds with Module Federation",
+            "description": "",
+            "file": "shared/guides/module-federation/faster-builds",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/faster-builds-with-module-federation",
+            "tags": [
+              "use-task-executors",
+              "module-federation",
+              "angular",
+              "react"
+            ]
+          },
+          {
+            "id": "applications-and-libraries",
+            "name": "Applications and Libraries",
+            "description": "",
+            "file": "shared/workspace/applications-and-libraries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/applications-and-libraries",
+            "tags": ["enforce-module-boundaries"]
+          },
+          {
+            "id": "creating-libraries",
+            "name": "Creating Libraries",
+            "description": "",
+            "file": "shared/workspace/creating-libraries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/creating-libraries",
+            "tags": ["enforce-module-boundaries"]
+          },
+          {
+            "id": "library-types",
+            "name": "Library Types",
+            "description": "",
+            "file": "shared/workspace/library-types",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/library-types",
+            "tags": ["enforce-module-boundaries"]
+          },
+          {
+            "id": "grouping-libraries",
+            "name": "Grouping Libraries",
+            "description": "",
+            "file": "shared/workspace/grouping-libraries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/grouping-libraries",
+            "tags": ["enforce-module-boundaries"]
+          },
+          {
+            "id": "buildable-and-publishable-libraries",
+            "name": "Buildable and Publishable Libraries",
+            "description": "",
+            "file": "shared/workspace/buildable-and-publishable-libraries",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
+            "tags": []
+          },
+          {
+            "id": "how-project-graph-is-built",
+            "name": "How the Project Graph is Built",
+            "description": "",
+            "file": "shared/concepts/how-project-graph-is-built",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/how-project-graph-is-built",
+            "tags": ["explore-graph"]
+          },
+          {
+            "id": "nx-and-the-wrapper",
+            "name": "Nx and the Nx Wrapper",
+            "description": "",
+            "file": "shared/guides/nx-and-the-wrapper",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/nx-and-the-wrapper",
+            "tags": []
+          },
+          {
+            "id": "global-nx",
+            "name": "Managing your Global Nx Installation",
+            "description": "",
+            "file": "shared/guides/global-nx",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/more-concepts/global-nx",
+            "tags": []
+          }
+        ],
         "isExternal": false,
-        "path": "/more-concepts",
+        "path": "/concepts/more-concepts",
         "tags": []
       }
     ],
@@ -1259,7 +1516,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/integrated-vs-package-based",
-    "tags": ["intro"]
+    "tags": ["intro", "repository-types"]
   },
   "/concepts/mental-model": {
     "id": "mental-model",
@@ -1311,7 +1568,7 @@
     "path": "/concepts/affected",
     "tags": ["run-tasks"]
   },
-  "/more-concepts": {
+  "/concepts/more-concepts": {
     "id": "more-concepts",
     "name": "More Concepts",
     "description": "Get deeper into how Nx works and its different aspects.",
@@ -1324,7 +1581,7 @@
         "file": "shared/concepts/customizing-inputs",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/customizing-inputs",
+        "path": "/concepts/more-concepts/customizing-inputs",
         "tags": ["cache-task-results"]
       },
       {
@@ -1334,7 +1591,7 @@
         "file": "shared/incremental-builds",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/incremental-builds",
+        "path": "/concepts/more-concepts/incremental-builds",
         "tags": ["use-task-executors"]
       },
       {
@@ -1344,7 +1601,7 @@
         "file": "shared/concepts/illustrated-dte-guide",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/illustrated-dte",
+        "path": "/concepts/more-concepts/illustrated-dte",
         "tags": ["distribute-task-execution"]
       },
       {
@@ -1354,7 +1611,7 @@
         "file": "shared/guides/turbo-and-nx",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/turbo-and-nx",
+        "path": "/concepts/more-concepts/turbo-and-nx",
         "tags": []
       },
       {
@@ -1364,7 +1621,7 @@
         "file": "shared/guides/why-monorepos",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/why-monorepos",
+        "path": "/concepts/more-concepts/why-monorepos",
         "tags": []
       },
       {
@@ -1374,7 +1631,7 @@
         "file": "shared/concepts/dependency-management",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/dependency-management",
+        "path": "/concepts/more-concepts/dependency-management",
         "tags": []
       },
       {
@@ -1384,7 +1641,7 @@
         "file": "shared/concepts/code-sharing",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/code-sharing",
+        "path": "/concepts/more-concepts/code-sharing",
         "tags": []
       },
       {
@@ -1394,8 +1651,8 @@
         "file": "shared/monorepo-nx-enterprise",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/monorepo-nx-enterprise",
-        "tags": ["enforce-project-boundaries", "use-code-generators"]
+        "path": "/concepts/more-concepts/monorepo-nx-enterprise",
+        "tags": ["enforce-module-boundaries", "use-code-generators"]
       },
       {
         "id": "nx-daemon",
@@ -1404,7 +1661,7 @@
         "file": "shared/daemon",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/nx-daemon",
+        "path": "/concepts/more-concepts/nx-daemon",
         "tags": []
       },
       {
@@ -1414,7 +1671,7 @@
         "file": "shared/guides/nx-and-angular-cli",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/nx-and-angular",
+        "path": "/concepts/more-concepts/nx-and-angular",
         "tags": []
       },
       {
@@ -1424,7 +1681,7 @@
         "file": "shared/guides/integrated-repo-folder-structure",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/folder-structure",
+        "path": "/concepts/more-concepts/folder-structure",
         "tags": []
       },
       {
@@ -1434,7 +1691,7 @@
         "file": "shared/guides/nx-devkit-angular-devkit",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/nx-devkit-angular-devkit",
+        "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
         "tags": ["create-your-own-plugin"]
       },
       {
@@ -1444,8 +1701,18 @@
         "file": "shared/guides/module-federation/micro-frontend-architecture",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/micro-frontend-architecture",
+        "path": "/concepts/more-concepts/micro-frontend-architecture",
         "tags": []
+      },
+      {
+        "id": "faster-builds-with-module-federation",
+        "name": "Faster Builds with Module Federation",
+        "description": "",
+        "file": "shared/guides/module-federation/faster-builds",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/more-concepts/faster-builds-with-module-federation",
+        "tags": ["use-task-executors", "module-federation", "angular", "react"]
       },
       {
         "id": "applications-and-libraries",
@@ -1454,8 +1721,8 @@
         "file": "shared/workspace/applications-and-libraries",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/applications-and-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/concepts/more-concepts/applications-and-libraries",
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "creating-libraries",
@@ -1464,8 +1731,8 @@
         "file": "shared/workspace/creating-libraries",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/creating-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/concepts/more-concepts/creating-libraries",
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "library-types",
@@ -1474,8 +1741,8 @@
         "file": "shared/workspace/library-types",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/library-types",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/concepts/more-concepts/library-types",
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "grouping-libraries",
@@ -1484,8 +1751,8 @@
         "file": "shared/workspace/grouping-libraries",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/grouping-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/concepts/more-concepts/grouping-libraries",
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "buildable-and-publishable-libraries",
@@ -1494,7 +1761,7 @@
         "file": "shared/workspace/buildable-and-publishable-libraries",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/buildable-and-publishable-libraries",
+        "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
         "tags": []
       },
       {
@@ -1504,7 +1771,7 @@
         "file": "shared/concepts/how-project-graph-is-built",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/how-project-graph-is-built",
+        "path": "/concepts/more-concepts/how-project-graph-is-built",
         "tags": ["explore-graph"]
       },
       {
@@ -1514,7 +1781,7 @@
         "file": "shared/guides/nx-and-the-wrapper",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/nx-and-the-wrapper",
+        "path": "/concepts/more-concepts/nx-and-the-wrapper",
         "tags": []
       },
       {
@@ -1524,252 +1791,3081 @@
         "file": "shared/guides/global-nx",
         "itemList": [],
         "isExternal": false,
-        "path": "/more-concepts/global-nx",
+        "path": "/concepts/more-concepts/global-nx",
         "tags": []
       }
     ],
     "isExternal": false,
-    "path": "/more-concepts",
+    "path": "/concepts/more-concepts",
     "tags": []
   },
-  "/more-concepts/customizing-inputs": {
+  "/concepts/more-concepts/customizing-inputs": {
     "id": "customizing-inputs",
     "name": "Customizing Inputs",
     "description": "",
     "file": "shared/concepts/customizing-inputs",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/customizing-inputs",
+    "path": "/concepts/more-concepts/customizing-inputs",
     "tags": ["cache-task-results"]
   },
-  "/more-concepts/incremental-builds": {
+  "/concepts/more-concepts/incremental-builds": {
     "id": "incremental-builds",
     "name": "Incremental Builds",
     "description": "",
     "file": "shared/incremental-builds",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/incremental-builds",
+    "path": "/concepts/more-concepts/incremental-builds",
     "tags": ["use-task-executors"]
   },
-  "/more-concepts/illustrated-dte": {
+  "/concepts/more-concepts/illustrated-dte": {
     "id": "illustrated-dte",
     "name": "Illustrated Distributed Task Execution",
     "description": "",
     "file": "shared/concepts/illustrated-dte-guide",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/illustrated-dte",
+    "path": "/concepts/more-concepts/illustrated-dte",
     "tags": ["distribute-task-execution"]
   },
-  "/more-concepts/turbo-and-nx": {
+  "/concepts/more-concepts/turbo-and-nx": {
     "id": "turbo-and-nx",
     "name": "Nx and Turborepo",
     "description": "",
     "file": "shared/guides/turbo-and-nx",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/turbo-and-nx",
+    "path": "/concepts/more-concepts/turbo-and-nx",
     "tags": []
   },
-  "/more-concepts/why-monorepos": {
+  "/concepts/more-concepts/why-monorepos": {
     "id": "why-monorepos",
     "name": "Monorepos",
     "description": "",
     "file": "shared/guides/why-monorepos",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/why-monorepos",
+    "path": "/concepts/more-concepts/why-monorepos",
     "tags": []
   },
-  "/more-concepts/dependency-management": {
+  "/concepts/more-concepts/dependency-management": {
     "id": "dependency-management",
     "name": "Dependency Management",
     "description": "",
     "file": "shared/concepts/dependency-management",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/dependency-management",
+    "path": "/concepts/more-concepts/dependency-management",
     "tags": []
   },
-  "/more-concepts/code-sharing": {
+  "/concepts/more-concepts/code-sharing": {
     "id": "code-sharing",
     "name": "Code Sharing",
     "description": "",
     "file": "shared/concepts/code-sharing",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/code-sharing",
+    "path": "/concepts/more-concepts/code-sharing",
     "tags": []
   },
-  "/more-concepts/monorepo-nx-enterprise": {
+  "/concepts/more-concepts/monorepo-nx-enterprise": {
     "id": "monorepo-nx-enterprise",
     "name": "Using Nx at Enterprises",
     "description": "",
     "file": "shared/monorepo-nx-enterprise",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/monorepo-nx-enterprise",
-    "tags": ["enforce-project-boundaries", "use-code-generators"]
+    "path": "/concepts/more-concepts/monorepo-nx-enterprise",
+    "tags": ["enforce-module-boundaries", "use-code-generators"]
   },
-  "/more-concepts/nx-daemon": {
+  "/concepts/more-concepts/nx-daemon": {
     "id": "nx-daemon",
     "name": "Nx Daemon",
     "description": "",
     "file": "shared/daemon",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/nx-daemon",
+    "path": "/concepts/more-concepts/nx-daemon",
     "tags": []
   },
-  "/more-concepts/nx-and-angular": {
+  "/concepts/more-concepts/nx-and-angular": {
     "id": "nx-and-angular",
     "name": "Nx and the Angular CLI",
     "description": "",
     "file": "shared/guides/nx-and-angular-cli",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/nx-and-angular",
+    "path": "/concepts/more-concepts/nx-and-angular",
     "tags": []
   },
-  "/more-concepts/folder-structure": {
+  "/concepts/more-concepts/folder-structure": {
     "id": "folder-structure",
     "name": "Folder Structure",
     "description": "",
     "file": "shared/guides/integrated-repo-folder-structure",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/folder-structure",
+    "path": "/concepts/more-concepts/folder-structure",
     "tags": []
   },
-  "/more-concepts/nx-devkit-angular-devkit": {
+  "/concepts/more-concepts/nx-devkit-angular-devkit": {
     "id": "nx-devkit-angular-devkit",
     "name": "Nx Devkit and Angular Devkit",
     "description": "",
     "file": "shared/guides/nx-devkit-angular-devkit",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/nx-devkit-angular-devkit",
+    "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
     "tags": ["create-your-own-plugin"]
   },
-  "/more-concepts/micro-frontend-architecture": {
+  "/concepts/more-concepts/micro-frontend-architecture": {
     "id": "micro-frontend-architecture",
     "name": "Micro Frontend Architecture",
     "description": "",
     "file": "shared/guides/module-federation/micro-frontend-architecture",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/micro-frontend-architecture",
+    "path": "/concepts/more-concepts/micro-frontend-architecture",
     "tags": []
   },
-  "/more-concepts/applications-and-libraries": {
+  "/concepts/more-concepts/faster-builds-with-module-federation": {
+    "id": "faster-builds-with-module-federation",
+    "name": "Faster Builds with Module Federation",
+    "description": "",
+    "file": "shared/guides/module-federation/faster-builds",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/more-concepts/faster-builds-with-module-federation",
+    "tags": ["use-task-executors", "module-federation", "angular", "react"]
+  },
+  "/concepts/more-concepts/applications-and-libraries": {
     "id": "applications-and-libraries",
     "name": "Applications and Libraries",
     "description": "",
     "file": "shared/workspace/applications-and-libraries",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/applications-and-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "path": "/concepts/more-concepts/applications-and-libraries",
+    "tags": ["enforce-module-boundaries"]
   },
-  "/more-concepts/creating-libraries": {
+  "/concepts/more-concepts/creating-libraries": {
     "id": "creating-libraries",
     "name": "Creating Libraries",
     "description": "",
     "file": "shared/workspace/creating-libraries",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/creating-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "path": "/concepts/more-concepts/creating-libraries",
+    "tags": ["enforce-module-boundaries"]
   },
-  "/more-concepts/library-types": {
+  "/concepts/more-concepts/library-types": {
     "id": "library-types",
     "name": "Library Types",
     "description": "",
     "file": "shared/workspace/library-types",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/library-types",
-    "tags": ["enforce-project-boundaries"]
+    "path": "/concepts/more-concepts/library-types",
+    "tags": ["enforce-module-boundaries"]
   },
-  "/more-concepts/grouping-libraries": {
+  "/concepts/more-concepts/grouping-libraries": {
     "id": "grouping-libraries",
     "name": "Grouping Libraries",
     "description": "",
     "file": "shared/workspace/grouping-libraries",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/grouping-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "path": "/concepts/more-concepts/grouping-libraries",
+    "tags": ["enforce-module-boundaries"]
   },
-  "/more-concepts/buildable-and-publishable-libraries": {
+  "/concepts/more-concepts/buildable-and-publishable-libraries": {
     "id": "buildable-and-publishable-libraries",
     "name": "Buildable and Publishable Libraries",
     "description": "",
     "file": "shared/workspace/buildable-and-publishable-libraries",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/buildable-and-publishable-libraries",
+    "path": "/concepts/more-concepts/buildable-and-publishable-libraries",
     "tags": []
   },
-  "/more-concepts/how-project-graph-is-built": {
+  "/concepts/more-concepts/how-project-graph-is-built": {
     "id": "how-project-graph-is-built",
     "name": "How the Project Graph is Built",
     "description": "",
     "file": "shared/concepts/how-project-graph-is-built",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/how-project-graph-is-built",
+    "path": "/concepts/more-concepts/how-project-graph-is-built",
     "tags": ["explore-graph"]
   },
-  "/more-concepts/nx-and-the-wrapper": {
+  "/concepts/more-concepts/nx-and-the-wrapper": {
     "id": "nx-and-the-wrapper",
     "name": "Nx and the Nx Wrapper",
     "description": "",
     "file": "shared/guides/nx-and-the-wrapper",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/nx-and-the-wrapper",
+    "path": "/concepts/more-concepts/nx-and-the-wrapper",
     "tags": []
   },
-  "/more-concepts/global-nx": {
+  "/concepts/more-concepts/global-nx": {
     "id": "global-nx",
     "name": "Managing your Global Nx Installation",
     "description": "",
     "file": "shared/guides/global-nx",
     "itemList": [],
     "isExternal": false,
-    "path": "/more-concepts/global-nx",
+    "path": "/concepts/more-concepts/global-nx",
     "tags": []
   },
   "/recipes": {
-    "id": "all",
-    "name": "All Recipes »",
-    "description": "",
+    "id": "recipes",
+    "name": "Recipes",
+    "description": "In depth recipes for common tasks",
     "file": "",
-    "itemList": [],
+    "itemList": [
+      {
+        "id": "adopting-nx",
+        "name": "Adopting Nx",
+        "description": "Adopting Nx incrementally, on existing project or from scratch.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "adding-to-monorepo",
+            "name": "NPM/Yarn/PNPM workspaces",
+            "description": "",
+            "file": "shared/migration/adding-to-monorepo",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/adding-to-monorepo",
+            "tags": []
+          },
+          {
+            "id": "adding-to-existing-project",
+            "name": "Add to any Project",
+            "description": "",
+            "file": "shared/migration/adding-to-existing-project",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/adding-to-existing-project",
+            "tags": []
+          },
+          {
+            "id": "lerna-and-nx",
+            "name": "Nx and Lerna",
+            "description": "",
+            "file": "shared/migration/lerna-and-nx",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/lerna-and-nx",
+            "tags": []
+          },
+          {
+            "id": "preserving-git-histories",
+            "name": "Preserving Git Histories",
+            "description": "",
+            "file": "shared/migration/preserving-git-histories",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/preserving-git-histories",
+            "tags": []
+          },
+          {
+            "id": "manual",
+            "name": "Manual migration",
+            "description": "",
+            "file": "shared/migration/manual",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/manual",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx",
+        "tags": []
+      },
+      {
+        "id": "react",
+        "name": "React",
+        "description": "Advanced guides to adopt Nx in React.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "migration-cra",
+            "name": "Migrating from CRA",
+            "description": "",
+            "file": "shared/migration/migration-cra",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/migration-cra",
+            "tags": []
+          },
+          {
+            "id": "react-18",
+            "name": "React 18 Migration",
+            "description": "",
+            "file": "shared/guides/react-18",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/react-18",
+            "tags": []
+          },
+          {
+            "id": "react-native",
+            "name": "React Native with Nx",
+            "description": "",
+            "file": "shared/guides/react-native",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/react-native",
+            "tags": []
+          },
+          {
+            "id": "remix",
+            "name": "Remix with Nx",
+            "description": "",
+            "file": "shared/guides/remix",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/remix",
+            "tags": []
+          },
+          {
+            "id": "use-environment-variables-in-react",
+            "name": "Use Environment Variables in React",
+            "description": "",
+            "file": "shared/guides/use-environment-variables-in-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/use-environment-variables-in-react",
+            "tags": ["environment-variables"]
+          },
+          {
+            "id": "using-tailwind-css-in-react",
+            "name": "Using Tailwind CSS in React",
+            "description": "",
+            "file": "shared/guides/using-tailwind-css-in-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/using-tailwind-css-in-react",
+            "tags": []
+          },
+          {
+            "id": "adding-assets-react",
+            "name": "Adding Images, Fonts, and Files",
+            "description": "",
+            "file": "shared/guides/adding-assets",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/adding-assets-react",
+            "tags": []
+          },
+          {
+            "id": "module-federation-with-ssr",
+            "name": "Setup Module Federation with SSR for React",
+            "description": "",
+            "file": "shared/recipes/module-federation-with-ssr",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/module-federation-with-ssr",
+            "tags": ["use-task-executors", "module-federation", "react"]
+          },
+          {
+            "id": "deploy-nextjs-to-vercel",
+            "name": "Deploying Next.js applications to Vercel",
+            "description": "",
+            "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/react/deploy-nextjs-to-vercel",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/react",
+        "tags": []
+      },
+      {
+        "id": "angular",
+        "name": "Angular",
+        "description": "Advanced guides to adopt Nx in Angular.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "migration",
+            "name": "Migration",
+            "description": "",
+            "file": "",
+            "itemList": [
+              {
+                "id": "angular",
+                "name": "Migrating from Angular CLI",
+                "description": "",
+                "file": "shared/migration/migration-angular",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/migration/angular",
+                "tags": []
+              },
+              {
+                "id": "angular-multiple",
+                "name": "Migrating From Multiple Angular CLI Repos",
+                "description": "",
+                "file": "shared/migration/angular-multiple",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/migration/angular-multiple",
+                "tags": []
+              },
+              {
+                "id": "angular-manual",
+                "name": "Migrating Angular Application manually",
+                "description": "",
+                "file": "shared/migration/angular-manual",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/migration/angular-manual",
+                "tags": []
+              },
+              {
+                "id": "angularjs",
+                "name": "Migrating from AngularJS",
+                "description": "",
+                "file": "shared/migration/migration-angularjs",
+                "itemList": [],
+                "isExternal": false,
+                "path": "/recipes/angular/migration/angularjs",
+                "tags": []
+              }
+            ],
+            "isExternal": false,
+            "path": "/recipes/angular/migration",
+            "tags": []
+          },
+          {
+            "id": "use-environment-variables-in-angular",
+            "name": "Use Environment Variables in Angular",
+            "description": "",
+            "file": "shared/guides/use-environment-variables-in-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/use-environment-variables-in-angular",
+            "tags": ["environment-variables"]
+          },
+          {
+            "id": "using-tailwind-css-with-angular-projects",
+            "name": "Using Tailwind CSS with Angular projects",
+            "description": "",
+            "file": "shared/guides/using-tailwind-css-with-angular-projects",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
+            "tags": []
+          },
+          {
+            "id": "module-federation-with-ssr",
+            "name": "Setup Module Federation with SSR for Angular",
+            "description": "",
+            "file": "shared/recipes/module-federation-with-ssr",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/module-federation-with-ssr",
+            "tags": ["use-task-executors", "module-federation", "angular"]
+          },
+          {
+            "id": "dynamic-module-federation-with-angular",
+            "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+            "description": "",
+            "file": "shared/guides/module-federation/dynamic-mfe-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/dynamic-module-federation-with-angular",
+            "tags": ["use-task-executors", "module-federation", "angular"]
+          },
+          {
+            "id": "setup-incremental-builds-angular",
+            "name": "Setup incremental builds for Angular applications",
+            "description": "",
+            "file": "shared/guides/setup-incremental-builds-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/setup-incremental-builds-angular",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/angular",
+        "tags": []
+      },
+      {
+        "id": "node",
+        "name": "Node",
+        "description": "Set of Node related recipes.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "node-server-fly-io",
+            "name": "Deploying a Node App to Fly.io",
+            "description": "",
+            "file": "shared/recipes/deployment/node-server-fly-io",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/node/node-server-fly-io",
+            "tags": ["deployment", "node"]
+          },
+          {
+            "id": "node-serverless-functions-netlify",
+            "name": "Add and Deploy Netlify Edge Functions with Node",
+            "description": "",
+            "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/node/node-serverless-functions-netlify",
+            "tags": ["deployment", "node"]
+          },
+          {
+            "id": "node-aws-lambda",
+            "name": "Deploying AWS lambda in Node.js",
+            "description": "",
+            "file": "shared/recipes/deployment/node-aws-lambda",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/node/node-aws-lambda",
+            "tags": ["deployment", "node"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/node",
+        "tags": []
+      },
+      {
+        "id": "storybook",
+        "name": "Storybook",
+        "description": "Storybook how tos.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "one-storybook-for-all",
+            "name": "One main Storybook instance for all projects",
+            "description": "",
+            "file": "shared/recipes/one-storybook-for-all",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/one-storybook-for-all",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "one-storybook-per-scope",
+            "name": "One Storybook instance per scope",
+            "description": "",
+            "file": "shared/recipes/one-storybook-per-scope",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/one-storybook-per-scope",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "one-storybook-with-composition",
+            "name": "One main Storybook instance using Storybook Composition",
+            "description": "",
+            "file": "shared/recipes/one-storybook-with-composition",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/one-storybook-with-composition",
+            "tags": ["storybook"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/storybook",
+        "tags": []
+      },
+      {
+        "id": "enforce-module-boundaries",
+        "name": "Enforce Module Boundaries",
+        "description": "Configuring the enforce module boundaries rule",
+        "file": "",
+        "itemList": [
+          {
+            "id": "ban-dependencies-with-tags",
+            "name": "Ban Dependencies with Certain Tags",
+            "description": "",
+            "file": "shared/recipes/ban-dependencies-with-tags",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+            "tags": ["enforce-module-boundaries"]
+          },
+          {
+            "id": "tag-multiple-dimensions",
+            "name": "Tag in Multiple Dimensions",
+            "description": "",
+            "file": "shared/recipes/tag-multiple-dimensions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+            "tags": ["enforce-module-boundaries"]
+          },
+          {
+            "id": "ban-external-imports",
+            "name": "Ban External Imports",
+            "description": "",
+            "file": "shared/recipes/ban-external-imports",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+            "tags": ["enforce-module-boundaries"]
+          },
+          {
+            "id": "tags-allow-list",
+            "name": "Tags Allow List",
+            "description": "",
+            "file": "shared/recipes/tags-allow-list",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+            "tags": ["enforce-module-boundaries"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries",
+        "tags": []
+      },
+      {
+        "id": "ci",
+        "name": "CI",
+        "description": "All recipes about how to use Nx to make your CI faster.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "ci-setup",
+            "name": "CI Setup",
+            "description": "",
+            "file": "shared/ci-overview",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/ci/ci-setup",
+            "tags": ["distribute-task-execution"]
+          },
+          {
+            "id": "ci-deployment",
+            "name": "Prepare applications for deployment via CI",
+            "description": "",
+            "file": "shared/recipes/ci-deployment",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/ci/ci-deployment",
+            "tags": ["docker", "deploy"]
+          },
+          {
+            "id": "monorepo-ci-azure",
+            "name": "Setting up Azure Pipelines",
+            "description": "",
+            "file": "shared/monorepo-ci-azure",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/ci/monorepo-ci-azure",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-circle-ci",
+            "name": "Setting up CircleCI",
+            "description": "",
+            "file": "shared/monorepo-ci-circle-ci",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/ci/monorepo-ci-circle-ci",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-github-actions",
+            "name": "Setting up GitHub Actions",
+            "description": "",
+            "file": "shared/monorepo-ci-github-actions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/ci/monorepo-ci-github-actions",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-jenkins",
+            "name": "Setting up Jenkins",
+            "description": "",
+            "file": "shared/monorepo-ci-jenkins",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/ci/monorepo-ci-jenkins",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-gitlab",
+            "name": "Setting up GitLab",
+            "description": "",
+            "file": "shared/monorepo-ci-gitlab",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/ci/monorepo-ci-gitlab",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-bitbucket-pipelines",
+            "name": "Setting up Bitbucket",
+            "description": "",
+            "file": "shared/monorepo-ci-bitbucket-pipelines",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/ci",
+        "tags": []
+      },
+      {
+        "id": "tips-n-tricks",
+        "name": "Tips and tricks",
+        "description": "Various tips and tricks for using Nx.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "package-based-in-integrated",
+            "name": "Add a Package-based Project in an Integrated Repo",
+            "description": "",
+            "file": "shared/recipes/repo-types/package-based-in-integrated",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+            "tags": ["repository-types"]
+          },
+          {
+            "id": "integrated-in-package-based",
+            "name": "Add an Integrated Project in a Package-based Repo",
+            "description": "",
+            "file": "shared/recipes/repo-types/integrated-in-package-based",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+            "tags": ["repository-types"]
+          },
+          {
+            "id": "eslint",
+            "name": "Configuring ESLint with Typescript",
+            "description": "",
+            "file": "shared/eslint",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/eslint",
+            "tags": []
+          },
+          {
+            "id": "define-environment-variables",
+            "name": "Define Environment Variables",
+            "description": "",
+            "file": "shared/guides/define-environment-variables",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/define-environment-variables",
+            "tags": ["environment-variables"]
+          },
+          {
+            "id": "browser-support",
+            "name": "Configuring Browser Support",
+            "description": "",
+            "file": "shared/guides/browser-support",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/browser-support",
+            "tags": []
+          },
+          {
+            "id": "include-assets-in-build",
+            "name": "Include Assets in Build",
+            "description": "",
+            "file": "shared/recipes/include-assets-in-build",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/include-assets-in-build",
+            "tags": []
+          },
+          {
+            "id": "include-all-packagejson",
+            "name": "Include All package.json Files as Projects",
+            "description": "",
+            "file": "shared/recipes/include-all-packagejson",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/include-all-packagejson",
+            "tags": []
+          },
+          {
+            "id": "identify-dependencies-between-folders",
+            "name": "Identify Dependencies Between Folders",
+            "description": "",
+            "file": "shared/recipes/identify-dependencies-between-folders",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
+            "tags": []
+          },
+          {
+            "id": "root-level-scripts",
+            "name": "Run Root-Level NPM Scripts with Nx",
+            "description": "",
+            "file": "shared/recipes/root-level-scripts",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/root-level-scripts",
+            "tags": ["run-tasks"]
+          },
+          {
+            "id": "analyze-source-files",
+            "name": "Disable Graph Links Created from Analyzing Source Files",
+            "description": "",
+            "file": "shared/recipes/analyze-source-files",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/analyze-source-files",
+            "tags": ["explore-graph"]
+          },
+          {
+            "id": "workspace-watching",
+            "name": "Workspace Watching",
+            "description": "",
+            "file": "shared/recipes/workspace-watching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/workspace-watching",
+            "tags": ["workspace-watching"]
+          },
+          {
+            "id": "standalone-to-integrated",
+            "name": "Convert from a Standalone Repository to an Integrated Repository",
+            "description": "",
+            "file": "shared/recipes/repo-types/standalone-to-integrated",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+            "tags": ["repository-types"]
+          },
+          {
+            "id": "js-and-ts",
+            "name": "Use JavaScript instead TypeScript",
+            "description": "",
+            "file": "shared/guides/js-and-ts",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/js-and-ts",
+            "tags": []
+          },
+          {
+            "id": "advanced-update",
+            "name": "Altering Migration Process",
+            "description": "",
+            "file": "shared/recipes/advanced-update",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/advanced-update",
+            "tags": ["automate-updating-dependencies"]
+          },
+          {
+            "id": "run-commands-executor",
+            "name": "Running Custom Commands",
+            "description": "",
+            "file": "shared/running-custom-commands",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/run-commands-executor",
+            "tags": ["use-task-executors"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks",
+        "tags": []
+      },
+      {
+        "id": "troubleshooting",
+        "name": "Troubleshooting",
+        "description": "Learn how to troubleshoot common problems.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "resolve-circular-dependencies",
+            "name": "Resolve Circular Dependencies",
+            "description": "",
+            "file": "shared/recipes/resolve-circular-dependencies",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+            "tags": ["explore-graph"]
+          },
+          {
+            "id": "troubleshoot-nx-install-issues",
+            "name": "Troubleshooting Nx Install Issues",
+            "description": "",
+            "file": "shared/installation/troubleshoot-installation",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+            "tags": []
+          },
+          {
+            "id": "troubleshoot-cache-misses",
+            "name": "Troubleshoot Cache Misses",
+            "description": "",
+            "file": "shared/recipes/troubleshoot-cache-misses",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+            "tags": ["cache-task-results"]
+          },
+          {
+            "id": "unknown-local-cache",
+            "name": "Unknown Local Cache Error",
+            "description": "",
+            "file": "shared/guides/unknown-local-cache",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/unknown-local-cache",
+            "tags": []
+          },
+          {
+            "id": "performance-profiling",
+            "name": "Profiling Build Performance",
+            "description": "",
+            "file": "shared/guides/performance-profiling",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/troubleshooting/performance-profiling",
+            "tags": ["use-task-executors", "environment-variables"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting",
+        "tags": []
+      },
+      {
+        "id": "nx-console",
+        "name": "Nx Console",
+        "description": "Checkout all the recipes related to Nx Console.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "console-telemetry",
+            "name": "Telemetry",
+            "description": "",
+            "file": "shared/recipes/console-telemetry",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-telemetry",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-generate-command",
+            "name": "Generate Command",
+            "description": "",
+            "file": "shared/recipes/console-generate-command",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-generate-command",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-run-command",
+            "name": "Run Command",
+            "description": "",
+            "file": "shared/recipes/console-run-command",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-run-command",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-add-dependency-command",
+            "name": "Add Dependency Command",
+            "description": "",
+            "file": "shared/recipes/console-add-dependency-command",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-add-dependency-command",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-project-pane",
+            "name": "Project Pane",
+            "description": "",
+            "file": "shared/recipes/console-project-pane",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-project-pane",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-shortcuts",
+            "name": "Keyboard Shortcuts",
+            "description": "",
+            "file": "shared/recipes/console-shortcuts",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-shortcuts",
+            "tags": ["integrate-with-editors"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/nx-console",
+        "tags": []
+      },
+      {
+        "id": "other",
+        "name": "Other",
+        "description": "Other recipes you will find useful.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "deno-deploy",
+            "name": "Serverless deployment with Deno Deploy",
+            "description": "",
+            "file": "shared/recipes/deployment/deno-deploy",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/other/deno-deploy",
+            "tags": ["deployment", "deno"]
+          },
+          {
+            "id": "deno-netlify-functions",
+            "name": "Add and Deploy Netlify Edge Functions with Deno",
+            "description": "",
+            "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/other/deno-netlify-functions",
+            "tags": ["deployment", "deno"]
+          },
+          {
+            "id": "rescope",
+            "name": "Rescope Packages from @nrwl to @nx",
+            "description": "",
+            "file": "shared/recipes/rescope",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/other/rescope",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/other",
+        "tags": []
+      }
+    ],
     "isExternal": false,
     "path": "/recipes",
+    "tags": []
+  },
+  "/recipes/adopting-nx": {
+    "id": "adopting-nx",
+    "name": "Adopting Nx",
+    "description": "Adopting Nx incrementally, on existing project or from scratch.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "adding-to-monorepo",
+        "name": "NPM/Yarn/PNPM workspaces",
+        "description": "",
+        "file": "shared/migration/adding-to-monorepo",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/adding-to-monorepo",
+        "tags": []
+      },
+      {
+        "id": "adding-to-existing-project",
+        "name": "Add to any Project",
+        "description": "",
+        "file": "shared/migration/adding-to-existing-project",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/adding-to-existing-project",
+        "tags": []
+      },
+      {
+        "id": "lerna-and-nx",
+        "name": "Nx and Lerna",
+        "description": "",
+        "file": "shared/migration/lerna-and-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/lerna-and-nx",
+        "tags": []
+      },
+      {
+        "id": "preserving-git-histories",
+        "name": "Preserving Git Histories",
+        "description": "",
+        "file": "shared/migration/preserving-git-histories",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/preserving-git-histories",
+        "tags": []
+      },
+      {
+        "id": "manual",
+        "name": "Manual migration",
+        "description": "",
+        "file": "shared/migration/manual",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/manual",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx",
+    "tags": []
+  },
+  "/recipes/adopting-nx/adding-to-monorepo": {
+    "id": "adding-to-monorepo",
+    "name": "NPM/Yarn/PNPM workspaces",
+    "description": "",
+    "file": "shared/migration/adding-to-monorepo",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/adding-to-monorepo",
+    "tags": []
+  },
+  "/recipes/adopting-nx/adding-to-existing-project": {
+    "id": "adding-to-existing-project",
+    "name": "Add to any Project",
+    "description": "",
+    "file": "shared/migration/adding-to-existing-project",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/adding-to-existing-project",
+    "tags": []
+  },
+  "/recipes/adopting-nx/lerna-and-nx": {
+    "id": "lerna-and-nx",
+    "name": "Nx and Lerna",
+    "description": "",
+    "file": "shared/migration/lerna-and-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/lerna-and-nx",
+    "tags": []
+  },
+  "/recipes/adopting-nx/preserving-git-histories": {
+    "id": "preserving-git-histories",
+    "name": "Preserving Git Histories",
+    "description": "",
+    "file": "shared/migration/preserving-git-histories",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/preserving-git-histories",
+    "tags": []
+  },
+  "/recipes/adopting-nx/manual": {
+    "id": "manual",
+    "name": "Manual migration",
+    "description": "",
+    "file": "shared/migration/manual",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/manual",
+    "tags": []
+  },
+  "/recipes/react": {
+    "id": "react",
+    "name": "React",
+    "description": "Advanced guides to adopt Nx in React.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "migration-cra",
+        "name": "Migrating from CRA",
+        "description": "",
+        "file": "shared/migration/migration-cra",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/migration-cra",
+        "tags": []
+      },
+      {
+        "id": "react-18",
+        "name": "React 18 Migration",
+        "description": "",
+        "file": "shared/guides/react-18",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/react-18",
+        "tags": []
+      },
+      {
+        "id": "react-native",
+        "name": "React Native with Nx",
+        "description": "",
+        "file": "shared/guides/react-native",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/react-native",
+        "tags": []
+      },
+      {
+        "id": "remix",
+        "name": "Remix with Nx",
+        "description": "",
+        "file": "shared/guides/remix",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/remix",
+        "tags": []
+      },
+      {
+        "id": "use-environment-variables-in-react",
+        "name": "Use Environment Variables in React",
+        "description": "",
+        "file": "shared/guides/use-environment-variables-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/use-environment-variables-in-react",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "using-tailwind-css-in-react",
+        "name": "Using Tailwind CSS in React",
+        "description": "",
+        "file": "shared/guides/using-tailwind-css-in-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/using-tailwind-css-in-react",
+        "tags": []
+      },
+      {
+        "id": "adding-assets-react",
+        "name": "Adding Images, Fonts, and Files",
+        "description": "",
+        "file": "shared/guides/adding-assets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/adding-assets-react",
+        "tags": []
+      },
+      {
+        "id": "module-federation-with-ssr",
+        "name": "Setup Module Federation with SSR for React",
+        "description": "",
+        "file": "shared/recipes/module-federation-with-ssr",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/module-federation-with-ssr",
+        "tags": ["use-task-executors", "module-federation", "react"]
+      },
+      {
+        "id": "deploy-nextjs-to-vercel",
+        "name": "Deploying Next.js applications to Vercel",
+        "description": "",
+        "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/react/deploy-nextjs-to-vercel",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/react",
+    "tags": []
+  },
+  "/recipes/react/migration-cra": {
+    "id": "migration-cra",
+    "name": "Migrating from CRA",
+    "description": "",
+    "file": "shared/migration/migration-cra",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/migration-cra",
+    "tags": []
+  },
+  "/recipes/react/react-18": {
+    "id": "react-18",
+    "name": "React 18 Migration",
+    "description": "",
+    "file": "shared/guides/react-18",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/react-18",
+    "tags": []
+  },
+  "/recipes/react/react-native": {
+    "id": "react-native",
+    "name": "React Native with Nx",
+    "description": "",
+    "file": "shared/guides/react-native",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/react-native",
+    "tags": []
+  },
+  "/recipes/react/remix": {
+    "id": "remix",
+    "name": "Remix with Nx",
+    "description": "",
+    "file": "shared/guides/remix",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/remix",
+    "tags": []
+  },
+  "/recipes/react/use-environment-variables-in-react": {
+    "id": "use-environment-variables-in-react",
+    "name": "Use Environment Variables in React",
+    "description": "",
+    "file": "shared/guides/use-environment-variables-in-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/use-environment-variables-in-react",
+    "tags": ["environment-variables"]
+  },
+  "/recipes/react/using-tailwind-css-in-react": {
+    "id": "using-tailwind-css-in-react",
+    "name": "Using Tailwind CSS in React",
+    "description": "",
+    "file": "shared/guides/using-tailwind-css-in-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/using-tailwind-css-in-react",
+    "tags": []
+  },
+  "/recipes/react/adding-assets-react": {
+    "id": "adding-assets-react",
+    "name": "Adding Images, Fonts, and Files",
+    "description": "",
+    "file": "shared/guides/adding-assets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/adding-assets-react",
+    "tags": []
+  },
+  "/recipes/react/module-federation-with-ssr": {
+    "id": "module-federation-with-ssr",
+    "name": "Setup Module Federation with SSR for React",
+    "description": "",
+    "file": "shared/recipes/module-federation-with-ssr",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/module-federation-with-ssr",
+    "tags": ["use-task-executors", "module-federation", "react"]
+  },
+  "/recipes/react/deploy-nextjs-to-vercel": {
+    "id": "deploy-nextjs-to-vercel",
+    "name": "Deploying Next.js applications to Vercel",
+    "description": "",
+    "file": "shared/recipes/deployment/deploy-nextjs-to-vercel",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/react/deploy-nextjs-to-vercel",
+    "tags": []
+  },
+  "/recipes/angular": {
+    "id": "angular",
+    "name": "Angular",
+    "description": "Advanced guides to adopt Nx in Angular.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "migration",
+        "name": "Migration",
+        "description": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "angular",
+            "name": "Migrating from Angular CLI",
+            "description": "",
+            "file": "shared/migration/migration-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/migration/angular",
+            "tags": []
+          },
+          {
+            "id": "angular-multiple",
+            "name": "Migrating From Multiple Angular CLI Repos",
+            "description": "",
+            "file": "shared/migration/angular-multiple",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/migration/angular-multiple",
+            "tags": []
+          },
+          {
+            "id": "angular-manual",
+            "name": "Migrating Angular Application manually",
+            "description": "",
+            "file": "shared/migration/angular-manual",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/migration/angular-manual",
+            "tags": []
+          },
+          {
+            "id": "angularjs",
+            "name": "Migrating from AngularJS",
+            "description": "",
+            "file": "shared/migration/migration-angularjs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/angular/migration/angularjs",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/angular/migration",
+        "tags": []
+      },
+      {
+        "id": "use-environment-variables-in-angular",
+        "name": "Use Environment Variables in Angular",
+        "description": "",
+        "file": "shared/guides/use-environment-variables-in-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/use-environment-variables-in-angular",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "using-tailwind-css-with-angular-projects",
+        "name": "Using Tailwind CSS with Angular projects",
+        "description": "",
+        "file": "shared/guides/using-tailwind-css-with-angular-projects",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
+        "tags": []
+      },
+      {
+        "id": "module-federation-with-ssr",
+        "name": "Setup Module Federation with SSR for Angular",
+        "description": "",
+        "file": "shared/recipes/module-federation-with-ssr",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/module-federation-with-ssr",
+        "tags": ["use-task-executors", "module-federation", "angular"]
+      },
+      {
+        "id": "dynamic-module-federation-with-angular",
+        "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+        "description": "",
+        "file": "shared/guides/module-federation/dynamic-mfe-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/dynamic-module-federation-with-angular",
+        "tags": ["use-task-executors", "module-federation", "angular"]
+      },
+      {
+        "id": "setup-incremental-builds-angular",
+        "name": "Setup incremental builds for Angular applications",
+        "description": "",
+        "file": "shared/guides/setup-incremental-builds-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/setup-incremental-builds-angular",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/angular",
+    "tags": []
+  },
+  "/recipes/angular/migration": {
+    "id": "migration",
+    "name": "Migration",
+    "description": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "angular",
+        "name": "Migrating from Angular CLI",
+        "description": "",
+        "file": "shared/migration/migration-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/migration/angular",
+        "tags": []
+      },
+      {
+        "id": "angular-multiple",
+        "name": "Migrating From Multiple Angular CLI Repos",
+        "description": "",
+        "file": "shared/migration/angular-multiple",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/migration/angular-multiple",
+        "tags": []
+      },
+      {
+        "id": "angular-manual",
+        "name": "Migrating Angular Application manually",
+        "description": "",
+        "file": "shared/migration/angular-manual",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/migration/angular-manual",
+        "tags": []
+      },
+      {
+        "id": "angularjs",
+        "name": "Migrating from AngularJS",
+        "description": "",
+        "file": "shared/migration/migration-angularjs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/angular/migration/angularjs",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/angular/migration",
+    "tags": []
+  },
+  "/recipes/angular/migration/angular": {
+    "id": "angular",
+    "name": "Migrating from Angular CLI",
+    "description": "",
+    "file": "shared/migration/migration-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/migration/angular",
+    "tags": []
+  },
+  "/recipes/angular/migration/angular-multiple": {
+    "id": "angular-multiple",
+    "name": "Migrating From Multiple Angular CLI Repos",
+    "description": "",
+    "file": "shared/migration/angular-multiple",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/migration/angular-multiple",
+    "tags": []
+  },
+  "/recipes/angular/migration/angular-manual": {
+    "id": "angular-manual",
+    "name": "Migrating Angular Application manually",
+    "description": "",
+    "file": "shared/migration/angular-manual",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/migration/angular-manual",
+    "tags": []
+  },
+  "/recipes/angular/migration/angularjs": {
+    "id": "angularjs",
+    "name": "Migrating from AngularJS",
+    "description": "",
+    "file": "shared/migration/migration-angularjs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/migration/angularjs",
+    "tags": []
+  },
+  "/recipes/angular/use-environment-variables-in-angular": {
+    "id": "use-environment-variables-in-angular",
+    "name": "Use Environment Variables in Angular",
+    "description": "",
+    "file": "shared/guides/use-environment-variables-in-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/use-environment-variables-in-angular",
+    "tags": ["environment-variables"]
+  },
+  "/recipes/angular/using-tailwind-css-with-angular-projects": {
+    "id": "using-tailwind-css-with-angular-projects",
+    "name": "Using Tailwind CSS with Angular projects",
+    "description": "",
+    "file": "shared/guides/using-tailwind-css-with-angular-projects",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/using-tailwind-css-with-angular-projects",
+    "tags": []
+  },
+  "/recipes/angular/module-federation-with-ssr": {
+    "id": "module-federation-with-ssr",
+    "name": "Setup Module Federation with SSR for Angular",
+    "description": "",
+    "file": "shared/recipes/module-federation-with-ssr",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/module-federation-with-ssr",
+    "tags": ["use-task-executors", "module-federation", "angular"]
+  },
+  "/recipes/angular/dynamic-module-federation-with-angular": {
+    "id": "dynamic-module-federation-with-angular",
+    "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+    "description": "",
+    "file": "shared/guides/module-federation/dynamic-mfe-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/dynamic-module-federation-with-angular",
+    "tags": ["use-task-executors", "module-federation", "angular"]
+  },
+  "/recipes/angular/setup-incremental-builds-angular": {
+    "id": "setup-incremental-builds-angular",
+    "name": "Setup incremental builds for Angular applications",
+    "description": "",
+    "file": "shared/guides/setup-incremental-builds-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/angular/setup-incremental-builds-angular",
+    "tags": []
+  },
+  "/recipes/node": {
+    "id": "node",
+    "name": "Node",
+    "description": "Set of Node related recipes.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "node-server-fly-io",
+        "name": "Deploying a Node App to Fly.io",
+        "description": "",
+        "file": "shared/recipes/deployment/node-server-fly-io",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/node-server-fly-io",
+        "tags": ["deployment", "node"]
+      },
+      {
+        "id": "node-serverless-functions-netlify",
+        "name": "Add and Deploy Netlify Edge Functions with Node",
+        "description": "",
+        "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/node-serverless-functions-netlify",
+        "tags": ["deployment", "node"]
+      },
+      {
+        "id": "node-aws-lambda",
+        "name": "Deploying AWS lambda in Node.js",
+        "description": "",
+        "file": "shared/recipes/deployment/node-aws-lambda",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/node-aws-lambda",
+        "tags": ["deployment", "node"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/node",
+    "tags": []
+  },
+  "/recipes/node/node-server-fly-io": {
+    "id": "node-server-fly-io",
+    "name": "Deploying a Node App to Fly.io",
+    "description": "",
+    "file": "shared/recipes/deployment/node-server-fly-io",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/node-server-fly-io",
+    "tags": ["deployment", "node"]
+  },
+  "/recipes/node/node-serverless-functions-netlify": {
+    "id": "node-serverless-functions-netlify",
+    "name": "Add and Deploy Netlify Edge Functions with Node",
+    "description": "",
+    "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/node-serverless-functions-netlify",
+    "tags": ["deployment", "node"]
+  },
+  "/recipes/node/node-aws-lambda": {
+    "id": "node-aws-lambda",
+    "name": "Deploying AWS lambda in Node.js",
+    "description": "",
+    "file": "shared/recipes/deployment/node-aws-lambda",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/node-aws-lambda",
+    "tags": ["deployment", "node"]
+  },
+  "/recipes/storybook": {
+    "id": "storybook",
+    "name": "Storybook",
+    "description": "Storybook how tos.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "one-storybook-for-all",
+        "name": "One main Storybook instance for all projects",
+        "description": "",
+        "file": "shared/recipes/one-storybook-for-all",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/one-storybook-for-all",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "one-storybook-per-scope",
+        "name": "One Storybook instance per scope",
+        "description": "",
+        "file": "shared/recipes/one-storybook-per-scope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/one-storybook-per-scope",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "one-storybook-with-composition",
+        "name": "One main Storybook instance using Storybook Composition",
+        "description": "",
+        "file": "shared/recipes/one-storybook-with-composition",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/one-storybook-with-composition",
+        "tags": ["storybook"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/storybook",
+    "tags": []
+  },
+  "/recipes/storybook/one-storybook-for-all": {
+    "id": "one-storybook-for-all",
+    "name": "One main Storybook instance for all projects",
+    "description": "",
+    "file": "shared/recipes/one-storybook-for-all",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/one-storybook-for-all",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/one-storybook-per-scope": {
+    "id": "one-storybook-per-scope",
+    "name": "One Storybook instance per scope",
+    "description": "",
+    "file": "shared/recipes/one-storybook-per-scope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/one-storybook-per-scope",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/one-storybook-with-composition": {
+    "id": "one-storybook-with-composition",
+    "name": "One main Storybook instance using Storybook Composition",
+    "description": "",
+    "file": "shared/recipes/one-storybook-with-composition",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/one-storybook-with-composition",
+    "tags": ["storybook"]
+  },
+  "/recipes/enforce-module-boundaries": {
+    "id": "enforce-module-boundaries",
+    "name": "Enforce Module Boundaries",
+    "description": "Configuring the enforce module boundaries rule",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ban-dependencies-with-tags",
+        "name": "Ban Dependencies with Certain Tags",
+        "description": "",
+        "file": "shared/recipes/ban-dependencies-with-tags",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+        "tags": ["enforce-module-boundaries"]
+      },
+      {
+        "id": "tag-multiple-dimensions",
+        "name": "Tag in Multiple Dimensions",
+        "description": "",
+        "file": "shared/recipes/tag-multiple-dimensions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+        "tags": ["enforce-module-boundaries"]
+      },
+      {
+        "id": "ban-external-imports",
+        "name": "Ban External Imports",
+        "description": "",
+        "file": "shared/recipes/ban-external-imports",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+        "tags": ["enforce-module-boundaries"]
+      },
+      {
+        "id": "tags-allow-list",
+        "name": "Tags Allow List",
+        "description": "",
+        "file": "shared/recipes/tags-allow-list",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+        "tags": ["enforce-module-boundaries"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries",
+    "tags": []
+  },
+  "/recipes/enforce-module-boundaries/ban-dependencies-with-tags": {
+    "id": "ban-dependencies-with-tags",
+    "name": "Ban Dependencies with Certain Tags",
+    "description": "",
+    "file": "shared/recipes/ban-dependencies-with-tags",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
+    "tags": ["enforce-module-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/tag-multiple-dimensions": {
+    "id": "tag-multiple-dimensions",
+    "name": "Tag in Multiple Dimensions",
+    "description": "",
+    "file": "shared/recipes/tag-multiple-dimensions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
+    "tags": ["enforce-module-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/ban-external-imports": {
+    "id": "ban-external-imports",
+    "name": "Ban External Imports",
+    "description": "",
+    "file": "shared/recipes/ban-external-imports",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/ban-external-imports",
+    "tags": ["enforce-module-boundaries"]
+  },
+  "/recipes/enforce-module-boundaries/tags-allow-list": {
+    "id": "tags-allow-list",
+    "name": "Tags Allow List",
+    "description": "",
+    "file": "shared/recipes/tags-allow-list",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/enforce-module-boundaries/tags-allow-list",
+    "tags": ["enforce-module-boundaries"]
+  },
+  "/recipes/ci": {
+    "id": "ci",
+    "name": "CI",
+    "description": "All recipes about how to use Nx to make your CI faster.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ci-setup",
+        "name": "CI Setup",
+        "description": "",
+        "file": "shared/ci-overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/ci-setup",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "ci-deployment",
+        "name": "Prepare applications for deployment via CI",
+        "description": "",
+        "file": "shared/recipes/ci-deployment",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/ci-deployment",
+        "tags": ["docker", "deploy"]
+      },
+      {
+        "id": "monorepo-ci-azure",
+        "name": "Setting up Azure Pipelines",
+        "description": "",
+        "file": "shared/monorepo-ci-azure",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/monorepo-ci-azure",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-circle-ci",
+        "name": "Setting up CircleCI",
+        "description": "",
+        "file": "shared/monorepo-ci-circle-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/monorepo-ci-circle-ci",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-github-actions",
+        "name": "Setting up GitHub Actions",
+        "description": "",
+        "file": "shared/monorepo-ci-github-actions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/monorepo-ci-github-actions",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-jenkins",
+        "name": "Setting up Jenkins",
+        "description": "",
+        "file": "shared/monorepo-ci-jenkins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/monorepo-ci-jenkins",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-gitlab",
+        "name": "Setting up GitLab",
+        "description": "",
+        "file": "shared/monorepo-ci-gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/monorepo-ci-gitlab",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-bitbucket-pipelines",
+        "name": "Setting up Bitbucket",
+        "description": "",
+        "file": "shared/monorepo-ci-bitbucket-pipelines",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/ci",
     "tags": []
   },
   "/recipes/ci/ci-setup": {
     "id": "ci-setup",
     "name": "CI Setup",
     "description": "",
-    "file": "",
+    "file": "shared/ci-overview",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/ci/ci-setup",
-    "tags": []
+    "tags": ["distribute-task-execution"]
   },
-  "/recipes/adopting-nx": {
-    "id": "adopting-nx",
-    "name": "Adopting Nx",
+  "/recipes/ci/ci-deployment": {
+    "id": "ci-deployment",
+    "name": "Prepare applications for deployment via CI",
     "description": "",
-    "file": "",
+    "file": "shared/recipes/ci-deployment",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/adopting-nx",
+    "path": "/recipes/ci/ci-deployment",
+    "tags": ["docker", "deploy"]
+  },
+  "/recipes/ci/monorepo-ci-azure": {
+    "id": "monorepo-ci-azure",
+    "name": "Setting up Azure Pipelines",
+    "description": "",
+    "file": "shared/monorepo-ci-azure",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/monorepo-ci-azure",
+    "tags": []
+  },
+  "/recipes/ci/monorepo-ci-circle-ci": {
+    "id": "monorepo-ci-circle-ci",
+    "name": "Setting up CircleCI",
+    "description": "",
+    "file": "shared/monorepo-ci-circle-ci",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/monorepo-ci-circle-ci",
+    "tags": []
+  },
+  "/recipes/ci/monorepo-ci-github-actions": {
+    "id": "monorepo-ci-github-actions",
+    "name": "Setting up GitHub Actions",
+    "description": "",
+    "file": "shared/monorepo-ci-github-actions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/monorepo-ci-github-actions",
+    "tags": []
+  },
+  "/recipes/ci/monorepo-ci-jenkins": {
+    "id": "monorepo-ci-jenkins",
+    "name": "Setting up Jenkins",
+    "description": "",
+    "file": "shared/monorepo-ci-jenkins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/monorepo-ci-jenkins",
+    "tags": []
+  },
+  "/recipes/ci/monorepo-ci-gitlab": {
+    "id": "monorepo-ci-gitlab",
+    "name": "Setting up GitLab",
+    "description": "",
+    "file": "shared/monorepo-ci-gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/monorepo-ci-gitlab",
+    "tags": []
+  },
+  "/recipes/ci/monorepo-ci-bitbucket-pipelines": {
+    "id": "monorepo-ci-bitbucket-pipelines",
+    "name": "Setting up Bitbucket",
+    "description": "",
+    "file": "shared/monorepo-ci-bitbucket-pipelines",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks": {
+    "id": "tips-n-tricks",
+    "name": "Tips and tricks",
+    "description": "Various tips and tricks for using Nx.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "package-based-in-integrated",
+        "name": "Add a Package-based Project in an Integrated Repo",
+        "description": "",
+        "file": "shared/recipes/repo-types/package-based-in-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+        "tags": ["repository-types"]
+      },
+      {
+        "id": "integrated-in-package-based",
+        "name": "Add an Integrated Project in a Package-based Repo",
+        "description": "",
+        "file": "shared/recipes/repo-types/integrated-in-package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+        "tags": ["repository-types"]
+      },
+      {
+        "id": "eslint",
+        "name": "Configuring ESLint with Typescript",
+        "description": "",
+        "file": "shared/eslint",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/eslint",
+        "tags": []
+      },
+      {
+        "id": "define-environment-variables",
+        "name": "Define Environment Variables",
+        "description": "",
+        "file": "shared/guides/define-environment-variables",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/define-environment-variables",
+        "tags": ["environment-variables"]
+      },
+      {
+        "id": "browser-support",
+        "name": "Configuring Browser Support",
+        "description": "",
+        "file": "shared/guides/browser-support",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/browser-support",
+        "tags": []
+      },
+      {
+        "id": "include-assets-in-build",
+        "name": "Include Assets in Build",
+        "description": "",
+        "file": "shared/recipes/include-assets-in-build",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/include-assets-in-build",
+        "tags": []
+      },
+      {
+        "id": "include-all-packagejson",
+        "name": "Include All package.json Files as Projects",
+        "description": "",
+        "file": "shared/recipes/include-all-packagejson",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/include-all-packagejson",
+        "tags": []
+      },
+      {
+        "id": "identify-dependencies-between-folders",
+        "name": "Identify Dependencies Between Folders",
+        "description": "",
+        "file": "shared/recipes/identify-dependencies-between-folders",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
+        "tags": []
+      },
+      {
+        "id": "root-level-scripts",
+        "name": "Run Root-Level NPM Scripts with Nx",
+        "description": "",
+        "file": "shared/recipes/root-level-scripts",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/root-level-scripts",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "analyze-source-files",
+        "name": "Disable Graph Links Created from Analyzing Source Files",
+        "description": "",
+        "file": "shared/recipes/analyze-source-files",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/analyze-source-files",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "workspace-watching",
+        "name": "Workspace Watching",
+        "description": "",
+        "file": "shared/recipes/workspace-watching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/workspace-watching",
+        "tags": ["workspace-watching"]
+      },
+      {
+        "id": "standalone-to-integrated",
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "description": "",
+        "file": "shared/recipes/repo-types/standalone-to-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+        "tags": ["repository-types"]
+      },
+      {
+        "id": "js-and-ts",
+        "name": "Use JavaScript instead TypeScript",
+        "description": "",
+        "file": "shared/guides/js-and-ts",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/js-and-ts",
+        "tags": []
+      },
+      {
+        "id": "advanced-update",
+        "name": "Altering Migration Process",
+        "description": "",
+        "file": "shared/recipes/advanced-update",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/advanced-update",
+        "tags": ["automate-updating-dependencies"]
+      },
+      {
+        "id": "run-commands-executor",
+        "name": "Running Custom Commands",
+        "description": "",
+        "file": "shared/running-custom-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/run-commands-executor",
+        "tags": ["use-task-executors"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/package-based-in-integrated": {
+    "id": "package-based-in-integrated",
+    "name": "Add a Package-based Project in an Integrated Repo",
+    "description": "",
+    "file": "shared/recipes/repo-types/package-based-in-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+    "tags": ["repository-types"]
+  },
+  "/recipes/tips-n-tricks/integrated-in-package-based": {
+    "id": "integrated-in-package-based",
+    "name": "Add an Integrated Project in a Package-based Repo",
+    "description": "",
+    "file": "shared/recipes/repo-types/integrated-in-package-based",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+    "tags": ["repository-types"]
+  },
+  "/recipes/tips-n-tricks/eslint": {
+    "id": "eslint",
+    "name": "Configuring ESLint with Typescript",
+    "description": "",
+    "file": "shared/eslint",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/eslint",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/define-environment-variables": {
+    "id": "define-environment-variables",
+    "name": "Define Environment Variables",
+    "description": "",
+    "file": "shared/guides/define-environment-variables",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/define-environment-variables",
+    "tags": ["environment-variables"]
+  },
+  "/recipes/tips-n-tricks/browser-support": {
+    "id": "browser-support",
+    "name": "Configuring Browser Support",
+    "description": "",
+    "file": "shared/guides/browser-support",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/browser-support",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/include-assets-in-build": {
+    "id": "include-assets-in-build",
+    "name": "Include Assets in Build",
+    "description": "",
+    "file": "shared/recipes/include-assets-in-build",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/include-assets-in-build",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/include-all-packagejson": {
+    "id": "include-all-packagejson",
+    "name": "Include All package.json Files as Projects",
+    "description": "",
+    "file": "shared/recipes/include-all-packagejson",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/include-all-packagejson",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/identify-dependencies-between-folders": {
+    "id": "identify-dependencies-between-folders",
+    "name": "Identify Dependencies Between Folders",
+    "description": "",
+    "file": "shared/recipes/identify-dependencies-between-folders",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/root-level-scripts": {
+    "id": "root-level-scripts",
+    "name": "Run Root-Level NPM Scripts with Nx",
+    "description": "",
+    "file": "shared/recipes/root-level-scripts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/root-level-scripts",
+    "tags": ["run-tasks"]
+  },
+  "/recipes/tips-n-tricks/analyze-source-files": {
+    "id": "analyze-source-files",
+    "name": "Disable Graph Links Created from Analyzing Source Files",
+    "description": "",
+    "file": "shared/recipes/analyze-source-files",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/analyze-source-files",
+    "tags": ["explore-graph"]
+  },
+  "/recipes/tips-n-tricks/workspace-watching": {
+    "id": "workspace-watching",
+    "name": "Workspace Watching",
+    "description": "",
+    "file": "shared/recipes/workspace-watching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/workspace-watching",
+    "tags": ["workspace-watching"]
+  },
+  "/recipes/tips-n-tricks/standalone-to-integrated": {
+    "id": "standalone-to-integrated",
+    "name": "Convert from a Standalone Repository to an Integrated Repository",
+    "description": "",
+    "file": "shared/recipes/repo-types/standalone-to-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+    "tags": ["repository-types"]
+  },
+  "/recipes/tips-n-tricks/js-and-ts": {
+    "id": "js-and-ts",
+    "name": "Use JavaScript instead TypeScript",
+    "description": "",
+    "file": "shared/guides/js-and-ts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/js-and-ts",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/advanced-update": {
+    "id": "advanced-update",
+    "name": "Altering Migration Process",
+    "description": "",
+    "file": "shared/recipes/advanced-update",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/advanced-update",
+    "tags": ["automate-updating-dependencies"]
+  },
+  "/recipes/tips-n-tricks/run-commands-executor": {
+    "id": "run-commands-executor",
+    "name": "Running Custom Commands",
+    "description": "",
+    "file": "shared/running-custom-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/run-commands-executor",
+    "tags": ["use-task-executors"]
+  },
+  "/recipes/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to troubleshoot common problems.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "resolve-circular-dependencies",
+        "name": "Resolve Circular Dependencies",
+        "description": "",
+        "file": "shared/recipes/resolve-circular-dependencies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+        "tags": ["explore-graph"]
+      },
+      {
+        "id": "troubleshoot-nx-install-issues",
+        "name": "Troubleshooting Nx Install Issues",
+        "description": "",
+        "file": "shared/installation/troubleshoot-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+        "tags": []
+      },
+      {
+        "id": "troubleshoot-cache-misses",
+        "name": "Troubleshoot Cache Misses",
+        "description": "",
+        "file": "shared/recipes/troubleshoot-cache-misses",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+        "tags": ["cache-task-results"]
+      },
+      {
+        "id": "unknown-local-cache",
+        "name": "Unknown Local Cache Error",
+        "description": "",
+        "file": "shared/guides/unknown-local-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/unknown-local-cache",
+        "tags": []
+      },
+      {
+        "id": "performance-profiling",
+        "name": "Profiling Build Performance",
+        "description": "",
+        "file": "shared/guides/performance-profiling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/troubleshooting/performance-profiling",
+        "tags": ["use-task-executors", "environment-variables"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting",
+    "tags": []
+  },
+  "/recipes/troubleshooting/resolve-circular-dependencies": {
+    "id": "resolve-circular-dependencies",
+    "name": "Resolve Circular Dependencies",
+    "description": "",
+    "file": "shared/recipes/resolve-circular-dependencies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/resolve-circular-dependencies",
+    "tags": ["explore-graph"]
+  },
+  "/recipes/troubleshooting/troubleshoot-nx-install-issues": {
+    "id": "troubleshoot-nx-install-issues",
+    "name": "Troubleshooting Nx Install Issues",
+    "description": "",
+    "file": "shared/installation/troubleshoot-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/troubleshoot-nx-install-issues",
+    "tags": []
+  },
+  "/recipes/troubleshooting/troubleshoot-cache-misses": {
+    "id": "troubleshoot-cache-misses",
+    "name": "Troubleshoot Cache Misses",
+    "description": "",
+    "file": "shared/recipes/troubleshoot-cache-misses",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
+    "tags": ["cache-task-results"]
+  },
+  "/recipes/troubleshooting/unknown-local-cache": {
+    "id": "unknown-local-cache",
+    "name": "Unknown Local Cache Error",
+    "description": "",
+    "file": "shared/guides/unknown-local-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/unknown-local-cache",
+    "tags": []
+  },
+  "/recipes/troubleshooting/performance-profiling": {
+    "id": "performance-profiling",
+    "name": "Profiling Build Performance",
+    "description": "",
+    "file": "shared/guides/performance-profiling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/troubleshooting/performance-profiling",
+    "tags": ["use-task-executors", "environment-variables"]
+  },
+  "/recipes/nx-console": {
+    "id": "nx-console",
+    "name": "Nx Console",
+    "description": "Checkout all the recipes related to Nx Console.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "console-telemetry",
+        "name": "Telemetry",
+        "description": "",
+        "file": "shared/recipes/console-telemetry",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-telemetry",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-generate-command",
+        "name": "Generate Command",
+        "description": "",
+        "file": "shared/recipes/console-generate-command",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-generate-command",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-run-command",
+        "name": "Run Command",
+        "description": "",
+        "file": "shared/recipes/console-run-command",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-run-command",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-add-dependency-command",
+        "name": "Add Dependency Command",
+        "description": "",
+        "file": "shared/recipes/console-add-dependency-command",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-add-dependency-command",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-project-pane",
+        "name": "Project Pane",
+        "description": "",
+        "file": "shared/recipes/console-project-pane",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-project-pane",
+        "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-shortcuts",
+        "name": "Keyboard Shortcuts",
+        "description": "",
+        "file": "shared/recipes/console-shortcuts",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-shortcuts",
+        "tags": ["integrate-with-editors"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/nx-console",
+    "tags": []
+  },
+  "/recipes/nx-console/console-telemetry": {
+    "id": "console-telemetry",
+    "name": "Telemetry",
+    "description": "",
+    "file": "shared/recipes/console-telemetry",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-telemetry",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-generate-command": {
+    "id": "console-generate-command",
+    "name": "Generate Command",
+    "description": "",
+    "file": "shared/recipes/console-generate-command",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-generate-command",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-run-command": {
+    "id": "console-run-command",
+    "name": "Run Command",
+    "description": "",
+    "file": "shared/recipes/console-run-command",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-run-command",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-add-dependency-command": {
+    "id": "console-add-dependency-command",
+    "name": "Add Dependency Command",
+    "description": "",
+    "file": "shared/recipes/console-add-dependency-command",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-add-dependency-command",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-project-pane": {
+    "id": "console-project-pane",
+    "name": "Project Pane",
+    "description": "",
+    "file": "shared/recipes/console-project-pane",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-project-pane",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-shortcuts": {
+    "id": "console-shortcuts",
+    "name": "Keyboard Shortcuts",
+    "description": "",
+    "file": "shared/recipes/console-shortcuts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-shortcuts",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/other": {
+    "id": "other",
+    "name": "Other",
+    "description": "Other recipes you will find useful.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "deno-deploy",
+        "name": "Serverless deployment with Deno Deploy",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-deploy",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/deno-deploy",
+        "tags": ["deployment", "deno"]
+      },
+      {
+        "id": "deno-netlify-functions",
+        "name": "Add and Deploy Netlify Edge Functions with Deno",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/deno-netlify-functions",
+        "tags": ["deployment", "deno"]
+      },
+      {
+        "id": "rescope",
+        "name": "Rescope Packages from @nrwl to @nx",
+        "description": "",
+        "file": "shared/recipes/rescope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/other/rescope",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/other",
+    "tags": []
+  },
+  "/recipes/other/deno-deploy": {
+    "id": "deno-deploy",
+    "name": "Serverless deployment with Deno Deploy",
+    "description": "",
+    "file": "shared/recipes/deployment/deno-deploy",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/deno-deploy",
+    "tags": ["deployment", "deno"]
+  },
+  "/recipes/other/deno-netlify-functions": {
+    "id": "deno-netlify-functions",
+    "name": "Add and Deploy Netlify Edge Functions with Deno",
+    "description": "",
+    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/deno-netlify-functions",
+    "tags": ["deployment", "deno"]
+  },
+  "/recipes/other/rescope": {
+    "id": "rescope",
+    "name": "Rescope Packages from @nrwl to @nx",
+    "description": "",
+    "file": "shared/recipes/rescope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/other/rescope",
+    "tags": []
+  },
+  "/showcase": {
+    "id": "showcase",
+    "name": "Showcase",
+    "description": "Discover our selection of examples and benchmarks.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "example-repos",
+        "name": "Example Repos",
+        "description": "Examples of different ways to use Nx",
+        "file": "",
+        "itemList": [
+          {
+            "id": "add-lit",
+            "name": "Add a Lit Project",
+            "description": "Add a Lit project to your repo",
+            "file": "shared/recipes/add-stack/add-lit",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-lit",
+            "tags": []
+          },
+          {
+            "id": "add-solid",
+            "name": "Add a Solid Project",
+            "description": "Add a Solid project to your repo",
+            "file": "shared/recipes/add-stack/add-solid",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-solid",
+            "tags": []
+          },
+          {
+            "id": "add-qwik",
+            "name": "Add a Qwik Project",
+            "description": "Add a Qwik project to your repo",
+            "file": "shared/recipes/add-stack/add-qwik",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-qwik",
+            "tags": []
+          },
+          {
+            "id": "react-nx",
+            "name": "Powering Up React Development With Nx",
+            "description": "",
+            "file": "shared/examples/react-nx",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/react-nx",
+            "tags": []
+          },
+          {
+            "id": "apollo-react",
+            "name": "Using Apollo GraphQL",
+            "description": "",
+            "file": "shared/examples/apollo-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/apollo-react",
+            "tags": []
+          },
+          {
+            "id": "nestjs-prisma",
+            "name": "Using Prisma with NestJS",
+            "description": "",
+            "file": "shared/recipes/database/nestjs-prisma",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/nestjs-prisma",
+            "tags": ["database", "node"]
+          },
+          {
+            "id": "mongo-fastify",
+            "name": "Using Mongo with Fastify",
+            "description": "",
+            "file": "shared/recipes/database/mongo-fastify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/mongo-fastify",
+            "tags": ["database", "node"]
+          },
+          {
+            "id": "redis-fastify",
+            "name": "Using Redis with Fastify",
+            "description": "",
+            "file": "shared/recipes/database/redis-fastify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/redis-fastify",
+            "tags": ["database", "node"]
+          },
+          {
+            "id": "postgres-fastify",
+            "name": "Using Postgres with Fastify",
+            "description": "",
+            "file": "shared/recipes/database/postgres-fastify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/postgres-fastify",
+            "tags": ["database", "node"]
+          },
+          {
+            "id": "serverless-fastify-planetscale",
+            "name": "Using PlanetScale with Serverless Fastify",
+            "description": "",
+            "file": "shared/recipes/database/serverless-fastify-planetscale",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/serverless-fastify-planetscale",
+            "tags": ["database", "node", "serverless"]
+          },
+          {
+            "id": "caching",
+            "name": "Large Repo and Caching",
+            "description": "",
+            "file": "shared/examples/caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/caching",
+            "tags": []
+          },
+          {
+            "id": "dte",
+            "name": "Large Repo and DTE",
+            "description": "",
+            "file": "shared/examples/dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/dte",
+            "tags": []
+          },
+          {
+            "id": "mfe",
+            "name": "Nx Micro-Frontend Example",
+            "description": "",
+            "file": "shared/examples/nx-examples",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/mfe",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/showcase/example-repos",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/showcase",
+    "tags": []
+  },
+  "/showcase/example-repos": {
+    "id": "example-repos",
+    "name": "Example Repos",
+    "description": "Examples of different ways to use Nx",
+    "file": "",
+    "itemList": [
+      {
+        "id": "add-lit",
+        "name": "Add a Lit Project",
+        "description": "Add a Lit project to your repo",
+        "file": "shared/recipes/add-stack/add-lit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-lit",
+        "tags": []
+      },
+      {
+        "id": "add-solid",
+        "name": "Add a Solid Project",
+        "description": "Add a Solid project to your repo",
+        "file": "shared/recipes/add-stack/add-solid",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-solid",
+        "tags": []
+      },
+      {
+        "id": "add-qwik",
+        "name": "Add a Qwik Project",
+        "description": "Add a Qwik project to your repo",
+        "file": "shared/recipes/add-stack/add-qwik",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-qwik",
+        "tags": []
+      },
+      {
+        "id": "react-nx",
+        "name": "Powering Up React Development With Nx",
+        "description": "",
+        "file": "shared/examples/react-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/react-nx",
+        "tags": []
+      },
+      {
+        "id": "apollo-react",
+        "name": "Using Apollo GraphQL",
+        "description": "",
+        "file": "shared/examples/apollo-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/apollo-react",
+        "tags": []
+      },
+      {
+        "id": "nestjs-prisma",
+        "name": "Using Prisma with NestJS",
+        "description": "",
+        "file": "shared/recipes/database/nestjs-prisma",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/nestjs-prisma",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "mongo-fastify",
+        "name": "Using Mongo with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/mongo-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/mongo-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "redis-fastify",
+        "name": "Using Redis with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/redis-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/redis-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "postgres-fastify",
+        "name": "Using Postgres with Fastify",
+        "description": "",
+        "file": "shared/recipes/database/postgres-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/postgres-fastify",
+        "tags": ["database", "node"]
+      },
+      {
+        "id": "serverless-fastify-planetscale",
+        "name": "Using PlanetScale with Serverless Fastify",
+        "description": "",
+        "file": "shared/recipes/database/serverless-fastify-planetscale",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/serverless-fastify-planetscale",
+        "tags": ["database", "node", "serverless"]
+      },
+      {
+        "id": "caching",
+        "name": "Large Repo and Caching",
+        "description": "",
+        "file": "shared/examples/caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/caching",
+        "tags": []
+      },
+      {
+        "id": "dte",
+        "name": "Large Repo and DTE",
+        "description": "",
+        "file": "shared/examples/dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/dte",
+        "tags": []
+      },
+      {
+        "id": "mfe",
+        "name": "Nx Micro-Frontend Example",
+        "description": "",
+        "file": "shared/examples/nx-examples",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/mfe",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/showcase/example-repos",
+    "tags": []
+  },
+  "/showcase/example-repos/add-lit": {
+    "id": "add-lit",
+    "name": "Add a Lit Project",
+    "description": "Add a Lit project to your repo",
+    "file": "shared/recipes/add-stack/add-lit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-lit",
+    "tags": []
+  },
+  "/showcase/example-repos/add-solid": {
+    "id": "add-solid",
+    "name": "Add a Solid Project",
+    "description": "Add a Solid project to your repo",
+    "file": "shared/recipes/add-stack/add-solid",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-solid",
+    "tags": []
+  },
+  "/showcase/example-repos/add-qwik": {
+    "id": "add-qwik",
+    "name": "Add a Qwik Project",
+    "description": "Add a Qwik project to your repo",
+    "file": "shared/recipes/add-stack/add-qwik",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-qwik",
+    "tags": []
+  },
+  "/showcase/example-repos/react-nx": {
+    "id": "react-nx",
+    "name": "Powering Up React Development With Nx",
+    "description": "",
+    "file": "shared/examples/react-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/react-nx",
+    "tags": []
+  },
+  "/showcase/example-repos/apollo-react": {
+    "id": "apollo-react",
+    "name": "Using Apollo GraphQL",
+    "description": "",
+    "file": "shared/examples/apollo-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/apollo-react",
+    "tags": []
+  },
+  "/showcase/example-repos/nestjs-prisma": {
+    "id": "nestjs-prisma",
+    "name": "Using Prisma with NestJS",
+    "description": "",
+    "file": "shared/recipes/database/nestjs-prisma",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/nestjs-prisma",
+    "tags": ["database", "node"]
+  },
+  "/showcase/example-repos/mongo-fastify": {
+    "id": "mongo-fastify",
+    "name": "Using Mongo with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/mongo-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/mongo-fastify",
+    "tags": ["database", "node"]
+  },
+  "/showcase/example-repos/redis-fastify": {
+    "id": "redis-fastify",
+    "name": "Using Redis with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/redis-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/redis-fastify",
+    "tags": ["database", "node"]
+  },
+  "/showcase/example-repos/postgres-fastify": {
+    "id": "postgres-fastify",
+    "name": "Using Postgres with Fastify",
+    "description": "",
+    "file": "shared/recipes/database/postgres-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/postgres-fastify",
+    "tags": ["database", "node"]
+  },
+  "/showcase/example-repos/serverless-fastify-planetscale": {
+    "id": "serverless-fastify-planetscale",
+    "name": "Using PlanetScale with Serverless Fastify",
+    "description": "",
+    "file": "shared/recipes/database/serverless-fastify-planetscale",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/serverless-fastify-planetscale",
+    "tags": ["database", "node", "serverless"]
+  },
+  "/showcase/example-repos/caching": {
+    "id": "caching",
+    "name": "Large Repo and Caching",
+    "description": "",
+    "file": "shared/examples/caching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/caching",
+    "tags": []
+  },
+  "/showcase/example-repos/dte": {
+    "id": "dte",
+    "name": "Large Repo and DTE",
+    "description": "",
+    "file": "shared/examples/dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/dte",
+    "tags": []
+  },
+  "/showcase/example-repos/mfe": {
+    "id": "mfe",
+    "name": "Nx Micro-Frontend Example",
+    "description": "",
+    "file": "shared/examples/nx-examples",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/mfe",
     "tags": []
   },
   "/reference": {
@@ -1779,18 +4875,8 @@
     "file": "",
     "itemList": [
       {
-        "id": "commands",
-        "name": "Commands",
-        "description": "",
-        "file": "shared/reference/commands",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/reference/commands",
-        "tags": []
-      },
-      {
         "id": "nx-json",
-        "name": "nx.json",
+        "name": "Nx Configuration",
         "description": "",
         "file": "shared/reference/nx-json",
         "itemList": [],
@@ -1816,7 +4902,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/reference/nxignore",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "environment-variables",
@@ -1829,26 +4915,6 @@
         "tags": ["environment-variables"]
       },
       {
-        "id": "packages",
-        "name": "Packages",
-        "description": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/packages",
-        "tags": []
-      },
-      {
-        "id": "packages-devkit",
-        "name": "Nx Devkit",
-        "description": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/packages/devkit/documents/nx_devkit",
-        "tags": ["create-your-own-plugin"]
-      },
-      {
         "id": "glossary",
         "name": "Glossary",
         "description": "",
@@ -1857,35 +4923,15 @@
         "isExternal": false,
         "path": "/reference/glossary",
         "tags": []
-      },
-      {
-        "id": "changelog",
-        "name": "Changelog",
-        "description": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/reference/changelog",
-        "tags": []
       }
     ],
     "isExternal": false,
     "path": "/reference",
     "tags": []
   },
-  "/reference/commands": {
-    "id": "commands",
-    "name": "Commands",
-    "description": "",
-    "file": "shared/reference/commands",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/reference/commands",
-    "tags": []
-  },
   "/reference/nx-json": {
     "id": "nx-json",
-    "name": "nx.json",
+    "name": "Nx Configuration",
     "description": "",
     "file": "shared/reference/nx-json",
     "itemList": [],
@@ -1911,7 +4957,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/nxignore",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/reference/environment-variables": {
     "id": "environment-variables",
@@ -1923,26 +4969,6 @@
     "path": "/reference/environment-variables",
     "tags": ["environment-variables"]
   },
-  "/packages": {
-    "id": "packages",
-    "name": "Packages",
-    "description": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/packages",
-    "tags": []
-  },
-  "/packages/devkit/documents/nx_devkit": {
-    "id": "packages-devkit",
-    "name": "Nx Devkit",
-    "description": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/packages/devkit/documents/nx_devkit",
-    "tags": ["create-your-own-plugin"]
-  },
   "/reference/glossary": {
     "id": "glossary",
     "name": "Glossary",
@@ -1951,16 +4977,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/glossary",
-    "tags": []
-  },
-  "/reference/changelog": {
-    "id": "changelog",
-    "name": "Changelog",
-    "description": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/reference/changelog",
     "tags": []
   },
   "/deprecated": {
@@ -2390,7 +5406,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/reference/nx-json#workspace-layout",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "nxjson-generator-defaults",
@@ -2475,7 +5491,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/reference/nx-json#workspace-layout",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/reference/nx-json#generators": {
     "id": "nxjson-generator-defaults",

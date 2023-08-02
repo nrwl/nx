@@ -77,6 +77,12 @@
       "version": "16.2.0-beta.0",
       "description": "Remove outputPath from run commands",
       "implementation": "./src/migrations/update-16-2-0/remove-run-commands-output-path"
+    },
+    "16.6.0-prefix-outputs": {
+      "cli": "nx",
+      "version": "16.6.0-beta.6",
+      "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
+      "implementation": "./src/migrations/update-15-0-0/prefix-outputs"
     }
   }
 }

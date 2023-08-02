@@ -164,8 +164,8 @@ describe('nx-dev: Packages Section', () => {
     { title: '@nx/jest', path: '/packages/jest' },
     { title: '@nx/jest:init', path: '/packages/jest/generators/init' },
     {
-      title: '@nx/jest:jest-project',
-      path: '/packages/jest/generators/jest-project',
+      title: '@nx/jest:configuration',
+      path: '/packages/jest/generators/configuration',
     },
     { title: '@nx/jest', path: '/packages/jest/executors/jest' },
     { title: '@nx/js', path: '/packages/js' },

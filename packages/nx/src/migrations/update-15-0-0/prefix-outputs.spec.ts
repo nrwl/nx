@@ -91,7 +91,7 @@ describe('15.0.0 migration (prefix-outputs)', () => {
       nx: {
         targets: {
           build: {
-            outputs: ['dist/proj'],
+            outputs: ['dist/proj', 'proj/build'],
           },
         },
       },
@@ -101,7 +101,7 @@ describe('15.0.0 migration (prefix-outputs)', () => {
     await prefixOutputs(tree);
 
     expect(readJson(tree, 'proj/package.json').nx.targets.build).toEqual({
-      outputs: ['dist/proj'],
+      outputs: ['{workspaceRoot}/dist/proj', '{projectRoot}/build'],
     });
   });
 

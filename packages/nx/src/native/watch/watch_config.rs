@@ -2,7 +2,6 @@ use crate::native::watch::utils::get_ignore_files;
 use crate::native::watch::watch_filterer::WatchFilterer;
 use ignore_files::IgnoreFilter;
 use std::sync::Arc;
-use std::time::Duration;
 use tracing::trace;
 use watchexec::config::RuntimeConfig;
 use watchexec_filterer_ignore::IgnoreFilterer;
@@ -36,7 +35,6 @@ pub(super) async fn create_runtime(
     runtime.filterer(Arc::new(WatchFilterer {
         inner: IgnoreFilterer(filter),
     }));
-    runtime.action_throttle(Duration::from_millis(500));
 
     // let watch_directories = get_watch_directories(origin);
     // trace!(directories = ?watch_directories, "watching");

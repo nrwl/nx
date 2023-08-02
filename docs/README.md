@@ -67,6 +67,16 @@ You can add specific languages and a filename on the code snippet displayed.
 ‎```
 ````
 
+#### Terminal command
+
+To display a terminal command, use:
+
+````
+‎```shell
+‎ npx nx build
+‎```
+````
+
 #### Terminal Output
 
 You can display your terminal output with a dedicated component the same way you would show code.
@@ -84,6 +94,14 @@ You can optionally also pass a `path` like
 ‎ My terminal output here!
 ‎```
 ````
+
+#### Terminal Video Output
+
+You can have a more dynamic visualization of a terminal output by using the following component:
+
+```
+{% terminal-video src="/documentation/shared/images/caching/cache-terminal-animation.mp4" /%}
+```
 
 #### Custom iframes
 
@@ -111,7 +129,7 @@ We can display a special button inviting the reader to go to a GitHub repository
 You can add an "open in stackblitz" button as follows:
 
 ```markdown
-{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/standalone-angular-app?file=README.md" /%}
+{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/angular-standalone?file=README.md" /%}
 ```
 
 #### Install Nx Console
@@ -168,6 +186,14 @@ Embed a YouTube video directly with the following shortcode, control the title a
 src="https://www.youtube.com/embed/rNImFxo9gYs"
 title="Nx Console Run UI Form"
 width="100%" /%}
+```
+
+#### Youtube Section Link
+
+Have a more decent button-like widget that you can place below sections of a tutorial with a link to a specific point in a Youtube video.
+
+```markdown
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
 ```
 
 #### Graph

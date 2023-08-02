@@ -5,10 +5,13 @@ import { componentGenerator } from '../component/component';
 import { scamGenerator } from '../scam/scam';
 import { generateTestApplication } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
+import { stripIndents } from '@nx/devkit';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
+
+// TODO(v18): remove Cypress
 
 describe('angularStories generator: applications', () => {
   let tree: Tree;
@@ -25,12 +28,12 @@ describe('angularStories generator: applications', () => {
     });
   });
 
-  it('should generate stories file', async () => {
+  it('should generate stories file with interaction tests', async () => {
     await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.exists(`apps/${appName}/src/app/app.component.stories.ts`)
-    ).toBeTruthy();
+      tree.read(`apps/${appName}/src/app/app.component.stories.ts`, 'utf-8')
+    ).toMatchSnapshot();
   });
 
   it('should generate stories file for scam component', async () => {
@@ -90,16 +93,62 @@ describe('angularStories generator: applications', () => {
     });
 
     expect(
-      tree
-        .read(
-          `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`
-        )
-        .toString()
+      tree.read(
+        `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`,
+        'utf-8'
+      )
     ).toMatchSnapshot();
     expect(
       tree.exists(
         `apps/${appName}/src/app/component-a/component-a.component.stories.ts`
       )
+    ).toBeFalsy();
+  });
+
+  it('should ignore a path when using a routing module', async () => {
+    tree.write(
+      `apps/${appName}/src/app/component/component.module.ts`,
+      stripIndents`
+      import { NgModule } from '@angular/core';
+      
+      @NgModule({})
+      export class ComponentModule {}
+      `
+    );
+    tree.write(
+      `apps/${appName}/src/app/component/component-routing.module.ts`,
+      stripIndents`
+      import { NgModule } from '@angular/core';
+      import { RouterModule, Routes } from '@angular/router';
+      
+      const routes: Routes = [];
+      
+      @NgModule({
+        imports: [RouterModule.forChild(routes)],
+        exports: [RouterModule],
+      })
+      export class ComponentRoutingModule {}
+      `
+    );
+    await componentGenerator(tree, {
+      name: 'component/component',
+      project: appName,
+      flat: true,
+    });
+
+    await angularStoriesGenerator(tree, {
+      name: appName,
+      ignorePaths: [`apps/${appName}/src/app/app.component.ts`],
+    });
+
+    expect(
+      tree.read(
+        `apps/${appName}/src/app/component/component.component.stories.ts`,
+        'utf-8'
+      )
+    ).toMatchSnapshot();
+    expect(
+      tree.exists(`apps/${appName}/src/app/app.component.stories.ts`)
     ).toBeFalsy();
   });
 
@@ -113,20 +162,10 @@ describe('angularStories generator: applications', () => {
     await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree
-        .read(`apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`)
-        .toString()
+      tree.read(
+        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`,
+        'utf-8'
+      )
     ).toMatchSnapshot();
-  });
-
-  it('should generate cypress spec file', async () => {
-    await angularStoriesGenerator(tree, {
-      name: appName,
-      generateCypressSpecs: true,
-    });
-
-    expect(
-      tree.exists(`apps/${appName}-e2e/src/e2e/app.component.cy.ts`)
-    ).toBeTruthy();
   });
 });

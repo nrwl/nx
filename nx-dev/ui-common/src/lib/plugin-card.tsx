@@ -40,7 +40,7 @@ export function PluginCard({
           {isOfficial ? (
             <span
               title="Official plugins are maintained by the Nx Team"
-              className="bg-green-nx-base absolute bottom-3 right-4 rounded-full px-3 py-0.5 text-xs font-medium capitalize text-white"
+              className="bg-green-500 absolute bottom-3 right-4 rounded-full px-3 py-0.5 text-xs font-medium capitalize text-white"
             >
               Official
             </span>

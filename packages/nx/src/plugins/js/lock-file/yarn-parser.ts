@@ -1,6 +1,6 @@
 import { getHoistedPackageVersion } from './utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
-import { satisfies, Range } from 'semver';
+import { satisfies, Range, gt } from 'semver';
 import { NormalizedPackageJson } from './utils/package-json';
 import {
   ProjectGraph,
@@ -14,10 +14,6 @@ import { sortObjectByKeys } from '../../../utils/object-sort';
  * - Classic has resolved and integrity
  * - Berry has resolution, checksum, languageName and linkType
  */
-type YarnLockFile = {
-  __metadata?: {};
-} & Record<string, YarnDependency>;
-
 type YarnDependency = {
   version: string;
   dependencies?: Record<string, string>;
@@ -37,15 +33,21 @@ type YarnDependency = {
 
 export function parseYarnLockfile(
   lockFileContent: string,
+  packageJson: NormalizedPackageJson,
   builder: ProjectGraphBuilder
 ) {
   const { parseSyml } = require('@yarnpkg/parsers');
-  const data = parseSyml(lockFileContent);
+  const { __metadata, ...dependencies } = parseSyml(lockFileContent);
+  const isBerry = !!__metadata;
 
   // we use key => node map to avoid duplicate work when parsing keys
   const keyMap = new Map<string, ProjectGraphExternalNode>();
-  addNodes(data, builder, keyMap);
-  addDependencies(data, builder, keyMap);
+
+  // yarn classic splits keys when parsing so we need to stich them back together
+  const groupedDependencies = groupDependencies(dependencies, isBerry);
+
+  addNodes(groupedDependencies, packageJson, builder, keyMap, isBerry);
+  addDependencies(groupedDependencies, builder, keyMap);
 }
 
 function getPackageNames(keys: string): string[] {
@@ -58,12 +60,19 @@ function getPackageNames(keys: string): string[] {
 }
 
 function addNodes(
-  { __metadata, ...dependencies }: YarnLockFile,
+  dependencies: Record<string, YarnDependency>,
+  packageJson: NormalizedPackageJson,
   builder: ProjectGraphBuilder,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  isBerry: boolean
 ) {
-  const isBerry = !!__metadata;
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
+  const combinedDeps = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+    ...packageJson.peerDependencies,
+    ...packageJson.optionalDependencies,
+  };
 
   Object.entries(dependencies).forEach(([keys, snapshot]) => {
     // ignore workspace projects & patches
@@ -103,23 +112,22 @@ function addNodes(
         };
 
         keyMap.set(key, node);
+        // use actual version so we can detect it later based on npm package's version
+        const mapKey =
+          snapshot.version && version !== snapshot.version
+            ? snapshot.version
+            : version;
         if (!nodes.has(packageName)) {
-          nodes.set(packageName, new Map([[version, node]]));
+          nodes.set(packageName, new Map([[mapKey, node]]));
         } else {
-          nodes.get(packageName).set(version, node);
+          nodes.get(packageName).set(mapKey, node);
         }
       });
     });
   });
 
   for (const [packageName, versionMap] of nodes.entries()) {
-    let hoistedNode: ProjectGraphExternalNode;
-    if (versionMap.size === 1) {
-      hoistedNode = versionMap.values().next().value;
-    } else {
-      const hoistedVersion = getHoistedVersion(packageName);
-      hoistedNode = versionMap.get(hoistedVersion);
-    }
+    const hoistedNode = findHoistedNode(packageName, versionMap, combinedDeps);
     if (hoistedNode) {
       hoistedNode.name = `npm:${packageName}`;
     }
@@ -127,6 +135,44 @@ function addNodes(
     versionMap.forEach((node) => {
       builder.addExternalNode(node);
     });
+  }
+}
+
+function findHoistedNode(
+  packageName: string,
+  versionMap: Map<string, ProjectGraphExternalNode>,
+  combinedDeps: Record<string, string>
+): ProjectGraphExternalNode {
+  const hoistedVersion = getHoistedVersion(packageName);
+  if (hoistedVersion) {
+    return versionMap.get(hoistedVersion);
+  }
+  const rootVersionSpecifier = combinedDeps[packageName];
+  if (!rootVersionSpecifier) {
+    return;
+  }
+  const versions = Array.from(versionMap.keys()).sort((a, b) =>
+    gt(a, b) ? -1 : 1
+  );
+  // take the highest version found
+  if (rootVersionSpecifier === '*') {
+    return versionMap.get(versions[0]);
+  }
+  // take version that satisfies the root version specifier
+  let version = versions.find((v) => satisfies(v, rootVersionSpecifier));
+  if (!version) {
+    // try to find alias version
+    version = versions.find(
+      (v) =>
+        versionMap.get(v).name === `npm:${packageName}@${rootVersionSpecifier}`
+    );
+  }
+  if (!version) {
+    // try to find tarball package
+    version = versions.find((v) => versionMap.get(v).data.version !== v);
+  }
+  if (version) {
+    return versionMap.get(version);
   }
 }
 
@@ -155,20 +201,33 @@ function findVersion(
     return snapshot.resolution.slice(packageName.length + 1);
   }
 
-  if (!isBerry && snapshot.resolved && !isValidVersionRange(versionRange)) {
+  if (!isBerry && isTarballPackage(versionRange, snapshot)) {
     return snapshot.resolved;
   }
   // otherwise it's a standard version
   return snapshot.version;
 }
 
-// check if value can be parsed as a semver range
-function isValidVersionRange(versionRange: string): boolean {
+// check if snapshot represents tarball package
+function isTarballPackage(
+  versionRange: string,
+  snapshot: YarnDependency
+): boolean {
+  // if resolved is missing it's internal link
+  if (!snapshot.resolved) {
+    return false;
+  }
+  // tarballs have no integrity
+  if (snapshot.integrity) {
+    return false;
+  }
   try {
     new Range(versionRange);
-    return true;
-  } catch {
+    // range is a valid semver
     return false;
+  } catch {
+    // range is not a valid semver, it can be an npm tag or url part of a tarball
+    return snapshot.version && !snapshot.resolved.includes(snapshot.version);
   }
 }
 
@@ -180,7 +239,7 @@ function getHoistedVersion(packageName: string): string {
 }
 
 function addDependencies(
-  { __metadata, ...dependencies }: YarnLockFile,
+  dependencies: Record<string, YarnDependency>,
   builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
@@ -243,8 +302,12 @@ export function stringifyYarnLockfile(
 }
 
 function groupDependencies(
-  dependencies: Record<string, YarnDependency>
+  dependencies: Record<string, YarnDependency>,
+  isBerry: boolean
 ): Record<string, YarnDependency> {
+  if (isBerry) {
+    return dependencies;
+  }
   let groupedDependencies: Record<string, YarnDependency>;
   const resolutionMap = new Map<string, YarnDependency>();
   const snapshotMap = new Map<YarnDependency, Set<string>>();
@@ -297,13 +360,8 @@ function mapSnapshots(
     ...packageJson.peerDependencies,
   };
 
-  let groupedDependencies: Record<string, YarnDependency>;
-  if (isBerry) {
-    groupedDependencies = dependencies;
-  } else {
-    // yarn classic splits keys when parsing so we need to stich them back together
-    groupedDependencies = groupDependencies(dependencies);
-  }
+  // yarn classic splits keys when parsing so we need to stich them back together
+  const groupedDependencies = groupDependencies(dependencies, isBerry);
 
   // collect snapshots and their matching keys
   Object.values(nodes).forEach((node) => {

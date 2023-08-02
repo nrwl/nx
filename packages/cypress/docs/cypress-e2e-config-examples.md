@@ -1,7 +1,7 @@
 This is a generator to add a cypress e2e configuration to an existing project.
 
 ```bash
-nx g cypress-e2e-configuration --project=my-cool-project --devServerTarget=some-app:serve
+nx g @nx/cypress:configuration --project=my-cool-project --devServerTarget=some-app:serve
 ```
 
 Running this generator, adds the required files to run cypress tests for a project,
@@ -13,7 +13,7 @@ You can customize the directory used via the `--directory` flag, the value is re
 For example if you wanted to place the files inside an `e2e` folder
 
 ```bash
-nx g cypress-e2e-configuration --project=my-cool-project --devServerTarget=some-app:serve --directory=e2e
+nx g @nx/cypress:configuration --project=my-cool-project --devServerTarget=some-app:serve --directory=e2e
 ```
 
 Providing a `--devServerTarget` is optional if you provide a `--baseUrl` or the project you're adding the configuration to has a `serve` target already.
@@ -116,12 +116,12 @@ Brining those e2e test closer to each feature can result is lowering CI times si
 
 Building this way leaves the `fancy-app-e2e` for mostly smoke type testing instead of more in-depth feature testing.
 
-Using the `cypress-e2e-configuration` generator can help you accomplish this in your workspace.
+Using the `@nx/cypress:configuration` generator can help you accomplish this in your workspace.
 
 ```bash
-nx g cypress-e2e-configuration --project=feature-cart --devServerTarget=fancy-app:serve
-nx g cypress-e2e-configuration --project=feature-user --devServerTarget=fancy-app:serve
-nx g cypress-e2e-configuration --project=feature-dashboard --devServerTarget=fancy-app:serve
+nx g @nx/cypress:configuration --project=feature-cart --devServerTarget=fancy-app:serve
+nx g @nx/cypress:configuration --project=feature-user --devServerTarget=fancy-app:serve
+nx g @nx/cypress:configuration --project=feature-dashboard --devServerTarget=fancy-app:serve
 ```
 
 Each project will now get their own `e2e` target, where the feature project is only concerned with itself. This allows for more focused tests without worrying about forcing unrelated tests to also run.

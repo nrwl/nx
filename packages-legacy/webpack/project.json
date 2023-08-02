@@ -14,7 +14,6 @@
         "main": "packages-legacy/webpack/index.ts",
         "tsConfig": "packages-legacy/webpack/tsconfig.json",
         "outputPath": "build/packages/webpack-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/webpack",

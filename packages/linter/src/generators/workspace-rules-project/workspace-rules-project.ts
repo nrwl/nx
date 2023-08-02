@@ -30,10 +30,9 @@ export async function lintWorkspaceRulesProjectGenerator(
   tree: Tree,
   options: LintWorkspaceRulesProjectGeneratorOptions = {}
 ) {
-  const { addPropertyToJestConfig, jestProjectGenerator } = ensurePackage(
-    '@nx/jest',
-    nxVersion
-  );
+  const { addPropertyToJestConfig, configurationGenerator } = ensurePackage<
+    typeof import('@nx/jest')
+  >('@nx/jest', nxVersion);
 
   // Noop if the workspace rules project already exists
   try {
@@ -70,7 +69,7 @@ export async function lintWorkspaceRulesProjectGenerator(
   }
 
   // Add jest to the project and return installation task
-  const installTask = await jestProjectGenerator(tree, {
+  const installTask = await configurationGenerator(tree, {
     project: WORKSPACE_RULES_PROJECT_NAME,
     supportTsx: false,
     skipSerializers: true,

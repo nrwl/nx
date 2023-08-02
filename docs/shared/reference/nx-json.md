@@ -116,7 +116,7 @@ In this case Nx will use the right `production` input for each project.
 
 {% cards %}
 {% card title="Project Configuration reference" type="documentation" description="inputs and namedInputs are also described in the project configuration reference" url="/reference/project-configuration#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/concepts/more-concepts/customizing-inputs" /%}
 {% /cards %}
 
 ### Target Defaults

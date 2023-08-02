@@ -1,0 +1,29 @@
+import componentName from './<%= componentImportFileName %>';
+<% if ( interactionTests ) { %>
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+<% } %>
+
+export default {
+  component: <%= componentName %>,
+  title: '<%= componentName %>',<% if ( argTypes && argTypes.length > 0 ) { %> 
+  argTypes: {<% for (let argType of argTypes) { %>
+    <%= argType.name %>: { <%- argType.type %> : "<%- argType.actionText %>" },<% } %>
+}
+   <% } %> 
+};
+
+export const Primary = {
+  args: {<% for (let prop of props) { %>
+    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+  },
+};
+
+<% if ( interactionTests ) { %>
+export const Heading: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to <%=componentName%>!/gi)).toBeTruthy();
+  },
+};
+<% } %>

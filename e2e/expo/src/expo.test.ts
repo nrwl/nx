@@ -2,6 +2,7 @@ import {
   checkFilesExist,
   cleanupProject,
   expectTestsPass,
+  getPackageManagerCommand,
   killPorts,
   newProject,
   promisifiedTreeKill,
@@ -9,9 +10,11 @@ import {
   readResolvedConfiguration,
   runCLI,
   runCLIAsync,
+  runCommand,
   runCommandUntil,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -22,6 +25,16 @@ describe('expo', () => {
 
   beforeAll(() => {
     proj = newProject();
+    // we create empty preset above which skips creation of `production` named input
+    updateJson('nx.json', (nxJson) => {
+      nxJson.namedInputs = {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: ['default'],
+        sharedGlobals: [],
+      };
+      nxJson.targetDefaults.build.inputs = ['production', '^production'];
+      return nxJson;
+    });
     runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
     runCLI(
       `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
@@ -92,15 +105,13 @@ describe('expo', () => {
     expect(prebuildResult.combinedOutput).toContain('Config synced');
   });
 
-  // TODO(emily): expo-cli always fetches the latest version of react native
-  // re-enable it when expo-cli is fixed
-  xit('should install', async () => {
+  it('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
-      `install ${appName} --no-interactive --check`
+      `install ${appName} --no-interactive`
     );
     expect(installResults.combinedOutput).toContain(
-      'Dependencies are up to date'
+      'Successfully ran target install'
     );
   });
 
@@ -125,8 +136,23 @@ describe('expo', () => {
   it('should build publishable library', async () => {
     expect(() => {
       runCLI(`build ${libName}`);
-      checkFilesExist(`dist/libs/${libName}/index.js`);
+      checkFilesExist(`dist/libs/${libName}/index.esm.js`);
       checkFilesExist(`dist/libs/${libName}/src/index.d.ts`);
+    }).not.toThrow();
+  });
+
+  it('should tsc app', async () => {
+    expect(() => {
+      const pmc = getPackageManagerCommand();
+      runCommand(
+        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
+      );
+      checkFilesExist(
+        `dist/out-tsc/apps/${appName}/src/app/App.js`,
+        `dist/out-tsc/apps/${appName}/src/app/App.d.ts`,
+        `dist/out-tsc/libs/${libName}/src/index.js`,
+        `dist/out-tsc/libs/${libName}/src/index.d.ts`
+      );
     }).not.toThrow();
   });
 });

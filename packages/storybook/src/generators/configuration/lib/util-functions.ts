@@ -28,6 +28,7 @@ import {
 import { StorybookConfigureSchema } from '../schema';
 import { UiFramework7 } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
+import ts = require('typescript');
 
 const DEFAULT_PORT = 4400;
 
@@ -35,7 +36,7 @@ export function addStorybookTask(
   tree: Tree,
   projectName: string,
   uiFramework: string,
-  configureTestRunner: boolean
+  interactionTests: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
     return;
@@ -68,7 +69,7 @@ export function addStorybookTask(
     },
   };
 
-  if (configureTestRunner === true) {
+  if (interactionTests === true) {
     projectConfig.targets['test-storybook'] = {
       executor: 'nx:run-commands',
       options: {
@@ -83,7 +84,7 @@ export function addStorybookTask(
 export function addAngularStorybookTask(
   tree: Tree,
   projectName: string,
-  configureTestRunner: boolean
+  interactionTests: boolean
 ) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   const { ngBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
@@ -124,7 +125,7 @@ export function addAngularStorybookTask(
     },
   };
 
-  if (configureTestRunner === true) {
+  if (interactionTests === true) {
     projectConfig.targets['test-storybook'] = {
       executor: 'nx:run-commands',
       options: {
@@ -257,6 +258,23 @@ export function createStorybookTsconfigFile(
   };
 
   writeJson(tree, storybookTsConfigPath, storybookTsConfig);
+}
+
+export function editTsconfigBaseJson(tree: Tree) {
+  let tsconfigBasePath = 'tsconfig.base.json';
+
+  // standalone workspace maybe
+  if (!tree.exists(tsconfigBasePath)) tsconfigBasePath = 'tsconfig.json';
+
+  if (!tree.exists(tsconfigBasePath)) return;
+
+  const tsconfigBaseContent = readJson<TsConfig>(tree, tsconfigBasePath);
+
+  if (!tsconfigBaseContent.compilerOptions)
+    tsconfigBaseContent.compilerOptions = {};
+  tsconfigBaseContent.compilerOptions.skipLibCheck = true;
+
+  writeJson(tree, tsconfigBasePath, tsconfigBaseContent);
 }
 
 export function configureTsProjectConfig(
@@ -497,6 +515,7 @@ export function createProjectStorybookDir(
   root: string,
   projectType: string,
   projectIsRootProjectInStandaloneWorkspace: boolean,
+  interactionTests: boolean,
   mainDir?: string,
   isNextJs?: boolean,
   usesSwc?: boolean,
@@ -533,6 +552,7 @@ export function createProjectStorybookDir(
     offsetFromRoot: offsetFromRoot(root),
     projectDirectory,
     projectType,
+    interactionTests,
     mainDir,
     isNextJs: isNextJs && projectType === 'application',
     usesSwc,
@@ -564,7 +584,7 @@ export function getTsConfigPath(
   const { root, projectType } = readProjectConfiguration(tree, projectName);
   return join(
     root,
-    path && path.length > 0
+    path?.length > 0
       ? path
       : projectType === 'application'
       ? 'tsconfig.app.json'
@@ -595,7 +615,7 @@ export function addBuildStorybookToCacheableOperations(tree: Tree) {
 }
 
 export function projectIsRootProjectInStandaloneWorkspace(projectRoot: string) {
-  return relative(workspaceRoot, projectRoot).length === 0;
+  return relative(workspaceRoot, projectRoot)?.length === 0;
 }
 
 export function workspaceHasRootProject(tree: Tree) {
@@ -675,21 +695,21 @@ export function renameAndMoveOldTsConfig(
   pathToStorybookConfigFile: string,
   tree: Tree
 ) {
-  if (pathToStorybookConfigFile) {
+  if (pathToStorybookConfigFile && tree.exists(pathToStorybookConfigFile)) {
     updateJson(tree, pathToStorybookConfigFile, (json) => {
       if (json.extends?.startsWith('../')) {
         // drop one level of nesting
         json.extends = json.extends.replace('../', './');
       }
 
-      for (let i = 0; i < json.files.length; i++) {
+      for (let i = 0; i < json.files?.length; i++) {
         // drop one level of nesting
         if (json.files[i].startsWith('../../../')) {
           json.files[i] = json.files[i].replace('../../../', '../../');
         }
       }
 
-      for (let i = 0; i < json.include.length; i++) {
+      for (let i = 0; i < json.include?.length; i++) {
         if (json.include[i].startsWith('../')) {
           json.include[i] = json.include[i].replace('../', '');
         }
@@ -702,7 +722,7 @@ export function renameAndMoveOldTsConfig(
         }
       }
 
-      for (let i = 0; i < json.exclude.length; i++) {
+      for (let i = 0; i < json.exclude?.length; i++) {
         if (json.exclude[i].startsWith('../')) {
           json.exclude[i] = json.exclude[i].replace('../', 'src/');
         }
@@ -718,13 +738,30 @@ export function renameAndMoveOldTsConfig(
   }
 
   const projectTsConfig = joinPathFragments(projectRoot, 'tsconfig.json');
-  updateJson(tree, projectTsConfig, (json) => {
-    for (let i = 0; i < json.references.length; i++) {
-      if (json.references[i].path === './.storybook/tsconfig.json') {
-        json.references[i].path = './tsconfig.storybook.json';
-        break;
+
+  if (tree.exists(projectTsConfig)) {
+    updateJson(tree, projectTsConfig, (json) => {
+      for (let i = 0; i < json.references?.length; i++) {
+        if (json.references[i].path === './.storybook/tsconfig.json') {
+          json.references[i].path = './tsconfig.storybook.json';
+          break;
+        }
       }
-    }
-    return json;
-  });
+      return json;
+    });
+  }
+
+  const projectEsLintFile = joinPathFragments(projectRoot, '.eslintrc.json');
+
+  if (tree.exists(projectEsLintFile)) {
+    updateJson(tree, projectEsLintFile, (json) => {
+      const jsonString = JSON.stringify(json);
+      const newJsonString = jsonString.replace(
+        /\.storybook\/tsconfig\.json/g,
+        'tsconfig.storybook.json'
+      );
+      json = JSON.parse(newJsonString);
+      return json;
+    });
+  }
 }

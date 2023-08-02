@@ -2,7 +2,7 @@
 import * as yargs from 'yargs';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { join } from 'path';
 
 import { parse } from 'semver';

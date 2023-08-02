@@ -1,6 +1,6 @@
 import { ExecutorContext, ProjectGraphProjectNode } from '@nx/devkit';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   createTmpTsConfig,
   DependentBuildableProjectNode,
 } from './buildable-libs-utils';
@@ -14,7 +14,8 @@ export function checkDependencies(
   target: ProjectGraphProjectNode;
   dependencies: DependentBuildableProjectNode[];
 } {
-  const { target, dependencies } = calculateProjectDependencies(
+  const { target, dependencies } = calculateProjectBuildableDependencies(
+    context.taskGraph,
     context.projectGraph,
     context.root,
     context.projectName,

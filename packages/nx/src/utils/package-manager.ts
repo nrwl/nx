@@ -15,6 +15,7 @@ const execAsync = promisify(exec);
 export type PackageManager = 'yarn' | 'pnpm' | 'npm';
 
 export interface PackageManagerCommands {
+  preInstall?: string;
   install: string;
   ciInstall: string;
   add: string;
@@ -60,10 +61,13 @@ export function getPackageManagerCommand(
 ): PackageManagerCommands {
   const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
     yarn: () => {
-      const yarnVersion = getPackageManagerVersion('yarn');
+      const yarnVersion = getPackageManagerVersion('yarn', root);
       const useBerry = gte(yarnVersion, '2.0.0');
 
       return {
+        preInstall: useBerry
+          ? 'yarn set version stable'
+          : 'yarn set version classic',
         install: 'yarn',
         ciInstall: useBerry
           ? 'yarn install --immutable'
@@ -71,13 +75,13 @@ export function getPackageManagerCommand(
         add: useBerry ? 'yarn add' : 'yarn add -W',
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
         rm: 'yarn remove',
-        exec: useBerry ? 'yarn exec' : 'yarn',
+        exec: 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
       };
     },
     pnpm: () => {
-      const pnpmVersion = getPackageManagerVersion('pnpm');
+      const pnpmVersion = getPackageManagerVersion('pnpm', root);
       const useExec = gte(pnpmVersion, '6.13.0');
       const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
@@ -122,9 +126,13 @@ export function getPackageManagerCommand(
  * but it can also be passed in explicitly.
  */
 export function getPackageManagerVersion(
-  packageManager: PackageManager = detectPackageManager()
+  packageManager: PackageManager = detectPackageManager(),
+  cwd = process.cwd()
 ): string {
-  return execSync(`${packageManager} --version`).toString('utf-8').trim();
+  return execSync(`${packageManager} --version`, {
+    cwd,
+    encoding: 'utf-8',
+  }).trim();
 }
 
 /**

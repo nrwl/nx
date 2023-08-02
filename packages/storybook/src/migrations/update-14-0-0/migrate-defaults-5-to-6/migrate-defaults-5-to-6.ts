@@ -196,6 +196,7 @@ function migrateProjectLevelStorybookInstance(
     root,
     projectType,
     false,
+    false,
     mainDir,
     !!nextBuildTarget,
     compiler === 'swc'

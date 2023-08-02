@@ -7,6 +7,7 @@
     "$id": "NxPluginCreatePackage",
     "title": "Create a framework package",
     "description": "Create a framework package that uses Nx CLI.",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Basic executable\" %}\n\nCreate an executable that initializes an Nx workspace with {my-plugin}'s preset:\n\n```bash\nnx g @nx/plugin:create-package create-my-plugin --project my-plugin\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "type": "object",
     "properties": {
       "name": {

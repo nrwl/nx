@@ -1,21 +1,23 @@
-import { dirname, join, relative } from 'path';
-import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
-import type { ProjectGraph, ProjectGraphProjectNode } from '@nx/devkit';
+import type {
+  ProjectGraph,
+  ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
+  TaskGraph,
+} from '@nx/devkit';
 import {
   getOutputsForTargetAndConfiguration,
-  ProjectGraphExternalNode,
+  parseTargetString,
   readJsonFile,
   stripIndents,
   writeJsonFile,
 } from '@nx/devkit';
-import type * as ts from 'typescript';
 import { unlinkSync } from 'fs';
-import { output } from 'nx/src/utils/output';
 import { isNpmProject } from 'nx/src/project-graph/operators';
-import { ensureTypescript } from './typescript/ensure-typescript';
+import { directoryExists, fileExists } from 'nx/src/utils/fileutils';
+import { output } from 'nx/src/utils/output';
+import { dirname, join, relative } from 'path';
+import type * as ts from 'typescript';
 import { readTsConfigPaths } from './typescript/ts-config';
-
-let tsModule: typeof import('typescript');
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (
@@ -30,6 +32,42 @@ export type DependentBuildableProjectNode = {
   outputs: string[];
   node: ProjectGraphProjectNode | ProjectGraphExternalNode;
 };
+
+export function calculateProjectBuildableDependencies(
+  taskGraph: TaskGraph | undefined,
+  projGraph: ProjectGraph,
+  root: string,
+  projectName: string,
+  targetName: string,
+  configurationName: string,
+  shallow?: boolean
+): {
+  target: ProjectGraphProjectNode;
+  dependencies: DependentBuildableProjectNode[];
+  nonBuildableDependencies: string[];
+  topLevelDependencies: DependentBuildableProjectNode[];
+} {
+  if (process.env.NX_BUILDABLE_LIBRARIES_TASK_GRAPH === 'true' && taskGraph) {
+    return calculateDependenciesFromTaskGraph(
+      taskGraph,
+      projGraph,
+      root,
+      projectName,
+      targetName,
+      configurationName,
+      shallow
+    );
+  }
+
+  return calculateProjectDependencies(
+    projGraph,
+    root,
+    projectName,
+    targetName,
+    configurationName,
+    shallow
+  );
+}
 
 export function calculateProjectDependencies(
   projGraph: ProjectGraph,
@@ -180,6 +218,191 @@ function readTsConfigWithRemappedPaths(
     );
   }
   return generatedTsConfig;
+}
+
+export function calculateDependenciesFromTaskGraph(
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
+  root: string,
+  projectName: string,
+  targetName: string,
+  configurationName: string,
+  shallow?: boolean
+): {
+  target: ProjectGraphProjectNode;
+  dependencies: DependentBuildableProjectNode[];
+  nonBuildableDependencies: string[];
+  topLevelDependencies: DependentBuildableProjectNode[];
+} {
+  const target = projectGraph.nodes[projectName];
+  const nonBuildableDependencies = [];
+  const topLevelDependencies: DependentBuildableProjectNode[] = [];
+
+  const dependentTasks = collectDependentTasks(
+    projectName,
+    `${projectName}:${targetName}${
+      configurationName ? `:${configurationName}` : ''
+    }`,
+    taskGraph,
+    projectGraph,
+    shallow
+  );
+
+  const npmDependencies = collectNpmDependencies(
+    projectName,
+    projectGraph,
+    !shallow ? dependentTasks : undefined
+  );
+
+  const dependencies: DependentBuildableProjectNode[] = [];
+  for (const [taskName, { isTopLevel }] of dependentTasks) {
+    let project: DependentBuildableProjectNode = null;
+    const depTask = taskGraph.tasks[taskName];
+    const depProjectNode = projectGraph.nodes?.[depTask.target.project];
+    if (depProjectNode?.type !== 'lib') {
+      return null;
+    }
+
+    let outputs = getOutputsForTargetAndConfiguration(depTask, depProjectNode);
+
+    if (outputs.length === 0) {
+      nonBuildableDependencies.push(depTask.target.project);
+      continue;
+    }
+
+    const libPackageJsonPath = join(
+      root,
+      depProjectNode.data.root,
+      'package.json'
+    );
+
+    project = {
+      name: fileExists(libPackageJsonPath)
+        ? readJsonFile(libPackageJsonPath).name // i.e. @workspace/mylib
+        : depTask.target.project,
+      outputs,
+      node: depProjectNode,
+    };
+
+    if (isTopLevel) {
+      topLevelDependencies.push(project);
+    }
+
+    dependencies.push(project);
+  }
+
+  for (const { project, isTopLevel } of npmDependencies) {
+    if (isTopLevel) {
+      topLevelDependencies.push(project);
+    }
+
+    dependencies.push(project);
+  }
+
+  dependencies.sort((a, b) => (a.name > b.name ? 1 : b.name > a.name ? -1 : 0));
+
+  return {
+    target,
+    dependencies,
+    nonBuildableDependencies,
+    topLevelDependencies,
+  };
+}
+
+function collectNpmDependencies(
+  projectName: string,
+  projectGraph: ProjectGraph,
+  dependentTasks:
+    | Map<string, { project: string; isTopLevel: boolean }>
+    | undefined,
+  collectedPackages = new Set<string>(),
+  isTopLevel = true
+): Array<{ project: DependentBuildableProjectNode; isTopLevel: boolean }> {
+  const dependencies: Array<{
+    project: DependentBuildableProjectNode;
+    isTopLevel: boolean;
+  }> = projectGraph.dependencies[projectName]
+    .map((dep) => {
+      const projectNode =
+        projectGraph.nodes?.[dep.target] ??
+        projectGraph.externalNodes?.[dep.target];
+      if (
+        projectNode?.type !== 'npm' ||
+        collectedPackages.has(projectNode.data.packageName)
+      ) {
+        return null;
+      }
+
+      const project = {
+        name: projectNode.data.packageName,
+        outputs: [],
+        node: projectNode,
+      };
+      collectedPackages.add(project.name);
+
+      return { project, isTopLevel };
+    })
+    .filter((x) => !!x);
+
+  if (dependentTasks?.size) {
+    for (const [, { project: projectName }] of dependentTasks) {
+      dependencies.push(
+        ...collectNpmDependencies(
+          projectName,
+          projectGraph,
+          undefined,
+          collectedPackages,
+          false
+        )
+      );
+    }
+  }
+
+  return dependencies;
+}
+
+function collectDependentTasks(
+  project: string,
+  task: string,
+  taskGraph: TaskGraph,
+  projectGraph: ProjectGraph,
+  shallow?: boolean,
+  areTopLevelDeps = true,
+  dependentTasks = new Map<string, { project: string; isTopLevel: boolean }>()
+): Map<string, { project: string; isTopLevel: boolean }> {
+  for (const depTask of taskGraph.dependencies[task] ?? []) {
+    if (dependentTasks.has(depTask)) {
+      if (!dependentTasks.get(depTask).isTopLevel && areTopLevelDeps) {
+        dependentTasks.get(depTask).isTopLevel = true;
+      }
+      continue;
+    }
+
+    const { project: depTaskProject } = parseTargetString(
+      depTask,
+      projectGraph
+    );
+    if (depTaskProject !== project) {
+      dependentTasks.set(depTask, {
+        project: depTaskProject,
+        isTopLevel: areTopLevelDeps,
+      });
+    }
+
+    if (!shallow) {
+      collectDependentTasks(
+        depTaskProject,
+        depTask,
+        taskGraph,
+        projectGraph,
+        shallow,
+        depTaskProject === project && areTopLevelDeps,
+        dependentTasks
+      );
+    }
+  }
+
+  return dependentTasks;
 }
 
 /**

@@ -45,6 +45,7 @@ describe('lib', () => {
           build: "echo 'implement build'",
           test: "echo 'implement test'",
         },
+        dependencies: {},
       });
 
       expect(tree.exists('libs/my-lib/src/index.ts')).toBeTruthy();
@@ -382,6 +383,33 @@ describe('lib', () => {
 
         expect.assertions(1);
       });
+
+      it('should provide a default import path using npm scope', async () => {
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          name: 'myLib',
+        });
+
+        const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+        expect(
+          tsconfigJson.compilerOptions.paths['@proj/my-lib']
+        ).toBeDefined();
+      });
+
+      it('should read import path from existing name in package.json', async () => {
+        updateJson(tree, 'package.json', (json) => {
+          json.name = '@acme/core';
+          return json;
+        });
+        await libraryGenerator(tree, {
+          ...defaultOptions,
+          rootProject: true,
+          name: 'myLib',
+        });
+
+        const tsconfigJson = readJson(tree, '/tsconfig.base.json');
+        expect(tsconfigJson.compilerOptions.paths['@acme/core']).toBeDefined();
+      });
     });
 
     describe('--pascalCaseFiles', () => {
@@ -435,7 +463,10 @@ describe('lib', () => {
           executor: '@nx/linter:eslint',
           outputs: ['{options.outputFile}'],
           options: {
-            lintFilePatterns: ['libs/my-lib/**/*.ts'],
+            lintFilePatterns: [
+              'libs/my-lib/**/*.ts',
+              'libs/my-lib/package.json',
+            ],
           },
         });
       });
@@ -479,6 +510,15 @@ describe('lib', () => {
                 ],
                 "rules": {},
               },
+              {
+                "files": [
+                  "*.json",
+                ],
+                "parser": "jsonc-eslint-parser",
+                "rules": {
+                  "@nx/dependency-checks": "error",
+                },
+              },
             ],
           }
         `);
@@ -499,7 +539,10 @@ describe('lib', () => {
           executor: '@nx/linter:eslint',
           outputs: ['{options.outputFile}'],
           options: {
-            lintFilePatterns: ['libs/my-dir/my-lib/**/*.ts'],
+            lintFilePatterns: [
+              'libs/my-dir/my-lib/**/*.ts',
+              'libs/my-dir/my-lib/package.json',
+            ],
           },
         });
       });
@@ -543,6 +586,15 @@ describe('lib', () => {
                   "*.jsx",
                 ],
                 "rules": {},
+              },
+              {
+                "files": [
+                  "*.json",
+                ],
+                "parser": "jsonc-eslint-parser",
+                "rules": {
+                  "@nx/dependency-checks": "error",
+                },
               },
             ],
           }
@@ -625,7 +677,10 @@ describe('lib', () => {
         expect(
           readProjectConfiguration(tree, 'my-dir-my-lib').targets.lint.options
             .lintFilePatterns
-        ).toEqual(['libs/my-dir/my-lib/**/*.js']);
+        ).toEqual([
+          'libs/my-dir/my-lib/**/*.js',
+          'libs/my-dir/my-lib/package.json',
+        ]);
         expect(readJson(tree, 'libs/my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
           {
@@ -658,6 +713,15 @@ describe('lib', () => {
                   "*.jsx",
                 ],
                 "rules": {},
+              },
+              {
+                "files": [
+                  "*.json",
+                ],
+                "parser": "jsonc-eslint-parser",
+                "rules": {
+                  "@nx/dependency-checks": "error",
+                },
               },
             ],
           }

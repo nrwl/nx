@@ -9,7 +9,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateToCypress11 from './cypress-11';
 import { installedCypressVersion } from '../../utils/cypress-version';
 jest.mock('../../utils/cypress-version');
-import { cypressComponentConfiguration } from '../../generators/cypress-component-configuration/cypress-component-configuration';
+import cypressComponentConfiguration from '../../generators/component-configuration/component-configuration';
 
 describe('Cypress 11 Migration', () => {
   let tree: Tree;

@@ -157,7 +157,7 @@ module.exports = composePlugins(withNx(), (config, { options, context }) => {
 
 ### Configure webpack for Module Federation
 
-If you use the [Module Federation](/recipes/module-federation/faster-builds) support from `@nx/angular` or `@nx/react` then
+If you use the [Module Federation](/concepts/more-concepts/faster-builds-with-module-federation) support from `@nx/angular` or `@nx/react` then
 you can customize your webpack configuration as follows.
 
 ```js {% fileName="apps/my-app/webpack.config.js" %}

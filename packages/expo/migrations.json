@@ -65,6 +65,18 @@
       "cli": "nx",
       "description": "Add app.json for detox",
       "factory": "./src/migrations/update-16-1-4/add-detox-app-json"
+    },
+    "update-16-6-0-add-dependsOn": {
+      "cli": "nx",
+      "version": "16.6.0-beta.0",
+      "description": "Add dependsOn like ensure-symlink or sync-deps to targets",
+      "implementation": "./src/migrations/update-16-6-0/add-depends-on"
+    },
+    "update-16-6-0-update-metro-config": {
+      "cli": "nx",
+      "version": "16.6.0-beta.0",
+      "description": "Update metro.config.js to use the new metro config format",
+      "implementation": "./src/migrations/update-16-6-0/update-metro-config"
     }
   },
   "packageJsonUpdates": {
@@ -852,6 +864,67 @@
         },
         "@expo/cli": {
           "version": "~0.7.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.6.0": {
+      "version": "16.6.0-beta.0",
+      "packages": {
+        "expo": {
+          "version": "^49.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-config": {
+          "version": "~0.10.6",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-splash-screen": {
+          "version": "~0.20.4",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-status-bar": {
+          "version": "~1.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "~0.10.10",
+          "alwaysAddToPackageJson": false
+        },
+        "eas-cli": {
+          "version": "~3.15.0",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-preset-expo": {
+          "version": "~9.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-expo": {
+          "version": "~49.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.76.7",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.76.7",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.72.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.72.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-web": {
+          "version": "~0.19.6",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "13.9.0",
           "alwaysAddToPackageJson": false
         }
       }

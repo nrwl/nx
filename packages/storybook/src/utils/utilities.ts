@@ -221,6 +221,7 @@ export function isTheFileAStory(tree: Tree, path: string): boolean {
       importSpecifiers.forEach((importSpecifier: ts.ImportSpecifier) => {
         if (
           importSpecifier.getText() === 'Story' ||
+          importSpecifier.getText() === 'Meta' ||
           importSpecifier.getText() === 'storiesOf' ||
           importSpecifier.getText() === 'ComponentStory'
         ) {

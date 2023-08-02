@@ -34,7 +34,8 @@
     "dotenv": "~10.0.0",
     "enquirer": "~2.3.6",
     "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js"
+    "@nx/js": "file:../js",
+    "tsconfig-paths": "^4.1.2"
   },
   "peerDependencies": {
     "vite": "^4.3.4",
@@ -44,15 +45,15 @@
     "access": "public"
   },
   "exports": {
-    "./package.json": {
-      "require": "./package.json"
-    },
+    ".": "./index.js",
+    "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./executors": "./executors.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
     "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/compat": "./src/executors/*/compat.js"
+    "./src/executors/*/compat": "./src/executors/*/compat.js",
+    "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js"
   }
 }

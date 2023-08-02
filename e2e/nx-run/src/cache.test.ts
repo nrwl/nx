@@ -1,10 +1,12 @@
 import {
   cleanupProject,
+  directoryExists,
   listFiles,
   newProject,
   readFile,
   rmDist,
   runCLI,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
@@ -157,17 +159,23 @@ describe('cache', () => {
     updateProjectConfig(mylib, (c) => {
       c.targets.build = {
         executor: 'nx:run-commands',
-        outputs: ['{workspaceRoot}/dist/*.txt'],
+        outputs: ['{workspaceRoot}/dist/!(.next)/**/!(z|x).(txt|md)'],
         options: {
           commands: [
             'rm -rf dist',
             'mkdir dist',
-            'echo a > dist/a.txt',
-            'echo b > dist/b.txt',
-            'echo c > dist/c.txt',
-            'echo d > dist/d.txt',
-            'echo e > dist/e.txt',
-            'echo f > dist/f.txt',
+            'mkdir dist/apps',
+            'mkdir dist/.next',
+            'echo a > dist/apps/a.txt',
+            'echo b > dist/apps/b.txt',
+            'echo c > dist/apps/c.txt',
+            'echo d > dist/apps/d.txt',
+            'echo e > dist/apps/e.txt',
+            'echo f > dist/apps/f.md',
+            'echo g > dist/apps/g.html',
+            'echo h > dist/.next/h.txt',
+            'echo x > dist/apps/x.txt',
+            'echo z > dist/apps/z.md',
           ],
           parallel: false,
         },
@@ -182,27 +190,43 @@ describe('cache', () => {
     // Rerun without touching anything
     const rerunWithUntouchedOutputs = runCLI(`build ${mylib}`);
     expect(rerunWithUntouchedOutputs).toContain('local cache');
-    const outputsWithUntouchedOutputs = listFiles('dist');
+    const outputsWithUntouchedOutputs = [
+      ...listFiles('dist/apps'),
+      ...listFiles('dist/.next').map((f) => `.next/${f}`),
+    ];
     expect(outputsWithUntouchedOutputs).toContain('a.txt');
     expect(outputsWithUntouchedOutputs).toContain('b.txt');
     expect(outputsWithUntouchedOutputs).toContain('c.txt');
     expect(outputsWithUntouchedOutputs).toContain('d.txt');
     expect(outputsWithUntouchedOutputs).toContain('e.txt');
-    expect(outputsWithUntouchedOutputs).toContain('f.txt');
+    expect(outputsWithUntouchedOutputs).toContain('f.md');
+    expect(outputsWithUntouchedOutputs).toContain('g.html');
+    expect(outputsWithUntouchedOutputs).toContain('.next/h.txt');
+    expect(outputsWithUntouchedOutputs).toContain('x.txt');
+    expect(outputsWithUntouchedOutputs).toContain('z.md');
 
     // Create a file in the dist that does not match output glob
-    updateFile('dist/c.ts', '');
+    updateFile('dist/apps/c.ts', '');
 
     // Rerun
     const rerunWithNewUnrelatedFile = runCLI(`build ${mylib}`);
     expect(rerunWithNewUnrelatedFile).toContain('local cache');
-    const outputsAfterAddingUntouchedFileAndRerunning = listFiles('dist');
+    const outputsAfterAddingUntouchedFileAndRerunning = [
+      ...listFiles('dist/apps'),
+      ...listFiles('dist/.next').map((f) => `.next/${f}`),
+    ];
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('a.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('b.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('d.txt');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('e.txt');
-    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('f.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('f.md');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('g.html');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain(
+      '.next/h.txt'
+    );
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('x.txt');
+    expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('z.md');
     expect(outputsAfterAddingUntouchedFileAndRerunning).toContain('c.ts');
 
     // Clear Dist
@@ -211,14 +235,18 @@ describe('cache', () => {
     // Rerun
     const rerunWithoutOutputs = runCLI(`build ${mylib}`);
     expect(rerunWithoutOutputs).toContain('read the output from the cache');
-    const outputsWithoutOutputs = listFiles('dist');
+    const outputsWithoutOutputs = listFiles('dist/apps');
+    expect(directoryExists(`${tmpProjPath()}/dist/.next`)).toBe(false);
     expect(outputsWithoutOutputs).toContain('a.txt');
     expect(outputsWithoutOutputs).toContain('b.txt');
     expect(outputsWithoutOutputs).toContain('c.txt');
     expect(outputsWithoutOutputs).toContain('d.txt');
     expect(outputsWithoutOutputs).toContain('e.txt');
-    expect(outputsWithoutOutputs).toContain('f.txt');
+    expect(outputsWithoutOutputs).toContain('f.md');
     expect(outputsWithoutOutputs).not.toContain('c.ts');
+    expect(outputsWithoutOutputs).not.toContain('g.html');
+    expect(outputsWithoutOutputs).not.toContain('x.txt');
+    expect(outputsWithoutOutputs).not.toContain('z.md');
   });
 
   it('should use consider filesets when hashing', async () => {

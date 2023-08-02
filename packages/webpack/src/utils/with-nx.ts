@@ -20,6 +20,18 @@ import browserslist = require('browserslist');
 
 const VALID_BROWSERSLIST_FILES = ['.browserslistrc', 'browserslist'];
 
+const ES5_BROWSERS = [
+  'ie 10',
+  'ie 11',
+  'safari 11',
+  'safari 11.1',
+  'safari 12',
+  'safari 12.1',
+  'safari 13',
+  'ios_saf 13.0',
+  'ios_saf 13.3',
+];
+
 function getTerserEcmaVersion(projectRoot: string) {
   let pathToBrowserslistFile = '';
   for (const browserslistFile of VALID_BROWSERSLIST_FILES) {
@@ -36,7 +48,7 @@ function getTerserEcmaVersion(projectRoot: string) {
 
   const env = browserslist.loadConfig({ path: pathToBrowserslistFile });
   const browsers = browserslist(env);
-  return browsers.includes('ie 11') ? 5 : 2020;
+  return browsers.some((b) => ES5_BROWSERS.includes(b)) ? 5 : 2020;
 }
 
 const IGNORED_WEBPACK_WARNINGS = [
@@ -402,9 +414,9 @@ export function createLoaderFromCompiler(
         babelConfig.options['rootMode'] = 'upward';
         babelConfig.options['babelrc'] = true;
       } else {
-        babelConfig.options['configFile'] =
-          babelConfig.options?.['babelConfig'] ??
-          path.join(options.root, options.projectRoot, '.babelrc');
+        babelConfig.options['configFile'] = options.babelConfig
+          ? path.join(options.root, options.babelConfig)
+          : path.join(options.root, options.projectRoot, '.babelrc');
       }
 
       return babelConfig;

@@ -58,6 +58,15 @@
         "path": "/packages/angular/executors/package",
         "type": "executor"
       },
+      "/packages/angular/executors/browser-esbuild": {
+        "description": "Builds your application with esbuild and adds support for incremental builds.",
+        "file": "generated/packages/angular/executors/browser-esbuild.json",
+        "hidden": false,
+        "name": "browser-esbuild",
+        "originalFilePath": "/packages/angular/src/executors/browser-esbuild/schema.json",
+        "path": "/packages/angular/executors/browser-esbuild",
+        "type": "executor"
+      },
       "/packages/angular/executors/webpack-browser": {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
@@ -483,22 +492,22 @@
         "path": "/packages/cypress/generators/cypress-project",
         "type": "generator"
       },
-      "/packages/cypress/generators/cypress-e2e-configuration": {
+      "/packages/cypress/generators/configuration": {
         "description": "Add a Cypress E2E Configuration to an existing project.",
-        "file": "generated/packages/cypress/generators/cypress-e2e-configuration.json",
+        "file": "generated/packages/cypress/generators/configuration.json",
         "hidden": false,
-        "name": "cypress-e2e-configuration",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-e2e-configuration/schema.json",
-        "path": "/packages/cypress/generators/cypress-e2e-configuration",
+        "name": "configuration",
+        "originalFilePath": "/packages/cypress/src/generators/configuration/schema.json",
+        "path": "/packages/cypress/generators/configuration",
         "type": "generator"
       },
-      "/packages/cypress/generators/cypress-component-configuration": {
+      "/packages/cypress/generators/component-configuration": {
         "description": "Set up Cypress Component Test for a project",
-        "file": "generated/packages/cypress/generators/cypress-component-configuration.json",
+        "file": "generated/packages/cypress/generators/component-configuration.json",
         "hidden": true,
-        "name": "cypress-component-configuration",
-        "originalFilePath": "/packages/cypress/src/generators/cypress-component-configuration/schema.json",
-        "path": "/packages/cypress/generators/cypress-component-configuration",
+        "name": "component-configuration",
+        "originalFilePath": "/packages/cypress/src/generators/component-configuration/schema.json",
+        "path": "/packages/cypress/generators/component-configuration",
         "type": "generator"
       },
       "/packages/cypress/generators/migrate-to-cypress-11": {
@@ -651,13 +660,13 @@
         "path": "/packages/esbuild/generators/init",
         "type": "generator"
       },
-      "/packages/esbuild/generators/esbuild-project": {
+      "/packages/esbuild/generators/configuration": {
         "description": "Add esbuild configuration to a project.",
-        "file": "generated/packages/esbuild/generators/esbuild-project.json",
+        "file": "generated/packages/esbuild/generators/configuration.json",
         "hidden": true,
-        "name": "esbuild-project",
-        "originalFilePath": "/packages/esbuild/src/generators/esbuild-project/schema.json",
-        "path": "/packages/esbuild/generators/esbuild-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/esbuild/src/generators/configuration/schema.json",
+        "path": "/packages/esbuild/generators/configuration",
         "type": "generator"
       }
     },
@@ -690,6 +699,17 @@
         "path": "/packages/eslint-plugin/documents/enforce-module-boundaries",
         "tags": [],
         "originalFilePath": "shared/packages/linter/enforce-module-boundaries"
+      },
+      "/packages/eslint-plugin/documents/dependency-checks": {
+        "id": "dependency-checks",
+        "name": "The `dependency-checks` rule",
+        "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
+        "file": "generated/packages/eslint-plugin/documents/dependency-checks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/eslint-plugin/documents/dependency-checks",
+        "tags": [],
+        "originalFilePath": "shared/packages/linter/dependency-checks"
       }
     },
     "root": "/packages/eslint-plugin",
@@ -952,13 +972,13 @@
         "path": "/packages/jest/generators/init",
         "type": "generator"
       },
-      "/packages/jest/generators/jest-project": {
+      "/packages/jest/generators/configuration": {
         "description": "Add Jest configuration to a project.",
-        "file": "generated/packages/jest/generators/jest-project.json",
+        "file": "generated/packages/jest/generators/configuration.json",
         "hidden": true,
-        "name": "jest-project",
-        "originalFilePath": "/packages/jest/src/generators/jest-project/schema.json",
-        "path": "/packages/jest/generators/jest-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/jest/src/generators/configuration/schema.json",
+        "path": "/packages/jest/generators/configuration",
         "type": "generator"
       }
     },
@@ -1632,7 +1652,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/format-check",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/format-check"
       },
       "/packages/nx/documents/format-write": {
@@ -1643,7 +1663,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/format-write",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/format-write"
       },
       "/packages/nx/documents/migrate": {
@@ -1687,7 +1707,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/workspace-lint",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/workspace-lint"
       },
       "/packages/nx/documents/workspace-generator": {
@@ -1812,6 +1832,59 @@
     },
     "generators": {},
     "path": "/packages/nx"
+  },
+  "playwright": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "playwright",
+    "packageName": "@nx/playwright",
+    "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
+    "documents": {
+      "/packages/playwright/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
+        "file": "generated/packages/playwright/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/playwright/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/playwright/playwright-plugin"
+      }
+    },
+    "root": "/packages/playwright",
+    "source": "/packages/playwright/src",
+    "executors": {
+      "/packages/playwright/executors/playwright": {
+        "description": "Run Playwright tests.",
+        "file": "generated/packages/playwright/executors/playwright.json",
+        "hidden": false,
+        "name": "playwright",
+        "originalFilePath": "/packages/playwright/src/executors/playwright/schema.json",
+        "path": "/packages/playwright/executors/playwright",
+        "type": "executor"
+      }
+    },
+    "generators": {
+      "/packages/playwright/generators/configuration": {
+        "description": "Add Nx Playwright configuration to your project",
+        "file": "generated/packages/playwright/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/playwright/src/generators/configuration/schema.json",
+        "path": "/packages/playwright/generators/configuration",
+        "type": "generator"
+      },
+      "/packages/playwright/generators/init": {
+        "description": "Initializes a Playwright project in the current workspace",
+        "file": "generated/packages/playwright/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/packages/playwright/src/generators/init/schema.json",
+        "path": "/packages/playwright/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/packages/playwright"
   },
   "plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2325,13 +2398,13 @@
         "path": "/packages/rollup/generators/init",
         "type": "generator"
       },
-      "/packages/rollup/generators/rollup-project": {
+      "/packages/rollup/generators/configuration": {
         "description": "Add rollup configuration to a project.",
-        "file": "generated/packages/rollup/generators/rollup-project.json",
+        "file": "generated/packages/rollup/generators/configuration.json",
         "hidden": true,
-        "name": "rollup-project",
-        "originalFilePath": "/packages/rollup/src/generators/rollup-project/schema.json",
-        "path": "/packages/rollup/generators/rollup-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
+        "path": "/packages/rollup/generators/configuration",
         "type": "generator"
       }
     },
@@ -2419,6 +2492,17 @@
         "path": "/packages/storybook/documents/custom-builder-configs",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/custom-builder-configs"
+      },
+      "/packages/storybook/documents/storybook-interaction-tests": {
+        "id": "storybook-interaction-tests",
+        "name": "Setting up Storybook Interaction Tests with Nx",
+        "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+        "file": "generated/packages/storybook/documents/storybook-interaction-tests",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/storybook/documents/storybook-interaction-tests",
+        "tags": [],
+        "originalFilePath": "shared/packages/storybook/interaction-tests"
       },
       "/packages/storybook/documents/storybook-composition-setup": {
         "id": "storybook-composition-setup",
@@ -2771,13 +2855,13 @@
         "path": "/packages/webpack/generators/init",
         "type": "generator"
       },
-      "/packages/webpack/generators/webpack-project": {
+      "/packages/webpack/generators/configuration": {
         "description": "Add webpack configuration to a project.",
-        "file": "generated/packages/webpack/generators/webpack-project.json",
+        "file": "generated/packages/webpack/generators/configuration.json",
         "hidden": true,
-        "name": "webpack-project",
-        "originalFilePath": "/packages/webpack/src/generators/webpack-project/schema.json",
-        "path": "/packages/webpack/generators/webpack-project",
+        "name": "configuration",
+        "originalFilePath": "/packages/webpack/src/generators/configuration/schema.json",
+        "path": "/packages/webpack/generators/configuration",
         "type": "generator"
       }
     },
@@ -2851,6 +2935,15 @@
         "name": "remove",
         "originalFilePath": "/packages/workspace/src/generators/remove/schema.json",
         "path": "/packages/workspace/generators/remove",
+        "type": "generator"
+      },
+      "/packages/workspace/generators/convert-to-monorepo": {
+        "description": "Convert a Nx project to a monorepo.",
+        "file": "generated/packages/workspace/generators/convert-to-monorepo.json",
+        "hidden": false,
+        "name": "convert-to-monorepo",
+        "originalFilePath": "/packages/workspace/src/generators/convert-to-monorepo/schema.json",
+        "path": "/packages/workspace/generators/convert-to-monorepo",
         "type": "generator"
       },
       "/packages/workspace/generators/new": {

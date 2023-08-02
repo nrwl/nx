@@ -3,7 +3,7 @@
 Before running any task, Nx computes its computation hash. As long as the computation hash is the same, the output of
 running the task is the same.
 
-By default, the computation hash for - say - `nx test remixapp` includes:
+By default, the computation hash for something like `nx test remixapp` includes:
 
 - All the source files of `remixapp` and its dependencies
 - Relevant global configuration
@@ -88,7 +88,7 @@ With this configuration, the build script will only consider the non-test files 
 The test script will consider all the source files for the project under test and only non-test files of its
 dependencies. The test script will also consider the jest config file at the root of the workspace.
 
-For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/more-concepts/customizing-inputs)
+For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/concepts/more-concepts/customizing-inputs)
 
 ### Filesets
 

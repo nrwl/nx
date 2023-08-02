@@ -1,10 +1,10 @@
+use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
-use crate::native::watch::types::{WatchEvent, WatchEventInternal};
-use itertools::Itertools;
+use crate::native::watch::types::{EventType, WatchEvent, WatchEventInternal};
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{
     ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
@@ -68,27 +68,22 @@ impl Watcher {
             .with_env_filter(EnvFilter::from_env("NX_NATIVE_LOGGING"))
             .try_init();
 
-        let mut callback_tsfn: ThreadsafeFunction<HashMap<String, Vec<WatchEventInternal>>> =
-            callback.create_threadsafe_function(
-                0,
-                |ctx: ThreadSafeCallContext<HashMap<String, Vec<WatchEventInternal>>>| {
-                    let mut watch_events: Vec<WatchEvent> = vec![];
-                    trace!(?ctx.value, "Base collection that will be sent");
+        let mut callback_tsfn: ThreadsafeFunction<HashMap<String, WatchEventInternal>> = callback
+            .create_threadsafe_function(
+            0,
+            |ctx: ThreadSafeCallContext<HashMap<String, WatchEventInternal>>| {
+                let mut watch_events: Vec<WatchEvent> = vec![];
+                trace!(?ctx.value, "Base collection that will be sent");
 
-                    for (_, value) in ctx.value {
-                        let event = value
-                            .first()
-                            .expect("should always have at least 1 element")
-                            .to_owned();
+                for event in ctx.value.values() {
+                    watch_events.push(event.into());
+                }
 
-                        watch_events.push(event.into());
-                    }
+                trace!(?watch_events, "sending to node");
 
-                    trace!(?watch_events, "sending to node");
-
-                    Ok(vec![watch_events])
-                },
-            )?;
+                Ok(vec![watch_events])
+            },
+        )?;
 
         callback_tsfn.unref(&env)?;
 
@@ -150,10 +145,30 @@ impl Watcher {
                     })
                     .collect::<Vec<WatchEventInternal>>();
 
-                let group_events = events
-                    .into_iter()
-                    .into_group_map_by(|g| g.path.display().to_string());
+                let mut group_events: HashMap<String, WatchEventInternal> = HashMap::new();
+                for g in events.into_iter() {
+                    let path = g.path.display().to_string();
 
+                    // Delete > Create > Modify
+                    match group_events.entry(path) {
+                        // Delete should override anything
+                        Entry::Occupied(mut e) if matches!(g.r#type, EventType::delete) => {
+                            e.insert(g);
+                        }
+                        // Create should override update
+                        Entry::Occupied(mut e)
+                            if matches!(g.r#type, EventType::create)
+                                && matches!(e.get().r#type, EventType::update) =>
+                        {
+                            e.insert(g);
+                        }
+                        Entry::Occupied(_) => {}
+                        // If its empty, insert
+                        Entry::Vacant(e) => {
+                            e.insert(g);
+                        }
+                    }
+                }
                 callback_tsfn.call(Ok(group_events), ThreadsafeFunctionCallMode::NonBlocking);
 
                 action.outcome(Outcome::Start);

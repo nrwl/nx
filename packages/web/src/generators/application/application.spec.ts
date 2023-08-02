@@ -8,6 +8,12 @@ import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
+jest.mock('@nx/devkit', () => {
+  return {
+    ...jest.requireActual('@nx/devkit'),
+    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
+  };
+});
 describe('app', () => {
   let tree: Tree;
   let mockedInstalledCypressVersion: jest.Mock<
@@ -133,6 +139,30 @@ describe('app', () => {
           ],
         }
       `);
+    });
+
+    it('should setup playwright e2e project', async () => {
+      await applicationGenerator(tree, {
+        name: 'cool-app',
+        e2eTestRunner: 'playwright',
+        unitTestRunner: 'none',
+      });
+
+      expect(readProjectConfiguration(tree, 'cool-app-e2e').targets.e2e)
+        .toMatchInlineSnapshot(`
+        {
+          "executor": "@nx/playwright:playwright",
+          "options": {
+            "config": "apps/cool-app-e2e/playwright.config.ts",
+          },
+          "outputs": [
+            "dist/.playwright/apps/cool-app-e2e",
+          ],
+        }
+      `);
+      expect(
+        tree.exists('apps/cool-app-e2e/playwright.config.ts')
+      ).toBeTruthy();
     });
 
     it('should generate files if bundler is vite', async () => {

@@ -11,7 +11,7 @@ import * as autoprefixer from 'autoprefixer';
 import type { ExecutorContext } from '@nx/devkit';
 import { joinPathFragments, logger, names, readJsonFile } from '@nx/devkit';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
@@ -26,8 +26,8 @@ import {
 import { analyze } from './lib/analyze-plugin';
 import { deleteOutputDir } from '../../utils/fs';
 import { swc } from './lib/swc-plugin';
-import { validateTypes } from './lib/validate-types';
 import { updatePackageJson } from './lib/update-package-json';
+import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 
 export type RollupExecutorEvent = {
   success: boolean;
@@ -52,7 +52,8 @@ export async function* rollupExecutor(
 
   const project = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = project.sourceRoot;
-  const { target, dependencies } = calculateProjectDependencies(
+  const { target, dependencies } = calculateProjectBuildableDependencies(
+    context.taskGraph,
     context.projectGraph,
     context.root,
     context.projectName,
@@ -63,7 +64,7 @@ export async function* rollupExecutor(
 
   const options = normalizeRollupExecutorOptions(
     rawOptions,
-    context.root,
+    context,
     sourceRoot
   );
 
@@ -83,18 +84,6 @@ export async function* rollupExecutor(
   );
 
   const outfile = resolveOutfile(context, options);
-
-  if (options.compiler === 'swc') {
-    try {
-      await validateTypes({
-        workspaceRoot: context.root,
-        projectRoot: options.projectRoot,
-        tsconfig: options.tsConfig,
-      });
-    } catch {
-      return { success: false };
-    }
-  }
 
   if (options.watch) {
     const watcher = rollup.watch(rollupOptions);
@@ -203,6 +192,10 @@ export function createRollupOptions(
   }
 
   return options.format.map((format, idx) => {
+    // Either we're generating only one format, so we should bundle types
+    // OR we are generating dual formats, so only bundle types for CJS.
+    const shouldBundleTypes = options.format.length === 1 || format === 'cjs';
+
     const plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -212,7 +205,7 @@ export function createRollupOptions(
       }),
       image(),
       json(),
-      (useTsc || useBabel) &&
+      (useTsc || shouldBundleTypes) &&
         require('rollup-plugin-typescript2')({
           check: !options.skipTypeCheck,
           tsconfig: options.tsConfig,
@@ -223,6 +216,11 @@ export function createRollupOptions(
               options
             ),
           },
+        }),
+      shouldBundleTypes &&
+        typeDefinitions({
+          main: options.main,
+          projectRoot: options.projectRoot,
         }),
       peerDepsExternal({
         packageJsonPath: options.project,
@@ -284,18 +282,21 @@ export function createRollupOptions(
     }
     externalPackages = [...new Set(externalPackages)];
 
+    const mainEntryFileName = options.outputFileName || options.main;
+    const input: Record<string, string> = {};
+    input[parse(mainEntryFileName).name] = options.main;
+    options.additionalEntryPoints.forEach((entry) => {
+      input[parse(entry).name] = entry;
+    });
+
     const rollupConfig = {
-      input: options.outputFileName
-        ? {
-            [parse(options.outputFileName).name]: options.main,
-          }
-        : options.main,
+      input,
       output: {
         format,
         dir: `${options.outputPath}`,
         name: names(context.projectName).className,
-        entryFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
-        chunkFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
+        entryFileNames: `[name].${format}.js`,
+        chunkFileNames: `[name].${format}.js`,
       },
       external: (id: string) => {
         return externalPackages.some(
@@ -326,6 +327,9 @@ function createTsCompilerOptions(
   if (config.options.module === ts.ModuleKind.CommonJS) {
     compilerOptions['module'] = 'ESNext';
   }
+  if (options.compiler === 'swc') {
+    compilerOptions['emitDeclarationOnly'] = true;
+  }
   return compilerOptions;
 }
 
@@ -346,7 +350,9 @@ function convertCopyAssetsToRollupOptions(
     : undefined;
 }
 
-function readCompatibleFormats(config: ts.ParsedCommandLine) {
+function readCompatibleFormats(
+  config: ts.ParsedCommandLine
+): ('cjs' | 'esm')[] {
   switch (config.options.module) {
     case ts.ModuleKind.CommonJS:
     case ts.ModuleKind.UMD:
@@ -363,7 +369,7 @@ function resolveOutfile(
 ) {
   if (!options.format?.includes('cjs')) return undefined;
   const { name } = parse(options.outputFileName ?? options.main);
-  return resolve(context.root, options.outputPath, `${name}.cjs`);
+  return resolve(context.root, options.outputPath, `${name}.cjs.js`);
 }
 
 export default rollupExecutor;

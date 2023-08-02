@@ -72,6 +72,7 @@ export function newProject({
         `@nx/next`,
         `@nx/node`,
         `@nx/plugin`,
+        `@nx/playwright`,
         `@nx/rollup`,
         `@nx/react`,
         `@nx/storybook`,
@@ -201,11 +202,19 @@ export function runCreateWorkspace(
     command += ` ${extraArgs}`;
   }
 
+  if (isCI) {
+    command += ` --verbose`;
+  }
+
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
       stdio: 'pipe',
-      env: { CI: 'true', ...process.env },
+      env: {
+        CI: 'true',
+        NX_VERBOSE_LOGGING: isCI ? 'true' : 'false',
+        ...process.env,
+      },
       encoding: 'utf-8',
     });
 

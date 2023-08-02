@@ -22,6 +22,8 @@ import {
   retrieveWorkspaceFiles,
   retrieveProjectConfigurations,
 } from '../../project-graph/utils/retrieve-workspace-files';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { readNxJson } from '../../config/nx-json';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -115,8 +117,18 @@ export function addUpdatedAndDeletedFiles(
   }
 }
 
-function computeWorkspaceConfigHash(projectsConfigurations: any) {
-  return hashArray([JSON.stringify(projectsConfigurations)]);
+function computeWorkspaceConfigHash(
+  projectsConfigurations: Record<string, ProjectConfiguration>
+) {
+  const projectConfigurationStrings = Object.entries(projectsConfigurations)
+    .sort(([projectNameA], [projectNameB]) =>
+      projectNameA.localeCompare(projectNameB)
+    )
+    .map(
+      ([projectName, projectConfig]) =>
+        `${projectName}:${JSON.stringify(projectConfig)}`
+    );
+  return hashArray(projectConfigurationStrings);
 }
 
 /**
@@ -126,6 +138,10 @@ function computeWorkspaceConfigHash(projectsConfigurations: any) {
  * TODO(Cammisuli): remove after 16.4 - Rust watcher handles nested gitignores
  */
 function filterUpdatedFiles(files: string[]) {
+  if (files.length === 0) {
+    return files;
+  }
+
   try {
     const quoted = files.map((f) => '"' + f + '"');
     const ignored = execSync(`git check-ignore ${quoted.join(' ')}`, {
@@ -155,7 +171,7 @@ async function processCollectedUpdatedAndDeletedFiles() {
     );
     fileHasher.incrementalUpdate(updatedFiles, deletedFiles);
 
-    let nxJson = new Workspaces(workspaceRoot).readNxJson();
+    let nxJson = readNxJson(workspaceRoot);
 
     const projectConfigurations = await retrieveProjectConfigurations(
       workspaceRoot,

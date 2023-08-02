@@ -3,7 +3,7 @@
 {% youtube
 src="https://www.youtube.com/embed/weZ7NAzB7PM"
 title="Tutorial: Getting Started with Integrated Repos"
-width="100%" /%}
+/%}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/integrated" /%}
 

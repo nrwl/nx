@@ -1,6 +1,5 @@
 import {
   cleanupProject,
-  createFile,
   newProject,
   runCLI,
   uniq,
@@ -10,13 +9,23 @@ import {
   isVerboseE2ERun,
 } from '@nx/e2e/utils';
 import { spawn } from 'child_process';
+import { join } from 'path';
+import { writeFileSync } from 'fs';
+
+async function writeFileForWatcher(path: string, content: string) {
+  const e2ePath = join(tmpProjPath(), path);
+
+  console.log(`writing to: ${e2ePath}`);
+  writeFileSync(e2ePath, content);
+  await wait(10);
+}
 
 describe('Nx Commands', () => {
   let proj1 = uniq('proj1');
   let proj2 = uniq('proj2');
   let proj3 = uniq('proj3');
   beforeAll(() => {
-    newProject({ packageManager: 'npm' });
+    newProject();
     runCLI(`generate @nx/js:lib ${proj1}`);
     runCLI(`generate @nx/js:lib ${proj2}`);
     runCLI(`generate @nx/js:lib ${proj3}`);
@@ -28,22 +37,22 @@ describe('Nx Commands', () => {
     const getOutput = await runWatch(
       `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`
     );
-    createFile(`libs/${proj1}/newfile.txt`, 'content');
-    createFile(`libs/${proj2}/newfile.txt`, 'content');
-    createFile(`libs/${proj1}/newfile2.txt`, 'content');
-    createFile(`libs/${proj3}/newfile2.txt`, 'content');
-    createFile(`newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj3}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`newfile2.txt`, 'content');
 
     expect(await getOutput()).toEqual([proj1]);
   });
 
   it('should watch for all projects and output the project name', async () => {
     const getOutput = await runWatch(`--all -- echo \\$NX_PROJECT_NAME`);
-    createFile(`libs/${proj1}/newfile.txt`, 'content');
-    createFile(`libs/${proj2}/newfile.txt`, 'content');
-    createFile(`libs/${proj1}/newfile2.txt`, 'content');
-    createFile(`libs/${proj3}/newfile2.txt`, 'content');
-    createFile(`newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj3}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`newfile2.txt`, 'content');
 
     let content = await getOutput();
     let results = content.sort();
@@ -53,10 +62,10 @@ describe('Nx Commands', () => {
 
   it('should watch for all project changes and output the file name changes', async () => {
     const getOutput = await runWatch(`--all -- echo \\$NX_FILE_CHANGES`);
-    createFile(`libs/${proj1}/newfile.txt`, 'content');
-    createFile(`libs/${proj2}/newfile.txt`, 'content');
-    createFile(`libs/${proj1}/newfile2.txt`, 'content');
-    createFile(`newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`newfile2.txt`, 'content');
 
     let output = (await getOutput())[0];
     let results = output.split(' ').sort();
@@ -72,10 +81,10 @@ describe('Nx Commands', () => {
     const getOutput = await runWatch(
       `--all --includeGlobalWorkspaceFiles -- echo \\$NX_FILE_CHANGES`
     );
-    createFile(`libs/${proj1}/newfile.txt`, 'content');
-    createFile(`libs/${proj2}/newfile.txt`, 'content');
-    createFile(`libs/${proj1}/newfile2.txt`, 'content');
-    createFile(`newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`newfile2.txt`, 'content');
 
     let output = (await getOutput())[0];
     let results = output.split(' ').sort();
@@ -92,11 +101,11 @@ describe('Nx Commands', () => {
     const getOutput = await runWatch(
       `--projects=${proj1},${proj3} -- echo \\$NX_PROJECT_NAME`
     );
-    createFile(`libs/${proj1}/newfile.txt`, 'content');
-    createFile(`libs/${proj2}/newfile.txt`, 'content');
-    createFile(`libs/${proj1}/newfile2.txt`, 'content');
-    createFile(`libs/${proj3}/newfile2.txt`, 'content');
-    createFile(`newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj3}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`newfile2.txt`, 'content');
 
     let output = await getOutput();
     let results = output.sort();
@@ -113,11 +122,11 @@ describe('Nx Commands', () => {
     const getOutput = await runWatch(
       `--projects=${proj3} --includeDependentProjects -- echo \\$NX_PROJECT_NAME`
     );
-    createFile(`libs/${proj1}/newfile.txt`, 'content');
-    createFile(`libs/${proj2}/newfile.txt`, 'content');
-    createFile(`libs/${proj1}/newfile2.txt`, 'content');
-    createFile(`libs/${proj3}/newfile2.txt`, 'content');
-    createFile(`newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj1}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`libs/${proj3}/newfile2.txt`, 'content');
+    await writeFileForWatcher(`newfile2.txt`, 'content');
 
     let output = await getOutput();
     let results = output.sort();

@@ -20,9 +20,11 @@ import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { NxJsonConfiguration } from '../../config/nx-json';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import type { Arguments } from 'yargs';
 import { output } from '../../utils/output';
+import { getGeneratorInformation } from './generator-utils';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -69,7 +71,7 @@ async function promptForCollection(
         resolvedCollectionName,
         normalizedGeneratorName,
         generatorConfiguration: { ['x-deprecated']: deprecated, hidden },
-      } = ws.readGenerator(collectionName, generatorName);
+      } = getGeneratorInformation(collectionName, generatorName, workspaceRoot);
       if (hidden) {
         continue;
       }
@@ -94,7 +96,7 @@ async function promptForCollection(
         resolvedCollectionName,
         normalizedGeneratorName,
         generatorConfiguration: { ['x-deprecated']: deprecated, hidden },
-      } = ws.readGenerator(name, generatorName);
+      } = getGeneratorInformation(name, generatorName, workspaceRoot);
       if (hidden) {
         continue;
       }
@@ -156,7 +158,7 @@ async function promptForCollection(
             return true;
           }
           try {
-            ws.readGenerator(value, generatorName);
+            getGeneratorInformation(value, generatorName, workspaceRoot);
             return true;
           } catch {
             logger.error(`\nCould not find ${value}:${generatorName}`);
@@ -325,7 +327,11 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         ['x-deprecated']: deprecated,
         ['x-use-standalone-layout']: isStandalonePreset,
       },
-    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+    } = getGeneratorInformation(
+      opts.collectionName,
+      opts.generatorName,
+      workspaceRoot
+    );
 
     if (deprecated) {
       logger.warn(
@@ -354,8 +360,9 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       nxJsonConfiguration,
       schema,
       opts.interactive,
-      ws.calculateDefaultProjectName(
+      calculateDefaultProjectName(
         cwd,
+        workspaceRoot,
         projectsConfigurations,
         nxJsonConfiguration
       ),
@@ -363,7 +370,13 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       verbose
     );
 
-    if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
+    if (
+      getGeneratorInformation(
+        opts.collectionName,
+        normalizedGeneratorName,
+        workspaceRoot
+      ).isNxGenerator
+    ) {
       const host = new FsTree(
         workspaceRoot,
         verbose,

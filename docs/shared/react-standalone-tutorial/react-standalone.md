@@ -19,15 +19,24 @@ Note, this tutorial sets up a repo with a single application at the root level t
 
 {% /callout %}
 
+Note, while you could easily use Nx together with your manually set up React application, we're going to use the `@nx/react` plugin for this tutorial which provides some nice enhancements when working with React. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
+
 ## Warm Up
 
 Here's the source code of the final result for this tutorial.
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/standalone-react-app" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone" /%}
 
-{% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/standalone-react-app?file=README.md" /%}
+<!-- {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%} -->
+
+{% youtube
+src="https://www.youtube.com/embed/OQ-Zc5tcxJE"
+title="Tutorial: Standalone React Application"
+/%}
 
 ## Creating a new React App
+
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
 
 Create a new standalone React application with the following command:
 
@@ -82,6 +91,8 @@ Let me explain a couple of things that might be new to you.
 | `project.json` | This file contains the targets that can be invoked for the `myreactapp` project. It is like a more evolved version of simple `package.json` scripts with more metadata attached. You can read more about it [here](/reference/project-configuration). |
 
 ## Serving the App
+
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=207" /%}
 
 The most common tasks are already mapped in the `package.json` file:
 
@@ -163,12 +174,14 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/plugins/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the React app using Vite.
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the React app using Vite.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
 Learn more about how to [run tasks with Nx](/core-features/run-tasks).
 
 ## Testing and Linting - Running Multiple Tasks
+
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=410" /%}
 
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
 
@@ -214,9 +227,23 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
 Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
 
+## Nx Plugins? Why?
+
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=598" /%}
+
+One thing you might be curious about is the project.json. You may wonder why we define tasks inside the `project.json` file instead of using the `package.json` file with scripts that directly launch Vite.
+
+Nx understands and supports both approaches, allowing you to define targets either in your `package.json` or `project.json` files. While both serve a similar purpose, the `project.json` file can be seen as an advanced form of `package.json` scripts, providing additional metadata and capabilities. In this tutorial, we utilize the `project.json` approach primarily because we take advantage of Nx Plugins.
+
+So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
+
+[visit our "Why Nx" page](/getting-started/why-nx) for more deails.
+
 ## Creating New Components
 
-You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=706" /%}
+
+You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/core-features/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
 
 ```shell {% command="npx nx list @nx/react" path="myreactapp" %}
 
@@ -289,6 +316,8 @@ export default HelloWorld;
 
 ## Building the App for Deployment
 
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=856" /%}
+
 If you're ready and want to ship your application, you can build it using
 
 ```shell {% command="npx nx build" path="myreactapp" %}
@@ -308,6 +337,8 @@ All the required files will be placed in the `dist/myreactapp` folder and can be
 
 ## You're ready to go!
 
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=906" /%}
+
 In the previous sections you learned about the basics of using Nx, running tasks and navigating an Nx workspace. You're ready to ship features now!
 
 But there's more to learn. You have two possibilities here:
@@ -316,6 +347,8 @@ But there's more to learn. You have two possibilities here:
 - keep reading and learn some more about what makes Nx unique when working with React.
 
 ## Modularizing your React App with Local Libraries
+
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=986" /%}
 
 When you develop your React application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, this becomes more and more monolithic though.
 
@@ -345,6 +378,8 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 - better scalability in your teams by allowing different teams to work on separate libraries
 
 ### Creating Local Libraries
+
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1041" /%}
 
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the React library generator:
 
@@ -410,6 +445,8 @@ Each of these libraries
 
 ### Importing Libraries into the React Application
 
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1245" /%}
+
 All libraries that we generate automatically have aliases created in the root-level `tsconfig.base.json`.
 
 ```json {% fileName="tsconfig.base.json" %}
@@ -434,7 +471,7 @@ nx g @nx/react:component product-list --project=modules-products
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main React application.
 
-```tsx {% fileName="modules/products/src/lib/product-list.tsx" %}
+```tsx {% fileName="modules/products/src/lib/product-list/product-list.tsx" %}
 import styles from './product-list.module.css';
 
 /* eslint-disable-next-line */
@@ -544,6 +581,8 @@ export default App;
 
 ## Visualizing your Project Structure
 
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1416" /%}
+
 Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/core-features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/core-features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
 Just run:
@@ -620,6 +659,8 @@ Notice how `modules-shared-ui` is not yet connected to anything because we didn'
 Exercise for you: change the codebase such that `modules-shared-ui` is used by `modules-orders` and `modules-products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
 
 ## Imposing Constraints with Module Boundary Rules
+
+{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1456" /%}
 
 Once you modularize your codebase you want to make sure that the modules are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
@@ -777,18 +818,18 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 ![ESLint module boundary error](/shared/images/tutorial-react-standalone/react-standalone-module-boundaries.png)
 
-Learn more about how to [enforce module boundaries](/core-features/enforce-project-boundaries).
+Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
 
 ## Next Steps
 
 Here's some more things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn how to [migrate your CRA app to Nx](/recipes/adopting-nx/migration-cra)
-- [Learn how to setup Tailwind](/recipes/other/using-tailwind-css-in-react)
+- Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
+- [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/packages/storybook/documents/overview-react)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)]
-- [Speed up CI: Share your cache](/core-features/share-your-cache)]
+- [Speed up CI: Share your cache](/core-features/remote-cache)]
 - [Speed up CI: Distribute your tasks across machines](/core-features/distribute-task-execution)
 
 Also, make sure you

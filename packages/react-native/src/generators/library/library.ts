@@ -20,7 +20,11 @@ import { addTsConfigPath, getRelativePathToRootTsConfig } from '@nx/js';
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
-import { nxVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  reactNativeVersion,
+  reactVersion,
+} from '../../utils/versions';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 
@@ -170,7 +174,6 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     {
       ...options,
       ...names(options.name),
-      tmpl: '',
       offsetFromRoot: offsetFromRoot(options.projectRoot),
       rootTsConfigPath: getRelativePathToRootTsConfig(
         host,
@@ -193,6 +196,10 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 function updateLibPackageNpmScope(host: Tree, options: NormalizedSchema) {
   return updateJson(host, `${options.projectRoot}/package.json`, (json) => {
     json.name = options.importPath;
+    json.peerDependencies = {
+      react: reactVersion,
+      'react-native': reactNativeVersion,
+    };
     return json;
   });
 }

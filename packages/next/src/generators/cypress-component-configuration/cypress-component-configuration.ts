@@ -22,7 +22,7 @@ export async function cypressComponentConfiguration(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { cypressComponentConfiguration: baseCyCtConfig } = ensurePackage<
+  const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
   tasks.push(

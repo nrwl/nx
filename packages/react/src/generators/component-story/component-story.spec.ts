@@ -27,6 +27,7 @@ describe('react:component-story', () => {
           await componentStoryGenerator(appTree, {
             componentPath: 'lib/test-ui-lib.tsx',
             project: 'test-ui-lib',
+            interactionTests: true,
           });
         } catch (e) {
           expect(e.message).toContain(
@@ -506,12 +507,13 @@ describe('react:component-story', () => {
     });
   });
 
-  describe('using eslint', () => {
+  describe('using eslint - not using interaction tests', () => {
     beforeEach(async () => {
       appTree = await createTestUILib('test-ui-lib');
       await componentStoryGenerator(appTree, {
         componentPath: 'lib/test-ui-lib.tsx',
         project: 'test-ui-lib',
+        interactionTests: false,
       });
     });
 

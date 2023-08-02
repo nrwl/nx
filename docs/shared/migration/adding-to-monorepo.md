@@ -9,7 +9,7 @@ Nx has first-class support for [package-based monorepos](/getting-started/tutori
 - fast [task scheduling](/core-features/run-tasks)
 - support for [task pipelines](/concepts/task-pipeline-configuration)
 - [caching](/core-features/cache-task-results)
-- optionally [remote caching with Nx Cloud](/core-features/share-your-cache)
+- optionally [remote caching with Nx Cloud](/core-features/remote-cache)
 - optionally [distributed task execution with Nx Cloud](/core-features/distribute-task-execution)
 
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and add an `nx.json` for configuring caching and task pipelines.
@@ -90,7 +90,7 @@ This allows for incrementally adopting Nx in your existing workspace.
 
 {% card title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" type="documentation" url="/reference/nxignore" /%}
 
-{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="/more-concepts/turbo-and-nx" /%}
+{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="/concepts/more-concepts/turbo-and-nx" /%}
 
 {% card title="Nx and Lerna" description="Read about how Nx and Lerna can be used together" url="/recipes/adopting-nx/lerna-and-nx" /%}
 

@@ -1,7 +1,7 @@
 {
   "run-tasks": [
     {
-      "description": "",
+      "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
       "file": "shared/core-features/run-tasks",
       "id": "run-tasks",
       "name": "Run Tasks",
@@ -26,7 +26,7 @@
       "file": "shared/recipes/root-level-scripts",
       "id": "root-level-scripts",
       "name": "Run Root-Level NPM Scripts with Nx",
-      "path": "/recipes/other/root-level-scripts"
+      "path": "/recipes/tips-n-tricks/root-level-scripts"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -52,7 +52,7 @@
   ],
   "cache-task-results": [
     {
-      "description": "",
+      "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
       "file": "shared/core-features/cache-task-results",
       "id": "cache-task-results",
       "name": "Cache Task Results",
@@ -77,7 +77,14 @@
       "file": "shared/concepts/customizing-inputs",
       "id": "customizing-inputs",
       "name": "Customizing Inputs",
-      "path": "/more-concepts/customizing-inputs"
+      "path": "/concepts/more-concepts/customizing-inputs"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/troubleshoot-cache-misses",
+      "id": "troubleshoot-cache-misses",
+      "name": "Troubleshoot Cache Misses",
+      "path": "/recipes/troubleshooting/troubleshoot-cache-misses"
     },
     {
       "description": "",
@@ -115,13 +122,6 @@
       "path": "/reference/project-configuration#inputs-&-namedinputs"
     },
     {
-      "description": "",
-      "file": "shared/recipes/troubleshoot-cache-misses",
-      "id": "troubleshoot-cache-misses",
-      "name": "Troubleshoot Cache Misses",
-      "path": "/recipes/other/troubleshoot-cache-misses"
-    },
-    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
@@ -136,69 +136,18 @@
       "path": "/packages/nx/documents/reset"
     }
   ],
-  "share-your-cache": [
+  "remote-cache": [
     {
-      "description": "",
-      "file": "shared/core-features/share-your-cache",
-      "id": "share-your-cache",
-      "name": "Share Your Cache",
-      "path": "/core-features/share-your-cache"
-    }
-  ],
-  "explore-graph": [
-    {
-      "description": "",
-      "file": "shared/core-features/explore-graph",
-      "id": "explore-graph",
-      "name": "Explore the Graph",
-      "path": "/core-features/explore-graph"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/how-project-graph-is-built",
-      "id": "how-project-graph-is-built",
-      "name": "How the Project Graph is Built",
-      "path": "/more-concepts/how-project-graph-is-built"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/analyze-source-files",
-      "id": "analyze-source-files",
-      "name": "Disable Graph Links Created from Analyzing Source Files",
-      "path": "/recipes/other/analyze-source-files"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/export-project-graph",
-      "id": "export-project-graph",
-      "name": "Export Project Graph",
-      "path": "/recipes/other/export-project-graph"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/resolve-circular-dependencies",
-      "id": "resolve-circular-dependencies",
-      "name": "Resolve Circular Dependencies",
-      "path": "/recipes/other/resolve-circular-dependencies"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/project-graph-plugins",
-      "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
-      "path": "/plugins/recipes/project-graph-plugins"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/dep-graph",
-      "id": "dep-graph",
-      "name": "graph",
-      "path": "/packages/nx/documents/dep-graph"
+      "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+      "file": "shared/core-features/remote-cache",
+      "id": "remote-cache",
+      "name": "Use Remote Caching",
+      "path": "/core-features/remote-cache"
     }
   ],
   "distribute-task-execution": [
     {
-      "description": "",
+      "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
       "file": "shared/core-features/distribute-task-execution",
       "id": "distribute-task-execution",
       "name": "Distribute Task Execution",
@@ -216,14 +165,7 @@
       "file": "shared/concepts/illustrated-dte-guide",
       "id": "illustrated-dte",
       "name": "Illustrated Distributed Task Execution",
-      "path": "/more-concepts/illustrated-dte"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "nx-cloud-documentation",
-      "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/what-is-nx-cloud"
+      "path": "/concepts/more-concepts/illustrated-dte"
     },
     {
       "description": "",
@@ -233,6 +175,13 @@
       "path": "/recipes/ci/ci-setup"
     },
     {
+      "description": "",
+      "file": "",
+      "id": "nx-cloud-documentation",
+      "name": "Nx Cloud Documentation",
+      "path": "/nx-cloud/intro/what-is-nx-cloud"
+    },
+    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
@@ -240,60 +189,53 @@
       "path": "/packages/nx/documents/connect-to-nx-cloud"
     }
   ],
-  "integrate-with-editors": [
+  "explore-graph": [
     {
-      "description": "",
-      "file": "shared/core-features/integrate-with-editors",
-      "id": "integrate-with-editors",
-      "name": "Integrate with Editors",
-      "path": "/core-features/integrate-with-editors"
+      "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+      "file": "shared/core-features/explore-graph",
+      "id": "explore-graph",
+      "name": "Explore the Graph",
+      "path": "/core-features/explore-graph"
     },
     {
       "description": "",
-      "file": "shared/recipes/console-telemetry",
-      "id": "console-telemetry",
-      "name": "Nx Console Telemetry",
-      "path": "/recipes/nx-console/console-telemetry"
+      "file": "shared/concepts/how-project-graph-is-built",
+      "id": "how-project-graph-is-built",
+      "name": "How the Project Graph is Built",
+      "path": "/concepts/more-concepts/how-project-graph-is-built"
     },
     {
       "description": "",
-      "file": "shared/recipes/console-generate-command",
-      "id": "console-generate-command",
-      "name": "Nx Console Generate Command",
-      "path": "/recipes/nx-console/console-generate-command"
+      "file": "shared/recipes/analyze-source-files",
+      "id": "analyze-source-files",
+      "name": "Disable Graph Links Created from Analyzing Source Files",
+      "path": "/recipes/tips-n-tricks/analyze-source-files"
     },
     {
       "description": "",
-      "file": "shared/recipes/console-run-command",
-      "id": "console-run-command",
-      "name": "Nx Console Run Command",
-      "path": "/recipes/nx-console/console-run-command"
+      "file": "shared/recipes/resolve-circular-dependencies",
+      "id": "resolve-circular-dependencies",
+      "name": "Resolve Circular Dependencies",
+      "path": "/recipes/troubleshooting/resolve-circular-dependencies"
     },
     {
       "description": "",
-      "file": "shared/recipes/console-add-dependency-command",
-      "id": "console-add-dependency-command",
-      "name": "Nx Console Add Dependency Command",
-      "path": "/recipes/nx-console/console-add-dependency-command"
+      "file": "shared/recipes/plugins/project-graph-plugins",
+      "id": "project-graph-plugins",
+      "name": "Modify the Project Graph",
+      "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
-      "description": "",
-      "file": "shared/recipes/console-project-pane",
-      "id": "console-project-pane",
-      "name": "Nx Console Project Pane",
-      "path": "/recipes/nx-console/console-project-pane"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/console-shortcuts",
-      "id": "console-shortcuts",
-      "name": "Nx Console Keyboard Shortcuts",
-      "path": "/recipes/nx-console/console-shortcuts"
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/dep-graph",
+      "id": "dep-graph",
+      "name": "graph",
+      "path": "/packages/nx/documents/dep-graph"
     }
   ],
   "automate-updating-dependencies": [
     {
-      "description": "",
+      "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
       "file": "shared/core-features/automate-updating-dependencies",
       "id": "automate-updating-dependencies",
       "name": "Automate Updating Dependencies",
@@ -303,8 +245,8 @@
       "description": "",
       "file": "shared/recipes/advanced-update",
       "id": "advanced-update",
-      "name": "Advanced Update Process",
-      "path": "/recipes/other/advanced-update"
+      "name": "Altering Migration Process",
+      "path": "/recipes/tips-n-tricks/advanced-update"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -314,62 +256,48 @@
       "path": "/packages/nx/documents/migrate"
     }
   ],
-  "enforce-project-boundaries": [
+  "enforce-module-boundaries": [
     {
-      "description": "",
-      "file": "shared/core-features/enforce-project-boundaries",
-      "id": "enforce-project-boundaries",
-      "name": "Enforce Project Boundaries",
-      "path": "/core-features/enforce-project-boundaries"
+      "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
+      "file": "shared/core-features/enforce-module-boundaries",
+      "id": "enforce-module-boundaries",
+      "name": "Enforce Module Boundaries",
+      "path": "/core-features/enforce-module-boundaries"
     },
     {
       "description": "",
       "file": "shared/monorepo-nx-enterprise",
       "id": "monorepo-nx-enterprise",
       "name": "Using Nx at Enterprises",
-      "path": "/more-concepts/monorepo-nx-enterprise"
+      "path": "/concepts/more-concepts/monorepo-nx-enterprise"
     },
     {
       "description": "",
       "file": "shared/workspace/applications-and-libraries",
       "id": "applications-and-libraries",
       "name": "Applications and Libraries",
-      "path": "/more-concepts/applications-and-libraries"
+      "path": "/concepts/more-concepts/applications-and-libraries"
     },
     {
       "description": "",
       "file": "shared/workspace/creating-libraries",
       "id": "creating-libraries",
       "name": "Creating Libraries",
-      "path": "/more-concepts/creating-libraries"
+      "path": "/concepts/more-concepts/creating-libraries"
     },
     {
       "description": "",
       "file": "shared/workspace/library-types",
       "id": "library-types",
       "name": "Library Types",
-      "path": "/more-concepts/library-types"
+      "path": "/concepts/more-concepts/library-types"
     },
     {
       "description": "",
       "file": "shared/workspace/grouping-libraries",
       "id": "grouping-libraries",
       "name": "Grouping Libraries",
-      "path": "/more-concepts/grouping-libraries"
-    },
-    {
-      "description": "",
-      "file": "shared/reference/nxignore",
-      "id": "nxignore",
-      "name": ".nxignore",
-      "path": "/reference/nxignore"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "nxjson-workspaceLayout",
-      "name": "nx.json workspaceLayout property",
-      "path": "/reference/nx-json#workspace-layout"
+      "path": "/concepts/more-concepts/grouping-libraries"
     },
     {
       "description": "",
@@ -401,10 +329,17 @@
     },
     {
       "description": "",
-      "file": "shared/eslint",
-      "id": "eslint",
-      "name": "Using ESLint in Nx Workspaces",
-      "path": "/recipes/other/eslint"
+      "file": "shared/reference/nxignore",
+      "id": "nxignore",
+      "name": ".nxignore",
+      "path": "/reference/nxignore"
+    },
+    {
+      "description": "",
+      "file": "",
+      "id": "nxjson-workspaceLayout",
+      "name": "nx.json workspaceLayout property",
+      "path": "/reference/nx-json#workspace-layout"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -428,13 +363,64 @@
       "path": "/packages/nx/documents/workspace-lint"
     }
   ],
+  "integrate-with-editors": [
+    {
+      "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+      "file": "shared/core-features/integrate-with-editors",
+      "id": "integrate-with-editors",
+      "name": "Integrate with Editors",
+      "path": "/core-features/integrate-with-editors"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-telemetry",
+      "id": "console-telemetry",
+      "name": "Telemetry",
+      "path": "/recipes/nx-console/console-telemetry"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-generate-command",
+      "id": "console-generate-command",
+      "name": "Generate Command",
+      "path": "/recipes/nx-console/console-generate-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-run-command",
+      "id": "console-run-command",
+      "name": "Run Command",
+      "path": "/recipes/nx-console/console-run-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-add-dependency-command",
+      "id": "console-add-dependency-command",
+      "name": "Add Dependency Command",
+      "path": "/recipes/nx-console/console-add-dependency-command"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-project-pane",
+      "id": "console-project-pane",
+      "name": "Project Pane",
+      "path": "/recipes/nx-console/console-project-pane"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-shortcuts",
+      "id": "console-shortcuts",
+      "name": "Keyboard Shortcuts",
+      "path": "/recipes/nx-console/console-shortcuts"
+    }
+  ],
   "use-task-executors": [
     {
       "description": "",
       "file": "shared/plugin-features/use-task-executors",
       "id": "use-task-executors",
       "name": "Use Task Executors",
-      "path": "/plugin-features/use-task-executors"
+      "path": "/core-features/plugin-features/use-task-executors"
     },
     {
       "description": "",
@@ -448,7 +434,49 @@
       "file": "shared/incremental-builds",
       "id": "incremental-builds",
       "name": "Incremental Builds",
-      "path": "/more-concepts/incremental-builds"
+      "path": "/concepts/more-concepts/incremental-builds"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/more-concepts/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/recipes/react/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for Angular",
+      "path": "/recipes/angular/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "id": "dynamic-module-federation-with-angular",
+      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/running-custom-commands",
+      "id": "run-commands-executor",
+      "name": "Running Custom Commands",
+      "path": "/recipes/tips-n-tricks/run-commands-executor"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/performance-profiling",
+      "id": "performance-profiling",
+      "name": "Profiling Build Performance",
+      "path": "/recipes/troubleshooting/performance-profiling"
     },
     {
       "description": "",
@@ -459,59 +487,17 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/use-executor-configurations",
-      "id": "use-executor-configurations",
-      "name": "Use Executor Configurations",
-      "path": "/recipes/executors/use-executor-configurations"
-    },
-    {
-      "description": "",
-      "file": "shared/running-custom-commands",
-      "id": "run-commands-executor",
-      "name": "Running Custom Commands",
-      "path": "/recipes/executors/run-commands-executor"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds",
-      "name": "Faster Builds with Module Federation",
-      "path": "/recipes/module-federation/faster-builds"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular and React",
-      "path": "/recipes/module-federation/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
-      "id": "dynamic-module-federation-with-angular",
-      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/module-federation/dynamic-module-federation-with-angular"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/recipes/other/performance-profiling"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/plugins/local-executors",
       "id": "local-executors",
       "name": "Write a Simple Executor",
-      "path": "/plugins/recipes/local-executors"
+      "path": "/extending-nx/recipes/local-executors"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/compose-executors",
       "id": "compose-executors",
       "name": "Compose Executors",
-      "path": "/plugins/recipes/compose-executors"
+      "path": "/extending-nx/recipes/compose-executors"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -541,14 +527,14 @@
       "file": "shared/plugin-features/use-code-generators",
       "id": "use-code-generators",
       "name": "Use Code Generators",
-      "path": "/plugin-features/use-code-generators"
+      "path": "/core-features/plugin-features/use-code-generators"
     },
     {
       "description": "",
       "file": "shared/monorepo-nx-enterprise",
       "id": "monorepo-nx-enterprise",
       "name": "Using Nx at Enterprises",
-      "path": "/more-concepts/monorepo-nx-enterprise"
+      "path": "/concepts/more-concepts/monorepo-nx-enterprise"
     },
     {
       "description": "",
@@ -562,35 +548,35 @@
       "file": "shared/recipes/generators/local-generators",
       "id": "local-generators",
       "name": "Write a Simple Generator",
-      "path": "/plugins/recipes/local-generators"
+      "path": "/extending-nx/recipes/local-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/composing-generators",
       "id": "composing-generators",
       "name": "Compose Generators",
-      "path": "/plugins/recipes/composing-generators"
+      "path": "/extending-nx/recipes/composing-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/generator-options",
       "id": "generator-options",
       "name": "Provide Options for Generators",
-      "path": "/plugins/recipes/generator-options"
+      "path": "/extending-nx/recipes/generator-options"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/creating-files",
       "id": "creating-files",
       "name": "Create Files",
-      "path": "/plugins/recipes/creating-files"
+      "path": "/extending-nx/recipes/creating-files"
     },
     {
       "description": "",
       "file": "shared/recipes/generators/modifying-files",
       "id": "modifying-files",
       "name": "Modify Files",
-      "path": "/plugins/recipes/modifying-files"
+      "path": "/extending-nx/recipes/modifying-files"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -616,85 +602,295 @@
       "path": "/concepts/mental-model"
     }
   ],
+  "repository-types": [
+    {
+      "description": "",
+      "file": "shared/concepts/integrated-vs-package-based",
+      "id": "integrated-vs-package-based",
+      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+      "path": "/concepts/integrated-vs-package-based"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/repo-types/package-based-in-integrated",
+      "id": "package-based-in-integrated",
+      "name": "Add a Package-based Project in an Integrated Repo",
+      "path": "/recipes/tips-n-tricks/package-based-in-integrated"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/repo-types/integrated-in-package-based",
+      "id": "integrated-in-package-based",
+      "name": "Add an Integrated Project in a Package-based Repo",
+      "path": "/recipes/tips-n-tricks/integrated-in-package-based"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/repo-types/standalone-to-integrated",
+      "id": "standalone-to-integrated",
+      "name": "Convert from a Standalone Repository to an Integrated Repository",
+      "path": "/recipes/tips-n-tricks/standalone-to-integrated"
+    }
+  ],
   "create-your-own-plugin": [
     {
       "description": "",
       "file": "shared/guides/nx-devkit-angular-devkit",
       "id": "nx-devkit-angular-devkit",
       "name": "Nx Devkit and Angular Devkit",
-      "path": "/more-concepts/nx-devkit-angular-devkit"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "packages-devkit",
-      "name": "Nx Devkit",
-      "path": "/packages/devkit/documents/nx_devkit"
+      "path": "/concepts/more-concepts/nx-devkit-angular-devkit"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/migration-generators",
       "id": "migration-generators",
       "name": "Write a Migration",
-      "path": "/plugins/recipes/migration-generators"
+      "path": "/extending-nx/recipes/migration-generators"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/create-preset",
       "id": "create-preset",
       "name": "Create a Preset",
-      "path": "/plugins/recipes/create-preset"
+      "path": "/extending-nx/recipes/create-preset"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
-      "path": "/plugins/recipes/project-graph-plugins"
+      "path": "/extending-nx/recipes/project-graph-plugins"
     },
     {
       "description": "",
       "file": "shared/recipes/plugins/project-inference-plugins",
       "id": "project-inference-plugins",
       "name": "Identify Custom Projects",
-      "path": "/plugins/recipes/project-inference-plugins"
+      "path": "/extending-nx/recipes/project-inference-plugins"
+    }
+  ],
+  "module-federation": [
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/more-concepts/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/recipes/react/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for Angular",
+      "path": "/recipes/angular/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "id": "dynamic-module-federation-with-angular",
+      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+    }
+  ],
+  "angular": [
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/more-concepts/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for Angular",
+      "path": "/recipes/angular/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "id": "dynamic-module-federation-with-angular",
+      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+    }
+  ],
+  "react": [
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/more-concepts/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/recipes/react/module-federation-with-ssr"
     }
   ],
   "environment-variables": [
     {
       "description": "",
-      "file": "shared/reference/environment-variables",
-      "id": "environment-variables",
-      "name": "Environment Variables",
-      "path": "/reference/environment-variables"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/define-environment-variables",
-      "id": "define-environment-variables",
-      "name": "Define Environment Variables",
-      "path": "/recipes/environment-variables/define-environment-variables"
-    },
-    {
-      "description": "",
       "file": "shared/guides/use-environment-variables-in-react",
       "id": "use-environment-variables-in-react",
       "name": "Use Environment Variables in React",
-      "path": "/recipes/environment-variables/use-environment-variables-in-react"
+      "path": "/recipes/react/use-environment-variables-in-react"
     },
     {
       "description": "",
       "file": "shared/guides/use-environment-variables-in-angular",
       "id": "use-environment-variables-in-angular",
       "name": "Use Environment Variables in Angular",
-      "path": "/recipes/environment-variables/use-environment-variables-in-angular"
+      "path": "/recipes/angular/use-environment-variables-in-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/define-environment-variables",
+      "id": "define-environment-variables",
+      "name": "Define Environment Variables",
+      "path": "/recipes/tips-n-tricks/define-environment-variables"
     },
     {
       "description": "",
       "file": "shared/guides/performance-profiling",
       "id": "performance-profiling",
       "name": "Profiling Build Performance",
-      "path": "/recipes/other/performance-profiling"
+      "path": "/recipes/troubleshooting/performance-profiling"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/environment-variables",
+      "id": "environment-variables",
+      "name": "Environment Variables",
+      "path": "/reference/environment-variables"
+    }
+  ],
+  "deployment": [
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/node-server-fly-io",
+      "id": "node-server-fly-io",
+      "name": "Deploying a Node App to Fly.io",
+      "path": "/recipes/node/node-server-fly-io"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+      "id": "node-serverless-functions-netlify",
+      "name": "Add and Deploy Netlify Edge Functions with Node",
+      "path": "/recipes/node/node-serverless-functions-netlify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/node-aws-lambda",
+      "id": "node-aws-lambda",
+      "name": "Deploying AWS lambda in Node.js",
+      "path": "/recipes/node/node-aws-lambda"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-deploy",
+      "id": "deno-deploy",
+      "name": "Serverless deployment with Deno Deploy",
+      "path": "/recipes/other/deno-deploy"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+      "id": "deno-netlify-functions",
+      "name": "Add and Deploy Netlify Edge Functions with Deno",
+      "path": "/recipes/other/deno-netlify-functions"
+    }
+  ],
+  "node": [
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/node-server-fly-io",
+      "id": "node-server-fly-io",
+      "name": "Deploying a Node App to Fly.io",
+      "path": "/recipes/node/node-server-fly-io"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/node-serverless-functions-netlify",
+      "id": "node-serverless-functions-netlify",
+      "name": "Add and Deploy Netlify Edge Functions with Node",
+      "path": "/recipes/node/node-serverless-functions-netlify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/node-aws-lambda",
+      "id": "node-aws-lambda",
+      "name": "Deploying AWS lambda in Node.js",
+      "path": "/recipes/node/node-aws-lambda"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/nestjs-prisma",
+      "id": "nestjs-prisma",
+      "name": "Using Prisma with NestJS",
+      "path": "/showcase/example-repos/nestjs-prisma"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/mongo-fastify",
+      "id": "mongo-fastify",
+      "name": "Using Mongo with Fastify",
+      "path": "/showcase/example-repos/mongo-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/redis-fastify",
+      "id": "redis-fastify",
+      "name": "Using Redis with Fastify",
+      "path": "/showcase/example-repos/redis-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/postgres-fastify",
+      "id": "postgres-fastify",
+      "name": "Using Postgres with Fastify",
+      "path": "/showcase/example-repos/postgres-fastify"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/database/serverless-fastify-planetscale",
+      "id": "serverless-fastify-planetscale",
+      "name": "Using PlanetScale with Serverless Fastify",
+      "path": "/showcase/example-repos/serverless-fastify-planetscale"
+    }
+  ],
+  "storybook": [
+    {
+      "description": "",
+      "file": "shared/recipes/one-storybook-for-all",
+      "id": "one-storybook-for-all",
+      "name": "One main Storybook instance for all projects",
+      "path": "/recipes/storybook/one-storybook-for-all"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/one-storybook-per-scope",
+      "id": "one-storybook-per-scope",
+      "name": "One Storybook instance per scope",
+      "path": "/recipes/storybook/one-storybook-per-scope"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/one-storybook-with-composition",
+      "id": "one-storybook-with-composition",
+      "name": "One main Storybook instance using Storybook Composition",
+      "path": "/recipes/storybook/one-storybook-with-composition"
     }
   ],
   "docker": [
@@ -715,184 +911,20 @@
       "path": "/recipes/ci/ci-deployment"
     }
   ],
-  "module-federation": [
+  "workspace-watching": [
     {
       "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds",
-      "name": "Faster Builds with Module Federation",
-      "path": "/recipes/module-federation/faster-builds"
+      "file": "shared/recipes/workspace-watching",
+      "id": "workspace-watching",
+      "name": "Workspace Watching",
+      "path": "/recipes/tips-n-tricks/workspace-watching"
     },
     {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular and React",
-      "path": "/recipes/module-federation/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
-      "id": "dynamic-module-federation-with-angular",
-      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/module-federation/dynamic-module-federation-with-angular"
-    }
-  ],
-  "angular": [
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds",
-      "name": "Faster Builds with Module Federation",
-      "path": "/recipes/module-federation/faster-builds"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular and React",
-      "path": "/recipes/module-federation/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
-      "id": "dynamic-module-federation-with-angular",
-      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/module-federation/dynamic-module-federation-with-angular"
-    }
-  ],
-  "react": [
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds",
-      "name": "Faster Builds with Module Federation",
-      "path": "/recipes/module-federation/faster-builds"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular and React",
-      "path": "/recipes/module-federation/module-federation-with-ssr"
-    }
-  ],
-  "storybook": [
-    {
-      "description": "",
-      "file": "shared/recipes/one-storybook-for-all",
-      "id": "one-storybook-for-all",
-      "name": "Publishing Storybook: One main Storybook instance for all projects",
-      "path": "/recipes/storybook/one-storybook-for-all"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/one-storybook-per-scope",
-      "id": "one-storybook-per-scope",
-      "name": "Publishing Storybook: One Storybook instance per scope",
-      "path": "/recipes/storybook/one-storybook-per-scope"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/one-storybook-with-composition",
-      "id": "one-storybook-with-composition",
-      "name": "Publishing Storybook: One main Storybook instance using Storybook Composition",
-      "path": "/recipes/storybook/one-storybook-with-composition"
-    }
-  ],
-  "deployment": [
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/node-server-fly-io",
-      "id": "node-server-fly-io",
-      "name": "Deploying a Node App to Fly.io",
-      "path": "/recipes/deployment/node-server-fly-io"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/node-serverless-functions-netlify",
-      "id": "node-serverless-functions-netlify",
-      "name": "Add and Deploy Netlify Edge Functions with Node",
-      "path": "/recipes/deployment/node-serverless-functions-netlify"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/node-aws-lambda",
-      "id": "node-aws-lambda",
-      "name": "Deploying AWS lambda in Node.js",
-      "path": "/recipes/deployment/node-aws-lambda"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/deno-deploy",
-      "id": "deno-deploy",
-      "name": "Serverless deployment with Deno Deploy",
-      "path": "/recipes/deployment/deno-deploy"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-      "id": "deno-netlify-functions",
-      "name": "Add and Deploy Netlify Edge Functions with Deno",
-      "path": "/recipes/deployment/deno-netlify-functions"
-    }
-  ],
-  "node": [
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/node-server-fly-io",
-      "id": "node-server-fly-io",
-      "name": "Deploying a Node App to Fly.io",
-      "path": "/recipes/deployment/node-server-fly-io"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/node-serverless-functions-netlify",
-      "id": "node-serverless-functions-netlify",
-      "name": "Add and Deploy Netlify Edge Functions with Node",
-      "path": "/recipes/deployment/node-serverless-functions-netlify"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/node-aws-lambda",
-      "id": "node-aws-lambda",
-      "name": "Deploying AWS lambda in Node.js",
-      "path": "/recipes/deployment/node-aws-lambda"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/database/nestjs-prisma",
-      "id": "nestjs-prisma",
-      "name": "Using Prisma with NestJS",
-      "path": "/recipes/database/nestjs-prisma"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/database/mongo-fastify",
-      "id": "mongo-fastify",
-      "name": "Using Mongo with Fastify",
-      "path": "/recipes/database/mongo-fastify"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/database/redis-fastify",
-      "id": "redis-fastify",
-      "name": "Using Redis with Fastify",
-      "path": "/recipes/database/redis-fastify"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/database/postgres-fastify",
-      "id": "postgres-fastify",
-      "name": "Using Postgres with Fastify",
-      "path": "/recipes/database/postgres-fastify"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/database/serverless-fastify-planetscale",
-      "id": "serverless-fastify-planetscale",
-      "name": "Using PlanetScale with Serverless Fastify",
-      "path": "/recipes/database/serverless-fastify-planetscale"
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/watch",
+      "id": "watch",
+      "name": "watch",
+      "path": "/packages/nx/documents/watch"
     }
   ],
   "deno": [
@@ -901,14 +933,14 @@
       "file": "shared/recipes/deployment/deno-deploy",
       "id": "deno-deploy",
       "name": "Serverless deployment with Deno Deploy",
-      "path": "/recipes/deployment/deno-deploy"
+      "path": "/recipes/other/deno-deploy"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/deno-netlify-edge-functions",
       "id": "deno-netlify-functions",
       "name": "Add and Deploy Netlify Edge Functions with Deno",
-      "path": "/recipes/deployment/deno-netlify-functions"
+      "path": "/recipes/other/deno-netlify-functions"
     }
   ],
   "database": [
@@ -917,35 +949,35 @@
       "file": "shared/recipes/database/nestjs-prisma",
       "id": "nestjs-prisma",
       "name": "Using Prisma with NestJS",
-      "path": "/recipes/database/nestjs-prisma"
+      "path": "/showcase/example-repos/nestjs-prisma"
     },
     {
       "description": "",
       "file": "shared/recipes/database/mongo-fastify",
       "id": "mongo-fastify",
       "name": "Using Mongo with Fastify",
-      "path": "/recipes/database/mongo-fastify"
+      "path": "/showcase/example-repos/mongo-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/redis-fastify",
       "id": "redis-fastify",
       "name": "Using Redis with Fastify",
-      "path": "/recipes/database/redis-fastify"
+      "path": "/showcase/example-repos/redis-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/postgres-fastify",
       "id": "postgres-fastify",
       "name": "Using Postgres with Fastify",
-      "path": "/recipes/database/postgres-fastify"
+      "path": "/showcase/example-repos/postgres-fastify"
     },
     {
       "description": "",
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
       "name": "Using PlanetScale with Serverless Fastify",
-      "path": "/recipes/database/serverless-fastify-planetscale"
+      "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ],
   "serverless": [
@@ -954,23 +986,7 @@
       "file": "shared/recipes/database/serverless-fastify-planetscale",
       "id": "serverless-fastify-planetscale",
       "name": "Using PlanetScale with Serverless Fastify",
-      "path": "/recipes/database/serverless-fastify-planetscale"
-    }
-  ],
-  "workspace-watching": [
-    {
-      "description": "",
-      "file": "shared/recipes/workspace-watching",
-      "id": "workspace-watching",
-      "name": "Workspace Watching",
-      "path": "/recipes/other/workspace-watching"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/watch",
-      "id": "watch",
-      "name": "watch",
-      "path": "/packages/nx/documents/watch"
+      "path": "/showcase/example-repos/serverless-fastify-planetscale"
     }
   ]
 }

@@ -1,5 +1,6 @@
 import {
   cleanupProject,
+  isNotWindows,
   newProject,
   runCLI,
   uniq,
@@ -22,7 +23,7 @@ describe('Next.js App Router', () => {
     const appName = uniq('app');
     const jsLib = uniq('tslib');
 
-    runCLI(`generate @nx/next:app ${appName}`);
+    runCLI(`generate @nx/next:app ${appName} --e2eTestRunner=playwright`);
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
     updateFile(
@@ -42,7 +43,7 @@ describe('Next.js App Router', () => {
     await checkApp(appName, {
       checkUnitTest: false,
       checkLint: true,
-      checkE2E: false,
+      checkE2E: isNotWindows(),
       checkExport: false,
     });
   }, 300_000);

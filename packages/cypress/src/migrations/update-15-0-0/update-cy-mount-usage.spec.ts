@@ -11,7 +11,7 @@ import {
   updateCyMountUsage,
 } from './update-cy-mount-usage';
 import { libraryGenerator } from '@nx/js';
-import { cypressComponentConfiguration } from '../../generators/cypress-component-configuration/cypress-component-configuration';
+import cypressComponentConfiguration from '../../generators/component-configuration/component-configuration';
 
 jest.mock('../../utils/cypress-version');
 // nested code imports graph from the repo, which might have innacurate graph version

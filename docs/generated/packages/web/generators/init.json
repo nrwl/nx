@@ -24,7 +24,8 @@
       "e2eTestRunner": {
         "description": "Adds the specified e2e test runner",
         "type": "string",
-        "enum": ["cypress", "none"],
+        "enum": ["cypress", "playwright", "none"],
+        "x-prompt": "Which E2E test runner would you like to use?",
         "default": "cypress"
       },
       "skipFormat": {

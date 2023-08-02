@@ -14,11 +14,11 @@ export async function addJest(host: Tree, options: NormalizedSchema) {
     return () => {};
   }
 
-  const { jestProjectGenerator } = ensurePackage<typeof import('@nx/jest')>(
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
     nxVersion
   );
-  const jestTask = await jestProjectGenerator(host, {
+  const jestTask = await configurationGenerator(host, {
     ...options,
     project: options.projectName,
     supportTsx: true,

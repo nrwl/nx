@@ -15,7 +15,7 @@ export default async function* podInstall(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const iosDirectory = join(context.root, projectRoot, 'ios');
-  await runPodInstall(iosDirectory, true, options.buildFolder)();
+  await runPodInstall(iosDirectory, true, options)();
 
   yield { success: true };
 }

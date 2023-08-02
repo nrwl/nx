@@ -10,7 +10,6 @@ import { setHashEnv } from '../../hasher/set-hash-env';
  * TaskHasher has a cache inside, so keeping it around results in faster performance
  */
 let storedProjectGraph: any = null;
-let storedTaskGraph: any = null;
 let storedHasher: InProcessTaskHasher | null = null;
 
 export async function handleHashTasks(payload: {
@@ -27,18 +26,18 @@ export async function handleHashTasks(payload: {
 
   if (projectGraph !== storedProjectGraph) {
     storedProjectGraph = projectGraph;
-    storedTaskGraph = payload.taskGraph;
     storedHasher = new InProcessTaskHasher(
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
-      payload.taskGraph,
       nxJson,
       payload.runnerOptions,
       fileHasher
     );
   }
-  const response = JSON.stringify(await storedHasher.hashTasks(payload.tasks));
+  const response = JSON.stringify(
+    await storedHasher.hashTasks(payload.tasks, payload.taskGraph)
+  );
   return {
     response,
     description: 'handleHashTasks',

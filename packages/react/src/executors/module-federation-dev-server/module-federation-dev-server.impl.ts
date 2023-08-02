@@ -1,4 +1,10 @@
-import { ExecutorContext, logger, runExecutor } from '@nx/devkit';
+import {
+  ExecutorContext,
+  logger,
+  parseTargetString,
+  readTargetOptions,
+  runExecutor,
+} from '@nx/devkit';
 import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
 import { WebDevServerOptions } from '@nx/webpack/src/executors/dev-server/schema';
 import { join } from 'path';
@@ -10,41 +16,107 @@ import * as chalk from 'chalk';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { fork } from 'child_process';
+import { existsSync } from 'fs';
+import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
   skipRemotes?: string[];
 };
 
+function getBuildOptions(buildTarget: string, context: ExecutorContext) {
+  const target = parseTargetString(buildTarget, context.projectGraph);
+
+  const buildOptions = readTargetOptions(target, context);
+
+  return {
+    ...buildOptions,
+  };
+}
+
+function getModuleFederationConfig(
+  tsconfigPath: string,
+  workspaceRoot: string,
+  projectRoot: string
+) {
+  const moduleFederationConfigPathJS = join(
+    workspaceRoot,
+    projectRoot,
+    'module-federation.config.js'
+  );
+
+  const moduleFederationConfigPathTS = join(
+    workspaceRoot,
+    projectRoot,
+    'module-federation.config.ts'
+  );
+
+  let moduleFederationConfigPath = moduleFederationConfigPathJS;
+
+  if (existsSync(moduleFederationConfigPathTS)) {
+    tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath);
+    moduleFederationConfigPath = moduleFederationConfigPathTS;
+  }
+
+  try {
+    const config = require(moduleFederationConfigPath);
+    return config.default || config;
+  } catch {
+    throw new Error(
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/concepts/more-concepts/faster-builds-with-module-federation`
+    );
+  }
+}
+
 export default async function* moduleFederationDevServer(
   options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
+  const nxBin = require.resolve('nx');
   const currIter = devServerExecutor(options, context);
   const p = context.projectsConfigurations.projects[context.projectName];
+  const buildOptions = getBuildOptions(options.buildTarget, context);
 
-  const moduleFederationConfigPath = join(
+  const moduleFederationConfig = getModuleFederationConfig(
+    buildOptions.tsConfig,
     context.root,
-    p.root,
-    'module-federation.config.js'
+    p.root
   );
 
-  let moduleFederationConfig: any;
-  try {
-    moduleFederationConfig = require(moduleFederationConfigPath);
-  } catch {
-    throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/recipes/module-federation/faster-builds`
+  const remotesToSkip = new Set(
+    findMatchingProjects(options.skipRemotes, context.projectGraph.nodes) ?? []
+  );
+
+  if (remotesToSkip.size > 0) {
+    logger.info(
+      `Remotes not served automatically: ${[...remotesToSkip.values()].join(
+        ', '
+      )}`
+    );
+  }
+  const remotesNotInWorkspace: string[] = [];
+
+  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
+    const validRemote = Array.isArray(r) ? r[0] : r;
+
+    if (remotesToSkip.has(validRemote)) {
+      return false;
+    } else if (!context.projectGraph.nodes[validRemote]) {
+      remotesNotInWorkspace.push(validRemote);
+      return false;
+    } else {
+      return true;
+    }
+  });
+
+  if (remotesNotInWorkspace.length > 0) {
+    logger.warn(
+      `Skipping serving ${remotesNotInWorkspace.join(
+        ', '
+      )} as they could not be found in the workspace. Ensure they are served correctly.`
     );
   }
 
-  const remotesToSkip = new Set(
-    findMatchingProjects(options.skipRemotes ?? [], context.projectGraph.nodes)
-  );
-  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
-    const validRemote = Array.isArray(r) ? r[0] : r;
-    return !remotesToSkip.has(validRemote);
-  });
   const remotePorts = knownRemotes.map(
     (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
@@ -61,7 +133,6 @@ export default async function* moduleFederationDevServer(
     )} with ${knownRemotes.length} remotes`
   );
 
-  const nxBin = require.resolve('nx');
   const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
   let isCollectingStaticRemoteOutput = true;
 
@@ -133,6 +204,7 @@ export default async function* moduleFederationDevServer(
               waitForPortOpen(port, {
                 retries: 480,
                 retryDelay: 2500,
+                host: 'localhost',
               })
             )
           );

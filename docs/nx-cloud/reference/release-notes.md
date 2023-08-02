@@ -98,6 +98,11 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 2306.01.2.patch3
+
+- Fixes an issue with multiple admin organizations being created on new installations
+- Fixes an issue where Enterprise licenses could not be applied on some new orgs
+
 ## 2306.01.2.patch2
 
 - Fixes an issue with the `single-image` container where the aggregation would block the API from starting up
@@ -155,7 +160,7 @@ If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cl
 
 On May 16th, 2023 we announced our plans to sunset the Community Edition of NxCloud On-Prem to align with our new pricing plans. If you are on the Community Edition, please follow these steps to migrate:
 
-1. Use this image: `2306.01.2`
+1. Use this image: `2306.01.2.patch3`
 2. Switch to private Enterprise by setting `NX_CLOUD_MODE=private-enterprise` (or `mode: 'private-enterprise'` if using Helm).
 3. Reach out to us at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io). You will get a FREE, unlimited-use coupon for the next 3 months so you can trial Nx Enterprise.
 

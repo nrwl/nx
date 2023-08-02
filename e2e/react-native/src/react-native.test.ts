@@ -14,6 +14,7 @@ import {
   runCommandUntil,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 import { join } from 'path';
@@ -25,6 +26,16 @@ describe('react native', () => {
 
   beforeAll(() => {
     proj = newProject();
+    // we create empty preset above which skips creation of `production` named input
+    updateJson('nx.json', (nxJson) => {
+      nxJson.namedInputs = {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: ['default'],
+        sharedGlobals: [],
+      };
+      nxJson.targetDefaults.build.inputs = ['production', '^production'];
+      return nxJson;
+    });
     runCLI(
       `generate @nx/react-native:application ${appName} --install=false --no-interactive`
     );
@@ -161,7 +172,7 @@ describe('react native', () => {
     );
     expect(() => {
       runCLI(`build ${libName}`);
-      checkFilesExist(`dist/libs/${libName}/index.js`);
+      checkFilesExist(`dist/libs/${libName}/index.esm.js`);
       checkFilesExist(`dist/libs/${libName}/src/index.d.ts`);
     }).not.toThrow();
   });
@@ -193,5 +204,22 @@ describe('react native', () => {
         '@react-native-async-storage/async-storage': '*',
       },
     });
+  });
+
+  it('should tsc app', async () => {
+    expect(() => {
+      const pmc = getPackageManagerCommand();
+      runCommand(
+        `${pmc.runUninstalledPackage} tsc -p apps/${appName}/tsconfig.app.json`
+      );
+      checkFilesExist(
+        `dist/out-tsc/apps/${appName}/src/main.js`,
+        `dist/out-tsc/apps/${appName}/src/main.d.ts`,
+        `dist/out-tsc/apps/${appName}/src/app/App.js`,
+        `dist/out-tsc/apps/${appName}/src/app/App.d.ts`,
+        `dist/out-tsc/libs/${libName}/src/index.js`,
+        `dist/out-tsc/libs/${libName}/src/index.d.ts`
+      );
+    }).not.toThrow();
   });
 });

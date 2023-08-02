@@ -16,7 +16,7 @@ import {
   runTasksInSerial,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { addPropertyToJestConfig, jestProjectGenerator } from '@nx/jest';
+import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
@@ -93,7 +93,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     implicitDependencies: [options.pluginName],
   });
 
-  const jestTask = await jestProjectGenerator(host, {
+  const jestTask = await configurationGenerator(host, {
     project: options.projectName,
     setupFile: 'none',
     supportTsx: false,
