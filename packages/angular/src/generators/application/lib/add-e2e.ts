@@ -11,14 +11,12 @@ import {
 import { nxVersion } from '../../../utils/versions';
 import type { NormalizedSchema } from './normalized-schema';
 import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
+import { cypressProjectGenerator } from '@nx/cypress';
 
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
   removeScaffoldedE2e(tree, options, options.ngCliSchematicE2ERoot);
 
   if (options.e2eTestRunner === 'cypress') {
-    const { cypressProjectGenerator } = ensurePackage<
-      typeof import('@nx/cypress')
-    >('@nx/cypress', nxVersion);
     // TODO: This can call `@nx/web:static-config` generator when ready
     addFileServerTarget(tree, options, 'serve-static');
 

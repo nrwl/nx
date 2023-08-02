@@ -2,7 +2,7 @@ import {
   createFile,
   newProject,
   runCLI,
-  runCypressTests,
+  runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -17,13 +17,13 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs app', () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
         'All specs passed!'
       );
     }
     addTailwindToApp(appName);
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -33,13 +33,13 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs lib', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${libName} --no-watch`)).toContain(
         'All specs passed!'
       );
     }
     addTailwindToLib(libName);
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${libName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -49,14 +49,14 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs buildable lib', async () => {
     const buildableLibName = uniq('next-buildable-lib');
     createLibWithCt(buildableLibName, true);
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
     }
 
     addTailwindToLib(buildableLibName);
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
