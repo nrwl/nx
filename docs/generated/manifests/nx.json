@@ -37,7 +37,7 @@
       },
       {
         "id": "tutorials",
-        "name": "5 min Tutorials",
+        "name": "Tutorials",
         "description": "Get started with basic information, concepts and tutorials.",
         "file": "",
         "itemList": [
@@ -133,7 +133,7 @@
   },
   "/getting-started/tutorials": {
     "id": "tutorials",
-    "name": "5 min Tutorials",
+    "name": "Tutorials",
     "description": "Get started with basic information, concepts and tutorials.",
     "file": "",
     "itemList": [
