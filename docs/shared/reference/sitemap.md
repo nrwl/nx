@@ -176,6 +176,7 @@
   - [Showcase](/showcase)
     - [Example Repos](/showcase/example-repos)
       - [Add a Lit Project](/showcase/example-repos/add-lit)
+      - [Add a Solid Project](/showcase/example-repos/add-solid)
       - [Add a Qwik Project](/showcase/example-repos/add-qwik)
       - [Powering Up React Development With Nx](/showcase/example-repos/react-nx)
       - [Using Apollo GraphQL](/showcase/example-repos/apollo-react)

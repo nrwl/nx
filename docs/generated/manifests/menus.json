@@ -3584,6 +3584,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Add a Solid Project",
+                "path": "/showcase/example-repos/add-solid",
+                "id": "add-solid",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Add a Qwik Project",
                 "path": "/showcase/example-repos/add-qwik",
                 "id": "add-qwik",
@@ -3692,6 +3700,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Add a Solid Project",
+            "path": "/showcase/example-repos/add-solid",
+            "id": "add-solid",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Add a Qwik Project",
             "path": "/showcase/example-repos/add-qwik",
             "id": "add-qwik",
@@ -3786,6 +3802,14 @@
         "name": "Add a Lit Project",
         "path": "/showcase/example-repos/add-lit",
         "id": "add-lit",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Solid Project",
+        "path": "/showcase/example-repos/add-solid",
+        "id": "add-solid",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

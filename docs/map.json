@@ -1029,6 +1029,12 @@
                   "file": "shared/recipes/add-stack/add-lit"
                 },
                 {
+                  "name": "Add a Solid Project",
+                  "id": "add-solid",
+                  "description": "Add a Solid project to your repo",
+                  "file": "shared/recipes/add-stack/add-solid"
+                },
+                {
                   "name": "Add a Qwik Project",
                   "id": "add-qwik",
                   "description": "Add a Qwik project to your repo",
