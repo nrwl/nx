@@ -4,7 +4,7 @@ import {
   ensureCypressInstallation,
   newProject,
   runCLI,
-  runCypressTests,
+  runE2ETests,
   uniq,
   updateFile,
   updateJson,
@@ -147,7 +147,7 @@ export default Input;
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -158,7 +158,7 @@ export default Input;
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -190,7 +190,7 @@ describe(Input.name, () => {
       `generate @nx/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
     );
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -221,7 +221,7 @@ ${content}`;
       }
     );
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -260,7 +260,7 @@ ${content}`;
       return config;
     });
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       const results = runCLI(`component-test ${appName}`);
       expect(results).toContain('I am from the custom async Webpack config');
       expect(results).toContain('All specs passed!');
@@ -291,7 +291,7 @@ export default MyComponent;`;
     runCLI(
       `generate @nrwl/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${viteLibName}`)).toContain(
         'All specs passed!'
       );

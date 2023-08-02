@@ -7,7 +7,6 @@ import {
   readProjectConfig,
   runCLI,
   runCLIAsync,
-  runCypressTests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';

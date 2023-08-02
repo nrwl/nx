@@ -12,7 +12,7 @@ import {
   rmDist,
   runCLI,
   runCLIAsync,
-  runCypressTests,
+  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
@@ -43,7 +43,7 @@ describe('Web Components Applications', () => {
 
     expect(lintE2eResults).toContain('All files pass linting.');
 
-    if (isNotWindows() && runCypressTests()) {
+    if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
@@ -109,7 +109,7 @@ describe('Web Components Applications', () => {
 
     expect(lintE2eResults).toContain('All files pass linting.');
 
-    if (isNotWindows() && runCypressTests()) {
+    if (isNotWindows() && runE2ETests()) {
       ensurePlaywrightBrowsersInstallation();
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain(

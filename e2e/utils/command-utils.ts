@@ -3,6 +3,7 @@ import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
   ensureCypressInstallation,
+  ensurePlaywrightBrowsersInstallation,
   getNpmMajorVersion,
   getPublishedVersion,
   getStrippedEnvironmentVariables,
@@ -175,15 +176,23 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export function runCypressTests() {
-  if (process.env.NX_E2E_RUN_CYPRESS === 'true') {
+export function runE2ETests() {
+  if (process.env.NX_E2E_RUN_E2E === 'true') {
     ensureCypressInstallation();
+    ensurePlaywrightBrowsersInstallation();
     return true;
-  } else {
+  }
+
+  console.warn(
+    'Not running E2E tests because NX_E2E_RUN_E2E is not set to true.'
+  );
+
+  if (process.env.NX_E2E_RUN_CYPRESS) {
     console.warn(
-      'Not running Cypress because NX_E2E_RUN_CYPRESS is not set to true.'
+      'NX_E2E_RUN_CYPRESS is deprecated, use NX_E2E_RUN_E2E instead.'
     );
   }
+
   return false;
 }
 

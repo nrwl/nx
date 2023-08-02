@@ -8,7 +8,7 @@ import {
   newProject,
   readJson,
   runCLI,
-  runCypressTests,
+  runE2ETests,
   uniq,
   updateFile,
   updateJson,
@@ -200,7 +200,7 @@ async function testCtAndE2eInProject(
     `generate @nx/${projectType}:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
   );
 
-  if (runCypressTests()) {
+  if (runE2ETests()) {
     expect(runCLI(`run ${appName}:component-test --no-watch`)).toContain(
       'All specs passed!'
     );
@@ -208,7 +208,7 @@ async function testCtAndE2eInProject(
 
   runCLI(`generate @nx/cypress:e2e --project=${appName} --no-interactive`);
 
-  if (runCypressTests()) {
+  if (runE2ETests()) {
     expect(runCLI(`run ${appName}:e2e --no-watch`)).toContain(
       'All specs passed!'
     );

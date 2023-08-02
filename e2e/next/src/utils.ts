@@ -4,7 +4,7 @@ import {
   readJson,
   runCLI,
   runCLIAsync,
-  runCypressTests,
+  runE2ETests,
 } from '../../utils';
 
 export async function checkApp(
@@ -40,7 +40,7 @@ export async function checkApp(
   expect(packageJson.dependencies['react-dom']).toBeDefined();
   expect(packageJson.dependencies.next).toBeDefined();
 
-  if (opts.checkE2E && runCypressTests()) {
+  if (opts.checkE2E && runE2ETests()) {
     const e2eResults = runCLI(
       `e2e ${appName}-e2e --no-watch --configuration=production`
     );
