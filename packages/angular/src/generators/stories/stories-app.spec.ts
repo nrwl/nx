@@ -5,8 +5,7 @@ import { componentGenerator } from '../component/component';
 import { scamGenerator } from '../scam/scam';
 import { generateTestApplication } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
-import { readProjectConfiguration, stripIndents } from '@nx/devkit';
-import { indentBy } from '@angular-devkit/core/src/utils/literals';
+import { stripIndents } from '@nx/devkit';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
