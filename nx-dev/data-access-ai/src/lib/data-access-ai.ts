@@ -11,7 +11,13 @@ import {
   ChatCompletionRequestMessageRoleEnum,
   CreateCompletionResponseUsage,
 } from 'openai';
-import { getMessageFromResponse, sanitizeLinksInResponse } from './utils';
+import {
+  PageSection,
+  getListOfSources,
+  getMessageFromResponse,
+  sanitizeLinksInResponse,
+  toMarkdownList,
+} from './utils';
 
 const openAiKey = process.env['NX_OPENAI_KEY'];
 const supabaseUrl = process.env['NX_NEXT_PUBLIC_SUPABASE_URL'];
@@ -21,9 +27,12 @@ const config = new Configuration({
 });
 const openai = new OpenAIApi(config);
 
-export async function nxDevDataAccessAi(
-  query: string
-): Promise<{ textResponse: string; usage?: CreateCompletionResponseUsage }> {
+export async function nxDevDataAccessAi(query: string): Promise<{
+  textResponse: string;
+  usage?: CreateCompletionResponseUsage;
+  sources: { heading: string; url: string }[];
+  sourcesMarkdown: string;
+}> {
   try {
     if (!openAiKey) {
       throw new ApplicationError('Missing environment variable NX_OPENAI_KEY');
@@ -80,11 +89,11 @@ export async function nxDevDataAccessAi(
     }: CreateEmbeddingResponse = embeddingResponse.data;
 
     const { error: matchError, data: pageSections } = await supabaseClient.rpc(
-      'match_page_sections',
+      'match_page_sections_2',
       {
         embedding,
         match_threshold: 0.78,
-        match_count: 10,
+        match_count: 15,
         min_content_length: 50,
       }
     );
@@ -97,13 +106,13 @@ export async function nxDevDataAccessAi(
     let tokenCount = 0;
     let contextText = '';
 
-    for (let i = 0; i < pageSections.length; i++) {
-      const pageSection = pageSections[i];
+    for (let i = 0; i < (pageSections as PageSection[]).length; i++) {
+      const pageSection: PageSection = pageSections[i];
       const content = pageSection.content;
       const encoded = tokenizer.encode(content);
       tokenCount += encoded.text.length;
 
-      if (tokenCount >= 1500) {
+      if (tokenCount >= 2500) {
         break;
       }
 
@@ -163,9 +172,13 @@ export async function nxDevDataAccessAi(
 
     const responseWithoutBadLinks = await sanitizeLinksInResponse(message);
 
+    const sources = getListOfSources(pageSections);
+
     return {
       textResponse: responseWithoutBadLinks,
       usage: response.data.usage,
+      sources,
+      sourcesMarkdown: toMarkdownList(sources),
     };
   } catch (err: unknown) {
     if (err instanceof UserError) {

@@ -19,7 +19,9 @@ import manifestsCloud from '../../../../docs/generated/manifests/cloud.json' ass
 import manifestsExtending from '../../../../docs/generated/manifests/extending-nx.json' assert { type: 'json' };
 import manifestsNx from '../../../../docs/generated/manifests/nx.json' assert { type: 'json' };
 import manifestsPackages from '../../../../docs/generated/manifests/packages.json' assert { type: 'json' };
+import manifestsRecipes from '../../../../docs/generated/manifests/recipes.json' assert { type: 'json' };
 import manifestsTags from '../../../../docs/generated/manifests/tags.json' assert { type: 'json' };
+import { get } from 'http';
 
 dotenv.config();
 
@@ -189,6 +191,7 @@ async function generateEmbeddings() {
     ...getAllFilesWithItemList(manifestsExtending),
     ...getAllFilesWithItemList(manifestsNx),
     ...getAllFilesWithItemList(manifestsPackages),
+    ...getAllFilesWithItemList(manifestsRecipes),
     ...getAllFilesWithItemList(manifestsTags),
   ].filter((entry) => !entry.path.includes('sitemap'));
 

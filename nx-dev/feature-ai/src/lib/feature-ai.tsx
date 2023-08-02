@@ -10,6 +10,7 @@ export function FeatureAi(): JSX.Element {
   const [error, setError] = useState(null);
   const [query, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sources, setSources] = useState('');
 
   const warning = `
   {% callout type="warning" title="Always double check!" %}
@@ -23,18 +24,32 @@ export function FeatureAi(): JSX.Element {
     setLoading(true);
     let completeText = '';
     let usage;
+    let sourcesMarkdown = '';
     try {
       const aiResponse = await nxDevDataAccessAi(query);
       completeText = aiResponse.textResponse;
       usage = aiResponse.usage;
+      setSources(
+        JSON.stringify(aiResponse.sources?.map((source) => source.url))
+      );
+      sourcesMarkdown = aiResponse.sourcesMarkdown;
       setLoading(false);
     } catch (error) {
       setError(error as any);
       setLoading(false);
     }
-    sendCustomEvent('ai_query', 'ai', 'query', undefined, { query, ...usage });
+    sendCustomEvent('ai_query', 'ai', 'query', undefined, {
+      query,
+      ...usage,
+    });
+
+    const sourcesMd = `
+  {% callout type="info" title="Sources" %}
+  ${sourcesMarkdown}
+  {% /callout %}`;
+
     setFinalResult(
-      renderMarkdown(warning + completeText, { filePath: '' }).node
+      renderMarkdown(warning + completeText + sourcesMd, { filePath: '' }).node
     );
   };
 
@@ -86,6 +101,7 @@ export function FeatureAi(): JSX.Element {
                 sendCustomEvent('ai_feedback', 'ai', 'good', undefined, {
                   query,
                   result: finalResult,
+                  sources,
                 })
               }
             >
@@ -101,6 +117,7 @@ export function FeatureAi(): JSX.Element {
                 sendCustomEvent('ai_feedback', 'ai', 'bad', undefined, {
                   query,
                   result: finalResult,
+                  sources,
                 })
               }
             >
