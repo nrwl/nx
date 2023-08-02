@@ -12,32 +12,61 @@ interface PluginRegistry {
   url: string;
 }
 
+const packagesJson = require('../../nx-dev/nx-dev/public/documentation/generated/manifests/packages.json');
+const officialPlugins = Object.keys(packagesJson)
+  .filter(
+    (m: any) =>
+      packagesJson[m].name !== 'add-nx-to-monorepo' &&
+      packagesJson[m].name !== 'cra-to-nx' &&
+      packagesJson[m].name !== 'create-nx-plugin' &&
+      packagesJson[m].name !== 'create-nx-workspace' &&
+      packagesJson[m].name !== 'make-angular-cli-faster' &&
+      packagesJson[m].name !== 'tao'
+  )
+  .map((k) => ({
+    name: packagesJson[k].name === 'nx' ? 'nx' : '@nx/' + packagesJson[k].name,
+    description: packagesJson[k].description,
+    url: packagesJson[k].githubRoot,
+  }));
+
 const plugins =
   require('../../community/approved-plugins.json') as PluginRegistry[];
 
 async function main() {
   const qualityIndicators: any = {};
+  const { data } = await axios.get(`https://api.github.com/repos/nrwl/nx`, {
+    headers: {
+      Authorization: `Bearer ${process.env.GITHUB_PAT}`,
+    },
+  });
+  const nxGithubStars = data.stargazers_count;
+  for (let i = 0; i < officialPlugins.length; i++) {
+    const plugin = officialPlugins[i];
+    console.log(`Fetching data for ${plugin.name}`);
+    const npmData = await getNpmData(plugin, true);
+    const npmDownloads = await getNpmDownloads(plugin);
+    qualityIndicators[plugin.name] = {
+      lastPublishedDate: npmData.lastPublishedDate,
+      npmDownloads,
+      githubStars: nxGithubStars,
+    };
+  }
   for (let i = 0; i < plugins.length; i++) {
     const plugin = plugins[i];
+    console.log(`Fetching data for ${plugin.name}`);
     const npmData = await getNpmData(plugin);
     const npmDownloads = await getNpmDownloads(plugin);
     const githubStars = await getGithubStars(npmData.githubRepo);
-    const nxVersion = await getNxVersion(
-      npmData.githubRepo,
-      npmData.githubDirectory
-    );
     qualityIndicators[plugin.name] = {
       lastPublishedDate: npmData.lastPublishedDate,
-      githubDirectory: npmData.githubDirectory,
       npmDownloads,
       githubStars,
-      nxVersion,
+      nxVersion: npmData.nxVersion,
     };
-    console.log(qualityIndicators[plugin.name]);
   }
 
   writeFileSync(
-    '../../nx-dev/nx-dev/pages/extending-nx/quality-indicators.json',
+    './nx-dev/nx-dev/pages/extending-nx/quality-indicators.json',
     JSON.stringify(qualityIndicators, null, 2)
   );
 }
@@ -45,45 +74,55 @@ main();
 
 // Publish date (and github directory, readme content)
 // i.e. https://registry.npmjs.org/@nxkit/playwright
-async function getNpmData(plugin: PluginRegistry) {
-  const { data } = await axios.get(`https://registry.npmjs.org/${plugin.name}`);
-  console.log(plugin.name);
-  const lastPublishedDate = data.time[data['dist-tags'].latest];
-  if (!data.repository) {
-    console.log('!!! No repository!');
-    return { lastPublishedDate, githubRepo: '' };
+async function getNpmData(plugin: PluginRegistry, skipNxVersion = false) {
+  try {
+    const { data } = await axios.get(
+      `https://registry.npmjs.org/${plugin.name}`
+    );
+    const lastPublishedDate = data.time[data['dist-tags'].latest];
+    const nxVersion = skipNxVersion || (await getNxVersion(data));
+    if (!data.repository) {
+      console.warn('- No repository defined in package.json!');
+      return { lastPublishedDate, nxVersion, githubRepo: '' };
+    }
+    const url: String = data.repository.url;
+    const githubRepo = url
+      .slice(url.indexOf('github.com/') + 11)
+      .replace('.git', '');
+    return {
+      lastPublishedDate,
+      githubRepo,
+      nxVersion,
+      // readmeContent: plugin.name
+    };
+  } catch (ex) {
+    return { lastPublishedDate: '', githubRepo: '' };
   }
-  const url: String = data.repository.url;
-  const githubRepo = url
-    .slice(url.indexOf('github.com/') + 11)
-    .replace('.git', '');
-  return {
-    lastPublishedDate,
-    githubDirectory: data.repository.directory,
-    githubRepo,
-    // readmeContent: plugin.name
-  };
 }
 
 // Download count
 // i.e. https://api.npmjs.org/downloads/point/2023-06-01:2023-07-01/@nxkit/playwright
 async function getNpmDownloads(plugin: PluginRegistry) {
   const lastMonth = getLastMonth();
-  const { data } = await axios.get(
-    `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
-      lastMonth
-    )}/${plugin.name}`
-  );
-  return data.downloads;
+  try {
+    const { data } = await axios.get(
+      `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
+        lastMonth
+      )}/${plugin.name}`
+    );
+    return data.downloads;
+  } catch (ex) {
+    return '';
+  }
 }
 
 export function getLastMonth() {
   const now = new Date();
-  const thisYear = now.getFullYear();
-  const thisMonth = now.getMonth();
+  const oneMonthAgo = new Date();
+  oneMonthAgo.setMonth(now.getMonth() - 1);
   return {
-    start: new Date(`${thisYear}-${thisMonth - 1}-01`),
-    end: new Date(`${thisYear}-${thisMonth}-01`),
+    start: oneMonthAgo,
+    end: now,
   };
 }
 
@@ -107,54 +146,53 @@ async function getGithubStars(repo: String) {
     });
     return data.stargazers_count;
   } catch (ex) {
+    console.warn('- Could not load GitHub stars!');
     return -1;
   }
 }
 
-// Nx Version
-// i.e. https://raw.githubusercontent.com/nxkit/nxkit/HEAD/packages/playwright/package.json
-// i.e. https://raw.githubusercontent.com/nxkit/nxkit/HEAD/package.json
-async function getNxVersion(githubRepo: String, githubDirectory?: String) {
-  if (!githubRepo) {
-    return '';
-  }
-  if (githubDirectory) {
-    try {
-      const { data } = await axios.get(
-        `https://raw.githubusercontent.com/${githubRepo}/HEAD/${githubDirectory}/package.json`
-      );
-      const nxVersion = findNxVersion(data);
-      if (nxVersion) {
-        return nxVersion;
+async function getNxVersion(data: any) {
+  const latest = data['dist-tags'].latest;
+  const nxPackages = [
+    '@nx/devkit',
+    '@nrwl/devkit',
+    '@nx/workspace',
+    '@nrwl/workspace',
+  ];
+  let devkitVersion = '';
+  for (let i = 0; i < nxPackages.length && !devkitVersion; i++) {
+    const packageName = nxPackages[i];
+    if (data.versions[latest]?.dependencies) {
+      devkitVersion = data.versions[latest]?.dependencies[packageName];
+      if (devkitVersion) {
+        return await findNxRange(packageName, devkitVersion);
       }
-    } catch (ex) {}
+    }
+    if (!devkitVersion && data.versions[latest]?.peerDependencies) {
+      devkitVersion = data.versions[latest]?.peerDependencies[packageName];
+      if (devkitVersion) {
+        return await findNxRange(packageName, devkitVersion);
+      }
+    }
   }
-  try {
-    const { data } = await axios.get(
-      `https://raw.githubusercontent.com/${githubRepo}/HEAD/package.json`
-    );
-    return findNxVersion(data);
-  } catch (ex) {
-    return '';
-  }
+  console.warn('- No dependency on @nx/devkit!');
+  return devkitVersion;
 }
 
-function findNxVersion(packageJsonContent: any): string {
-  let nxVersion = '';
-  const nxPackages = ['@nrwl/devkit', 'nx', '@nx/devkit'];
-  nxPackages.forEach((packageName) => {
-    if (
-      packageJsonContent.dependencies &&
-      packageJsonContent.dependencies[packageName]
-    ) {
-      nxVersion = packageJsonContent.dependencies[packageName];
-    }
-    if (
-      packageJsonContent.devDependencies &&
-      packageJsonContent.devDependencies[packageName]
-    ) {
-      nxVersion = packageJsonContent.devDependencies[packageName];
-    }
-  });
-  return nxVersion;
+async function findNxRange(packageName: string, devkitVersion: string) {
+  devkitVersion = devkitVersion
+    .replace('^', '')
+    .replace('>=', '')
+    .replace('>', '');
+  const lookupPackage = packageName.includes('@nx')
+    ? '@nx/devkit'
+    : '@nrwl/devkit';
+  const { data: devkitData } = await axios.get(
+    `https://registry.npmjs.org/${lookupPackage}`
+  );
+  if (!devkitData.versions[devkitVersion]?.peerDependencies) {
+    const dependencies = devkitData.versions[devkitVersion]?.dependencies;
+    return dependencies && (dependencies?.nx || dependencies['@nrwl/tao']);
+  }
+  return devkitData.versions[devkitVersion]?.peerDependencies.nx;
 }

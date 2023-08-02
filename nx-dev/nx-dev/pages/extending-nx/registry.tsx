@@ -51,6 +51,7 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
           name: plugin.packageName,
           description: plugin.description ?? '',
           url: plugin.path,
+          ...qualityIndicators[plugin.packageName],
           isOfficial: true,
         })),
         ...pluginList.map((plugin) => ({

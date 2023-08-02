@@ -1,594 +1,676 @@
 {
+  "@nx/angular": {
+    "lastPublishedDate": "2023-07-31T13:26:25.163Z",
+    "npmDownloads": 433284,
+    "githubStars": 18536
+  },
+  "@nx/cypress": {
+    "lastPublishedDate": "2023-07-31T13:26:10.027Z",
+    "npmDownloads": 1155708,
+    "githubStars": 18536
+  },
+  "@nx/detox": {
+    "lastPublishedDate": "2023-07-31T13:26:44.703Z",
+    "npmDownloads": 72037,
+    "githubStars": 18536
+  },
+  "@nx/devkit": {
+    "lastPublishedDate": "2023-07-31T13:25:14.034Z",
+    "npmDownloads": 4436007,
+    "githubStars": 18536
+  },
+  "@nx/esbuild": {
+    "lastPublishedDate": "2023-07-31T13:25:35.264Z",
+    "npmDownloads": 222196,
+    "githubStars": 18536
+  },
+  "@nx/eslint-plugin": {
+    "lastPublishedDate": "2023-07-31T13:25:37.806Z",
+    "npmDownloads": 1518752,
+    "githubStars": 18536
+  },
+  "@nx/expo": {
+    "lastPublishedDate": "2023-07-31T13:26:57.711Z",
+    "npmDownloads": 27833,
+    "githubStars": 18536
+  },
+  "@nx/express": {
+    "lastPublishedDate": "2023-07-31T13:26:32.209Z",
+    "npmDownloads": 136341,
+    "githubStars": 18536
+  },
+  "@nx/jest": {
+    "lastPublishedDate": "2023-07-31T13:25:46.305Z",
+    "npmDownloads": 1710746,
+    "githubStars": 18536
+  },
+  "@nx/js": {
+    "lastPublishedDate": "2023-07-31T13:25:30.195Z",
+    "npmDownloads": 2456765,
+    "githubStars": 18536
+  },
+  "@nx/linter": {
+    "lastPublishedDate": "2023-07-31T13:25:53.612Z",
+    "npmDownloads": 1891220,
+    "githubStars": 18536
+  },
+  "@nx/nest": {
+    "lastPublishedDate": "2023-07-31T13:26:35.646Z",
+    "npmDownloads": 468574,
+    "githubStars": 18536
+  },
+  "@nx/next": {
+    "lastPublishedDate": "2023-07-31T13:26:54.477Z",
+    "npmDownloads": 370856,
+    "githubStars": 18536
+  },
+  "@nx/node": {
+    "lastPublishedDate": "2023-07-31T13:26:12.510Z",
+    "npmDownloads": 789085,
+    "githubStars": 18536
+  },
+  "nx": {
+    "lastPublishedDate": "2023-07-31T13:25:19.774Z",
+    "npmDownloads": 15701158,
+    "githubStars": 18536
+  },
+  "@nx/playwright": {
+    "lastPublishedDate": "",
+    "npmDownloads": "",
+    "githubStars": 18536
+  },
+  "@nx/plugin": {
+    "lastPublishedDate": "2023-07-31T13:26:17.005Z",
+    "npmDownloads": 584062,
+    "githubStars": 18536
+  },
+  "@nx/react": {
+    "lastPublishedDate": "2023-07-31T13:26:19.350Z",
+    "npmDownloads": 792182,
+    "githubStars": 18536
+  },
+  "@nx/react-native": {
+    "lastPublishedDate": "2023-07-31T13:27:02.407Z",
+    "npmDownloads": 43926,
+    "githubStars": 18536
+  },
+  "@nx/rollup": {
+    "lastPublishedDate": "2023-07-31T13:25:56.293Z",
+    "npmDownloads": 137473,
+    "githubStars": 18536
+  },
+  "@nx/storybook": {
+    "lastPublishedDate": "2023-07-31T13:26:41.485Z",
+    "npmDownloads": 562080,
+    "githubStars": 18536
+  },
+  "@nx/vite": {
+    "lastPublishedDate": "2023-07-31T13:25:59.567Z",
+    "npmDownloads": 291173,
+    "githubStars": 18536
+  },
+  "@nx/web": {
+    "lastPublishedDate": "2023-07-31T13:26:02.010Z",
+    "npmDownloads": 985271,
+    "githubStars": 18536
+  },
+  "@nx/webpack": {
+    "lastPublishedDate": "2023-07-31T13:26:06.719Z",
+    "npmDownloads": 1143030,
+    "githubStars": 18536
+  },
+  "@nx/workspace": {
+    "lastPublishedDate": "2023-07-31T13:25:27.694Z",
+    "npmDownloads": 2498807,
+    "githubStars": 18536
+  },
   "@ahryman40k/nx-vitepress": {
     "lastPublishedDate": "2022-12-23T01:15:39.916Z",
-    "npmDownloads": 556,
-    "githubStars": 0,
-    "nxVersion": "15.4.0"
+    "npmDownloads": 45,
+    "githubStars": 0
   },
   "@nightwatch/nx": {
     "lastPublishedDate": "2022-12-05T21:50:17.172Z",
-    "githubDirectory": "packages/nightwatch",
-    "npmDownloads": 14,
-    "githubStars": 2,
-    "nxVersion": "15.2.4"
+    "npmDownloads": 57,
+    "githubStars": 2
   },
   "@nxkit/playwright": {
     "lastPublishedDate": "2023-06-06T17:50:01.235Z",
-    "githubDirectory": "packages/playwright",
-    "npmDownloads": 14223,
-    "githubStars": 36,
-    "nxVersion": "16.3.2"
+    "npmDownloads": 16049,
+    "githubStars": 36
   },
   "qwik-nx": {
     "lastPublishedDate": "2023-07-27T04:27:50.074Z",
-    "npmDownloads": 6809,
+    "npmDownloads": 4038,
     "githubStars": 113,
-    "nxVersion": "16.4.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nxkit/style-dictionary": {
     "lastPublishedDate": "2023-06-06T17:50:01.313Z",
-    "githubDirectory": "packages/style-dictionary",
-    "npmDownloads": 8764,
-    "githubStars": 36,
-    "nxVersion": "16.3.2"
+    "npmDownloads": 8395,
+    "githubStars": 36
   },
   "nx-plugin-esbuild": {
     "lastPublishedDate": "2021-10-02T13:53:16.067Z",
-    "npmDownloads": 1220,
+    "npmDownloads": 480,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": "12.7.2"
   },
   "nx-plugin-vite": {
     "lastPublishedDate": "2022-07-09T09:40:02.353Z",
-    "npmDownloads": 701,
-    "githubStars": 94,
-    "nxVersion": ""
+    "npmDownloads": 541,
+    "githubStars": 94
   },
   "nx-plugin-snowpack": {
     "lastPublishedDate": "2021-10-04T02:55:28.868Z",
-    "npmDownloads": 44,
+    "npmDownloads": 38,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": "12.7.2"
   },
   "nx-plugin-prisma": {
     "lastPublishedDate": "2021-09-30T04:07:48.904Z",
-    "npmDownloads": 19,
+    "npmDownloads": 13,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": "12.7.2"
   },
   "@codebrew/nx-aws-cdk": {
     "lastPublishedDate": "2022-01-28T05:22:43.508Z",
-    "npmDownloads": 3994,
+    "npmDownloads": 1542,
     "githubStars": 20,
-    "nxVersion": "12.5.8"
+    "nxVersion": ""
   },
   "@ago-dev/nx-aws-cdk-v2": {
     "lastPublishedDate": "2023-05-08T11:33:02.618Z",
-    "npmDownloads": 8745,
+    "npmDownloads": 35737,
     "githubStars": 30,
-    "nxVersion": "16.6.0"
+    "nxVersion": ""
   },
   "@berenddeboer/nx-sst": {
     "lastPublishedDate": "2023-07-28T02:12:51.950Z",
-    "npmDownloads": 452,
+    "npmDownloads": 1198,
     "githubStars": 4,
-    "nxVersion": "^16.5.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@rxap/plugin-localazy": {
     "lastPublishedDate": "2022-12-14T13:23:03.536Z",
-    "npmDownloads": 200,
+    "npmDownloads": 456,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": ">= 14 <= 16"
   },
   "nx-electron": {
     "lastPublishedDate": "2023-06-22T13:23:58.845Z",
-    "npmDownloads": 16152,
+    "npmDownloads": 14764,
     "githubStars": 273,
-    "nxVersion": "15.9.2"
+    "nxVersion": ">= 14.1 <= 16"
   },
   "nx-stylelint": {
     "lastPublishedDate": "2023-02-16T14:16:46.275Z",
-    "npmDownloads": 114683,
+    "npmDownloads": 117383,
     "githubStars": 64,
-    "nxVersion": "15.9.2"
+    "nxVersion": ">= 14 <= 16"
   },
   "@nxext/ionic-react": {
     "lastPublishedDate": "2023-05-26T12:53:11.721Z",
-    "npmDownloads": 619,
-    "githubStars": -1,
-    "nxVersion": ""
+    "npmDownloads": 658,
+    "githubStars": -1
   },
   "@nxext/ionic-angular": {
     "lastPublishedDate": "2023-05-26T12:52:58.419Z",
-    "npmDownloads": 26969,
-    "githubStars": 190,
-    "nxVersion": "13.7.2"
+    "npmDownloads": 32188,
+    "githubStars": 190
   },
   "@nxext/capacitor": {
     "lastPublishedDate": "2023-06-12T07:43:34.104Z",
-    "npmDownloads": 48090,
-    "githubStars": 393,
-    "nxVersion": "16.5.5"
+    "npmDownloads": 50162,
+    "githubStars": 394,
+    "nxVersion": ">= 15 <= 17"
   },
   "@nxtend/firebase": {
     "lastPublishedDate": "2021-12-02T15:22:22.629Z",
-    "npmDownloads": 462,
+    "npmDownloads": 246,
     "githubStars": 190,
-    "nxVersion": "13.7.2"
+    "nxVersion": "12.0.0"
   },
   "@angular-architects/ddd": {
     "lastPublishedDate": "2023-05-20T19:52:32.293Z",
-    "npmDownloads": 17299,
-    "githubStars": 276,
-    "nxVersion": "16.2.1"
+    "npmDownloads": 19786,
+    "githubStars": 276
   },
   "@offeringsolutions/nx-karma-to-jest": {
     "lastPublishedDate": "2020-03-08T19:29:18.913Z",
-    "npmDownloads": 33,
-    "githubStars": 9,
-    "nxVersion": ""
+    "npmDownloads": 19,
+    "githubStars": 9
   },
   "@flowaccount/nx-serverless": {
     "lastPublishedDate": "2023-07-10T19:06:16.916Z",
-    "npmDownloads": 6734,
+    "npmDownloads": 7177,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": ">= 13.10 <= 15"
   },
   "@ns3/nx-serverless": {
     "lastPublishedDate": "2023-07-12T07:08:25.829Z",
-    "npmDownloads": 56427,
-    "githubStars": 59,
-    "nxVersion": "16.0.3"
+    "npmDownloads": 53411,
+    "githubStars": 59
   },
   "@ns3/nx-jest-playwright": {
     "lastPublishedDate": "2023-05-03T07:05:36.802Z",
-    "npmDownloads": 7989,
-    "githubStars": 59,
-    "nxVersion": "16.0.3"
+    "npmDownloads": 6750,
+    "githubStars": 59
   },
   "@ns3/nx-playwright": {
     "lastPublishedDate": "2023-05-03T07:05:36.629Z",
-    "npmDownloads": 2181,
-    "githubStars": 59,
-    "nxVersion": "16.0.3"
+    "npmDownloads": 4583,
+    "githubStars": 59
   },
   "@dev-thought/nx-deploy-it": {
     "lastPublishedDate": "2021-02-12T21:12:18.923Z",
-    "npmDownloads": 265,
-    "githubStars": 77,
-    "nxVersion": "^11.2.12"
+    "npmDownloads": 212,
+    "githubStars": 77
   },
   "@offeringsolutions/nx-protractor-to-cypress": {
     "lastPublishedDate": "2021-03-04T15:12:40.394Z",
-    "npmDownloads": 12,
+    "npmDownloads": 11,
     "githubStars": 4,
-    "nxVersion": "11.4.0"
+    "nxVersion": ""
   },
   "@angular-custom-builders/lite-serve": {
     "lastPublishedDate": "2021-03-08T14:21:34.424Z",
-    "npmDownloads": 1627,
-    "githubStars": 6,
-    "nxVersion": ""
+    "npmDownloads": 1619,
+    "githubStars": 6
   },
   "@nx-plus/nuxt": {
     "lastPublishedDate": "2022-07-02T16:45:19.149Z",
-    "npmDownloads": 2685,
-    "githubStars": 297,
-    "nxVersion": "15.2.4"
+    "npmDownloads": 3245,
+    "githubStars": 298,
+    "nxVersion": ">= 13.10 <= 15"
   },
   "@nx-plus/vue": {
     "lastPublishedDate": "2022-12-05T02:51:23.682Z",
-    "npmDownloads": 10648,
-    "githubStars": 297,
-    "nxVersion": "15.2.4"
+    "npmDownloads": 9254,
+    "githubStars": 298,
+    "nxVersion": ">= 14 <= 16"
   },
   "@nx-plus/docusaurus": {
     "lastPublishedDate": "2022-12-05T02:51:37.534Z",
-    "npmDownloads": 53130,
-    "githubStars": 297,
-    "nxVersion": "15.2.4"
+    "npmDownloads": 59902,
+    "githubStars": 298,
+    "nxVersion": ">= 14 <= 16"
   },
   "@twittwer/compodoc": {
     "lastPublishedDate": "2023-06-25T12:35:20.159Z",
-    "npmDownloads": 18466,
+    "npmDownloads": 17456,
     "githubStars": 40,
-    "nxVersion": "16.4.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@enio.ai/nx-install": {
     "lastPublishedDate": "2023-03-05T20:18:09.761Z",
-    "npmDownloads": 421,
+    "npmDownloads": 50,
     "githubStars": 22,
-    "nxVersion": ""
+    "nxVersion": ">= 14.1 <= 16"
   },
   "@enio.ai/typedoc": {
     "lastPublishedDate": "2023-03-05T20:17:20.752Z",
-    "npmDownloads": 5513,
+    "npmDownloads": 3599,
     "githubStars": 22,
-    "nxVersion": ""
+    "nxVersion": ">= 14.1 <= 16"
   },
   "@nxext/svelte": {
     "lastPublishedDate": "2023-05-26T12:47:54.560Z",
-    "npmDownloads": 4047,
-    "githubStars": 393,
-    "nxVersion": "16.5.5"
+    "npmDownloads": 4976,
+    "githubStars": 394
   },
   "@nxext/stencil": {
     "lastPublishedDate": "2023-06-21T09:20:15.486Z",
-    "npmDownloads": 10979,
-    "githubStars": 393,
-    "nxVersion": "16.5.5"
+    "npmDownloads": 10950,
+    "githubStars": 394,
+    "nxVersion": ">= 15 <= 17"
   },
   "@nxext/vite": {
     "lastPublishedDate": "2023-02-28T19:05:21.436Z",
-    "npmDownloads": 22434,
-    "githubStars": 393,
-    "nxVersion": "16.5.5"
+    "npmDownloads": 22988,
+    "githubStars": 394,
+    "nxVersion": ">= 14.1 <= 16"
   },
   "@nxext/solid": {
     "lastPublishedDate": "2023-05-26T12:47:38.232Z",
-    "npmDownloads": 1013,
-    "githubStars": 393,
-    "nxVersion": "16.5.5"
+    "npmDownloads": 1560,
+    "githubStars": 394
   },
   "@joelcode/gcp-function": {
     "lastPublishedDate": "2021-09-15T16:46:35.377Z",
-    "npmDownloads": 66,
-    "githubStars": -1,
-    "nxVersion": ""
+    "npmDownloads": 29,
+    "githubStars": -1
   },
   "@nx-go/nx-go": {
     "lastPublishedDate": "2022-10-17T07:48:25.180Z",
-    "npmDownloads": 232218,
-    "githubStars": -1,
-    "nxVersion": ""
+    "npmDownloads": 234870,
+    "githubStars": -1
   },
   "@nx-golang/gin": {
     "lastPublishedDate": "2023-01-04T14:57:24.660Z",
-    "npmDownloads": 117,
-    "githubStars": 0,
-    "nxVersion": "15.4.2"
+    "npmDownloads": 37,
+    "githubStars": 0
   },
   "@angular-architects/module-federation": {
     "lastPublishedDate": "2023-06-20T16:52:19.205Z",
-    "npmDownloads": 427558,
-    "githubStars": 577,
-    "nxVersion": "14.5.2"
+    "npmDownloads": 425479,
+    "githubStars": 577
   },
   "@nxrocks/nx-spring-boot": {
     "lastPublishedDate": "2023-05-12T16:58:52.743Z",
-    "githubDirectory": "packages/nx-spring-boot",
-    "npmDownloads": 5671,
+    "npmDownloads": 6675,
     "githubStars": 232,
-    "nxVersion": "16.5.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@trumbitta/nx-plugin-openapi": {
     "lastPublishedDate": "2022-08-28T20:54:50.978Z",
-    "npmDownloads": 22814,
+    "npmDownloads": 25483,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": "13.0.0"
   },
   "@trumbitta/nx-plugin-unused-deps": {
     "lastPublishedDate": "2022-08-28T20:55:11.226Z",
-    "npmDownloads": 57757,
+    "npmDownloads": 64540,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": "13.0.0"
   },
   "@nxrocks/nx-flutter": {
     "lastPublishedDate": "2023-05-12T16:59:33.230Z",
-    "githubDirectory": "packages/nx-flutter",
-    "npmDownloads": 10609,
+    "npmDownloads": 8304,
     "githubStars": 232,
-    "nxVersion": "16.5.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@srleecode/domain": {
     "lastPublishedDate": "2023-06-22T13:44:39.620Z",
-    "npmDownloads": 1370,
+    "npmDownloads": 379,
     "githubStars": -1,
     "nxVersion": ""
   },
   "@jscutlery/semver": {
     "lastPublishedDate": "2023-07-31T06:50:30.918Z",
-    "npmDownloads": 464113,
+    "npmDownloads": 506545,
     "githubStars": 618,
-    "nxVersion": "16.6.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "ngx-deploy-npm": {
     "lastPublishedDate": "2023-05-15T07:18:38.684Z",
-    "npmDownloads": 275957,
+    "npmDownloads": 278141,
     "githubStars": 99,
-    "nxVersion": "16.4.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@trafilea/nx-shopify": {
     "lastPublishedDate": "2021-06-02T19:51:43.707Z",
-    "npmDownloads": 127,
+    "npmDownloads": 105,
     "githubStars": 42,
     "nxVersion": "12.0.8"
   },
   "@nx-dotnet/core": {
     "lastPublishedDate": "2023-04-12T17:54:41.139Z",
-    "npmDownloads": 53584,
+    "npmDownloads": 56204,
     "githubStars": 214,
-    "nxVersion": "15.8.5"
+    "nxVersion": ">= 14.1 <= 16"
   },
   "@nxrocks/nx-quarkus": {
     "lastPublishedDate": "2023-05-12T16:59:55.758Z",
-    "githubDirectory": "packages/nx-quarkus",
-    "npmDownloads": 6001,
+    "npmDownloads": 9422,
     "githubStars": 232,
-    "nxVersion": "16.5.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/gcp-secrets": {
     "lastPublishedDate": "2023-06-22T17:40:46.440Z",
-    "npmDownloads": 219,
+    "npmDownloads": 95,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/gcp-storage": {
     "lastPublishedDate": "2023-06-22T17:40:53.943Z",
-    "npmDownloads": 1982,
+    "npmDownloads": 950,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/gcp-functions": {
     "lastPublishedDate": "2023-07-22T09:38:42.753Z",
-    "npmDownloads": 3585,
+    "npmDownloads": 3962,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/gcp-deployment-manager": {
     "lastPublishedDate": "2023-06-22T17:40:40.176Z",
-    "npmDownloads": 163,
+    "npmDownloads": 106,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/gcp-cloud-run": {
     "lastPublishedDate": "2023-06-22T17:40:52.218Z",
-    "npmDownloads": 1529,
+    "npmDownloads": 2093,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/translations": {
     "lastPublishedDate": "2023-06-22T17:40:44.178Z",
-    "npmDownloads": 357,
+    "npmDownloads": 236,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/firebase-hosting": {
     "lastPublishedDate": "2023-07-13T10:38:12.436Z",
-    "npmDownloads": 1007,
+    "npmDownloads": 1305,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/e2e-runner": {
     "lastPublishedDate": "2023-07-21T20:54:54.000Z",
-    "npmDownloads": 8086,
+    "npmDownloads": 6223,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/vercel": {
     "lastPublishedDate": "2023-07-28T08:36:42.305Z",
-    "npmDownloads": 1141,
+    "npmDownloads": 814,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/strapi": {
     "lastPublishedDate": "2023-07-12T07:02:19.604Z",
-    "npmDownloads": 8150,
+    "npmDownloads": 8787,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/playwright": {
     "lastPublishedDate": "2023-06-22T17:40:55.663Z",
-    "npmDownloads": 10326,
+    "npmDownloads": 7417,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/terraform": {
     "lastPublishedDate": "2023-06-22T17:40:57.454Z",
-    "npmDownloads": 1030,
+    "npmDownloads": 567,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-extend/pulumi": {
     "lastPublishedDate": "2023-06-22T17:40:59.131Z",
-    "npmDownloads": 451,
+    "npmDownloads": 483,
     "githubStars": 98,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nativescript/nx": {
     "lastPublishedDate": "2023-07-05T22:55:56.178Z",
-    "npmDownloads": 6852,
+    "npmDownloads": 10198,
     "githubStars": 58,
-    "nxVersion": "16.5.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-clean/plugin-core": {
     "lastPublishedDate": "2022-03-10T15:36:11.690Z",
-    "npmDownloads": 147,
+    "npmDownloads": 138,
     "githubStars": 65,
-    "nxVersion": "16.5.0"
+    "nxVersion": ""
   },
   "@jnxplus/nx-boot-gradle": {
     "lastPublishedDate": "2023-07-28T16:33:38.123Z",
-    "npmDownloads": 10018,
+    "npmDownloads": 2421,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": ">= 15 <= 17"
   },
   "@jnxplus/nx-boot-maven": {
     "lastPublishedDate": "2023-07-28T16:34:00.918Z",
-    "npmDownloads": 7619,
+    "npmDownloads": 7233,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": ">= 15 <= 17"
   },
   "@nxtensions/astro": {
     "lastPublishedDate": "2023-07-30T14:40:23.494Z",
-    "githubDirectory": "packages/astro",
-    "npmDownloads": 3111,
+    "npmDownloads": 4679,
     "githubStars": 43,
-    "nxVersion": "16.5.5"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nxrs/cargo": {
     "lastPublishedDate": "2022-05-25T02:55:50.238Z",
-    "npmDownloads": 1489,
-    "githubStars": 101,
-    "nxVersion": "13.4.3"
+    "npmDownloads": 2625,
+    "githubStars": 101
   },
   "nx-uvu": {
     "lastPublishedDate": "2023-06-16T16:07:57.812Z",
-    "npmDownloads": 856,
+    "npmDownloads": 554,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": ">= 15 <= 17"
   },
   "@ndrsg/nx-http": {
     "lastPublishedDate": "2022-06-07T13:16:25.323Z",
-    "npmDownloads": 33,
+    "npmDownloads": 18,
     "githubStars": 6,
-    "nxVersion": "14.1.9"
+    "nxVersion": "14.0.0"
   },
   "@diogovcs/graphql-mesh": {
     "lastPublishedDate": "2023-01-22T11:38:26.303Z",
-    "npmDownloads": 697,
-    "githubStars": -1,
-    "nxVersion": ""
+    "npmDownloads": 594,
+    "githubStars": -1
   },
   "@computas/nx-yarn": {
     "lastPublishedDate": "2022-05-30T07:04:03.376Z",
-    "npmDownloads": 237,
+    "npmDownloads": 463,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": ">= 13.10 <= 15"
   },
   "@theunderscorer/nx-semantic-release": {
     "lastPublishedDate": "2023-07-16T18:50:55.453Z",
-    "npmDownloads": 14548,
-    "githubStars": 58,
-    "nxVersion": "16.0.0"
+    "npmDownloads": 17137,
+    "githubStars": 61,
+    "nxVersion": ">= 15 <= 17"
   },
   "nx-pwm": {
     "lastPublishedDate": "2022-12-03T18:41:17.623Z",
-    "githubDirectory": "packages/nx-pwm",
-    "npmDownloads": 86,
+    "npmDownloads": 19,
     "githubStars": 4,
-    "nxVersion": "15.2.4"
+    "nxVersion": ">= 14 <= 16"
   },
   "@nxrocks/nx-micronaut": {
     "lastPublishedDate": "2023-05-12T16:59:13.295Z",
-    "githubDirectory": "packages/nx-micronaut",
-    "npmDownloads": 185,
+    "npmDownloads": 201,
     "githubStars": 232,
-    "nxVersion": "16.5.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@koliveira15/nx-sonarqube": {
-    "lastPublishedDate": "2023-06-28T18:41:40.138Z",
-    "npmDownloads": 39901,
-    "githubStars": 21,
-    "nxVersion": "16.2.2"
+    "lastPublishedDate": "2023-08-02T00:25:44.844Z",
+    "npmDownloads": 41340,
+    "githubStars": 21
   },
   "@mands/nx-playwright": {
     "lastPublishedDate": "2023-05-16T10:59:21.495Z",
-    "npmDownloads": 64051,
-    "githubStars": 58,
-    "nxVersion": "16.1.4"
+    "npmDownloads": 61666,
+    "githubStars": 58
   },
   "@diogovcs/stryker-mutator": {
     "lastPublishedDate": "2023-03-18T12:51:54.214Z",
-    "npmDownloads": 1383,
+    "npmDownloads": 2376,
     "githubStars": -1,
     "nxVersion": ""
   },
   "@spaceribs/nx-web-ext": {
     "lastPublishedDate": "2023-07-16T15:45:19.229Z",
-    "npmDownloads": 187,
+    "npmDownloads": 255,
     "githubStars": 5,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@spaceribs/nx-betterer": {
     "lastPublishedDate": "2023-07-16T15:45:12.663Z",
-    "npmDownloads": 251,
+    "npmDownloads": 173,
     "githubStars": 5,
-    "nxVersion": "16.3.2"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nx-tools/nx-container": {
     "lastPublishedDate": "2023-06-21T06:38:36.059Z",
-    "npmDownloads": 97180,
+    "npmDownloads": 100493,
     "githubStars": 261,
-    "nxVersion": "16.5.5"
+    "nxVersion": ">= 15 <= 17"
   },
   "@nxrocks/nx-melos": {
     "lastPublishedDate": "2023-05-12T17:00:25.890Z",
-    "githubDirectory": "packages/nx-melos",
-    "npmDownloads": 201,
+    "npmDownloads": 165,
     "githubStars": 232,
-    "nxVersion": "16.5.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "@monodon/rust": {
     "lastPublishedDate": "2023-06-30T16:35:58.528Z",
-    "npmDownloads": 6405,
+    "npmDownloads": 7087,
     "githubStars": 15,
-    "nxVersion": "16.4.1"
+    "nxVersion": ">= 15 <= 17"
   },
   "nx-mesh": {
     "lastPublishedDate": "2023-04-26T20:23:43.825Z",
-    "githubDirectory": "packages/nx-mesh",
-    "npmDownloads": 1944,
+    "npmDownloads": 2068,
     "githubStars": 19,
-    "nxVersion": "^15.7.1"
+    "nxVersion": ">= 14.1 <= 16"
   },
   "@nxazure/func": {
     "lastPublishedDate": "2023-06-17T22:19:57.878Z",
-    "npmDownloads": 2351,
-    "githubStars": 9,
-    "nxVersion": "16.1.3"
+    "npmDownloads": 2016,
+    "githubStars": 9
   },
   "@rbnx/webdriverio": {
     "lastPublishedDate": "2023-05-05T06:51:41.339Z",
-    "githubDirectory": "packages/webdriverio",
-    "npmDownloads": 198,
+    "npmDownloads": 232,
     "githubStars": 7,
-    "nxVersion": "16.1.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "nx-ngrok": {
     "lastPublishedDate": "2023-04-17T21:34:27.110Z",
-    "githubDirectory": "packages/nx-ngrok",
-    "npmDownloads": 283,
+    "npmDownloads": 244,
     "githubStars": 0,
-    "nxVersion": "^15.7.1"
+    "nxVersion": ">= 14.1 <= 16"
   },
   "@nxrocks/nx-ktor": {
     "lastPublishedDate": "2023-05-25T05:35:48.467Z",
-    "githubDirectory": "packages/nx-ktor",
-    "npmDownloads": 38,
+    "npmDownloads": 27,
     "githubStars": 232,
-    "nxVersion": "16.5.0"
+    "nxVersion": ">= 15 <= 17"
   },
   "nx-size-limit": {
     "lastPublishedDate": "2023-04-22T07:50:24.764Z",
-    "githubDirectory": "packages/nx-size-limit",
-    "npmDownloads": 466,
-    "githubStars": 7,
-    "nxVersion": "15.9.2"
+    "npmDownloads": 320,
+    "githubStars": 7
   },
   "@jnxplus/nx-quarkus-gradle": {
     "lastPublishedDate": "2023-07-28T16:33:30.811Z",
-    "npmDownloads": 1504,
+    "npmDownloads": 803,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": ">= 15 <= 17"
   },
   "@jnxplus/nx-quarkus-maven": {
     "lastPublishedDate": "2023-07-28T16:33:52.833Z",
-    "npmDownloads": 1468,
+    "npmDownloads": 750,
     "githubStars": -1,
-    "nxVersion": ""
+    "nxVersion": ">= 15 <= 17"
   },
   "@loft-orbital/terraform": {
     "lastPublishedDate": "2023-03-25T21:03:22.028Z",
-    "npmDownloads": 43,
-    "githubStars": -1,
-    "nxVersion": ""
+    "npmDownloads": 475,
+    "githubStars": -1
   },
   "@nxlv/python": {
     "lastPublishedDate": "2023-07-06T13:05:49.453Z",
-    "githubDirectory": "packages/nx-python",
-    "npmDownloads": 9764,
-    "githubStars": 41,
-    "nxVersion": "16.3.2"
+    "npmDownloads": 9227,
+    "githubStars": 43,
+    "nxVersion": ">= 15 <= 17"
   }
 }
