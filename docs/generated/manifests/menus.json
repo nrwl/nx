@@ -3584,6 +3584,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Add a Qwik Project",
+                "path": "/showcase/example-repos/add-qwik",
+                "id": "add-qwik",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Powering Up React Development With Nx",
                 "path": "/showcase/example-repos/react-nx",
                 "id": "react-nx",
@@ -3684,6 +3692,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Add a Qwik Project",
+            "path": "/showcase/example-repos/add-qwik",
+            "id": "add-qwik",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Powering Up React Development With Nx",
             "path": "/showcase/example-repos/react-nx",
             "id": "react-nx",
@@ -3770,6 +3786,14 @@
         "name": "Add a Lit Project",
         "path": "/showcase/example-repos/add-lit",
         "id": "add-lit",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Qwik Project",
+        "path": "/showcase/example-repos/add-qwik",
+        "id": "add-qwik",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

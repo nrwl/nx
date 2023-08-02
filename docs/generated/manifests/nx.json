@@ -4468,6 +4468,16 @@
             "tags": []
           },
           {
+            "id": "add-qwik",
+            "name": "Add a Qwik Project",
+            "description": "Add a Qwik project to your repo",
+            "file": "shared/recipes/add-stack/add-qwik",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-qwik",
+            "tags": []
+          },
+          {
             "id": "react-nx",
             "name": "Powering Up React Development With Nx",
             "description": "",
@@ -4594,6 +4604,16 @@
         "tags": []
       },
       {
+        "id": "add-qwik",
+        "name": "Add a Qwik Project",
+        "description": "Add a Qwik project to your repo",
+        "file": "shared/recipes/add-stack/add-qwik",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-qwik",
+        "tags": []
+      },
+      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -4706,6 +4726,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-lit",
+    "tags": []
+  },
+  "/showcase/example-repos/add-qwik": {
+    "id": "add-qwik",
+    "name": "Add a Qwik Project",
+    "description": "Add a Qwik project to your repo",
+    "file": "shared/recipes/add-stack/add-qwik",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-qwik",
     "tags": []
   },
   "/showcase/example-repos/react-nx": {
