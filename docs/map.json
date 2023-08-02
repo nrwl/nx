@@ -1041,6 +1041,12 @@
                   "file": "shared/recipes/add-stack/add-qwik"
                 },
                 {
+                  "name": "Add an Astro Project",
+                  "id": "add-astro",
+                  "description": "Add Nx to an Astro project",
+                  "file": "shared/recipes/add-stack/add-astro"
+                },
+                {
                   "name": "Powering Up React Development With Nx",
                   "id": "react-nx",
                   "file": "shared/examples/react-nx"
