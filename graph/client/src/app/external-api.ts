@@ -23,6 +23,10 @@ export class ExternalApi {
   };
 
   private fileClickCallbackListeners: ((url: string) => void)[] = [];
+  private openProjectConfigCallbackListeners: ((
+    projectName: string
+  ) => void)[] = [];
+  private runTaskCallbackListeners: ((taskId: string) => void)[] = [];
 
   get depGraphService() {
     return this.projectGraphService;
@@ -33,6 +37,14 @@ export class ExternalApi {
       if (event.type === 'FileLinkClick') {
         const url = `${event.sourceRoot}/${event.file}`;
         this.fileClickCallbackListeners.forEach((cb) => cb(url));
+      }
+      if (event.type === 'ProjectOpenConfigClick') {
+        this.openProjectConfigCallbackListeners.forEach((cb) =>
+          cb(event.projectName)
+        );
+      }
+      if (event.type === 'RunTaskClick') {
+        this.runTaskCallbackListeners.forEach((cb) => cb(event.taskId));
       }
     });
   }
@@ -57,6 +69,12 @@ export class ExternalApi {
 
   registerFileClickCallback(callback: (url: string) => void) {
     this.fileClickCallbackListeners.push(callback);
+  }
+  registerOpenProjectConfigCallback(callback: (projectName: string) => void) {
+    this.openProjectConfigCallbackListeners.push(callback);
+  }
+  registerRunTaskCallback(callback: (taskId: string) => void) {
+    this.runTaskCallbackListeners.push(callback);
   }
 
   private handleLegacyProjectGraphEvent(event: ProjectGraphMachineEvents) {
