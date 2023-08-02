@@ -97,13 +97,18 @@ export function processMdxForSearch(content: string): ProcessedMdx {
 
 type WalkEntry = {
   path: string;
+  url_partial: string;
 };
 
 abstract class BaseEmbeddingSource {
   checksum?: string;
   sections?: Section[];
 
-  constructor(public source: string, public path: string) {}
+  constructor(
+    public source: string,
+    public path: string,
+    public url_partial: string
+  ) {}
 
   abstract load(): Promise<{
     checksum: string;
@@ -114,9 +119,13 @@ abstract class BaseEmbeddingSource {
 class MarkdownEmbeddingSource extends BaseEmbeddingSource {
   type: 'markdown' = 'markdown';
 
-  constructor(source: string, public filePath: string) {
+  constructor(
+    source: string,
+    public filePath: string,
+    public url_partial: string
+  ) {
     const path = filePath.replace(/^docs/, '').replace(/\.md?$/, '');
-    super(source, path);
+    super(source, path, url_partial);
   }
 
   async load() {
@@ -184,9 +193,13 @@ async function generateEmbeddings() {
   ].filter((entry) => !entry.path.includes('sitemap'));
 
   const embeddingSources: EmbeddingSource[] = [
-    ...allFilesPaths.map(
-      (entry) => new MarkdownEmbeddingSource('guide', entry.path)
-    ),
+    ...allFilesPaths.map((entry) => {
+      return new MarkdownEmbeddingSource(
+        'guide',
+        entry.path,
+        entry.url_partial
+      );
+    }),
   ];
 
   console.log(`Discovered ${embeddingSources.length} pages`);
@@ -197,8 +210,8 @@ async function generateEmbeddings() {
     console.log('Refresh flag set, re-generating all pages');
   }
 
-  for (const embeddingSource of embeddingSources) {
-    const { type, source, path } = embeddingSource;
+  for (const [index, embeddingSource] of embeddingSources.entries()) {
+    const { type, source, path, url_partial } = embeddingSource;
 
     try {
       const { checksum, sections } = await embeddingSource.load();
@@ -223,11 +236,11 @@ async function generateEmbeddings() {
       if (existingPage) {
         if (!shouldRefresh) {
           console.log(
-            `[${path}] Docs have changed, removing old page sections and their embeddings`
+            `#${index}: [${path}] Docs have changed, removing old page sections and their embeddings`
           );
         } else {
           console.log(
-            `[${path}] Refresh flag set, removing old page sections and their embeddings`
+            `#${index}: [${path}] Refresh flag set, removing old page sections and their embeddings`
           );
         }
 
@@ -249,6 +262,7 @@ async function generateEmbeddings() {
           {
             checksum: null,
             path,
+            url_partial,
             type,
             source,
           },
@@ -263,8 +277,12 @@ async function generateEmbeddings() {
       }
 
       console.log(
-        `[${path}] Adding ${sections.length} page sections (with embeddings)`
+        `#${index}: [${path}] Adding ${sections.length} page sections (with embeddings)`
       );
+      console.log(
+        `${embeddingSources.length - index - 1} pages remaining to process.`
+      );
+
       for (const { slug, heading, content } of sections) {
         // OpenAI recommends replacing newlines with spaces for best results (specific to embeddings)
         const input = content.replace(/\n/g, ' ');
@@ -294,6 +312,7 @@ async function generateEmbeddings() {
                 slug,
                 heading,
                 content,
+                url_partial,
                 token_count: embeddingResponse.data.usage.total_tokens,
                 embedding: responseData.embedding,
               })
@@ -351,7 +370,9 @@ function getAllFilesFromMapJson(doc): WalkEntry[] {
     for (const item of itemList) {
       if (item.file && item.file.length > 0) {
         // we can exclude some docs here, eg. the deprecated ones
-        files.push({ path: `docs/${item.file}.md` });
+        // the path is the relative path to the file within the nx repo
+        // the url_partial is the relative path to the file within the docs site - under nx.dev
+        files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
       }
 
       if (item.itemList) {
@@ -363,7 +384,6 @@ function getAllFilesFromMapJson(doc): WalkEntry[] {
   for (const item of doc.content) {
     traverse([item]);
   }
-
   return files;
 }
 
@@ -373,7 +393,9 @@ function getAllFilesWithItemList(data): WalkEntry[] {
   function traverse(itemList) {
     for (const item of itemList) {
       if (item.file && item.file.length > 0) {
-        files.push({ path: `docs/${item.file}.md` });
+        // the path is the relative path to the file within the nx repo
+        // the url_partial is the relative path to the file within the docs site - under nx.dev
+        files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
       }
 
       if (item.itemList) {
@@ -400,7 +422,6 @@ function getAllFilesWithItemList(data): WalkEntry[] {
       }
     }
   }
-
   return files;
 }
 
