@@ -12,6 +12,10 @@ export function updateWorkspace(
   options: NormalizedJestProjectSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
+  if (!projectConfig.targets) {
+    projectConfig.targets = {};
+  }
+
   projectConfig.targets.test = {
     executor: '@nx/jest:jest',
     outputs: [
