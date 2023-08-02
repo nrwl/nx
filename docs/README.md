@@ -201,7 +201,7 @@ Yarn related information.
 
 ##### Youtube
 
-Embed a YouTube video directly with the following shortcode, control the title and the associated width.
+Embed a YouTube video directly with the following shortcode, control the title and the associated width. `src` can be the Youtube URL from the browser, the "share" button (short YT url) or the embed URL.
 
 ```markdown
 {% youtube

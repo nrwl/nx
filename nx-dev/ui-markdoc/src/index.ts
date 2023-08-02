@@ -17,8 +17,8 @@ import { CustomLink } from './lib/nodes/link.component';
 import { link } from './lib/nodes/link.schema';
 import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
-import { Card, Cards, TitleCard } from './lib/tags/cards.component';
-import { card, cards, titleCard } from './lib/tags/cards.schema';
+import { Card, Cards, LinkCard } from './lib/tags/cards.component';
+import { card, cards, linkCard } from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
 import { StackblitzButton } from './lib/tags/stackblitz-button.component';
@@ -43,6 +43,7 @@ import {
   terminalVideo,
 } from './lib/tags/terminal-video.component';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
+// import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
 import { pill } from './lib/tags/pill.schema';
 
@@ -63,6 +64,7 @@ export const getMarkdocCustomConfig = (
       callout,
       card,
       cards,
+      'link-card': linkCard,
       'github-repository': githubRepository,
       'stackblitz-button': stackblitzButton,
       graph,
@@ -75,16 +77,17 @@ export const getMarkdocCustomConfig = (
       'side-by-side': sideBySide,
       tab,
       tabs,
-      'title-card': titleCard,
       youtube,
       'terminal-video': terminalVideo,
       'video-link': videoLink,
+      // 'svg-animation': svgAnimation,
     },
   },
   components: {
     Callout,
     Card,
     Cards,
+    LinkCard,
     CustomLink,
     Fence,
     GithubRepository,
@@ -100,10 +103,10 @@ export const getMarkdocCustomConfig = (
     SideBySide,
     Tab,
     Tabs,
-    TitleCard,
     YouTube,
     TerminalVideo,
     VideoLink,
+    // SvgAnimation,
   },
 });
 
