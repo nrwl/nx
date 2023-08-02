@@ -6,7 +6,24 @@ import { resolve } from 'path';
 const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
 
 const documents: any[] = [
-  ...mapJson.find((x) => x.id === 'nx-documentation')?.['itemList'],
+  ...mapJson
+    .find((x) => x.id === 'nx-documentation')
+    ?.['itemList'].map((item) => {
+      item.sidebarId = '';
+      return item;
+    }),
+  ...mapJson
+    .find((x) => x.id === 'extending-nx')
+    ?.['itemList'].map((item) => {
+      item.sidebarId = 'extending-nx';
+      return item;
+    }),
+  ...mapJson
+    .find((x) => x.id === 'nx-cloud-documentation')
+    ?.['itemList'].map((item) => {
+      item.sidebarId = 'nx-cloud';
+      return item;
+    }),
 ].filter(Boolean);
 
 const packages: PackageMetadata[] = readJSONSync(
@@ -23,13 +40,15 @@ documents.map((category) => {
   data.push({
     title: category.name,
     content: category.description,
-    filename: [category.id].join('-'),
+    filename: [category.sidebarId, category.id].filter(Boolean).join('-'),
   });
   category.itemList.map((item) =>
     data.push({
       title: item.name,
       content: category.name,
-      filename: [category.id, item.id].join('-'),
+      filename: [category.sidebarId, category.id, item.id]
+        .filter(Boolean)
+        .join('-'),
     })
   );
 });
