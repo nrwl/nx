@@ -9,7 +9,7 @@ import {
 import { fileHasher } from '../hasher/file-hasher';
 import { DependencyType, ProjectGraph } from '../config/project-graph';
 import { TaskPlanner } from './task-planner';
-import { Task } from '../config/task-graph';
+import { Task, TaskGraph } from '../config/task-graph';
 
 jest.mock('../utils/workspace-root', () => {
   return {
@@ -46,12 +46,13 @@ describe('task planner', () => {
   // This should just match snapshots of the planner
   async function assertNodes(
     task: Task | Task[],
+    taskGraph: TaskGraph,
     taskHasher: InProcessTaskHasher,
     taskPlanner: TaskPlanner
   ) {
     if (!Array.isArray(task)) task = [task];
 
-    const hashes = await taskHasher.hashTasks(task);
+    const hashes = await taskHasher.hashTasks(task, taskGraph);
     const plans = taskPlanner.getTaskPlans(task);
 
     let hashNodes = hashes.map((hash) => {
@@ -151,7 +152,6 @@ describe('task planner', () => {
         projectFileMap,
         allWorkspaceFiles,
         projectGraph,
-        taskGraph,
         nxJson,
         options,
         fileHasher
@@ -171,6 +171,7 @@ describe('task planner', () => {
           id: 'parent-build',
           overrides: { prop: 'prop-value' },
         },
+        taskGraph,
         hasher,
         planner
       );
@@ -235,7 +236,6 @@ describe('task planner', () => {
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
-      taskGraph,
       nxJson,
       {},
       fileHasher
@@ -254,6 +254,7 @@ describe('task planner', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
       },
+      taskGraph,
       hasher,
       planner
     );
@@ -329,7 +330,6 @@ describe('task planner', () => {
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
-      taskGraph,
       nxJson,
       {},
       fileHasher
@@ -348,6 +348,7 @@ describe('task planner', () => {
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
       },
+      taskGraph,
       hasher,
       planner
     );
@@ -406,7 +407,6 @@ describe('task planner', () => {
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
-      taskGraph,
       nxJson,
       {},
       fileHasher
@@ -432,7 +432,7 @@ describe('task planner', () => {
       },
     ];
 
-    assertNodes(tasks, hasher, planner);
+    assertNodes(tasks, taskGraph, hasher, planner);
   });
 
   it('should be able to handle multiple filesets per project', async () => {
@@ -518,7 +518,6 @@ describe('task planner', () => {
           projectFileMap,
           allWorkspaceFiles,
           projectGraph,
-          taskGraph,
           nxJson as any,
           {},
           fileHasher
@@ -544,7 +543,7 @@ describe('task planner', () => {
             overrides: { prop: 'prop-value' },
           },
         ];
-        await assertNodes(tasks, hasher, planner);
+        await assertNodes(tasks, taskGraph, hasher, planner);
       }
     );
   });
@@ -619,7 +618,7 @@ describe('task planner', () => {
       allWorkspaceFiles,
 
       projectGraph,
-      taskGraph,
+
       nxJson,
       {},
       fileHasher
@@ -640,7 +639,7 @@ describe('task planner', () => {
         overrides: { prop: 'prop-value' },
       },
     ];
-    await assertNodes(tasks, hasher, planner);
+    await assertNodes(tasks, taskGraph, hasher, planner);
   });
 
   it('should build plans where the project graph has circular dependencies', async () => {
@@ -696,7 +695,6 @@ describe('task planner', () => {
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
-      taskGraph,
       nxJson,
       {},
       fileHasher
@@ -721,7 +719,7 @@ describe('task planner', () => {
         overrides: { prop: 'prop-value' },
       },
     ];
-    await assertNodes(tasks, hasher, planner);
+    await assertNodes(tasks, taskGraph, hasher, planner);
   });
 
   it('should include npm projects', async () => {
@@ -772,7 +770,6 @@ describe('task planner', () => {
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
-      taskGraph,
       nxJson,
       {},
       fileHasher
@@ -793,6 +790,6 @@ describe('task planner', () => {
       },
     ];
 
-    await assertNodes(tasks, hasher, planner);
+    await assertNodes(tasks, taskGraph, hasher, planner);
   });
 });
