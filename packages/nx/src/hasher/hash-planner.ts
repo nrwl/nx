@@ -312,7 +312,7 @@ export class HashPlanner {
       }
     }
     // not found, just return the package name
-    return packageName;
+    return `external:${packageName}`;
   }
 
   private singleProjectInputs(
