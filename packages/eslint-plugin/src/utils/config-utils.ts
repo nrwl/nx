@@ -1,5 +1,3 @@
-import { accessSync } from 'fs';
-
 /**
  * Checks if package is available
  * @param name name of the package
@@ -7,10 +5,9 @@ import { accessSync } from 'fs';
  */
 export function packageExists(name: string): boolean {
   try {
-    // TODO(meeroslav): This will not work once we start using yarn Berry with PnP
-    accessSync(`./node_modules/.bin/${name}`);
+    require.resolve(name);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
