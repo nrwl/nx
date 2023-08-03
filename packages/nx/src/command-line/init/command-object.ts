@@ -1,4 +1,4 @@
-import { CommandModule, Argv } from 'yargs';
+import { CommandModule, Argv, boolean } from 'yargs';
 import { parseCSV } from '../yargs-utils/shared-options';
 
 export const yargsInitCommand: CommandModule = {
@@ -14,7 +14,7 @@ export const yargsInitCommand: CommandModule = {
 
 function withInitOptions(yargs: Argv) {
   return yargs
-    .options('nxCloud', {
+    .option('nxCloud', {
       type: 'boolean',
       description: 'Set up distributed caching with Nx Cloud.',
     })
@@ -35,18 +35,24 @@ function withInitOptions(yargs: Argv) {
       type: 'boolean',
       default: false,
     })
+    .option('useDotNxInstallation', {
+      type: 'boolean',
+      description:
+        'Initialize an Nx workspace setup in the .nx directory of the current repository.',
+      default: false,
+    })
     .option('force', {
       describe:
         'Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.',
       type: 'boolean',
       default: false,
     })
-    .options('vite', {
+    .option('vite', {
       type: 'boolean',
       description: 'Use Vite as the bundler. Only for CRA projects.',
       default: true,
     })
-    .options('cacheable', {
+    .option('cacheable', {
       type: 'string',
       description:
         'Comma-separated list of cacheable operations. Only used for internal testing.',
