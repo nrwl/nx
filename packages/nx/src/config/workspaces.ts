@@ -84,7 +84,7 @@ export class Workspaces {
   ) {
     for (const proj of Object.values(projects)) {
       if (proj.targets) {
-        for (const targetName of Object.keys(proj.targets)) {
+        for (const targetName of Object.keys(proj.targets ?? {})) {
           const projectTargetDefinition = proj.targets[targetName];
           const defaults = readTargetDefaultsForTarget(
             targetName,
@@ -389,53 +389,34 @@ export function mergeTargetConfigurations(
     !targetConfiguration.executor ||
     targetDefaults.executor === targetConfiguration.executor
   ) {
-    result.options = mergeOptions(
-      defaultOptions,
-      targetConfiguration.options ?? {},
-      projectConfiguration,
-      target
-    );
+    result.options = { ...defaultOptions, ...targetConfiguration?.options };
     result.configurations = mergeConfigurations(
       defaultConfigurations,
-      targetConfiguration.configurations,
-      projectConfiguration,
-      target
+      targetConfiguration.configurations
     );
   }
   return result as TargetConfiguration;
 }
 
-function mergeOptions<T extends Object>(
-  defaults: T,
-  options: T,
-  project: ProjectConfiguration,
-  key: string
-): T {
-  return {
-    ...resolvePathTokensInOptions(defaults, project, key),
-    ...options,
-  };
-}
-
 function mergeConfigurations<T extends Object>(
   defaultConfigurations: Record<string, T>,
-  projectDefinedConfigurations: Record<string, T>,
-  project: ProjectConfiguration,
-  targetName: string
+  projectDefinedConfigurations: Record<string, T>
 ): Record<string, T> {
-  const configurations: Record<string, T> = { ...projectDefinedConfigurations };
-  for (const configuration in defaultConfigurations) {
-    configurations[configuration] = mergeOptions(
-      defaultConfigurations[configuration],
-      configurations[configuration],
-      project,
-      `${targetName}.${configuration}`
-    );
+  const result: Record<string, T> = {};
+  const configurations = new Set([
+    ...Object.keys(defaultConfigurations ?? {}),
+    ...Object.keys(projectDefinedConfigurations ?? {}),
+  ]);
+  for (const configuration of configurations) {
+    result[configuration] = {
+      ...(defaultConfigurations?.[configuration] ?? ({} as T)),
+      ...(projectDefinedConfigurations?.[configuration] ?? ({} as T)),
+    };
   }
-  return configurations;
+  return result;
 }
 
-function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
+export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
   object: T,
   project: ProjectConfiguration,
   key: string
@@ -443,8 +424,9 @@ function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
   const result: T = Array.isArray(object) ? ([...object] as T) : { ...object };
   for (let [opt, value] of Object.entries(object ?? {})) {
     if (typeof value === 'string') {
-      if (value.startsWith('{workspaceRoot}/')) {
-        value = value.replace(/^\{workspaceRoot\}\//, '');
+      const workspaceRootMatch = /^(\{workspaceRoot\}\/?)/.exec(value);
+      if (workspaceRootMatch?.length) {
+        value = value.replace(workspaceRootMatch[0], '');
       }
       if (value.includes('{workspaceRoot}')) {
         throw new Error(
@@ -454,7 +436,7 @@ function resolvePathTokensInOptions<T extends Object | Array<unknown>>(
       value = value.replace(/\{projectRoot\}/g, project.root);
       result[opt] = value.replace(/\{projectName\}/g, project.name);
     } else if (typeof value === 'object' && value) {
-      result[opt] = resolvePathTokensInOptions(
+      result[opt] = resolveNxTokensInOptions(
         value,
         project,
         [key, opt].join('.')
