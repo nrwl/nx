@@ -42,7 +42,8 @@
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/compat",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
-      "description": "Converts a project from TSLint to ESLint."
+      "description": "Converts a project from TSLint to ESLint.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint."
     },
     "init": {
       "factory": "./src/generators/init/init.compat#initSchematic",
@@ -194,7 +195,8 @@
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
-      "description": "Converts a project from TSLint to ESLint."
+      "description": "Converts a project from TSLint to ESLint.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint."
     },
     "directive": {
       "factory": "./src/generators/directive/directive",

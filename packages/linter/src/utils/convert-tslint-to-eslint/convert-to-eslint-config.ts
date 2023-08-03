@@ -49,6 +49,9 @@ function getConvertToEslintConfig() {
   return tslintToEslint;
 }
 
+/**
+ * @deprecated This will be removed in v17
+ */
 export async function convertToESLintConfig(
   pathToTslintJson: string,
   tslintJson: Record<string, unknown>,
@@ -196,6 +199,9 @@ function likelyContainsTSLintComment(fileContent: string): boolean {
   return fileContent.includes('tslint:');
 }
 
+/**
+ * @deprecated This will be removed in v17
+ */
 export function convertTSLintDisableCommentsForProject(
   tree: Tree,
   projectName: string

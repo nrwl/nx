@@ -1,6 +1,7 @@
 export { applicationGenerator } from './src/generators/application/application';
 export { classGenerator } from './src/generators/class/class';
 export { controllerGenerator } from './src/generators/controller/controller';
+/** @deprecated This generator will be removed in v17 */
 export { conversionGenerator } from './src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint';
 export { decoratorGenerator } from './src/generators/decorator/decorator';
 export { filterGenerator } from './src/generators/filter/filter';

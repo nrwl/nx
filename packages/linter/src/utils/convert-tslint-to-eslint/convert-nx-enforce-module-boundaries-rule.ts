@@ -26,6 +26,9 @@ function convertTSLintRuleSeverity(
 
 const NX_TSLINT_RULE_NAME = 'nx-enforce-module-boundaries';
 
+/**
+ * @deprecated This converter will be removed in v17
+ */
 export function convertTslintNxRuleToEslintNxRule(
   tslintJson: Record<string, unknown>
 ): {

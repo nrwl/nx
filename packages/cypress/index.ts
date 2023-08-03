@@ -9,5 +9,6 @@ export const cypressComponentConfiguration = componentConfigurationGenerator;
 export { configurationGenerator as cypressE2EConfigurationGenerator };
 export { cypressProjectGenerator } from './src/generators/cypress-project/cypress-project';
 export { cypressInitGenerator } from './src/generators/init/init';
+/** @deprecated This generator will be removed in v17 */
 export { conversionGenerator } from './src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint';
 export { migrateCypressProject } from './src/generators/migrate-to-cypress-11/migrate-to-cypress-11';
