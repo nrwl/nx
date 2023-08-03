@@ -77,6 +77,13 @@
     "build": {
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/nx"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*.node"
+        }
+      ],
       "options": {
         "commands": [
           {

@@ -58,13 +58,7 @@
   "targetDefaults": {
     "build": {
       "dependsOn": ["build-base", "build-native"],
-      "inputs": [
-        "production",
-        "^production",
-        {
-          "dependentTasksOutputFiles": "**/*.node"
-        }
-      ]
+      "inputs": ["production", "^production"]
     },
     "build-native": {
       "inputs": ["native"]
