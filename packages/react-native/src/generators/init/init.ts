@@ -12,7 +12,10 @@ import { Schema } from './schema';
 
 import { jestInitGenerator } from '@nx/jest';
 import { detoxInitGenerator } from '@nx/detox';
-import { babelPresetReactVersion } from '@nx/react/src/utils/versions';
+import {
+  babelCoreVersion,
+  babelPresetReactVersion,
+} from '@nx/react/src/utils/versions';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
@@ -109,6 +112,7 @@ export function updateDependencies(host: Tree) {
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
       '@babel/preset-react': babelPresetReactVersion,
+      '@babel/core': babelCoreVersion,
       ...(isPnpm
         ? {
             '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
