@@ -2678,6 +2678,16 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/run-commands-executor",
             "tags": ["use-task-executors"]
+          },
+          {
+            "id": "yarn-pnp",
+            "name": "Using Yarn PnP",
+            "description": "",
+            "file": "shared/recipes/yarn-pnp",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/yarn-pnp",
+            "tags": ["yarn", "Plug and Play"]
           }
         ],
         "isExternal": false,
@@ -3976,6 +3986,16 @@
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/run-commands-executor",
         "tags": ["use-task-executors"]
+      },
+      {
+        "id": "yarn-pnp",
+        "name": "Using Yarn PnP",
+        "description": "",
+        "file": "shared/recipes/yarn-pnp",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/yarn-pnp",
+        "tags": ["yarn", "Plug and Play"]
       }
     ],
     "isExternal": false,
@@ -4131,6 +4151,16 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/run-commands-executor",
     "tags": ["use-task-executors"]
+  },
+  "/recipes/tips-n-tricks/yarn-pnp": {
+    "id": "yarn-pnp",
+    "name": "Using Yarn PnP",
+    "description": "",
+    "file": "shared/recipes/yarn-pnp",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/yarn-pnp",
+    "tags": ["yarn", "Plug and Play"]
   },
   "/recipes/troubleshooting": {
     "id": "troubleshooting",
