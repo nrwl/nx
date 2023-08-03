@@ -19,7 +19,27 @@ After that, you can then install your plugin like any other npm package,
 
 ## List your Nx Plugin
 
-Nx provides a utility (`nx list`) that lists both core and community plugins. To submit your plugin, please follow the steps below:
+Nx provides a utility (`nx list`) that lists both core and community plugins. You can submit your plugin to be added to this list, but it needs to meet a few criteria first:
+
+- Run some kind of automated e2e tests in your repository
+- Include `@nx/devkit` as a `dependency` in the plugin's `package.json`
+- List a `repository.url` in the plugin's `package.json`
+
+```jsonc {% fileName="package.json" %}
+{
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/web"
+  }
+}
+```
+
+{% callout type="warning" title="Unmaintained Plugins" %}
+We reserve the right to remove unmaintained plugins from the registry. If the plugins become maintained again, they can be resubmitted to the registry.
+{% /callout %}
+
+Once those criteria are met, you can submit your plugin by following the steps below:
 
 - Fork the [Nx repo](https://github.com/nrwl/nx/fork) (if you haven't already)
 - Update the [`community/approved-plugins.json` file](https://github.com/nrwl/nx/blob/master/community/approved-plugins.json) with a new entry for your plugin that includes name, url and description
