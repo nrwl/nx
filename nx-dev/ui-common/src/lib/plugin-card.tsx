@@ -64,18 +64,20 @@ export function PluginCard({
             <div className="mx-1 my-1">
               <GithubStarsWidget githubStars={githubStars}></GithubStarsWidget>
             </div>
-            {isOfficial ? (
-              <div
-                data-tooltip="Maintained by the Nx Team"
-                className="ml-1 my-1 border bg-green-50 border-green-300 text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400 rounded-full px-3 py-0.5 text-xs font-medium capitalize"
-              >
-                Nx Team
-              </div>
-            ) : (
-              <div className="ml-1 my-1">
-                <NxVersionWidget nxVersion={nxVersion}></NxVersionWidget>
-              </div>
-            )}
+            <div className="flex-grow flex justify-end">
+              {isOfficial ? (
+                <div
+                  data-tooltip="Maintained by the Nx Team"
+                  className="ml-1 my-1 border inline-block bg-green-50 border-green-300 text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400 rounded-full px-3 py-0.5 text-xs font-medium capitalize"
+                >
+                  Nx Team
+                </div>
+              ) : (
+                <div className="ml-1 my-1">
+                  <NxVersionWidget nxVersion={nxVersion}></NxVersionWidget>
+                </div>
+              )}
+            </div>
           </div>
         </a>
       </div>
