@@ -45,11 +45,6 @@
     "url": "https://nx-plugins.netlify.app/"
   },
   {
-    "name": "@codebrew/nx-aws-cdk",
-    "description": "An Nx plugin for aws cdk develop.",
-    "url": "https://github.com/codebrewlab/nx-plugins/tree/main/packages/nx-aws-cdk"
-  },
-  {
     "name": "@ago-dev/nx-aws-cdk-v2",
     "description": "An nx plugin for the aws-cdk v2.",
     "url": "https://github.com/adrian-goe/nx-aws-cdk-v2"
@@ -90,19 +85,9 @@
     "url": "https://github.com/nxext/nx-extensions/tree/main/packages/capacitor"
   },
   {
-    "name": "@nxtend/firebase",
-    "description": "An Nx plugin for developing applications using Firebase",
-    "url": "https://github.com/nxtend-team/nxtend/tree/main/packages/firebase"
-  },
-  {
     "name": "@angular-architects/ddd",
     "description": "Nx plugin for structuring a monorepo with domains and layers",
     "url": "https://github.com/angular-architects/nx-ddd-plugin"
-  },
-  {
-    "name": "@offeringsolutions/nx-karma-to-jest",
-    "description": "Nx plugin for replacing karma with jest in an Nx workspace",
-    "url": "https://github.com/FabianGosebrink/nx-karma-to-jest"
   },
   {
     "name": "@flowaccount/nx-serverless",
@@ -123,21 +108,6 @@
     "name": "@ns3/nx-playwright",
     "description": "Nx plugin to run playwright e2e tests in an Nx workspace",
     "url": "https://github.com/Bielik20/nx-plugins/tree/master/packages/nx-playwright"
-  },
-  {
-    "name": "@dev-thought/nx-deploy-it",
-    "description": "Nx plugin to deploy applications on your favorite cloud provider",
-    "url": "https://github.com/Dev-Thought/nx-plugins/tree/master/libs/nx-deploy-it"
-  },
-  {
-    "name": "@offeringsolutions/nx-protractor-to-cypress",
-    "description": "Nx plugin to replace protractor with cypress in an nx workspace",
-    "url": "https://github.com/FabianGosebrink/nx-protractor-to-cypress"
-  },
-  {
-    "name": "@angular-custom-builders/lite-serve",
-    "description": "Nx plugin to run the e2e test on an existing dist folder",
-    "url": "https://github.com/mauriziovitale/angular-plugins/tree/master/libs/lite-serve"
   },
   {
     "name": "@nx-plus/nuxt",
