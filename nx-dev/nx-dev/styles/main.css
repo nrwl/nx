@@ -107,6 +107,10 @@ iframe[src*='youtube'] {
   z-index: 1;
   width: max-content;
 }
+[data-tooltip][data-tooltip-align-right]:before {
+  left: auto;
+  right: 0;
+}
 
 [data-tooltip]:hover:before {
   opacity: 1;

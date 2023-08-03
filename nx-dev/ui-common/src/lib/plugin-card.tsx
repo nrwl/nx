@@ -68,6 +68,7 @@ export function PluginCard({
               {isOfficial ? (
                 <div
                   data-tooltip="Maintained by the Nx Team"
+                  data-tooltip-align-right
                   className="ml-1 my-1 border inline-block bg-green-50 border-green-300 text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400 rounded-full px-3 py-0.5 text-xs font-medium capitalize"
                 >
                   Nx Team
@@ -94,7 +95,7 @@ export function LastPublishedWidget({
     return <div className="w-20"></div>;
   }
   return (
-    <abbr data-tooltip="Most Recent Release Date">
+    <abbr data-tooltip="Most Recent Release Date" data-tooltip-align-right>
       <ClockIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ClockIcon>
       {/* yyyy-MM-dd */}
       <span>{new Date(lastPublishedDate).toISOString().slice(0, 10)}</span>
@@ -115,7 +116,7 @@ function NpmDownloadsWidget({
     return <div className="w-8"></div>;
   }
   return (
-    <abbr data-tooltip="Monthly NPM Downloads">
+    <abbr data-tooltip="Monthly NPM Downloads" data-tooltip-align-right>
       <ArrowDownIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ArrowDownIcon>
       {shortenNumber(npmDownloads)}
       <span className="md:hidden">
@@ -135,7 +136,7 @@ function GithubStarsWidget({
     return <div className="w-8"></div>;
   }
   return (
-    <abbr data-tooltip="GitHub Stars">
+    <abbr data-tooltip="GitHub Stars" data-tooltip-align-right>
       <StarIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></StarIcon>
       {shortenNumber(githubStars)}
       <span className="md:hidden">
@@ -162,7 +163,7 @@ function NxVersionWidget({ nxVersion }: { nxVersion: string | undefined }) {
     return <div className="w-20"></div>;
   }
   return (
-    <abbr data-tooltip="Supported Nx Versions">
+    <abbr data-tooltip="Supported Nx Versions" data-tooltip-align-right>
       {/* Nx Logo */}
       <svg
         role="img"
