@@ -14,7 +14,7 @@
         "description": "Library name.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the library?",
-        "pattern": "(?:^@[a-zA-Z]+\\/[a-zA-Z]+|^[a-zA-Z]\\S*)$"
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
       },
       "directory": {
         "type": "string",

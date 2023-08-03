@@ -82,7 +82,18 @@ function validateName(
     );
   }
 
-  const pattern = '(?:^@[a-zA-Z]+\\/[a-zA-Z]+|^[a-zA-Z]\\S*)$';
+  /**
+   * Matches two types of project names:
+   *
+   * 1. Valid npm package names (e.g., '@scope/name' or 'name').
+   * 2. Names starting with a letter and can contain any character except whitespace and ':'.
+   *
+   * The second case is to support the legacy behavior (^[a-zA-Z].*$) with the difference
+   * that it doesn't allow the ":" character. It was wrong to allow it because it would
+   * conflict with the notation for tasks.
+   */
+  const pattern =
+    '(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$';
   const validationRegex = new RegExp(pattern);
   if (!validationRegex.test(name)) {
     throw new Error(
