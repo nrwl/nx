@@ -27,10 +27,6 @@ export class Workspaces {
 
   constructor(private root: string) {}
 
-  relativeCwd(cwd: string) {
-    return path.relative(this.root, cwd).replace(/\\/g, '/') || null;
-  }
-
   /**
    * @deprecated
    */
