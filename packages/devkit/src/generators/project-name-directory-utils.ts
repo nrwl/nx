@@ -8,37 +8,62 @@ import {
 } from '../utils/get-workspace-layout';
 import { names } from '../utils/names';
 
-const { joinPathFragments } = requireNx();
+const { joinPathFragments, readJson, readNxJson } = requireNx();
 
 export type ProjectNameDirectoryFormat = 'as-provided' | 'derived';
 export type ProjectGenerationOptions = {
   name: string;
   projectType: ProjectType;
   directory?: string;
+  importPath?: string;
   nameDirectoryFormat?: ProjectNameDirectoryFormat;
   rootProject?: boolean;
 };
-export type ProjectNameDirectory = {
+
+export type ProjectNamesAndDirectories = {
+  /**
+   * Normalized full project name, including scope if name was provided with
+   * scope (e.g., `@scope/name`, only available when `nameDirectoryFormat` is
+   * `as-provided`).
+   */
   projectName: string;
+  /**
+   * Normalized project directory, including the layout directory if configured.
+   */
   projectDirectory: string;
-  projectDirectoryWithoutLayout: string;
+  names: {
+    /**
+     * Normalized project name without scope. It's meant to be used when
+     * generating file names that contain the project name.
+     */
+    projectFileName: string;
+    /**
+     * Normalized project name without scope or directory. It's meant to be used
+     * when generating shorter file names that contain the project name.
+     */
+    projectSimpleName: string;
+  };
+  /**
+   * Normalized import path for the project.
+   */
+  importPath?: string;
 };
 
 type ProjectNameDirectoryFormats = {
   'as-provided': {
     description: string;
-    options: ProjectNameDirectory;
+    options: ProjectNamesAndDirectories;
   };
   derived?: {
     description: string;
-    options: ProjectNameDirectory;
+    options: ProjectNamesAndDirectories;
   };
 };
 
-export async function determineProjectNameDirectory(
+export async function determineProjectNamesAndDirectories(
   tree: Tree,
   options: ProjectGenerationOptions
-): Promise<ProjectNameDirectory> {
+): Promise<ProjectNamesAndDirectories> {
   validateName(options.name, options.nameDirectoryFormat);
   const formats = getProjectNameDirectoryFormats(tree, options);
   const format =
@@ -57,7 +82,7 @@ function validateName(
     );
   }
 
-  const pattern = '^(@[a-zA-Z]+\\/[a-zA-Z]|[a-zA-Z]).*$';
+  const pattern = '(?:^@[a-zA-Z]+\\/[a-zA-Z]+|^[a-zA-Z]\\S*)$';
   const validationRegex = new RegExp(pattern);
   if (!validationRegex.test(name)) {
     throw new Error(
@@ -103,22 +128,42 @@ function getProjectNameDirectoryFormats(
   const directory = options.directory?.replace(/^\.?\//, '');
 
   const asProvidedProjectName = name;
-  // TODO(leo): should we validate whether there's already a project in the root?
   const asProvidedProjectDirectory = directory
     ? names(directory).fileName
-    : '.';
+    : options.rootProject
+    ? '.'
+    : asProvidedProjectName;
 
   if (name.startsWith('@')) {
+    const nameWithoutScope = asProvidedProjectName.split('/')[1];
     return {
       'as-provided': {
-        description: `${asProvidedProjectName} @ ${asProvidedProjectDirectory} (preferred)`,
+        description: `${asProvidedProjectName} @ ${asProvidedProjectDirectory} (recommended)`,
         options: {
           projectName: asProvidedProjectName,
+          names: {
+            projectSimpleName: nameWithoutScope,
+            projectFileName: nameWithoutScope,
+          },
+          importPath: asProvidedProjectName,
           projectDirectory: asProvidedProjectDirectory,
-          projectDirectoryWithoutLayout: asProvidedProjectDirectory,
         },
       },
     };
+  }
+
+  let asProvidedImportPath: string;
+  let npmScope: string;
+  if (options.projectType === 'library') {
+    asProvidedImportPath = options.importPath;
+    if (!asProvidedImportPath) {
+      npmScope = getNpmScope(tree);
+      asProvidedImportPath =
+        asProvidedProjectDirectory === '.'
+          ? readJson<{ name?: string }>(tree, 'package.json').name ??
+            getImportPath(npmScope, asProvidedProjectName)
+          : getImportPath(npmScope, asProvidedProjectName);
+    }
   }
 
   let { projectDirectory, layoutDirectory } = getDirectories(
@@ -135,6 +180,7 @@ function getProjectNameDirectoryFormats(
   const derivedProjectName = options.rootProject
     ? name
     : derivedProjectDirectoryWithoutLayout.replace(/\//g, '-');
+  const derivedSimpleProjectName = name;
   let derivedProjectDirectory = derivedProjectDirectoryWithoutLayout;
   if (!options.rootProject) {
     // prepend the layout directory
@@ -144,21 +190,41 @@ function getProjectNameDirectoryFormats(
     );
   }
 
+  let derivedImportPath: string;
+  if (options.projectType === 'library') {
+    derivedImportPath = options.importPath;
+    if (!derivedImportPath) {
+      derivedImportPath =
+        derivedProjectDirectory === '.'
+          ? readJson<{ name?: string }>(tree, 'package.json').name ??
+            getImportPath(npmScope, derivedProjectName)
+          : getImportPath(npmScope, derivedProjectDirectoryWithoutLayout);
+    }
+  }
+
   return {
     'as-provided': {
-      description: `${asProvidedProjectName} @ ${asProvidedProjectDirectory} (preferred)`,
+      description: `${asProvidedProjectName} @ ${asProvidedProjectDirectory} (recommended)`,
       options: {
         projectName: asProvidedProjectName,
+        names: {
+          projectSimpleName: asProvidedProjectName,
+          projectFileName: asProvidedProjectName,
+        },
+        importPath: asProvidedImportPath,
         projectDirectory: asProvidedProjectDirectory,
-        projectDirectoryWithoutLayout: asProvidedProjectDirectory,
       },
     },
     derived: {
       description: `${derivedProjectName} @ ${derivedProjectDirectory} (legacy)`,
       options: {
         projectName: derivedProjectName,
+        names: {
+          projectSimpleName: derivedSimpleProjectName,
+          projectFileName: derivedProjectName,
+        },
+        importPath: derivedImportPath,
         projectDirectory: derivedProjectDirectory,
-        projectDirectoryWithoutLayout: derivedProjectDirectoryWithoutLayout,
       },
     },
   };
@@ -179,4 +245,23 @@ function getDirectories(
   }
 
   return { projectDirectory, layoutDirectory };
+}
+
+function getImportPath(npmScope: string | undefined, name: string) {
+  return npmScope ? `${npmScope === '@' ? '' : '@'}${npmScope}/${name}` : name;
+}
+
+function getNpmScope(tree: Tree): string | undefined {
+  const nxJson = readNxJson(tree);
+
+  // TODO(v17): Remove reading this from nx.json
+  if (nxJson?.npmScope) {
+    return nxJson.npmScope;
+  }
+
+  const { name } = tree.exists('package.json')
+    ? readJson<{ name?: string }>(tree, 'package.json')
+    : { name: null };
+
+  return name?.startsWith('@') ? name.split('/')[0].substring(1) : undefined;
 }

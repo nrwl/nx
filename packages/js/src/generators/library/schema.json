@@ -14,7 +14,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the library?",
-      "pattern": "^(@[a-zA-Z]+\\/[a-zA-Z]|[a-zA-Z]).*$"
+      "pattern": "(?:^@[a-zA-Z]+\\/[a-zA-Z]+|^[a-zA-Z]\\S*)$"
     },
     "directory": {
       "type": "string",

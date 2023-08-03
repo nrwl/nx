@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library#libraryGenerator",
+  "factory": "./src/generators/library/library#libraryGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxTypescriptLibrary",
@@ -14,7 +14,7 @@
         "description": "Library name.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the library?",
-        "pattern": "^(@[a-zA-Z]+\\/[a-zA-Z]|[a-zA-Z]).*$"
+        "pattern": "(?:^@[a-zA-Z]+\\/[a-zA-Z]+|^[a-zA-Z]\\S*)$"
       },
       "directory": {
         "type": "string",
@@ -148,7 +148,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a library",
-  "implementation": "/packages/js/src/generators/library/library#libraryGenerator.ts",
+  "implementation": "/packages/js/src/generators/library/library#libraryGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/js/src/generators/library/schema.json",
   "type": "generator"

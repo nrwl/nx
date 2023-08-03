@@ -1,9 +1,10 @@
 import * as enquirer from 'enquirer';
-import type { Tree } from 'nx/src/generators/tree';
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
-import { determineProjectNameDirectory } from './project-name-directory-utils';
+import type { Tree } from 'nx/src/generators/tree';
+import { updateJson } from 'nx/src/generators/utils/json';
+import { determineProjectNamesAndDirectories } from './project-name-directory-utils';
 
-describe('determineProjectNameDirectory', () => {
+describe('determineProjectNamesAndDirectories', () => {
   let tree: Tree;
 
   describe('no layout', () => {
@@ -13,22 +14,26 @@ describe('determineProjectNameDirectory', () => {
     });
 
     it('should return the project name and directory as provided', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         directory: 'shared',
         projectType: 'library',
         nameDirectoryFormat: 'as-provided',
       });
 
-      expect(result).toEqual({
+      expect(result).toStrictEqual({
         projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@proj/lib-name',
         projectDirectory: 'shared',
-        projectDirectoryWithoutLayout: 'shared',
       });
     });
 
-    it('should support using a scoped package name as the project name when format is as-provided', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+    it('should use a scoped package name as the project name and import path when format is "as-provided"', async () => {
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: '@scope/libName',
         directory: 'shared',
         projectType: 'library',
@@ -37,27 +42,44 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: '@scope/lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@scope/lib-name',
         projectDirectory: 'shared',
-        projectDirectoryWithoutLayout: 'shared',
       });
     });
 
-    it('should return the directory as root when directory is not provided and format is as-provided', async () => {
-      const result = await determineProjectNameDirectory(tree, {
-        name: 'libName',
+    it('should return the directory as the project name when directory is not provided and format is "as-provided"', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = 'lib-name';
+        return json;
+      });
+      const result = await determineProjectNamesAndDirectories(tree, {
+        name: '@scope/libName',
         projectType: 'library',
         nameDirectoryFormat: 'as-provided',
       });
 
       expect(result).toEqual({
-        projectName: 'lib-name',
-        projectDirectory: '.',
-        projectDirectoryWithoutLayout: '.',
+        projectName: '@scope/lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@scope/lib-name',
+        projectDirectory: '@scope/lib-name',
       });
     });
 
     it('should return the project name and directory as provided for root projects', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = 'lib-name';
+        return json;
+      });
+
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         projectType: 'library',
         nameDirectoryFormat: 'as-provided',
@@ -66,14 +88,34 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: 'lib-name',
         projectDirectory: '.',
-        projectDirectoryWithoutLayout: '.',
       });
+    });
+
+    it('should derive import path for root projects when package.json does not have a name and format is as-provided', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = undefined;
+        return json;
+      });
+
+      const result = await determineProjectNamesAndDirectories(tree, {
+        name: 'libName',
+        projectType: 'library',
+        nameDirectoryFormat: 'as-provided',
+        rootProject: true,
+      });
+
+      expect(result.importPath).toBe('@proj/lib-name');
     });
 
     it('should throw when an invalid name is provided', async () => {
       await expect(
-        determineProjectNameDirectory(tree, {
+        determineProjectNamesAndDirectories(tree, {
           name: '!scope/libName',
           directory: 'shared',
           projectType: 'library',
@@ -83,7 +125,7 @@ describe('determineProjectNameDirectory', () => {
     });
 
     it('should return the derived project name and directory', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         directory: 'shared',
         projectType: 'library',
@@ -92,14 +134,18 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: 'shared-lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'shared-lib-name',
+        },
+        importPath: '@proj/shared/lib-name',
         projectDirectory: 'shared/lib-name',
-        projectDirectoryWithoutLayout: 'shared/lib-name',
       });
     });
 
-    it('should throw when using a scoped package name as the project name and format is derived', async () => {
+    it('should throw when using a scoped package name as the project name and format is "derived"', async () => {
       await expect(
-        determineProjectNameDirectory(tree, {
+        determineProjectNamesAndDirectories(tree, {
           name: '@scope/libName',
           directory: 'shared',
           projectType: 'library',
@@ -109,7 +155,11 @@ describe('determineProjectNameDirectory', () => {
     });
 
     it('should return the derived project name and directory for root projects', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = 'lib-name';
+        return json;
+      });
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         projectType: 'library',
         nameDirectoryFormat: 'derived',
@@ -118,9 +168,29 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: 'lib-name',
         projectDirectory: '.',
-        projectDirectoryWithoutLayout: '.',
       });
+    });
+
+    it('should derive import path for root projects when package.json does not have a name and format is "derived"', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = undefined;
+        return json;
+      });
+
+      const result = await determineProjectNamesAndDirectories(tree, {
+        name: 'libName',
+        projectType: 'library',
+        nameDirectoryFormat: 'as-provided',
+        rootProject: true,
+      });
+
+      expect(result.importPath).toBe('@proj/lib-name');
     });
 
     it('should prompt for the project name and directory format', async () => {
@@ -131,7 +201,7 @@ describe('determineProjectNameDirectory', () => {
         .spyOn(enquirer, 'prompt')
         .mockImplementation(() => Promise.resolve({ format: 'as-provided' }));
 
-      await determineProjectNameDirectory(tree, {
+      await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         projectType: 'library',
         directory: 'shared',
@@ -145,7 +215,7 @@ describe('determineProjectNameDirectory', () => {
             'What project name and directory format would you like to use?',
           choices: [
             {
-              message: 'lib-name @ shared (preferred)',
+              message: 'lib-name @ shared (recommended)',
               name: 'as-provided',
             },
             {
@@ -167,7 +237,7 @@ describe('determineProjectNameDirectory', () => {
       process.env.NX_INTERACTIVE = 'true';
       const promptSpy = jest.spyOn(enquirer, 'prompt');
 
-      const result = await determineProjectNameDirectory(tree, {
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: '@scope/libName',
         projectType: 'library',
         directory: 'shared',
@@ -176,8 +246,12 @@ describe('determineProjectNameDirectory', () => {
       expect(promptSpy).not.toHaveBeenCalled();
       expect(result).toEqual({
         projectName: '@scope/lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@scope/lib-name',
         projectDirectory: 'shared',
-        projectDirectoryWithoutLayout: 'shared',
       });
 
       // restore original interactive value
@@ -192,7 +266,7 @@ describe('determineProjectNameDirectory', () => {
     });
 
     it('should return the project name and directory as provided', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         directory: 'shared',
         projectType: 'library',
@@ -201,13 +275,17 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@proj/lib-name',
         projectDirectory: 'shared',
-        projectDirectoryWithoutLayout: 'shared',
       });
     });
 
-    it('should support using a scoped package name as the project name when format is as-provided', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+    it('should use a scoped package name as the project name and import path when format is "as-provided"', async () => {
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: '@scope/libName',
         directory: 'shared',
         projectType: 'library',
@@ -216,27 +294,45 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: '@scope/lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@scope/lib-name',
         projectDirectory: 'shared',
-        projectDirectoryWithoutLayout: 'shared',
       });
     });
 
-    it('should return the directory as root when directory is not provided and format is as-provided', async () => {
-      const result = await determineProjectNameDirectory(tree, {
-        name: 'libName',
+    it('should return the directory as the project name when directory is not provided and format is "as-provided"', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = 'lib-name';
+        return json;
+      });
+
+      const result = await determineProjectNamesAndDirectories(tree, {
+        name: '@scope/libName',
         projectType: 'library',
         nameDirectoryFormat: 'as-provided',
       });
 
       expect(result).toEqual({
-        projectName: 'lib-name',
-        projectDirectory: '.',
-        projectDirectoryWithoutLayout: '.',
+        projectName: '@scope/lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@scope/lib-name',
+        projectDirectory: '@scope/lib-name',
       });
     });
 
     it('should return the project name and directory as provided for root projects', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = 'lib-name';
+        return json;
+      });
+
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         projectType: 'library',
         nameDirectoryFormat: 'as-provided',
@@ -245,14 +341,34 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: 'lib-name',
         projectDirectory: '.',
-        projectDirectoryWithoutLayout: '.',
       });
+    });
+
+    it('should derive import path for root projects when package.json does not have a name and format is "as-provided"', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = undefined;
+        return json;
+      });
+
+      const result = await determineProjectNamesAndDirectories(tree, {
+        name: 'libName',
+        projectType: 'library',
+        nameDirectoryFormat: 'as-provided',
+        rootProject: true,
+      });
+
+      expect(result.importPath).toBe('@proj/lib-name');
     });
 
     it('should throw when an invalid name is provided', async () => {
       await expect(
-        determineProjectNameDirectory(tree, {
+        determineProjectNamesAndDirectories(tree, {
           name: '!scope/libName',
           directory: 'shared',
           projectType: 'library',
@@ -262,7 +378,7 @@ describe('determineProjectNameDirectory', () => {
     });
 
     it('should return the derived project name and directory', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         directory: 'shared',
         projectType: 'library',
@@ -271,14 +387,18 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: 'shared-lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'shared-lib-name',
+        },
+        importPath: '@proj/shared/lib-name',
         projectDirectory: 'libs/shared/lib-name',
-        projectDirectoryWithoutLayout: 'shared/lib-name',
       });
     });
 
     it('should throw when using a scoped package name as the project name and format is derived', async () => {
       await expect(
-        determineProjectNameDirectory(tree, {
+        determineProjectNamesAndDirectories(tree, {
           name: '@scope/libName',
           directory: 'shared',
           projectType: 'library',
@@ -288,7 +408,12 @@ describe('determineProjectNameDirectory', () => {
     });
 
     it('should return the derived project name and directory for root projects', async () => {
-      const result = await determineProjectNameDirectory(tree, {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = 'lib-name';
+        return json;
+      });
+
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         projectType: 'library',
         nameDirectoryFormat: 'derived',
@@ -297,9 +422,29 @@ describe('determineProjectNameDirectory', () => {
 
       expect(result).toEqual({
         projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: 'lib-name',
         projectDirectory: '.',
-        projectDirectoryWithoutLayout: '.',
       });
+    });
+
+    it('should derive import path for root projects when package.json does not have a name and format is "derived"', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.name = undefined;
+        return json;
+      });
+
+      const result = await determineProjectNamesAndDirectories(tree, {
+        name: 'libName',
+        projectType: 'library',
+        nameDirectoryFormat: 'as-provided',
+        rootProject: true,
+      });
+
+      expect(result.importPath).toBe('@proj/lib-name');
     });
 
     it('should prompt for the project name and directory format', async () => {
@@ -310,7 +455,7 @@ describe('determineProjectNameDirectory', () => {
         .spyOn(enquirer, 'prompt')
         .mockImplementation(() => Promise.resolve({ format: 'as-provided' }));
 
-      await determineProjectNameDirectory(tree, {
+      await determineProjectNamesAndDirectories(tree, {
         name: 'libName',
         projectType: 'library',
         directory: 'shared',
@@ -324,7 +469,7 @@ describe('determineProjectNameDirectory', () => {
             'What project name and directory format would you like to use?',
           choices: [
             {
-              message: 'lib-name @ shared (preferred)',
+              message: 'lib-name @ shared (recommended)',
               name: 'as-provided',
             },
             {
@@ -346,7 +491,7 @@ describe('determineProjectNameDirectory', () => {
       process.env.NX_INTERACTIVE = 'true';
       const promptSpy = jest.spyOn(enquirer, 'prompt');
 
-      const result = await determineProjectNameDirectory(tree, {
+      const result = await determineProjectNamesAndDirectories(tree, {
         name: '@scope/libName',
         projectType: 'library',
         directory: 'shared',
@@ -355,8 +500,12 @@ describe('determineProjectNameDirectory', () => {
       expect(promptSpy).not.toHaveBeenCalled();
       expect(result).toEqual({
         projectName: '@scope/lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@scope/lib-name',
         projectDirectory: 'shared',
-        projectDirectoryWithoutLayout: 'shared',
       });
 
       // restore original interactive value

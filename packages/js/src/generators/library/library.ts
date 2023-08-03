@@ -10,14 +10,16 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
-  readJson,
   runTasksInSerial,
   toJS,
   Tree,
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { determineProjectNameDirectory } from '@nx/devkit/src/generators/project-name-directory-utils';
+import {
+  determineProjectNamesAndDirectories,
+  type ProjectNamesAndDirectories,
+} from '@nx/devkit/src/generators/project-name-directory-utils';
 
 import {
   addTsConfigPath,
@@ -28,7 +30,6 @@ import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
 import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
-import { getImportPath } from '../../utils/get-import-path';
 import {
   esbuildVersion,
   nxVersion,
@@ -42,6 +43,18 @@ import setupVerdaccio from '../setup-verdaccio/generator';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 
 export async function libraryGenerator(
+  tree: Tree,
+  schema: LibraryGeneratorSchema
+) {
+  return await libraryGeneratorInternal(tree, {
+    // provide a default nameDirectoryFormat to avoid breaking changes
+    // to external generators invoking this one
+    nameDirectoryFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function libraryGeneratorInternal(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
@@ -129,6 +142,7 @@ export async function libraryGenerator(
 
 export interface NormalizedSchema extends LibraryGeneratorSchema {
   name: string;
+  projectNames: ProjectNamesAndDirectories['names'];
   fileName: string;
   projectRoot: string;
   parsedTags: string[];
@@ -213,9 +227,19 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   }
 }
 
+export type AddLintOptions = Pick<
+  NormalizedSchema,
+  | 'name'
+  | 'linter'
+  | 'projectRoot'
+  | 'unitTestRunner'
+  | 'js'
+  | 'setParserOptionsProject'
+  | 'rootProject'
+>;
 export async function addLint(
   tree: Tree,
-  options: NormalizedSchema
+  options: AddLintOptions
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
   const task = lintProjectGenerator(tree, {
@@ -296,7 +320,9 @@ function addBabelRc(tree: Tree, options: NormalizedSchema) {
 }
 
 function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
-  const { className, name, propertyName } = names(options.name);
+  const { className, name, propertyName } = names(
+    options.projectNames.projectFileName
+  );
 
   createProjectTsConfigJson(tree, options);
 
@@ -512,17 +538,24 @@ async function normalizeOptions(
     options.linter = Linter.EsLint;
   }
 
-  const { projectName, projectDirectory, projectDirectoryWithoutLayout } =
-    await determineProjectNameDirectory(tree, {
-      name: options.name,
-      projectType: 'library',
-      directory: options.directory,
-      nameDirectoryFormat: options.nameDirectoryFormat,
-      rootProject: options.rootProject,
-    });
-  const name = names(options.name).fileName;
+  const {
+    projectName,
+    names: projectNames,
+    projectDirectory,
+    importPath,
+  } = await determineProjectNamesAndDirectories(tree, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    nameDirectoryFormat: options.nameDirectoryFormat,
+    rootProject: options.rootProject,
+  });
+  options.rootProject = projectDirectory === '.';
   const fileName = getCaseAwareFileName({
-    fileName: options.simpleName ? name : projectName,
+    fileName: options.simpleName
+      ? projectNames.projectSimpleName
+      : projectNames.projectFileName,
     pascalCaseFiles: options.pascalCaseFiles,
   });
 
@@ -530,16 +563,13 @@ async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const importPath = options.rootProject
-    ? readJson(tree, 'package.json').name ?? getImportPath(tree, 'core')
-    : options.importPath || getImportPath(tree, projectDirectoryWithoutLayout);
-
   options.minimal ??= false;
 
   return {
     ...options,
     fileName,
     name: projectName,
+    projectNames,
     projectRoot: projectDirectory,
     parsedTags,
     importPath,
@@ -713,4 +743,4 @@ function determineEntryFields(
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGenerator);
+export const librarySchematic = convertNxGenerator(libraryGeneratorInternal);
