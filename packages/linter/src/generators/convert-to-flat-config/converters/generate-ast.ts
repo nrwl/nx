@@ -39,6 +39,31 @@ export function generateAst<T>(input: unknown, factory: ts.NodeFactory): T {
   throw new Error(`Unknown type: ${typeof input}`);
 }
 
+export function generateRequire(
+  variableName: string,
+  imp: string,
+  factory: ts.NodeFactory
+): ts.VariableStatement {
+  return ts.factory.createVariableStatement(
+    undefined,
+    ts.factory.createVariableDeclarationList(
+      [
+        ts.factory.createVariableDeclaration(
+          variableName,
+          undefined,
+          undefined,
+          ts.factory.createCallExpression(
+            ts.factory.createIdentifier('require'),
+            undefined,
+            [ts.factory.createStringLiteral(imp)]
+          )
+        ),
+      ],
+      ts.NodeFlags.Const
+    )
+  );
+}
+
 function isValidKey(key: string): boolean {
   return /^[a-zA-Z0-9_]+$/.test(key);
 }

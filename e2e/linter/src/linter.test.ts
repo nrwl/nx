@@ -1,5 +1,6 @@
 import * as path from 'path';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -535,6 +536,40 @@ describe('Linter', () => {
         );
       });
     });
+  });
+
+  describe('Integrated Flat', () => {
+    let projScope;
+
+    beforeAll(() => {
+      projScope = newProject();
+    });
+    afterAll(() => cleanupProject());
+
+    it('should convert to flat config', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      runCLI(`generate @nx/react:app ${myapp} --tags=validtag`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+
+      // migrate to flat structure
+      runCLI(`generate @nx/linter:convert-to-flat-config`);
+      checkFilesExist(
+        'eslint.config.js',
+        `apps/${myapp}/eslint.config.js`,
+        `libs/${mylib}/eslint.config.js`
+      );
+      checkFilesDoNotExist(
+        '.eslintrc.json',
+        `apps/${myapp}/.eslintrc.json`,
+        `libs/${mylib}/.eslintrc.json`
+      );
+
+      const outFlat = runCLI(`affected -t lint`, { silenceError: true });
+      expect(outFlat).toContain('All files pass linting');
+      console.log(outFlat);
+    }, 1000000);
   });
 
   describe('Root projects migration', () => {

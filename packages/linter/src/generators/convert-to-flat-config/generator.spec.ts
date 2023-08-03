@@ -51,12 +51,12 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "import nxEslintPlugin from '@nx/eslint-plugin';
-      import { FlatCompat } from '@eslint/eslintrc';
+      "const nxEslintPlugin = require('@nx/eslint-plugin');
+      const { FlatCompat } = require('@eslint/eslintrc');
       const eslintrc = new FlatCompat({
         baseDirectory: __dirname,
       });
-      export default [
+      module.exports = [
         ...eslintrc.extends('plugin:storybook/recommended'),
         { plugins: { '@nx': nxEslintPlugin } },
         {
@@ -201,12 +201,12 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "import nxEslintPlugin from '@nx/eslint-plugin';
-      import { FlatCompat } from '@eslint/eslintrc';
+      "const nxEslintPlugin = require('@nx/eslint-plugin');
+      const { FlatCompat } = require('@eslint/eslintrc');
       const eslintrc = new FlatCompat({
         baseDirectory: __dirname,
       });
-      export default [
+      module.exports = [
         { plugins: { '@nx': nxEslintPlugin } },
         {
           linterOptions: {

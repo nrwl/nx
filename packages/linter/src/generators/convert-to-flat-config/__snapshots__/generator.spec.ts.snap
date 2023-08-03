@@ -1,12 +1,12 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`convert-to-flat-config generator should add env configuration 1`] = `
-"import nxEslintPlugin from '@nx/eslint-plugin';
-import { FlatCompat } from '@eslint/eslintrc';
+"const nxEslintPlugin = require('@nx/eslint-plugin');
+const { FlatCompat } = require('@eslint/eslintrc');
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
-export default [
+module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
     languageOptions: {
@@ -51,12 +51,12 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should add global gitignores 1`] = `
-"import nxEslintPlugin from '@nx/eslint-plugin';
-import { FlatCompat } from '@eslint/eslintrc';
+"const nxEslintPlugin = require('@nx/eslint-plugin');
+const { FlatCompat } = require('@eslint/eslintrc');
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
-export default [
+module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
@@ -93,13 +93,13 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should add parser 1`] = `
-"import nxEslintPlugin from '@nx/eslint-plugin';
-import typescriptEslintParser from '@typescript-eslint/parser';
-import { FlatCompat } from '@eslint/eslintrc';
+"const nxEslintPlugin = require('@nx/eslint-plugin');
+const typescriptEslintParser = require('@typescript-eslint/parser');
+const { FlatCompat } = require('@eslint/eslintrc');
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
-export default [
+module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
   {
@@ -137,15 +137,15 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should add plugins 1`] = `
-"import eslintPluginImport from 'eslint-plugin-import';
-import eslintPluginSingleName from 'eslint-plugin-single-name';
-import scopeEslintPluginWithName from '@scope/eslint-plugin-with-name';
-import justScopeEslintPlugin from '@just-scope/eslint-plugin';
-import { FlatCompat } from '@eslint/eslintrc';
+"const eslintPluginImport = require('eslint-plugin-import');
+const eslintPluginSingleName = require('eslint-plugin-single-name');
+const scopeEslintPluginWithName = require('@scope/eslint-plugin-with-name');
+const justScopeEslintPlugin = require('@just-scope/eslint-plugin');
+const { FlatCompat } = require('@eslint/eslintrc');
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
-export default [
+module.exports = [
   {
     plugins: {
       'eslint-plugin-import': eslintPluginImport,
@@ -189,12 +189,12 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should add settings 1`] = `
-"import nxEslintPlugin from '@nx/eslint-plugin';
-import { FlatCompat } from '@eslint/eslintrc';
+"const nxEslintPlugin = require('@nx/eslint-plugin');
+const { FlatCompat } = require('@eslint/eslintrc');
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
-export default [
+module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { settings: { sharedData: 'Hello' } },
   {
@@ -232,12 +232,12 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should run successfully 1`] = `
-"import nxEslintPlugin from '@nx/eslint-plugin';
-import { FlatCompat } from '@eslint/eslintrc';
+"const nxEslintPlugin = require('@nx/eslint-plugin');
+const { FlatCompat } = require('@eslint/eslintrc');
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
-export default [
+module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
     files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
@@ -274,12 +274,12 @@ export default [
 `;
 
 exports[`convert-to-flat-config generator should run successfully 2`] = `
-"import baseConfig from '../../.eslintrc.json';
-import { FlatCompat } from '@eslint/eslintrc';
+"const baseConfig = require('../../.eslintrc.json');
+const { FlatCompat } = require('@eslint/eslintrc');
 const eslintrc = new FlatCompat({
   baseDirectory: __dirname,
 });
-export default [
+module.exports = [
   ...baseConfig,
   {
     files: ['*.ts', '*.tsx', '*.js', '*.jsx'],

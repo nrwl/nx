@@ -2,7 +2,7 @@ import { Tree, names } from '@nx/devkit';
 import { join } from 'path';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
-import { generateAst } from './generate-ast';
+import { generateAst, generateRequire } from './generate-ast';
 
 /**
  * Converts an ESLint JSON config to a flat config.
@@ -164,17 +164,7 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
       const localName = index ? `baseConfig${index}` : 'baseConfig';
-
-      const importStatement = ts.factory.createImportDeclaration(
-        undefined,
-        ts.factory.createImportClause(
-          false,
-          ts.factory.createIdentifier(localName),
-          undefined
-        ),
-        ts.factory.createStringLiteral(imp)
-      );
-
+      const importStatement = generateRequire(localName, imp, ts.factory);
       importsList.push(importStatement);
       configBlocks.push(
         ts.factory.createSpreadElement(ts.factory.createIdentifier(localName))
@@ -192,15 +182,7 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
     );
 
     if (eslintPluginExtends.length) {
-      const importStatement = ts.factory.createImportDeclaration(
-        undefined,
-        ts.factory.createImportClause(
-          false,
-          ts.factory.createIdentifier('js'),
-          undefined
-        ),
-        ts.factory.createStringLiteral('@eslint/js')
-      );
+      const importStatement = generateRequire('js', '@eslint/js', ts.factory);
 
       importsList.push(importStatement);
       eslintPluginExtends.forEach((plugin) => {
@@ -255,15 +237,7 @@ function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
     mappedPlugins.push({ name, varName, imp });
   });
   mappedPlugins.forEach(({ varName, imp }) => {
-    const importStatement = ts.factory.createImportDeclaration(
-      undefined,
-      ts.factory.createImportClause(
-        false,
-        ts.factory.createIdentifier(varName),
-        undefined
-      ),
-      ts.factory.createStringLiteral(imp)
-    );
+    const importStatement = generateRequire(varName, imp, ts.factory);
     importsList.push(importStatement);
   });
   const pluginsAst = ts.factory.createObjectLiteralExpression(
@@ -300,17 +274,7 @@ function addParser(
 ): ts.PropertyAssignment {
   const imp = config.parser;
   const parserName = names(imp).propertyName;
-
-  const importStatement = ts.factory.createImportDeclaration(
-    undefined,
-    ts.factory.createImportClause(
-      false,
-      ts.factory.createIdentifier(parserName),
-      undefined
-    ),
-    ts.factory.createStringLiteral(imp)
-  );
-
+  const importStatement = generateRequire(parserName, imp, ts.factory);
   importsList.push(importStatement);
 
   return ts.factory.createPropertyAssignment(
@@ -319,7 +283,7 @@ function addParser(
   );
 }
 
-const DEFAULT_FLAT_CONFIG = `import { FlatCompat } from "@eslint/eslintrc";
+const DEFAULT_FLAT_CONFIG = `const { FlatCompat } = require('@eslint/eslintrc');
 const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
@@ -329,7 +293,7 @@ function createNodeList(
   importsList: ts.VariableStatement[],
   exportElements: ts.Expression[]
 ): ts.NodeArray<
-  ts.VariableStatement | ts.Identifier | ts.ExportAssignment | ts.SourceFile
+  ts.VariableStatement | ts.Identifier | ts.ExpressionStatement | ts.SourceFile
 > {
   return ts.factory.createNodeArray([
     // add plugin imports
@@ -342,11 +306,16 @@ function createNodeList(
       ts.ScriptKind.JS
     ),
     // creates:
-    // export default [ ... ];
-    ts.factory.createExportAssignment(
-      undefined,
-      false,
-      ts.factory.createArrayLiteralExpression(exportElements, true)
+    // module.exports = [ ... ];
+    ts.factory.createExpressionStatement(
+      ts.factory.createBinaryExpression(
+        ts.factory.createPropertyAccessExpression(
+          ts.factory.createIdentifier('module'),
+          ts.factory.createIdentifier('exports')
+        ),
+        ts.factory.createToken(ts.SyntaxKind.EqualsToken),
+        ts.factory.createArrayLiteralExpression(exportElements, true)
+      )
     ),
   ]);
 }
