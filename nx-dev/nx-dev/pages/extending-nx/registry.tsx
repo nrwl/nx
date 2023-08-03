@@ -13,6 +13,7 @@ import { useRef } from 'react';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../lib/packages.api';
+import * as qualityIndicators from './quality-indicators.json';
 
 declare const fetch: any;
 
@@ -50,10 +51,13 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
           name: plugin.packageName,
           description: plugin.description ?? '',
           url: plugin.path,
+          ...qualityIndicators[plugin.packageName],
+          nxVersion: 'official',
           isOfficial: true,
         })),
         ...pluginList.map((plugin) => ({
           ...plugin,
+          ...qualityIndicators[plugin.name],
           isOfficial: false,
         })),
       ],
