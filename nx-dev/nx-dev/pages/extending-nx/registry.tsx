@@ -52,6 +52,7 @@ export async function getStaticProps(): Promise<{ props: BrowseProps }> {
           description: plugin.description ?? '',
           url: plugin.path,
           ...qualityIndicators[plugin.packageName],
+          nxVersion: 'official',
           isOfficial: true,
         })),
         ...pluginList.map((plugin) => ({

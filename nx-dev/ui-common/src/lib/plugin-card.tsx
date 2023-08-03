@@ -26,7 +26,7 @@ export function PluginCard({
   nxVersion,
 }: PluginCardProps): JSX.Element {
   return (
-    <div className="focus-within:ring-focus-within:ring-blue-500 relative flex w-full overflow-hidden rounded-lg border border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 dark:border-slate-900 dark:bg-slate-800/60 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800">
+    <div className="focus-within:ring-focus-within:ring-blue-500 relative flex w-full rounded-lg border border border-slate-200 bg-white shadow-sm transition hover:bg-slate-50 dark:border-slate-900 dark:bg-slate-800/60 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800">
       <div className="flex w-full flex-col px-4 py-3">
         <h3 className="mb-4 flex items-center font-semibold leading-tight">
           <svg
@@ -45,7 +45,6 @@ export function PluginCard({
           href={url}
           target="_blank"
           rel="noreferrer"
-          title={name}
           className="focus:outline-none flex flex-col grow"
         >
           <span className="absolute inset-0" aria-hidden="true" />
@@ -67,10 +66,10 @@ export function PluginCard({
             </div>
             {isOfficial ? (
               <div
-                title="Official plugins are maintained by the Nx Team"
+                data-tooltip="Maintained by the Nx Team"
                 className="ml-1 my-1 border bg-green-50 border-green-300 text-green-600 dark:border-green-900 dark:bg-green-900/30 dark:text-green-400 rounded-full px-3 py-0.5 text-xs font-medium capitalize"
               >
-                Official
+                Nx Team
               </div>
             ) : (
               <div className="ml-1 my-1">
@@ -93,7 +92,7 @@ export function LastPublishedWidget({
     return <div className="w-20"></div>;
   }
   return (
-    <abbr title="Most Recent Release Date">
+    <abbr data-tooltip="Most Recent Release Date">
       <ClockIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ClockIcon>
       {/* yyyy-MM-dd */}
       <span>{new Date(lastPublishedDate).toISOString().slice(0, 10)}</span>
@@ -114,7 +113,7 @@ function NpmDownloadsWidget({
     return <div className="w-8"></div>;
   }
   return (
-    <abbr title="Monthly NPM Downloads">
+    <abbr data-tooltip="Monthly NPM Downloads">
       <ArrowDownIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ArrowDownIcon>
       {shortenNumber(npmDownloads)}
       <span className="md:hidden">
@@ -134,7 +133,7 @@ function GithubStarsWidget({
     return <div className="w-8"></div>;
   }
   return (
-    <abbr title="GitHub Stars">
+    <abbr data-tooltip="GitHub Stars">
       <StarIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></StarIcon>
       {shortenNumber(githubStars)}
       <span className="md:hidden">
@@ -161,7 +160,7 @@ function NxVersionWidget({ nxVersion }: { nxVersion: string | undefined }) {
     return <div className="w-20"></div>;
   }
   return (
-    <abbr title="Supported Nx Versions">
+    <abbr data-tooltip="Supported Nx Versions">
       {/* Nx Logo */}
       <svg
         role="img"
