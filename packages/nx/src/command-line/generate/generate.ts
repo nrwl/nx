@@ -54,7 +54,10 @@ async function promptForCollection(
   interactive: boolean,
   projectsConfiguration: ProjectsConfigurations
 ): Promise<string> {
-  const localPlugins = await getLocalWorkspacePlugins(projectsConfiguration);
+  const localPlugins = await getLocalWorkspacePlugins(
+    projectsConfiguration,
+    readNxJson()
+  );
 
   const installedCollections = Array.from(
     new Set(findInstalledPlugins().map((x) => x.name))
