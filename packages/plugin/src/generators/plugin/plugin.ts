@@ -85,8 +85,6 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       publishable: options.publishable,
       importPath: options.npmPackageName,
       skipFormat: true,
-      // TODO(leo): add option to this generator's schema
-      nameDirectoryFormat: 'derived',
     })
   );
 
