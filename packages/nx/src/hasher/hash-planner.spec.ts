@@ -2,13 +2,10 @@ import { TempFs } from '../utils/testing/temp-fs';
 let tempFs = new TempFs('task-planner');
 
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
-import {
-  InProcessTaskHasher,
-  LEGACY_FILESET_INPUTS,
-} from '../hasher/task-hasher';
-import { fileHasher } from '../hasher/file-hasher';
+import { InProcessTaskHasher } from './task-hasher';
+import { fileHasher } from './file-hasher';
 import { DependencyType, ProjectGraph } from '../config/project-graph';
-import { TaskPlanner } from './task-planner';
+import { HashPlanner } from './hash-planner';
 import { Task, TaskGraph } from '../config/task-graph';
 
 jest.mock('../utils/workspace-root', () => {
@@ -48,12 +45,24 @@ describe('task planner', () => {
     task: Task | Task[],
     taskGraph: TaskGraph,
     taskHasher: InProcessTaskHasher,
-    taskPlanner: TaskPlanner
+    hashPlanner: HashPlanner
   ) {
     if (!Array.isArray(task)) task = [task];
 
+    function getHashPlans(
+      tasks: Task[],
+      taskGraph: TaskGraph
+    ): Record<string, string[]> {
+      return tasks.reduce((acc, task) => {
+        acc[task.id] = hashPlanner.getHashPlan(task, taskGraph, [
+          task.target.project,
+        ]);
+        return acc;
+      }, {});
+    }
+
     const hashes = await taskHasher.hashTasks(task, taskGraph);
-    const plans = taskPlanner.getTaskPlans(task);
+    const plans = getHashPlans(task, taskGraph);
 
     let hashNodes = hashes.map((hash) => {
       return Object.keys(hash.details.nodes).sort();
@@ -157,13 +166,7 @@ describe('task planner', () => {
         fileHasher
       );
 
-      const planner = new TaskPlanner(
-        nxJson,
-        projectGraph,
-        taskGraph,
-        options.runtimeCacheInputs.map((r) => ({ runtime: r })),
-        LEGACY_FILESET_INPUTS
-      );
+      const planner = new HashPlanner(nxJson, projectGraph, options);
 
       await assertNodes(
         {
@@ -240,13 +243,7 @@ describe('task planner', () => {
       {},
       fileHasher
     );
-    const planner = new TaskPlanner(
-      nxJson,
-      projectGraph,
-      taskGraph,
-      [],
-      LEGACY_FILESET_INPUTS
-    );
+    const planner = new HashPlanner(nxJson, projectGraph, {});
 
     await assertNodes(
       {
@@ -334,13 +331,7 @@ describe('task planner', () => {
       {},
       fileHasher
     );
-    const planner = new TaskPlanner(
-      nxJson,
-      projectGraph,
-      taskGraph,
-      [],
-      LEGACY_FILESET_INPUTS
-    );
+    const planner = new HashPlanner(nxJson, projectGraph, {});
 
     await assertNodes(
       {
@@ -411,13 +402,7 @@ describe('task planner', () => {
       {},
       fileHasher
     );
-    const planner = new TaskPlanner(
-      nxJson,
-      projectGraph,
-      taskGraph,
-      [],
-      LEGACY_FILESET_INPUTS
-    );
+    const planner = new HashPlanner(nxJson, projectGraph, {});
 
     const tasks = [
       {
@@ -523,13 +508,7 @@ describe('task planner', () => {
           fileHasher
         );
 
-        const planner = new TaskPlanner(
-          nxJson as any,
-          projectGraph,
-          taskGraph,
-          [],
-          LEGACY_FILESET_INPUTS
-        );
+        const planner = new HashPlanner(nxJson as any, projectGraph, {});
 
         const tasks = [
           {
@@ -624,13 +603,7 @@ describe('task planner', () => {
       fileHasher
     );
 
-    const planner = new TaskPlanner(
-      nxJson,
-      projectGraph,
-      taskGraph,
-      [],
-      LEGACY_FILESET_INPUTS
-    );
+    const planner = new HashPlanner(nxJson, projectGraph, {});
 
     let tasks = [
       {
@@ -699,13 +672,7 @@ describe('task planner', () => {
       {},
       fileHasher
     );
-    let planner = new TaskPlanner(
-      nxJson,
-      projectGraph,
-      taskGraph,
-      [],
-      LEGACY_FILESET_INPUTS
-    );
+    let planner = new HashPlanner(nxJson, projectGraph, {});
 
     let tasks = [
       {
@@ -774,13 +741,7 @@ describe('task planner', () => {
       {},
       fileHasher
     );
-    const planner = new TaskPlanner(
-      nxJson,
-      projectGraph,
-      taskGraph,
-      [],
-      LEGACY_FILESET_INPUTS
-    );
+    const planner = new HashPlanner(nxJson, projectGraph, {});
 
     let tasks = [
       {

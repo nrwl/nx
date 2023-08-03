@@ -13,8 +13,7 @@ import {
 import { TargetDependencyConfig } from '../devkit-exports';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { output } from '../utils/output';
-import { TaskPlanner } from './task-planner';
-import { LEGACY_FILESET_INPUTS } from '../hasher/task-hasher';
+import { HashPlanner } from '../hasher/hash-planner';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -424,16 +423,13 @@ export function createTaskGraphWithPlan(
     excludeTaskDependencies
   );
 
-  const plans = new TaskPlanner(
-    nxJson,
-    projectGraph,
-    taskGraph,
-    [],
-    LEGACY_FILESET_INPUTS
-  ).getTaskPlans(Object.values(taskGraph.tasks));
+  const planner = new HashPlanner(nxJson, projectGraph, {});
 
   for (let taskId of Object.keys(taskGraph.tasks)) {
-    taskGraph.tasks[taskId].inputs = plans[taskId];
+    const task = taskGraph.tasks[taskId];
+    taskGraph.tasks[taskId].inputs = planner.getHashPlan(task, taskGraph, [
+      task.id,
+    ]);
   }
 
   return taskGraph;

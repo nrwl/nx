@@ -13,29 +13,33 @@ import {
   getNamedInputs,
   isDepsOutput,
   isSelfInput,
-} from '../hasher/task-hasher';
+  LEGACY_FILESET_INPUTS,
+} from './task-hasher';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { workspaceRoot } from '../utils/workspace-root';
-import { getOutputsForTargetAndConfiguration } from './utils';
+import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 
-export class TaskPlanner {
+export class HashPlanner {
+  legacyRuntimeInputs: ExpandedSelfInput[];
   constructor(
     private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
-    private readonly taskGraph: TaskGraph,
-    private readonly legacyRuntimeInputs: { runtime: string }[],
-    private readonly legacyFilesetInputs: { fileset: string }[]
-  ) {}
+    private options: { runtimeCacheInputs?: string[] }
+  ) {
+    const legacyRuntimeInputs: ExpandedSelfInput[] = (
+      this.options && this.options.runtimeCacheInputs
+        ? this.options.runtimeCacheInputs
+        : []
+    ).map((r) => ({ runtime: r }));
+    if (process.env.NX_CLOUD_ENCRYPTION_KEY) {
+      legacyRuntimeInputs.push({ env: 'NX_CLOUD_ENCRYPTION_KEY' });
+    }
 
-  getTaskPlans(tasks: Task[]): Record<string, string[]> {
-    return tasks.reduce((acc, task) => {
-      acc[task.id] = this.getTaskPlan(task, [task.target.project]);
-      return acc;
-    }, {});
+    this.legacyRuntimeInputs = legacyRuntimeInputs;
   }
 
-  getTaskPlan(task: Task, visited: string[]): string[] {
+  getHashPlan(task: Task, taskGraph: TaskGraph, visited: string[]): string[] {
     const { selfInputs, depsInputs, depsOutputs, projectInputs } = getInputs(
       task,
       this.projectGraph,
@@ -52,6 +56,7 @@ export class TaskPlanner {
       task.target.project,
       task,
       { selfInputs, depsInputs, depsOutputs, projectInputs },
+      taskGraph,
       visited,
       // TODO(cammisuli): put this back when the task hasher is replaced
       // target.includes('AllExternalDependencies')
@@ -65,6 +70,7 @@ export class TaskPlanner {
     projectName: string,
     task: Task,
     namedInput: string,
+    taskGraph: TaskGraph,
     visited: string[],
     skipExternalDeps
   ): string[] {
@@ -83,6 +89,7 @@ export class TaskPlanner {
       projectName,
       task,
       { selfInputs, depsInputs, depsOutputs, projectInputs: [] },
+      taskGraph,
       visited,
       skipExternalDeps
     );
@@ -97,6 +104,7 @@ export class TaskPlanner {
       depsOutputs: ExpandedDepsOutput[];
       projectInputs: { input: string; projects: string[] }[];
     },
+    taskGraph: TaskGraph,
     visited: string[],
     skipExternalDeps
   ): string[] {
@@ -107,11 +115,12 @@ export class TaskPlanner {
       task,
       inputs.depsInputs,
       projectGraphDeps,
+      taskGraph,
       visited,
       skipExternalDeps
     );
 
-    const depsOut = this.getDepsOutputs(task, inputs.depsOutputs);
+    const depsOut = this.getDepsOutputs(task, taskGraph, inputs.depsOutputs);
     const projects = this.getProjectInputs(inputs.projectInputs);
 
     return Array.from(new Set([...self, ...deps, ...depsOut, ...projects]));
@@ -121,6 +130,7 @@ export class TaskPlanner {
     task: Task,
     inputs: { input: string }[],
     projectGraphDeps: ProjectGraphDependency[],
+    taskGraph: TaskGraph,
     visited: string[],
     skipExternalDeps
   ): string[] {
@@ -137,6 +147,7 @@ export class TaskPlanner {
                   d.target,
                   task,
                   input.input || 'default',
+                  taskGraph,
                   visited,
                   skipExternalDeps
                 );
@@ -163,6 +174,7 @@ export class TaskPlanner {
 
   private getDepsOutputs(
     task: Task,
+    taskGraph: TaskGraph,
     depsOutputs: ExpandedDepsOutput[]
   ): string[] {
     if (depsOutputs.length === 0) {
@@ -171,7 +183,12 @@ export class TaskPlanner {
     const result: string[] = [];
     for (const { dependentTasksOutputFiles, transitive } of depsOutputs) {
       result.push(
-        ...this.getDepOutput(task, dependentTasksOutputFiles, transitive)
+        ...this.getDepOutput(
+          task,
+          taskGraph,
+          dependentTasksOutputFiles,
+          transitive
+        )
       );
     }
     return result;
@@ -179,17 +196,18 @@ export class TaskPlanner {
 
   private getDepOutput(
     task: Task,
+    taskGraph: TaskGraph,
     dependentTasksOutputFiles: string,
     transitive?: boolean
   ): string[] {
     // task has no dependencies
-    if (!this.taskGraph.dependencies[task.id]) {
+    if (!taskGraph.dependencies[task.id]) {
       return [];
     }
 
     const inputs: string[] = [];
-    for (const d of this.taskGraph.dependencies[task.id]) {
-      const childTask = this.taskGraph.tasks[d];
+    for (const d of taskGraph.dependencies[task.id]) {
+      const childTask = taskGraph.tasks[d];
       const outputs = getOutputsForTargetAndConfiguration(
         childTask,
         this.projectGraph.nodes[childTask.target.project]
@@ -207,7 +225,12 @@ export class TaskPlanner {
 
       if (transitive) {
         inputs.push(
-          ...this.getDepOutput(childTask, dependentTasksOutputFiles, transitive)
+          ...this.getDepOutput(
+            childTask,
+            taskGraph,
+            dependentTasksOutputFiles,
+            transitive
+          )
         );
       }
     }
@@ -326,7 +349,7 @@ export class TaskPlanner {
       ...this.projectFileSetInputs(projectName, projectFilesets),
       ...[
         ...workspaceFilesets,
-        ...this.legacyFilesetInputs.map((input) => input.fileset),
+        ...LEGACY_FILESET_INPUTS.map((input) => input.fileset),
       ].map((fileset) => this.rootFilesetInput(fileset)),
       ...[...notFilesets, ...this.legacyRuntimeInputs].map((r) =>
         r['runtime'] ? this.runtimeInput(r['runtime']) : this.envInput(r['env'])
