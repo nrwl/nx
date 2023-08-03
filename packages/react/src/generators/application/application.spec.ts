@@ -590,6 +590,7 @@ describe('app', () => {
         ],
         "ignorePatterns": [
           "!**/*",
+          "**/*.d.ts",
         ],
         "overrides": [
           {

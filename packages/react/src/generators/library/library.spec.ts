@@ -189,41 +189,42 @@ describe('lib', () => {
 
     const eslintJson = readJson(tree, 'libs/my-lib/.eslintrc.json');
     expect(eslintJson).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "plugin:@nx/react",
-            "../../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      {
+        "extends": [
+          "plugin:@nx/react",
+          "../../.eslintrc.json",
+        ],
+        "ignorePatterns": [
+          "!**/*",
+          "**/*.d.ts",
+        ],
+        "overrides": [
+          {
+            "files": [
+              "*.ts",
+              "*.tsx",
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": {},
+          },
+          {
+            "files": [
+              "*.ts",
+              "*.tsx",
+            ],
+            "rules": {},
+          },
+          {
+            "files": [
+              "*.js",
+              "*.jsx",
+            ],
+            "rules": {},
+          },
+        ],
+      }
+    `);
   });
   it('should update jest.config.ts for babel', async () => {
     await libraryGenerator(tree, {

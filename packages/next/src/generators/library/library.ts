@@ -89,15 +89,6 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
       if (!json.files) {
         json.files = [];
       }
-      json.files = json.files.map((path: string) => {
-        if (path.endsWith('react/typings/image.d.ts')) {
-          return path.replace(
-            '@nx/react/typings/image.d.ts',
-            '@nx/next/typings/image.d.ts'
-          );
-        }
-        return path;
-      });
       if (!json.compilerOptions) {
         json.compilerOptions = {
           types: [],
@@ -109,6 +100,24 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
       json.compilerOptions.types.push('next');
       return json;
     }
+  );
+
+  // add image.d.ts to lib src/typings
+  host.write(
+    joinPathFragments(options.projectRoot, 'src/lib', 'typings/image.d.ts'),
+    `
+   /// <reference types="next/image-types/global" />
+
+  declare module '*.svg' {
+    import * as React from 'react';
+
+    export const ReactComponent: React.FunctionComponent<
+      React.SVGProps<SVGSVGElement> & { title?: string }
+    >;
+
+    const content: any;
+    export default content;
+  }`
   );
 
   if (!options.skipFormat) {

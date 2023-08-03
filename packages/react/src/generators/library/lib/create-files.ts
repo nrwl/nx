@@ -41,6 +41,15 @@ export function createFiles(host: Tree, options: NormalizedSchema) {
     );
   }
 
+  if (options.style === 'styled-jsx') {
+    generateFiles(
+      host,
+      joinPathFragments(__dirname, '../files/styled-jsx'),
+      options.projectRoot,
+      substitutions
+    );
+  }
+
   if (options.compiler === 'babel') {
     writeJson(host, joinPathFragments(options.projectRoot, '.babelrc'), {
       presets: [

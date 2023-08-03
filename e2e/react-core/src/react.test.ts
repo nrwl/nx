@@ -265,6 +265,9 @@ describe('React Applications', () => {
       expect(readFile(`dist/apps/${appName}/styles.css`)).toMatch(
         /Comic Sans MS/
       );
+      // Check typings exist
+      checkFilesExist(`apps/${appName}/src/typings/cssmodule.d.ts`);
+      checkFilesExist(`apps/${appName}/src/typings/image.d.ts`);
     });
   });
 

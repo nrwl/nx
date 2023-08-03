@@ -139,6 +139,13 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       templateVariables
     );
   }
+  // Add typings
+  generateFiles(
+    host,
+    join(__dirname, '../files/base'),
+    options.appProjectRoot,
+    templateVariables
+  );
 
   generateFiles(
     host,
