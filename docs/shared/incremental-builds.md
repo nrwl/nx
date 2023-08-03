@@ -68,8 +68,8 @@ If you are only planning to use incremental builds to speed up your CI, then the
 
 ## Using the @nx/js:tsc Batch Implementation
 
-{% callout type="check" title="Available since Nx 16.5.0" %}
-The `@nx/js:tsc` batch implementation was introduced in Nx **16.5.0**.
+{% callout type="check" title="Available since Nx 16.6.0" %}
+The `@nx/js:tsc` batch implementation was introduced in Nx **16.6.0**.
 {% /callout %}
 
 If you're using the `@nx/js:tsc` to build your projects, you can opt-in to use its batch implementation. The batch implementation uses the [TypeScript APIs for incremental builds](https://www.typescriptlang.org/docs/handbook/project-references.html#build-mode-for-typescript) and batches the execution of the tasks into a single process. This results in a much faster build time when compared to the default implementation (the bigger the task graph to run, the more the performance improvements).

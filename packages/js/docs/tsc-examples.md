@@ -74,6 +74,10 @@ npx nx build ts-lib --external=none
 {% /tab %}
 {% tab label="Batch mode execution" %}
 
+{% callout type="check" title="Available since Nx 16.6.0" %}
+The `@nx/js:tsc` batch implementation was introduced in Nx **16.6.0**.
+{% /callout %}
+
 The `@nx/js:tsc` executor supports running multiple tasks in a single process. When running in batch mode, the executor uses the [TypeScript APIs for incremental builds](https://www.typescriptlang.org/docs/handbook/project-references.html#build-mode-for-typescript). This results in a much faster build time when compared to the default implementation (the bigger the task graph to run, the more the performance improvements).
 
 {% callout type="warning" title="Experimental feature" %}
