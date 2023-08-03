@@ -7,15 +7,11 @@ const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
 export default [
-    { ignores: ["**/*"] },
-    { ignores: ["node_modules"] },
-    { plugins: {
-            "@nx": nxEslintPlugin
-        } },
-    { env: {
-            browser: true,
-            node: true
-        } },
+    { plugins: { "@nx": nxEslintPlugin } },
+    { languageOptions: { env: {
+                browser: true,
+                node: true
+            } } },
     {
         files: [
             "*.ts",
@@ -50,7 +46,9 @@ export default [
         ],
         extends: ["plugin:@nx/javascript"],
         rules: {}
-    }
+    },
+    { ignores: ["**/*"] },
+    { ignores: ["node_modules"] }
 ];
 "
 `;
@@ -62,11 +60,7 @@ const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
 export default [
-    { ignores: ["**/*"] },
-    { ignores: ["ignore/me"] },
-    { plugins: {
-            "@nx": nxEslintPlugin
-        } },
+    { plugins: { "@nx": nxEslintPlugin } },
     {
         files: [
             "*.ts",
@@ -101,7 +95,9 @@ export default [
         ],
         extends: ["plugin:@nx/javascript"],
         rules: {}
-    }
+    },
+    { ignores: ["**/*"] },
+    { ignores: ["ignore/me"] }
 ];
 "
 `;
@@ -114,16 +110,8 @@ const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
 export default [
-    { ignores: ["**/*"] },
-    { ignores: ["node_modules"] },
-    { plugins: {
-            "@nx": nxEslintPlugin
-        } },
-    {
-        languageOptions: {
-            parser: typescriptEslintParser
-        }
-    },
+    { plugins: { "@nx": nxEslintPlugin } },
+    { languageOptions: { parser: typescriptEslintParser } },
     {
         files: [
             "*.ts",
@@ -158,7 +146,9 @@ export default [
         ],
         extends: ["plugin:@nx/javascript"],
         rules: {}
-    }
+    },
+    { ignores: ["**/*"] },
+    { ignores: ["node_modules"] }
 ];
 "
 `;
@@ -173,8 +163,6 @@ const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
 export default [
-    { ignores: ["**/*"] },
-    { ignores: ["node_modules"] },
     { plugins: {
             "eslint-plugin-import": eslintPluginImport,
             "single-name": eslintPluginSingleName,
@@ -215,7 +203,9 @@ export default [
         ],
         extends: ["plugin:@nx/javascript"],
         rules: {}
-    }
+    },
+    { ignores: ["**/*"] },
+    { ignores: ["node_modules"] }
 ];
 "
 `;
@@ -227,11 +217,7 @@ const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
 export default [
-    { ignores: ["**/*"] },
-    { ignores: ["node_modules"] },
-    { plugins: {
-            "@nx": nxEslintPlugin
-        } },
+    { plugins: { "@nx": nxEslintPlugin } },
     { settings: { sharedData: "Hello" } },
     {
         files: [
@@ -267,7 +253,9 @@ export default [
         ],
         extends: ["plugin:@nx/javascript"],
         rules: {}
-    }
+    },
+    { ignores: ["**/*"] },
+    { ignores: ["node_modules"] }
 ];
 "
 `;
@@ -279,11 +267,7 @@ const eslintrc = new FlatCompat({
     baseDirectory: __dirname
 });
 export default [
-    { ignores: ["**/*"] },
-    { ignores: ["node_modules"] },
-    { plugins: {
-            "@nx": nxEslintPlugin
-        } },
+    { plugins: { "@nx": nxEslintPlugin } },
     {
         files: [
             "*.ts",
@@ -318,7 +302,9 @@ export default [
         ],
         extends: ["plugin:@nx/javascript"],
         rules: {}
-    }
+    },
+    { ignores: ["**/*"] },
+    { ignores: ["node_modules"] }
 ];
 "
 `;
@@ -331,7 +317,6 @@ const eslintrc = new FlatCompat({
 });
 export default [
   ...baseConfig,
-  { ignores: ['!**/*'] },
   {
     files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
     rules: {},
@@ -344,6 +329,7 @@ export default [
     files: ['*.js', '*.jsx'],
     rules: {},
   },
+  { ignores: ['!**/*'] },
 ];
 "
 `;

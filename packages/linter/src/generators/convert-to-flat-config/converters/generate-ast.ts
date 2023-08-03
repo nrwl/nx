@@ -15,12 +15,14 @@ export function generateAst<T>(input: unknown, factory: ts.NodeFactory): T {
   }
   if (typeof input === 'object') {
     return factory.createObjectLiteralExpression(
-      Object.entries(input).map(([key, value]) =>
-        factory.createPropertyAssignment(
-          key,
-          generateAst<ts.Expression>(value, factory)
-        )
-      ),
+      Object.entries(input)
+        .filter(([_, value]) => value !== undefined)
+        .map(([key, value]) =>
+          factory.createPropertyAssignment(
+            key,
+            generateAst<ts.Expression>(value, factory)
+          )
+        ),
       Object.keys(input).length > 1 // multiline only if more than one property
     ) as T;
   }

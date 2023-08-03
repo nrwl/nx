@@ -36,6 +36,71 @@ describe('convert-to-flat-config generator', () => {
     ).toMatchSnapshot();
   });
 
+  it('should add plugin extends', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.extends = ['plugin:storybook/recommended'];
+      return json;
+    });
+    await convertToFlatConfigGenerator(tree, options);
+
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+      "import nxEslintPlugin from "@nx/eslint-plugin";
+      import { FlatCompat } from "@eslint/eslintrc";
+      const eslintrc = new FlatCompat({
+          baseDirectory: __dirname
+      });
+      export default [
+          ...eslintrc.extends("plugin:storybook/recommended"),
+          { plugins: { "@nx": nxEslintPlugin } },
+          {
+              files: [
+                  "*.ts",
+                  "*.tsx",
+                  "*.js",
+                  "*.jsx"
+              ],
+              rules: { @nx/enforce-module-boundaries: [
+                      "error",
+                      {
+                          enforceBuildableLibDependency: true,
+                          allow: [],
+                          depConstraints: [{
+                                  sourceTag: "*",
+                                  onlyDependOnLibsWithTags: ["*"]
+                              }]
+                      }
+                  ] }
+          },
+          {
+              files: [
+                  "*.ts",
+                  "*.tsx"
+              ],
+              extends: ["plugin:@nx/typescript"],
+              rules: {}
+          },
+          {
+              files: [
+                  "*.js",
+                  "*.jsx"
+              ],
+              extends: ["plugin:@nx/javascript"],
+              rules: {}
+          },
+          { ignores: ["**/*"] },
+          { ignores: ["node_modules"] }
+      ];
+      "
+    `);
+  });
+
   it('should add global gitignores', async () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
@@ -126,5 +191,72 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should add linter options', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.noInlineConfig = true;
+      return json;
+    });
+    await convertToFlatConfigGenerator(tree, options);
+
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+      "import nxEslintPlugin from "@nx/eslint-plugin";
+      import { FlatCompat } from "@eslint/eslintrc";
+      const eslintrc = new FlatCompat({
+          baseDirectory: __dirname
+      });
+      export default [
+          { plugins: { "@nx": nxEslintPlugin } },
+          { linterOptions: {
+                  noInlineConfig: true
+              } },
+          {
+              files: [
+                  "*.ts",
+                  "*.tsx",
+                  "*.js",
+                  "*.jsx"
+              ],
+              rules: { @nx/enforce-module-boundaries: [
+                      "error",
+                      {
+                          enforceBuildableLibDependency: true,
+                          allow: [],
+                          depConstraints: [{
+                                  sourceTag: "*",
+                                  onlyDependOnLibsWithTags: ["*"]
+                              }]
+                      }
+                  ] }
+          },
+          {
+              files: [
+                  "*.ts",
+                  "*.tsx"
+              ],
+              extends: ["plugin:@nx/typescript"],
+              rules: {}
+          },
+          {
+              files: [
+                  "*.js",
+                  "*.jsx"
+              ],
+              extends: ["plugin:@nx/javascript"],
+              rules: {}
+          },
+          { ignores: ["**/*"] },
+          { ignores: ["node_modules"] }
+      ];
+      "
+    `);
   });
 });

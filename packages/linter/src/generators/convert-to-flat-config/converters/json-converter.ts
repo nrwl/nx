@@ -17,9 +17,104 @@ export function convertEslintJsonToFlatConfig(
 ) {
   const importsList: ts.VariableStatement[] = [];
   const exportElements: ts.Expression[] = [];
+  let combinedConfig: ts.PropertyAssignment[] = [];
+  let languageOptions: ts.PropertyAssignment[] = [];
 
   if (config.extends) {
     addExtends(importsList, exportElements, config);
+  }
+
+  if (config.plugins) {
+    addPlugins(importsList, exportElements, config);
+  }
+
+  if (config.parser) {
+    languageOptions.push(addParser(importsList, config));
+  }
+
+  if (config.parserOptions) {
+    languageOptions.push(
+      ts.factory.createPropertyAssignment(
+        'parserOptions',
+        generateAst(config.parserOptions, ts.factory)
+      )
+    );
+  }
+
+  if (config.env) {
+    languageOptions.push(
+      ts.factory.createPropertyAssignment(
+        'env',
+        generateAst(config.env, ts.factory)
+      )
+    );
+  }
+
+  if (config.globals) {
+    languageOptions.push(
+      ts.factory.createPropertyAssignment(
+        'globals',
+        generateAst(config.globals, ts.factory)
+      )
+    );
+  }
+
+  if (config.settings) {
+    combinedConfig.push(
+      ts.factory.createPropertyAssignment(
+        'settings',
+        generateAst(config.settings, ts.factory)
+      )
+    );
+  }
+
+  if (
+    config.noInlineConfig !== undefined ||
+    config.reportUnusedDisableDirectives !== undefined
+  ) {
+    combinedConfig.push(
+      ts.factory.createPropertyAssignment(
+        'linterOptions',
+        generateAst(
+          {
+            noInlineConfig: config.noInlineConfig,
+            reportUnusedDisableDirectives: config.reportUnusedDisableDirectives,
+          },
+          ts.factory
+        )
+      )
+    );
+  }
+
+  if (languageOptions.length > 0) {
+    combinedConfig.push(
+      ts.factory.createPropertyAssignment(
+        'languageOptions',
+        ts.factory.createObjectLiteralExpression(
+          languageOptions,
+          languageOptions.length > 1
+        )
+      )
+    );
+  }
+
+  if (combinedConfig.length > 0) {
+    exportElements.push(
+      ts.factory.createObjectLiteralExpression(
+        combinedConfig,
+        combinedConfig.length > 1
+      )
+    );
+  }
+
+  if (config.rules) {
+    exportElements.push(generateAst({ rules: config.rules }, ts.factory));
+  }
+
+  if (config.overrides) {
+    config.overrides.forEach((override) => {
+      exportElements.push(generateAst(override, ts.factory));
+    });
   }
 
   if (config.ignorePatterns) {
@@ -35,42 +130,6 @@ export function convertEslintJsonToFlatConfig(
       .split('\n')
       .filter((line) => line.length > 0);
     exportElements.push(generateAst({ ignores: patterns }, ts.factory));
-  }
-
-  if (config.plugins) {
-    addPlugins(importsList, exportElements, config);
-  }
-
-  if (config.parser) {
-    addParser(importsList, exportElements, config);
-  }
-
-  if (config.parserOptions) {
-    exportElements.push(
-      generateAst({ parserOptions: config.parserOptions }, ts.factory)
-    );
-  }
-
-  if (config.rules) {
-    exportElements.push(generateAst({ rules: config.rules }, ts.factory));
-  }
-
-  if (config.settings) {
-    exportElements.push(generateAst({ settings: config.settings }, ts.factory));
-  }
-
-  if (config.env) {
-    exportElements.push(generateAst({ env: config.env }, ts.factory));
-  }
-
-  if (config.globals) {
-    exportElements.push(generateAst({ globals: config.globals }, ts.factory));
-  }
-
-  if (config.overrides) {
-    config.overrides.forEach((override) => {
-      exportElements.push(generateAst(override, ts.factory));
-    });
   }
 
   tree.delete(join(root, sourceFile));
@@ -125,17 +184,52 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
   // TODO(meeroslav): Check if this is the recommended way of doing it
   const pluginExtends = extendsConfig.filter((imp) => !imp.match(/^\.?(\.\/)/));
   if (pluginExtends.length) {
-    const pluginExtendsSpread = ts.factory.createSpreadElement(
-      ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier('eslintrc'),
-          ts.factory.createIdentifier('extends')
-        ),
-        undefined,
-        []
-      )
+    const eslintPluginExtends = pluginExtends.filter((imp) =>
+      imp.startsWith('eslint:')
     );
-    configBlocks.push(pluginExtendsSpread);
+    const externalPluginExtends = pluginExtends.filter(
+      (imp) => !imp.startsWith('eslint:')
+    );
+
+    if (eslintPluginExtends.length) {
+      const importStatement = ts.factory.createImportDeclaration(
+        undefined,
+        ts.factory.createImportClause(
+          false,
+          ts.factory.createIdentifier('js'),
+          undefined
+        ),
+        ts.factory.createStringLiteral('@eslint/js')
+      );
+
+      importsList.push(importStatement);
+      eslintPluginExtends.forEach((plugin) => {
+        configBlocks.push(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createPropertyAccessExpression(
+              ts.factory.createIdentifier('js'),
+              ts.factory.createIdentifier('configs')
+            ),
+            ts.factory.createIdentifier(plugin.slice(7)) // strip 'eslint:' prefix
+          )
+        );
+      });
+    }
+    if (externalPluginExtends) {
+      const pluginExtendsSpread = ts.factory.createSpreadElement(
+        ts.factory.createCallExpression(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createIdentifier('eslintrc'),
+            ts.factory.createIdentifier('extends')
+          ),
+          undefined,
+          externalPluginExtends.map((plugin) =>
+            ts.factory.createStringLiteral(plugin)
+          )
+        )
+      );
+      configBlocks.push(pluginExtendsSpread);
+    }
   }
 }
 
@@ -183,21 +277,29 @@ function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
               ts.factory.createIdentifier(varName)
             );
           }),
-          true
+          mappedPlugins.length > 1
         )
       ),
+      ...(config.processor
+        ? [
+            ts.factory.createPropertyAssignment(
+              'processor',
+              ts.factory.createStringLiteral(config.processor)
+            ),
+          ]
+        : []),
     ],
     false
   );
   configBlocks.push(pluginsAst);
 }
 
-function addParser(importsList, configBlocks, config: ESLint.ConfigData) {
-  // TODO we need to find import for each plugin
+function addParser(
+  importsList,
+  config: ESLint.ConfigData
+): ts.PropertyAssignment {
   const imp = config.parser;
-  const parserName = names(
-    imp.replace(/^@/, '').split('/').join('-')
-  ).propertyName;
+  const parserName = names(imp).propertyName;
 
   const importStatement = ts.factory.createImportDeclaration(
     undefined,
@@ -211,24 +313,9 @@ function addParser(importsList, configBlocks, config: ESLint.ConfigData) {
 
   importsList.push(importStatement);
 
-  configBlocks.push(
-    ts.factory.createObjectLiteralExpression(
-      [
-        ts.factory.createPropertyAssignment(
-          'languageOptions',
-          ts.factory.createObjectLiteralExpression(
-            [
-              ts.factory.createPropertyAssignment(
-                'parser',
-                ts.factory.createIdentifier(parserName)
-              ),
-            ],
-            true
-          )
-        ),
-      ],
-      true
-    )
+  return ts.factory.createPropertyAssignment(
+    'parser',
+    ts.factory.createIdentifier(parserName)
   );
 }
 
