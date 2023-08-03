@@ -19,7 +19,7 @@ export function generateAst<T>(input: unknown, factory: ts.NodeFactory): T {
         .filter(([_, value]) => value !== undefined)
         .map(([key, value]) =>
           factory.createPropertyAssignment(
-            key,
+            isValidKey(key) ? key : factory.createStringLiteral(key),
             generateAst<ts.Expression>(value, factory)
           )
         ),
@@ -37,4 +37,8 @@ export function generateAst<T>(input: unknown, factory: ts.NodeFactory): T {
   }
   // since we are parsing JSON, this should never happen
   throw new Error(`Unknown type: ${typeof input}`);
+}
+
+function isValidKey(key: string): boolean {
+  return /^[a-zA-Z0-9_]+$/.test(key);
 }

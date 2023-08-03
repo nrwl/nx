@@ -51,51 +51,44 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "import nxEslintPlugin from "@nx/eslint-plugin";
-      import { FlatCompat } from "@eslint/eslintrc";
+      "import nxEslintPlugin from '@nx/eslint-plugin';
+      import { FlatCompat } from '@eslint/eslintrc';
       const eslintrc = new FlatCompat({
-          baseDirectory: __dirname
+        baseDirectory: __dirname,
       });
       export default [
-          ...eslintrc.extends("plugin:storybook/recommended"),
-          { plugins: { "@nx": nxEslintPlugin } },
-          {
-              files: [
-                  "*.ts",
-                  "*.tsx",
-                  "*.js",
-                  "*.jsx"
-              ],
-              rules: { @nx/enforce-module-boundaries: [
-                      "error",
-                      {
-                          enforceBuildableLibDependency: true,
-                          allow: [],
-                          depConstraints: [{
-                                  sourceTag: "*",
-                                  onlyDependOnLibsWithTags: ["*"]
-                              }]
-                      }
-                  ] }
+        ...eslintrc.extends('plugin:storybook/recommended'),
+        { plugins: { '@nx': nxEslintPlugin } },
+        {
+          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          rules: {
+            '@nx/enforce-module-boundaries': [
+              'error',
+              {
+                enforceBuildableLibDependency: true,
+                allow: [],
+                depConstraints: [
+                  {
+                    sourceTag: '*',
+                    onlyDependOnLibsWithTags: ['*'],
+                  },
+                ],
+              },
+            ],
           },
-          {
-              files: [
-                  "*.ts",
-                  "*.tsx"
-              ],
-              extends: ["plugin:@nx/typescript"],
-              rules: {}
-          },
-          {
-              files: [
-                  "*.js",
-                  "*.jsx"
-              ],
-              extends: ["plugin:@nx/javascript"],
-              rules: {}
-          },
-          { ignores: ["**/*"] },
-          { ignores: ["node_modules"] }
+        },
+        {
+          files: ['*.ts', '*.tsx'],
+          extends: ['plugin:@nx/typescript'],
+          rules: {},
+        },
+        {
+          files: ['*.js', '*.jsx'],
+          extends: ['plugin:@nx/javascript'],
+          rules: {},
+        },
+        { ignores: ['**/*'] },
+        { ignores: ['node_modules'] },
       ];
       "
     `);
@@ -208,53 +201,48 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "import nxEslintPlugin from "@nx/eslint-plugin";
-      import { FlatCompat } from "@eslint/eslintrc";
+      "import nxEslintPlugin from '@nx/eslint-plugin';
+      import { FlatCompat } from '@eslint/eslintrc';
       const eslintrc = new FlatCompat({
-          baseDirectory: __dirname
+        baseDirectory: __dirname,
       });
       export default [
-          { plugins: { "@nx": nxEslintPlugin } },
-          { linterOptions: {
-                  noInlineConfig: true
-              } },
-          {
-              files: [
-                  "*.ts",
-                  "*.tsx",
-                  "*.js",
-                  "*.jsx"
-              ],
-              rules: { @nx/enforce-module-boundaries: [
-                      "error",
-                      {
-                          enforceBuildableLibDependency: true,
-                          allow: [],
-                          depConstraints: [{
-                                  sourceTag: "*",
-                                  onlyDependOnLibsWithTags: ["*"]
-                              }]
-                      }
-                  ] }
+        { plugins: { '@nx': nxEslintPlugin } },
+        {
+          linterOptions: {
+            noInlineConfig: true,
           },
-          {
-              files: [
-                  "*.ts",
-                  "*.tsx"
-              ],
-              extends: ["plugin:@nx/typescript"],
-              rules: {}
+        },
+        {
+          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          rules: {
+            '@nx/enforce-module-boundaries': [
+              'error',
+              {
+                enforceBuildableLibDependency: true,
+                allow: [],
+                depConstraints: [
+                  {
+                    sourceTag: '*',
+                    onlyDependOnLibsWithTags: ['*'],
+                  },
+                ],
+              },
+            ],
           },
-          {
-              files: [
-                  "*.js",
-                  "*.jsx"
-              ],
-              extends: ["plugin:@nx/javascript"],
-              rules: {}
-          },
-          { ignores: ["**/*"] },
-          { ignores: ["node_modules"] }
+        },
+        {
+          files: ['*.ts', '*.tsx'],
+          extends: ['plugin:@nx/typescript'],
+          rules: {},
+        },
+        {
+          files: ['*.js', '*.jsx'],
+          extends: ['plugin:@nx/javascript'],
+          rules: {},
+        },
+        { ignores: ['**/*'] },
+        { ignores: ['node_modules'] },
       ];
       "
     `);
