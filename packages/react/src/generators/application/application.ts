@@ -7,7 +7,6 @@ import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
 import { addProject, maybeJs } from './lib/add-project';
-import { addCypress } from './lib/add-cypress';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
@@ -39,6 +38,7 @@ import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import * as chalk from 'chalk';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
+import { addE2e } from './lib/add-e2e';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -70,7 +70,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     );
 
     if (!options.skipPackageJson) {
-      const installTask = await addDependenciesToPackageJson(
+      const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
         extraEslintDependencies.devDependencies
@@ -189,8 +189,8 @@ export async function applicationGenerator(
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
 
-  const cypressTask = await addCypress(host, options);
-  tasks.push(cypressTask);
+  const e2eTask = await addE2e(host, options);
+  tasks.push(e2eTask);
 
   if (options.unitTestRunner === 'jest') {
     const jestTask = await addJest(host, options);
