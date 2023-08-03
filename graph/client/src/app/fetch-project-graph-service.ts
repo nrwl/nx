@@ -31,4 +31,15 @@ export class FetchProjectGraphService implements ProjectGraphService {
 
     return response.json();
   }
+
+  async getExpandedTaskInputs(
+    taskId: string
+  ): Promise<Record<string, string[]>> {
+    const request = new Request(`task-inputs.json?taskId=${taskId}`, {
+      mode: 'no-cors',
+    });
+
+    const response = await fetch(request);
+    return await response.json();
+  }
 }

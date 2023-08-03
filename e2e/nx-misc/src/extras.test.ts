@@ -1,3 +1,4 @@
+import { parseJson } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -8,6 +9,7 @@ import {
   setMaxWorkers,
   uniq,
   updateFile,
+  readFile,
   updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
@@ -319,6 +321,116 @@ describe('Extra Nx Misc Tests', () => {
       );
       const unitTestsOutput = runCLI(`test ${appName}`);
       expect(unitTestsOutput).toContain('Successfully ran target test');
+    });
+  });
+
+  describe('task graph inputs', () => {
+    const readExpandedTaskInputResponse = (): Record<
+      string,
+      Record<string, string[]>
+    > =>
+      parseJson(
+        readFile('static/environment.js').match(
+          /window\.expandedTaskInputsResponse\s*=\s*(.*?);/
+        )[1]
+      );
+
+    const baseLib = 'lib-base-123';
+    beforeAll(() => {
+      runCLI(`generate @nx/js:lib ${baseLib}`);
+    });
+
+    it('should correctly expand default task inputs', () => {
+      runCLI('graph --file=graph.html');
+
+      expect(readExpandedTaskInputResponse()[`${baseLib}:build`])
+        .toMatchInlineSnapshot(`
+        {
+          "external": [
+            "external:@nx/js",
+          ],
+          "general": [
+            "nx.json",
+            ".gitignore",
+            "libs/lib-base-123/package.json",
+            "tsconfig.base.json",
+          ],
+          "lib-base-123": [
+            "libs/lib-base-123/.eslintrc.json",
+            "libs/lib-base-123/README.md",
+            "libs/lib-base-123/jest.config.ts",
+            "libs/lib-base-123/package.json",
+            "libs/lib-base-123/project.json",
+            "libs/lib-base-123/src/index.ts",
+            "libs/lib-base-123/src/lib/lib-base-123.spec.ts",
+            "libs/lib-base-123/src/lib/lib-base-123.ts",
+            "libs/lib-base-123/tsconfig.json",
+            "libs/lib-base-123/tsconfig.lib.json",
+            "libs/lib-base-123/tsconfig.spec.json",
+          ],
+        }
+      `);
+    });
+
+    it('should correctly expand dependent task inputs', () => {
+      const dependentLib = 'lib-dependent-123';
+      runCLI(`generate @nx/js:lib ${dependentLib}`);
+
+      updateProjectConfig(baseLib, (config) => {
+        config.targets['build'].inputs = ['default', '^default'];
+        config.implicitDependencies = [dependentLib];
+        return config;
+      });
+
+      updateJson('nx.json', (json) => {
+        json.namedInputs = {
+          ...json.namedInputs,
+          default: ['{projectRoot}/**/*'],
+        };
+        return json;
+      });
+      runCLI('graph --file=graph.html');
+
+      expect(readExpandedTaskInputResponse()[`${baseLib}:build`])
+        .toMatchInlineSnapshot(`
+        {
+          "external": [
+            "external:@nx/js",
+          ],
+          "general": [
+            "nx.json",
+            ".gitignore",
+            "libs/lib-base-123/package.json",
+            "tsconfig.base.json",
+          ],
+          "lib-base-123": [
+            "libs/lib-base-123/.eslintrc.json",
+            "libs/lib-base-123/README.md",
+            "libs/lib-base-123/jest.config.ts",
+            "libs/lib-base-123/package.json",
+            "libs/lib-base-123/project.json",
+            "libs/lib-base-123/src/index.ts",
+            "libs/lib-base-123/src/lib/lib-base-123.spec.ts",
+            "libs/lib-base-123/src/lib/lib-base-123.ts",
+            "libs/lib-base-123/tsconfig.json",
+            "libs/lib-base-123/tsconfig.lib.json",
+            "libs/lib-base-123/tsconfig.spec.json",
+          ],
+          "lib-dependent-123": [
+            "libs/lib-dependent-123/.eslintrc.json",
+            "libs/lib-dependent-123/README.md",
+            "libs/lib-dependent-123/jest.config.ts",
+            "libs/lib-dependent-123/package.json",
+            "libs/lib-dependent-123/project.json",
+            "libs/lib-dependent-123/src/index.ts",
+            "libs/lib-dependent-123/src/lib/lib-dependent-123.spec.ts",
+            "libs/lib-dependent-123/src/lib/lib-dependent-123.ts",
+            "libs/lib-dependent-123/tsconfig.json",
+            "libs/lib-dependent-123/tsconfig.lib.json",
+            "libs/lib-dependent-123/tsconfig.spec.json",
+          ],
+        }
+      `);
     });
   });
 });
