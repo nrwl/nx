@@ -538,19 +538,19 @@ describe('Linter', () => {
     });
   });
 
-  describe('Integrated Flat', () => {
+  describe('Flat config', () => {
     let projScope;
 
-    beforeAll(() => {
+    beforeEach(() => {
       projScope = newProject();
     });
-    afterAll(() => cleanupProject());
+    afterEach(() => cleanupProject());
 
-    it('should convert to flat config', () => {
+    it('should convert integrated to flat config', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
-      runCLI(`generate @nx/react:app ${myapp} --tags=validtag`);
+      runCLI(`generate @nx/react:app ${myapp}`);
       runCLI(`generate @nx/js:lib ${mylib}`);
 
       // migrate to flat structure
@@ -568,7 +568,28 @@ describe('Linter', () => {
 
       const outFlat = runCLI(`affected -t lint`, { silenceError: true });
       expect(outFlat).toContain('All files pass linting');
-      console.log(outFlat);
+    }, 1000000);
+
+    it('should convert standalone to flat config', () => {
+      const myapp = uniq('myapp');
+
+      runCLI(`generate @nx/react:app ${myapp} --rootProject=true`);
+
+      // migrate to flat structure
+      runCLI(`generate @nx/linter:convert-to-flat-config`);
+      checkFilesExist(
+        'eslint.config.js',
+        'e2e/eslint.config.js',
+        'eslint.base.config.js'
+      );
+      checkFilesDoNotExist(
+        '.eslintrc.json',
+        'e2e/.eslintrc.json',
+        '.eslintrc.base.json'
+      );
+
+      const outFlat = runCLI(`affected -t lint`, { silenceError: true });
+      expect(outFlat).toContain('All files pass linting');
     }, 1000000);
   });
 
