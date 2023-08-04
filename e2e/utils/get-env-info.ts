@@ -68,12 +68,16 @@ export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
   return (process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm') || 'npm';
 }
 
-export function getNpmMajorVersion(): string {
-  const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
-  return npmMajorVersion;
+export function getNpmMajorVersion(): string | undefined {
+  try {
+    const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
+    return npmMajorVersion;
+  } catch {
+    return undefined;
+  }
 }
 
-export function getYarnMajorVersion(path: string): string {
+export function getYarnMajorVersion(path: string): string | undefined {
   try {
     // this fails if path is not yet created
     const [yarnMajorVersion] = execSync(`yarn -v`, {
@@ -82,10 +86,14 @@ export function getYarnMajorVersion(path: string): string {
     }).split('.');
     return yarnMajorVersion;
   } catch {
-    const [yarnMajorVersion] = execSync(`yarn -v`, { encoding: 'utf-8' }).split(
-      '.'
-    );
-    return yarnMajorVersion;
+    try {
+      const [yarnMajorVersion] = execSync(`yarn -v`, {
+        encoding: 'utf-8',
+      }).split('.');
+      return yarnMajorVersion;
+    } catch {
+      return undefined;
+    }
   }
 }
 
