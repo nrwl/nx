@@ -131,7 +131,7 @@ export function getPackageManagerCommand({
   return {
     npm: {
       createWorkspace: `npx ${
-        +npmMajorVersion >= 7 ? '--yes' : ''
+        npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
       } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `npm run ${script} -- ${args}`,
       runNx: `npx nx`,
@@ -146,18 +146,24 @@ export function getPackageManagerCommand({
     },
     yarn: {
       createWorkspace: `npx ${
-        +npmMajorVersion >= 7 ? '--yes' : ''
+        npmMajorVersion && +npmMajorVersion >= 7 ? '--yes' : ''
       } create-nx-workspace@${publishedVersion}`,
       run: (script: string, args: string) => `yarn ${script} ${args}`,
       runNx: `yarn nx`,
-      runNxSilent: +yarnMajorVersion >= 2 ? 'yarn nx' : `yarn --silent nx`,
+      runNxSilent:
+        yarnMajorVersion && +yarnMajorVersion >= 2
+          ? 'yarn nx'
+          : `yarn --silent nx`,
       runUninstalledPackage: 'npx --yes',
       install: 'yarn',
       ciInstall: 'yarn --frozen-lockfile',
       addProd: isYarnWorkspace ? 'yarn add -W' : 'yarn add',
       addDev: isYarnWorkspace ? 'yarn add -DW' : 'yarn add -D',
       list: 'yarn list --pattern',
-      runLerna: +yarnMajorVersion >= 2 ? 'yarn lerna' : `yarn --silent lerna`,
+      runLerna:
+        yarnMajorVersion && +yarnMajorVersion >= 2
+          ? 'yarn lerna'
+          : `yarn --silent lerna`,
     },
     // Pnpm 3.5+ adds nx to
     pnpm: {
