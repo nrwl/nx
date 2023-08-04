@@ -7,6 +7,10 @@ import { Task } from '../../config/task-graph';
 import { writeJsonFile } from '../../utils/fileutils';
 
 export class TaskProfilingLifeCycle implements LifeCycle {
+  /**
+   * Task timings. High-res timestamps provided by perf_hooks, where 0
+   * represents the start of the current node process.
+   */
   private timings: {
     [target: string]: {
       perfStart: number;
@@ -37,14 +41,7 @@ export class TaskProfilingLifeCycle implements LifeCycle {
     metadata: TaskMetadata
   ): void {
     for (let tr of taskResults) {
-      if (tr.task.startTime) {
-        this.timings[tr.task.id].perfStart = tr.task.startTime;
-      }
-      if (tr.task.endTime) {
-        this.timings[tr.task.id].perfEnd = tr.task.endTime;
-      } else {
-        this.timings[tr.task.id].perfEnd = performance.now();
-      }
+      this.timings[tr.task.id].perfEnd = performance.now();
     }
     this.recordTaskCompletions(taskResults, metadata);
   }
