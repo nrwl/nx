@@ -108,6 +108,10 @@
             "description": "Pre-generate official package metadata"
           },
           {
+            "command": "nx copy-docs nx-dev",
+            "description": "Copy generated docs to build output"
+          },
+          {
             "command": "npx ts-node scripts/documentation/plugin-quality-indicators.ts",
             "description": "Fetch plugin data"
           },
