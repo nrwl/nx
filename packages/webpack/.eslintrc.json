@@ -44,6 +44,8 @@
               "stylus",
               "stylus-loader",
               "source-map-loader",
+              "swc-loader",
+              "@swc/core",
               "ts-loader"
             ]
           }
