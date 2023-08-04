@@ -11,7 +11,7 @@ import {
   writeCache,
 } from './nx-deps-cache';
 import { buildImplicitProjectDependencies } from './build-dependencies';
-import { buildWorkspaceProjectNodes } from './build-nodes';
+import { normalizeProjectNodes } from './build-nodes';
 import { isNxPluginV1, isNxPluginV2, loadNxPlugins } from '../utils/nx-plugin';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
@@ -33,6 +33,7 @@ import {
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
+import { output } from '../utils/output';
 
 let storedProjectFileMap: ProjectFileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -158,7 +159,7 @@ async function buildProjectGraphUsingContext(
     builder.addExternalNode(knownExternalNodes[node]);
   }
 
-  await buildWorkspaceProjectNodes(ctx, builder, nxJson);
+  await normalizeProjectNodes(ctx, builder, nxJson);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
@@ -224,6 +225,13 @@ async function updateProjectGraphWithPlugins(
   for (const plugin of plugins) {
     try {
       if (isNxPluginV1(plugin) && plugin.processProjectGraph) {
+        // TODO(@AgentEnder): Enable after rewriting nx-js-graph-plugin to v2
+        // output.warn({
+        //   title: `${plugin.name} is a v1 plugin.`,
+        //   bodyLines: [
+        //     'Nx has recently released a v2 model for project graph plugins. The `processProjectGraph` method is deprecated. Plugins should use some combination of `projectConfigurationsConstructors` and `projectDependencyLocator` instead.',
+        //   ],
+        // });
         graph = await plugin.processProjectGraph(graph, context);
       }
     } catch (e) {
@@ -239,10 +247,22 @@ async function updateProjectGraphWithPlugins(
     try {
       if (isNxPluginV2(plugin)) {
         const builder = new ProjectDependencyBuilder(graph);
-        await plugin.processProjectDependencies?.(builder, {
+        const newDependencies = await plugin.projectDependencyLocator?.({
           ...context,
           graph,
         });
+        for (const targetProject in newDependencies) {
+          for (const targetProjectDependency of newDependencies[
+            targetProject
+          ]) {
+            builder.addDependency(
+              targetProjectDependency.source,
+              targetProjectDependency.target,
+              targetProjectDependency.dependencyType,
+              targetProjectDependency.sourceFile
+            );
+          }
+        }
         graph = builder.getUpdatedProjectGraph();
       }
     } catch (e) {

@@ -1,10 +1,7 @@
 import { performance } from 'perf_hooks';
 import {
-  buildProjectsConfigurationsFromProjectPaths,
   getGlobPatternsFromPlugins,
   getGlobPatternsFromPluginsAsync,
-  mergeTargetConfigurations,
-  readTargetDefaultsForTarget,
 } from '../../config/workspaces';
 import { getNxRequirePaths } from '../../utils/installation-directory';
 import { readJsonFile } from '../../utils/fileutils';
@@ -23,8 +20,14 @@ import {
   ProjectFileMap,
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
-import type { NxWorkspaceFiles } from '../../native';
+import { getProjectConfigurationFiles, NxWorkspaceFiles } from '../../native';
 import { getGlobPatternsFromPackageManagerWorkspaces } from '../../../plugins/package-json-workspaces';
+import {
+  buildProjectsConfigurationsFromProjectPathsAndPlugins,
+  mergeTargetConfigurations,
+  readTargetDefaultsForTarget,
+} from './project-configuration-utils';
+import { loadNxPlugins, NxPluginV2 } from '../../utils/nx-plugin';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -41,6 +44,11 @@ export async function retrieveWorkspaceFiles(
 
   performance.mark('native-file-deps:start');
   let globs = await configurationGlobs(workspaceRoot, nxJson);
+  const plugins = await loadNxPlugins(
+    nxJson.plugins,
+    getNxRequirePaths(workspaceRoot),
+    workspaceRoot
+  );
   performance.mark('native-file-deps:end');
   performance.measure(
     'native-file-deps',
@@ -55,7 +63,8 @@ export async function retrieveWorkspaceFiles(
       const projectConfigurations = createProjectConfigurations(
         workspaceRoot,
         nxJson,
-        configs
+        configs,
+        plugins
       );
 
       return {
@@ -97,11 +106,17 @@ export async function retrieveProjectConfigurations(
   const { getProjectConfigurations } =
     require('../../native') as typeof import('../../native');
   const globs = await configurationGlobs(workspaceRoot, nxJson);
+  const plugins = await loadNxPlugins(
+    nxJson.plugins,
+    getNxRequirePaths(workspaceRoot),
+    workspaceRoot
+  );
   return getProjectConfigurations(workspaceRoot, globs, (configs: string[]) => {
     const projectConfigurations = createProjectConfigurations(
       workspaceRoot,
       nxJson,
-      configs
+      configs,
+      plugins
     );
 
     return {
@@ -122,6 +137,15 @@ export function retrieveProjectConfigurationPaths(
   const { getProjectConfigurationFiles } =
     require('../../native') as typeof import('../../native');
   return getProjectConfigurationFiles(root, projectGlobPatterns);
+}
+
+export function retrieveProjectConfigurationPathsWithoutPluginInference(
+  root: string
+): string[] {
+  return getProjectConfigurationFiles(
+    root,
+    configurationGlobsWithoutPlugins(root)
+  );
 }
 
 const projectsWithoutPluginCache = new Map<
@@ -151,7 +175,7 @@ export function retrieveProjectConfigurationsWithoutPluginInference(
         root,
         nxJson,
         configs,
-        true
+        []
       );
       return {
         projectNodes: projects,
@@ -187,7 +211,7 @@ function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[],
-  _ignorePluginInference = false
+  plugins: NxPluginV2[]
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
@@ -195,12 +219,12 @@ function createProjectConfigurations(
   performance.mark('build-project-configs:start');
 
   const { projects, externalNodes } =
-    buildProjectsConfigurationsFromProjectPaths(
+    buildProjectsConfigurationsFromProjectPathsAndPlugins(
       nxJson,
       configFiles,
+      plugins,
       workspaceRoot,
-      (path) => readJsonFile(join(workspaceRoot, path)),
-      _ignorePluginInference
+      (path) => readJsonFile(join(workspaceRoot, path))
     );
 
   let projectConfigurations = mergeTargetDefaultsIntoProjectDescriptions(
@@ -270,7 +294,7 @@ async function configurationGlobs(
 /**
  * @deprecated Use {@link configurationGlobs} instead.
  */
-export function configurationGlobsSync(
+function configurationGlobsSync(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ): string[] {

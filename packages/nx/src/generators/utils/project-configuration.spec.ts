@@ -189,9 +189,7 @@ describe('project configuration', () => {
 
       expect(proj).toEqual({
         name: 'proj',
-        projectType: 'library',
         root: 'proj',
-        sourceRoot: 'proj',
       });
     });
 
@@ -205,9 +203,7 @@ describe('project configuration', () => {
       expect(projects.size).toEqual(1);
       expect(projects.get('proj')).toEqual({
         name: 'proj',
-        projectType: 'library',
         root: 'proj',
-        sourceRoot: 'proj',
       });
     });
   });

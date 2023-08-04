@@ -12,20 +12,22 @@ export function getProjectJsonPlugin(
   // making this an arg allows us to reuse in devkit): NxPluginV2 {
   return {
     name: 'nx-core-build-project-json-nodes',
-    processProjectNodes: {
+    projectConfigurationsConstructor:
       // Load projects from project.json files. These will be read second, since
       // they are listed last in the plugin, so they will overwrite things from the package.json
       // based projects.
-      '{project.json,**/project.json}': (file) => {
-        const json = readJson<ProjectConfiguration>(file);
-        const project = buildProjectFromProjectJson(json, file);
-        return {
-          projectNodes: {
-            [project.name]: project,
-          },
-        };
-      },
-    },
+      [
+        '{project.json,**/project.json}',
+        (file) => {
+          const json = readJson<ProjectConfiguration>(file);
+          const project = buildProjectFromProjectJson(json, file);
+          return {
+            projectNodes: {
+              [project.name]: project,
+            },
+          };
+        },
+      ],
   };
 }
 

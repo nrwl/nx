@@ -1,26 +1,26 @@
 import { basename, join, relative } from 'path';
+
+import {
+  buildProjectConfigurationFromPackageJson,
+  getGlobPatternsFromPackageManagerWorkspaces,
+} from '../../../plugins/package-json-workspaces';
+import { buildProjectFromProjectJson } from '../../../plugins/project-json';
+import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
-import {
-  buildProjectsConfigurationsFromProjectPaths,
-  renamePropertyWithStableKeys,
-} from '../../config/workspaces';
+import { mergeProjectConfigurationIntoProjectsConfigurations } from '../../project-graph/utils/project-configuration-utils';
+import { retrieveProjectConfigurationPathsWithoutPluginInference } from '../../project-graph/utils/retrieve-workspace-files';
+import { output } from '../../utils/output';
+import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
+import { readJson, writeJson } from './json';
+import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
 
-import { readJson, writeJson } from './json';
-import { PackageJson } from '../../utils/package-json';
-import { readNxJson } from './nx-json';
-import { output } from '../../utils/output';
-import {
-  configurationGlobsSync,
-  retrieveProjectConfigurationPaths,
-} from '../../project-graph/utils/retrieve-workspace-files';
 import minimatch = require('minimatch');
-import { buildProjectFromProjectJson } from '../../../plugins/project-json';
 
 export { readNxJson, updateNxJson } from './nx-json';
 export {
@@ -185,52 +185,60 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
 } {
   const nxJson = readNxJson(tree);
 
-  const patterns = configurationGlobsSync(tree.root, nxJson);
-  const globbedFiles = retrieveProjectConfigurationPaths(tree.root, nxJson);
+  /**
+   * We can't update projects that come from plugins anyways, so we are going
+   * to ignore them for now. Plugins should add their own add/create/update methods
+   * if they would like to use devkit to update inferred projects.
+   */
+  const patterns = [
+    '**/project.json',
+    'project.json',
+    ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
+      readJson(tree, p)
+    ),
+  ];
+
+  const globbedFiles = retrieveProjectConfigurationPathsWithoutPluginInference(
+    tree.root
+  );
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  const { projects } = buildProjectsConfigurationsFromProjectPaths(
-    nxJson,
-    projectFiles,
-    tree.root,
-    (file) => readJson(tree, file)
-  );
-
-  for (const project in projects) {
-    const config = projects[project];
-    const maybeProjectJsonPath = joinPathFragments(config.root, 'project.json');
-    if (tree.exists(maybeProjectJsonPath)) {
-      const json = readJson(tree, maybeProjectJsonPath);
-      projects[project] = buildProjectFromProjectJson(
-        json,
-        maybeProjectJsonPath
+  const rootMap: Map<string, string> = new Map();
+  return projectFiles.reduce((projects, projectFile) => {
+    if (basename(projectFile) === 'project.json') {
+      const json = readJson(tree, projectFile);
+      const config = buildProjectFromProjectJson(json, projectFile);
+      mergeProjectConfigurationIntoProjectsConfigurations(
+        projects,
+        rootMap,
+        config,
+        projectFile
       );
     } else {
-      // TODO - We should enable this. It's currently disabled because
-      // it causes issues with the migrator (e.g. e2e.migrator.ts) code inside @nx/angular. With this disabled,
-      // inferred projects will be visible in their final state, which could be confusing for folks
-      // who are writing migration generators.
-      //
-      // The reason this breaks the angular migrator stuff is that we write a project.json file
-      // where projectConfig.root !== dirname(path/to/project.json). We don't support this, but the
-      // migrator does it as a "staging" step. When we try to read the project.json above its not
-      // present at the expected location, so the below code would wipe the targets from the project
-      // Wiping the targets causes the migrator to fail.
-      //
-      // // Inferred targets, tags, etc don't show up when running generators
-      // // This is to help avoid running into issues when trying to update the workspace
-      // projects[project] = {
-      //   name: project,
-      //   root: config.root,
-      // };
+      const packageJson = readJson<PackageJson>(tree, projectFile);
+      const config = buildProjectConfigurationFromPackageJson(
+        packageJson,
+        projectFile,
+        readNxJson(tree)
+      );
+      mergeProjectConfigurationIntoProjectsConfigurations(
+        projects,
+        rootMap,
+        // Inferred targets, tags, etc don't show up when running generators
+        // This is to help avoid running into issues when trying to update the workspace
+        {
+          name: config.name,
+          root: config.root,
+        },
+        projectFile
+      );
     }
-  }
-
-  return projects;
+    return projects;
+  }, {});
 }
 
 /**

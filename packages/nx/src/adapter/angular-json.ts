@@ -5,7 +5,6 @@ import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
-import { renamePropertyWithStableKeys } from '../config/workspaces';
 
 export function shouldMergeAngularProjects(
   root: string,
@@ -116,4 +115,24 @@ export function toOldFormat(w: any) {
     w.version = 1;
   }
   return w;
+}
+
+// we have to do it this way to preserve the order of properties
+// not to screw up the formatting
+export function renamePropertyWithStableKeys(
+  obj: any,
+  from: string,
+  to: string
+) {
+  const copy = { ...obj };
+  Object.keys(obj).forEach((k) => {
+    delete obj[k];
+  });
+  Object.keys(copy).forEach((k) => {
+    if (k === from) {
+      obj[to] = copy[k];
+    } else {
+      obj[k] = copy[k];
+    }
+  });
 }

@@ -1,21 +1,13 @@
 import { output } from '../utils/output';
-import { Workspaces } from '../config/workspaces';
-import { mergeNpmScriptsWithTargets } from '../utils/project-graph-utils';
-import { existsSync } from 'fs';
-import { join, relative } from 'path';
-import {
-  loadNxPlugins,
-  mergePluginTargetsWithNxTargets,
-} from '../utils/nx-plugin';
+import { relative } from 'path';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
-import { splitByColons, splitTarget } from '../utils/split-target';
+import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher } from '../config/misc-interfaces';
 

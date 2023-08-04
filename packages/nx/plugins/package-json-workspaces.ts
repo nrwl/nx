@@ -21,33 +21,33 @@ export function getPackageJsonWorkspacesPlugin(
     getGlobPatternsFromPackageManagerWorkspaces(root, readJson);
   return {
     name: 'nx-core-build-package-json-nodes',
-    processProjectNodes: {
-      // Load projects from pnpm / npm workspaces
-      ...(globPatternsFromPackageManagerWorkspaces.length
-        ? {
-            [combineGlobPatterns(globPatternsFromPackageManagerWorkspaces)]: (
-              pkgJsonPath
-            ) => {
+    // Load projects from pnpm / npm workspaces. If no patterns, we can
+    // leave the property off of the object to save some perf.
+    ...(globPatternsFromPackageManagerWorkspaces.length
+      ? {
+          projectConfigurationsConstructor: [
+            combineGlobPatterns(globPatternsFromPackageManagerWorkspaces),
+            (pkgJsonPath) => {
               const json = readJson<PackageJson>(pkgJsonPath);
               return {
                 projectNodes: {
                   [json.name]: buildProjectConfigurationFromPackageJson(
-                    pkgJsonPath,
                     json,
+                    pkgJsonPath,
                     nxJson
                   ),
                 },
               };
             },
-          }
-        : {}),
-    },
+          ],
+        }
+      : {}),
   };
 }
 
-function buildProjectConfigurationFromPackageJson(
-  path: string,
+export function buildProjectConfigurationFromPackageJson(
   packageJson: { name: string },
+  path: string,
   nxJson: NxJsonConfiguration
 ): ProjectConfiguration & { name: string } {
   const normalizedPath = path.split('\\').join('/');

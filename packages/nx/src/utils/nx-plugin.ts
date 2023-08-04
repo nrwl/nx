@@ -1,4 +1,3 @@
-import { sync } from 'fast-glob';
 import { existsSync } from 'fs';
 import * as path from 'path';
 import {
@@ -6,7 +5,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../config/project-graph';
-import { toProjectName, Workspaces } from '../config/workspaces';
+import { toProjectName } from '../config/workspaces';
 
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
@@ -21,7 +20,6 @@ import {
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-  TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { logger } from './logger';
 import {
@@ -37,62 +35,63 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import type * as ts from 'typescript';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 import { NxPluginV1 } from './nx-plugin.deprecated';
-import { ProjectDependencyBuilder } from '../project-graph/project-graph-builder';
+import { ProjectGraphDependencyWithFile } from '../project-graph/project-graph-builder';
 import { combineGlobPatterns } from './globs';
 
-export type ProjectConfigurationBuilder = (
-  projectConfigurationFile: string,
-  context: {
-    projectsConfigurations: Record<string, ProjectConfiguration>;
-    nxJsonConfiguration: NxJsonConfiguration;
-    workspaceRoot: string;
+export type ProjectConfigurationsConstructor = [
+  projectFilePattern: string,
+  constructorMethod: (
+    projectConfigurationFile: string,
+    context: {
+      projectsConfigurations: Record<string, ProjectConfiguration>;
+      nxJsonConfiguration: NxJsonConfiguration;
+      workspaceRoot: string;
+    }
+  ) => {
+    projectNodes?: Record<string, ProjectConfiguration>;
+    externalNodes?: Record<string, ProjectGraphExternalNode>;
   }
-) => {
-  projectNodes?: Record<string, ProjectConfiguration>;
-  externalNodes?: Record<string, ProjectGraphExternalNode>;
-};
+];
 
-export type DependencyLocator = (
-  builder: ProjectDependencyBuilder,
-  context: {
-    /**
-     * The current project graph,
-     */
-    readonly graph: ProjectGraph;
+type Awaitable<T> = T | Promise<T>;
+export type ProjectDependencyLocator = (context: {
+  /**
+   * The current project graph,
+   */
+  readonly graph: ProjectGraph;
 
-    /**
-     * The configuration of each project in the workspace
-     */
-    projectsConfigurations: ProjectsConfigurations;
+  /**
+   * The configuration of each project in the workspace
+   */
+  projectsConfigurations: ProjectsConfigurations;
 
-    /**
-     * The `nx.json` configuration from the workspace
-     */
-    nxJsonConfiguration: NxJsonConfiguration;
+  /**
+   * The `nx.json` configuration from the workspace
+   */
+  nxJsonConfiguration: NxJsonConfiguration;
 
-    /**
-     * All files in the workspace
-     */
-    fileMap: ProjectFileMap;
+  /**
+   * All files in the workspace
+   */
+  fileMap: ProjectFileMap;
 
-    /**
-     * Files changes since last invocation
-     */
-    filesToProcess: ProjectFileMap;
-  }
-) => void | Promise<void>;
+  /**
+   * Files changes since last invocation
+   */
+  filesToProcess: ProjectFileMap;
+}) => Awaitable<Record<string, ProjectGraphDependencyWithFile[]>>;
 
 export type NxPluginV2 = {
   name: string;
 
   /**
-   * Provides a map between file patterns and functions that retrieve configuration info from
+   * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
    */
-  processProjectNodes?: Record<string, ProjectConfigurationBuilder>;
+  projectConfigurationsConstructor?: ProjectConfigurationsConstructor;
 
   // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
-  processProjectDependencies?: DependencyLocator;
+  projectDependencyLocator?: ProjectDependencyLocator;
 };
 
 export * from './nx-plugin.deprecated';
@@ -234,10 +233,9 @@ function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
   if (isNxPluginV1(plugin) && plugin.projectFilePatterns) {
     return {
       ...plugin,
-      processProjectNodes: {
-        [`*/**/${combineGlobPatterns(plugin.projectFilePatterns)}`]: (
-          configFilePath
-        ) => {
+      projectConfigurationsConstructor: [
+        `*/**/${combineGlobPatterns(plugin.projectFilePatterns)}`,
+        (configFilePath) => {
           const name = toProjectName(configFilePath);
           return {
             projectNodes: {
@@ -249,7 +247,7 @@ function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
             },
           };
         },
-      },
+      ],
     };
   }
   return plugin;
@@ -257,7 +255,8 @@ function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
 
 export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
   return (
-    'processProjectNodes' in plugin || 'processProjectDependencies' in plugin
+    'projectConfigurationsConstructor' in plugin ||
+    'projectDependencyLocator' in plugin
   );
 }
 
@@ -266,34 +265,6 @@ export function isNxPluginV1(plugin: NxPlugin): plugin is NxPluginV1 {
     ('processProjectGraph' in plugin || 'projectFilePatterns' in plugin) &&
     !isNxPluginV2(plugin)
   );
-}
-
-export function mergePluginTargetsWithNxTargets(
-  projectRoot: string,
-  targets: Record<string, TargetConfiguration>,
-  plugins: NxPlugin[]
-): Record<string, TargetConfiguration> {
-  let newTargets: Record<string, TargetConfiguration> = {};
-  for (const plugin of plugins) {
-    if (
-      !('projectFilePatterns' in plugin) ||
-      !plugin.projectFilePatterns?.length ||
-      !plugin.registerProjectTargets
-    ) {
-      continue;
-    }
-
-    const projectFiles = sync(`+(${plugin.projectFilePatterns.join('|')})`, {
-      cwd: path.join(workspaceRoot, projectRoot),
-    });
-    for (const projectFile of projectFiles) {
-      newTargets = {
-        ...newTargets,
-        ...plugin.registerProjectTargets(path.join(projectRoot, projectFile)),
-      };
-    }
-  }
-  return { ...newTargets, ...targets };
 }
 
 export function readPluginPackageJson(

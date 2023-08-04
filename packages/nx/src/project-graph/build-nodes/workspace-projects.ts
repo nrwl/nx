@@ -20,9 +20,9 @@ import {
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
   resolveNxTokensInOptions,
-} from '../../config/workspaces';
+} from '../utils/project-configuration-utils';
 
-export async function buildWorkspaceProjectNodes(
+export async function normalizeProjectNodes(
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder,
   nxJson: NxJsonConfiguration

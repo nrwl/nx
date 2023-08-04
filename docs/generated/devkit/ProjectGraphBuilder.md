@@ -1,6 +1,6 @@
 # Class: ProjectGraphBuilder
 
-@deprecated(v18): General project graph processors are deprecated. Replace usage with a plugin that utilizes `processProjectNodes` and `processProjectDependencies`.
+@deprecated(v18): General project graph processors are deprecated. Replace usage with a plugin that utilizes `projectConfigurationsConstructor` and `projectDependencyLocator`.
 
 ## Hierarchy
 
@@ -29,8 +29,6 @@
 - [addImplicitDependency](../../devkit/documents/ProjectGraphBuilder#addimplicitdependency)
 - [addNode](../../devkit/documents/ProjectGraphBuilder#addnode)
 - [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency)
-- [calculateAlreadySetTargetDeps](../../devkit/documents/ProjectGraphBuilder#calculatealreadysettargetdeps)
-- [calculateTargetDepsFromFiles](../../devkit/documents/ProjectGraphBuilder#calculatetargetdepsfromfiles)
 - [getUpdatedProjectGraph](../../devkit/documents/ProjectGraphBuilder#getupdatedprojectgraph)
 - [mergeProjectGraph](../../devkit/documents/ProjectGraphBuilder#mergeprojectgraph)
 - [removeDependenciesWithNode](../../devkit/documents/ProjectGraphBuilder#removedependencieswithnode)
@@ -59,7 +57,7 @@ ProjectDependencyBuilder.constructor
 
 ### fileMap
 
-• `Protected` `Optional` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
+• `Protected` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
 
 #### Inherited from
 
@@ -89,16 +87,16 @@ ProjectDependencyBuilder.removedEdges
 
 ### addDependency
 
-▸ `Protected` **addDependency**(`sourceProjectName`, `targetProjectName`, `type`, `sourceProjectFile?`): `void`
+▸ **addDependency**(`source`, `target`, `type`, `sourceFile?`): `void`
 
 #### Parameters
 
-| Name                 | Type                                                      |
-| :------------------- | :-------------------------------------------------------- |
-| `sourceProjectName`  | `string`                                                  |
-| `targetProjectName`  | `string`                                                  |
-| `type`               | [`DependencyType`](../../devkit/documents/DependencyType) |
-| `sourceProjectFile?` | `string`                                                  |
+| Name          | Type                                                      |
+| :------------ | :-------------------------------------------------------- |
+| `source`      | `string`                                                  |
+| `target`      | `string`                                                  |
+| `type`        | [`DependencyType`](../../devkit/documents/DependencyType) |
+| `sourceFile?` | `string`                                                  |
 
 #### Returns
 
@@ -229,38 +227,6 @@ Adds static dependency from source project to target project
 
 ---
 
-### calculateAlreadySetTargetDeps
-
-▸ `Private` **calculateAlreadySetTargetDeps**(`sourceProject`): `Map`<`string`, `Map`<`string`, [`ProjectGraphDependency`](../../devkit/documents/ProjectGraphDependency)\>\>
-
-#### Parameters
-
-| Name            | Type     |
-| :-------------- | :------- |
-| `sourceProject` | `string` |
-
-#### Returns
-
-`Map`<`string`, `Map`<`string`, [`ProjectGraphDependency`](../../devkit/documents/ProjectGraphDependency)\>\>
-
----
-
-### calculateTargetDepsFromFiles
-
-▸ `Private` **calculateTargetDepsFromFiles**(`sourceProject`): `Map`<`string`, `Set`<`string`\>\>
-
-#### Parameters
-
-| Name            | Type     |
-| :-------------- | :------- |
-| `sourceProject` | `string` |
-
-#### Returns
-
-`Map`<`string`, `Set`<`string`\>\>
-
----
-
 ### getUpdatedProjectGraph
 
 ▸ **getUpdatedProjectGraph**(): [`ProjectGraph`](../../devkit/documents/ProjectGraph)
@@ -268,6 +234,10 @@ Adds static dependency from source project to target project
 #### Returns
 
 [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+
+#### Inherited from
+
+ProjectDependencyBuilder.getUpdatedProjectGraph
 
 ---
 

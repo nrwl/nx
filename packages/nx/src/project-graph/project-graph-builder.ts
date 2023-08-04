@@ -109,43 +109,43 @@ export class ProjectDependencyBuilder {
     return alreadySetTargetProjects;
   }
 
-  protected addDependency(
-    sourceProjectName: string,
-    targetProjectName: string,
+  public addDependency(
+    source: string,
+    target: string,
     type: DependencyType,
-    sourceProjectFile?: string
+    sourceFile?: string
   ): void {
-    if (sourceProjectName === targetProjectName) {
+    if (source === target) {
       return;
     }
 
     validateNewDependency(this._graph, {
-      sourceProjectName,
-      targetProjectName,
+      source,
+      target,
       dependencyType: type,
-      sourceProjectFile,
+      sourceFile,
     });
 
-    if (!this._graph.dependencies[sourceProjectName]) {
-      this._graph.dependencies[sourceProjectName] = [];
+    if (!this._graph.dependencies[source]) {
+      this._graph.dependencies[source] = [];
     }
-    const isDuplicate = !!this._graph.dependencies[sourceProjectName].find(
-      (d) => d.target === targetProjectName && d.type === type
+    const isDuplicate = !!this._graph.dependencies[source].find(
+      (d) => d.target === target && d.type === type
     );
 
-    if (sourceProjectFile) {
-      const source = this._graph.nodes[sourceProjectName];
-      if (!source) {
+    if (sourceFile) {
+      const sourceProject = this._graph.nodes[source];
+      if (!sourceProject) {
         throw new Error(
-          `Source project is not a project node: ${sourceProjectName}`
+          `Source project is not a project node: ${sourceProject}`
         );
       }
-      const fileData = (this.fileMap[sourceProjectName] || []).find(
-        (f) => f.file === sourceProjectFile
+      const fileData = (this.fileMap[source] || []).find(
+        (f) => f.file === sourceFile
       );
       if (!fileData) {
         throw new Error(
-          `Source project ${sourceProjectName} does not have a file: ${sourceProjectFile}`
+          `Source project ${source} does not have a file: ${sourceFile}`
         );
       }
 
@@ -154,21 +154,19 @@ export class ProjectDependencyBuilder {
       }
       if (
         !fileData.deps.find(
-          (t) =>
-            fileDataDepTarget(t) === targetProjectName &&
-            fileDataDepType(t) === type
+          (t) => fileDataDepTarget(t) === target && fileDataDepType(t) === type
         )
       ) {
         const dep: string | [string, string] =
-          type === 'static' ? targetProjectName : [targetProjectName, type];
+          type === 'static' ? target : [target, type];
         fileData.deps.push(dep);
       }
     } else if (!isDuplicate) {
       // only add to dependencies section if the source file is not specified
       // and not already added
-      this._graph.dependencies[sourceProjectName].push({
-        source: sourceProjectName,
-        target: targetProjectName,
+      this._graph.dependencies[source].push({
+        source: source,
+        target: target,
         type,
       });
     }
@@ -201,7 +199,7 @@ export class ProjectDependencyBuilder {
 }
 
 /**
- * @deprecated(v18): General project graph processors are deprecated. Replace usage with a plugin that utilizes `processProjectNodes` and `processProjectDependencies`.
+ * @deprecated(v18): General project graph processors are deprecated. Replace usage with a plugin that utilizes `projectConfigurationsConstructor` and `projectDependencyLocator`.
  */
 export class ProjectGraphBuilder extends ProjectDependencyBuilder {
   // TODO(FrozenPandaz): make this private
@@ -381,14 +379,17 @@ export class ProjectGraphBuilder extends ProjectDependencyBuilder {
   }
 }
 
-interface CandidateDependency {
-  sourceProjectName: string;
-  targetProjectName: string;
-  sourceProjectFile?: string;
+export interface ProjectGraphDependencyWithFile {
+  source: string;
+  target: string;
+  sourceFile?: string;
   dependencyType: DependencyType;
 }
 
-function validateNewDependency(graph: ProjectGraph, d: CandidateDependency) {
+function validateNewDependency(
+  graph: ProjectGraph,
+  d: ProjectGraphDependencyWithFile
+) {
   if (d.dependencyType === DependencyType.implicit) {
     validateImplicitDependency(graph, d);
   } else if (d.dependencyType === DependencyType.dynamic) {
@@ -402,57 +403,54 @@ function validateNewDependency(graph: ProjectGraph, d: CandidateDependency) {
 
 function validateCommonDependencyRules(
   graph: ProjectGraph,
-  d: CandidateDependency
+  d: ProjectGraphDependencyWithFile
 ) {
-  if (
-    !graph.nodes[d.sourceProjectName] &&
-    !graph.externalNodes[d.sourceProjectName]
-  ) {
-    throw new Error(`Source project does not exist: ${d.sourceProjectName}`);
+  if (!graph.nodes[d.source] && !graph.externalNodes[d.source]) {
+    throw new Error(`Source project does not exist: ${d.source}`);
   }
   if (
-    !graph.nodes[d.targetProjectName] &&
-    !graph.externalNodes[d.targetProjectName] &&
-    !d.sourceProjectFile
+    !graph.nodes[d.target] &&
+    !graph.externalNodes[d.target] &&
+    !d.sourceFile
   ) {
-    throw new Error(`Target project does not exist: ${d.targetProjectName}`);
+    throw new Error(`Target project does not exist: ${d.target}`);
   }
-  if (
-    graph.externalNodes[d.sourceProjectName] &&
-    graph.nodes[d.targetProjectName]
-  ) {
+  if (graph.externalNodes[d.source] && graph.nodes[d.target]) {
     throw new Error(`External projects can't depend on internal projects`);
   }
 }
 
 function validateImplicitDependency(
   graph: ProjectGraph,
-  d: CandidateDependency
+  d: ProjectGraphDependencyWithFile
 ) {
-  if (graph.externalNodes[d.sourceProjectName]) {
+  if (graph.externalNodes[d.source]) {
     throw new Error(`External projects can't have "implicit" dependencies`);
   }
 }
 
 function validateDynamicDependency(
   graph: ProjectGraph,
-  d: CandidateDependency
+  d: ProjectGraphDependencyWithFile
 ) {
-  if (graph.externalNodes[d.sourceProjectName]) {
+  if (graph.externalNodes[d.source]) {
     throw new Error(`External projects can't have "dynamic" dependencies`);
   }
   // dynamic dependency is always bound to a file
-  if (!d.sourceProjectFile) {
+  if (!d.sourceFile) {
     throw new Error(
       `Source project file is required for "dynamic" dependencies`
     );
   }
 }
 
-function validateStaticDependency(graph: ProjectGraph, d: CandidateDependency) {
+function validateStaticDependency(
+  graph: ProjectGraph,
+  d: ProjectGraphDependencyWithFile
+) {
   // internal nodes must provide sourceProjectFile when creating static dependency
   // externalNodes do not have sourceProjectFile
-  if (graph.nodes[d.sourceProjectName] && !d.sourceProjectFile) {
+  if (graph.nodes[d.source] && !d.sourceFile) {
     throw new Error(`Source project file is required`);
   }
 }
