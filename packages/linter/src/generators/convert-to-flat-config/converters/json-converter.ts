@@ -1,8 +1,9 @@
-import { Tree, names } from '@nx/devkit';
+import { Tree, addDependenciesToPackageJson, names } from '@nx/devkit';
 import { join } from 'path';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
 import { generateAst, generateRequire } from './generate-ast';
+import { eslintrcVersion } from '../../../utils/versions';
 
 /**
  * Converts an ESLint JSON config to a flat config.
@@ -160,6 +161,16 @@ export function convertEslintJsonToFlatConfig(
     resultFile
   );
   tree.write(join(root, destinationFile), result);
+
+  if (isFlatCompatNeeded) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@eslint/eslintrc': eslintrcVersion,
+      }
+    );
+  }
 }
 
 // add parsed extends to export blocks and add import statements

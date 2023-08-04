@@ -1,10 +1,16 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, addProjectConfiguration, updateJson } from '@nx/devkit';
+import {
+  Tree,
+  addProjectConfiguration,
+  readJson,
+  updateJson,
+} from '@nx/devkit';
 
 import { convertToFlatConfigGenerator } from './generator';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
 import { Linter } from '../utils/linter';
+import { eslintrcVersion } from '../../utils/versions';
 
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;
@@ -91,6 +97,9 @@ describe('convert-to-flat-config generator', () => {
       ];
       "
     `);
+    expect(
+      readJson(tree, 'package.json').devDependencies['@eslint/eslintrc']
+    ).toEqual(eslintrcVersion);
   });
 
   it('should add global gitignores', async () => {
