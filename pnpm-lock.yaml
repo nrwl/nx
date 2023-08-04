@@ -216,6 +216,9 @@ devDependencies:
   '@eslint/eslintrc':
     specifier: ^2.1.1
     version: 2.1.1
+  '@eslint/js':
+    specifier: ^8.46.0
+    version: 8.46.0
   '@floating-ui/react':
     specifier: 0.19.2
     version: 0.19.2(@types/react@18.2.14)(react-dom@18.2.0)(react@18.2.0)

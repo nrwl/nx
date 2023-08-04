@@ -23,7 +23,7 @@ export function convertEslintJsonToFlatConfig(
   let languageOptions: ts.PropertyAssignment[] = [];
 
   if (config.extends) {
-    isFlatCompatNeeded = addExtends(importsList, exportElements, config);
+    isFlatCompatNeeded = addExtends(importsList, exportElements, config, tree);
   }
 
   if (config.plugins) {
@@ -177,7 +177,8 @@ export function convertEslintJsonToFlatConfig(
 function addExtends(
   importsList,
   configBlocks,
-  config: ESLint.ConfigData
+  config: ESLint.ConfigData,
+  tree: Tree
 ): boolean {
   let isFlatCompatNeeded = false;
   const extendsConfig = Array.isArray(config.extends)
@@ -221,6 +222,14 @@ function addExtends(
 
     if (eslintPluginExtends.length) {
       const importStatement = generateRequire('js', '@eslint/js', ts.factory);
+
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@eslint/js': eslintrcVersion,
+        }
+      );
 
       importsList.push(importStatement);
       eslintPluginExtends.forEach((plugin) => {
