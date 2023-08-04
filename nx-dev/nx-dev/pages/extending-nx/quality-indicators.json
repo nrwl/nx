@@ -305,8 +305,8 @@
   "@enio.ai/nx-install": {
     "lastPublishedDate": "2023-03-05T20:18:09.761Z",
     "npmDownloads": 61,
-    "githubStars": 22,
-    "nxVersion": ">= 14.1 <= 16"
+    "nxVersion": ">= 14.1 <= 16",
+    "githubStars": 22
   },
   "@enio.ai/typedoc": {
     "lastPublishedDate": "2023-03-05T20:17:20.752Z",
@@ -349,7 +349,7 @@
   "@nx-golang/gin": {
     "lastPublishedDate": "2023-01-04T14:57:24.660Z",
     "npmDownloads": 37,
-    "githubStars": 0
+    "githubStars": -1
   },
   "@angular-architects/module-federation": {
     "lastPublishedDate": "2023-06-20T16:52:19.205Z",
@@ -538,8 +538,8 @@
   "@ndrsg/nx-http": {
     "lastPublishedDate": "2022-06-07T13:16:25.323Z",
     "npmDownloads": 18,
-    "githubStars": 6,
-    "nxVersion": "14.0.0"
+    "nxVersion": "14.0.0",
+    "githubStars": 6
   },
   "@diogovcs/graphql-mesh": {
     "lastPublishedDate": "2023-01-22T11:38:26.303Z",
@@ -561,8 +561,8 @@
   "nx-pwm": {
     "lastPublishedDate": "2022-12-03T18:41:17.623Z",
     "npmDownloads": 19,
-    "githubStars": 4,
-    "nxVersion": ">= 14 <= 16"
+    "nxVersion": ">= 14 <= 16",
+    "githubStars": 4
   },
   "@nxrocks/nx-micronaut": {
     "lastPublishedDate": "2023-05-12T16:59:13.295Z",

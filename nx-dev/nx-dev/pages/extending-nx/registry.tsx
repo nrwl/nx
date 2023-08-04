@@ -13,9 +13,12 @@ import { useRef } from 'react';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../lib/packages.api';
-import * as qualityIndicators from './quality-indicators.json';
 
 declare const fetch: any;
+let qualityIndicators = {};
+try {
+  qualityIndicators = require('./quality-indicators.json');
+} catch (ex) {}
 
 interface PluginInfo {
   description: string;

@@ -104,6 +104,10 @@
             "description": "OG images generation"
           },
           {
+            "command": "npx ts-node scripts/documentation/plugin-quality-indicators.ts",
+            "description": "Fetch plugin data"
+          },
+          {
             "command": "nx run nx-dev:build",
             "description": "NextJs build step"
           }
