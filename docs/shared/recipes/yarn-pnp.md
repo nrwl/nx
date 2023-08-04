@@ -42,19 +42,19 @@ Once you are on the modern version of yarn, you can use the following command to
  yarn config set nodeLinker pnp
 ```
 
-Your `.yarnrc.yml` will now have `nodeLinked` set to a proper method:
+Your `.yarnrc.yml` will now have `nodeLinker` set to a proper method:
 
 ```yml {% fileName=".yarnrc.yml" %}
 nodeLinker: pnp
 ```
 
-Once the config is changed we need to run install again:
+Once the config is changed you need to run the install again:
 
 ```shell {% path="~/workspace" %}
  yarn install
 ```
 
-Running install generates `.pnp.cjs` file that contains mapping of external packages and strips all the packages from the `node_modules`. The contents of your `node_modules` should now look like this:
+Running install generates a `.pnp.cjs` file that contains a mapping of external packages and strips all the packages from the `node_modules`. The contents of your `node_modules` should now look like this:
 
 ```text
 node_modules/
@@ -62,9 +62,9 @@ node_modules/
     └──  nx
 ```
 
-## Dealing with inaccessible dependencies
+## Dealing with Inaccessible Dependencies
 
-When using Yarn Berry, Nx will set the `nodeLinker` property to a backwards compatible `node-modules` value by default. This is to ensure your repository works out-of-the-box.
+When using Yarn Berry, Nx will set the `nodeLinker` property to a backward compatible `node-modules` value by default. This is to ensure your repository works out of the box.
 
 Some packages come with broken dependency requirements so using strict `PnP` can lead to broken builds. This results in errors similar to the one below:
 
@@ -80,5 +80,5 @@ The problem above is something we need to fix by ensuring the requested peer dep
  yarn add -D @babel/core
 ```
 
-Sometimes, simply adding a missing package doesn't work. In those cases the only thing we can do is to contact the author of the package causing the issues and notify them of the missing dependency requirement.
+Sometimes, simply adding a missing package doesn't work. In those cases, the only thing we can do is contact the author of the package causing the issues and notify them of the missing dependency requirement.
 The alternative is to switch back to using the `node-modules` node linker.
