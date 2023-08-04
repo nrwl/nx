@@ -11,7 +11,7 @@ export interface Schema {
   tags?: string;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   inSourceTests?: boolean;
-  e2eTestRunner?: 'cypress' | 'none';
+  e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   linter?: Linter;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;

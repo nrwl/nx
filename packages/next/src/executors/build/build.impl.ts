@@ -1,8 +1,11 @@
 import 'dotenv/config';
 import {
+  detectPackageManager,
   ExecutorContext,
+  getPackageManagerVersion,
   logger,
   readJsonFile,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
@@ -53,7 +56,14 @@ export default async function buildExecutor(
   process.env.NX_NEXT_OUTPUT_PATH ??= outputPath;
 
   const args = createCliOptions({ experimentalAppOnly, profile, debug });
-  const command = `npx next build ${args.join(' ')}`;
+  const isYarnBerry =
+    detectPackageManager() === 'yarn' &&
+    gte(getPackageManagerVersion('yarn', workspaceRoot), '2.0.0');
+  const buildCommand = isYarnBerry
+    ? `yarn next build ${projectRoot}`
+    : 'npx next build';
+
+  const command = `${buildCommand} ${args.join(' ')}`;
   const execSyncOptions: ExecSyncOptions = {
     stdio: 'inherit',
     encoding: 'utf-8',

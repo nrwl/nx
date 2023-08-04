@@ -9,6 +9,7 @@ export const fence: Schema = {
     command: { type: 'String', default: '' },
     path: { type: 'String', default: '~/workspace' },
     process: { type: 'Boolean', render: false, default: true },
+    enableCopy: { type: 'Boolean', default: true },
   },
   transform(node, config) {
     const attributes = node.transformAttributes(config);

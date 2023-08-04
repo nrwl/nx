@@ -85,6 +85,7 @@ export async function* esbuildExecutor(
       ...options,
       // TODO(jack): make types generate with esbuild
       skipTypings: true,
+      generateLockfile: true,
       outputFileExtensionForCjs: getOutExtension('cjs', options),
       excludeLibsInPackageJson: !options.thirdParty,
       updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,

@@ -4,6 +4,9 @@
   "type": "commonjs",
   "homepage": "https://nx.dev",
   "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
   "keywords": [
     "Monorepo",

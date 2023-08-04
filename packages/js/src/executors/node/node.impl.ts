@@ -20,7 +20,7 @@ import { InspectType, NodeExecutorOptions } from './schema';
 import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
-import { getMainFileDirRelativeToProjectRoot } from '../../utils/get-main-file-dir';
+import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 
 interface ActiveTask {
   id: string;
@@ -379,10 +379,7 @@ function getFileToRun(
       buildTargetExecutor === '@nx/js:swc'
     ) {
       outputFileName = path.join(
-        getMainFileDirRelativeToProjectRoot(
-          buildOptions.main,
-          project.data.root
-        ),
+        getRelativeDirectoryToProjectRoot(buildOptions.main, project.data.root),
         fileName
       );
     } else {

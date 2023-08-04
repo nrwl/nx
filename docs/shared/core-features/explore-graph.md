@@ -8,7 +8,7 @@ high level view of your code architecture.
 To launch the project graph visualization run:
 
 ```shell
-nx graph
+npx nx graph
 ```
 
 This will open a browser window with an interactive representation of the project graph of your current codebase.

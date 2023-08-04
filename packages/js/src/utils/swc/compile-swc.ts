@@ -20,7 +20,9 @@ function getSwcCmd(
     // TODO(jack): clean this up when we remove inline module support
     // Handle root project
     srcPath === '.' ? 'src' : srcPath
-  } -d ${destPath} --config-file=${swcrcPath}`;
+  } -d ${
+    srcPath === '.' ? `${destPath}/src` : destPath
+  } --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 

@@ -39,10 +39,12 @@ import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
 import { YouTube, youtube } from './lib/tags/youtube.component';
 import {
-  TerminalCommand,
-  terminalCommand,
-} from './lib/tags/terminal-command.component';
+  TerminalVideo,
+  terminalVideo,
+} from './lib/tags/terminal-video.component';
 import { VideoLink, videoLink } from './lib/tags/video-link.component';
+import { Pill } from './lib/tags/pill.component';
+import { pill } from './lib/tags/pill.schema';
 
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
@@ -69,12 +71,13 @@ export const getMarkdocCustomConfig = (
       'nx-cloud-section': nxCloudSection,
       persona,
       personas,
+      pill,
       'side-by-side': sideBySide,
       tab,
       tabs,
       'title-card': titleCard,
       youtube,
-      'terminal-command': terminalCommand,
+      'terminal-video': terminalVideo,
       'video-link': videoLink,
     },
   },
@@ -93,12 +96,13 @@ export const getMarkdocCustomConfig = (
     NxCloudSection,
     Persona,
     Personas,
+    Pill,
     SideBySide,
     Tab,
     Tabs,
     TitleCard,
     YouTube,
-    TerminalCommand,
+    TerminalVideo,
     VideoLink,
   },
 });

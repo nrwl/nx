@@ -9,7 +9,7 @@ import {
   removeFile,
   runCLI,
   runCLIAsync,
-  runCypressTests,
+  runE2ETests,
   uniq,
 } from '@nx/e2e/utils';
 
@@ -35,7 +35,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     expect(lintE2eResults).toContain('All files pass linting.');
 
-    if (isNotWindows() && runCypressTests()) {
+    if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();

@@ -10,32 +10,61 @@ export function FeatureAi(): JSX.Element {
   const [error, setError] = useState(null);
   const [query, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState<boolean>(false);
+  const [sources, setSources] = useState('');
 
   const warning = `
   {% callout type="warning" title="Always double check!" %}
   This feature is still in Alpha.
   The results may not be accurate, so please always double check with our documentation.
 {% /callout %}
-
   `;
 
   const handleSubmit = async () => {
     setLoading(true);
     let completeText = '';
     let usage;
+    let sourcesMarkdown = '';
     try {
       const aiResponse = await nxDevDataAccessAi(query);
       completeText = aiResponse.textResponse;
       usage = aiResponse.usage;
+      setSources(
+        JSON.stringify(aiResponse.sources?.map((source) => source.url))
+      );
+      sourcesMarkdown = aiResponse.sourcesMarkdown;
       setLoading(false);
     } catch (error) {
       setError(error as any);
       setLoading(false);
     }
-    sendCustomEvent('ai_query', 'ai', 'query', undefined, { query, ...usage });
+    sendCustomEvent('ai_query', 'ai', 'query', undefined, {
+      query,
+      ...usage,
+    });
+    setFeedbackSent(false);
+
+    const sourcesMd = `
+  {% callout type="info" title="Sources" %}
+  ${sourcesMarkdown}
+  {% /callout %}`;
+
     setFinalResult(
-      renderMarkdown(warning + completeText, { filePath: '' }).node
+      renderMarkdown(warning + completeText + sourcesMd, { filePath: '' }).node
     );
+  };
+
+  const handleFeedback = (type: 'good' | 'bad') => {
+    try {
+      sendCustomEvent('ai_feedback', 'ai', type, undefined, {
+        query,
+        result: finalResult,
+        sources,
+      });
+      setFeedbackSent(true);
+    } catch (error) {
+      setFeedbackSent(false);
+    }
   };
 
   return (
@@ -73,43 +102,43 @@ export function FeatureAi(): JSX.Element {
           <h1>Thinking...</h1>
         </div>
       ) : null}
-      {finalResult && !error ? (
+      {finalResult && !loading && !error ? (
         <>
           <div className="p-4 max-w-none prose prose-slate dark:prose-invert">
             {finalResult}
           </div>
-          <div>
-            <Button
-              variant="primary"
-              size="small"
-              onClick={() =>
-                sendCustomEvent('ai_feedback', 'ai', 'good', undefined, {
-                  query,
-                  result: finalResult,
-                })
-              }
-            >
-              Answer was helpful{' '}
-              <span role="img" aria-label="thumbs-up">
-                👍
-              </span>
-            </Button>
-            <Button
-              variant="primary"
-              size="small"
-              onClick={() =>
-                sendCustomEvent('ai_feedback', 'ai', 'bad', undefined, {
-                  query,
-                  result: finalResult,
-                })
-              }
-            >
-              Answer looks wrong{' '}
-              <span role="img" aria-label="thumbs-down">
-                👎
-              </span>
-            </Button>
-          </div>
+          {!feedbackSent && (
+            <div>
+              <Button
+                variant="primary"
+                size="small"
+                onClick={() => handleFeedback('good')}
+              >
+                Answer was helpful{' '}
+                <span role="img" aria-label="thumbs-up">
+                  👍
+                </span>
+              </Button>
+              <Button
+                variant="primary"
+                size="small"
+                onClick={() => handleFeedback('bad')}
+              >
+                Answer looks wrong{' '}
+                <span role="img" aria-label="thumbs-down">
+                  👎
+                </span>
+              </Button>
+            </div>
+          )}
+          {feedbackSent && (
+            <p>
+              <span role="img" aria-label="check">
+                ✅
+              </span>{' '}
+              Thank you for your feedback!
+            </p>
+          )}
         </>
       ) : null}
       {error ? <div>There was an error: {error['message']}</div> : null}

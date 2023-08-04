@@ -7,17 +7,23 @@ If instead you want to jump right into it, run the following command. It will gu
 {% tabs %}
 {% tab label="npm" %}
 
-{% terminal-command command="npx create-nx-workspace"  /%}
+```shell
+npx create-nx-workspace
+```
 
 {% /tab %}
 {% tab label="yarn" %}
 
-{% terminal-command command="npx create-nx-workspace --pm yarn"  /%}
+```shell
+npx create-nx-workspace --pm yarn
+```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
-{% terminal-command command="npx create-nx-workspace --pm pnpm"  /%}
+```shell
+npx create-nx-workspace --pm pnpm
+```
 
 {% /tab %}
 {% /tabs %}
@@ -92,7 +98,9 @@ A modern Node server with scaffolding for Express, Fastify or Koa. There's also 
 
 If you have an existing project and want to adopt Nx or migrate to Nx just run the following command which guides you through the migration process:
 
-{% terminal-command command="npx nx@latest init"  /%}
+```shell
+npx nx@latest init
+```
 
 Alternatively, here are some recipes that give you more details based on the technology stack you're using:
 

@@ -74,5 +74,5 @@
     },
     "lint": {}
   },
-  "implicitDependencies": ["workspace", "cypress", "jest"]
+  "implicitDependencies": []
 }

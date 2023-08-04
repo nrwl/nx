@@ -47,6 +47,7 @@
               // Installed by ensurePackage
               "@nx/linter",
               "@nx/cypress",
+              "@nx/playwright",
               "@nx/vite",
               "@nx/webpack",
               "@nx/jest"

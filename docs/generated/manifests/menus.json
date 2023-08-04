@@ -786,17 +786,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Share Your Cache",
-            "path": "/core-features/share-your-cache",
-            "id": "share-your-cache",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Explore the Graph",
-            "path": "/core-features/explore-graph",
-            "id": "explore-graph",
+            "name": "Use Remote Caching",
+            "path": "/core-features/remote-cache",
+            "id": "remote-cache",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -810,9 +802,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Integrate with Editors",
-            "path": "/core-features/integrate-with-editors",
-            "id": "integrate-with-editors",
+            "name": "Explore the Graph",
+            "path": "/core-features/explore-graph",
+            "id": "explore-graph",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -826,9 +818,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Enforce Project Boundaries",
-            "path": "/core-features/enforce-project-boundaries",
-            "id": "enforce-project-boundaries",
+            "name": "Enforce Module Boundaries",
+            "path": "/core-features/enforce-module-boundaries",
+            "id": "enforce-module-boundaries",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Integrate with Editors",
+            "path": "/core-features/integrate-with-editors",
+            "id": "integrate-with-editors",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -878,17 +878,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Share Your Cache",
-        "path": "/core-features/share-your-cache",
-        "id": "share-your-cache",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Explore the Graph",
-        "path": "/core-features/explore-graph",
-        "id": "explore-graph",
+        "name": "Use Remote Caching",
+        "path": "/core-features/remote-cache",
+        "id": "remote-cache",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -902,9 +894,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Integrate with Editors",
-        "path": "/core-features/integrate-with-editors",
-        "id": "integrate-with-editors",
+        "name": "Explore the Graph",
+        "path": "/core-features/explore-graph",
+        "id": "explore-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -918,9 +910,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Enforce Project Boundaries",
-        "path": "/core-features/enforce-project-boundaries",
-        "id": "enforce-project-boundaries",
+        "name": "Enforce Module Boundaries",
+        "path": "/core-features/enforce-module-boundaries",
+        "id": "enforce-module-boundaries",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Integrate with Editors",
+        "path": "/core-features/integrate-with-editors",
+        "id": "integrate-with-editors",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2030,6 +2030,22 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Add a Package-based Project in an Integrated Repo",
+                "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+                "id": "package-based-in-integrated",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add an Integrated Project in a Package-based Repo",
+                "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+                "id": "integrated-in-package-based",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configuring ESLint with Typescript",
                 "path": "/recipes/tips-n-tricks/eslint",
                 "id": "eslint",
@@ -3054,6 +3070,22 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Add a Package-based Project in an Integrated Repo",
+            "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+            "id": "package-based-in-integrated",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add an Integrated Project in a Package-based Repo",
+            "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+            "id": "integrated-in-package-based",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configuring ESLint with Typescript",
             "path": "/recipes/tips-n-tricks/eslint",
             "id": "eslint",
@@ -3158,6 +3190,22 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Package-based Project in an Integrated Repo",
+        "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+        "id": "package-based-in-integrated",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add an Integrated Project in a Package-based Repo",
+        "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+        "id": "integrated-in-package-based",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -3528,6 +3576,38 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Add a Lit Project",
+                "path": "/showcase/example-repos/add-lit",
+                "id": "add-lit",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add a Solid Project",
+                "path": "/showcase/example-repos/add-solid",
+                "id": "add-solid",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add a Qwik Project",
+                "path": "/showcase/example-repos/add-qwik",
+                "id": "add-qwik",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add an Astro Project",
+                "path": "/showcase/example-repos/add-astro",
+                "id": "add-astro",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Powering Up React Development With Nx",
                 "path": "/showcase/example-repos/react-nx",
                 "id": "react-nx",
@@ -3620,6 +3700,38 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Add a Lit Project",
+            "path": "/showcase/example-repos/add-lit",
+            "id": "add-lit",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add a Solid Project",
+            "path": "/showcase/example-repos/add-solid",
+            "id": "add-solid",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add a Qwik Project",
+            "path": "/showcase/example-repos/add-qwik",
+            "id": "add-qwik",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add an Astro Project",
+            "path": "/showcase/example-repos/add-astro",
+            "id": "add-astro",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Powering Up React Development With Nx",
             "path": "/showcase/example-repos/react-nx",
             "id": "react-nx",
@@ -3700,6 +3812,38 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Lit Project",
+        "path": "/showcase/example-repos/add-lit",
+        "id": "add-lit",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Solid Project",
+        "path": "/showcase/example-repos/add-solid",
+        "id": "add-solid",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Qwik Project",
+        "path": "/showcase/example-repos/add-qwik",
+        "id": "add-qwik",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add an Astro Project",
+        "path": "/showcase/example-repos/add-astro",
+        "id": "add-astro",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -6819,6 +6963,23 @@
         "path": "/packages/playwright",
         "name": "playwright",
         "children": [
+          {
+            "id": "documents",
+            "path": "/packages/playwright/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/packages/playwright/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
           {
             "id": "executors",
             "path": "/packages/playwright/executors",

@@ -9,7 +9,7 @@ import {
   readFile,
   runCLI,
   runCLIAsync,
-  runCypressTests,
+  runE2ETests,
   uniq,
   updateFile,
   updateJson,
@@ -363,7 +363,7 @@ async function testGeneratedApp(
     'Test Suites: 1 passed, 1 total'
   );
 
-  if (opts.checkE2E && runCypressTests()) {
+  if (opts.checkE2E && runE2ETests()) {
     const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
     expect(e2eResults).toContain('All specs passed!');
     expect(await killPorts()).toBeTruthy();

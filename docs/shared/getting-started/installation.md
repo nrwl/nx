@@ -5,24 +5,30 @@ Create a new Nx workspace using the following command:
 {% tabs %}
 {% tab label="npm" %}
 
-{% terminal-command command="npx create-nx-workspace"  /%}
+```shell
+npx create-nx-workspace
+```
 
 {% /tab %}
 {% tab label="yarn" %}
 
-{% terminal-command command="npx create-nx-workspace --pm yarn"  /%}
+```shell
+npx create-nx-workspace --pm yarn
+```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
-{% terminal-command command="npx create-nx-workspace --pm pnpm"  /%}
+```shell
+npx create-nx-workspace --pm pnpm
+```
 
 {% /tab %}
 {% /tabs %}
 
 This will guide you through the setup, asking whether you want a monorepo or a standalone app and whether you want to start with a blank or a preconfigured setup.
 
-```{% command="npx create-nx-workspace" %}
+```{% command="npx create-nx-workspace" path="~" %}
 
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
@@ -48,7 +54,9 @@ Learn more about [running tasks](/core-features/run-tasks).
 
 If you want to add Nx to an existing repository run:
 
-{% terminal-command command="npx nx@latest init" /%}
+```shell
+npx nx@latest init
+```
 
 You can also manually install the nx NPM package and create a [nx.json](https://nx.dev/reference/nx-json) to configure it. Learn more about [adopting Nx in an existing project](/recipes/adopting-nx)
 
@@ -59,17 +67,23 @@ You can install Nx globally. Depending on your package manager, use one of the f
 {% tabs %}
 {% tab label="npm" %}
 
-{% terminal-command command="npm install --global nx@latest" /%}
+```shell
+npm install --global nx@latest
+```
 
 {% /tab %}
 {% tab label="yarn" %}
 
-{% terminal-command command="yarn global add nx@latest" /%}
+```shell
+yarn global add nx@latest
+```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
-{% terminal-command command="pnpm install --global nx@latest" /%}
+```shell
+pnpm install --global nx@latest
+```
 
 {% /tab %}
 {% /tabs %}

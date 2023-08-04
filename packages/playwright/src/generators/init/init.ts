@@ -3,12 +3,16 @@ import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
+  output,
   runTasksInSerial,
   Tree,
   updateJson,
+  workspaceRoot,
 } from '@nx/devkit';
 import { InitGeneratorSchema } from './schema';
 import { nxVersion, playwrightVersion } from '../../utils/versions';
+import { execSync } from 'child_process';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -49,6 +53,17 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
         2
       )
     );
+  }
+
+  if (!options.skipInstall) {
+    tasks.push(() => {
+      output.log({
+        title: 'Ensuring Playwright is installed.',
+        bodyLines: ['use --skipInstall to skip installation.'],
+      });
+      const pmc = getPackageManagerCommand();
+      execSync(`${pmc.exec} playwright install`, { cwd: workspaceRoot });
+    });
   }
 
   return runTasksInSerial(...tasks);

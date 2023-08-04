@@ -1652,7 +1652,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/format-check",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/format-check"
       },
       "/packages/nx/documents/format-write": {
@@ -1663,7 +1663,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/format-write",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/format-write"
       },
       "/packages/nx/documents/migrate": {
@@ -1707,7 +1707,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/workspace-lint",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/workspace-lint"
       },
       "/packages/nx/documents/workspace-generator": {
@@ -1838,7 +1838,19 @@
     "name": "playwright",
     "packageName": "@nx/playwright",
     "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
-    "documents": {},
+    "documents": {
+      "/packages/playwright/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
+        "file": "generated/packages/playwright/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/playwright/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/playwright/playwright-plugin"
+      }
+    },
     "root": "/packages/playwright",
     "source": "/packages/playwright/src",
     "executors": {

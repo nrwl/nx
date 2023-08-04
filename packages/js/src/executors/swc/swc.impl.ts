@@ -1,6 +1,7 @@
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, readJsonFile } from '@nx/devkit';
 import { assetGlobsToFiles, FileInputOutput } from '../../utils/assets/assets';
 import { removeSync } from 'fs-extra';
+import { sync as globSync } from 'fast-glob';
 import { dirname, join, relative, resolve } from 'path';
 import { copyAssets } from '../../utils/assets';
 import { checkDependencies } from '../../utils/check-dependencies';
@@ -135,6 +136,13 @@ export async function* swcExecutor(
     );
   }
 
+  function determineModuleFormatFromSwcrc(
+    absolutePathToSwcrc: string
+  ): 'cjs' | 'esm' {
+    const swcrc = readJsonFile(absolutePathToSwcrc);
+    return swcrc.module?.type?.startsWith('es') ? 'esm' : 'cjs';
+  }
+
   if (options.watch) {
     let disposeFn: () => void;
     process.on('SIGINT', () => disposeFn());
@@ -145,7 +153,13 @@ export async function* swcExecutor(
       const packageJsonResult = await copyPackageJson(
         {
           ...options,
-          skipTypings: !options.skipTypeCheck,
+          additionalEntryPoints: createEntryPoints(options, context),
+          format: [
+            determineModuleFormatFromSwcrc(options.swcCliOptions.swcrcPath),
+          ],
+          // As long as d.ts files match their .js counterparts, we don't need to emit them.
+          // TSC can match them correctly based on file names.
+          skipTypings: true,
         },
         context
       );
@@ -161,8 +175,13 @@ export async function* swcExecutor(
       await copyPackageJson(
         {
           ...options,
-          generateExportsField: true,
-          skipTypings: !options.skipTypeCheck,
+          additionalEntryPoints: createEntryPoints(options, context),
+          format: [
+            determineModuleFormatFromSwcrc(options.swcCliOptions.swcrcPath),
+          ],
+          // As long as d.ts files match their .js counterparts, we don't need to emit them.
+          // TSC can match them correctly based on file names.
+          skipTypings: true,
           extraDependencies: swcHelperDependency ? [swcHelperDependency] : [],
         },
         context
@@ -181,6 +200,16 @@ function removeTmpSwcrc(swcrcPath: string) {
   if (swcrcPath.includes('tmp/') && swcrcPath.includes('.generated.swcrc')) {
     removeSync(dirname(swcrcPath));
   }
+}
+
+function createEntryPoints(
+  options: { additionalEntryPoints?: string[] },
+  context: ExecutorContext
+): string[] {
+  if (!options.additionalEntryPoints?.length) return [];
+  return globSync(options.additionalEntryPoints, {
+    cwd: context.root,
+  });
 }
 
 export default swcExecutor;

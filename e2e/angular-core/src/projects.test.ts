@@ -10,7 +10,7 @@ import {
   removeFile,
   runCLI,
   runCommandUntil,
-  runCypressTests,
+  runE2ETests,
   tmpProjPath,
   uniq,
   updateFile,
@@ -97,7 +97,7 @@ describe('Angular Projects', () => {
     );
 
     // check e2e tests
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       const e2eResults = runCLI(`e2e ${app1}-e2e --no-watch`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
@@ -121,6 +121,22 @@ describe('Angular Projects', () => {
 
     // port and process cleanup
     await killProcessAndPorts(esbProcess.pid, appPort);
+  }, 1000000);
+
+  it('should successfully work with playwright for e2e tests', async () => {
+    const app = uniq('app');
+
+    runCLI(
+      `generate @nx/angular:app ${app} --e2eTestRunner=playwright --no-interactive`
+    );
+
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${app}-e2e`);
+      expect(e2eResults).toContain(
+        `Successfully ran target e2e for project ${app}-e2e`
+      );
+      expect(await killPorts()).toBeTruthy();
+    }
   }, 1000000);
 
   it('should lint correctly with eslint and handle external HTML files and inline templates', async () => {

@@ -86,7 +86,7 @@ export function ConfScheduleShort(): JSX.Element {
       title: 'Package-based to Integrated: One Small Step or One Giant Leap?',
       description: `When you have a package-based repo, it can feel like the features of an integrated repo are all the way on the moon.  But, in the same way that Neil Armstrong had a whole team of people enabling him to take his one small step, you can take advantage of the hard work of the Nx team to incrementally move your package-based repo toward an integrated repo.
 
-      Starting from a package-based repo, we'll enforce project boundaries, create and use code generators and, finally, use task executors and automate updating dependencies.  Together, these improvements add up to one giant leap forward in developer experience.`,
+      Starting from a package-based repo, we'll enforce module boundaries, create and use code generators and, finally, use task executors and automate updating dependencies.  Together, these improvements add up to one giant leap forward in developer experience.`,
       speakers: ['Isaac Mann'],
       videoUrl: '',
     },

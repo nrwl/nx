@@ -1,9 +1,9 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
+import { relative } from 'path';
 
 import { readNxJson } from '../../config/configuration';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { Workspaces } from '../../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../../generators/tree';
 import {
   createProjectGraphAsync,
@@ -51,11 +51,13 @@ export function printChanges(fileChanges: FileChange[]) {
 
 async function promptForCollection(
   generatorName: string,
-  ws: Workspaces,
   interactive: boolean,
   projectsConfiguration: ProjectsConfigurations
 ): Promise<string> {
-  const localPlugins = await getLocalWorkspacePlugins(projectsConfiguration);
+  const localPlugins = await getLocalWorkspacePlugins(
+    projectsConfiguration,
+    readNxJson()
+  );
 
   const installedCollections = Array.from(
     new Set(findInstalledPlugins().map((x) => x.name))
@@ -202,7 +204,6 @@ function parseGeneratorString(value: string): {
 
 async function convertToGenerateOptions(
   generatorOptions: { [p: string]: any },
-  ws: Workspaces,
   defaultCollectionName: string,
   mode: 'generate' | 'new',
   projectsConfiguration?: ProjectsConfigurations
@@ -221,7 +222,6 @@ async function convertToGenerateOptions(
     } else if (!defaultCollectionName) {
       const generatorString = await promptForCollection(
         generatorDescriptor,
-        ws,
         interactive,
         projectsConfiguration
       );
@@ -302,7 +302,6 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   }
   const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
-  const ws = new Workspaces(workspaceRoot);
   const nxJsonConfiguration = readNxJson();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projectsConfigurations =
@@ -311,7 +310,6 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   return handleErrors(verbose, async () => {
     const opts = await convertToGenerateOptions(
       args,
-      ws,
       readDefaultCollection(nxJsonConfiguration),
       'generate',
       projectsConfigurations
@@ -366,7 +364,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         projectsConfigurations,
         nxJsonConfiguration
       ),
-      ws.relativeCwd(cwd),
+      relative(cwd, workspaceRoot),
       verbose
     );
 

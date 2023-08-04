@@ -247,7 +247,9 @@ const diataxis = {
   '/structure/grouping-libraries': '/concepts/more-concepts/grouping-libraries',
   '/structure/buildable-and-publishable-libraries':
     '/concepts/more-concepts/buildable-and-publishable-libraries',
-  '/structure/monorepo-tags': '/core-features/enforce-project-boundaries',
+  '/structure/monorepo-tags': '/core-features/enforce-module-boundaries',
+  '/core-features/enforce-project-boundaries':
+    '/core-features/enforce-module-boundaries',
   '/structure/dependency-graph': '/core-features/explore-graph',
   '/structure/project-graph-plugins':
     '/recipes/advanced-plugins/project-graph-plugins',
@@ -382,8 +384,8 @@ const recipesUrls = {
  * Nx Cloud
  */
 const nxCloudUrls = {
-  '/nx-cloud/set-up/add-nx-cloud': '/core-features/share-your-cache',
-  '/nx-cloud/set-up/set-up-caching': '/core-features/share-your-cache',
+  '/nx-cloud/set-up/add-nx-cloud': '/core-features/remote-cache',
+  '/nx-cloud/set-up/set-up-caching': '/core-features/remote-cache',
   '/nx-cloud/set-up/set-up-dte': '/core-features/distribute-task-execution',
   '/nx-cloud/private-cloud/standalone': '/nx-cloud/private-cloud/ami-setup',
   '/nx-cloud/private-cloud/kubernetes-setup':
@@ -829,6 +831,10 @@ const latestRecipesRefactoring = {
   '/reference/commands': '/packages/nx',
 };
 
+const coreFeatureRefactoring = {
+  '/core-features/share-your-cache': '/core-features/remote-cache',
+};
+
 /**
  * Public export API
  */
@@ -853,4 +859,5 @@ module.exports = {
   makeMoreConceptsSubmenu,
   pluginsToExtendNx,
   latestRecipesRefactoring,
+  coreFeatureRefactoring,
 };

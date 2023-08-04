@@ -61,6 +61,14 @@ Type: `boolean`
 
 Set up distributed caching with Nx Cloud.
 
+### useDotNxInstallation
+
+Type: `boolean`
+
+Default: `false`
+
+Initialize an Nx workspace setup in the .nx directory of the current repository.
+
 ### version
 
 Type: `boolean`

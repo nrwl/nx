@@ -957,7 +957,7 @@
       {
         "id": "run-tasks",
         "name": "Run Tasks",
-        "description": "",
+        "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
         "file": "shared/core-features/run-tasks",
         "itemList": [],
         "isExternal": false,
@@ -967,7 +967,7 @@
       {
         "id": "cache-task-results",
         "name": "Cache Task Results",
-        "description": "",
+        "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
         "file": "shared/core-features/cache-task-results",
         "itemList": [],
         "isExternal": false,
@@ -975,29 +975,19 @@
         "tags": ["cache-task-results"]
       },
       {
-        "id": "share-your-cache",
-        "name": "Share Your Cache",
-        "description": "",
-        "file": "shared/core-features/share-your-cache",
+        "id": "remote-cache",
+        "name": "Use Remote Caching",
+        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+        "file": "shared/core-features/remote-cache",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/share-your-cache",
-        "tags": ["share-your-cache"]
-      },
-      {
-        "id": "explore-graph",
-        "name": "Explore the Graph",
-        "description": "",
-        "file": "shared/core-features/explore-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/explore-graph",
-        "tags": ["explore-graph"]
+        "path": "/core-features/remote-cache",
+        "tags": ["remote-cache"]
       },
       {
         "id": "distribute-task-execution",
         "name": "Distribute Task Execution",
-        "description": "",
+        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
         "file": "shared/core-features/distribute-task-execution",
         "itemList": [],
         "isExternal": false,
@@ -1005,19 +995,19 @@
         "tags": ["distribute-task-execution"]
       },
       {
-        "id": "integrate-with-editors",
-        "name": "Integrate with Editors",
-        "description": "",
-        "file": "shared/core-features/integrate-with-editors",
+        "id": "explore-graph",
+        "name": "Explore the Graph",
+        "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+        "file": "shared/core-features/explore-graph",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/integrate-with-editors",
-        "tags": ["integrate-with-editors"]
+        "path": "/core-features/explore-graph",
+        "tags": ["explore-graph"]
       },
       {
         "id": "automate-updating-dependencies",
         "name": "Automate Updating Dependencies",
-        "description": "",
+        "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
         "file": "shared/core-features/automate-updating-dependencies",
         "itemList": [],
         "isExternal": false,
@@ -1025,14 +1015,24 @@
         "tags": ["automate-updating-dependencies"]
       },
       {
-        "id": "enforce-project-boundaries",
-        "name": "Enforce Project Boundaries",
-        "description": "",
-        "file": "shared/core-features/enforce-project-boundaries",
+        "id": "enforce-module-boundaries",
+        "name": "Enforce Module Boundaries",
+        "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
+        "file": "shared/core-features/enforce-module-boundaries",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/enforce-project-boundaries",
-        "tags": ["enforce-project-boundaries"]
+        "path": "/core-features/enforce-module-boundaries",
+        "tags": ["enforce-module-boundaries"]
+      },
+      {
+        "id": "integrate-with-editors",
+        "name": "Integrate with Editors",
+        "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+        "file": "shared/core-features/integrate-with-editors",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/integrate-with-editors",
+        "tags": ["integrate-with-editors"]
       },
       {
         "id": "plugin-features",
@@ -1073,7 +1073,7 @@
   "/core-features/run-tasks": {
     "id": "run-tasks",
     "name": "Run Tasks",
-    "description": "",
+    "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
     "file": "shared/core-features/run-tasks",
     "itemList": [],
     "isExternal": false,
@@ -1083,72 +1083,72 @@
   "/core-features/cache-task-results": {
     "id": "cache-task-results",
     "name": "Cache Task Results",
-    "description": "",
+    "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
     "file": "shared/core-features/cache-task-results",
     "itemList": [],
     "isExternal": false,
     "path": "/core-features/cache-task-results",
     "tags": ["cache-task-results"]
   },
-  "/core-features/share-your-cache": {
-    "id": "share-your-cache",
-    "name": "Share Your Cache",
-    "description": "",
-    "file": "shared/core-features/share-your-cache",
+  "/core-features/remote-cache": {
+    "id": "remote-cache",
+    "name": "Use Remote Caching",
+    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+    "file": "shared/core-features/remote-cache",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/share-your-cache",
-    "tags": ["share-your-cache"]
-  },
-  "/core-features/explore-graph": {
-    "id": "explore-graph",
-    "name": "Explore the Graph",
-    "description": "",
-    "file": "shared/core-features/explore-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/explore-graph",
-    "tags": ["explore-graph"]
+    "path": "/core-features/remote-cache",
+    "tags": ["remote-cache"]
   },
   "/core-features/distribute-task-execution": {
     "id": "distribute-task-execution",
     "name": "Distribute Task Execution",
-    "description": "",
+    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
     "file": "shared/core-features/distribute-task-execution",
     "itemList": [],
     "isExternal": false,
     "path": "/core-features/distribute-task-execution",
     "tags": ["distribute-task-execution"]
   },
-  "/core-features/integrate-with-editors": {
-    "id": "integrate-with-editors",
-    "name": "Integrate with Editors",
-    "description": "",
-    "file": "shared/core-features/integrate-with-editors",
+  "/core-features/explore-graph": {
+    "id": "explore-graph",
+    "name": "Explore the Graph",
+    "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+    "file": "shared/core-features/explore-graph",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/integrate-with-editors",
-    "tags": ["integrate-with-editors"]
+    "path": "/core-features/explore-graph",
+    "tags": ["explore-graph"]
   },
   "/core-features/automate-updating-dependencies": {
     "id": "automate-updating-dependencies",
     "name": "Automate Updating Dependencies",
-    "description": "",
+    "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
     "file": "shared/core-features/automate-updating-dependencies",
     "itemList": [],
     "isExternal": false,
     "path": "/core-features/automate-updating-dependencies",
     "tags": ["automate-updating-dependencies"]
   },
-  "/core-features/enforce-project-boundaries": {
-    "id": "enforce-project-boundaries",
-    "name": "Enforce Project Boundaries",
-    "description": "",
-    "file": "shared/core-features/enforce-project-boundaries",
+  "/core-features/enforce-module-boundaries": {
+    "id": "enforce-module-boundaries",
+    "name": "Enforce Module Boundaries",
+    "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
+    "file": "shared/core-features/enforce-module-boundaries",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/enforce-project-boundaries",
-    "tags": ["enforce-project-boundaries"]
+    "path": "/core-features/enforce-module-boundaries",
+    "tags": ["enforce-module-boundaries"]
+  },
+  "/core-features/integrate-with-editors": {
+    "id": "integrate-with-editors",
+    "name": "Integrate with Editors",
+    "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
+    "file": "shared/core-features/integrate-with-editors",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/integrate-with-editors",
+    "tags": ["integrate-with-editors"]
   },
   "/core-features/plugin-features": {
     "id": "plugin-features",
@@ -1351,7 +1351,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-            "tags": ["enforce-project-boundaries", "use-code-generators"]
+            "tags": ["enforce-module-boundaries", "use-code-generators"]
           },
           {
             "id": "nx-daemon",
@@ -1426,7 +1426,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/applications-and-libraries",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "creating-libraries",
@@ -1436,7 +1436,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/creating-libraries",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "library-types",
@@ -1446,7 +1446,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/library-types",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "grouping-libraries",
@@ -1456,7 +1456,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/grouping-libraries",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "buildable-and-publishable-libraries",
@@ -1652,7 +1652,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-        "tags": ["enforce-project-boundaries", "use-code-generators"]
+        "tags": ["enforce-module-boundaries", "use-code-generators"]
       },
       {
         "id": "nx-daemon",
@@ -1722,7 +1722,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/applications-and-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "creating-libraries",
@@ -1732,7 +1732,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/creating-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "library-types",
@@ -1742,7 +1742,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/library-types",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "grouping-libraries",
@@ -1752,7 +1752,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/grouping-libraries",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "buildable-and-publishable-libraries",
@@ -1877,7 +1877,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-    "tags": ["enforce-project-boundaries", "use-code-generators"]
+    "tags": ["enforce-module-boundaries", "use-code-generators"]
   },
   "/concepts/more-concepts/nx-daemon": {
     "id": "nx-daemon",
@@ -1947,7 +1947,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/applications-and-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts/creating-libraries": {
     "id": "creating-libraries",
@@ -1957,7 +1957,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/creating-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts/library-types": {
     "id": "library-types",
@@ -1967,7 +1967,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/library-types",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts/grouping-libraries": {
     "id": "grouping-libraries",
@@ -1977,7 +1977,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/grouping-libraries",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/concepts/more-concepts/buildable-and-publishable-libraries": {
     "id": "buildable-and-publishable-libraries",
@@ -2395,7 +2395,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "tag-multiple-dimensions",
@@ -2405,7 +2405,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "ban-external-imports",
@@ -2415,7 +2415,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/enforce-module-boundaries/ban-external-imports",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           },
           {
             "id": "tags-allow-list",
@@ -2425,7 +2425,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/enforce-module-boundaries/tags-allow-list",
-            "tags": ["enforce-project-boundaries"]
+            "tags": ["enforce-module-boundaries"]
           }
         ],
         "isExternal": false,
@@ -2529,6 +2529,26 @@
         "description": "Various tips and tricks for using Nx.",
         "file": "",
         "itemList": [
+          {
+            "id": "package-based-in-integrated",
+            "name": "Add a Package-based Project in an Integrated Repo",
+            "description": "",
+            "file": "shared/recipes/repo-types/package-based-in-integrated",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+            "tags": ["repository-types"]
+          },
+          {
+            "id": "integrated-in-package-based",
+            "name": "Add an Integrated Project in a Package-based Repo",
+            "description": "",
+            "file": "shared/recipes/repo-types/integrated-in-package-based",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+            "tags": ["repository-types"]
+          },
           {
             "id": "eslint",
             "name": "Configuring ESLint with Typescript",
@@ -3553,7 +3573,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "tag-multiple-dimensions",
@@ -3563,7 +3583,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "ban-external-imports",
@@ -3573,7 +3593,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries/ban-external-imports",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "tags-allow-list",
@@ -3583,7 +3603,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/enforce-module-boundaries/tags-allow-list",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       }
     ],
     "isExternal": false,
@@ -3598,7 +3618,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/ban-dependencies-with-tags",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/recipes/enforce-module-boundaries/tag-multiple-dimensions": {
     "id": "tag-multiple-dimensions",
@@ -3608,7 +3628,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/tag-multiple-dimensions",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/recipes/enforce-module-boundaries/ban-external-imports": {
     "id": "ban-external-imports",
@@ -3618,7 +3638,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/ban-external-imports",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/recipes/enforce-module-boundaries/tags-allow-list": {
     "id": "tags-allow-list",
@@ -3628,7 +3648,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/tags-allow-list",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/recipes/ci": {
     "id": "ci",
@@ -3808,6 +3828,26 @@
     "file": "",
     "itemList": [
       {
+        "id": "package-based-in-integrated",
+        "name": "Add a Package-based Project in an Integrated Repo",
+        "description": "",
+        "file": "shared/recipes/repo-types/package-based-in-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+        "tags": ["repository-types"]
+      },
+      {
+        "id": "integrated-in-package-based",
+        "name": "Add an Integrated Project in a Package-based Repo",
+        "description": "",
+        "file": "shared/recipes/repo-types/integrated-in-package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+        "tags": ["repository-types"]
+      },
+      {
         "id": "eslint",
         "name": "Configuring ESLint with Typescript",
         "description": "",
@@ -3941,6 +3981,26 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks",
     "tags": []
+  },
+  "/recipes/tips-n-tricks/package-based-in-integrated": {
+    "id": "package-based-in-integrated",
+    "name": "Add a Package-based Project in an Integrated Repo",
+    "description": "",
+    "file": "shared/recipes/repo-types/package-based-in-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/package-based-in-integrated",
+    "tags": ["repository-types"]
+  },
+  "/recipes/tips-n-tricks/integrated-in-package-based": {
+    "id": "integrated-in-package-based",
+    "name": "Add an Integrated Project in a Package-based Repo",
+    "description": "",
+    "file": "shared/recipes/repo-types/integrated-in-package-based",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+    "tags": ["repository-types"]
   },
   "/recipes/tips-n-tricks/eslint": {
     "id": "eslint",
@@ -4398,6 +4458,46 @@
         "file": "",
         "itemList": [
           {
+            "id": "add-lit",
+            "name": "Add a Lit Project",
+            "description": "Add a Lit project to your repo",
+            "file": "shared/recipes/add-stack/add-lit",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-lit",
+            "tags": []
+          },
+          {
+            "id": "add-solid",
+            "name": "Add a Solid Project",
+            "description": "Add a Solid project to your repo",
+            "file": "shared/recipes/add-stack/add-solid",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-solid",
+            "tags": []
+          },
+          {
+            "id": "add-qwik",
+            "name": "Add a Qwik Project",
+            "description": "Add a Qwik project to your repo",
+            "file": "shared/recipes/add-stack/add-qwik",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-qwik",
+            "tags": []
+          },
+          {
+            "id": "add-astro",
+            "name": "Add an Astro Project",
+            "description": "Add Nx to an Astro project",
+            "file": "shared/recipes/add-stack/add-astro",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-astro",
+            "tags": []
+          },
+          {
             "id": "react-nx",
             "name": "Powering Up React Development With Nx",
             "description": "",
@@ -4514,6 +4614,46 @@
     "file": "",
     "itemList": [
       {
+        "id": "add-lit",
+        "name": "Add a Lit Project",
+        "description": "Add a Lit project to your repo",
+        "file": "shared/recipes/add-stack/add-lit",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-lit",
+        "tags": []
+      },
+      {
+        "id": "add-solid",
+        "name": "Add a Solid Project",
+        "description": "Add a Solid project to your repo",
+        "file": "shared/recipes/add-stack/add-solid",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-solid",
+        "tags": []
+      },
+      {
+        "id": "add-qwik",
+        "name": "Add a Qwik Project",
+        "description": "Add a Qwik project to your repo",
+        "file": "shared/recipes/add-stack/add-qwik",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-qwik",
+        "tags": []
+      },
+      {
+        "id": "add-astro",
+        "name": "Add an Astro Project",
+        "description": "Add Nx to an Astro project",
+        "file": "shared/recipes/add-stack/add-astro",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-astro",
+        "tags": []
+      },
+      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -4616,6 +4756,46 @@
     ],
     "isExternal": false,
     "path": "/showcase/example-repos",
+    "tags": []
+  },
+  "/showcase/example-repos/add-lit": {
+    "id": "add-lit",
+    "name": "Add a Lit Project",
+    "description": "Add a Lit project to your repo",
+    "file": "shared/recipes/add-stack/add-lit",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-lit",
+    "tags": []
+  },
+  "/showcase/example-repos/add-solid": {
+    "id": "add-solid",
+    "name": "Add a Solid Project",
+    "description": "Add a Solid project to your repo",
+    "file": "shared/recipes/add-stack/add-solid",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-solid",
+    "tags": []
+  },
+  "/showcase/example-repos/add-qwik": {
+    "id": "add-qwik",
+    "name": "Add a Qwik Project",
+    "description": "Add a Qwik project to your repo",
+    "file": "shared/recipes/add-stack/add-qwik",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-qwik",
+    "tags": []
+  },
+  "/showcase/example-repos/add-astro": {
+    "id": "add-astro",
+    "name": "Add an Astro Project",
+    "description": "Add Nx to an Astro project",
+    "file": "shared/recipes/add-stack/add-astro",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-astro",
     "tags": []
   },
   "/showcase/example-repos/react-nx": {
@@ -4752,7 +4932,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/reference/nxignore",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "environment-variables",
@@ -4807,7 +4987,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/nxignore",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/reference/environment-variables": {
     "id": "environment-variables",
@@ -5256,7 +5436,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/reference/nx-json#workspace-layout",
-        "tags": ["enforce-project-boundaries"]
+        "tags": ["enforce-module-boundaries"]
       },
       {
         "id": "nxjson-generator-defaults",
@@ -5341,7 +5521,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/reference/nx-json#workspace-layout",
-    "tags": ["enforce-project-boundaries"]
+    "tags": ["enforce-module-boundaries"]
   },
   "/reference/nx-json#generators": {
     "id": "nxjson-generator-defaults",

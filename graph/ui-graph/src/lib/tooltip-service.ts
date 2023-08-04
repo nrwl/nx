@@ -20,16 +20,34 @@ export class GraphTooltipService {
           this.hideAll();
           break;
         case 'ProjectNodeClick':
+          const openConfigCallback =
+            graph.renderMode === 'nx-console'
+              ? () =>
+                  graph.broadcast({
+                    type: 'ProjectOpenConfigClick',
+                    projectName: event.data.id,
+                  })
+              : undefined;
           this.openProjectNodeToolTip(event.ref, {
             id: event.data.id,
             tags: event.data.tags,
             type: event.data.type,
             description: event.data.description,
+            openConfigCallback,
           });
           break;
         case 'TaskNodeClick':
+          const runTaskCallback =
+            graph.renderMode === 'nx-console'
+              ? () =>
+                  graph.broadcast({
+                    type: 'RunTaskClick',
+                    taskId: event.data.id,
+                  })
+              : undefined;
           this.openTaskNodeTooltip(event.ref, {
             ...event.data,
+            runTaskCallback,
           });
           break;
         case 'EdgeClick':

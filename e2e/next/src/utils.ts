@@ -1,11 +1,10 @@
-import { execSync } from 'child_process';
 import {
   checkFilesExist,
-  killPort,
+  killPorts,
   readJson,
   runCLI,
   runCLIAsync,
-  runCypressTests,
+  runE2ETests,
 } from '../../utils';
 
 export async function checkApp(
@@ -41,12 +40,12 @@ export async function checkApp(
   expect(packageJson.dependencies['react-dom']).toBeDefined();
   expect(packageJson.dependencies.next).toBeDefined();
 
-  if (opts.checkE2E && runCypressTests()) {
+  if (opts.checkE2E && runE2ETests()) {
     const e2eResults = runCLI(
-      `e2e ${appName}-e2e --no-watch --configuration=production --port=9000`
+      `e2e ${appName}-e2e --no-watch --configuration=production`
     );
-    expect(e2eResults).toContain('All specs passed!');
-    expect(await killPort(9000)).toBeTruthy();
+    expect(e2eResults).toContain('Successfully ran target e2e for project');
+    expect(await killPorts()).toBeTruthy();
   }
 
   if (opts.checkExport) {

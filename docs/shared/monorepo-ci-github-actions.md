@@ -150,7 +150,7 @@ jobs:
           pids+=($!)
 
           # run all commands in parallel and bail if one of them fails
-          for pid in \${pids[*]}; do
+          for pid in ${pids[*]}; do
             if ! wait $pid; then
               exit 1
             fi
@@ -168,8 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        agent:
-          - [1, 2, 3]
+        agent: [1, 2, 3]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -193,7 +192,7 @@ jobs:
       - name: Start Nx Agent ${{ matrix.agent }}
         run: npx nx-cloud start-agent
         env:
-          NX_AGENT_NAME: ${{matrix.agent}}
+          NX_AGENT_NAME: ${{ matrix.agent }}
 ```
 
 {% /nx-cloud-section %}

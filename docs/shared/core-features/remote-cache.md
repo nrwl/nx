@@ -1,13 +1,13 @@
-# Share Your Cache
+# Use Remote Caching
 
-The computation cache provided by Nx can be distributed across multiple machines. You can either build an implementation
-of the cache or use Nx Cloud. Nx Cloud is an app that provides a fast and zero-config implementation of distributed
-caching. It's completely free for OSS projects and for most closed-sourced
-projects ([read more here](https://dev.to/nrwl/more-time-saved-for-free-with-nx-cloud-4a2j)).
+The computation cache provided by Nx can be distributed across multiple machines. You can either build an implementation of the cache or use Nx Cloud. Nx Cloud is an app that provides a fast and zero-config implementation of distributed caching. It's completely free for OSS projects and for most closed-sourced
+projects ([read more here](https://nx.app/pricing)).
 
 ![Diagram showing Teika sharing his cache with CI, Kimiko and James](/shared/images/dte/distributed-caching.svg)
 
 In this diagram, Teika runs the build once on his machine, then CI, Kimiko and James can use the cached artifact from Teika instead of re-executing the same work.
+
+## Connecting Your Workspace to Your Nx Cloud Account
 
 You can connect your workspace to Nx Cloud by running:
 
@@ -15,25 +15,7 @@ You can connect your workspace to Nx Cloud by running:
 npx nx connect-to-nx-cloud
 ```
 
-```{% command="npx nx connect-to-nx-cloud"%}
-✔ Enable distributed caching to make your CI faster · Yes
-
- >  NX   Distributed caching via Nx Cloud has been enabled
-
-   In addition to the caching, Nx Cloud provides config-free distributed execution,
-   UI for viewing complex runs and GitHub integration. Learn more at https://nx.app
-
-   Your workspace is currently unclaimed. Run details from unclaimed workspaces can be viewed on cloud.nx.app by anyone
-   with the link. Claim your workspace at the following link to restrict access.
-
-   https://cloud.nx.app/orgs/workspace-setup?accessToken=YOURACCESSTOKEN
-```
-
 To see the remote cache in action, run:
-
-```shell
-nx build header && nx reset && nx build header
-```
 
 ```{% command="nx build header && nx reset && nx build header"%}
 > nx run header:build
@@ -81,11 +63,11 @@ created dist in 786ms
    Nx Cloud made it possible to reuse header: https://nx.app/runs/P0X6ZGTkqZ
 ```
 
-## Connecting Your Workspace to Your Nx Cloud Account
+## Claim your Nx Cloud Workspace
 
 After you have enabled Nx Cloud in your workspace, you will see the following:
 
-```shell
+```plaintext
 >  NX   NOTE  Nx Cloud has been enabled
 
   Your workspace is currently public. Anybody with code access
@@ -109,5 +91,4 @@ account, and connect your workspace using the access token from `nx.json`.
 
 ## Skipping Cloud
 
-Similar to how `--skip-nx-cache` will instruct Nx not to use the cache, passing `--no-cloud` will tell Nx not to use Nx
-Cloud.
+Similar to how `--skip-nx-cache` will instruct Nx not to use the local cache, passing `--no-cloud` will tell Nx not to use the remote cache from Nx Cloud.

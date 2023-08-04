@@ -5,6 +5,7 @@ import { componentGenerator } from '../component/component';
 import { scamGenerator } from '../scam/scam';
 import { generateTestApplication } from '../utils/testing';
 import { angularStoriesGenerator } from './stories';
+import { stripIndents } from '@nx/devkit';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
@@ -101,6 +102,53 @@ describe('angularStories generator: applications', () => {
       tree.exists(
         `apps/${appName}/src/app/component-a/component-a.component.stories.ts`
       )
+    ).toBeFalsy();
+  });
+
+  it('should ignore a path when using a routing module', async () => {
+    tree.write(
+      `apps/${appName}/src/app/component/component.module.ts`,
+      stripIndents`
+      import { NgModule } from '@angular/core';
+      
+      @NgModule({})
+      export class ComponentModule {}
+      `
+    );
+    tree.write(
+      `apps/${appName}/src/app/component/component-routing.module.ts`,
+      stripIndents`
+      import { NgModule } from '@angular/core';
+      import { RouterModule, Routes } from '@angular/router';
+      
+      const routes: Routes = [];
+      
+      @NgModule({
+        imports: [RouterModule.forChild(routes)],
+        exports: [RouterModule],
+      })
+      export class ComponentRoutingModule {}
+      `
+    );
+    await componentGenerator(tree, {
+      name: 'component/component',
+      project: appName,
+      flat: true,
+    });
+
+    await angularStoriesGenerator(tree, {
+      name: appName,
+      ignorePaths: [`apps/${appName}/src/app/app.component.ts`],
+    });
+
+    expect(
+      tree.read(
+        `apps/${appName}/src/app/component/component.component.stories.ts`,
+        'utf-8'
+      )
+    ).toMatchSnapshot();
+    expect(
+      tree.exists(`apps/${appName}/src/app/app.component.stories.ts`)
     ).toBeFalsy();
   });
 

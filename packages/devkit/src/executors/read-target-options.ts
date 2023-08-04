@@ -3,6 +3,7 @@ import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { combineOptionsForExecutor } from 'nx/src/utils/params';
 import { requireNx } from '../../nx';
+import { relative } from 'path';
 
 const { Workspaces, getExecutorInformation, calculateDefaultProjectName } =
   requireNx();
@@ -21,6 +22,7 @@ export function readTargetOptions<T = any>(
   ).projects[project];
   const targetConfiguration = projectConfiguration.targets[target];
 
+  // TODO(v18): remove Workspaces.
   const ws = new Workspaces(context.root);
   const [nodeModule, executorName] = targetConfiguration.executor.split(':');
   const { schema } = getExecutorInformation
@@ -48,6 +50,6 @@ export function readTargetOptions<T = any>(
     targetConfiguration,
     schema,
     defaultProject,
-    ws.relativeCwd(context.cwd)
+    relative(context.cwd, context.root)
   ) as T;
 }

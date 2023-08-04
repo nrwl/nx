@@ -38,6 +38,8 @@ export interface ExecutorOptions {
   rootDir?: string;
   outputPath: string;
   tsConfig: string;
+  generateExportsField?: boolean;
+  additionalEntryPoints?: string[];
   swcrc?: string;
   watch: boolean;
   clean?: boolean;

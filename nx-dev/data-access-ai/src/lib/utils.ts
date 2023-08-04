@@ -1,4 +1,13 @@
 import { CreateChatCompletionResponse } from 'openai';
+export interface PageSection {
+  id: number;
+  page_id: number;
+  content: string;
+  heading: string;
+  similarity: number;
+  slug: string;
+  url_partial: string | null;
+}
 
 export function getMessageFromResponse(
   response: CreateChatCompletionResponse
@@ -9,6 +18,34 @@ export function getMessageFromResponse(
    * once we add more functionality
    */
   return response.choices[0].message?.content ?? '';
+}
+
+export function getListOfSources(
+  pageSections: PageSection[]
+): { heading: string; url: string }[] {
+  const uniqueUrlPartials = new Set<string | null>();
+  const result = pageSections
+    .filter((section) => {
+      if (section.url_partial && !uniqueUrlPartials.has(section.url_partial)) {
+        uniqueUrlPartials.add(section.url_partial);
+        return true;
+      }
+      return false;
+    })
+    .map((section) => ({
+      heading: section.heading,
+      url: `https://nx.dev${section.url_partial}`,
+    }));
+
+  return result;
+}
+
+export function toMarkdownList(
+  sections: { heading: string; url: string }[]
+): string {
+  return sections
+    .map((section) => `- [${section.heading}](${section.url})`)
+    .join('\n');
 }
 
 export async function sanitizeLinksInResponse(

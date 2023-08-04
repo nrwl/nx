@@ -76,7 +76,6 @@ async function createTasks(
     {},
     [],
     projectGraph,
-    taskGraph,
     nxJson,
     {},
     fileHasher
@@ -85,7 +84,7 @@ async function createTasks(
   const tasks = Object.values(taskGraph.tasks);
 
   await Promise.all(
-    tasks.map((t) => hashTask(hasher, projectGraph, {} as any, t))
+    tasks.map((t) => hashTask(hasher, projectGraph, taskGraph, t))
   );
 
   return tasks.map((task) => ({

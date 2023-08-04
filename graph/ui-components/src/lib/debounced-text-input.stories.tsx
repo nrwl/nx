@@ -1,7 +1,7 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { DebouncedTextInput } from './debounced-text-input';
 
-const Story: ComponentMeta<typeof DebouncedTextInput> = {
+const meta: Meta<typeof DebouncedTextInput> = {
   component: DebouncedTextInput,
   title: 'Shared/DebouncedTextInput',
   argTypes: {
@@ -13,14 +13,13 @@ const Story: ComponentMeta<typeof DebouncedTextInput> = {
     },
   },
 };
-export default Story;
 
-const Template: ComponentStory<typeof DebouncedTextInput> = (args) => (
-  <DebouncedTextInput {...args} />
-);
+export default meta;
+type Story = StoryObj<typeof DebouncedTextInput>;
 
-export const Primary = Template.bind({});
-Primary.args = {
-  initialText: '',
-  placeholderText: '',
+export const Primary: Story = {
+  args: {
+    initialText: '',
+    placeholderText: '',
+  },
 };

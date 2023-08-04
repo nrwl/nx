@@ -255,6 +255,23 @@
           "version": "^5.60.1"
         }
       }
+    },
+    "16.7.0": {
+      "version": "16.7.0-beta.2",
+      "packages": {
+        "eslint": {
+          "version": "~8.46.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^5.60.1"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^5.60.1"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^5.60.1"
+        }
+      }
     }
   }
 }

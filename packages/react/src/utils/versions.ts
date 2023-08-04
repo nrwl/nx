@@ -15,6 +15,7 @@ export const typesReactIsVersion = '18.2.1';
 export const typesNodeVersion = '18.14.2';
 
 export const babelPresetReactVersion = '^7.14.5';
+export const babelCoreVersion = '^7.14.5';
 
 export const styledComponentsVersion = '5.3.6';
 export const typesStyledComponentsVersion = '5.1.26';

@@ -4,7 +4,7 @@ import {
   createFile,
   newProject,
   runCLI,
-  runCypressTests,
+  runE2ETests,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -39,7 +39,7 @@ describe('Angular Cypress Component Tests', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${appName} --generate-tests --no-interactive`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -50,7 +50,7 @@ describe('Angular Cypress Component Tests', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${usedInAppLibName} --generate-tests --no-interactive`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -70,7 +70,7 @@ describe('Angular Cypress Component Tests', () => {
     runCLI(
       `generate @nx/angular:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build --no-interactive`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -92,7 +92,7 @@ describe('Angular Cypress Component Tests', () => {
       }
     );
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -108,7 +108,7 @@ describe('Angular Cypress Component Tests', () => {
 
     updateBuilableLibTestsToAssertAppStyles(appName, buildableLibName);
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -122,7 +122,7 @@ describe('Angular Cypress Component Tests', () => {
     checkFilesExist('tailwind.config.js');
     checkFilesDoNotExist(`libs/${buildableLibName}/tailwind.config.js`);
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );

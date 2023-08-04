@@ -89,7 +89,7 @@ export default function CloudRoot({
 export const getStaticProps: GetStaticProps = async () => {
   const document = nxCloudApi.generateRootDocumentIndex({
     name: 'cloud',
-    description: 'Learn about what is Nx Cloud.',
+    description: 'Learn about Nx Cloud.',
   });
   return {
     props: {

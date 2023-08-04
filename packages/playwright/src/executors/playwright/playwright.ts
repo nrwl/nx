@@ -1,6 +1,11 @@
-import { fork } from 'child_process';
-import { ExecutorContext, names } from '@nx/devkit';
-import { join } from 'path';
+import { execSync, fork } from 'child_process';
+import {
+  ExecutorContext,
+  getPackageManagerCommand,
+  names,
+  output,
+  workspaceRoot,
+} from '@nx/devkit';
 
 export interface PlaywrightExecutorSchema {
   /*
@@ -49,6 +54,7 @@ export interface PlaywrightExecutorSchema {
   ui?: boolean;
   uiHost?: string;
   uiPort?: string;
+  skipInstall?: boolean;
 }
 
 export async function playwrightExecutor(
@@ -63,6 +69,16 @@ export async function playwrightExecutor(
       `Unable to find the Project Root for ${context.projectName}. Is it set in the project.json?`
     );
   }
+
+  if (!options.skipInstall) {
+    output.log({
+      title: 'Ensuring Playwright is installed.',
+      bodyLines: ['use --skipInstall to skip installation.'],
+    });
+    const pmc = getPackageManagerCommand();
+    execSync(`${pmc.exec} playwright install`, { cwd: workspaceRoot });
+  }
+
   const args = createArgs(options);
   const p = runPlaywright(args, context.root);
 
