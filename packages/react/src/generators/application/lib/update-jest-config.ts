@@ -8,16 +8,15 @@ export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
   }
 
   updateJson(host, `${options.appProjectRoot}/tsconfig.spec.json`, (json) => {
-    const offset = offsetFromRoot(options.appProjectRoot);
-    json.files = [
-      `${offset}node_modules/@nx/react/typings/cssmodule.d.ts`,
-      `${offset}node_modules/@nx/react/typings/image.d.ts`,
-    ];
+    json.types = json.types || [];
     if (options.style === 'styled-jsx') {
-      json.files.unshift(
-        `${offset}node_modules/@nx/react/typings/styled-jsx.d.ts`
-      );
+      json.types.push('@nx/react/typings/styled-jsx.d.ts');
     }
+    json.types = [
+      ...json.types,
+      '@nx/react/typings/cssmodule.d.ts',
+      '@nx/react/typings/image.d.ts',
+    ];
     return json;
   });
 
