@@ -173,17 +173,28 @@ function addExtends(
     ? config.extends
     : [config.extends];
 
+  const eslintrcConfigs = [];
+
   // add base extends
   extendsConfig
-    // TODO this only works for .eslintrc files that will be converted automatically to flat config
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
-      const localName = index ? `baseConfig${index}` : 'baseConfig';
-      const importStatement = generateRequire(localName, imp, ts.factory);
-      importsList.push(importStatement);
-      configBlocks.push(
-        ts.factory.createSpreadElement(ts.factory.createIdentifier(localName))
-      );
+      if (imp.match(/\.eslintrc(.base)?\.json$/)) {
+        const localName = index ? `baseConfig${index}` : 'baseConfig';
+        configBlocks.push(ts.factory.createIdentifier(localName));
+        const newImport = imp.replace(
+          /^(.*)\.eslintrc(.base)?\.json$/,
+          '$1eslint$2.config.js'
+        );
+        const importStatement = generateRequire(
+          localName,
+          newImport,
+          ts.factory
+        );
+        importsList.push(importStatement);
+      } else {
+        eslintrcConfigs.push(imp);
+      }
     });
   // add plugin extends
   const pluginExtends = extendsConfig.filter((imp) => !imp.match(/^\.?(\.\/)/));
@@ -191,9 +202,11 @@ function addExtends(
     const eslintPluginExtends = pluginExtends.filter((imp) =>
       imp.startsWith('eslint:')
     );
-    const externalPluginExtends = pluginExtends.filter(
-      (imp) => !imp.startsWith('eslint:')
-    );
+    pluginExtends.forEach((imp) => {
+      if (!imp.startsWith('eslint:')) {
+        eslintrcConfigs.push(imp);
+      }
+    });
 
     if (eslintPluginExtends.length) {
       const importStatement = generateRequire('js', '@eslint/js', ts.factory);
@@ -211,23 +224,23 @@ function addExtends(
         );
       });
     }
-    if (externalPluginExtends.length) {
-      isFlatCompatNeeded = true;
-      const pluginExtendsSpread = ts.factory.createSpreadElement(
-        ts.factory.createCallExpression(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createIdentifier('eslintrc'),
-            ts.factory.createIdentifier('extends')
-          ),
-          undefined,
-          externalPluginExtends.map((plugin) =>
-            ts.factory.createStringLiteral(plugin)
-          )
-        )
-      );
-      configBlocks.push(pluginExtendsSpread);
-    }
   }
+  if (eslintrcConfigs.length) {
+    isFlatCompatNeeded = true;
+
+    const pluginExtendsSpread = ts.factory.createSpreadElement(
+      ts.factory.createCallExpression(
+        ts.factory.createPropertyAccessExpression(
+          ts.factory.createIdentifier('eslintrc'),
+          ts.factory.createIdentifier('extends')
+        ),
+        undefined,
+        eslintrcConfigs.map((plugin) => ts.factory.createStringLiteral(plugin))
+      )
+    );
+    configBlocks.push(pluginExtendsSpread);
+  }
+
   return isFlatCompatNeeded;
 }
 

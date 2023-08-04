@@ -244,9 +244,9 @@ module.exports = [
 `;
 
 exports[`convert-to-flat-config generator should run successfully 2`] = `
-"const baseConfig = require('../../.eslintrc.json');
+"const baseConfig = require('../../eslint.config.js');
 module.exports = [
-  ...baseConfig,
+  baseConfig,
   {
     files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
     rules: {},
