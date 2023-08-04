@@ -903,6 +903,12 @@
                   "id": "run-commands-executor",
                   "tags": ["use-task-executors"],
                   "file": "shared/running-custom-commands"
+                },
+                {
+                  "name": "Using Yarn PnP",
+                  "id": "yarn-pnp",
+                  "tags": ["yarn", "Plug and Play"],
+                  "file": "shared/recipes/yarn-pnp"
                 }
               ]
             },

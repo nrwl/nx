@@ -156,6 +156,7 @@
       - [Use JavaScript instead TypeScript](/recipes/tips-n-tricks/js-and-ts)
       - [Altering Migration Process](/recipes/tips-n-tricks/advanced-update)
       - [Running Custom Commands](/recipes/tips-n-tricks/run-commands-executor)
+      - [Using Yarn PnP](/recipes/tips-n-tricks/yarn-pnp)
     - [Troubleshooting](/recipes/troubleshooting)
       - [Resolve Circular Dependencies](/recipes/troubleshooting/resolve-circular-dependencies)
       - [Troubleshooting Nx Install Issues](/recipes/troubleshooting/troubleshoot-nx-install-issues)
