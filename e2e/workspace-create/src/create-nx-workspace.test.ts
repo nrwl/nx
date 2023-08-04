@@ -31,6 +31,7 @@ describe('create-nx-workspace', () => {
       packageManager,
       standaloneApi: false,
       routing: false,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('package.json');
@@ -50,6 +51,7 @@ describe('create-nx-workspace', () => {
       packageManager,
       standaloneApi: true,
       routing: true,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('package.json');
@@ -68,6 +70,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       packageManager,
       bundler: 'vite',
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('package.json');
@@ -77,7 +80,7 @@ describe('create-nx-workspace', () => {
     expectCodeIsFormatted();
   });
 
-  it('should create a workspace with a single react app with webpack at the root', () => {
+  it('should create a workspace with a single react app with webpack and playwright at the root', () => {
     const wsName = uniq('react');
 
     runCreateWorkspace(wsName, {
@@ -86,6 +89,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       packageManager,
       bundler: 'webpack',
+      e2eTestRunner: 'playwright',
     });
 
     checkFilesExist('package.json');
@@ -144,6 +148,7 @@ describe('create-nx-workspace', () => {
       packageManager,
       standaloneApi: false,
       routing: true,
+      e2eTestRunner: 'none',
     });
     expectCodeIsFormatted();
   });
@@ -162,6 +167,7 @@ describe('create-nx-workspace', () => {
         packageManager,
         standaloneApi: false,
         routing: false,
+        e2eTestRunner: 'none',
       })
     ).toThrow();
   });
@@ -176,6 +182,7 @@ describe('create-nx-workspace', () => {
       appName,
       packageManager,
       bundler: 'webpack',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
@@ -195,6 +202,7 @@ describe('create-nx-workspace', () => {
       appName,
       packageManager,
       bundler: 'vite',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
@@ -213,6 +221,7 @@ describe('create-nx-workspace', () => {
       appName,
       nextAppDir: false,
       packageManager,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist(`apps/${appName}/pages/index.tsx`);
@@ -230,6 +239,7 @@ describe('create-nx-workspace', () => {
       nextAppDir: true,
       appName,
       packageManager,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('app/page.tsx');
@@ -247,6 +257,7 @@ describe('create-nx-workspace', () => {
       nextAppDir: false,
       appName,
       packageManager,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('pages/index.tsx');

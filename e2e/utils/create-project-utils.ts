@@ -138,6 +138,7 @@ export function runCreateWorkspace(
     standaloneApi,
     docker,
     nextAppDir,
+    e2eTestRunner,
   }: {
     preset: string;
     appName?: string;
@@ -153,6 +154,7 @@ export function runCreateWorkspace(
     routing?: boolean;
     docker?: boolean;
     nextAppDir?: boolean;
+    e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
   }
 ) {
   projName = name;
@@ -196,6 +198,10 @@ export function runCreateWorkspace(
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
+  }
+
+  if (e2eTestRunner) {
+    command += ` --e2eTestRunner=${e2eTestRunner}`;
   }
 
   if (extraArgs) {

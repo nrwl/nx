@@ -24,6 +24,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
       style: 'css',
       bundler: 'vite',
       packageManager: getSelectedPackageManager(),
+      e2eTestRunner: 'none',
     });
 
     runCLI(
