@@ -17,11 +17,12 @@ export function convertEslintJsonToFlatConfig(
 ) {
   const importsList: ts.VariableStatement[] = [];
   const exportElements: ts.Expression[] = [];
+  let isFlatCompatNeeded = false;
   let combinedConfig: ts.PropertyAssignment[] = [];
   let languageOptions: ts.PropertyAssignment[] = [];
 
   if (config.extends) {
-    addExtends(importsList, exportElements, config);
+    isFlatCompatNeeded = addExtends(importsList, exportElements, config);
   }
 
   if (config.plugins) {
@@ -140,7 +141,11 @@ export function convertEslintJsonToFlatConfig(
   tree.delete(join(root, '.eslintignore'));
 
   // create the node list and print it to new file
-  const nodeList = createNodeList(importsList, exportElements);
+  const nodeList = createNodeList(
+    importsList,
+    exportElements,
+    isFlatCompatNeeded
+  );
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
     join(root, destinationFile),
@@ -158,13 +163,19 @@ export function convertEslintJsonToFlatConfig(
 }
 
 // add parsed extends to export blocks and add import statements
-function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
+function addExtends(
+  importsList,
+  configBlocks,
+  config: ESLint.ConfigData
+): boolean {
+  let isFlatCompatNeeded = false;
   const extendsConfig = Array.isArray(config.extends)
     ? config.extends
     : [config.extends];
 
   // add base extends
   extendsConfig
+    // TODO this only works for .eslintrc files that will be converted automatically to flat config
     .filter((imp) => imp.match(/^\.?(\.\/)/))
     .forEach((imp, index) => {
       const localName = index ? `baseConfig${index}` : 'baseConfig';
@@ -175,7 +186,6 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
       );
     });
   // add plugin extends
-  // TODO(meeroslav): Check if this is the recommended way of doing it
   const pluginExtends = extendsConfig.filter((imp) => !imp.match(/^\.?(\.\/)/));
   if (pluginExtends.length) {
     const eslintPluginExtends = pluginExtends.filter((imp) =>
@@ -201,7 +211,8 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
         );
       });
     }
-    if (externalPluginExtends) {
+    if (externalPluginExtends.length) {
+      isFlatCompatNeeded = true;
       const pluginExtendsSpread = ts.factory.createSpreadElement(
         ts.factory.createCallExpression(
           ts.factory.createPropertyAccessExpression(
@@ -217,6 +228,7 @@ function addExtends(importsList, configBlocks, config: ESLint.ConfigData) {
       configBlocks.push(pluginExtendsSpread);
     }
   }
+  return isFlatCompatNeeded;
 }
 
 function getPluginImport(pluginName: string): string {
@@ -295,7 +307,8 @@ const eslintrc = new FlatCompat({
 
 function createNodeList(
   importsList: ts.VariableStatement[],
-  exportElements: ts.Expression[]
+  exportElements: ts.Expression[],
+  isFlatCompatNeeded: boolean
 ): ts.NodeArray<
   ts.VariableStatement | ts.Identifier | ts.ExpressionStatement | ts.SourceFile
 > {
@@ -304,7 +317,7 @@ function createNodeList(
     ...importsList,
     ts.createSourceFile(
       '',
-      DEFAULT_FLAT_CONFIG,
+      isFlatCompatNeeded ? DEFAULT_FLAT_CONFIG : '',
       ts.ScriptTarget.Latest,
       false,
       ts.ScriptKind.JS

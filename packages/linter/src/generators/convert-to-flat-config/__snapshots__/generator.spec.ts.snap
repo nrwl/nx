@@ -2,10 +2,6 @@
 
 exports[`convert-to-flat-config generator should add env configuration 1`] = `
 "const nxEslintPlugin = require('@nx/eslint-plugin');
-const { FlatCompat } = require('@eslint/eslintrc');
-const eslintrc = new FlatCompat({
-  baseDirectory: __dirname,
-});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -44,7 +40,6 @@ module.exports = [
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['**/*'] },
   { ignores: ['node_modules'] },
 ];
 "
@@ -52,10 +47,6 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should add global gitignores 1`] = `
 "const nxEslintPlugin = require('@nx/eslint-plugin');
-const { FlatCompat } = require('@eslint/eslintrc');
-const eslintrc = new FlatCompat({
-  baseDirectory: __dirname,
-});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -86,7 +77,6 @@ module.exports = [
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['**/*'] },
   { ignores: ['ignore/me'] },
 ];
 "
@@ -95,10 +85,6 @@ module.exports = [
 exports[`convert-to-flat-config generator should add parser 1`] = `
 "const nxEslintPlugin = require('@nx/eslint-plugin');
 const typescriptEslintParser = require('@typescript-eslint/parser');
-const { FlatCompat } = require('@eslint/eslintrc');
-const eslintrc = new FlatCompat({
-  baseDirectory: __dirname,
-});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
@@ -130,7 +116,6 @@ module.exports = [
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['**/*'] },
   { ignores: ['node_modules'] },
 ];
 "
@@ -141,10 +126,6 @@ exports[`convert-to-flat-config generator should add plugins 1`] = `
 const eslintPluginSingleName = require('eslint-plugin-single-name');
 const scopeEslintPluginWithName = require('@scope/eslint-plugin-with-name');
 const justScopeEslintPlugin = require('@just-scope/eslint-plugin');
-const { FlatCompat } = require('@eslint/eslintrc');
-const eslintrc = new FlatCompat({
-  baseDirectory: __dirname,
-});
 module.exports = [
   {
     plugins: {
@@ -182,7 +163,6 @@ module.exports = [
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['**/*'] },
   { ignores: ['node_modules'] },
 ];
 "
@@ -190,10 +170,6 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should add settings 1`] = `
 "const nxEslintPlugin = require('@nx/eslint-plugin');
-const { FlatCompat } = require('@eslint/eslintrc');
-const eslintrc = new FlatCompat({
-  baseDirectory: __dirname,
-});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { settings: { sharedData: 'Hello' } },
@@ -225,7 +201,6 @@ module.exports = [
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['**/*'] },
   { ignores: ['node_modules'] },
 ];
 "
@@ -233,10 +208,6 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should run successfully 1`] = `
 "const nxEslintPlugin = require('@nx/eslint-plugin');
-const { FlatCompat } = require('@eslint/eslintrc');
-const eslintrc = new FlatCompat({
-  baseDirectory: __dirname,
-});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -267,7 +238,6 @@ module.exports = [
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['**/*'] },
   { ignores: ['node_modules'] },
 ];
 "
@@ -275,10 +245,6 @@ module.exports = [
 
 exports[`convert-to-flat-config generator should run successfully 2`] = `
 "const baseConfig = require('../../.eslintrc.json');
-const { FlatCompat } = require('@eslint/eslintrc');
-const eslintrc = new FlatCompat({
-  baseDirectory: __dirname,
-});
 module.exports = [
   ...baseConfig,
   {
@@ -293,7 +259,6 @@ module.exports = [
     files: ['*.js', '*.jsx'],
     rules: {},
   },
-  { ignores: ['!**/*'] },
 ];
 "
 `;

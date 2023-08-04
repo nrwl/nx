@@ -87,7 +87,6 @@ describe('convert-to-flat-config generator', () => {
           extends: ['plugin:@nx/javascript'],
           rules: {},
         },
-        { ignores: ['**/*'] },
         { ignores: ['node_modules'] },
       ];
       "
@@ -202,10 +201,6 @@ describe('convert-to-flat-config generator', () => {
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "const nxEslintPlugin = require('@nx/eslint-plugin');
-      const { FlatCompat } = require('@eslint/eslintrc');
-      const eslintrc = new FlatCompat({
-        baseDirectory: __dirname,
-      });
       module.exports = [
         { plugins: { '@nx': nxEslintPlugin } },
         {
@@ -241,7 +236,6 @@ describe('convert-to-flat-config generator', () => {
           extends: ['plugin:@nx/javascript'],
           rules: {},
         },
-        { ignores: ['**/*'] },
         { ignores: ['node_modules'] },
       ];
       "
