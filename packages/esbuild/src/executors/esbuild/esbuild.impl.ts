@@ -149,6 +149,7 @@ export async function* esbuildExecutor(
                       },
                     }
                   : null,
+                ...(esbuildOptions?.plugins || []),
               ].filter(Boolean),
             });
 
