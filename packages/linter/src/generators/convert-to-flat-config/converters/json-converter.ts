@@ -118,10 +118,14 @@ export function convertEslintJsonToFlatConfig(
   }
 
   if (config.ignorePatterns) {
-    const patterns = Array.isArray(config.ignorePatterns)
-      ? config.ignorePatterns
-      : [config.ignorePatterns];
-    exportElements.push(generateAst({ ignores: patterns }, ts.factory));
+    const patterns = (
+      Array.isArray(config.ignorePatterns)
+        ? config.ignorePatterns
+        : [config.ignorePatterns]
+    ).filter((pattern) => pattern !== '**/*' && pattern !== '!**/*'); // these are useless in a flat config
+    if (patterns.length > 0) {
+      exportElements.push(generateAst({ ignores: patterns }, ts.factory));
+    }
   }
 
   if (tree.exists(`${root}/.eslintignore`)) {
