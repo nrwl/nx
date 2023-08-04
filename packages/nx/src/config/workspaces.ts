@@ -44,8 +44,7 @@ export class Workspaces {
         nxJson,
         projectPaths,
         loadNxPluginsSync(),
-        this.root,
-        (path) => readJsonFile(join(this.root, path))
+        this.root
       ).projects;
     if (
       shouldMergeAngularProjects(
@@ -114,35 +113,4 @@ export class Workspaces {
 export function toProjectName(fileName: string): string {
   const parts = dirname(fileName).split(/[\/\\]/g);
   return parts[parts.length - 1].toLowerCase();
-}
-
-/**
- * @deprecated Use getGlobPatternsFromPluginsAsync instead.
- */
-export function getGlobPatternsFromPlugins(
-  nxJson: NxJsonConfiguration,
-  paths: string[],
-  root = workspaceRoot
-): string[] {
-  const plugins = loadNxPluginsSync(nxJson?.plugins, paths, root);
-
-  return plugins.flatMap((plugin) =>
-    plugin.projectConfigurationsConstructor
-      ? plugin.projectConfigurationsConstructor[0]
-      : []
-  );
-}
-
-export async function getGlobPatternsFromPluginsAsync(
-  nxJson: NxJsonConfiguration,
-  paths: string[],
-  root = workspaceRoot
-): Promise<string[]> {
-  const plugins = await loadNxPlugins(nxJson?.plugins, paths, root);
-
-  return plugins.flatMap((plugin) =>
-    plugin.projectConfigurationsConstructor
-      ? Object.keys(plugin.projectConfigurationsConstructor[0])
-      : []
-  );
 }

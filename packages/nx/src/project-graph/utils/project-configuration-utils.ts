@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 
-import { getPackageJsonWorkspacesPlugin } from '../../../plugins/package-json-workspaces';
-import { getProjectJsonPlugin } from '../../../plugins/project-json';
+import { NX_PACKAGE_JSON_WORKSPACES_PLUGIN } from '../../../plugins/package-json-workspaces';
+import { NX_PROJECT_JSON_PLUGIN } from '../../../plugins/project-json';
 import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
@@ -94,9 +94,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: NxPluginV2[],
-  root: string = workspaceRoot,
-  readJson: <T extends Object>(string) => T = <T extends Object>(string) =>
-    readJsonFile<T>(string) // making this an arg allows us to reuse in devkit
+  root: string = workspaceRoot
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
@@ -106,10 +104,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
 
   // We push the nx core node builder onto the end, s.t. it overwrites any user specified behavior
-  const nxCorePlugin: NxPluginV2 = getProjectJsonPlugin(readJson);
-  const nxPackageManagerWorkspacesPlugin: NxPluginV2 =
-    getPackageJsonWorkspacesPlugin(root, nxJson, readJson);
-  plugins.push(nxPackageManagerWorkspacesPlugin, nxCorePlugin);
+  plugins.push(NX_PACKAGE_JSON_WORKSPACES_PLUGIN, NX_PROJECT_JSON_PLUGIN);
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const plugin of plugins) {

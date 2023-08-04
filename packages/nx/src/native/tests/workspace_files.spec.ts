@@ -254,18 +254,16 @@ describe('workspace files', () => {
         };
       }
     );
-    expect(nodes.projectNodes).toMatchInlineSnapshot(`
-      {
+    expect(nodes.projectNodes).toEqual({
         "project1": {
           "name": "project1",
           "root": "libs/project1",
         },
-        "repo-name": {
+        "repo-name": expect.objectContaining({
           "name": "repo-name",
           "root": ".",
-        },
-      }
-    `);
+        }),
+      });
   });
 
   // describe('errors', () => {

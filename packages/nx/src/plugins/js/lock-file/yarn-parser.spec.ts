@@ -6,7 +6,13 @@ import { ProjectGraph } from '../../../config/project-graph';
 import { PackageJson } from '../../../utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 
-jest.mock('fs', () => require('memfs').fs);
+jest.mock('fs', () => {
+  const memFs = require('memfs').fs;
+  return {
+    ...memFs,
+    existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),
+  };
+});
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),

@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { NxJsonConfiguration } from '../src/config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../src/config/nx-json';
 import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
 import { toProjectName } from '../src/config/workspaces';
 import { readJsonFile, readYamlFile } from '../src/utils/fileutils';
@@ -11,39 +11,30 @@ import { NxPluginV2 } from '../src/utils/nx-plugin';
 import { output } from '../src/utils/output';
 import { PackageJson } from '../src/utils/package-json';
 import { joinPathFragments } from '../src/utils/path';
+import { workspaceRoot } from '../src/utils/workspace-root';
 
-export function getPackageJsonWorkspacesPlugin(
-  root: string,
-  nxJson: NxJsonConfiguration,
-  readJson: <T extends Object>(string) => T
-): NxPluginV2 {
-  const globPatternsFromPackageManagerWorkspaces =
-    getGlobPatternsFromPackageManagerWorkspaces(root, readJson);
-  return {
-    name: 'nx-core-build-package-json-nodes',
-    // Load projects from pnpm / npm workspaces. If no patterns, we can
-    // leave the property off of the object to save some perf.
-    ...(globPatternsFromPackageManagerWorkspaces.length
-      ? {
-          projectConfigurationsConstructor: [
-            combineGlobPatterns(globPatternsFromPackageManagerWorkspaces),
-            (pkgJsonPath) => {
-              const json = readJson<PackageJson>(pkgJsonPath);
-              return {
-                projectNodes: {
-                  [json.name]: buildProjectConfigurationFromPackageJson(
-                    json,
-                    pkgJsonPath,
-                    nxJson
-                  ),
-                },
-              };
-            },
-          ],
-        }
-      : {}),
-  };
-}
+const readJson = (f) => readJsonFile(join(workspaceRoot, f));
+
+export const NX_PACKAGE_JSON_WORKSPACES_PLUGIN: NxPluginV2 = {
+  name: 'nx-core-build-package-json-nodes',
+  projectConfigurationsConstructor: [
+    combineGlobPatterns(
+      getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot, readJson)
+    ),
+    (pkgJsonPath) => {
+      const json = readJsonFile<PackageJson>(pkgJsonPath);
+      return {
+        projectNodes: {
+          [json.name]: buildProjectConfigurationFromPackageJson(
+            json,
+            pkgJsonPath,
+            readNxJson(workspaceRoot)
+          ),
+        },
+      };
+    },
+  ],
+};
 
 export function buildProjectConfigurationFromPackageJson(
   packageJson: { name: string },

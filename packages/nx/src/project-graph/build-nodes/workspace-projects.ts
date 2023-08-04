@@ -126,7 +126,7 @@ export function normalizeProjectTargets(
   project: ProjectConfiguration,
   targetDefaults: NxJsonConfiguration['targetDefaults'],
   projectName: string
-) {
+): Record<string, TargetConfiguration> {
   const targets = project.targets;
   for (const target in targets) {
     const executor =
@@ -153,7 +153,9 @@ export function normalizeProjectTargets(
       project,
       `${projectName}:${target}`
     );
-    for (const configuration in targets[target].configurations ?? {}) {
+
+    targets[target].configurations ??= {};
+    for (const configuration in targets[target].configurations) {
       targets[target].configurations[configuration] = resolveNxTokensInOptions(
         targets[target].configurations[configuration],
         project,

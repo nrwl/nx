@@ -275,7 +275,7 @@ async function createAndSerializeProjectGraph(): Promise<{
       await buildProjectGraphUsingProjectFileMap(
         projectsConfigurations,
         knownExternalNodes,
-        projectFileMapWithFiles.projectFileMap,
+        projectFileMap,
         allWorkspaceFiles,
         currentProjectFileMapCache || readProjectFileMapCache(),
         true

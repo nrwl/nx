@@ -194,9 +194,70 @@ describe('workspace-projects', () => {
         ).build
       ).toEqual({
         executor: 'nx:run-commands',
+        configurations: {},
         options: {
           command: 'echo',
         },
+      });
+    });
+
+    it('should apply defaults to run-commands from syntactic sugar', () => {
+      const result = normalizeProjectTargets(
+        {
+          name: 'mylib',
+          root: 'projects/mylib',
+          targets: {
+            echo: {
+              command: 'echo "hello world"',
+            },
+          },
+        },
+        {
+          'nx:run-commands': {
+            options: {
+              cwd: '{projectRoot}',
+            },
+          },
+        },
+        'echo'
+      );
+      expect(result.echo).toEqual({
+        executor: 'nx:run-commands',
+        options: {
+          command: 'echo "hello world"',
+          cwd: 'projects/mylib',
+        },
+        configurations: {},
+      });
+    });
+
+    it('should not apply defaults when executor is not nx:run-commands and using command syntactic sugar', () => {
+      const result = normalizeProjectTargets(
+        {
+          name: 'mylib',
+          root: 'projects/mylib',
+          targets: {
+            echo: {
+              command: 'echo "hello world"',
+            },
+          },
+        },
+        {
+          echo: {
+            executor: 'nx:noop',
+            options: {
+              cwd: '{projectRoot}',
+            },
+          },
+        },
+        'echo'
+      );
+      expect(result.echo).toEqual({
+        executor: 'nx:run-commands',
+        options: {
+          command: 'echo "hello world"',
+        },
+        configurations: {},
       });
     });
 
