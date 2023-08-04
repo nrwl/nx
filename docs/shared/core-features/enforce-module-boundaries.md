@@ -138,7 +138,7 @@ With these constraints in place, `scope:client` projects can only depend on proj
 
 Projects without any tags cannot depend on any other projects. If you try to violate the constraints, you will get an error when linting:
 
-```shell
+```plaintext
 A project tagged with "scope:admin" can only depend on projects
 tagged with "scoped:shared" or "scope:admin".
 ```

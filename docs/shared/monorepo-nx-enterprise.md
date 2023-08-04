@@ -159,7 +159,7 @@ Since Nx allows us to group apps and libs in directories, those directories can 
 why the structure of an Nx workspace often reflects the structure of an organization. GitHub users can use
 the `CODEOWNERS` file for that.
 
-```shell
+```plaintext
 /libs/happynrwlapp          julie-happynrwlapp-lead
 /apps/happynrwlapp          julie-happynrwlapp-lead
 /libs/shared/ui             hank-the-ui-guy
