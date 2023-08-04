@@ -539,10 +539,8 @@ describe('Linter', () => {
   });
 
   describe('Flat config', () => {
-    let projScope;
-
     beforeEach(() => {
-      projScope = newProject();
+      newProject();
     });
     afterEach(() => cleanupProject());
 
@@ -572,19 +570,23 @@ describe('Linter', () => {
 
     it('should convert standalone to flat config', () => {
       const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
 
       runCLI(`generate @nx/react:app ${myapp} --rootProject=true`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
 
       // migrate to flat structure
       runCLI(`generate @nx/linter:convert-to-flat-config`);
       checkFilesExist(
         'eslint.config.js',
         'e2e/eslint.config.js',
+        `libs/${mylib}/eslint.config.js`,
         'eslint.base.config.js'
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
         'e2e/.eslintrc.json',
+        `libs/${mylib}/.eslintrc.json`,
         '.eslintrc.base.json'
       );
 
