@@ -155,6 +155,47 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
   });
 
+  it('should add global configuration', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.globals = {
+        myCustomGlobal: 'readonly',
+      };
+      return json;
+    });
+    await convertToFlatConfigGenerator(tree, options);
+
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should add global and env configuration', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.globals = {
+        myCustomGlobal: 'readonly',
+      };
+      json.env = {
+        browser: true,
+      };
+      return json;
+    });
+    await convertToFlatConfigGenerator(tree, options);
+
+    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+  });
+
   it('should add plugins', async () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,

@@ -2,16 +2,91 @@
 
 exports[`convert-to-flat-config generator should add env configuration 1`] = `
 "const nxEslintPlugin = require('@nx/eslint-plugin');
+const globals = require('globals');
+module.exports = [
+  { plugins: { '@nx': nxEslintPlugin } },
+  { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
+  {
+    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['*.ts', '*.tsx'],
+    extends: ['plugin:@nx/typescript'],
+    rules: {},
+  },
+  {
+    files: ['*.js', '*.jsx'],
+    extends: ['plugin:@nx/javascript'],
+    rules: {},
+  },
+  { ignores: ['node_modules'] },
+];
+"
+`;
+
+exports[`convert-to-flat-config generator should add global and env configuration 1`] = `
+"const nxEslintPlugin = require('@nx/eslint-plugin');
+const globals = require('globals');
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
     languageOptions: {
-      env: {
-        browser: true,
-        node: true,
-      },
+      globals: { ...globals.browser, myCustomGlobal: 'readonly' },
     },
   },
+  {
+    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: [],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['*.ts', '*.tsx'],
+    extends: ['plugin:@nx/typescript'],
+    rules: {},
+  },
+  {
+    files: ['*.js', '*.jsx'],
+    extends: ['plugin:@nx/javascript'],
+    rules: {},
+  },
+  { ignores: ['node_modules'] },
+];
+"
+`;
+
+exports[`convert-to-flat-config generator should add global configuration 1`] = `
+"const nxEslintPlugin = require('@nx/eslint-plugin');
+module.exports = [
+  { plugins: { '@nx': nxEslintPlugin } },
+  { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
   {
     files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
     rules: {

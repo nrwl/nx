@@ -43,20 +43,30 @@ export function convertEslintJsonToFlatConfig(
     );
   }
 
-  if (config.env) {
-    languageOptions.push(
-      ts.factory.createPropertyAssignment(
-        'env',
-        generateAst(config.env, ts.factory)
-      )
-    );
-  }
+  if (config.globals || config.env) {
+    if (config.env) {
+      importsList.push(generateRequire('globals', 'globals', ts.factory));
+    }
 
-  if (config.globals) {
     languageOptions.push(
       ts.factory.createPropertyAssignment(
         'globals',
-        generateAst(config.globals, ts.factory)
+        ts.factory.createObjectLiteralExpression([
+          ...Object.keys(config.env || {}).map((env) =>
+            ts.factory.createSpreadAssignment(
+              ts.factory.createPropertyAccessExpression(
+                ts.factory.createIdentifier('globals'),
+                ts.factory.createIdentifier(env)
+              )
+            )
+          ),
+          ...Object.keys(config.globals || {}).map((key) =>
+            ts.factory.createPropertyAssignment(
+              key,
+              generateAst(config.globals[key], ts.factory)
+            )
+          ),
+        ])
       )
     );
   }
