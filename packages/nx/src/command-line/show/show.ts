@@ -40,7 +40,7 @@ export async function showProjectsHandler(
 
   if (args.withTarget) {
     graph.nodes = Object.entries(graph.nodes).reduce((acc, [name, node]) => {
-      if (args.withTarget.some(target => node.data.targets?.[target])) {
+      if (args.withTarget.some((target) => node.data.targets?.[target])) {
         acc[name] = node;
       }
       return acc;
