@@ -448,5 +448,10 @@
     "name": "@nxlv/python",
     "description": "Nx plugin designed to extend the Nx features to work with Python projects based on Poetry.",
     "url": "https://github.com/lucasvieirasilva/nx-plugins/tree/main/packages/nx-python"
+  },
+  {
+    "name": "@naxodev/nx-cloudflare",
+    "description": "Nx plugin for Cloudflare, in particular Cloudflare workers.",
+    "url": "https://github.com/naxodev/oss/tree/main/packages/plugins/nx-cloudflare"
   }
 ]
