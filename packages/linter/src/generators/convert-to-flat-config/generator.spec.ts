@@ -40,6 +40,10 @@ describe('convert-to-flat-config generator', () => {
     expect(
       tree.read('libs/test-lib/eslint.config.js', 'utf-8')
     ).toMatchSnapshot();
+    expect(
+      readJson(tree, 'libs/test-lib/project.json').targets.lint.options
+        .eslintConfig
+    ).toEqual('libs/test-lib/eslint.config.js');
   });
 
   it('should add plugin extends', async () => {
@@ -91,6 +95,31 @@ describe('convert-to-flat-config generator', () => {
         {
           files: ['**/*.js', '**/*.jsx'],
           extends: ['plugin:@nx/javascript'],
+          rules: {},
+        },
+      ];
+      "
+    `);
+    expect(tree.read('libs/test-lib/eslint.config.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "const baseConfig = require('../../eslint.config.js');
+      module.exports = [
+        ...baseConfig,
+        {
+          files: [
+            'libs/test-lib/**/*.ts',
+            'libs/test-lib/**/*.tsx',
+            'libs/test-lib/**/*.js',
+            'libs/test-lib/**/*.jsx',
+          ],
+          rules: {},
+        },
+        {
+          files: ['libs/test-lib/**/*.ts', 'libs/test-lib/**/*.tsx'],
+          rules: {},
+        },
+        {
+          files: ['libs/test-lib/**/*.js', 'libs/test-lib/**/*.jsx'],
           rules: {},
         },
       ];

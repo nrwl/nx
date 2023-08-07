@@ -65,7 +65,7 @@ function convertProjectToFlatConfig(
   if (tree.exists(`${projectConfig.root}/.eslintrc.json`)) {
     if (projectConfig.targets) {
       const eslintTargets = Object.keys(projectConfig.targets).filter(
-        (t) => projectConfig.targets[t].executor === '@nrwl/linter:eslint'
+        (t) => projectConfig.targets[t].executor === '@nx/linter:eslint'
       );
       for (const target of eslintTargets) {
         projectConfig.targets[target].options = {

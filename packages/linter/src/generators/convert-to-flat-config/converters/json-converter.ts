@@ -136,7 +136,12 @@ export function convertEslintJsonToFlatConfig(
         : [config.ignorePatterns]
     ).filter((pattern) => !['**/*', '!**/*', 'node_modules'].includes(pattern)); // these are useless in a flat config
     if (patterns.length > 0) {
-      exportElements.push(generateAst({ ignores: patterns.map(path => mapFilePath(path, root)) }, ts.factory));
+      exportElements.push(
+        generateAst(
+          { ignores: patterns.map((path) => mapFilePath(path, root)) },
+          ts.factory
+        )
+      );
     }
   }
 
@@ -145,7 +150,7 @@ export function convertEslintJsonToFlatConfig(
       .read(`${root}/.eslintignore`, 'utf-8')
       .split('\n')
       .filter((line) => line.length > 0 && line !== 'node_modules')
-      .map(path => mapFilePath(path, root));
+      .map((path) => mapFilePath(path, root));
     if (patterns.length > 0) {
       exportElements.push(generateAst({ ignores: patterns }, ts.factory));
     }
@@ -349,11 +354,11 @@ function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
       ),
       ...(config.processor
         ? [
-          ts.factory.createPropertyAssignment(
-            'processor',
-            ts.factory.createStringLiteral(config.processor)
-          ),
-        ]
+            ts.factory.createPropertyAssignment(
+              'processor',
+              ts.factory.createStringLiteral(config.processor)
+            ),
+          ]
         : []),
     ],
     false
