@@ -15,10 +15,7 @@ import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../lib/packages.api';
 
 declare const fetch: any;
-let qualityIndicators = {};
-try {
-  qualityIndicators = require('./quality-indicators.json');
-} catch (ex) {}
+let qualityIndicators = require('./quality-indicators.json');
 
 interface PluginInfo {
   description: string;

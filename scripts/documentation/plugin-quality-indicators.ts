@@ -33,49 +33,56 @@ const plugins =
   require('../../community/approved-plugins.json') as PluginRegistry[];
 
 async function main() {
-  const qualityIndicators: any = {};
-  for (let i = 0; i < officialPlugins.length; i++) {
-    const plugin = officialPlugins[i];
-    console.log(`Fetching data for ${plugin.name}`);
-    const npmData = await getNpmData(plugin, true);
-    const npmDownloads = await getNpmDownloads(plugin);
-    qualityIndicators[plugin.name] = {
-      lastPublishedDate: npmData.lastPublishedDate,
-      npmDownloads,
-      githubRepo: `nrwl/nx`,
-    };
-  }
-  for (let i = 0; i < plugins.length; i++) {
-    const plugin = plugins[i];
-    console.log(`Fetching data for ${plugin.name}`);
-    const npmData = await getNpmData(plugin);
-    const npmDownloads = await getNpmDownloads(plugin);
-    qualityIndicators[plugin.name] = {
-      lastPublishedDate: npmData.lastPublishedDate,
-      npmDownloads,
-      githubRepo: npmData.githubRepo,
-      nxVersion: npmData.nxVersion,
-    };
-  }
-  const repos = Object.keys(qualityIndicators).map((pluginName) => {
-    const [owner, repo] = qualityIndicators[pluginName].githubRepo?.split('/');
-    return {
-      owner,
-      repo,
-    };
-  });
-  const starData = await getGithubStars(repos);
-  Object.keys(qualityIndicators).forEach((key) => {
-    qualityIndicators[key].githubStars =
-      starData[qualityIndicators[key].githubRepo.replace(/[\-\/#]/g, '')]
-        ?.stargazers?.totalCount || -1;
-    delete qualityIndicators[key].githubRepo;
-  });
+  try {
+    const qualityIndicators: any = {};
+    for (let i = 0; i < officialPlugins.length; i++) {
+      const plugin = officialPlugins[i];
+      console.log(`Fetching data for ${plugin.name}`);
+      const npmData = await getNpmData(plugin, true);
+      const npmDownloads = await getNpmDownloads(plugin);
+      qualityIndicators[plugin.name] = {
+        lastPublishedDate: npmData.lastPublishedDate,
+        npmDownloads,
+        githubRepo: `nrwl/nx`,
+      };
+    }
+    for (let i = 0; i < plugins.length; i++) {
+      const plugin = plugins[i];
+      console.log(`Fetching data for ${plugin.name}`);
+      const npmData = await getNpmData(plugin);
+      const npmDownloads = await getNpmDownloads(plugin);
+      qualityIndicators[plugin.name] = {
+        lastPublishedDate: npmData.lastPublishedDate,
+        npmDownloads,
+        githubRepo: npmData.githubRepo,
+        nxVersion: npmData.nxVersion,
+      };
+    }
+    const repos = Object.keys(qualityIndicators).map((pluginName) => {
+      const [owner, repo] =
+        qualityIndicators[pluginName].githubRepo?.split('/');
+      return {
+        owner,
+        repo,
+      };
+    });
+    const starData = await getGithubStars(repos);
+    Object.keys(qualityIndicators).forEach((key) => {
+      qualityIndicators[key].githubStars =
+        starData[qualityIndicators[key].githubRepo.replace(/[\-\/#]/g, '')]
+          ?.stargazers?.totalCount || -1;
+      delete qualityIndicators[key].githubRepo;
+    });
 
-  writeFileSync(
-    './nx-dev/nx-dev/pages/extending-nx/quality-indicators.json',
-    JSON.stringify(qualityIndicators, null, 2)
-  );
+    writeFileSync(
+      './nx-dev/nx-dev/pages/extending-nx/quality-indicators.json',
+      JSON.stringify(qualityIndicators, null, 2)
+    );
+  } catch (ex) {
+    console.warn('Failed to load quality indicators!');
+    console.warn(ex);
+    // Don't overwrite quality-indicators.json if the script fails
+  }
 }
 main();
 

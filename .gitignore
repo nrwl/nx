@@ -19,7 +19,6 @@ jest.debug.config.js
 /graph/client/src/assets/generated-task-graphs
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/images/open-graph
-/nx-dev/nx-dev/pages/extending-nx/quality-indicators.json
 /scripts/issues-scraper/cached
 # Lerna creates this
 CHANGELOG.md
