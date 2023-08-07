@@ -109,7 +109,7 @@ async function determineFormat(
     return 'as-provided';
   }
 
-  if (process.env.NX_INTERACTIVE !== 'true') {
+  if (process.env.NX_INTERACTIVE !== 'true' || !isTTY()) {
     return 'derived';
   }
 
@@ -275,4 +275,8 @@ function getNpmScope(tree: Tree): string | undefined {
     : { name: null };
 
   return name?.startsWith('@') ? name.split('/')[0].substring(1) : undefined;
+}
+
+function isTTY(): boolean {
+  return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }

@@ -35,10 +35,10 @@ describe('Nx Affected and Graph Tests', () => {
       const mypublishablelib = uniq('mypublishablelib');
       runCLI(`generate @nx/web:app ${myapp}`);
       runCLI(`generate @nx/web:app ${myapp2}`);
-      runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
-      runCLI(`generate @nx/js:lib ${mylib2} --no-interactive`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib2}`);
       runCLI(
-        `generate @nx/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui --no-interactive`
+        `generate @nx/js:lib ${mypublishablelib} --publishable --importPath=@${proj}/${mypublishablelib} --tags=ui`
       );
 
       updateFile(
@@ -189,7 +189,7 @@ describe('Nx Affected and Graph Tests', () => {
     function generateAll() {
       runCLI(`generate @nx/web:app ${myapp}`);
       runCLI(`generate @nx/web:app ${myapp2}`);
-      runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
       runCommand(`git add . && git commit -am "add all"`);
     }
 
@@ -206,7 +206,7 @@ describe('Nx Affected and Graph Tests', () => {
         expect(output).toContain(myapp2);
         runCommand(`git add . && git commit -am "add ${myapp2}"`);
 
-        runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
+        runCLI(`generate @nx/js:lib ${mylib}`);
         output = runCLI('print-affected --select projects');
         expect(output).not.toContain(myapp);
         expect(output).not.toContain(myapp2);
@@ -309,8 +309,8 @@ describe('Nx Affected and Graph Tests', () => {
       runCLI(`generate @nx/web:app ${myapp}`);
       runCLI(`generate @nx/web:app ${myapp2}`);
       runCLI(`generate @nx/web:app ${myapp3}`);
-      runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
-      runCLI(`generate @nx/js:lib ${mylib2} --no-interactive`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib2}`);
 
       runCommand(`git init`);
       runCommand(`git config user.email "test@test.com"`);
@@ -542,9 +542,9 @@ describe('Print-affected', () => {
 
     runCLI(`generate @nx/web:app ${myapp}`);
     runCLI(`generate @nx/web:app ${myapp2}`);
-    runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
-    runCLI(`generate @nx/js:lib ${mylib2} --no-interactive`);
-    runCLI(`generate @nx/js:lib ${mypublishablelib} --no-interactive`);
+    runCLI(`generate @nx/js:lib ${mylib}`);
+    runCLI(`generate @nx/js:lib ${mylib2}`);
+    runCLI(`generate @nx/js:lib ${mypublishablelib}`);
 
     const app1ElementSpec = readFile(
       `apps/${myapp}/src/app/app.element.spec.ts`

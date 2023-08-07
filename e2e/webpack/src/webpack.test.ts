@@ -15,7 +15,7 @@ describe('Webpack Plugin', () => {
 
   it('should be able to setup project to build node programs with webpack and different compilers', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none --no-interactive`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(
@@ -76,7 +76,7 @@ module.exports = composePlugins(withNx(), (config) => {
 
   it('should use either BABEL_ENV or NODE_ENV value for Babel environment configuration', async () => {
     const myPkg = uniq('my-pkg');
-    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none --no-interactive`);
+    runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
 
     runCLI(

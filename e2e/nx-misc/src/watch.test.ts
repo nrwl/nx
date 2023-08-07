@@ -26,9 +26,9 @@ describe('Nx Commands', () => {
   let proj3 = uniq('proj3');
   beforeAll(() => {
     newProject();
-    runCLI(`generate @nx/js:lib ${proj1} --no-interactive`);
-    runCLI(`generate @nx/js:lib ${proj2} --no-interactive`);
-    runCLI(`generate @nx/js:lib ${proj3} --no-interactive`);
+    runCLI(`generate @nx/js:lib ${proj1}`);
+    runCLI(`generate @nx/js:lib ${proj2}`);
+    runCLI(`generate @nx/js:lib ${proj3}`);
   });
 
   afterAll(() => cleanupProject());

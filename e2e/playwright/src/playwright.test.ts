@@ -17,9 +17,7 @@ describe('Playwright E2E Test runner', () => {
   it(
     'should test and lint example app',
     () => {
-      runCLI(
-        `g @nx/js:lib demo-e2e --unitTestRunner none --bundler none --no-interactive`
-      );
+      runCLI(`g @nx/js:lib demo-e2e --unitTestRunner none --bundler none`);
       runCLI(`g @nx/playwright:configuration --project demo-e2e`);
       ensurePlaywrightBrowsersInstallation();
 
@@ -36,7 +34,7 @@ describe('Playwright E2E Test runner', () => {
     'should test and lint example app with js',
     () => {
       runCLI(
-        `g @nx/js:lib demo-js-e2e --unitTestRunner none --bundler none --js --no-interactive`
+        `g @nx/js:lib demo-js-e2e --unitTestRunner none --bundler none --js`
       );
       runCLI(`g @nx/playwright:configuration --project demo-js-e2e --js`);
       ensurePlaywrightBrowsersInstallation();

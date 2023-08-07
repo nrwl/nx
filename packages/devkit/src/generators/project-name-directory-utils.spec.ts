@@ -6,6 +6,27 @@ import { determineProjectNamesAndDirectories } from './project-name-directory-ut
 
 describe('determineProjectNamesAndDirectories', () => {
   let tree: Tree;
+  let originalInteractiveValue;
+  let originalCIValue;
+  let originalIsTTYValue;
+
+  function ensureInteractiveMode() {
+    process.env.NX_INTERACTIVE = 'true';
+    process.env.CI = 'false';
+    process.stdout.isTTY = true;
+  }
+
+  function restoreOriginalInteractiveMode() {
+    process.env.NX_INTERACTIVE = originalInteractiveValue;
+    process.env.CI = originalCIValue;
+    process.stdout.isTTY = originalIsTTYValue;
+  }
+
+  beforeEach(() => {
+    originalInteractiveValue = process.env.NX_INTERACTIVE;
+    originalCIValue = process.env.CI;
+    originalIsTTYValue = process.stdout.isTTY;
+  });
 
   describe('no layout', () => {
     beforeEach(() => {
@@ -195,8 +216,7 @@ describe('determineProjectNamesAndDirectories', () => {
 
     it('should prompt for the project name and directory format', async () => {
       // simulate interactive mode
-      const originalInteractiveValue = process.env.NX_INTERACTIVE;
-      process.env.NX_INTERACTIVE = 'true';
+      ensureInteractiveMode();
       const promptSpy = jest
         .spyOn(enquirer, 'prompt')
         .mockImplementation(() => Promise.resolve({ format: 'as-provided' }));
@@ -227,14 +247,13 @@ describe('determineProjectNamesAndDirectories', () => {
         })
       );
 
-      // restore original interactive value
-      process.env.NX_INTERACTIVE = originalInteractiveValue;
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
     });
 
     it('should directly use format as-provided and not prompt when the name is a scoped package name', async () => {
       // simulate interactive mode
-      const originalInteractiveValue = process.env.NX_INTERACTIVE;
-      process.env.NX_INTERACTIVE = 'true';
+      ensureInteractiveMode();
       const promptSpy = jest.spyOn(enquirer, 'prompt');
 
       const result = await determineProjectNamesAndDirectories(tree, {
@@ -254,8 +273,8 @@ describe('determineProjectNamesAndDirectories', () => {
         projectDirectory: 'shared',
       });
 
-      // restore original interactive value
-      process.env.NX_INTERACTIVE = originalInteractiveValue;
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
     });
   });
 
@@ -449,8 +468,7 @@ describe('determineProjectNamesAndDirectories', () => {
 
     it('should prompt for the project name and directory format', async () => {
       // simulate interactive mode
-      const originalInteractiveValue = process.env.NX_INTERACTIVE;
-      process.env.NX_INTERACTIVE = 'true';
+      ensureInteractiveMode();
       const promptSpy = jest
         .spyOn(enquirer, 'prompt')
         .mockImplementation(() => Promise.resolve({ format: 'as-provided' }));
@@ -481,14 +499,13 @@ describe('determineProjectNamesAndDirectories', () => {
         })
       );
 
-      // restore original interactive value
-      process.env.NX_INTERACTIVE = originalInteractiveValue;
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
     });
 
     it('should directly use format as-provided and not prompt when the name is a scoped package name', async () => {
       // simulate interactive mode
-      const originalInteractiveValue = process.env.NX_INTERACTIVE;
-      process.env.NX_INTERACTIVE = 'true';
+      ensureInteractiveMode();
       const promptSpy = jest.spyOn(enquirer, 'prompt');
 
       const result = await determineProjectNamesAndDirectories(tree, {
@@ -508,8 +525,8 @@ describe('determineProjectNamesAndDirectories', () => {
         projectDirectory: 'shared',
       });
 
-      // restore original interactive value
-      process.env.NX_INTERACTIVE = originalInteractiveValue;
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
     });
   });
 });

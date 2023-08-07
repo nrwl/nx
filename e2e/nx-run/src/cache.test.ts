@@ -155,7 +155,7 @@ describe('cache', () => {
 
   it('should support using globs as outputs', async () => {
     const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:library ${mylib} --no-interactive`);
+    runCLI(`generate @nx/js:library ${mylib}`);
     updateProjectConfig(mylib, (c) => {
       c.targets.build = {
         executor: 'nx:run-commands',
@@ -253,9 +253,9 @@ describe('cache', () => {
     const parent = uniq('parent');
     const child1 = uniq('child1');
     const child2 = uniq('child2');
-    runCLI(`generate @nx/js:lib ${parent} --no-interactive`);
-    runCLI(`generate @nx/js:lib ${child1} --no-interactive`);
-    runCLI(`generate @nx/js:lib ${child2} --no-interactive`);
+    runCLI(`generate @nx/js:lib ${parent}`);
+    runCLI(`generate @nx/js:lib ${child1}`);
+    runCLI(`generate @nx/js:lib ${child2}`);
     updateJson(`nx.json`, (c) => {
       c.namedInputs = {
         default: ['{projectRoot}/**/*'],
@@ -319,7 +319,7 @@ describe('cache', () => {
 
   it('should support ENV as an input', () => {
     const lib = uniq('lib');
-    runCLI(`generate @nx/js:lib ${lib} --no-interactive`);
+    runCLI(`generate @nx/js:lib ${lib}`);
     updateJson(`nx.json`, (c) => {
       c.tasksRunnerOptions.default.options.cacheableOperations.push('echo');
       c.targetDefaults = {

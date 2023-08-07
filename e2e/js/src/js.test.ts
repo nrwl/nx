@@ -95,9 +95,7 @@ export function ${lib}Wildcard() {
     const libName = uniq('mylib');
     const dirName = uniq('dir');
 
-    runCLI(
-      `generate @nx/js:lib ${libName} --directory ${dirName} --no-interactive`
-    );
+    runCLI(`generate @nx/js:lib ${libName} --directory ${dirName}`);
 
     checkFilesExist(
       `libs/${dirName}/${libName}/src/index.ts`,
@@ -121,12 +119,8 @@ export function ${lib}Wildcard() {
     const consumerLib = uniq('consumer');
     const producerLib = uniq('producer');
 
-    runCLI(
-      `generate @nx/js:lib ${consumerLib} --bundler=none --no-interactive`
-    );
-    runCLI(
-      `generate @nx/js:lib ${producerLib} --bundler=none --no-interactive`
-    );
+    runCLI(`generate @nx/js:lib ${consumerLib} --bundler=none`);
+    runCLI(`generate @nx/js:lib ${producerLib} --bundler=none`);
 
     updateFile(
       `libs/${producerLib}/src/lib/${producerLib}.ts`,
@@ -160,9 +154,7 @@ export function ${lib}Wildcard() {
   it('should be able to add build to non-buildable projects', () => {
     const nonBuildable = uniq('nonbuildable');
 
-    runCLI(
-      `generate @nx/js:lib ${nonBuildable} --bundler=none --no-interactive`
-    );
+    runCLI(`generate @nx/js:lib ${nonBuildable} --bundler=none`);
     expect(() => runCLI(`build ${nonBuildable}`)).toThrow();
     checkFilesDoNotExist(`dist/libs/${nonBuildable}/src/index.js`);
 
@@ -242,7 +234,7 @@ export function ${lib}Wildcard() {
   it('should generate project with name and directory as provided when --nameDirectoryFormat=as-provided', async () => {
     const lib1 = uniq('lib1');
     runCLI(
-      `generate @nx/js:lib ${lib1} --directory=shared --bundler=tsc --name-directory-format=as-provided --no-interactive`
+      `generate @nx/js:lib ${lib1} --directory=shared --bundler=tsc --name-directory-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -265,12 +257,12 @@ export function ${lib}Wildcard() {
     // assert scoped project names are not supported when --nameDirectoryFormat=derived
     expect(() =>
       runCLI(
-        `generate @nx/js:lib ${scopedLib} --bundler=tsc --name-directory-format=derived --no-interactive`
+        `generate @nx/js:lib ${scopedLib} --bundler=tsc --name-directory-format=derived`
       )
     ).toThrow();
 
     runCLI(
-      `generate @nx/js:lib ${scopedLib} --bundler=tsc --name-directory-format=as-provided --no-interactive`
+      `generate @nx/js:lib ${scopedLib} --bundler=tsc --name-directory-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and

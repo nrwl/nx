@@ -148,7 +148,7 @@ describe('Nx Commands', () => {
 
     beforeAll(() => {
       runCLI(`generate @nx/web:app ${myapp}`);
-      runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
     });
 
     beforeEach(() => {
