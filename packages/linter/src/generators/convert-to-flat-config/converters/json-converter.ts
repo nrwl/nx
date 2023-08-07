@@ -1,6 +1,6 @@
 import { Tree, addDependenciesToPackageJson, names } from '@nx/devkit';
 import { join } from 'path';
-import { ESLint } from 'eslint';
+import { ESLint, Linter } from 'eslint';
 import * as ts from 'typescript';
 import { generateAst, generateRequire } from './generate-ast';
 import { eslintrcVersion } from '../../../utils/versions';
@@ -125,7 +125,7 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.overrides) {
     config.overrides.forEach((override) => {
-      exportElements.push(generateAst(override, ts.factory));
+      exportElements.push(generateAst(updateFiles(override, root), ts.factory));
     });
   }
 
@@ -134,9 +134,9 @@ export function convertEslintJsonToFlatConfig(
       Array.isArray(config.ignorePatterns)
         ? config.ignorePatterns
         : [config.ignorePatterns]
-    ).filter((pattern) => pattern !== '**/*' && pattern !== '!**/*'); // these are useless in a flat config
+    ).filter((pattern) => !['**/*', '!**/*', 'node_modules'].includes(pattern)); // these are useless in a flat config
     if (patterns.length > 0) {
-      exportElements.push(generateAst({ ignores: patterns }, ts.factory));
+      exportElements.push(generateAst({ ignores: patterns.map(path => mapFilePath(path, root)) }, ts.factory));
     }
   }
 
@@ -144,8 +144,11 @@ export function convertEslintJsonToFlatConfig(
     const patterns = tree
       .read(`${root}/.eslintignore`, 'utf-8')
       .split('\n')
-      .filter((line) => line.length > 0);
-    exportElements.push(generateAst({ ignores: patterns }, ts.factory));
+      .filter((line) => line.length > 0 && line !== 'node_modules')
+      .map(path => mapFilePath(path, root));
+    if (patterns.length > 0) {
+      exportElements.push(generateAst({ ignores: patterns }, ts.factory));
+    }
   }
 
   tree.delete(join(root, sourceFile));
@@ -183,6 +186,35 @@ export function convertEslintJsonToFlatConfig(
   }
 }
 
+function updateFiles(
+  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  root: string
+) {
+  if (override.files) {
+    override.files = Array.isArray(override.files)
+      ? override.files
+      : [override.files];
+    override.files = override.files.map((file) => mapFilePath(file, root));
+  }
+  return override;
+}
+
+function mapFilePath(filePath: string, root: string) {
+  if (filePath.startsWith('!')) {
+    const fileWithoutBang = filePath.slice(1);
+    if (fileWithoutBang.startsWith('*.')) {
+      return `!${join(root, '**', fileWithoutBang)}`;
+    } else {
+      return `!${join(root, fileWithoutBang)}`;
+    }
+  }
+  if (filePath.startsWith('*.')) {
+    return join(root, '**', filePath);
+  } else {
+    return join(root, filePath);
+  }
+}
+
 // add parsed extends to export blocks and add import statements
 function addExtends(
   importsList,
@@ -203,7 +235,9 @@ function addExtends(
     .forEach((imp, index) => {
       if (imp.match(/\.eslintrc(.base)?\.json$/)) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
-        configBlocks.push(ts.factory.createIdentifier(localName));
+        configBlocks.push(
+          ts.factory.createSpreadElement(ts.factory.createIdentifier(localName))
+        );
         const newImport = imp.replace(
           /^(.*)\.eslintrc(.base)?\.json$/,
           '$1eslint$2.config.js'
@@ -261,7 +295,7 @@ function addExtends(
     const pluginExtendsSpread = ts.factory.createSpreadElement(
       ts.factory.createCallExpression(
         ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier('eslintrc'),
+          ts.factory.createIdentifier('compat'),
           ts.factory.createIdentifier('extends')
         ),
         undefined,
@@ -315,11 +349,11 @@ function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
       ),
       ...(config.processor
         ? [
-            ts.factory.createPropertyAssignment(
-              'processor',
-              ts.factory.createStringLiteral(config.processor)
-            ),
-          ]
+          ts.factory.createPropertyAssignment(
+            'processor',
+            ts.factory.createStringLiteral(config.processor)
+          ),
+        ]
         : []),
     ],
     false
@@ -343,8 +377,8 @@ function addParser(
 }
 
 const DEFAULT_FLAT_CONFIG = `const { FlatCompat } = require('@eslint/eslintrc');
-const eslintrc = new FlatCompat({
-    baseDirectory: __dirname
+const compat = new FlatCompat({
+  baseDirectory: __dirname
 });
 `;
 

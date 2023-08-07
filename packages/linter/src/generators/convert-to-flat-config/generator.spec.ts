@@ -59,14 +59,14 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "const nxEslintPlugin = require('@nx/eslint-plugin');
       const { FlatCompat } = require('@eslint/eslintrc');
-      const eslintrc = new FlatCompat({
+      const compat = new FlatCompat({
         baseDirectory: __dirname,
       });
       module.exports = [
-        ...eslintrc.extends('plugin:storybook/recommended'),
+        ...compat.extends('plugin:storybook/recommended'),
         { plugins: { '@nx': nxEslintPlugin } },
         {
-          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
           rules: {
             '@nx/enforce-module-boundaries': [
               'error',
@@ -84,16 +84,15 @@ describe('convert-to-flat-config generator', () => {
           },
         },
         {
-          files: ['*.ts', '*.tsx'],
+          files: ['**/*.ts', '**/*.tsx'],
           extends: ['plugin:@nx/typescript'],
           rules: {},
         },
         {
-          files: ['*.js', '*.jsx'],
+          files: ['**/*.js', '**/*.jsx'],
           extends: ['plugin:@nx/javascript'],
           rules: {},
         },
-        { ignores: ['node_modules'] },
       ];
       "
     `);
@@ -259,7 +258,7 @@ describe('convert-to-flat-config generator', () => {
           },
         },
         {
-          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
           rules: {
             '@nx/enforce-module-boundaries': [
               'error',
@@ -277,16 +276,15 @@ describe('convert-to-flat-config generator', () => {
           },
         },
         {
-          files: ['*.ts', '*.tsx'],
+          files: ['**/*.ts', '**/*.tsx'],
           extends: ['plugin:@nx/typescript'],
           rules: {},
         },
         {
-          files: ['*.js', '*.jsx'],
+          files: ['**/*.js', '**/*.jsx'],
           extends: ['plugin:@nx/javascript'],
           rules: {},
         },
-        { ignores: ['node_modules'] },
       ];
       "
     `);

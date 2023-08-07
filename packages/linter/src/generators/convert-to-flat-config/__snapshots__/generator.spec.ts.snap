@@ -7,7 +7,7 @@ module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -25,16 +25,15 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: ['plugin:@nx/typescript'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['node_modules'] },
 ];
 "
 `;
@@ -50,7 +49,7 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -68,16 +67,15 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: ['plugin:@nx/typescript'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['node_modules'] },
 ];
 "
 `;
@@ -88,7 +86,7 @@ module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -106,16 +104,15 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: ['plugin:@nx/typescript'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['node_modules'] },
 ];
 "
 `;
@@ -125,7 +122,7 @@ exports[`convert-to-flat-config generator should add global gitignores 1`] = `
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -143,12 +140,12 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: ['plugin:@nx/typescript'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
@@ -164,7 +161,7 @@ module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -182,16 +179,15 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: ['plugin:@nx/typescript'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['node_modules'] },
 ];
 "
 `;
@@ -211,7 +207,7 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -229,16 +225,15 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: ['plugin:@nx/typescript'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['node_modules'] },
 ];
 "
 `;
@@ -249,7 +244,7 @@ module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { settings: { sharedData: 'Hello' } },
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -267,16 +262,15 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: ['plugin:@nx/typescript'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['node_modules'] },
 ];
 "
 `;
@@ -286,7 +280,7 @@ exports[`convert-to-flat-config generator should run successfully 1`] = `
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
       '@nx/enforce-module-boundaries': [
         'error',
@@ -304,16 +298,15 @@ module.exports = [
     },
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     extends: ['plugin:@nx/typescript'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     extends: ['plugin:@nx/javascript'],
     rules: {},
   },
-  { ignores: ['node_modules'] },
 ];
 "
 `;
@@ -321,17 +314,22 @@ module.exports = [
 exports[`convert-to-flat-config generator should run successfully 2`] = `
 "const baseConfig = require('../../eslint.config.js');
 module.exports = [
-  baseConfig,
+  ...baseConfig,
   {
-    files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+    files: [
+      'libs/test-lib/**/*.ts',
+      'libs/test-lib/**/*.tsx',
+      'libs/test-lib/**/*.js',
+      'libs/test-lib/**/*.jsx',
+    ],
     rules: {},
   },
   {
-    files: ['*.ts', '*.tsx'],
+    files: ['libs/test-lib/**/*.ts', 'libs/test-lib/**/*.tsx'],
     rules: {},
   },
   {
-    files: ['*.js', '*.jsx'],
+    files: ['libs/test-lib/**/*.js', 'libs/test-lib/**/*.jsx'],
     rules: {},
   },
 ];
