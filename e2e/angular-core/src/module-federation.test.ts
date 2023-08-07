@@ -161,8 +161,7 @@ describe('Angular Module Federation', () => {
     await killProcessAndPorts(process.pid, app1Port, app2Port);
   }, 20_000_000);
 
-  // TODO(colum): enable when this issue is resolved https://github.com/module-federation/universe/issues/604
-  xit('should scaffold MF + SSR setup successfully', async () => {
+  it('should scaffold MF + SSR setup successfully', async () => {
     const host = uniq('host');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
