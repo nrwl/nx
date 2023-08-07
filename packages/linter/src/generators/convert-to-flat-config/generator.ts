@@ -104,8 +104,5 @@ function convertConfigToFlatConfig(
   source: string,
   target: string
 ) {
-  // read original config
-  const config = readJson(tree, `${root}/${source}`);
-
-  convertEslintJsonToFlatConfig(tree, root, config, source, target);
+  convertEslintJsonToFlatConfig(tree, root, source, target);
 }

@@ -40,9 +40,8 @@ export function generateAst<T>(input: unknown, factory: ts.NodeFactory): T {
 }
 
 export function generateRequire(
-  variableName: string,
-  imp: string,
-  factory: ts.NodeFactory
+  variableName: string | ts.ObjectBindingPattern,
+  imp: string
 ): ts.VariableStatement {
   return ts.factory.createVariableStatement(
     undefined,

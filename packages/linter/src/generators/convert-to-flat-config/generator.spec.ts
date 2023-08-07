@@ -61,10 +61,14 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "const nxEslintPlugin = require('@nx/eslint-plugin');
+      "const { FlatCompat } = require('@eslint/eslintrc');
+      const nxEslintPlugin = require('@nx/eslint-plugin');
+      const js = require('@eslint/js');
       const { FlatCompat } = require('@eslint/eslintrc');
+      const js = require('@eslint/js');
       const compat = new FlatCompat({
         baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
       });
       module.exports = [
         ...compat.extends('plugin:storybook/recommended'),

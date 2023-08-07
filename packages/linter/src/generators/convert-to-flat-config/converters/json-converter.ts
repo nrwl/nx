@@ -1,4 +1,9 @@
-import { Tree, addDependenciesToPackageJson, names } from '@nx/devkit';
+import {
+  Tree,
+  addDependenciesToPackageJson,
+  names,
+  readJson,
+} from '@nx/devkit';
 import { join } from 'path';
 import { ESLint, Linter } from 'eslint';
 import * as ts from 'typescript';
@@ -12,26 +17,28 @@ import { eslintrcVersion } from '../../../utils/versions';
 export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
-  config: ESLint.ConfigData,
   sourceFile: string,
   destinationFile: string
 ) {
-  const importsList: ts.VariableStatement[] = [];
+  const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
   let isFlatCompatNeeded = false;
   let combinedConfig: ts.PropertyAssignment[] = [];
   let languageOptions: ts.PropertyAssignment[] = [];
 
+  // read original config
+  const config: ESLint.ConfigData = readJson(tree, `${root}/${sourceFile}`);
+
   if (config.extends) {
-    isFlatCompatNeeded = addExtends(importsList, exportElements, config, tree);
+    isFlatCompatNeeded = addExtends(importsMap, exportElements, config, tree);
   }
 
   if (config.plugins) {
-    addPlugins(importsList, exportElements, config);
+    addPlugins(importsMap, exportElements, config);
   }
 
   if (config.parser) {
-    languageOptions.push(addParser(importsList, config));
+    languageOptions.push(addParser(importsMap, config));
   }
 
   if (config.parserOptions) {
@@ -45,7 +52,7 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.globals || config.env) {
     if (config.env) {
-      importsList.push(generateRequire('globals', 'globals', ts.factory));
+      importsMap.set('globals', 'globals');
     }
 
     languageOptions.push(
@@ -161,7 +168,7 @@ export function convertEslintJsonToFlatConfig(
 
   // create the node list and print it to new file
   const nodeList = createNodeList(
-    importsList,
+    importsMap,
     exportElements,
     isFlatCompatNeeded
   );
@@ -222,7 +229,7 @@ function mapFilePath(filePath: string, root: string) {
 
 // add parsed extends to export blocks and add import statements
 function addExtends(
-  importsList,
+  importsMap: Map<string, string | string[]>,
   configBlocks,
   config: ESLint.ConfigData,
   tree: Tree
@@ -247,12 +254,7 @@ function addExtends(
           /^(.*)\.eslintrc(.base)?\.json$/,
           '$1eslint$2.config.js'
         );
-        const importStatement = generateRequire(
-          localName,
-          newImport,
-          ts.factory
-        );
-        importsList.push(importStatement);
+        importsMap.set(newImport, localName);
       } else {
         eslintrcConfigs.push(imp);
       }
@@ -270,8 +272,6 @@ function addExtends(
     });
 
     if (eslintPluginExtends.length) {
-      const importStatement = generateRequire('js', '@eslint/js', ts.factory);
-
       addDependenciesToPackageJson(
         tree,
         {},
@@ -280,7 +280,7 @@ function addExtends(
         }
       );
 
-      importsList.push(importStatement);
+      importsMap.set('@eslint/js', 'js');
       eslintPluginExtends.forEach((plugin) => {
         configBlocks.push(
           ts.factory.createPropertyAccessExpression(
@@ -296,6 +296,13 @@ function addExtends(
   }
   if (eslintrcConfigs.length) {
     isFlatCompatNeeded = true;
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@eslint/js': eslintrcVersion,
+      }
+    );
 
     const pluginExtendsSpread = ts.factory.createSpreadElement(
       ts.factory.createCallExpression(
@@ -327,7 +334,11 @@ function getPluginImport(pluginName: string): string {
   return `${scope}/eslint-plugin-${name}`;
 }
 
-function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
+function addPlugins(
+  importsMap: Map<string, string | string[]>,
+  configBlocks,
+  config: ESLint.ConfigData
+) {
   const mappedPlugins: { name: string; varName: string; imp: string }[] = [];
   config.plugins.forEach((name) => {
     const imp = getPluginImport(name);
@@ -335,8 +346,7 @@ function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
     mappedPlugins.push({ name, varName, imp });
   });
   mappedPlugins.forEach(({ varName, imp }) => {
-    const importStatement = generateRequire(varName, imp, ts.factory);
-    importsList.push(importStatement);
+    importsMap.set(imp, varName);
   });
   const pluginsAst = ts.factory.createObjectLiteralExpression(
     [
@@ -367,13 +377,12 @@ function addPlugins(importsList, configBlocks, config: ESLint.ConfigData) {
 }
 
 function addParser(
-  importsList,
+  importsMap: Map<string, string>,
   config: ESLint.ConfigData
 ): ts.PropertyAssignment {
   const imp = config.parser;
   const parserName = names(imp).propertyName;
-  const importStatement = generateRequire(parserName, imp, ts.factory);
-  importsList.push(importStatement);
+  importsMap.set(imp, parserName);
 
   return ts.factory.createPropertyAssignment(
     'parser',
@@ -382,18 +391,40 @@ function addParser(
 }
 
 const DEFAULT_FLAT_CONFIG = `const { FlatCompat } = require('@eslint/eslintrc');
+const js = require('@eslint/js');
+
 const compat = new FlatCompat({
-  baseDirectory: __dirname
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
 });
 `;
 
 function createNodeList(
-  importsList: ts.VariableStatement[],
+  importsMap: Map<string, string>,
   exportElements: ts.Expression[],
   isFlatCompatNeeded: boolean
 ): ts.NodeArray<
   ts.VariableStatement | ts.Identifier | ts.ExpressionStatement | ts.SourceFile
 > {
+  const importsList = [];
+  if (isFlatCompatNeeded) {
+    importsMap.set('@eslint/js', 'js');
+
+    importsList.push(
+      generateRequire(
+        ts.factory.createObjectBindingPattern([
+          ts.factory.createBindingElement(undefined, undefined, 'FlatCompat'),
+        ]),
+        '@eslint/eslintrc'
+      )
+    );
+  }
+
+  // generateRequire(varName, imp, ts.factory);
+  Array.from(importsMap.entries()).forEach(([imp, varName]) => {
+    importsList.push(generateRequire(varName, imp));
+  });
+
   return ts.factory.createNodeArray([
     // add plugin imports
     ...importsList,
