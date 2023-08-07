@@ -86,7 +86,9 @@ async function getNpmData(plugin: PluginRegistry, skipNxVersion = false) {
       return { lastPublishedDate, nxVersion, githubRepo: '' };
     }
     const url: String = data.repository.url;
+    const indexOfTree = url.indexOf('/tree/');
     const githubRepo = url
+      .slice(0, indexOfTree === -1 ? undefined : indexOfTree)
       .slice(url.indexOf('github.com/') + 11)
       .replace('.git', '');
     return {
