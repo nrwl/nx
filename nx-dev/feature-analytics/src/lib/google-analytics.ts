@@ -40,3 +40,15 @@ export function sendCustomEvent(
     throw new Error(`Cannot send Google Tag event: ${error}`);
   }
 }
+
+export function searchAI(query: string, moreParams: {}): void {
+  try {
+    gtag('event', 'search', {
+      search_term: query,
+      event_category: 'ai',
+      ...moreParams,
+    });
+  } catch (error) {
+    throw new Error(`Cannot send Google Tag event: ${error}`);
+  }
+}

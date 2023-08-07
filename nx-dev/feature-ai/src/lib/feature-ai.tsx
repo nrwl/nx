@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
 import { Button } from '@nx/nx-dev/ui-common';
-import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
+import { searchAI, sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { nxDevDataAccessAi } from '@nx/nx-dev/data-access-ai';
@@ -38,10 +38,7 @@ export function FeatureAi(): JSX.Element {
       setError(error as any);
       setLoading(false);
     }
-    sendCustomEvent('ai_query', 'ai', 'query', undefined, {
-      query,
-      ...usage,
-    });
+    searchAI(query, usage ?? {});
     setFeedbackSent(false);
 
     const sourcesMd = `
@@ -54,9 +51,9 @@ export function FeatureAi(): JSX.Element {
     );
   };
 
-  const handleFeedback = (type: 'good' | 'bad') => {
+  const handleFeedback = (type: 'good' | 'bad', value: 1 | -1) => {
     try {
-      sendCustomEvent('ai_feedback', 'ai', type, undefined, {
+      sendCustomEvent('ai_feedback', 'ai', type, value, {
         query,
         result: finalResult,
         sources,
@@ -112,7 +109,7 @@ export function FeatureAi(): JSX.Element {
               <Button
                 variant="primary"
                 size="small"
-                onClick={() => handleFeedback('good')}
+                onClick={() => handleFeedback('good', 1)}
               >
                 Answer was helpful{' '}
                 <span role="img" aria-label="thumbs-up">
@@ -122,7 +119,7 @@ export function FeatureAi(): JSX.Element {
               <Button
                 variant="primary"
                 size="small"
-                onClick={() => handleFeedback('bad')}
+                onClick={() => handleFeedback('bad', -1)}
               >
                 Answer looks wrong{' '}
                 <span role="img" aria-label="thumbs-down">
