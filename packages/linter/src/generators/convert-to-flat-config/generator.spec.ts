@@ -64,8 +64,6 @@ describe('convert-to-flat-config generator', () => {
       "const { FlatCompat } = require('@eslint/eslintrc');
       const nxEslintPlugin = require('@nx/eslint-plugin');
       const js = require('@eslint/js');
-      const { FlatCompat } = require('@eslint/eslintrc');
-      const js = require('@eslint/js');
       const compat = new FlatCompat({
         baseDirectory: __dirname,
         recommendedConfig: js.configs.recommended,
@@ -91,16 +89,16 @@ describe('convert-to-flat-config generator', () => {
             ],
           },
         },
-        {
+        ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+          ...config,
           files: ['**/*.ts', '**/*.tsx'],
-          extends: ['plugin:@nx/typescript'],
           rules: {},
-        },
-        {
+        })),
+        ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+          ...config,
           files: ['**/*.js', '**/*.jsx'],
-          extends: ['plugin:@nx/javascript'],
           rules: {},
-        },
+        })),
       ];
       "
     `);
@@ -282,7 +280,13 @@ describe('convert-to-flat-config generator', () => {
     await convertToFlatConfigGenerator(tree, options);
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
-      "const nxEslintPlugin = require('@nx/eslint-plugin');
+      "const { FlatCompat } = require('@eslint/eslintrc');
+      const nxEslintPlugin = require('@nx/eslint-plugin');
+      const js = require('@eslint/js');
+      const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
       module.exports = [
         { plugins: { '@nx': nxEslintPlugin } },
         {
@@ -308,16 +312,16 @@ describe('convert-to-flat-config generator', () => {
             ],
           },
         },
-        {
+        ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+          ...config,
           files: ['**/*.ts', '**/*.tsx'],
-          extends: ['plugin:@nx/typescript'],
           rules: {},
-        },
-        {
+        })),
+        ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+          ...config,
           files: ['**/*.js', '**/*.jsx'],
-          extends: ['plugin:@nx/javascript'],
           rules: {},
-        },
+        })),
       ];
       "
     `);

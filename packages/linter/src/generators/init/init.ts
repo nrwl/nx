@@ -25,13 +25,14 @@ export interface LinterInitOptions {
   rootProject?: boolean;
 }
 
-function addTargetDefaults(tree: Tree) {
+function addTargetDefaults(tree: Tree, isRootProject: boolean) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     // Remove .eslintrc.json
     productionFileSet.push('!{projectRoot}/.eslintrc.json');
+    productionFileSet.push('!{projectRoot}/eslint.config.js');
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
@@ -43,6 +44,7 @@ function addTargetDefaults(tree: Tree) {
     'default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
+    `{workspaceRoot}/eslint.config.js`,
   ];
   updateNxJson(tree, nxJson);
 }
@@ -65,7 +67,7 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
   );
   tree.write('.eslintignore', 'node_modules\n');
-  addTargetDefaults(tree);
+  addTargetDefaults(tree, options.rootProject);
 
   if (tree.exists('.vscode/extensions.json')) {
     updateJson(tree, '.vscode/extensions.json', (json) => {

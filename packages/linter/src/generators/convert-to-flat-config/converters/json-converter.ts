@@ -45,7 +45,7 @@ export function convertEslintJsonToFlatConfig(
     languageOptions.push(
       ts.factory.createPropertyAssignment(
         'parserOptions',
-        generateAst(config.parserOptions, ts.factory)
+        generateAst(config.parserOptions)
       )
     );
   }
@@ -70,7 +70,7 @@ export function convertEslintJsonToFlatConfig(
           ...Object.keys(config.globals || {}).map((key) =>
             ts.factory.createPropertyAssignment(
               key,
-              generateAst(config.globals[key], ts.factory)
+              generateAst(config.globals[key])
             )
           ),
         ])
@@ -82,7 +82,7 @@ export function convertEslintJsonToFlatConfig(
     combinedConfig.push(
       ts.factory.createPropertyAssignment(
         'settings',
-        generateAst(config.settings, ts.factory)
+        generateAst(config.settings)
       )
     );
   }
@@ -94,13 +94,10 @@ export function convertEslintJsonToFlatConfig(
     combinedConfig.push(
       ts.factory.createPropertyAssignment(
         'linterOptions',
-        generateAst(
-          {
-            noInlineConfig: config.noInlineConfig,
-            reportUnusedDisableDirectives: config.reportUnusedDisableDirectives,
-          },
-          ts.factory
-        )
+        generateAst({
+          noInlineConfig: config.noInlineConfig,
+          reportUnusedDisableDirectives: config.reportUnusedDisableDirectives,
+        })
       )
     );
   }
@@ -127,12 +124,23 @@ export function convertEslintJsonToFlatConfig(
   }
 
   if (config.rules) {
-    exportElements.push(generateAst({ rules: config.rules }, ts.factory));
+    exportElements.push(generateAst({ rules: config.rules }));
   }
 
   if (config.overrides) {
     config.overrides.forEach((override) => {
-      exportElements.push(generateAst(updateFiles(override, root), ts.factory));
+      updateFiles(override, root);
+      if (
+        override.env ||
+        override.extends ||
+        override.plugins ||
+        override.parser
+      ) {
+        isFlatCompatNeeded = true;
+        addFlattenedOverride(override, exportElements);
+      } else {
+        exportElements.push(generateAst(override));
+      }
     });
   }
 
@@ -144,10 +152,9 @@ export function convertEslintJsonToFlatConfig(
     ).filter((pattern) => !['**/*', '!**/*', 'node_modules'].includes(pattern)); // these are useless in a flat config
     if (patterns.length > 0) {
       exportElements.push(
-        generateAst(
-          { ignores: patterns.map((path) => mapFilePath(path, root)) },
-          ts.factory
-        )
+        generateAst({
+          ignores: patterns.map((path) => mapFilePath(path, root)),
+        })
       );
     }
   }
@@ -159,7 +166,7 @@ export function convertEslintJsonToFlatConfig(
       .filter((line) => line.length > 0 && line !== 'node_modules')
       .map((path) => mapFilePath(path, root));
     if (patterns.length > 0) {
-      exportElements.push(generateAst({ ignores: patterns }, ts.factory));
+      exportElements.push(generateAst({ ignores: patterns }));
     }
   }
 
@@ -230,7 +237,7 @@ function mapFilePath(filePath: string, root: string) {
 // add parsed extends to export blocks and add import statements
 function addExtends(
   importsMap: Map<string, string | string[]>,
-  configBlocks,
+  configBlocks: ts.Expression[],
   config: ESLint.ConfigData,
   tree: Tree
 ): boolean {
@@ -336,7 +343,7 @@ function getPluginImport(pluginName: string): string {
 
 function addPlugins(
   importsMap: Map<string, string | string[]>,
-  configBlocks,
+  configBlocks: ts.Expression[],
   config: ESLint.ConfigData
 ) {
   const mappedPlugins: { name: string; varName: string; imp: string }[] = [];
@@ -390,9 +397,75 @@ function addParser(
   );
 }
 
-const DEFAULT_FLAT_CONFIG = `const { FlatCompat } = require('@eslint/eslintrc');
-const js = require('@eslint/js');
+function addFlattenedOverride(
+  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  configBlocks: ts.Expression[]
+) {
+  const { files, excludedFiles, rules, ...rest } = override;
 
+  const objectLiteralElements: ts.ObjectLiteralElementLike[] = [
+    ts.factory.createSpreadAssignment(ts.factory.createIdentifier('config')),
+  ];
+  if (files) {
+    objectLiteralElements.push(
+      ts.factory.createPropertyAssignment('files', generateAst(files))
+    );
+  }
+  if (excludedFiles) {
+    objectLiteralElements.push(
+      ts.factory.createPropertyAssignment(
+        'excludedFiles',
+        generateAst(excludedFiles)
+      )
+    );
+  }
+  if (rules) {
+    objectLiteralElements.push(
+      ts.factory.createPropertyAssignment('rules', generateAst(rules))
+    );
+  }
+
+  const overrideSpread = ts.factory.createSpreadElement(
+    ts.factory.createCallExpression(
+      ts.factory.createPropertyAccessExpression(
+        ts.factory.createCallExpression(
+          ts.factory.createPropertyAccessExpression(
+            ts.factory.createIdentifier('compat'),
+            ts.factory.createIdentifier('config')
+          ),
+          undefined,
+          [generateAst(rest)]
+        ),
+        ts.factory.createIdentifier('map')
+      ),
+      undefined,
+      [
+        ts.factory.createArrowFunction(
+          undefined,
+          undefined,
+          [
+            ts.factory.createParameterDeclaration(
+              undefined,
+              undefined,
+              'config'
+            ),
+          ],
+          undefined,
+          ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+          ts.factory.createParenthesizedExpression(
+            ts.factory.createObjectLiteralExpression(
+              objectLiteralElements,
+              true
+            )
+          )
+        ),
+      ]
+    )
+  );
+  configBlocks.push(overrideSpread);
+}
+
+const DEFAULT_FLAT_CONFIG = `
 const compat = new FlatCompat({
   baseDirectory: __dirname,
   recommendedConfig: js.configs.recommended,

@@ -1,8 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`convert-to-flat-config generator should add env configuration 1`] = `
-"const nxEslintPlugin = require('@nx/eslint-plugin');
+"const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 const globals = require('globals');
+const js = require('@eslint/js');
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
@@ -24,23 +30,29 @@ module.exports = [
       ],
     },
   },
-  {
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
     files: ['**/*.ts', '**/*.tsx'],
-    extends: ['plugin:@nx/typescript'],
     rules: {},
-  },
-  {
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
     files: ['**/*.js', '**/*.jsx'],
-    extends: ['plugin:@nx/javascript'],
     rules: {},
-  },
+  })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should add global and env configuration 1`] = `
-"const nxEslintPlugin = require('@nx/eslint-plugin');
+"const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 const globals = require('globals');
+const js = require('@eslint/js');
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -66,22 +78,28 @@ module.exports = [
       ],
     },
   },
-  {
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
     files: ['**/*.ts', '**/*.tsx'],
-    extends: ['plugin:@nx/typescript'],
     rules: {},
-  },
-  {
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
     files: ['**/*.js', '**/*.jsx'],
-    extends: ['plugin:@nx/javascript'],
     rules: {},
-  },
+  })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should add global configuration 1`] = `
-"const nxEslintPlugin = require('@nx/eslint-plugin');
+"const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
+const js = require('@eslint/js');
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { globals: { myCustomGlobal: 'readonly' } } },
@@ -103,22 +121,28 @@ module.exports = [
       ],
     },
   },
-  {
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
     files: ['**/*.ts', '**/*.tsx'],
-    extends: ['plugin:@nx/typescript'],
     rules: {},
-  },
-  {
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
     files: ['**/*.js', '**/*.jsx'],
-    extends: ['plugin:@nx/javascript'],
     rules: {},
-  },
+  })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should add global gitignores 1`] = `
-"const nxEslintPlugin = require('@nx/eslint-plugin');
+"const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
+const js = require('@eslint/js');
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -139,24 +163,30 @@ module.exports = [
       ],
     },
   },
-  {
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
     files: ['**/*.ts', '**/*.tsx'],
-    extends: ['plugin:@nx/typescript'],
     rules: {},
-  },
-  {
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
     files: ['**/*.js', '**/*.jsx'],
-    extends: ['plugin:@nx/javascript'],
     rules: {},
-  },
+  })),
   { ignores: ['ignore/me'] },
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should add parser 1`] = `
-"const nxEslintPlugin = require('@nx/eslint-plugin');
+"const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
 const typescriptEslintParser = require('@typescript-eslint/parser');
+const js = require('@eslint/js');
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { languageOptions: { parser: typescriptEslintParser } },
@@ -178,25 +208,31 @@ module.exports = [
       ],
     },
   },
-  {
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
     files: ['**/*.ts', '**/*.tsx'],
-    extends: ['plugin:@nx/typescript'],
     rules: {},
-  },
-  {
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
     files: ['**/*.js', '**/*.jsx'],
-    extends: ['plugin:@nx/javascript'],
     rules: {},
-  },
+  })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should add plugins 1`] = `
-"const eslintPluginImport = require('eslint-plugin-import');
+"const { FlatCompat } = require('@eslint/eslintrc');
+const eslintPluginImport = require('eslint-plugin-import');
 const eslintPluginSingleName = require('eslint-plugin-single-name');
 const scopeEslintPluginWithName = require('@scope/eslint-plugin-with-name');
 const justScopeEslintPlugin = require('@just-scope/eslint-plugin');
+const js = require('@eslint/js');
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
 module.exports = [
   {
     plugins: {
@@ -224,22 +260,28 @@ module.exports = [
       ],
     },
   },
-  {
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
     files: ['**/*.ts', '**/*.tsx'],
-    extends: ['plugin:@nx/typescript'],
     rules: {},
-  },
-  {
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
     files: ['**/*.js', '**/*.jsx'],
-    extends: ['plugin:@nx/javascript'],
     rules: {},
-  },
+  })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should add settings 1`] = `
-"const nxEslintPlugin = require('@nx/eslint-plugin');
+"const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
+const js = require('@eslint/js');
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   { settings: { sharedData: 'Hello' } },
@@ -261,22 +303,28 @@ module.exports = [
       ],
     },
   },
-  {
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
     files: ['**/*.ts', '**/*.tsx'],
-    extends: ['plugin:@nx/typescript'],
     rules: {},
-  },
-  {
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
     files: ['**/*.js', '**/*.jsx'],
-    extends: ['plugin:@nx/javascript'],
     rules: {},
-  },
+  })),
 ];
 "
 `;
 
 exports[`convert-to-flat-config generator should run successfully 1`] = `
-"const nxEslintPlugin = require('@nx/eslint-plugin');
+"const { FlatCompat } = require('@eslint/eslintrc');
+const nxEslintPlugin = require('@nx/eslint-plugin');
+const js = require('@eslint/js');
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
 module.exports = [
   { plugins: { '@nx': nxEslintPlugin } },
   {
@@ -297,16 +345,16 @@ module.exports = [
       ],
     },
   },
-  {
+  ...compat.config({ extends: ['plugin:@nx/typescript'] }).map((config) => ({
+    ...config,
     files: ['**/*.ts', '**/*.tsx'],
-    extends: ['plugin:@nx/typescript'],
     rules: {},
-  },
-  {
+  })),
+  ...compat.config({ extends: ['plugin:@nx/javascript'] }).map((config) => ({
+    ...config,
     files: ['**/*.js', '**/*.jsx'],
-    extends: ['plugin:@nx/javascript'],
     rules: {},
-  },
+  })),
 ];
 "
 `;

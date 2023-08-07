@@ -4,10 +4,12 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  getSelectedPackageManager,
   newProject,
   readFile,
   readJson,
   runCLI,
+  runCreateWorkspace,
   uniq,
   updateFile,
   updateJson,
@@ -539,16 +541,21 @@ describe('Linter', () => {
   });
 
   describe('Flat config', () => {
-    beforeEach(() => {
-      newProject();
-    });
+    const packageManager = getSelectedPackageManager() || 'pnpm';
+
     afterEach(() => cleanupProject());
 
     it('should convert integrated to flat config', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
-      runCLI(`generate @nx/react:app ${myapp}`);
+      runCreateWorkspace(myapp, {
+        preset: 'react-monorepo',
+        appName: myapp,
+        style: 'css',
+        packageManager,
+        bundler: 'vite',
+      });
       runCLI(`generate @nx/js:lib ${mylib}`);
 
       // migrate to flat structure
@@ -564,7 +571,10 @@ describe('Linter', () => {
         `libs/${mylib}/.eslintrc.json`
       );
 
-      const outFlat = runCLI(`affected -t lint`, { silenceError: true });
+      // TODO: once eslint-plugin-cypress is fixed, we can run --all
+      const outFlat = runCLI(`run-many -t lint -p ${myapp} ${mylib}`, {
+        silenceError: true,
+      });
       expect(outFlat).toContain('All files pass linting');
     }, 1000000);
 
@@ -572,7 +582,13 @@ describe('Linter', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
-      runCLI(`generate @nx/react:app ${myapp} --rootProject=true`);
+      runCreateWorkspace(myapp, {
+        preset: 'react-standalone',
+        appName: myapp,
+        style: 'css',
+        packageManager,
+        bundler: 'vite',
+      });
       runCLI(`generate @nx/js:lib ${mylib}`);
 
       // migrate to flat structure
@@ -580,17 +596,20 @@ describe('Linter', () => {
       checkFilesExist(
         'eslint.config.js',
         'e2e/eslint.config.js',
-        `libs/${mylib}/eslint.config.js`,
+        `${mylib}/eslint.config.js`,
         'eslint.base.config.js'
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
         'e2e/.eslintrc.json',
-        `libs/${mylib}/.eslintrc.json`,
+        `${mylib}/.eslintrc.json`,
         '.eslintrc.base.json'
       );
 
-      const outFlat = runCLI(`affected -t lint`, { silenceError: true });
+      // TODO: once eslint-plugin-cypress is fixed, we can run --all
+      const outFlat = runCLI(`run-many -t lint -p ${myapp} ${mylib}`, {
+        silenceError: true,
+      });
       expect(outFlat).toContain('All files pass linting');
     }, 1000000);
   });
