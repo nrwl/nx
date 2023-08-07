@@ -86,18 +86,6 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
     host,
     joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     (json) => {
-      if (!json.files) {
-        json.files = [];
-      }
-      json.files = json.files.map((path: string) => {
-        if (path.endsWith('react/typings/image.d.ts')) {
-          return path.replace(
-            '@nx/react/typings/image.d.ts',
-            '@nx/next/typings/image.d.ts'
-          );
-        }
-        return path;
-      });
       if (!json.compilerOptions) {
         json.compilerOptions = {
           types: [],
@@ -106,7 +94,11 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
       if (!json.compilerOptions.types) {
         json.compilerOptions.types = [];
       }
-      json.compilerOptions.types.push('next');
+      json.compilerOptions.types = [
+        ...json.compilerOptions.types,
+        'next',
+        '@nx/next/typings/image.d.ts',
+      ];
       return json;
     }
   );

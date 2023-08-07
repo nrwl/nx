@@ -52,6 +52,8 @@ describe('app', () => {
       const tsconfigApp = readJson(appTree, 'apps/my-app/tsconfig.app.json');
       expect(tsconfigApp.compilerOptions.types).toEqual([
         'node',
+        '@nx/react/typings/cssmodule.d.ts',
+        '@nx/react/typings/image.d.ts',
         'vite/client',
       ]);
       const tsconfigSpec = readJson(appTree, 'apps/my-app/tsconfig.spec.json');
