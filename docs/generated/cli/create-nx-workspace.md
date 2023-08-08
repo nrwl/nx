@@ -79,6 +79,14 @@ Type: `boolean`
 
 Generate a Dockerfile for the Node API
 
+### e2eTestRunner
+
+Type: `string`
+
+Choices: [cypress, playwright, none]
+
+Test runner to use for end to end (E2E) tests.
+
 ### framework
 
 Type: `string`

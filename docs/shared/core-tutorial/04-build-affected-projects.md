@@ -46,7 +46,7 @@ git checkout .
 
 Update `packages/ascii/assets/cow.txt`:
 
-```shell
+```plaintext
  _____
 < Hi! >
  -----

@@ -57,8 +57,8 @@ export default createESLintRule<Options, MessageIds>({
       },
     ],
     messages: {
-      missingDependency: `The "{{projectName}}" uses the following packages, but they are missing from the "{{section}}":{{packageNames}}`,
-      obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}".`,
+      missingDependency: `The "{{projectName}}" project uses the following packages, but they are missing from the "{{section}}":{{packageNames}}`,
+      obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}" project.`,
       versionMismatch: `The version specifier does not contain the installed version of "{{packageName}}" package: {{version}}.`,
       missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected:{{dependencies}}`,
     },

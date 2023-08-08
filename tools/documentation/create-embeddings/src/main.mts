@@ -192,7 +192,10 @@ async function generateEmbeddings() {
     ...getAllFilesWithItemList(manifestsPackages),
     ...getAllFilesWithItemList(manifestsRecipes),
     ...getAllFilesWithItemList(manifestsTags),
-  ].filter((entry) => !entry.path.includes('sitemap'));
+  ].filter(
+    (entry) =>
+      !entry.path.includes('sitemap') || !entry.path.includes('deprecated')
+  );
 
   const embeddingSources: EmbeddingSource[] = [
     ...allFilesPaths.map((entry) => {

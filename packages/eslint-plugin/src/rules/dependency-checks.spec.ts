@@ -446,7 +446,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(`
-      "The "liba" uses the following packages, but they are missing from the "dependencies":
+      "The "liba" project uses the following packages, but they are missing from the "dependencies":
           - external2"
     `);
     expect(failures[0].line).toEqual(3);
@@ -805,7 +805,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is not used by "liba"."`
+      `"The "unneeded" package is not used by "liba" project."`
     );
     expect(failures[0].line).toEqual(7);
 
@@ -884,7 +884,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is not used by "liba"."`
+      `"The "unneeded" package is not used by "liba" project."`
     );
     expect(failures[0].line).toEqual(5);
 
@@ -963,7 +963,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is not used by "liba"."`
+      `"The "unneeded" package is not used by "liba" project."`
     );
     expect(failures[0].line).toEqual(4);
 
@@ -1042,7 +1042,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(
-      `"The "unneeded" package is not used by "liba"."`
+      `"The "unneeded" package is not used by "liba" project."`
     );
 
     // should apply fixer
@@ -1462,7 +1462,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(`
-      "The "liba" uses the following packages, but they are missing from the "dependencies":
+      "The "liba" project uses the following packages, but they are missing from the "dependencies":
           - tslib"
     `);
     expect(failures[0].line).toEqual(3);
@@ -1525,7 +1525,7 @@ it('should require swc if @nx/js:swc executor', () => {
   );
   expect(failures.length).toEqual(1);
   expect(failures[0].message).toMatchInlineSnapshot(`
-      "The "liba" uses the following packages, but they are missing from the "dependencies":
+      "The "liba" project uses the following packages, but they are missing from the "dependencies":
           - @swc/helpers"
   `);
   expect(failures[0].line).toEqual(3);

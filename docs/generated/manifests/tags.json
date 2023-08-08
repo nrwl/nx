@@ -927,6 +927,24 @@
       "path": "/packages/nx/documents/watch"
     }
   ],
+  "yarn": [
+    {
+      "description": "",
+      "file": "shared/recipes/yarn-pnp",
+      "id": "yarn-pnp",
+      "name": "Using Yarn PnP",
+      "path": "/recipes/tips-n-tricks/yarn-pnp"
+    }
+  ],
+  "Plug and Play": [
+    {
+      "description": "",
+      "file": "shared/recipes/yarn-pnp",
+      "id": "yarn-pnp",
+      "name": "Using Yarn PnP",
+      "path": "/recipes/tips-n-tricks/yarn-pnp"
+    }
+  ],
   "deno": [
     {
       "description": "",
