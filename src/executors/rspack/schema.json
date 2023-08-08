@@ -59,6 +59,28 @@
       "description": "Extract all licenses in a separate file.",
       "default": true
     },
+    "fileReplacements": {
+      "description": "Replace files with other files in the build.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "replace": {
+            "type": "string",
+            "description": "The file to be replaced.",
+            "x-completion-type": "file"
+          },
+          "with": {
+            "type": "string",
+            "description": "The file to replace with.",
+            "x-completion-type": "file"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["replace", "with"]
+      },
+      "default": []
+    },
     "mode": {
       "type": "string",
       "description": "Mode to run the build in.",

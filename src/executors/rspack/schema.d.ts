@@ -13,4 +13,10 @@ export interface RspackExecutorSchema {
   sourceMap?: boolean | string;
   assets?: any[];
   extractLicenses?: boolean;
+  fileReplacements?: FileReplacement[];
+}
+
+export interface FileReplacement {
+  replace: string;
+  with: string;
 }
