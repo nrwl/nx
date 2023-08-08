@@ -10,6 +10,7 @@ export function TaskNodeActions(props: TaskNodeTooltipProps) {
       <div
         className="flex justify-between items-center w-full bg-slate-50 px-4 py-2 text-xs font-medium uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400"
         onClick={() => setIsOpen(!isOpen)}
+        data-cy="inputs-accordion"
       >
         <span>Inputs</span>
         <span>
@@ -50,6 +51,7 @@ function InputAccordion({ section, inputs }) {
       key={section}
       className="flex justify-between items-center whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-300"
       onClick={() => setIsOpen(!isOpen)}
+      data-cy="input-section-entry"
     >
       <span className="block truncate font-normal font-bold">{section}</span>
       <span>
@@ -70,6 +72,7 @@ function renderInputs(inputs: string[]) {
       key={input}
       className="whitespace-nowrap px-4 py-2 text-sm font-medium text-slate-800 dark:text-slate-300"
       title={input}
+      data-cy="input-list-entry"
     >
       <span className="block truncate font-normal">{input}</span>
     </li>
