@@ -6344,6 +6344,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-flat-config",
+                "path": "/packages/linter/generators/convert-to-flat-config",
+                "name": "convert-to-flat-config",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

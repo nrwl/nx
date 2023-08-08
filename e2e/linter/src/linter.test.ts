@@ -1,12 +1,15 @@
 import * as path from 'path';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
+  getSelectedPackageManager,
   newProject,
   readFile,
   readJson,
   runCLI,
+  runCreateWorkspace,
   uniq,
   updateFile,
   updateJson,
@@ -535,6 +538,78 @@ describe('Linter', () => {
         );
       });
     });
+  });
+
+  describe('Flat config', () => {
+    const packageManager = getSelectedPackageManager() || 'pnpm';
+
+    afterEach(() => cleanupProject());
+
+    it('should convert integrated to flat config', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      runCreateWorkspace(myapp, {
+        preset: 'react-monorepo',
+        appName: myapp,
+        style: 'css',
+        packageManager,
+        bundler: 'vite',
+        e2eTestRunner: 'none',
+      });
+      runCLI(`generate @nx/js:lib ${mylib}`);
+
+      // migrate to flat structure
+      runCLI(`generate @nx/linter:convert-to-flat-config`);
+      checkFilesExist(
+        'eslint.config.js',
+        `apps/${myapp}/eslint.config.js`,
+        `libs/${mylib}/eslint.config.js`
+      );
+      checkFilesDoNotExist(
+        '.eslintrc.json',
+        `apps/${myapp}/.eslintrc.json`,
+        `libs/${mylib}/.eslintrc.json`
+      );
+
+      const outFlat = runCLI(`affected -t lint`, {
+        silenceError: true,
+      });
+      expect(outFlat).toContain('All files pass linting');
+    }, 1000000);
+
+    it('should convert standalone to flat config', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      runCreateWorkspace(myapp, {
+        preset: 'react-standalone',
+        appName: myapp,
+        style: 'css',
+        packageManager,
+        bundler: 'vite',
+        e2eTestRunner: 'none',
+      });
+      runCLI(`generate @nx/js:lib ${mylib}`);
+
+      // migrate to flat structure
+      runCLI(`generate @nx/linter:convert-to-flat-config`);
+      checkFilesExist(
+        'eslint.config.js',
+        `${mylib}/eslint.config.js`,
+        'eslint.base.config.js'
+      );
+      checkFilesDoNotExist(
+        '.eslintrc.json',
+        `${mylib}/.eslintrc.json`,
+        '.eslintrc.base.json'
+      );
+
+      const outFlat = runCLI(`affected -t lint`, {
+        silenceError: true,
+      });
+      expect(outFlat).toContain('All files pass linting');
+    }, 1000000);
   });
 
   describe('Root projects migration', () => {
