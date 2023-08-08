@@ -20,7 +20,7 @@ import {
   TargetDependencies,
 } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
-import { createTaskGraph, createTaskGraphWithPlan } from './create-task-graph';
+import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
@@ -98,7 +98,6 @@ async function getTerminalOutputLifeCycle(
 
 function createTaskGraphAndValidateCycles(
   projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration,
   defaultDependencyConfigs: TargetDependencies,
   projectNames: string[],
   nxArgs: NxArgs,
@@ -108,9 +107,8 @@ function createTaskGraphAndValidateCycles(
     loadDotEnvFiles: boolean;
   }
 ) {
-  const taskGraph = createTaskGraphWithPlan(
+  const taskGraph = createTaskGraph(
     projectGraph,
-    nxJson,
     defaultDependencyConfigs,
     projectNames,
     nxArgs.targets,
@@ -160,7 +158,6 @@ export async function runCommand(
 
       const taskGraph = createTaskGraphAndValidateCycles(
         projectGraph,
-        nxJson,
         defaultDependencyConfigs,
         projectNames,
         nxArgs,
