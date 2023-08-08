@@ -1776,12 +1776,12 @@
             {
               "id": "nx_devkit",
               "name": "Overview",
-              "file": "generated/devkit/nx_devkit"
+              "file": "generated/devkit/README"
             },
             {
               "id": "ngcli_adapter",
               "name": "Ng CLI Adapter",
-              "file": "generated/devkit/ngcli_adapter"
+              "file": "generated/devkit/ngcli_adapter/README"
             }
           ]
         },

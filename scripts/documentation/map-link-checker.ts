@@ -39,8 +39,12 @@ const mapPathList: string[] = readJsonSync(`${basePath}/map.json`, {
 })
   .content.map((file: any) => filePathExtractor(file))
   .flat();
-const readmeMissList = readmePathList.filter((x) => !mapPathList.includes(x));
-const mapMissList = mapPathList.filter((x) => !readmePathList.includes(x));
+const readmeMissList = readmePathList.filter(
+  (x) => !mapPathList.includes(x) && !x.startsWith('generated/devkit/')
+);
+const mapMissList = mapPathList.filter(
+  (x) => !readmePathList.includes(x) && !x.startsWith('generated/devkit/')
+);
 
 let scriptError = false;
 

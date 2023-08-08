@@ -599,7 +599,7 @@
         "isExternal": false,
         "path": "/packages/devkit/documents/nx_devkit",
         "tags": [],
-        "originalFilePath": "generated/devkit/nx_devkit"
+        "originalFilePath": "generated/devkit/README"
       },
       "/packages/devkit/documents/ngcli_adapter": {
         "id": "ngcli_adapter",
@@ -610,7 +610,7 @@
         "isExternal": false,
         "path": "/packages/devkit/documents/ngcli_adapter",
         "tags": [],
-        "originalFilePath": "generated/devkit/ngcli_adapter"
+        "originalFilePath": "generated/devkit/ngcli_adapter/README"
       }
     },
     "root": "/packages/devkit",

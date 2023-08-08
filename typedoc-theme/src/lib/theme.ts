@@ -19,7 +19,7 @@ export default class NxMarkdownTheme extends MarkdownTheme {
     return (
       super
         .render(page, template)
-        .replace(/.md#/gi, '#')
+        .replace(/.md/gi, '')
         /**
          * Hack: This is the simplest way to update the urls and make them work
          * in the `/packages/[name]/documents/[index|ngcli_adapter] context.
