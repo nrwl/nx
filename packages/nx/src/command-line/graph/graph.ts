@@ -19,7 +19,7 @@ import {
 import { pruneExternalNodes } from '../../project-graph/operators';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import {
-  createTaskGraphWithPlan,
+  createTaskGraph,
   mapTargetDefaultsToDependencies,
 } from '../../tasks-runner/create-task-graph';
 import { TaskGraph } from '../../config/task-graph';
@@ -29,6 +29,8 @@ import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
 import { fileHasher } from '../../hasher/file-hasher';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
+import { NxJsonConfiguration } from '../../config/nx-json';
+import { HashPlanner } from '../../hasher/hash-planner';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -44,6 +46,7 @@ export interface ProjectGraphClientResponse {
 
 export interface TaskGraphClientResponse {
   taskGraphs: Record<string, TaskGraph>;
+  plans?: Record<string, string[]>;
   errors: Record<string, string>;
 }
 
@@ -621,11 +624,25 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
     await createProjectGraphAsync({ exitOnError: true })
   );
 
+  const nxJson = readNxJson();
+
   performance.mark('task graph generation:start');
-
-  const taskGraphs = getAllTaskGraphsForWorkspace(graph);
-
+  const taskGraphs = getAllTaskGraphsForWorkspace(nxJson, graph);
   performance.mark('task graph generation:end');
+
+  const planner = new HashPlanner(nxJson, graph, {});
+  performance.mark('task hash plan generation:start');
+  const plans: Record<string, string[]> = {};
+  for (const individualTaskGraph of Object.values(taskGraphs.taskGraphs)) {
+    for (const task of Object.values(individualTaskGraph.tasks)) {
+      if (plans[task.id]) {
+        continue;
+      }
+
+      plans[task.id] = planner.getHashPlan(task.id, individualTaskGraph);
+    }
+  }
+  performance.mark('task hash plan generation:end');
 
   performance.measure(
     'task graph generation',
@@ -633,15 +650,25 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
     'task graph generation:end'
   );
 
-  return taskGraphs;
+  performance.measure(
+    'task hash plan generation',
+    'task hash plan generation:start',
+    'task hash plan generation:end'
+  );
+
+  return {
+    ...taskGraphs,
+    plans,
+  };
 }
 
-function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
+function getAllTaskGraphsForWorkspace(
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+): {
   taskGraphs: Record<string, TaskGraph>;
   errors: Record<string, string>;
 } {
-  const nxJson = readNxJson();
-
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
     nxJson.targetDefaults
   );
@@ -657,9 +684,8 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
     targets.forEach((target) => {
       const taskId = createTaskId(projectName, target);
       try {
-        taskGraphs[taskId] = createTaskGraphWithPlan(
+        taskGraphs[taskId] = createTaskGraph(
           projectGraph,
-          nxJson,
           defaultDependencyConfigs,
           [projectName],
           [target],
@@ -684,9 +710,8 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
         configurations.forEach((configuration) => {
           const taskId = createTaskId(projectName, target, configuration);
           try {
-            taskGraphs[taskId] = createTaskGraphWithPlan(
+            taskGraphs[taskId] = createTaskGraph(
               projectGraph,
-              nxJson,
               defaultDependencyConfigs,
               [projectName],
               [target],
@@ -753,9 +778,8 @@ function createJsonOutput(
       nxJson.targetDefaults
     );
 
-    response.tasks = createTaskGraphWithPlan(
+    response.tasks = createTaskGraph(
       graph,
-      nxJson,
       defaultDependencyConfigs,
       projects,
       targets,

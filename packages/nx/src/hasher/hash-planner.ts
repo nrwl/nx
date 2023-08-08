@@ -39,7 +39,12 @@ export class HashPlanner {
     this.legacyRuntimeInputs = legacyRuntimeInputs;
   }
 
-  getHashPlan(task: Task, taskGraph: TaskGraph, visited: string[]): string[] {
+  getHashPlan(
+    taskId: string,
+    taskGraph: TaskGraph,
+    visited: string[] = [taskId]
+  ): string[] {
+    const task = taskGraph.tasks[taskId];
     const { selfInputs, depsInputs, depsOutputs, projectInputs } = getInputs(
       task,
       this.projectGraph,

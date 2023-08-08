@@ -54,7 +54,7 @@ describe('task planner', () => {
       taskGraph: TaskGraph
     ): Record<string, string[]> {
       return tasks.reduce((acc, task) => {
-        acc[task.id] = hashPlanner.getHashPlan(task, taskGraph, [
+        acc[task.id] = hashPlanner.getHashPlan(task.id, taskGraph, [
           task.target.project,
         ]);
         return acc;
@@ -381,6 +381,11 @@ describe('task planner', () => {
     let taskGraph = {
       roots: ['parent-test'],
       tasks: {
+        'parent-build': {
+          id: 'parent-build',
+          target: { project: 'parent', target: 'build' },
+          overrides: {},
+        },
         'parent-test': {
           id: 'parent-test',
           target: { project: 'parent', target: 'test' },

@@ -5,15 +5,10 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
-import {
-  NxJsonConfiguration,
-  TargetDefaults,
-  TargetDependencies,
-} from '../config/nx-json';
+import { TargetDefaults, TargetDependencies } from '../config/nx-json';
 import { TargetDependencyConfig } from '../devkit-exports';
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { output } from '../utils/output';
-import { HashPlanner } from '../hasher/hash-planner';
 
 export class ProcessTasks {
   private readonly seen = new Set<string>();
@@ -401,38 +396,6 @@ export function mapTargetDefaultsToDependencies(
   });
 
   return res;
-}
-
-export function createTaskGraphWithPlan(
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration,
-  defaultDependencyConfigs: TargetDependencies,
-  projectNames: string[],
-  targets: string[],
-  configuration: string | undefined,
-  overrides: Object,
-  excludeTaskDependencies: boolean = false
-) {
-  const taskGraph = createTaskGraph(
-    projectGraph,
-    defaultDependencyConfigs,
-    projectNames,
-    targets,
-    configuration,
-    overrides,
-    excludeTaskDependencies
-  );
-
-  const planner = new HashPlanner(nxJson, projectGraph, {});
-
-  for (let taskId of Object.keys(taskGraph.tasks)) {
-    const task = taskGraph.tasks[taskId];
-    taskGraph.tasks[taskId].inputs = planner.getHashPlan(task, taskGraph, [
-      task.id,
-    ]);
-  }
-
-  return taskGraph;
 }
 
 function interpolateOverrides<T = any>(
