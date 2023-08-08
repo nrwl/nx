@@ -7,6 +7,8 @@ import { fileHasher } from './file-hasher';
 import { DependencyType, ProjectGraph } from '../config/project-graph';
 import { HashPlanner } from './hash-planner';
 import { Task, TaskGraph } from '../config/task-graph';
+import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { createTaskGraph } from '../tasks-runner/create-task-graph';
 
 jest.mock('../utils/workspace-root', () => {
   return {
@@ -93,65 +95,59 @@ describe('task planner', () => {
         parent: [{ file: '/file', hash: 'file.hash' }],
         unrelated: [{ file: 'libs/unrelated/filec.ts', hash: 'filec.hash' }],
       };
-      let projectGraph: ProjectGraph = {
-        nodes: {
-          parent: {
-            name: 'parent',
-            type: 'lib',
-            data: {
-              root: 'libs/parent',
-              targets: {
-                build: {
-                  executor: 'nx:run-commands',
-                  inputs: [
-                    'default',
-                    '^default',
-                    { runtime: 'echo runtime123' },
-                    { env: 'TESTENV' },
-                    { env: 'NONEXISTENTENV' },
-                    {
-                      input: 'default',
-                      projects: ['unrelated', 'tag:some-tag'],
-                    },
-                  ],
+
+      const builder = new ProjectGraphBuilder();
+
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'parent',
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              inputs: [
+                'default',
+                '^default',
+                { runtime: 'echo runtime123' },
+                { env: 'TESTENV' },
+                { env: 'NONEXISTENTENV' },
+                {
+                  input: 'default',
+                  projects: ['unrelated', 'tag:some-tag'],
                 },
-              },
-            },
-          },
-          unrelated: {
-            name: 'unrelated',
-            type: 'lib',
-            data: {
-              root: 'libs/unrelated',
-              targets: { build: {} },
-            },
-          },
-          tagged: {
-            name: 'tagged',
-            type: 'lib',
-            data: {
-              root: 'libs/tagged',
-              targets: { build: {} },
-              tags: ['some-tag'],
+              ],
             },
           },
         },
-        dependencies: {
-          parent: [],
+      });
+      builder.addNode({
+        name: 'unrelated',
+        type: 'lib',
+        data: {
+          root: 'libs/unrelated',
+          targets: { build: {} },
         },
-        externalNodes: {},
-      };
-      let taskGraph = {
-        roots: ['parent-build'],
-        tasks: {
-          'parent-build': {
-            id: 'parent-build',
-            target: { project: 'parent', target: 'build' },
-            overrides: {},
-          },
+      });
+      builder.addNode({
+        name: 'tagged',
+        type: 'lib',
+        data: {
+          root: 'libs/tagged',
+          targets: { build: {} },
+          tags: ['some-tag'],
         },
-        dependencies: {},
-      };
+      });
+      const projectGraph = builder.getUpdatedProjectGraph();
+      const taskGraph = createTaskGraph(
+        projectGraph,
+        {},
+        ['parent'],
+        ['build'],
+        undefined,
+        {},
+        false
+      );
       let options = {
         runtimeCacheInputs: ['echo runtime456'],
       };
@@ -169,11 +165,7 @@ describe('task planner', () => {
       const planner = new HashPlanner(nxJson, projectGraph, options);
 
       await assertNodes(
-        {
-          target: { project: 'parent', target: 'build' },
-          id: 'parent-build',
-          overrides: { prop: 'prop-value' },
-        },
+        taskGraph.tasks['parent:build'],
         taskGraph,
         hasher,
         planner
