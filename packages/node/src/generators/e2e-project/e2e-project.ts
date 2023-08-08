@@ -16,8 +16,8 @@ import {
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import {
-  globalJavaScriptOverrides,
-  globalTypeScriptOverrides,
+  javaScriptOverride,
+  typeScriptOverride,
 } from '@nx/linter/src/generators/init/global-eslint-config';
 import * as path from 'path';
 import { join } from 'path';
@@ -126,7 +126,7 @@ export async function e2eProjectGeneratorInternal(
       }
       json.overrides = [
         ...(options.rootProject
-          ? [globalTypeScriptOverrides, globalJavaScriptOverrides]
+          ? [typeScriptOverride, javaScriptOverride]
           : []),
         /**
          * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs

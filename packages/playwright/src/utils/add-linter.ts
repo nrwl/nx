@@ -8,8 +8,12 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/linter';
-import { globalJavaScriptOverrides } from '@nx/linter/src/generators/init/global-eslint-config';
+import { javaScriptOverride } from '@nx/linter/src/generators/init/global-eslint-config';
 import { eslintPluginPlaywrightVersion } from './versions';
+import {
+  addExtendsToLintConfig,
+  addOverrideToLintConfig,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 export interface PlaywrightLinterOptions {
   project: string;
@@ -66,38 +70,23 @@ export async function addLinterToPlaywrightProject(
       : () => {}
   );
 
-  updateJson(
+  addExtendsToLintConfig(
     tree,
-    joinPathFragments(projectConfig.root, '.eslintrc.json'),
-    (json) => {
-      if (options.rootProject) {
-        json.plugins = ['@nx'];
-        json.extends = ['plugin:playwright/recommended'];
-      } else {
-        json.extends = ['plugin:playwright/recommended', ...json.extends];
-      }
-      json.overrides ??= [];
-      const globals = options.rootProject ? [globalJavaScriptOverrides] : [];
-      const override = {
-        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-        parserOptions: !options.setParserOptionsProject
-          ? undefined
-          : {
-              project: `${projectConfig.root}/tsconfig.*?.json`,
-            },
-        rules: {},
-      };
-      const palywrightFiles = [
-        {
-          ...override,
-          files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
-        },
-      ];
-      json.overrides.push(...globals);
-      json.overrides.push(...palywrightFiles);
-      return json;
-    }
+    projectConfig.root,
+    'plugin:playwright/recommended'
   );
+  if (options.rootProject) {
+    addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
+  }
+  addOverrideToLintConfig(tree, projectConfig.root, {
+    files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
+    parserOptions: !options.setParserOptionsProject
+      ? undefined
+      : {
+          project: `${projectConfig.root}/tsconfig.*?.json`,
+        },
+    rules: {},
+  });
 
   return runTasksInSerial(...tasks);
 }

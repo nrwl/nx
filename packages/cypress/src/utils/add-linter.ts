@@ -8,7 +8,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/linter';
-import { globalJavaScriptOverrides } from '@nx/linter/src/generators/init/global-eslint-config';
+import { javaScriptOverride } from '@nx/linter/src/generators/init/global-eslint-config';
 import { installedCypressVersion } from './cypress-version';
 import { eslintPluginCypressVersion } from './versions';
 
@@ -84,7 +84,7 @@ export async function addLinterToCyProject(
         json.extends = ['plugin:cypress/recommended', ...json.extends];
       }
       json.overrides ??= [];
-      const globals = options.rootProject ? [globalJavaScriptOverrides] : [];
+      const globals = options.rootProject ? [javaScriptOverride] : [];
       const override = {
         files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
         parserOptions: !options.setParserOptionsProject
