@@ -3,6 +3,7 @@ import {
   getProjects,
   NxJsonConfiguration,
   ProjectConfiguration,
+  readNxJson,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -26,11 +27,11 @@ export async function convertToFlatConfigGenerator(
   }
 
   // rename root eslint config to eslint.config.js
-  convertRootToFlatConfig(tree);
+  convertRootToFlatConfig(tree, eslintFile);
   // rename and map files
   const projects = getProjects(tree);
   for (const [project, projectConfig] of projects) {
-    convertProjectToFlatConfig(tree, project, projectConfig);
+    convertProjectToFlatConfig(tree, project, projectConfig, readNxJson(tree));
   }
   // replace references in nx.json
   updateNxJsonConfig(tree);
@@ -43,8 +44,8 @@ export async function convertToFlatConfigGenerator(
 
 export default convertToFlatConfigGenerator;
 
-function convertRootToFlatConfig(tree: Tree) {
-  if (tree.exists('.eslintrc.base.json')) {
+function convertRootToFlatConfig(tree: Tree, eslintFile: string) {
+  if (eslintFile.endsWith('.base.json')) {
     convertConfigToFlatConfig(
       tree,
       '',
@@ -52,36 +53,42 @@ function convertRootToFlatConfig(tree: Tree) {
       'eslint.base.config.js'
     );
   }
-  if (tree.exists('.eslintrc.json')) {
-    convertConfigToFlatConfig(tree, '', '.eslintrc.json', 'eslint.config.js');
-  }
+  convertConfigToFlatConfig(tree, '', '.eslintrc.json', 'eslint.config.js');
 }
 
 function convertProjectToFlatConfig(
   tree: Tree,
   project: string,
-  projectConfig: ProjectConfiguration
+  projectConfig: ProjectConfiguration,
+  nxJson: NxJsonConfiguration
 ) {
   if (tree.exists(`${projectConfig.root}/.eslintrc.json`)) {
     if (projectConfig.targets) {
-      const eslintTargets = Object.keys(projectConfig.targets).filter(
+      const eslintTargets = Object.keys(projectConfig.targets || {}).filter(
         (t) => projectConfig.targets[t].executor === '@nx/linter:eslint'
       );
       for (const target of eslintTargets) {
         // remove any obsolete `eslintConfig` options pointing to the old config file
-        if (projectConfig.targets[target].options.eslintConfig) {
+        if (projectConfig.targets[target].options?.eslintConfig) {
           delete projectConfig.targets[target].options.eslintConfig;
         }
         updateProjectConfiguration(tree, project, projectConfig);
       }
+      const nxHasLintTargets = Object.keys(nxJson.targetDefaults || {}).some(
+        (t) =>
+          (t === '@nx/linter:eslint' ||
+            nxJson.targetDefaults[t].executor === '@nx/linter:eslint') &&
+          projectConfig.targets?.[t]
+      );
+      if (nxHasLintTargets || eslintTargets.length > 0) {
+        convertConfigToFlatConfig(
+          tree,
+          projectConfig.root,
+          '.eslintrc.json',
+          'eslint.config.js'
+        );
+      }
     }
-
-    convertConfigToFlatConfig(
-      tree,
-      projectConfig.root,
-      '.eslintrc.json',
-      'eslint.config.js'
-    );
   }
 }
 
@@ -94,6 +101,13 @@ function updateNxJsonConfig(tree: Tree) {
         const inputSet = new Set(json.targetDefaults.lint.inputs);
         inputSet.add('{workspaceRoot}/eslint.config.js');
         json.targetDefaults.lint.inputs = Array.from(inputSet);
+      }
+      if (json.targetDefaults?.['@nx/linter:eslint']?.inputs) {
+        const inputSet = new Set(
+          json.targetDefaults['@nx/linter:eslint'].inputs
+        );
+        inputSet.add('{workspaceRoot}/eslint.config.js');
+        json.targetDefaults['@nx/linter:eslint'].inputs = Array.from(inputSet);
       }
       if (json.namedInputs?.production) {
         const inputSet = new Set(json.namedInputs.production);
