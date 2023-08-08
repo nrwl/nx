@@ -62,6 +62,8 @@ It only uses language primitives and immutable objects
 ### Type Aliases
 
 - [AdditionalSharedConfig](../../devkit/documents/AdditionalSharedConfig)
+- [CreateDependencies](../../devkit/documents/CreateDependencies)
+- [CreateNodes](../../devkit/documents/CreateNodes)
 - [CustomHasher](../../devkit/documents/CustomHasher)
 - [Executor](../../devkit/documents/Executor)
 - [Generator](../../devkit/documents/Generator)
@@ -70,6 +72,8 @@ It only uses language primitives and immutable objects
 - [ImplicitDependencyEntry](../../devkit/documents/ImplicitDependencyEntry)
 - [ModuleFederationLibrary](../../devkit/documents/ModuleFederationLibrary)
 - [NxPlugin](../../devkit/documents/NxPlugin)
+- [NxPluginV1](../../devkit/documents/NxPluginV1)
+- [NxPluginV2](../../devkit/documents/NxPluginV2)
 - [PackageManager](../../devkit/documents/PackageManager)
 - [ProjectGraphNode](../../devkit/documents/ProjectGraphNode)
 - [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
@@ -156,6 +160,7 @@ It only uses language primitives and immutable objects
 - [updateProjectConfiguration](../../devkit/documents/updateProjectConfiguration)
 - [updateTsConfigsToJs](../../devkit/documents/updateTsConfigsToJs)
 - [updateWorkspaceConfiguration](../../devkit/documents/updateWorkspaceConfiguration)
+- [validateNewDependency](../../devkit/documents/validateNewDependency)
 - [visitNotIgnoredFiles](../../devkit/documents/visitNotIgnoredFiles)
 - [workspaceLayout](../../devkit/documents/workspaceLayout)
 - [writeJson](../../devkit/documents/writeJson)

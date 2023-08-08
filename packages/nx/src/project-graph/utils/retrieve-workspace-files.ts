@@ -40,7 +40,7 @@ export async function retrieveWorkspaceFiles(
 
   performance.mark('native-file-deps:start');
   const plugins = await loadNxPlugins(
-    nxJson.plugins,
+    nxJson?.plugins ?? [],
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
   );
@@ -102,7 +102,7 @@ export async function retrieveProjectConfigurations(
   const { getProjectConfigurations } =
     require('../../native') as typeof import('../../native');
   const plugins = await loadNxPlugins(
-    nxJson.plugins,
+    nxJson?.plugins ?? [],
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
   );
@@ -131,7 +131,7 @@ export function retrieveProjectConfigurationPaths(
 ): string[] {
   const projectGlobPatterns = configurationGlobs(
     root,
-    loadNxPluginsSync(nxJson.plugins, getNxRequirePaths(root), root)
+    loadNxPluginsSync(nxJson?.plugins ?? [], getNxRequirePaths(root), root)
   );
   const { getProjectConfigurationFiles } =
     require('../../native') as typeof import('../../native');
@@ -253,8 +253,8 @@ export function configurationGlobs(
   const globPatterns: string[] =
     configurationGlobsWithoutPlugins(workspaceRoot);
   for (const plugin of plugins) {
-    if (plugin.projectConfigurationsConstructor) {
-      globPatterns.push(plugin.projectConfigurationsConstructor[0]);
+    if (plugin.createNodes) {
+      globPatterns.push(plugin.createNodes[0]);
     }
   }
   return globPatterns;

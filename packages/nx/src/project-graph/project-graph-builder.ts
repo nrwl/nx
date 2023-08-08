@@ -119,7 +119,7 @@ export class ProjectDependencyBuilder {
       return;
     }
 
-    validateNewDependency(this._graph, {
+    validateDependency(this._graph, {
       source,
       target,
       dependencyType: type,
@@ -386,19 +386,23 @@ export interface ProjectGraphDependencyWithFile {
   dependencyType: DependencyType;
 }
 
-function validateNewDependency(
+/**
+ *
+ * @throws If the dependency is invalid.
+ */
+export function validateDependency(
   graph: ProjectGraph,
-  d: ProjectGraphDependencyWithFile
-) {
-  if (d.dependencyType === DependencyType.implicit) {
-    validateImplicitDependency(graph, d);
-  } else if (d.dependencyType === DependencyType.dynamic) {
-    validateDynamicDependency(graph, d);
-  } else if (d.dependencyType === DependencyType.static) {
-    validateStaticDependency(graph, d);
+  dependency: ProjectGraphDependencyWithFile
+): void {
+  if (dependency.dependencyType === DependencyType.implicit) {
+    validateImplicitDependency(graph, dependency);
+  } else if (dependency.dependencyType === DependencyType.dynamic) {
+    validateDynamicDependency(graph, dependency);
+  } else if (dependency.dependencyType === DependencyType.static) {
+    validateStaticDependency(graph, dependency);
   }
 
-  validateCommonDependencyRules(graph, d);
+  validateCommonDependencyRules(graph, dependency);
 }
 
 function validateCommonDependencyRules(

@@ -7,9 +7,6 @@ import {
   FileData,
   ProjectFileMap,
   ProjectGraph,
-  ProjectGraphDependency,
-  ProjectGraphExternalNode,
-  ProjectGraphProjectNode,
 } from '../config/project-graph';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
 import { projectGraphCacheDirectory } from '../utils/cache-directory';
@@ -113,7 +110,7 @@ export function createProjectFileMapCache(
   projectFileMap: ProjectFileMap,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
 ) {
-  const nxJsonPlugins = (nxJson.plugins || []).map((p) => ({
+  const nxJsonPlugins = (nxJson?.plugins || []).map((p) => ({
     name: p,
     version: packageJsonDeps[p],
   }));
@@ -124,7 +121,7 @@ export function createProjectFileMapCache(
     // compilerOptions may not exist, especially for package-based repos
     pathMappings: tsConfig?.compilerOptions?.paths || {},
     nxJsonPlugins,
-    pluginsConfig: nxJson.pluginsConfig,
+    pluginsConfig: nxJson?.pluginsConfig,
     projectFileMap,
   };
   return newValue;
@@ -209,11 +206,12 @@ export function shouldRecomputeWholeGraph(
   }
 
   // a new plugin has been added
-  if ((nxJson.plugins || []).length !== cache.nxJsonPlugins.length) return true;
+  if ((nxJson?.plugins || []).length !== cache.nxJsonPlugins.length)
+    return true;
 
   // a plugin has changed
   if (
-    (nxJson.plugins || []).some((t) => {
+    (nxJson?.plugins || []).some((t) => {
       const matchingPlugin = cache.nxJsonPlugins.find((p) => p.name === t);
       if (!matchingPlugin) return true;
       return matchingPlugin.version !== packageJsonDeps[t];
@@ -223,7 +221,8 @@ export function shouldRecomputeWholeGraph(
   }
 
   if (
-    JSON.stringify(nxJson.pluginsConfig) !== JSON.stringify(cache.pluginsConfig)
+    JSON.stringify(nxJson?.pluginsConfig) !==
+    JSON.stringify(cache.pluginsConfig)
   ) {
     return true;
   }

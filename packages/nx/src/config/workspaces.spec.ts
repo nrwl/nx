@@ -1,6 +1,6 @@
 import { toProjectName, Workspaces } from './workspaces';
-import { TargetConfiguration } from './workspace-json-project-json';
 import { TempFs } from '../utils/testing/temp-fs';
+import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
 const libConfig = (root, name?: string) => ({
   name: name ?? toProjectName(`${root}/some-file`),
@@ -108,14 +108,21 @@ describe('Workspaces', () => {
         }),
       });
 
-      const workspaces = new Workspaces(fs.tempDir);
-      const resolved = workspaces.readProjectsConfigurations();
-      expect(resolved.projects['my-package']).toEqual({
-        name: 'my-package',
-        root: 'packages/my-package',
-        sourceRoot: 'packages/my-package',
-        projectType: 'library',
-      });
+      withEnvironmentVariables(
+        {
+          NX_WORKSPACE_ROOT: fs.tempDir,
+        },
+        () => {
+          const workspaces = new Workspaces(fs.tempDir);
+          const resolved = workspaces.readProjectsConfigurations();
+          expect(resolved.projects['my-package']).toEqual({
+            name: 'my-package',
+            root: 'packages/my-package',
+            sourceRoot: 'packages/my-package',
+            projectType: 'library',
+          });
+        }
+      );
     });
   });
 });

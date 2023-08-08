@@ -220,7 +220,7 @@ async function updateProjectGraphWithPlugins(
   context: ProjectGraphProcessorContext,
   initProjectGraph: ProjectGraph
 ) {
-  const plugins = await loadNxPlugins(context.nxJsonConfiguration.plugins);
+  const plugins = await loadNxPlugins(context.nxJsonConfiguration?.plugins);
   let graph = initProjectGraph;
   for (const plugin of plugins) {
     try {
@@ -247,21 +247,17 @@ async function updateProjectGraphWithPlugins(
     try {
       if (isNxPluginV2(plugin)) {
         const builder = new ProjectDependencyBuilder(graph);
-        const newDependencies = await plugin.projectDependencyLocator?.({
+        const newDependencies = await plugin.createDependencies?.({
           ...context,
           graph,
         });
-        for (const targetProject in newDependencies) {
-          for (const targetProjectDependency of newDependencies[
-            targetProject
-          ]) {
-            builder.addDependency(
-              targetProjectDependency.source,
-              targetProjectDependency.target,
-              targetProjectDependency.dependencyType,
-              targetProjectDependency.sourceFile
-            );
-          }
+        for (const targetProjectDependency of newDependencies) {
+          builder.addDependency(
+            targetProjectDependency.source,
+            targetProjectDependency.target,
+            targetProjectDependency.dependencyType,
+            targetProjectDependency.sourceFile
+          );
         }
         graph = builder.getUpdatedProjectGraph();
       }

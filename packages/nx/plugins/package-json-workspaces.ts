@@ -11,30 +11,30 @@ import { NxPluginV2 } from '../src/utils/nx-plugin';
 import { output } from '../src/utils/output';
 import { PackageJson } from '../src/utils/package-json';
 import { joinPathFragments } from '../src/utils/path';
-import { workspaceRoot } from '../src/utils/workspace-root';
 
-const readJson = (f) => readJsonFile(join(workspaceRoot, f));
-
-export const NX_PACKAGE_JSON_WORKSPACES_PLUGIN: NxPluginV2 = {
-  name: 'nx-core-build-package-json-nodes',
-  projectConfigurationsConstructor: [
-    combineGlobPatterns(
-      getGlobPatternsFromPackageManagerWorkspaces(workspaceRoot, readJson)
-    ),
-    (pkgJsonPath) => {
-      const json = readJsonFile<PackageJson>(pkgJsonPath);
-      return {
-        projectNodes: {
-          [json.name]: buildProjectConfigurationFromPackageJson(
-            json,
-            pkgJsonPath,
-            readNxJson(workspaceRoot)
-          ),
-        },
-      };
-    },
-  ],
-};
+export function getNxPackageJsonWorkspacesPlugin(root: string): NxPluginV2 {
+  const readJson = (f) => readJsonFile(join(root, f));
+  return {
+    name: 'nx-core-build-package-json-nodes',
+    createNodes: [
+      combineGlobPatterns(
+        getGlobPatternsFromPackageManagerWorkspaces(root, readJson)
+      ),
+      (pkgJsonPath) => {
+        const json: PackageJson = readJson(pkgJsonPath);
+        return {
+          projects: {
+            [json.name]: buildProjectConfigurationFromPackageJson(
+              json,
+              pkgJsonPath,
+              readNxJson(root)
+            ),
+          },
+        };
+      },
+    ],
+  };
+}
 
 export function buildProjectConfigurationFromPackageJson(
   packageJson: { name: string },

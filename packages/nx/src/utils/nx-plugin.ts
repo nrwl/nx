@@ -38,23 +38,22 @@ import { NxPluginV1 } from './nx-plugin.deprecated';
 import { ProjectGraphDependencyWithFile } from '../project-graph/project-graph-builder';
 import { combineGlobPatterns } from './globs';
 
-export type ProjectConfigurationsConstructor = [
+export type CreateNodes = [
   projectFilePattern: string,
   constructorMethod: (
     projectConfigurationFile: string,
     context: {
-      projectsConfigurations: Record<string, ProjectConfiguration>;
-      nxJsonConfiguration: NxJsonConfiguration;
-      workspaceRoot: string;
+      readonly projectsConfigurations: Record<string, ProjectConfiguration>;
+      readonly nxJsonConfiguration: NxJsonConfiguration;
+      readonly workspaceRoot: string;
     }
   ) => {
-    projectNodes?: Record<string, ProjectConfiguration>;
+    projects?: Record<string, ProjectConfiguration>;
     externalNodes?: Record<string, ProjectGraphExternalNode>;
   }
 ];
 
-type Awaitable<T> = T | Promise<T>;
-export type ProjectDependencyLocator = (context: {
+export type CreateDependencies = (context: {
   /**
    * The current project graph,
    */
@@ -63,23 +62,25 @@ export type ProjectDependencyLocator = (context: {
   /**
    * The configuration of each project in the workspace
    */
-  projectsConfigurations: ProjectsConfigurations;
+  readonly projectsConfigurations: ProjectsConfigurations;
 
   /**
    * The `nx.json` configuration from the workspace
    */
-  nxJsonConfiguration: NxJsonConfiguration;
+  readonly nxJsonConfiguration: NxJsonConfiguration;
 
   /**
    * All files in the workspace
    */
-  fileMap: ProjectFileMap;
+  readonly fileMap: ProjectFileMap;
 
   /**
    * Files changes since last invocation
    */
-  filesToProcess: ProjectFileMap;
-}) => Awaitable<Record<string, ProjectGraphDependencyWithFile[]>>;
+  readonly filesToProcess: ProjectFileMap;
+}) =>
+  | ProjectGraphDependencyWithFile[]
+  | Promise<ProjectGraphDependencyWithFile[]>;
 
 export type NxPluginV2 = {
   name: string;
@@ -88,10 +89,10 @@ export type NxPluginV2 = {
    * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
    */
-  projectConfigurationsConstructor?: ProjectConfigurationsConstructor;
+  createNodes?: CreateNodes;
 
   // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
-  projectDependencyLocator?: ProjectDependencyLocator;
+  createDependencies?: CreateDependencies;
 };
 
 export * from './nx-plugin.deprecated';
@@ -233,12 +234,12 @@ function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
   if (isNxPluginV1(plugin) && plugin.projectFilePatterns) {
     return {
       ...plugin,
-      projectConfigurationsConstructor: [
+      createNodes: [
         `*/**/${combineGlobPatterns(plugin.projectFilePatterns)}`,
         (configFilePath) => {
           const name = toProjectName(configFilePath);
           return {
-            projectNodes: {
+            projects: {
               [name]: {
                 name,
                 root: dirname(configFilePath),

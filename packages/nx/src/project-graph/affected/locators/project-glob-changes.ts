@@ -14,7 +14,7 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
       configurationGlobs(
         workspaceRoot,
         await loadNxPlugins(
-          nxJson.plugins,
+          nxJson?.plugins,
           getNxRequirePaths(workspaceRoot),
           workspaceRoot
         )
