@@ -33,89 +33,94 @@ const plugins =
   require('../../community/approved-plugins.json') as PluginRegistry[];
 
 async function main() {
-  const qualityIndicators: any = {};
-  const { data } = await axios.get(`https://api.github.com/repos/nrwl/nx`, {
-    headers: {
-      Authorization: `Bearer ${process.env.GITHUB_PAT}`,
-    },
-  });
-  const nxGithubStars = data.stargazers_count;
-  for (let i = 0; i < officialPlugins.length; i++) {
-    const plugin = officialPlugins[i];
-    console.log(`Fetching data for ${plugin.name}`);
-    const npmData = await getNpmData(plugin, true);
-    const npmDownloads = await getNpmDownloads(plugin);
-    qualityIndicators[plugin.name] = {
-      lastPublishedDate: npmData.lastPublishedDate,
-      npmDownloads,
-      githubStars: nxGithubStars,
-    };
-  }
-  for (let i = 0; i < plugins.length; i++) {
-    const plugin = plugins[i];
-    console.log(`Fetching data for ${plugin.name}`);
-    const npmData = await getNpmData(plugin);
-    const npmDownloads = await getNpmDownloads(plugin);
-    const githubStars = await getGithubStars(npmData.githubRepo);
-    qualityIndicators[plugin.name] = {
-      lastPublishedDate: npmData.lastPublishedDate,
-      npmDownloads,
-      githubStars,
-      nxVersion: npmData.nxVersion,
-    };
-  }
+  try {
+    const qualityIndicators: any = {};
+    for (let i = 0; i < officialPlugins.length; i++) {
+      const plugin = officialPlugins[i];
+      console.log(`Fetching data for ${plugin.name}`);
+      const npmData = await getNpmData(plugin, true);
+      const npmDownloads = await getNpmDownloads(plugin);
+      qualityIndicators[plugin.name] = {
+        lastPublishedDate: npmData.lastPublishedDate,
+        npmDownloads,
+        githubRepo: `nrwl/nx`,
+      };
+    }
+    for (let i = 0; i < plugins.length; i++) {
+      const plugin = plugins[i];
+      console.log(`Fetching data for ${plugin.name}`);
+      const npmData = await getNpmData(plugin);
+      const npmDownloads = await getNpmDownloads(plugin);
+      qualityIndicators[plugin.name] = {
+        lastPublishedDate: npmData.lastPublishedDate,
+        npmDownloads,
+        githubRepo: npmData.githubRepo,
+        nxVersion: npmData.nxVersion,
+      };
+    }
+    const repos = Object.keys(qualityIndicators).map((pluginName) => {
+      const [owner, repo] =
+        qualityIndicators[pluginName].githubRepo?.split('/');
+      return {
+        owner,
+        repo,
+      };
+    });
+    const starData = await getGithubStars(repos);
+    Object.keys(qualityIndicators).forEach((key) => {
+      qualityIndicators[key].githubStars =
+        starData[qualityIndicators[key].githubRepo.replace(/[\-\/#]/g, '')]
+          ?.stargazers?.totalCount || -1;
+      delete qualityIndicators[key].githubRepo;
+    });
 
-  writeFileSync(
-    './nx-dev/nx-dev/pages/extending-nx/quality-indicators.json',
-    JSON.stringify(qualityIndicators, null, 2)
-  );
+    writeFileSync(
+      './nx-dev/nx-dev/pages/extending-nx/quality-indicators.json',
+      JSON.stringify(qualityIndicators, null, 2)
+    );
+  } catch (ex) {
+    console.warn('Failed to load quality indicators!');
+    console.warn(ex);
+    // Don't overwrite quality-indicators.json if the script fails
+  }
 }
 main();
 
 // Publish date (and github directory, readme content)
 // i.e. https://registry.npmjs.org/@nxkit/playwright
 async function getNpmData(plugin: PluginRegistry, skipNxVersion = false) {
-  try {
-    const { data } = await axios.get(
-      `https://registry.npmjs.org/${plugin.name}`
-    );
-    const lastPublishedDate = data.time[data['dist-tags'].latest];
-    const nxVersion = skipNxVersion || (await getNxVersion(data));
-    if (!data.repository) {
-      console.warn('- No repository defined in package.json!');
-      return { lastPublishedDate, nxVersion, githubRepo: '' };
-    }
-    const url: String = data.repository.url;
-    const indexOfTree = url.indexOf('/tree/');
-    const githubRepo = url
-      .slice(0, indexOfTree === -1 ? undefined : indexOfTree)
-      .slice(url.indexOf('github.com/') + 11)
-      .replace('.git', '');
-    return {
-      lastPublishedDate,
-      githubRepo,
-      nxVersion,
-      // readmeContent: plugin.name
-    };
-  } catch (ex) {
-    return { lastPublishedDate: '', githubRepo: '' };
+  const { data } = await axios.get(`https://registry.npmjs.org/${plugin.name}`);
+  const lastPublishedDate = data.time[data['dist-tags'].latest];
+  const nxVersion = skipNxVersion || (await getNxVersion(data));
+  if (!data.repository) {
+    console.warn('- No repository defined in package.json!');
+    return { lastPublishedDate, nxVersion, githubRepo: '' };
   }
+  const url: String = data.repository.url;
+  const indexOfTree = url.indexOf('/tree/');
+  const githubRepo = url
+    .slice(0, indexOfTree === -1 ? undefined : indexOfTree)
+    .slice(0, url.indexOf('#') === -1 ? undefined : url.indexOf('#'))
+    .slice(url.indexOf('github.com/') + 11)
+    .replace('.git', '');
+  return {
+    lastPublishedDate,
+    githubRepo,
+    nxVersion,
+    // readmeContent: plugin.name
+  };
 }
 
 // Download count
 // i.e. https://api.npmjs.org/downloads/point/2023-06-01:2023-07-01/@nxkit/playwright
 async function getNpmDownloads(plugin: PluginRegistry) {
   const lastMonth = getLastMonth();
-  try {
-    const { data } = await axios.get(
-      `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
-        lastMonth
-      )}/${plugin.name}`
-    );
-    return data.downloads;
-  } catch (ex) {
-    return '';
-  }
+  const { data } = await axios.get(
+    `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
+      lastMonth
+    )}/${plugin.name}`
+  );
+  return data.downloads;
 }
 
 export function getLastMonth() {
@@ -138,19 +143,44 @@ export function stringifyDate(date: Date) {
 }
 
 // Stars
-// i.e. https://api.github.com/repos/nxkit/nxkit
-async function getGithubStars(repo: String) {
-  try {
-    const { data } = await axios.get(`https://api.github.com/repos/${repo}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.GITHUB_PAT}`,
-      },
-    });
-    return data.stargazers_count;
-  } catch (ex) {
-    console.warn('- Could not load GitHub stars!');
-    return -1;
+// i.e. https://api.github.com/graphql
+async function getGithubStars(repos: { owner: string; repo: string }[]) {
+  const query = `
+  fragment repoProperties on Repository {
+    nameWithOwner
+    stargazers {
+      totalCount
+    }
   }
+  
+  {
+    ${repos
+      .filter(({ owner, repo }) => owner && repo && !owner.includes('.'))
+      .map(
+        ({ owner, repo }, index) =>
+          `${owner.replace(/[\-#]/g, '')}${repo.replace(
+            /[\-#]/g,
+            ''
+          )}: repository(owner: "${owner}", name: "${repo}") {
+      ...repoProperties
+    }`
+      )
+      .join('\n')}
+  }`;
+
+  const result = await axios.post(
+    'https://api.github.com/graphql',
+    {
+      query,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      },
+    }
+  );
+
+  return result.data.data;
 }
 
 async function getNxVersion(data: any) {
