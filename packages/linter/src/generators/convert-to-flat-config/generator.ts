@@ -1,10 +1,10 @@
 import {
   formatFiles,
   getProjects,
+  NxJsonConfiguration,
   ProjectConfiguration,
-  readJson,
   Tree,
-  updateNxJson,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
@@ -68,12 +68,12 @@ function convertProjectToFlatConfig(
         (t) => projectConfig.targets[t].executor === '@nx/linter:eslint'
       );
       for (const target of eslintTargets) {
-        projectConfig.targets[target].options = {
-          ...projectConfig.targets[target].options,
-          eslintConfig: `${projectConfig.root}/eslint.config.js`,
-        };
+        // remove any obsolete `eslintConfig` options pointing to the old config file
+        if (projectConfig.targets[target].options.eslintConfig) {
+          delete projectConfig.targets[target].options.eslintConfig;
+        }
+        updateProjectConfiguration(tree, project, projectConfig);
       }
-      updateProjectConfiguration(tree, project, projectConfig);
     }
 
     convertConfigToFlatConfig(
@@ -89,12 +89,19 @@ function convertProjectToFlatConfig(
 // and remove eslintignore
 function updateNxJsonConfig(tree: Tree) {
   if (tree.exists('nx.json')) {
-    const content = tree.read('nx.json', 'utf-8');
-    const strippedConfig: string = content
-      .replace('.eslintrc.json', 'eslint.config.js')
-      .replace('.eslintrc.base.json', 'eslint.config.base.js')
-      .replace(/".*\.eslintignore.json",?/, '');
-    updateNxJson(tree, JSON.parse(strippedConfig));
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      if (json.targetDefaults?.lint?.inputs) {
+        const inputSet = new Set(json.targetDefaults.lint.inputs);
+        inputSet.add('{workspaceRoot}/eslint.config.js');
+        json.targetDefaults.lint.inputs = Array.from(inputSet);
+      }
+      if (json.namedInputs?.production) {
+        const inputSet = new Set(json.namedInputs.production);
+        inputSet.add('!{projectRoot}/eslint.config.js');
+        json.namedInputs.production = Array.from(inputSet);
+      }
+      return json;
+    });
   }
 }
 

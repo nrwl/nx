@@ -1,5 +1,6 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
+  NxJsonConfiguration,
   Tree,
   addProjectConfiguration,
   readJson,
@@ -22,6 +23,22 @@ describe('convert-to-flat-config generator', () => {
       root: 'libs/test-lib',
       targets: {},
     });
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      json.targetDefaults = {
+        lint: {
+          inputs: ['default'],
+        },
+      };
+      json.namedInputs = {
+        default: ['{projectRoot}/**/*', 'sharedGlobals'],
+        production: [
+          'default',
+          '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+        ],
+        sharedGlobals: [],
+      };
+      return json;
+    });
   });
 
   it('should run successfully', async () => {
@@ -40,10 +57,14 @@ describe('convert-to-flat-config generator', () => {
     expect(
       tree.read('libs/test-lib/eslint.config.js', 'utf-8')
     ).toMatchSnapshot();
-    expect(
-      readJson(tree, 'libs/test-lib/project.json').targets.lint.options
-        .eslintConfig
-    ).toEqual('libs/test-lib/eslint.config.js');
+    // check nx.json changes
+    const nxJson = readJson(tree, 'nx.json');
+    expect(nxJson.targetDefaults.lint.inputs).toContain(
+      '{workspaceRoot}/eslint.config.js'
+    );
+    expect(nxJson.namedInputs.production).toContain(
+      '!{projectRoot}/eslint.config.js'
+    );
   });
 
   it('should add plugin extends', async () => {

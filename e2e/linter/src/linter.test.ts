@@ -555,6 +555,7 @@ describe('Linter', () => {
         style: 'css',
         packageManager,
         bundler: 'vite',
+        e2eTestRunner: 'none',
       });
       runCLI(`generate @nx/js:lib ${mylib}`);
 
@@ -571,8 +572,7 @@ describe('Linter', () => {
         `libs/${mylib}/.eslintrc.json`
       );
 
-      // TODO: once eslint-plugin-cypress is fixed, we can run --all
-      const outFlat = runCLI(`run-many -t lint -p ${myapp} ${mylib}`, {
+      const outFlat = runCLI(`affected -t lint`, {
         silenceError: true,
       });
       expect(outFlat).toContain('All files pass linting');
@@ -588,6 +588,7 @@ describe('Linter', () => {
         style: 'css',
         packageManager,
         bundler: 'vite',
+        e2eTestRunner: 'none',
       });
       runCLI(`generate @nx/js:lib ${mylib}`);
 
@@ -595,19 +596,16 @@ describe('Linter', () => {
       runCLI(`generate @nx/linter:convert-to-flat-config`);
       checkFilesExist(
         'eslint.config.js',
-        'e2e/eslint.config.js',
         `${mylib}/eslint.config.js`,
         'eslint.base.config.js'
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
-        'e2e/.eslintrc.json',
         `${mylib}/.eslintrc.json`,
         '.eslintrc.base.json'
       );
 
-      // TODO: once eslint-plugin-cypress is fixed, we can run --all
-      const outFlat = runCLI(`run-many -t lint -p ${myapp} ${mylib}`, {
+      const outFlat = runCLI(`affected -t lint`, {
         silenceError: true,
       });
       expect(outFlat).toContain('All files pass linting');
