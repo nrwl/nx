@@ -1,4 +1,4 @@
-import { Configuration, ExternalItem, RspackPluginInstance } from '@rspack/core';
+import { Configuration, ExternalItem, RspackPluginInstance, ResolveAlias } from '@rspack/core';
 import * as path from 'path';
 import { getCopyPatterns } from './get-copy-patterns';
 import { SharedConfigContext } from './model';
@@ -19,7 +19,7 @@ export function withNx(_opts = {}) {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const tsconfigPaths = require('tsconfig-paths');
     const { paths } = tsconfigPaths.loadConfig(options.tsConfig);
-    const alias = Object.keys(paths).reduce((acc, k) => {
+    const alias: ResolveAlias = Object.keys(paths).reduce((acc, k) => {
       acc[k] = path.join(context.root, paths[k][0]);
       return acc;
     }, {});
@@ -37,6 +37,10 @@ export function withNx(_opts = {}) {
       );
     }
 
+    options.fileReplacements.forEach(item => {
+      alias[item.replace] = item.with;
+    })
+     
     const externals: ExternalItem = {};
     let externalsType: Configuration['externalsType'];
     if (options.target === 'node') {
