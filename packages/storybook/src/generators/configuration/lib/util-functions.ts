@@ -28,7 +28,10 @@ import {
 import { StorybookConfigureSchema } from '../schema';
 import { UiFramework7 } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
-import ts = require('typescript');
+import {
+  addOverrideToLintConfig,
+  findEslintFile,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 const DEFAULT_PORT = 4400;
 
@@ -173,7 +176,7 @@ export function createStorybookTsconfigFile(
   if (tree.exists(oldStorybookTsConfigPath)) {
     logger.warn(`.storybook/tsconfig.json already exists for this project`);
     logger.warn(
-      `It will be renamed and moved to tsconfig.storybook.json. 
+      `It will be renamed and moved to tsconfig.storybook.json.
       Please make sure all settings look correct after this change.
       Also, please make sure to use "nx migrate" to move from one version of Nx to another.
       `
@@ -381,6 +384,10 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
       joinPathFragments(root, './.storybook/tsconfig.json'),
     ]);
   });
+
+  if (!findEslintFile(tree)) {
+    return;
+  }
 
   if (tree.exists(join(root, '.eslintrc.json'))) {
     updateJson(tree, join(root, '.eslintrc.json'), (json) => {
@@ -629,15 +636,15 @@ export function rootFileIsTs(
 ): boolean {
   if (tree.exists(`.storybook/${rootFileName}.ts`) && !tsConfiguration) {
     logger.info(
-      `The root Storybook configuration is in TypeScript, 
-      so Nx will generate TypeScript Storybook configuration files 
+      `The root Storybook configuration is in TypeScript,
+      so Nx will generate TypeScript Storybook configuration files
       in this project's .storybook folder as well.`
     );
     return true;
   } else if (tree.exists(`.storybook/${rootFileName}.js`) && tsConfiguration) {
     logger.info(
-      `The root Storybook configuration is in JavaScript, 
-        so Nx will generate JavaScript Storybook configuration files 
+      `The root Storybook configuration is in JavaScript,
+        so Nx will generate JavaScript Storybook configuration files
         in this project's .storybook folder as well.`
     );
     return false;

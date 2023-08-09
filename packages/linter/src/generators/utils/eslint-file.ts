@@ -4,9 +4,12 @@ import { useFlatConfig } from '../../utils/flat-config';
 import {
   addBlockToFlatConfigExport,
   addCompatToFlatConfig,
+  generateAst,
   generateFlatOverride,
   generatePluginExtendsElement,
+  mapFilePath,
 } from './flat-config/ast-utils';
+import ts = require('typescript');
 
 export const eslintConfigFileWhitelist = [
   '.eslintrc',
@@ -79,6 +82,33 @@ export function addExtendsToLintConfig(
     const fileName = joinPathFragments(root, '.eslintrc.json');
     updateJson(tree, fileName, (json) => {
       json.extends = [plugin, ...(json.extends ?? [])];
+      return json;
+    });
+  }
+}
+
+export function addIgnoresToLintConfig(
+  tree: Tree,
+  root: string,
+  ignorePatterns: string[]
+) {
+  if (useFlatConfig()) {
+    const fileName = joinPathFragments(root, 'eslint.config.js');
+    const block = generateAst<ts.ObjectLiteralExpression>({
+      ignores: ignorePatterns.map((path) => mapFilePath(path, root)),
+    });
+    tree.write(
+      fileName,
+      addBlockToFlatConfigExport(tree.read(fileName, 'utf8'), block)
+    );
+  } else {
+    const fileName = joinPathFragments(root, '.eslintrc.json');
+    updateJson(tree, fileName, (json) => {
+      const ignoreSet = new Set([
+        ...(json.ignorePatterns ?? []),
+        ...ignorePatterns,
+      ]);
+      json.ignorePatterns = Array.from(ignoreSet);
       return json;
     });
   }
