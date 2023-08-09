@@ -39,7 +39,7 @@ export function addOverrideToLintConfig(
 ) {
   if (useFlatConfig()) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
-    const flatOverride = generateFlatOverride(override);
+    const flatOverride = generateFlatOverride(override, root);
     tree.write(
       fileName,
       addConfigToFlatConfigExport(tree.read(fileName, 'utf8'), flatOverride)
@@ -61,7 +61,7 @@ export function addExtendsToLintConfig(
 ) {
   if (useFlatConfig()) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
-    const pluginExtends = generatePluginExtendsElement(plugin);
+    const pluginExtends = generatePluginExtendsElement([plugin]);
     tree.write(
       fileName,
       addConfigToFlatConfigExport(tree.read(fileName, 'utf8'), pluginExtends)

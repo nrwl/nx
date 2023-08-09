@@ -7,8 +7,8 @@ import {
 import { join } from 'path';
 import { ESLint, Linter } from 'eslint';
 import * as ts from 'typescript';
-import { generateAst, generateRequire } from './generate-ast';
 import { eslintrcVersion } from '../../../utils/versions';
+import { generateAst, generateFlatOverride, generatePluginExtendsElement, generateRequire, generateSpreadElement, mapFilePath } from '../../utils/flat-config/ast-utils';
 
 /**
  * Converts an ESLint JSON config to a flat config.
@@ -129,7 +129,6 @@ export function convertEslintJsonToFlatConfig(
 
   if (config.overrides) {
     config.overrides.forEach((override) => {
-      updateFiles(override, root);
       if (
         override.env ||
         override.extends ||
@@ -137,10 +136,8 @@ export function convertEslintJsonToFlatConfig(
         override.parser
       ) {
         isFlatCompatNeeded = true;
-        addFlattenedOverride(override, exportElements);
-      } else {
-        exportElements.push(generateAst(override));
       }
+      exportElements.push(generateFlatOverride(override, root));
     });
   }
 
@@ -218,22 +215,6 @@ function updateFiles(
   return override;
 }
 
-function mapFilePath(filePath: string, root: string) {
-  if (filePath.startsWith('!')) {
-    const fileWithoutBang = filePath.slice(1);
-    if (fileWithoutBang.startsWith('*.')) {
-      return `!${join(root, '**', fileWithoutBang)}`;
-    } else {
-      return `!${join(root, fileWithoutBang)}`;
-    }
-  }
-  if (filePath.startsWith('*.')) {
-    return join(root, '**', filePath);
-  } else {
-    return join(root, filePath);
-  }
-}
-
 // add parsed extends to export blocks and add import statements
 function addExtends(
   importsMap: Map<string, string | string[]>,
@@ -255,7 +236,7 @@ function addExtends(
       if (imp.match(/\.eslintrc(.base)?\.json$/)) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
         configBlocks.push(
-          ts.factory.createSpreadElement(ts.factory.createIdentifier(localName))
+          generateSpreadElement(localName)
         );
         const newImport = imp.replace(
           /^(.*)\.eslintrc(.base)?\.json$/,
@@ -311,17 +292,7 @@ function addExtends(
       }
     );
 
-    const pluginExtendsSpread = ts.factory.createSpreadElement(
-      ts.factory.createCallExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier('compat'),
-          ts.factory.createIdentifier('extends')
-        ),
-        undefined,
-        eslintrcConfigs.map((plugin) => ts.factory.createStringLiteral(plugin))
-      )
-    );
-    configBlocks.push(pluginExtendsSpread);
+    configBlocks.push(generatePluginExtendsElement(eslintrcConfigs));
   }
 
   return isFlatCompatNeeded;
@@ -371,11 +342,11 @@ function addPlugins(
       ),
       ...(config.processor
         ? [
-            ts.factory.createPropertyAssignment(
-              'processor',
-              ts.factory.createStringLiteral(config.processor)
-            ),
-          ]
+          ts.factory.createPropertyAssignment(
+            'processor',
+            ts.factory.createStringLiteral(config.processor)
+          ),
+        ]
         : []),
     ],
     false
@@ -395,74 +366,6 @@ function addParser(
     'parser',
     ts.factory.createIdentifier(parserName)
   );
-}
-
-function addFlattenedOverride(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
-  configBlocks: ts.Expression[]
-) {
-  const { files, excludedFiles, rules, ...rest } = override;
-
-  const objectLiteralElements: ts.ObjectLiteralElementLike[] = [
-    ts.factory.createSpreadAssignment(ts.factory.createIdentifier('config')),
-  ];
-  if (files) {
-    objectLiteralElements.push(
-      ts.factory.createPropertyAssignment('files', generateAst(files))
-    );
-  }
-  if (excludedFiles) {
-    objectLiteralElements.push(
-      ts.factory.createPropertyAssignment(
-        'excludedFiles',
-        generateAst(excludedFiles)
-      )
-    );
-  }
-  if (rules) {
-    objectLiteralElements.push(
-      ts.factory.createPropertyAssignment('rules', generateAst(rules))
-    );
-  }
-
-  const overrideSpread = ts.factory.createSpreadElement(
-    ts.factory.createCallExpression(
-      ts.factory.createPropertyAccessExpression(
-        ts.factory.createCallExpression(
-          ts.factory.createPropertyAccessExpression(
-            ts.factory.createIdentifier('compat'),
-            ts.factory.createIdentifier('config')
-          ),
-          undefined,
-          [generateAst(rest)]
-        ),
-        ts.factory.createIdentifier('map')
-      ),
-      undefined,
-      [
-        ts.factory.createArrowFunction(
-          undefined,
-          undefined,
-          [
-            ts.factory.createParameterDeclaration(
-              undefined,
-              undefined,
-              'config'
-            ),
-          ],
-          undefined,
-          ts.factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-          ts.factory.createParenthesizedExpression(
-            ts.factory.createObjectLiteralExpression(
-              objectLiteralElements,
-              true
-            )
-          )
-        ),
-      ]
-    )
-  );
-  configBlocks.push(overrideSpread);
 }
 
 const DEFAULT_FLAT_CONFIG = `

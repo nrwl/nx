@@ -143,8 +143,8 @@ function createEsLintConfiguration(
       parserOptions: !setParserOptionsProject
         ? undefined
         : {
-            project: [`${projectConfig.root}/tsconfig.*?.json`],
-          },
+          project: [`${projectConfig.root}/tsconfig.*?.json`],
+        },
       /**
        * Having an empty rules object present makes it more obvious to the user where they would
        * extend things from if they needed to
@@ -161,14 +161,14 @@ function createEsLintConfiguration(
     },
     ...(isBuildableLibraryProject(projectConfig)
       ? [
-          {
-            files: ['*.json'],
-            parser: 'jsonc-eslint-parser',
-            rules: {
-              '@nx/dependency-checks': 'error',
-            } as Linter.RulesRecord,
-          },
-        ]
+        {
+          files: ['*.json'],
+          parser: 'jsonc-eslint-parser',
+          rules: {
+            '@nx/dependency-checks': 'error',
+          } as Linter.RulesRecord,
+        },
+      ]
       : []),
   ];
 
@@ -181,7 +181,7 @@ function createEsLintConfiguration(
       nodes.push(generateSpreadElement('baseConfig'));
     }
     overrides.forEach((override) => {
-      nodes.push(generateFlatOverride(override));
+      nodes.push(generateFlatOverride(override, projectConfig.root));
     });
     const nodeList = createNodeList(importMap, nodes, isCompatNeeded);
     const content = stringifyNodeList(

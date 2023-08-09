@@ -116,7 +116,7 @@ export function generateSpreadElement(name: string): ts.SpreadElement {
   return ts.factory.createSpreadElement(ts.factory.createIdentifier(name));
 }
 
-export function generatePluginExtendsElement(plugin: string): ts.SpreadElement {
+export function generatePluginExtendsElement(plugins: string[]): ts.SpreadElement {
   return ts.factory.createSpreadElement(
     ts.factory.createCallExpression(
       ts.factory.createPropertyAccessExpression(
@@ -124,7 +124,7 @@ export function generatePluginExtendsElement(plugin: string): ts.SpreadElement {
         ts.factory.createIdentifier('extends')
       ),
       undefined,
-      [ts.factory.createStringLiteral(plugin)]
+      plugins.map(plugin => ts.factory.createStringLiteral(plugin))
     )
   );
 }
@@ -184,8 +184,10 @@ export function generateRequire(
  * Generates AST object or spread element based on JSON override object
  */
 export function generateFlatOverride(
-  override: Linter.ConfigOverride<Linter.RulesRecord>
+  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  root: string
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
+  mapFilePaths(override, root);
   if (
     !override.env &&
     !override.extends &&
@@ -194,7 +196,6 @@ export function generateFlatOverride(
   ) {
     return generateAst(override);
   }
-
   const { files, excludedFiles, rules, ...rest } = override;
 
   const objectLiteralElements: ts.ObjectLiteralElementLike[] = [
@@ -241,6 +242,38 @@ export function generateFlatOverride(
       ]
     )
   );
+}
+
+function mapFilePaths(override: Linter.ConfigOverride<Linter.RulesRecord>,
+  root: string) {
+  if (override.files) {
+    override.files = Array.isArray(override.files)
+      ? override.files
+      : [override.files];
+    override.files = override.files.map((file) => mapFilePath(file, root));
+  }
+  if (override.excludedFiles) {
+    override.excludedFiles = Array.isArray(override.excludedFiles)
+      ? override.excludedFiles
+      : [override.excludedFiles];
+    override.excludedFiles = override.excludedFiles.map((file) => mapFilePath(file, root));
+  }
+}
+
+export function mapFilePath(filePath: string, root: string) {
+  if (filePath.startsWith('!')) {
+    const fileWithoutBang = filePath.slice(1);
+    if (fileWithoutBang.startsWith('*.')) {
+      return `!${joinPathFragments(root, '**', fileWithoutBang)}`;
+    } else {
+      return `!${joinPathFragments(root, fileWithoutBang)}`;
+    }
+  }
+  if (filePath.startsWith('*.')) {
+    return joinPathFragments(root, '**', filePath);
+  } else {
+    return joinPathFragments(root, filePath);
+  }
 }
 
 function addTSObjectProperty(
