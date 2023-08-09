@@ -573,9 +573,6 @@ describe('app', () => {
         const eslintJson = readJson(tree, '/apps/my-app/.eslintrc.json');
         expect(eslintJson).toMatchInlineSnapshot(`
           {
-            "env": {
-              "jest": true,
-            },
             "extends": [
               "plugin:@nx/react-typescript",
               "next",
@@ -615,10 +612,26 @@ describe('app', () => {
                 ],
                 "rules": {},
               },
+              {
+                "files": [
+                  "*.*",
+                ],
+                "rules": {
+                  "@next/next/no-html-link-for-pages": "off",
+                },
+              },
+              {
+                "env": {
+                  "jest": true,
+                },
+                "files": [
+                  "*.spec.ts",
+                  "*.spec.tsx",
+                  "*.spec.js",
+                  "*.spec.jsx",
+                ],
+              },
             ],
-            "rules": {
-              "@next/next/no-html-link-for-pages": "off",
-            },
           }
         `);
       });

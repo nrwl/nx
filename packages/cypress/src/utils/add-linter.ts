@@ -5,10 +5,8 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/linter';
-import { javaScriptOverride } from '@nx/linter/src/generators/init/global-eslint-config';
 import { installedCypressVersion } from './cypress-version';
 import { eslintPluginCypressVersion } from './versions';
 import {

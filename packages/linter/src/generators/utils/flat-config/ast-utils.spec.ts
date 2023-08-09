@@ -218,12 +218,12 @@ describe('ast-utils', () => {
       "const FlatCompat = require("@eslint/eslintrc");
       const js = require("@eslint/js");
       const baseConfig = require("../../eslint.config.js");
-
+         
       const compat = new FlatCompat({
             baseDirectory: __dirname,
             recommendedConfig: js.configs.recommended,
           });
-
+        
        module.exports = [
             ...baseConfig,
             {
@@ -257,12 +257,12 @@ describe('ast-utils', () => {
       "const FlatCompat = require("@eslint/eslintrc");
       const baseConfig = require("../../eslint.config.js");
           const js = require("@eslint/js");
-
+         
       const compat = new FlatCompat({
             baseDirectory: __dirname,
             recommendedConfig: js.configs.recommended,
           });
-
+        
        module.exports = [
             ...baseConfig,
             {

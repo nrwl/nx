@@ -32,17 +32,11 @@ export async function addLinting(
   });
 
   if (options.linter === Linter.EsLint) {
-    addExtendsToLintConfig(
-      host,
-      options.appProjectRoot,
-      'plugin:@nx/react-typescript'
-    );
-    addExtendsToLintConfig(host, options.appProjectRoot, 'next');
-    addExtendsToLintConfig(
-      host,
-      options.appProjectRoot,
-      'next/core-web-vitals'
-    );
+    addExtendsToLintConfig(host, options.appProjectRoot, [
+      'plugin:@nx/react-typescript',
+      'next',
+      'next/core-web-vitals',
+    ]);
     addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
 
     // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors

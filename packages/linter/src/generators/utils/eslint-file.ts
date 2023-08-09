@@ -100,11 +100,12 @@ export function replaceOverridesInLintConfig(
 export function addExtendsToLintConfig(
   tree: Tree,
   root: string,
-  plugin: string
+  plugin: string | string[]
 ) {
+  const plugins = Array.isArray(plugin) ? plugin : [plugin];
   if (useFlatConfig()) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
-    const pluginExtends = generatePluginExtendsElement([plugin]);
+    const pluginExtends = generatePluginExtendsElement(plugins);
     tree.write(
       fileName,
       addBlockToFlatConfigExport(tree.read(fileName, 'utf8'), pluginExtends)
@@ -112,7 +113,7 @@ export function addExtendsToLintConfig(
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
     updateJson(tree, fileName, (json) => {
-      json.extends = [plugin, ...(json.extends ?? [])];
+      json.extends = [...plugins, ...(json.extends ?? [])];
       return json;
     });
   }

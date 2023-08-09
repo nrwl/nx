@@ -9,7 +9,10 @@ import { Linter, lintProjectGenerator } from '@nx/linter';
 import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
 import type { AddLintingGeneratorSchema } from './schema';
-import { replaceOverridesInLintConfig } from '@nx/linter/src/generators/utils/eslint-file';
+import {
+  findEslintFile,
+  replaceOverridesInLintConfig,
+} from '@nx/linter/src/generators/utils/eslint-file';
 import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
 
 export async function addLintingGenerator(
@@ -35,9 +38,22 @@ export async function addLintingGenerator(
   });
   tasks.push(lintTask);
 
+  const eslintFile = findEslintFile(tree, options.projectRoot);
+  // keep parser options if they exist
+  const hasParserOptions = tree
+    .read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
+    .includes(`${options.projectRoot}/tsconfig.*?.json`);
+
   replaceOverridesInLintConfig(tree, options.projectRoot, [
     {
       files: ['*.ts'],
+      ...(hasParserOptions
+        ? {
+            parserOptions: {
+              project: [`${options.projectRoot}/tsconfig.*?.json`],
+            },
+          }
+        : {}),
       extends: [
         'plugin:@nx/angular',
         'plugin:@angular-eslint/template/process-inline-templates',
