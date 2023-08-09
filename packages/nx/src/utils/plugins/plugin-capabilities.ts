@@ -81,12 +81,12 @@ export async function getPluginCapabilities(
       projectGraphExtension:
         pluginModule &&
         ('processProjectGraph' in pluginModule ||
-          'buildProjectNodes' in pluginModule ||
-          'buildProjectDependencies' in pluginModule),
+          'createNodes' in pluginModule ||
+          'createDependencies' in pluginModule),
       projectInference:
         pluginModule &&
         ('projectFilePatterns' in pluginModule ||
-          'buildProjectNodes' in pluginModule),
+          'createNodes' in pluginModule),
     };
   } catch {
     return null;

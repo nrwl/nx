@@ -26,7 +26,7 @@ export type NxPluginV1 = {
   /**
    * A glob pattern to search for non-standard project files.
    * @example: ["*.csproj", "pom.xml"]
-   * @deprecated Use buildProjectNodes instead. This will be removed in Nx 18
+   * @deprecated Use {@link CreateNodes} instead. This will be removed in Nx 18
    */
   projectFilePatterns?: string[];
 };

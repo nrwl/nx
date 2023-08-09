@@ -47,7 +47,7 @@ export async function normalizeProjectNodes(
     const p = ctx.projectsConfigurations.projects[key];
     const projectRoot = join(workspaceRoot, p.root);
 
-    // Todo(@AgentEnder) we can move a lot of this to the buildProjectNodes
+    // Todo(@AgentEnder) we can move a lot of this to
     // builtin plugin inside workspaces.ts, but there would be some functional differences
     // - The plugin would only apply to package.json files found via the workspaces globs
     //   - This means that scripts / tags / etc from the `nx` property wouldn't be read if a project
