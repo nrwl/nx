@@ -6,6 +6,100 @@ import {
 import { Linter } from 'eslint';
 import * as ts from 'typescript';
 
+export function addImportToFlatConfig(
+  content: string,
+  variable: string | string[],
+  imp: string
+): string {
+  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+
+  const foundImportVars: ts.NodeArray<ts.BindingElement> = ts.forEachChild(
+    source,
+    function analyze(node) {
+      // we can only combine object binding patterns
+      if (!Array.isArray(variable)) {
+        return;
+      }
+      if (
+        ts.isVariableStatement(node) &&
+        node.declarationList.declarations.length > 0 &&
+        ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
+        ts.isObjectBindingPattern(node.declarationList.declarations[0].name) &&
+        ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
+        node.declarationList.declarations[0].initializer.expression.getText() ===
+          'require' &&
+        node.declarationList.declarations[0].initializer.arguments.length ===
+          1 &&
+        ts.isStringLiteral(
+          node.declarationList.declarations[0].initializer.arguments[0]
+        ) &&
+        node.declarationList.declarations[0].initializer.arguments[0].text ===
+          imp
+      ) {
+        return node.declarationList.declarations[0].name.elements;
+      }
+    }
+  );
+
+  if (foundImportVars && Array.isArray(variable)) {
+    const newVariables = variable.filter(
+      (v) => !foundImportVars.some((fv) => v === fv.name.getText())
+    );
+    if (newVariables.length === 0) {
+      return content;
+    }
+    const isMultiLine = foundImportVars.hasTrailingComma;
+    const pos = foundImportVars.end;
+    const nodes = ts.factory.createNodeArray(
+      newVariables.map((v) =>
+        ts.factory.createBindingElement(undefined, undefined, v)
+      )
+    );
+    const insert = printer.printList(
+      ts.ListFormat.ObjectBindingPatternElements,
+      nodes,
+      source
+    );
+    return applyChangesToString(content, [
+      {
+        type: ChangeType.Insert,
+        index: pos,
+        text: isMultiLine ? `,\n${insert}` : `,${insert}`,
+      },
+    ]);
+  } else {
+    const requireStatement = generateRequire(
+      typeof variable === 'string'
+        ? variable
+        : ts.factory.createObjectBindingPattern(
+            variable.map((v) =>
+              ts.factory.createBindingElement(undefined, undefined, v)
+            )
+          ),
+      imp
+    );
+    const insert = printer.printNode(
+      ts.EmitHint.Unspecified,
+      requireStatement,
+      source
+    );
+    return applyChangesToString(content, [
+      {
+        type: ChangeType.Insert,
+        index: 0,
+        text: `${insert}\n`,
+      },
+    ]);
+  }
+}
+
 /**
  * Injects new ts.expression to the end of the module.exports array.
  */
@@ -33,7 +127,6 @@ export function addConfigToFlatConfigExport(
       return node.expression.right.elements;
     }
   });
-  console.log(exportsArray);
   const insert = printer.printNode(ts.EmitHint.Expression, config, source);
   if (options.insertAtTheEnd) {
     return applyChangesToString(content, [

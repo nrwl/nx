@@ -173,7 +173,7 @@ function createEsLintConfiguration(
   ];
 
   if (useFlatConfig()) {
-    const isCompatNeeded = !!eslintConfig || addDependencyChecks;
+    const isCompatNeeded = addDependencyChecks;
     const nodes = [];
     const importMap = new Map();
     if (eslintConfig) {
