@@ -7,6 +7,7 @@ import {
 } from '../../../../config/project-graph';
 import { join, relative } from 'path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
+import { normalizePath } from '../../../../utils/path';
 
 export type ExplicitDependency = {
   sourceProjectName: string;
@@ -123,10 +124,11 @@ function buildExplicitTypeScriptDependenciesWithSwc(
     staticImportExpressions,
     dynamicImportExpressions,
   } of imports) {
+    const normalizedFilePath = normalizePath(relative(workspaceRoot, file));
     for (const importExpr of staticImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
-        relative(workspaceRoot, file),
+        normalizedFilePath,
         sourceProject,
         DependencyType.static,
         targetProjectLocator
@@ -142,7 +144,7 @@ function buildExplicitTypeScriptDependenciesWithSwc(
     for (const importExpr of dynamicImportExpressions) {
       const dependency = convertImportToDependency(
         importExpr,
-        relative(workspaceRoot, file),
+        normalizedFilePath,
         sourceProject,
         DependencyType.dynamic,
         targetProjectLocator
