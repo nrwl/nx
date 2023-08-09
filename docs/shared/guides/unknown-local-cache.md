@@ -32,7 +32,7 @@ default, Nx will refuse to use such artifacts and will throw the "Invalid Cache 
 
 Upgrading your computer's hardware may alter its Machine ID, yielding the error above. To fix it execute `nx reset` to
 remove all the cache directories created under the previous Machine ID. After doing so, you should no longer see the
-error. After doing so, you should no longer see the error.
+error.
 
 ## You Share Cache with Another Machine Using a Network Drive
 
