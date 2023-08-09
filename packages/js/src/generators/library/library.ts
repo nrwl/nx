@@ -261,6 +261,7 @@ export async function addLint(
   if (options.rootProject) {
     const {
       addOverrideToLintConfig,
+      // nx-ignore-next-line
     } = require('@nx/linter/src/generators/utils/eslint-file');
 
     addOverrideToLintConfig(tree, '', {
