@@ -103,9 +103,12 @@ export class PackagesApi {
             );
           } else {
             readdirSync('../../docs/generated/devkit/' + fileName).forEach(
-              (fileName) => {
+              (subFileName) => {
                 generateSegments(
-                  `packages/devkit/documents/${fileName.replace('.md', '')}`,
+                  `packages/devkit/documents/${fileName}/${subFileName.replace(
+                    '.md',
+                    ''
+                  )}`,
                   this.options.prefix
                 );
               }
