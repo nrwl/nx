@@ -21,7 +21,11 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 
 export class HashPlanner {
-  legacyRuntimeInputs: ExpandedSelfInput[];
+  private legacyRuntimeInputs: ExpandedSelfInput[];
+  private legacyFileSetInputs: string[] = [];
+  private externalDeps = new Map<string, string[]>();
+  private taskInputs = new Map<string, string[]>();
+
   constructor(
     private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
@@ -36,6 +40,8 @@ export class HashPlanner {
       legacyRuntimeInputs.push({ env: 'NX_CLOUD_ENCRYPTION_KEY' });
     }
 
+    this.setupExternalDeps();
+    this.legacyFileSetInputs = LEGACY_FILESET_INPUTS.map((f) => f.fileset);
     this.legacyRuntimeInputs = legacyRuntimeInputs;
   }
 
@@ -111,8 +117,12 @@ export class HashPlanner {
     },
     taskGraph: TaskGraph,
     visited: string[],
-    skipExternalDeps
+    skipExternalDeps: boolean
   ): string[] {
+    if (this.taskInputs.has(task.id)) {
+      return this.taskInputs.get(task.id);
+    }
+
     const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
 
     const self = this.singleProjectInputs(projectName, inputs.selfInputs);
@@ -128,7 +138,12 @@ export class HashPlanner {
     const depsOut = this.getDepsOutputs(task, taskGraph, inputs.depsOutputs);
     const projects = this.getProjectInputs(inputs.projectInputs);
 
-    return Array.from(new Set([...self, ...deps, ...depsOut, ...projects]));
+    let collectedInputs = Array.from(
+      new Set(self.concat(deps, depsOut, projects))
+    );
+
+    this.taskInputs.set(task.id, collectedInputs);
+    return collectedInputs;
   }
 
   private getDepsInputs(
@@ -137,44 +152,38 @@ export class HashPlanner {
     projectGraphDeps: ProjectGraphDependency[],
     taskGraph: TaskGraph,
     visited: string[],
-    skipExternalDeps
+    skipExternalDeps: boolean
   ): string[] {
-    return inputs
-      .map((input) => {
-        return projectGraphDeps
-          .map((d) => {
-            if (visited.indexOf(d.target) > -1) {
-              return null;
-            } else {
-              visited.push(d.target);
-              if (this.projectGraph.nodes[d.target]) {
-                return this.getNamedInputsForDependencies(
-                  d.target,
-                  task,
-                  input.input || 'default',
-                  taskGraph,
-                  visited,
-                  skipExternalDeps
-                );
-              } else {
-                if (skipExternalDeps) {
-                  return null;
-                } else {
-                  // external dependency
-                  const deps = findAllProjectNodeDependencies(
-                    d.target,
-                    this.projectGraph,
-                    true
-                  );
-                  return [d.target, ...deps];
-                }
-              }
-            }
-          })
-          .flat();
-      })
-      .flat()
-      .filter((r) => !!r);
+    const depInputs = [];
+
+    for (const { input } of inputs) {
+      for (const dep of projectGraphDeps) {
+        if (visited.includes(dep.target)) {
+          continue;
+        }
+        visited.push(dep.target);
+        if (this.projectGraph.nodes[dep.target]) {
+          depInputs.push(
+            ...this.getNamedInputsForDependencies(
+              dep.target,
+              task,
+              input || 'default',
+              taskGraph,
+              visited,
+              skipExternalDeps
+            )
+          );
+        } else {
+          if (skipExternalDeps) {
+            continue;
+          }
+          const deps = this.externalDeps.get(dep.target);
+          depInputs.push(dep.target, ...deps);
+        }
+      }
+    }
+
+    return depInputs;
   }
 
   private getDepsOutputs(
@@ -281,11 +290,7 @@ export class HashPlanner {
               );
             }
 
-            const deps = findAllProjectNodeDependencies(
-              externalNodeName,
-              this.projectGraph,
-              true
-            );
+            const deps = this.externalDeps.get(externalNodeName);
 
             externalDeps.push(externalDependency, ...deps);
           }
@@ -349,17 +354,22 @@ export class HashPlanner {
       );
     }
 
-    const notFilesets = inputs.filter((r) => !r['fileset']);
-    return [
-      ...this.projectFileSetInputs(projectName, projectFilesets),
-      ...[
-        ...workspaceFilesets,
-        ...LEGACY_FILESET_INPUTS.map((input) => input.fileset),
-      ].map((fileset) => this.rootFilesetInput(fileset)),
-      ...[...notFilesets, ...this.legacyRuntimeInputs].map((r) =>
+    const projectFileSetInputs = this.projectFileSetInputs(
+      projectName,
+      projectFilesets
+    );
+    const workspaceFileSets = workspaceFilesets.concat(
+      this.legacyFileSetInputs
+    );
+
+    const runtimeAndEnvInputs = inputs
+      .filter((r) => !r['fileset'])
+      .concat(this.legacyRuntimeInputs)
+      .map((r) =>
         r['runtime'] ? this.runtimeInput(r['runtime']) : this.envInput(r['env'])
-      ),
-    ];
+      );
+
+    return projectFileSetInputs.concat(workspaceFileSets, runtimeAndEnvInputs);
   }
 
   private getProjectInputs(
@@ -386,10 +396,6 @@ export class HashPlanner {
     return gatheredInputs.flat();
   }
 
-  private rootFilesetInput(fileset: string): string {
-    return fileset;
-  }
-
   private projectFileSetInputs(
     projectName: string,
     filesetPatterns: string[]
@@ -408,5 +414,19 @@ export class HashPlanner {
 
   private envInput(envVarName: string): string {
     return `env:${envVarName}`;
+  }
+
+  private setupExternalDeps() {
+    const keys = Object.keys(this.projectGraph.externalNodes ?? {});
+    for (const externalNodeName of keys) {
+      this.externalDeps.set(
+        externalNodeName,
+        findAllProjectNodeDependencies(
+          externalNodeName,
+          this.projectGraph,
+          true
+        )
+      );
+    }
   }
 }
