@@ -72,6 +72,26 @@ describe('determineProjectNamesAndDirectories', () => {
       });
     });
 
+    it('should use provided import path over scoped name when format is "as-provided"', async () => {
+      const result = await determineProjectNamesAndDirectories(tree, {
+        name: '@scope/libName',
+        directory: 'shared',
+        projectType: 'library',
+        nameDirectoryFormat: 'as-provided',
+        importPath: '@custom-scope/lib-name',
+      });
+
+      expect(result).toEqual({
+        projectName: '@scope/lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@custom-scope/lib-name',
+        projectDirectory: 'shared',
+      });
+    });
+
     it('should return the directory as the project name when directory is not provided and format is "as-provided"', async () => {
       updateJson(tree, 'package.json', (json) => {
         json.name = 'lib-name';
@@ -318,6 +338,26 @@ describe('determineProjectNamesAndDirectories', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@scope/lib-name',
+        projectDirectory: 'shared',
+      });
+    });
+
+    it('should use provided import path over scoped name when format is "as-provided"', async () => {
+      const result = await determineProjectNamesAndDirectories(tree, {
+        name: '@scope/libName',
+        directory: 'shared',
+        projectType: 'library',
+        nameDirectoryFormat: 'as-provided',
+        importPath: '@custom-scope/lib-name',
+      });
+
+      expect(result).toEqual({
+        projectName: '@scope/lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@custom-scope/lib-name',
         projectDirectory: 'shared',
       });
     });

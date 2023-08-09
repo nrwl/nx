@@ -156,7 +156,7 @@ function getProjectNameDirectoryFormats(
             projectSimpleName: nameWithoutScope,
             projectFileName: nameWithoutScope,
           },
-          importPath: asProvidedProjectName,
+          importPath: options.importPath ?? asProvidedProjectName,
           projectDirectory: asProvidedProjectDirectory,
         },
       },
