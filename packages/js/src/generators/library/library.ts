@@ -259,16 +259,16 @@ export async function addLint(
   // Also update the root .eslintrc.json lintProjectGenerator will not generate it for root projects.
   // But we need to set the package.json checks.
   if (options.rootProject) {
-    updateJson(tree, '.eslintrc.json', (json) => {
-      json.overrides ??= [];
-      json.overrides.push({
-        files: ['*.json'],
-        parser: 'jsonc-eslint-parser',
-        rules: {
-          '@nx/dependency-checks': 'error',
-        },
-      });
-      return json;
+    const {
+      addOverrideToLintConfig,
+    } = require('@nx/linter/src/generators/utils/eslint-file');
+
+    addOverrideToLintConfig(tree, '', {
+      files: ['*.json'],
+      parser: 'jsonc-eslint-parser',
+      rules: {
+        '@nx/dependency-checks': 'error',
+      },
     });
   }
   return task;
