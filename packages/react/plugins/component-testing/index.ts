@@ -84,7 +84,9 @@ export function nxComponentTestingPreset(
           const viteConfigPath = findViteConfig(normalizedProjectRootPath);
 
           const { mergeConfig, loadConfigFromFile, searchForWorkspaceRoot } =
-            await import('vite');
+            await (Function('return import("vite")')() as Promise<
+              typeof import('vite')
+            >);
 
           const resolved = await loadConfigFromFile(
             {

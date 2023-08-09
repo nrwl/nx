@@ -411,6 +411,7 @@
     - [generators](/packages/linter/generators)
       - [workspace-rules-project](/packages/linter/generators/workspace-rules-project)
       - [workspace-rule](/packages/linter/generators/workspace-rule)
+      - [convert-to-flat-config](/packages/linter/generators/convert-to-flat-config)
   - [nest](/packages/nest)
     - [documents](/packages/nest/documents)
       - [Overview](/packages/nest/documents/overview)

@@ -1,38 +1,58 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useRef, useState } from 'react';
 import { Button } from '@nx/nx-dev/ui-common';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
-import { nxDevDataAccessAi } from '@nx/nx-dev/data-access-ai';
+import {
+  nxDevDataAccessAi,
+  resetHistory,
+  getProcessedHistory,
+  ChatItem,
+} from '@nx/nx-dev/data-access-ai';
+import { warning, infoBox } from './utils';
 
 export function FeatureAi(): JSX.Element {
+  const [chatHistory, setChatHistory] = useState<ChatItem[] | null>([]);
   const [finalResult, setFinalResult] = useState<null | ReactNode>(null);
+  const [textResponse, setTextResponse] = useState<undefined | string>('');
   const [error, setError] = useState(null);
   const [query, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
-  const [feedbackSent, setFeedbackSent] = useState<boolean>(false);
+  const [feedbackSent, setFeedbackSent] = useState<Record<number, boolean>>({});
   const [sources, setSources] = useState('');
+  const [input, setInput] = useState('');
+  const lastMessageRef: React.RefObject<HTMLDivElement> | undefined =
+    useRef(null);
 
-  const warning = `
-  {% callout type="warning" title="Always double check!" %}
-  This feature is still in Alpha.
-  The results may not be accurate, so please always double check with our documentation.
-{% /callout %}
-  `;
+  useEffect(() => {
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatHistory]);
 
   const handleSubmit = async () => {
+    setInput('');
+    if (query) {
+      setChatHistory([
+        ...(chatHistory ?? []),
+        { role: 'user', content: query },
+        { role: 'assistant', content: 'Let me think about that...' },
+      ]);
+    }
     setLoading(true);
+    setError(null);
     let completeText = '';
     let usage;
     let sourcesMarkdown = '';
     try {
-      const aiResponse = await nxDevDataAccessAi(query);
+      const aiResponse = await nxDevDataAccessAi(query, textResponse);
       completeText = aiResponse.textResponse;
+      setTextResponse(completeText);
       usage = aiResponse.usage;
       setSources(
         JSON.stringify(aiResponse.sources?.map((source) => source.url))
       );
       sourcesMarkdown = aiResponse.sourcesMarkdown;
+
       setLoading(false);
     } catch (error) {
       setError(error as any);
@@ -42,45 +62,159 @@ export function FeatureAi(): JSX.Element {
       query,
       ...usage,
     });
-    setFeedbackSent(false);
-
-    const sourcesMd = `
-  {% callout type="info" title="Sources" %}
-  ${sourcesMarkdown}
-  {% /callout %}`;
+    const sourcesMd =
+      sourcesMarkdown.length === 0
+        ? ''
+        : `
+        {% callout type="info" title="Sources" %}
+        ${sourcesMarkdown}
+        {% /callout %}`;
 
     setFinalResult(
-      renderMarkdown(warning + completeText + sourcesMd, { filePath: '' }).node
+      renderMarkdown(completeText + sourcesMd, { filePath: '' }).node
     );
+    if (completeText) {
+      setChatHistory([
+        ...getProcessedHistory(),
+        { role: 'assistant', content: completeText + sourcesMd },
+      ]);
+    }
   };
 
-  const handleFeedback = (type: 'good' | 'bad') => {
+  const handleFeedback = (type: 'good' | 'bad', index: number) => {
     try {
       sendCustomEvent('ai_feedback', 'ai', type, undefined, {
         query,
         result: finalResult,
         sources,
       });
-      setFeedbackSent(true);
+      setFeedbackSent((prev) => ({ ...prev, [index]: true }));
     } catch (error) {
-      setFeedbackSent(false);
+      setFeedbackSent((prev) => ({ ...prev, [index]: false }));
     }
+  };
+
+  const handleReset = () => {
+    resetHistory();
+    setFinalResult(null);
+    setSearchTerm('');
+    setTextResponse('');
+    setSources('');
+    setChatHistory(null);
+    setInput('');
+    setFeedbackSent({});
   };
 
   return (
     <div
-      className="p-2 mx-auto flex h-full w-full flex-col"
+      className="p-2 mx-auto flex h-screen w-full flex-col h-[calc(100vh-150px)]"
       id="wrapper"
       data-testid="wrapper"
     >
-      <div className="w-full flex">
+      <div className="flex-1 overflow-y-auto mb-4">
+        <div>
+          {infoBox}
+          {warning}
+        </div>
+        {chatHistory && renderChatHistory(chatHistory)}
+      </div>
+      {renderChatInput()}
+    </div>
+  );
+
+  function renderChatHistory(history: ChatItem[]) {
+    return (
+      <div className="mx-auto bg-white p-6 rounded shadow">
+        {history.length > 30 && (
+          <div>
+            You've reached the maximum message history limit. Some previous
+            messages will be removed. You can always start a new chat.
+          </div>
+        )}{' '}
+        {history.map((chatItem, index) =>
+          renderChatItem(chatItem, index, history.length)
+        )}
+      </div>
+    );
+  }
+
+  function renderChatItem(
+    chatItem: ChatItem,
+    index: number,
+    historyLength: number
+  ) {
+    return (
+      <div
+        key={index}
+        ref={index === historyLength - 1 ? lastMessageRef : null}
+        className={` p-2 m-2 rounded-lg ${
+          chatItem.role === 'assistant' ? 'bg-blue-200' : 'bg-gray-300'
+        }`}
+      >
+        <strong className="text-gray-700">
+          {chatItem.role === 'user' ? 'you' : 'nx assistant'}:
+        </strong>
+        <div className="text-gray-600 mt-1">
+          {renderMarkdown(chatItem.content, { filePath: '' }).node}
+        </div>
+
+        {chatItem.role === 'assistant' &&
+          chatHistory?.length &&
+          (index === chatHistory.length - 1 && loading ? null : !feedbackSent[
+              index
+            ] ? (
+            <div>
+              <Button
+                variant="primary"
+                size="small"
+                onClick={() => handleFeedback('good', index)}
+              >
+                Answer was helpful{' '}
+                <span role="img" aria-label="thumbs-up">
+                  👍
+                </span>
+              </Button>
+              <Button
+                variant="primary"
+                size="small"
+                onClick={() => handleFeedback('bad', index)}
+              >
+                Answer looks wrong{' '}
+                <span role="img" aria-label="thumbs-down">
+                  👎
+                </span>
+              </Button>
+            </div>
+          ) : (
+            <p>
+              <span role="img" aria-label="check">
+                ✅
+              </span>{' '}
+              Thank you for your feedback!
+            </p>
+          ))}
+
+        {error && !loading ? (
+          <div>There was an error: {error['message']}</div>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderChatInput() {
+    return (
+      <div className="flex gap-2 fixed bottom-0 left-0 right-0 p-4 bg-white">
         <input
           id="search"
           name="search"
+          value={input}
           disabled={loading}
           className="block w-full rounded-md border border-slate-300 bg-white py-2 pl-10 pr-3 text-sm placeholder-slate-500 transition focus:placeholder-slate-400 dark:border-slate-900 dark:bg-slate-700"
           placeholder="What do you want to know?"
-          onChange={(event) => setSearchTerm(event.target.value)}
+          onChange={(event) => {
+            setSearchTerm(event.target.value);
+            setInput(event.target.value);
+          }}
           onKeyDown={(event) => {
             if (event.keyCode === 13 || event.key === 'Enter') {
               handleSubmit();
@@ -96,54 +230,15 @@ export function FeatureAi(): JSX.Element {
         >
           Ask
         </Button>
+        <Button variant="secondary" size="small" onClick={() => handleReset()}>
+          Ask new question{' '}
+          <span role="img" aria-label="new question">
+            🔄
+          </span>
+        </Button>
       </div>
-      {loading ? (
-        <div className="p-4 max-w-none">
-          <h1>Thinking...</h1>
-        </div>
-      ) : null}
-      {finalResult && !loading && !error ? (
-        <>
-          <div className="p-4 max-w-none prose prose-slate dark:prose-invert">
-            {finalResult}
-          </div>
-          {!feedbackSent && (
-            <div>
-              <Button
-                variant="primary"
-                size="small"
-                onClick={() => handleFeedback('good')}
-              >
-                Answer was helpful{' '}
-                <span role="img" aria-label="thumbs-up">
-                  👍
-                </span>
-              </Button>
-              <Button
-                variant="primary"
-                size="small"
-                onClick={() => handleFeedback('bad')}
-              >
-                Answer looks wrong{' '}
-                <span role="img" aria-label="thumbs-down">
-                  👎
-                </span>
-              </Button>
-            </div>
-          )}
-          {feedbackSent && (
-            <p>
-              <span role="img" aria-label="check">
-                ✅
-              </span>{' '}
-              Thank you for your feedback!
-            </p>
-          )}
-        </>
-      ) : null}
-      {error ? <div>There was an error: {error['message']}</div> : null}
-    </div>
-  );
+    );
+  }
 }
 
 export default FeatureAi;

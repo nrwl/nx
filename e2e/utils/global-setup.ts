@@ -2,8 +2,10 @@ import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { join } from 'path';
 import { exec } from 'child_process';
 import { tmpdir } from 'tmp';
-import { existsSync } from 'fs-extra';
+import { existsSync, removeSync } from 'fs-extra';
 import { Config } from '@jest/types';
+import { e2eCwd } from './get-env-info';
+import * as isCI from 'is-ci';
 
 export default async function (globalConfig: Config.ConfigGlobals) {
   const isVerbose: boolean =
@@ -19,10 +21,10 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     storage: storageLocation,
   });
 
-  if (
-    process.env.NX_E2E_SKIP_BUILD_CLEANUP !== 'true' ||
-    !existsSync('./build')
-  ) {
+  if (process.env.NX_E2E_SKIP_CLEANUP !== 'true' || !existsSync('./build')) {
+    if (!isCI) {
+      removeSync(e2eCwd);
+    }
     console.log('Publishing packages to local registry');
     const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
     await new Promise<void>((res, rej) => {

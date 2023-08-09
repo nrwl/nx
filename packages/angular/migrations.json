@@ -269,6 +269,15 @@
       "version": "16.6.0-beta.0",
       "description": "Explicitly set 'updateBuildableProjectDepsInPackageJson' to 'true' in targets that rely on that value as the default.",
       "factory": "./src/migrations/update-16-6-0/explicitly-set-projects-to-update-buildable-deps"
+    },
+    "update-angular-cli-version-16-2-0-rc-1": {
+      "cli": "nx",
+      "version": "16.7.0-beta.2",
+      "requires": {
+        "@angular/core": ">=16.2.0-rc.0"
+      },
+      "description": "Update the @angular/cli package version to ~16.2.0-rc.1.",
+      "factory": "./src/migrations/update-16-7-0/update-angular-cli"
     }
   },
   "packageJsonUpdates": {
@@ -1234,6 +1243,67 @@
           "version": "~16.1.0",
           "alwaysAddToPackageJson": false
         }
+      }
+    },
+    "16.7.0": {
+      "version": "16.7.0-beta.2",
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1602.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~16.2.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1602.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~16.2.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~16.2.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~16.2.0-rc.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~16.2.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~16.2.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/builders": {
+          "version": "~16.2.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/common": {
+          "version": "~16.2.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~16.2.0-rc.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~16.2.0-rc.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~16.2.0-next.1",
+          "alwaysAddToPackageJson": false
+        }
+      },
+      "x-prompt": "Do you want to update the Angular version to v16.2?",
+      "requires": {
+        "@angular/core": ">=16.1.0 <16.2.0-next.1"
       }
     }
   }

@@ -16,7 +16,7 @@ import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
   context: import('@angular-devkit/architect').BuilderContext
-) {
+): ReturnType<typeof executeWebpackDevServerBuilder> {
   const { ...options } = schema;
   const projectGraph = readCachedProjectGraph();
   const { projects: workspaceProjects } =

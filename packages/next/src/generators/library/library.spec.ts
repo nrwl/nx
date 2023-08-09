@@ -29,17 +29,10 @@ describe('next library', () => {
       ...baseOptions,
       name: 'myLib',
     });
-    const tsconfigFiles = readJson(
-      appTree,
-      'libs/my-lib/tsconfig.lib.json'
-    ).files;
+    const tsconfigTypes = readJson(appTree, 'libs/my-lib/tsconfig.lib.json')
+      .compilerOptions.types;
 
-    expect(tsconfigFiles).toContain(
-      '../../node_modules/@nx/next/typings/image.d.ts'
-    );
-    expect(tsconfigFiles).not.toContain(
-      '../../node_modules/@nx/react/typings/image.d.ts'
-    );
+    expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
   });
 
   it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {

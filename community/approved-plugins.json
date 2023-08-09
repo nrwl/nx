@@ -25,23 +25,8 @@
     "url": "https://github.com/nxkit/nxkit"
   },
   {
-    "name": "nx-plugin-esbuild",
-    "description": "Nx plugin integrations with ESBuild.",
-    "url": "https://nx-plugins.netlify.app/"
-  },
-  {
     "name": "nx-plugin-vite",
     "description": "Nx plugin integrations with Vite.",
-    "url": "https://nx-plugins.netlify.app/"
-  },
-  {
-    "name": "nx-plugin-snowpack",
-    "description": "Nx plugin integrations with Snowpack.",
-    "url": "https://nx-plugins.netlify.app/"
-  },
-  {
-    "name": "nx-plugin-prisma",
-    "description": "Nx plugin integrations with Snowpack.",
     "url": "https://nx-plugins.netlify.app/"
   },
   {
@@ -160,11 +145,6 @@
     "url": "https://github.com/nxext/nx-extensions/tree/master/packages/solid"
   },
   {
-    "name": "@joelcode/gcp-function",
-    "description": "Nx plugin to generate, test, lint, build, serve, & deploy Google Cloud Function",
-    "url": "https://github.com/JoelCode/gcp-function"
-  },
-  {
     "name": "@nx-go/nx-go",
     "description": "Nx plugin to use Go in a Nx workspace",
     "url": "https://github.com/nx-go/nx-go"
@@ -213,11 +193,6 @@
     "name": "ngx-deploy-npm",
     "description": "Publish your libraries to NPM with just one command.",
     "url": "https://github.com/bikecoders/ngx-deploy-npm"
-  },
-  {
-    "name": "@trafilea/nx-shopify",
-    "description": "Nx plugin for developing performance-first Shopify themes",
-    "url": "https://github.com/trafilea/nx-shopify"
   },
   {
     "name": "@nx-dotnet/core",
@@ -298,11 +273,6 @@
     "name": "@nativescript/nx",
     "description": "Nx Plugin adding first class support for NativeScript in your Nx workspace",
     "url": "https://github.com/nativescript/nx"
-  },
-  {
-    "name": "@nx-clean/plugin-core",
-    "description": "Nx Plugin to generate projects following Clean Architecture practices",
-    "url": "https://github.com/guiseek/nx-clean/tree/main/libs/plugin/core"
   },
   {
     "name": "@jnxplus/nx-boot-gradle",

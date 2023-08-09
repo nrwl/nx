@@ -1,7 +1,7 @@
 import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { dirname, join, resolve } from 'path';
+import { dirname, resolve } from 'path';
 
 import type { Schema } from './schema';
 import { resolveAndInstantiateESLint } from './utility/eslint-utils';
@@ -31,12 +31,12 @@ export default async function run(
    * We want users to have the option of not specifying the config path, and let
    * eslint automatically resolve the `.eslintrc.json` files in each folder.
    */
-  const eslintConfigPath = options.eslintConfig
+  let eslintConfigPath = options.eslintConfig
     ? resolve(systemRoot, options.eslintConfig)
     : undefined;
 
   options.cacheLocation = options.cacheLocation
-    ? join(options.cacheLocation, projectName)
+    ? joinPathFragments(options.cacheLocation, projectName)
     : undefined;
 
   const { printConfig, ...normalizedOptions } = options;
@@ -49,6 +49,13 @@ export default async function run(
   const useFlatConfig = existsSync(
     joinPathFragments(systemRoot, 'eslint.config.js')
   );
+
+  if (!eslintConfigPath && useFlatConfig) {
+    const projectRoot =
+      context.projectsConfigurations.projects[context.projectName].root;
+    eslintConfigPath = joinPathFragments(projectRoot, 'eslint.config.js');
+  }
+
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
     eslintConfigPath,
     normalizedOptions,
@@ -123,10 +130,13 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
       .filter((pattern) => !!pattern)
       .map((pattern) => `- '${pattern}'`);
     if (ignoredPatterns.length) {
+      const ignoreSection = useFlatConfig
+        ? `'ignores' configuration`
+        : `'.eslintignore' file`;
       throw new Error(
         `All files matching the following patterns are ignored:\n${ignoredPatterns.join(
           '\n'
-        )}\n\nPlease check your '.eslintignore' file.`
+        )}\n\nPlease check your ${ignoreSection}.`
       );
     }
     throw new Error(
@@ -158,7 +168,10 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   const formattedResults = await formatter.format(lintResults);
 
   if (normalizedOptions.outputFile) {
-    const pathToOutputFile = join(context.root, normalizedOptions.outputFile);
+    const pathToOutputFile = joinPathFragments(
+      context.root,
+      normalizedOptions.outputFile
+    );
     mkdirSync(dirname(pathToOutputFile), { recursive: true });
     writeFileSync(pathToOutputFile, formattedResults);
   } else {
