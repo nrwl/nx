@@ -1,7 +1,4 @@
-import {
-  extendReactEslintJson,
-  extraEslintDependencies,
-} from '../../utils/lint';
+import { extraEslintDependencies } from '../../utils/lint';
 import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
@@ -22,7 +19,6 @@ import {
   runTasksInSerial,
   stripIndents,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 
 import reactInitGenerator from '../init/init';
@@ -39,6 +35,7 @@ import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import * as chalk from 'chalk';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { addE2e } from './lib/add-e2e';
+import { addExtendsToLintConfig } from '@nx/linter/src/generators/utils/eslint-file';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -63,11 +60,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     });
     tasks.push(lintTask);
 
-    updateJson(
-      host,
-      joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      extendReactEslintJson
-    );
+    addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
 
     if (!options.skipPackageJson) {
       const installTask = addDependenciesToPackageJson(

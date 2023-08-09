@@ -5,7 +5,6 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import { javaScriptOverride } from '@nx/linter/src/generators/init/global-eslint-config';
@@ -13,6 +12,7 @@ import { eslintPluginPlaywrightVersion } from './versions';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
+  findEslintFile,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
 export interface PlaywrightLinterOptions {
@@ -39,7 +39,8 @@ export async function addLinterToPlaywrightProject(
   const tasks: GeneratorCallback[] = [];
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  if (!tree.exists(joinPathFragments(projectConfig.root, '.eslintrc.json'))) {
+  const eslintFile = findEslintFile(tree, projectConfig.root);
+  if (!eslintFile) {
     tasks.push(
       await lintProjectGenerator(tree, {
         project: options.project,

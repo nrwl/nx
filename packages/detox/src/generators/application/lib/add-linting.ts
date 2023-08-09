@@ -4,10 +4,10 @@ import {
   joinPathFragments,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
-import { extendReactEslintJson, extraEslintDependencies } from '@nx/react';
+import { extraEslintDependencies } from '@nx/react';
 import { NormalizedSchema } from './normalize-options';
+import { addExtendsToLintConfig } from '@nx/linter/src/generators/utils/eslint-file';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.None) {
@@ -24,11 +24,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     skipFormat: true,
   });
 
-  updateJson(
-    host,
-    joinPathFragments(options.e2eProjectRoot, '.eslintrc.json'),
-    extendReactEslintJson
-  );
+  addExtendsToLintConfig(host, options.e2eProjectRoot, 'plugin:@nx/react');
 
   const installTask = addDependenciesToPackageJson(
     host,

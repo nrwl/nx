@@ -1,5 +1,3 @@
-import { offsetFromRoot } from '@nx/devkit';
-import type { Linter } from 'eslint';
 import {
   eslintPluginImportVersion,
   eslintPluginReactVersion,
@@ -17,11 +15,11 @@ export const extraEslintDependencies = {
   },
 };
 
-export const extendReactEslintJson = (json: Linter.Config) => {
-  const { extends: pluginExtends, ...config } = json;
+// export const extendReactEslintJson = (json: Linter.Config) => {
+//   const { extends: pluginExtends, ...config } = json;
 
-  return {
-    extends: ['plugin:@nx/react', ...(pluginExtends || [])],
-    ...config,
-  };
-};
+//   return {
+//     extends: ['plugin:@nx/react', ...(pluginExtends || [])],
+//     ...config,
+//   };
+// };
