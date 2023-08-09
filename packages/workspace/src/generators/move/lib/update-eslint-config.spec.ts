@@ -7,7 +7,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
-import { updateEslintrcJson } from './update-eslintrc-json';
+import { updateEslintConfig } from './update-eslint-config';
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');
@@ -38,7 +38,7 @@ describe('updateEslint', () => {
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
     expect(() => {
-      updateEslintrcJson(tree, schema, projectConfig);
+      updateEslintConfig(tree, schema, projectConfig);
     }).not.toThrow();
   });
 
@@ -54,7 +54,7 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    updateEslintrcJson(tree, schema, projectConfig);
+    updateEslintConfig(tree, schema, projectConfig);
 
     expect(
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
@@ -84,7 +84,7 @@ describe('updateEslint', () => {
       relativeToRootDestination: 'libs/test',
     };
 
-    updateEslintrcJson(tree, newSchema, projectConfig);
+    updateEslintConfig(tree, newSchema, projectConfig);
 
     expect(readJson(tree, '/libs/test/.eslintrc.json')).toEqual(
       expect.objectContaining({
@@ -113,7 +113,7 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    updateEslintrcJson(tree, schema, projectConfig);
+    updateEslintConfig(tree, schema, projectConfig);
 
     expect(
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
@@ -141,7 +141,7 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    updateEslintrcJson(tree, schema, projectConfig);
+    updateEslintConfig(tree, schema, projectConfig);
 
     expect(
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
@@ -181,7 +181,7 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    updateEslintrcJson(tree, schema, projectConfig);
+    updateEslintConfig(tree, schema, projectConfig);
 
     expect(
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json')
@@ -222,7 +222,7 @@ describe('updateEslint', () => {
     );
     const projectConfig = readProjectConfiguration(tree, 'my-lib');
 
-    updateEslintrcJson(tree, schema, projectConfig);
+    updateEslintConfig(tree, schema, projectConfig);
 
     expect(
       readJson(tree, '/libs/shared/my-destination/.eslintrc.json').overrides[0]

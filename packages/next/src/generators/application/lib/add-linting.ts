@@ -7,11 +7,12 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import {
-  extendReactEslintJson,
-  extraEslintDependencies,
-} from '@nx/react/src/utils/lint';
+import { extraEslintDependencies } from '@nx/react/src/utils/lint';
 import { NormalizedSchema } from './normalize-options';
+import {
+  addExtendsToLintConfig,
+  addIgnoresToLintConfig,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 export async function addLinting(
   host: Tree,
@@ -30,16 +31,15 @@ export async function addLinting(
   });
 
   if (options.linter === Linter.EsLint) {
+    addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+    addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
+
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
       (json) => {
-        json = extendReactEslintJson(json);
-
         // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
         // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
-
-        json.ignorePatterns = [...json.ignorePatterns, '.next/**/*'];
 
         json.rules = {
           '@next/next/no-html-link-for-pages': 'off',

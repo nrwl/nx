@@ -12,7 +12,7 @@ import { normalizeSchema } from './lib/normalize-schema';
 import { updateBuildTargets } from './lib/update-build-targets';
 import { updateCypressConfig } from './lib/update-cypress-config';
 import { updateDefaultProject } from './lib/update-default-project';
-import { updateEslintrcJson } from './lib/update-eslintrc-json';
+import { updateEslintConfig } from './lib/update-eslint-config';
 import { updateImplicitDependencies } from './lib/update-implicit-dependencies';
 import { updateImports } from './lib/update-imports';
 import { updateJestConfig } from './lib/update-jest-config';
@@ -48,7 +48,7 @@ export async function moveGenerator(tree: Tree, rawSchema: Schema) {
   updateCypressConfig(tree, schema, projectConfig);
   updateJestConfig(tree, schema, projectConfig);
   updateStorybookConfig(tree, schema, projectConfig);
-  updateEslintrcJson(tree, schema, projectConfig);
+  updateEslintConfig(tree, schema, projectConfig);
   updateReadme(tree, schema);
   updatePackageJson(tree, schema);
   updateBuildTargets(tree, schema);

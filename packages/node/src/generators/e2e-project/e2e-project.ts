@@ -11,7 +11,6 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter, lintProjectGenerator } from '@nx/linter';
@@ -20,9 +19,13 @@ import {
   typeScriptOverride,
 } from '@nx/linter/src/generators/init/global-eslint-config';
 import * as path from 'path';
-import { join } from 'path';
 import { axiosVersion } from '../../utils/versions';
 import { Schema } from './schema';
+import {
+  addPluginsToLintConfig,
+  isEslintConfigSupported,
+  replaceOverridesInLintConfig,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
@@ -119,32 +122,13 @@ export async function e2eProjectGeneratorInternal(
     });
     tasks.push(linterTask);
 
-    updateJson(host, join(options.e2eProjectRoot, '.eslintrc.json'), (json) => {
-      if (options.rootProject) {
-        json.plugins = ['@nx'];
-        json.extends = [];
-      }
-      json.overrides = [
-        ...(options.rootProject
-          ? [typeScriptOverride, javaScriptOverride]
-          : []),
-        /**
-         * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
-         * behind the scenes during lint runs, we need to make sure the project is configured to use its
-         * own specific tsconfigs, and not fall back to the ones in the root of the workspace.
-         */
-        {
-          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-          /**
-           * Having an empty rules object present makes it more obvious to the user where they would
-           * extend things from if they needed to
-           */
-          rules: {},
-        },
-      ];
-
-      return json;
-    });
+    if (options.rootProject && isEslintConfigSupported(host)) {
+      addPluginsToLintConfig(host, options.e2eProjectRoot, '@nx');
+      replaceOverridesInLintConfig(host, options.e2eProjectRoot, [
+        typeScriptOverride,
+        javaScriptOverride,
+      ]);
+    }
   }
 
   if (!options.skipFormat) {
@@ -183,3 +167,7 @@ async function normalizeOptions(
 
 export default e2eProjectGenerator;
 export const e2eProjectSchematic = convertNxGenerator(e2eProjectGenerator);
+function isEslintConfigSupported(host: Tree) {
+  throw new Error('Function not implemented.');
+}
+

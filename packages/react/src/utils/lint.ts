@@ -1,3 +1,4 @@
+import { Linter } from 'eslint';
 import {
   eslintPluginImportVersion,
   eslintPluginReactVersion,
@@ -15,11 +16,14 @@ export const extraEslintDependencies = {
   },
 };
 
-// export const extendReactEslintJson = (json: Linter.Config) => {
-//   const { extends: pluginExtends, ...config } = json;
+/**
+ * @deprecated Use `addExtendsToLintConfig` from `@nx/linter` instead.
+ */
+export const extendReactEslintJson = (json: Linter.Config) => {
+  const { extends: pluginExtends, ...config } = json;
 
-//   return {
-//     extends: ['plugin:@nx/react', ...(pluginExtends || [])],
-//     ...config,
-//   };
-// };
+  return {
+    extends: ['plugin:@nx/react', ...(pluginExtends || [])],
+    ...config,
+  };
+};

@@ -37,19 +37,19 @@ function offsetFilePath(
  *
  * @param schema The options provided to the schematic
  */
-export function updateEslintrcJson(
+export function updateEslintConfig(
   tree: Tree,
   schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
+  const offset = offsetFromRoot(schema.relativeToRootDestination);
+
   const eslintRcPath = join(schema.relativeToRootDestination, '.eslintrc.json');
 
   if (!tree.exists(eslintRcPath)) {
     // no .eslintrc found. nothing to do
     return;
   }
-
-  const offset = offsetFromRoot(schema.relativeToRootDestination);
 
   updateJson<PartialEsLintRcJson>(tree, eslintRcPath, (eslintRcJson) => {
     if (typeof eslintRcJson.extends === 'string') {
