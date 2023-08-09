@@ -317,16 +317,14 @@ export class ForkedProcessTaskRunner {
     streamOutput: boolean
   ) {
     // Unload any dot env files at the root of the workspace that were loaded on init of Nx.
-    this.unloadDotEnvFiles(process.env);
+    const taskEnv = this.unloadDotEnvFiles({ ...process.env });
 
     const res = {
       // Start With Dotenv Variables
       ...(process.env.NX_LOAD_DOT_ENV_FILES === 'true'
-        ? this.loadDotEnvFilesForTask(task, {
-            ...process.env,
-          })
+        ? this.loadDotEnvFilesForTask(task, taskEnv)
         : // If not loading dot env files, ensure env vars created by system are still loaded
-          { ...process.env }),
+          taskEnv),
       // Nx Env Variables overrides everything
       ...this.getNxEnvVariablesForTask(
         task,

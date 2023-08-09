@@ -17,6 +17,7 @@ import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
 import { join } from 'path';
 import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
+import { performance } from 'perf_hooks';
 
 function main() {
   if (
@@ -27,7 +28,16 @@ function main() {
     assertSupportedPlatform();
   }
 
+  require('nx/src/utils/perf-logging');
+
+  performance.mark('loading dotenv files:start');
   loadDotEnvFiles();
+  performance.mark('loading dotenv files:end');
+  performance.measure(
+    'loading dotenv files',
+    'loading dotenv files:start',
+    'loading dotenv files:end'
+  );
 
   const workspace = findWorkspaceRoot(process.cwd());
   // new is a special case because there is no local workspace to load
