@@ -21,7 +21,7 @@ describe('Playwright E2E Test runner', () => {
       runCLI(`g @nx/playwright:configuration --project demo-e2e`);
       ensurePlaywrightBrowsersInstallation();
 
-      const e2eResults = runCLI(`e2e demo-e2e`);
+      const e2eResults = runCLI(`e2e demo-e2e --skipInstall`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
       const lintResults = runCLI(`lint demo-e2e`);
@@ -39,7 +39,7 @@ describe('Playwright E2E Test runner', () => {
       runCLI(`g @nx/playwright:configuration --project demo-js-e2e --js`);
       ensurePlaywrightBrowsersInstallation();
 
-      const e2eResults = runCLI(`e2e demo-js-e2e`);
+      const e2eResults = runCLI(`e2e demo-js-e2e --skipInstall`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
       const lintResults = runCLI(`lint demo-e2e`);

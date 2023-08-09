@@ -89,11 +89,15 @@ export async function playwrightExecutor(
   });
 }
 
+const nxOptions = ['skipInstall'];
 function createArgs(opts: PlaywrightExecutorSchema): string[] {
   const args: string[] = [];
 
   for (const key in opts) {
     const value = opts[key];
+    if (nxOptions.includes(key)) {
+      continue;
+    }
     // NOTE: playwright doesn't accept pascalCase args, only kebab-case
     const arg = names(key).fileName;
 
