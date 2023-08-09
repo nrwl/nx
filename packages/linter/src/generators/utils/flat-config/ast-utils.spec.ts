@@ -1,9 +1,10 @@
 import ts = require('typescript');
 import {
-  addConfigToFlatConfigExport,
+  addBlockToFlatConfigExport,
   generateAst,
   addImportToFlatConfig,
   generateRequire,
+  addCompatToFlatConfig,
 } from './ast-utils';
 
 describe('ast-utils', () => {
@@ -20,7 +21,7 @@ describe('ast-utils', () => {
         },
         { ignores: ["mylib/.cache/**/*"] },
     ];`;
-    const result = addConfigToFlatConfigExport(
+    const result = addBlockToFlatConfigExport(
       content,
       generateAst({
         files: ['**/*.svg'],
@@ -62,7 +63,7 @@ describe('ast-utils', () => {
         },
         { ignores: ["mylib/.cache/**/*"] },
     ];`;
-    const result = addConfigToFlatConfigExport(
+    const result = addBlockToFlatConfigExport(
       content,
       ts.factory.createSpreadElement(ts.factory.createIdentifier('config')),
       { insertAtTheEnd: false }
@@ -155,7 +156,7 @@ describe('ast-utils', () => {
     `);
   });
 
-  it('should not update import if already exists', () => {
+  it('should not inject import if already exists', () => {
     const content = `const { varName, otherName } = require("@myorg/awesome-config");
     const baseConfig = require("../../eslint.config.js");
     module.exports = [
@@ -174,6 +175,130 @@ describe('ast-utils', () => {
       ['otherName'],
       '@myorg/awesome-config'
     );
+    expect(result).toEqual(content);
+  });
+
+  it('should not update import if already exists', () => {
+    const content = `const varName = require("@myorg/awesome-config");
+    const baseConfig = require("../../eslint.config.js");
+    module.exports = [
+        ...baseConfig,
+        {
+            files: [
+                "mylib/**/*.ts",
+                "mylib/**/*.tsx"
+            ],
+            rules: {}
+        },
+        { ignores: ["mylib/.cache/**/*"] },
+    ];`;
+    const result = addImportToFlatConfig(
+      content,
+      'varName',
+      '@myorg/awesome-config'
+    );
+    expect(result).toEqual(content);
+  });
+
+  it('should add compat to config', () => {
+    const content = `const baseConfig = require("../../eslint.config.js");
+    module.exports = [
+      ...baseConfig,
+      {
+        files: [
+          "mylib/**/*.ts",
+          "mylib/**/*.tsx"
+        ],
+        rules: {}
+      },
+      { ignores: ["mylib/.cache/**/*"] },
+    ];`;
+    const result = addCompatToFlatConfig(content);
+    expect(result).toMatchInlineSnapshot(`
+      "const FlatCompat = require("@eslint/eslintrc");
+      const js = require("@eslint/js");
+      const baseConfig = require("../../eslint.config.js");
+         
+      const compat = new FlatCompat({
+            baseDirectory: __dirname,
+            recommendedConfig: js.configs.recommended,
+          });
+        
+       module.exports = [
+            ...baseConfig,
+            {
+              files: [
+                "mylib/**/*.ts",
+                "mylib/**/*.tsx"
+              ],
+              rules: {}
+            },
+            { ignores: ["mylib/.cache/**/*"] },
+          ];"
+    `);
+  });
+
+  it('should add only partially compat to config if parts exist', () => {
+    const content = `const baseConfig = require("../../eslint.config.js");
+    const js = require("@eslint/js");
+    module.exports = [
+      ...baseConfig,
+      {
+        files: [
+          "mylib/**/*.ts",
+          "mylib/**/*.tsx"
+        ],
+        rules: {}
+      },
+      { ignores: ["mylib/.cache/**/*"] },
+    ];`;
+    const result = addCompatToFlatConfig(content);
+    expect(result).toMatchInlineSnapshot(`
+      "const FlatCompat = require("@eslint/eslintrc");
+      const baseConfig = require("../../eslint.config.js");
+          const js = require("@eslint/js");
+         
+      const compat = new FlatCompat({
+            baseDirectory: __dirname,
+            recommendedConfig: js.configs.recommended,
+          });
+        
+       module.exports = [
+            ...baseConfig,
+            {
+              files: [
+                "mylib/**/*.ts",
+                "mylib/**/*.tsx"
+              ],
+              rules: {}
+            },
+            { ignores: ["mylib/.cache/**/*"] },
+          ];"
+    `);
+  });
+
+  it('should not add compat to config if exist', () => {
+    const content = `const FlatCompat = require("@eslint/eslintrc");
+    const baseConfig = require("../../eslint.config.js");
+    const js = require("@eslint/js");
+
+    const compat = new FlatCompat({
+      baseDirectory: __dirname,
+      recommendedConfig: js.configs.recommended,
+    });
+
+    module.exports = [
+      ...baseConfig,
+      {
+        files: [
+          "mylib/**/*.ts",
+          "mylib/**/*.tsx"
+        ],
+        rules: {}
+      },
+      { ignores: ["mylib/.cache/**/*"] },
+    ];`;
+    const result = addCompatToFlatConfig(content);
     expect(result).toEqual(content);
   });
 });

@@ -2,7 +2,8 @@ import { joinPathFragments, Tree, updateJson } from '@nx/devkit';
 import { Linter } from 'eslint';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
-  addConfigToFlatConfigExport,
+  addBlockToFlatConfigExport,
+  addCompatToFlatConfig,
   generateFlatOverride,
   generatePluginExtendsElement,
 } from './flat-config/ast-utils';
@@ -40,10 +41,18 @@ export function addOverrideToLintConfig(
   if (useFlatConfig()) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
     const flatOverride = generateFlatOverride(override, root);
-    tree.write(
-      fileName,
-      addConfigToFlatConfigExport(tree.read(fileName, 'utf8'), flatOverride)
-    );
+    let content = tree.read(fileName, 'utf8');
+    // we will be using compat here so we need to make sure it's added
+    if (
+      !override.env &&
+      !override.extends &&
+      !override.plugins &&
+      !override.parser
+    ) {
+      content = addCompatToFlatConfig(content);
+    }
+
+    tree.write(fileName, addBlockToFlatConfigExport(content, flatOverride));
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
     updateJson(tree, fileName, (json) => {
@@ -64,7 +73,7 @@ export function addExtendsToLintConfig(
     const pluginExtends = generatePluginExtendsElement([plugin]);
     tree.write(
       fileName,
-      addConfigToFlatConfigExport(tree.read(fileName, 'utf8'), pluginExtends)
+      addBlockToFlatConfigExport(tree.read(fileName, 'utf8'), pluginExtends)
     );
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');

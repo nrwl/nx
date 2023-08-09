@@ -20,7 +20,7 @@ export function addImportToFlatConfig(
     ts.ScriptKind.JS
   );
 
-  const foundImportVars: ts.NodeArray<ts.BindingElement> = ts.forEachChild(
+  const foundBindingVars: ts.NodeArray<ts.BindingElement> = ts.forEachChild(
     source,
     function analyze(node) {
       // we can only combine object binding patterns
@@ -29,14 +29,11 @@ export function addImportToFlatConfig(
       }
       if (
         ts.isVariableStatement(node) &&
-        node.declarationList.declarations.length > 0 &&
         ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
         ts.isObjectBindingPattern(node.declarationList.declarations[0].name) &&
         ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
         node.declarationList.declarations[0].initializer.expression.getText() ===
           'require' &&
-        node.declarationList.declarations[0].initializer.arguments.length ===
-          1 &&
         ts.isStringLiteral(
           node.declarationList.declarations[0].initializer.arguments[0]
         ) &&
@@ -48,15 +45,15 @@ export function addImportToFlatConfig(
     }
   );
 
-  if (foundImportVars && Array.isArray(variable)) {
+  if (foundBindingVars && Array.isArray(variable)) {
     const newVariables = variable.filter(
-      (v) => !foundImportVars.some((fv) => v === fv.name.getText())
+      (v) => !foundBindingVars.some((fv) => v === fv.name.getText())
     );
     if (newVariables.length === 0) {
       return content;
     }
-    const isMultiLine = foundImportVars.hasTrailingComma;
-    const pos = foundImportVars.end;
+    const isMultiLine = foundBindingVars.hasTrailingComma;
+    const pos = foundBindingVars.end;
     const nodes = ts.factory.createNodeArray(
       newVariables.map((v) =>
         ts.factory.createBindingElement(undefined, undefined, v)
@@ -74,36 +71,67 @@ export function addImportToFlatConfig(
         text: isMultiLine ? `,\n${insert}` : `,${insert}`,
       },
     ]);
-  } else {
-    const requireStatement = generateRequire(
-      typeof variable === 'string'
-        ? variable
-        : ts.factory.createObjectBindingPattern(
-            variable.map((v) =>
-              ts.factory.createBindingElement(undefined, undefined, v)
-            )
-          ),
-      imp
-    );
-    const insert = printer.printNode(
-      ts.EmitHint.Unspecified,
-      requireStatement,
-      source
-    );
-    return applyChangesToString(content, [
-      {
-        type: ChangeType.Insert,
-        index: 0,
-        text: `${insert}\n`,
-      },
-    ]);
   }
+
+  const hasSameIdentifierVar: boolean = ts.forEachChild(
+    source,
+    function analyze(node) {
+      // we are searching for a single variable
+      if (Array.isArray(variable)) {
+        return;
+      }
+      if (
+        ts.isVariableStatement(node) &&
+        ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
+        ts.isIdentifier(node.declarationList.declarations[0].name) &&
+        node.declarationList.declarations[0].name.getText() === variable &&
+        ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
+        node.declarationList.declarations[0].initializer.expression.getText() ===
+          'require' &&
+        ts.isStringLiteral(
+          node.declarationList.declarations[0].initializer.arguments[0]
+        ) &&
+        node.declarationList.declarations[0].initializer.arguments[0].text ===
+          imp
+      ) {
+        return true;
+      }
+    }
+  );
+
+  if (hasSameIdentifierVar) {
+    return content;
+  }
+
+  // the import was not found, create a new one
+  const requireStatement = generateRequire(
+    typeof variable === 'string'
+      ? variable
+      : ts.factory.createObjectBindingPattern(
+          variable.map((v) =>
+            ts.factory.createBindingElement(undefined, undefined, v)
+          )
+        ),
+    imp
+  );
+  const insert = printer.printNode(
+    ts.EmitHint.Unspecified,
+    requireStatement,
+    source
+  );
+  return applyChangesToString(content, [
+    {
+      type: ChangeType.Insert,
+      index: 0,
+      text: `${insert}\n`,
+    },
+  ]);
 }
 
 /**
  * Injects new ts.expression to the end of the module.exports array.
  */
-export function addConfigToFlatConfigExport(
+export function addBlockToFlatConfigExport(
   content: string,
   config: ts.Expression | ts.SpreadElement,
   options: { insertAtTheEnd: boolean } = { insertAtTheEnd: true }
@@ -145,6 +173,27 @@ export function addConfigToFlatConfigExport(
       },
     ]);
   }
+}
+
+/**
+ * Adds compat if missing to flat config
+ */
+export function addCompatToFlatConfig(content: string) {
+  let result = content;
+  result = addImportToFlatConfig(result, 'js', '@eslint/js');
+  if (result.includes('const compat = new FlatCompat')) {
+    return result;
+  }
+  result = addImportToFlatConfig(result, 'FlatCompat', '@eslint/eslintrc');
+  const index = result.indexOf('module.exports');
+  return applyChangesToString(result, [
+    {
+      type: ChangeType.Insert,
+      index: index - 1,
+      text: `${DEFAULT_FLAT_CONFIG}\n`,
+    },
+  ]);
+  // TODO DEFAULT_FLAT_CONFIG before module.exports
 }
 
 const DEFAULT_FLAT_CONFIG = `
