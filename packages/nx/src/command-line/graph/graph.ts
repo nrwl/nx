@@ -833,7 +833,7 @@ function createTaskId(
 async function getExpandedTaskInputs(
   taskId: string
 ): Promise<Record<string, string[]>> {
-  const [project, target] = taskId.split(':');
+  const [project] = taskId.split(':');
   const taskGraphResponse = await createTaskGraphClientResponse(false);
 
   const allWorkspaceFiles = await allFileData();
