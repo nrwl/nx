@@ -4528,6 +4528,16 @@
             "tags": []
           },
           {
+            "id": "add-nuxt",
+            "name": "Add a Nuxt Project",
+            "description": "Add a nuxt project to your repo",
+            "file": "shared/recipes/add-stack/add-nuxt",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-nuxt",
+            "tags": []
+          },
+          {
             "id": "add-astro",
             "name": "Add an Astro Project",
             "description": "Add Nx to an Astro project",
@@ -4704,6 +4714,16 @@
         "tags": []
       },
       {
+        "id": "add-nuxt",
+        "name": "Add a Nuxt Project",
+        "description": "Add a nuxt project to your repo",
+        "file": "shared/recipes/add-stack/add-nuxt",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-nuxt",
+        "tags": []
+      },
+      {
         "id": "add-astro",
         "name": "Add an Astro Project",
         "description": "Add Nx to an Astro project",
@@ -4866,6 +4886,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-rust",
+    "tags": []
+  },
+  "/showcase/example-repos/add-nuxt": {
+    "id": "add-nuxt",
+    "name": "Add a Nuxt Project",
+    "description": "Add a nuxt project to your repo",
+    "file": "shared/recipes/add-stack/add-nuxt",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-nuxt",
     "tags": []
   },
   "/showcase/example-repos/add-astro": {
