@@ -90,7 +90,7 @@ Rename or remove the existing e2e target.`);
   projectConfig.targets ??= {};
   projectConfig.targets.e2e = {
     executor: '@nx/playwright:playwright',
-    outputs: [`dist/.playwright/${projectConfig.root}`],
+    outputs: [`{workspaceRoot}/dist/.playwright/${projectConfig.root}`],
     options: {
       config: `${projectConfig.root}/playwright.config.${
         options.js ? 'js' : 'ts'

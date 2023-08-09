@@ -4,10 +4,16 @@ import {
   uniq,
   runCLI,
   ensurePlaywrightBrowsersInstallation,
+  getPackageManagerCommand,
+  getSelectedPackageManager,
 } from '@nx/e2e/utils';
 
 const TEN_MINS_MS = 600_000;
 describe('Playwright E2E Test runner', () => {
+  const pmc = getPackageManagerCommand({
+    packageManager: getSelectedPackageManager(),
+  });
+
   beforeAll(() => {
     newProject({ name: uniq('playwright') });
   });
@@ -17,8 +23,12 @@ describe('Playwright E2E Test runner', () => {
   it(
     'should test and lint example app',
     () => {
-      runCLI(`g @nx/js:lib demo-e2e --unitTestRunner none --bundler none`);
-      runCLI(`g @nx/playwright:configuration --project demo-e2e`);
+      runCLI(
+        `g @nx/web:app demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
+      );
+      runCLI(
+        `g @nx/playwright:configuration --project demo-e2e --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
+      );
       ensurePlaywrightBrowsersInstallation();
 
       const e2eResults = runCLI(`e2e demo-e2e`);
@@ -34,9 +44,11 @@ describe('Playwright E2E Test runner', () => {
     'should test and lint example app with js',
     () => {
       runCLI(
-        `g @nx/js:lib demo-js-e2e --unitTestRunner none --bundler none --js`
+        `g @nx/web:app demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
       );
-      runCLI(`g @nx/playwright:configuration --project demo-js-e2e --js`);
+      runCLI(
+        `g @nx/playwright:configuration --project demo-js-e2e --js  --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
+      );
       ensurePlaywrightBrowsersInstallation();
 
       const e2eResults = runCLI(`e2e demo-js-e2e`);

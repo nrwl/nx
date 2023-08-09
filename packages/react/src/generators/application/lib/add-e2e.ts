@@ -55,6 +55,7 @@ export async function addE2e(
         webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
           options.name
         }`,
+        webServerAddress: 'http://localhost:4200',
       });
     case 'none':
     default:
