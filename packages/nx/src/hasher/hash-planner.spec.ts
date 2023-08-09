@@ -4,10 +4,10 @@ let tempFs = new TempFs('task-planner');
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { InProcessTaskHasher } from './task-hasher';
 import { fileHasher } from './file-hasher';
-import { DependencyType, ProjectGraph } from '../config/project-graph';
 import { HashPlanner } from './hash-planner';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 
 jest.mock('../utils/workspace-root', () => {
@@ -43,7 +43,7 @@ describe('task planner', () => {
 
   // TODO(cammisuli): This function is temporary until the new file hashing is implemented
   // This should just match snapshots of the planner
-  async function assertNodes(
+  async function assertHashPlan(
     task: Task | Task[],
     taskGraph: TaskGraph,
     taskHasher: InProcessTaskHasher,
@@ -75,6 +75,8 @@ describe('task planner', () => {
     for (let i = 0; i < hashNodes.length; i++) {
       expect(planNodes[i]).toEqual(hashNodes[i]);
     }
+
+    return plans;
   }
 
   beforeEach(async () => {
@@ -164,7 +166,7 @@ describe('task planner', () => {
 
       const planner = new HashPlanner(nxJson, projectGraph, options);
 
-      await assertNodes(
+      await assertHashPlan(
         taskGraph.tasks['parent:build'],
         taskGraph,
         hasher,
@@ -174,7 +176,7 @@ describe('task planner', () => {
   });
 
   it('should plan the task where the project has dependencies', async () => {
-    let projectFileMap = {
+    const projectFileMap = {
       parent: [
         { file: '/filea.ts', hash: 'a.hash' },
         { file: '/filea.spec.ts', hash: 'a.spec.hash' },
@@ -184,48 +186,38 @@ describe('task planner', () => {
         { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
       ],
     };
-    let projectGraph: ProjectGraph = {
-      nodes: {
-        parent: {
-          name: 'parent',
-          type: 'lib',
-          data: {
-            root: 'libs/parent',
-            targets: { build: { executor: 'unknown' } },
-          },
-        },
-        child: {
-          name: 'child',
-          type: 'lib',
-          data: {
-            root: 'libs/child',
-            targets: { build: {} },
-          },
-        },
+
+    const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: { build: { executor: 'unknown' } },
       },
-      externalNodes: {},
-      dependencies: {
-        parent: [{ source: 'parent', target: 'child', type: 'static' }],
+    });
+
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: { build: { executor: 'none' } },
       },
-    };
-    let taskGraph = {
-      roots: ['child-build'],
-      tasks: {
-        'parent-build': {
-          id: 'parent-build',
-          target: { project: 'parent', target: 'build' },
-          overrides: {},
-        },
-        'child-build': {
-          id: 'child-build',
-          target: { project: 'child', target: 'build' },
-          overrides: {},
-        },
-      },
-      dependencies: {
-        'parent-build': ['child-build'],
-      },
-    };
+    });
+    builder.addStaticDependency('parent', 'child', '/filea.ts');
+
+    const projectGraph = builder.getUpdatedProjectGraph();
+
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
     let nxJson = {} as any;
     const hasher = new InProcessTaskHasher(
       projectFileMap,
@@ -237,16 +229,14 @@ describe('task planner', () => {
     );
     const planner = new HashPlanner(nxJson, projectGraph, {});
 
-    await assertNodes(
-      {
-        target: { project: 'parent', target: 'build' },
-        id: 'parent-build',
-        overrides: { prop: 'prop-value' },
-      },
+    const hashPlan = await assertHashPlan(
+      taskGraph.tasks['parent:build'],
       taskGraph,
       hasher,
       planner
     );
+
+    expect(hashPlan).toMatchSnapshot();
   });
 
   it('should plan non-default filesets', async () => {
@@ -260,56 +250,45 @@ describe('task planner', () => {
         { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
       ],
     };
-    let projectGraph: ProjectGraph = {
-      nodes: {
-        parent: {
-          name: 'parent',
-          type: 'lib',
-          data: {
-            root: 'libs/parent',
-            targets: {
-              build: {
-                inputs: ['prod', '^prod'],
-                executor: 'nx:run-commands',
-              },
-            },
-          },
-        },
-        child: {
-          name: 'child',
-          type: 'lib',
-          data: {
-            root: 'libs/child',
-            namedInputs: {
-              prod: ['default'],
-            },
-            targets: { build: { executor: 'unknown' } },
+
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            inputs: ['prod', '^prod'],
+            executor: 'nx:run-commands',
           },
         },
       },
-      externalNodes: {},
-      dependencies: {
-        parent: [{ source: 'parent', target: 'child', type: 'static' }],
-      },
-    };
-    let taskGraph = {
-      roots: ['child-build'],
-      tasks: {
-        'parent-build': {
-          id: 'parent-build',
-          target: { project: 'parent', target: 'build' },
-          overrides: {},
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        namedInputs: {
+          prod: ['default'],
         },
-        'child-build': {
-          id: 'child-build',
-          target: { project: 'child', target: 'build' },
-          overrides: {},
-        },
+        targets: { build: { executor: 'unknown' } },
       },
-      dependencies: {
-        'parent-build': ['child-build'],
-      },
-    };
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+
+    let projectGraph = builder.getUpdatedProjectGraph();
+
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
     let nxJson = {
       namedInputs: {
         prod: ['!{projectRoot}/**/*.spec.ts'],
@@ -325,16 +304,14 @@ describe('task planner', () => {
     );
     const planner = new HashPlanner(nxJson, projectGraph, {});
 
-    await assertNodes(
-      {
-        target: { project: 'parent', target: 'build' },
-        id: 'parent-build',
-        overrides: { prop: 'prop-value' },
-      },
+    let hashPlans = await assertHashPlan(
+      taskGraph.tasks['parent:build'],
       taskGraph,
       hasher,
       planner
     );
+
+    expect(hashPlans).toMatchSnapshot();
   });
 
   it('should make a plan with multiple filesets of a project', async () => {
@@ -344,48 +321,35 @@ describe('task planner', () => {
         { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
       ],
     };
-    let projectGraph: ProjectGraph = {
-      nodes: {
-        parent: {
-          name: 'parent',
-          type: 'lib',
-          data: {
-            root: 'libs/parent',
-            targets: {
-              build: {
-                inputs: ['prod'],
-                executor: 'nx:run-commands',
-              },
-              test: {
-                inputs: ['default'],
-                dependsOn: ['build'],
-                executor: 'nx:run-commands',
-              },
-            },
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            inputs: ['prod'],
+            executor: 'nx:run-commands',
+          },
+          test: {
+            inputs: ['default'],
+            dependsOn: ['build'],
+            executor: 'nx:run-commands',
           },
         },
       },
-      externalNodes: {},
-      dependencies: {
-        parent: [],
-      },
-    };
-    let taskGraph = {
-      roots: ['parent-test'],
-      tasks: {
-        'parent-build': {
-          id: 'parent-build',
-          target: { project: 'parent', target: 'build' },
-          overrides: {},
-        },
-        'parent-test': {
-          id: 'parent-test',
-          target: { project: 'parent', target: 'test' },
-          overrides: {},
-        },
-      },
-      dependencies: {},
-    };
+    });
+    let projectGraph = builder.getUpdatedProjectGraph();
+
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['build', 'test'],
+      undefined,
+      {}
+    );
     let nxJson = {
       namedInputs: {
         prod: ['!{projectRoot}/**/*.spec.ts'],
@@ -401,20 +365,10 @@ describe('task planner', () => {
     );
     const planner = new HashPlanner(nxJson, projectGraph, {});
 
-    const tasks = [
-      {
-        target: { project: 'parent', target: 'build' },
-        id: 'parent-build',
-        overrides: { prop: 'prop-value' },
-      },
-      {
-        target: { project: 'parent', target: 'test' },
-        id: 'parent-test',
-        overrides: { prop: 'prop-value' },
-      },
-    ];
+    const tasks = Object.values(taskGraph.tasks);
 
-    assertNodes(tasks, taskGraph, hasher, planner);
+    let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
+    expect(plans).toMatchSnapshot();
   });
 
   it('should be able to handle multiple filesets per project', async () => {
@@ -431,65 +385,50 @@ describe('task planner', () => {
             { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
           ],
         };
-        let projectGraph: ProjectGraph = {
-          nodes: {
-            parent: {
-              name: 'parent',
-              type: 'lib',
-              data: {
-                root: 'libs/parent',
-                targets: {
-                  test: {
-                    inputs: ['default', '^prod'],
-                    executor: 'nx:run-commands',
-                  },
-                },
-              },
-            },
-            child: {
-              name: 'child',
-              type: 'lib',
-              data: {
-                root: 'libs/child',
-                namedInputs: {
-                  prod: [
-                    '!{projectRoot}/**/*.spec.ts',
-                    '{workspaceRoot}/global2',
-                    { env: 'MY_TEST_HASH_ENV' },
-                  ],
-                },
-                targets: {
-                  test: {
-                    inputs: ['default'],
-                    executor: 'nx:run-commands',
-                  },
-                },
+        const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+        builder.addNode({
+          name: 'parent',
+          type: 'lib',
+          data: {
+            root: 'libs/parent',
+            targets: {
+              test: {
+                inputs: ['default', '^prod'],
+                executor: 'nx:run-commands',
               },
             },
           },
-          externalNodes: {},
-          dependencies: {
-            parent: [{ source: 'parent', target: 'child', type: 'static' }],
-          },
-        };
-        let taskGraph = {
-          roots: ['child-test'],
-          tasks: {
-            'parent-test': {
-              id: 'parent-test',
-              target: { project: 'parent', target: 'test' },
-              overrides: {},
+        });
+        builder.addNode({
+          name: 'child',
+          type: 'lib',
+          data: {
+            root: 'libs/child',
+            namedInputs: {
+              prod: [
+                '!{projectRoot}/**/*.spec.ts',
+                '{workspaceRoot}/global2',
+                { env: 'MY_TEST_HASH_ENV' },
+              ],
             },
-            'child-test': {
-              id: 'child-test',
-              target: { project: 'child', target: 'test' },
-              overrides: {},
+            targets: {
+              test: {
+                inputs: ['default'],
+                executor: 'nx:run-commands',
+              },
             },
           },
-          dependencies: {
-            'parent-test': ['child-test'],
-          },
-        };
+        });
+        builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+        let projectGraph = builder.getUpdatedProjectGraph();
+        let taskGraph = createTaskGraph(
+          projectGraph,
+          { build: ['^build'] },
+          ['parent'],
+          ['test'],
+          undefined,
+          {}
+        );
         let nxJson = {
           namedInputs: {
             default: ['{projectRoot}/**/*', '{workspaceRoot}/global1'],
@@ -507,19 +446,9 @@ describe('task planner', () => {
 
         const planner = new HashPlanner(nxJson as any, projectGraph, {});
 
-        const tasks = [
-          {
-            target: { project: 'parent', target: 'test' },
-            id: 'parent-test',
-            overrides: { prop: 'prop-value' },
-          },
-          {
-            target: { project: 'child', target: 'test' },
-            id: 'child-test',
-            overrides: { prop: 'prop-value' },
-          },
-        ];
-        await assertNodes(tasks, taskGraph, hasher, planner);
+        const tasks = Object.values(taskGraph.tasks);
+        let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
+        expect(plans).toMatchSnapshot();
       }
     );
   });
@@ -535,50 +464,35 @@ describe('task planner', () => {
         { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
       ],
     };
-    let projectGraph: ProjectGraph = {
-      nodes: {
-        parent: {
-          name: 'parent',
-          type: 'lib',
-          data: {
-            root: 'libs/parent',
-            targets: {
-              build: { executor: 'nx:run-commands' },
-            },
-          },
-        },
-        child: {
-          name: 'child',
-          type: 'lib',
-          data: {
-            root: 'libs/child',
-            targets: { build: { executor: 'nx:run-commands' } },
-          },
+    const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: { executor: 'nx:run-commands' },
         },
       },
-      dependencies: {
-        parent: [{ source: 'parent', target: 'child', type: 'static' }],
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: { build: { executor: 'nx:run-commands' } },
       },
-      externalNodes: {},
-    };
-    let taskGraph = {
-      roots: ['child-build'],
-      tasks: {
-        'parent-build': {
-          id: 'parent-build',
-          target: { project: 'parent', target: 'build' },
-          overrides: {},
-        },
-        'child-build': {
-          id: 'child-build',
-          target: { project: 'child', target: 'build' },
-          overrides: {},
-        },
-      },
-      dependencies: {
-        'parent-build': ['child-build'],
-      },
-    };
+    });
+    builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
     let nxJson = {
       namedInputs: {
         prod: ['!{projectRoot}/**/*.spec.ts'],
@@ -602,14 +516,13 @@ describe('task planner', () => {
 
     const planner = new HashPlanner(nxJson, projectGraph, {});
 
-    let tasks = [
-      {
-        target: { project: 'parent', target: 'build' },
-        id: 'parent-build',
-        overrides: { prop: 'prop-value' },
-      },
-    ];
-    await assertNodes(tasks, taskGraph, hasher, planner);
+    let plans = await assertHashPlan(
+      taskGraph.tasks['parent:build'],
+      taskGraph,
+      hasher,
+      planner
+    );
+    expect(plans).toMatchSnapshot();
   });
 
   it('should build plans where the project graph has circular dependencies', async () => {
@@ -617,49 +530,34 @@ describe('task planner', () => {
       parent: [{ file: '/filea.ts', hash: 'a.hash' }],
       child: [{ file: '/fileb.ts', hash: 'b.hash' }],
     };
-    let projectGraph: ProjectGraph = {
-      nodes: {
-        parent: {
-          name: 'parent',
-          type: 'lib',
-          data: {
-            root: 'libs/parent',
-            targets: { build: { executor: 'nx:run-commands' } },
-          },
-        },
-        child: {
-          name: 'child',
-          type: 'lib',
-          data: {
-            root: 'libs/child',
-            targets: { build: { executor: 'nx:run-commands' } },
-          },
-        },
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: { build: { executor: 'nx:run-commands' } },
       },
-      dependencies: {
-        parent: [{ source: 'parent', target: 'child', type: 'static' }],
-        child: [{ source: 'child', target: 'parent', type: 'static' }],
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: { build: { executor: 'nx:run-commands' } },
       },
-      externalNodes: {},
-    };
-    let taskGraph = {
-      roots: ['child-build'],
-      tasks: {
-        'parent-build': {
-          id: 'parent-build',
-          target: { project: 'parent', target: 'build' },
-          overrides: {},
-        },
-        'child-build': {
-          id: 'child-build',
-          target: { project: 'child', target: 'build' },
-          overrides: {},
-        },
-      },
-      dependencies: {
-        'parent-build': ['child-build'],
-      },
-    };
+    });
+    builder.addStaticDependency('parent', 'child', '/filea.ts');
+    builder.addStaticDependency('child', 'parent', '/fileb.ts');
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
     let nxJson = {} as any;
     const hasher = new InProcessTaskHasher(
       projectFileMap,
@@ -671,64 +569,42 @@ describe('task planner', () => {
     );
     let planner = new HashPlanner(nxJson, projectGraph, {});
 
-    let tasks = [
-      {
-        target: { project: 'parent', target: 'build' },
-        id: 'parent-build',
-        overrides: { prop: 'prop-value' },
-      },
-      {
-        target: { project: 'child', target: 'build' },
-        id: 'child-build',
-        overrides: { prop: 'prop-value' },
-      },
-    ];
-    await assertNodes(tasks, taskGraph, hasher, planner);
+    let tasks = Object.values(taskGraph.tasks);
+    let plans = await assertHashPlan(tasks, taskGraph, hasher, planner);
+    expect(plans).toMatchSnapshot();
   });
 
   it('should include npm projects', async () => {
     let projectFileMap = {
       app: [{ file: '/filea.ts', hash: 'a.hash' }],
     };
-    let projectGraph: ProjectGraph = {
-      nodes: {
-        app: {
-          name: 'app',
-          type: 'app',
-          data: {
-            root: 'apps/app',
-            targets: { build: { executor: 'nx:run-commands' } },
-          },
-        },
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'app',
+      type: 'app',
+      data: {
+        root: 'apps/app',
+        targets: { build: { executor: 'nx:run-commands' } },
       },
-      externalNodes: {
-        'npm:react': {
-          name: 'npm:react',
-          type: 'npm',
-          data: {
-            version: '17.0.0',
-            packageName: 'react',
-          },
-        },
+    });
+    builder.addExternalNode({
+      name: 'npm:react',
+      type: 'npm',
+      data: {
+        version: '17.0.0',
+        packageName: 'react',
       },
-      dependencies: {
-        'npm:react': [],
-        app: [
-          { source: 'app', target: 'npm:react', type: DependencyType.static },
-        ],
-      },
-    };
-    let taskGraph = {
-      roots: ['app-build'],
-      tasks: {
-        'app-build': {
-          id: 'app-build',
-          target: { project: 'app', target: 'build' },
-          overrides: {},
-        },
-      },
-      dependencies: {},
-    };
+    });
+    builder.addStaticDependency('app', 'npm:react', '/filea.ts');
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['app'],
+      ['build'],
+      undefined,
+      {}
+    );
     let nxJson = {} as any;
     const hasher = new InProcessTaskHasher(
       projectFileMap,
@@ -740,14 +616,12 @@ describe('task planner', () => {
     );
     const planner = new HashPlanner(nxJson, projectGraph, {});
 
-    let tasks = [
-      {
-        target: { project: 'app', target: 'build' },
-        id: 'app-build',
-        overrides: { prop: 'prop-value' },
-      },
-    ];
-
-    await assertNodes(tasks, taskGraph, hasher, planner);
+    let plans = await assertHashPlan(
+      taskGraph.tasks['app:build'],
+      taskGraph,
+      hasher,
+      planner
+    );
+    expect(plans).toMatchSnapshot();
   });
 });
