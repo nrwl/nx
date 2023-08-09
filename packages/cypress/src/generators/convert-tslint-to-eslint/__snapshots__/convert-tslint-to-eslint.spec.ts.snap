@@ -10,7 +10,7 @@ exports[`convert-tslint-to-eslint should work for Cypress applications 1`] = `
     "@typescript-eslint/parser": "^5.60.1",
     "eslint": "~8.46.0",
     "eslint-config-prettier": "8.1.0",
-    "eslint-plugin-cypress": "^2.10.3",
+    "eslint-plugin-cypress": "^2.13.4",
     "eslint-plugin-import": "latest",
   },
   "name": "test-name",
