@@ -7,6 +7,7 @@
 ▸ (`context`): `ProjectGraphDependencyWithFile`[] \| `Promise`<`ProjectGraphDependencyWithFile`[]\>
 
 A function which parses files in the workspace to create dependencies in the [ProjectGraph](../../devkit/documents/ProjectGraph)
+Use validateDependency to validate dependencies
 
 ##### Parameters
 

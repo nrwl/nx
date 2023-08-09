@@ -99,6 +99,7 @@ export interface CreateDependenciesContext {
 
 /**
  * A function which parses files in the workspace to create dependencies in the {@link ProjectGraph}
+ * Use {@link validateDependency} to validate dependencies
  */
 export type CreateDependencies = (
   context: CreateDependenciesContext

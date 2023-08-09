@@ -379,15 +379,31 @@ export class ProjectGraphBuilder extends ProjectDependencyBuilder {
   }
 }
 
+/**
+ * A {@link ProjectGraph} dependency between 2 projects
+ * Optional: Specifies a file from where the dependency is made
+ */
 export interface ProjectGraphDependencyWithFile {
+  /**
+   * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} depending on the target project
+   */
   source: string;
+  /**
+   * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} that the source project depends on
+   */
   target: string;
+  /**
+   * The path of a file (relative from the workspace root) where the dependency is made
+   */
   sourceFile?: string;
+  /**
+   * The type of dependency
+   */
   dependencyType: DependencyType;
 }
 
 /**
- *
+ * A function to validate dependencies in a {@link CreateDependencies} function
  * @throws If the dependency is invalid.
  */
 export function validateDependency(
