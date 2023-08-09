@@ -131,7 +131,6 @@ export function findPackageMetadataList(
         (pkg) => pkg.id === folderName
       );
 
-      console.log(folderName, hasDocumentation?.itemList);
       return isPrivate
         ? null
         : {
