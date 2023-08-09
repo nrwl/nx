@@ -25,8 +25,7 @@
         ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
-        "url": "https://staging.nx.app",
-        "experimentalDisableCleanUpHashDetails": true
+        "url": "https://staging.nx.app"
       }
     }
   },
