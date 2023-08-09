@@ -18,6 +18,7 @@ import {
   getToggleAllButtonForFolder,
   getUncheckedProjectItems,
   getUnfocusProjectButton,
+  openTooltipForNode,
 } from '../support/app.po';
 
 import * as affectedJson from '../fixtures/affected.json';
@@ -208,7 +209,7 @@ describe('dev mode - task graph', () => {
       cy.get('[data-project="cart"]').click({
         force: true,
       });
-      cy.get('#cytoscape-graph').click('center');
+      openTooltipForNode('cart:build');
       cy.get('[data-cy="inputs-accordion"]').click();
 
       cy.get('[data-cy="input-list-entry"]').should('have.length', 20);
