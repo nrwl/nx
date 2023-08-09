@@ -8,6 +8,7 @@ import {
   generateFlatOverride,
   generatePluginExtendsElement,
   mapFilePath,
+  removeRulesFromLintConfig,
 } from './flat-config/ast-utils';
 import ts = require('typescript');
 
@@ -46,21 +47,51 @@ export function addOverrideToLintConfig(
     const flatOverride = generateFlatOverride(override, root);
     let content = tree.read(fileName, 'utf8');
     // we will be using compat here so we need to make sure it's added
-    if (
-      !override.env &&
-      !override.extends &&
-      !override.plugins &&
-      !override.parser
-    ) {
+    if (overrideNeedsCompat(override)) {
       content = addCompatToFlatConfig(content);
     }
-
     tree.write(fileName, addBlockToFlatConfigExport(content, flatOverride));
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
     updateJson(tree, fileName, (json) => {
       json.overrides ?? [];
       json.overrides.push(override);
+      return json;
+    });
+  }
+}
+
+function overrideNeedsCompat(
+  override: Linter.ConfigOverride<Linter.RulesRecord>
+) {
+  return (
+    !override.env && !override.extends && !override.plugins && !override.parser
+  );
+}
+
+export function replaceOverridesInLintConfig(
+  tree: Tree,
+  root: string,
+  overrides: Linter.ConfigOverride<Linter.RulesRecord>[]
+) {
+  if (useFlatConfig()) {
+    const fileName = joinPathFragments(root, 'eslint.config.js');
+    let content = tree.read(fileName, 'utf8');
+    // we will be using compat here so we need to make sure it's added
+    if (overrides.some(overrideNeedsCompat)) {
+      content = addCompatToFlatConfig(content);
+    }
+    content = removeRulesFromLintConfig(content);
+    overrides.forEach((override) => {
+      const flatOverride = generateFlatOverride(override, root);
+      addBlockToFlatConfigExport(content, flatOverride);
+    });
+
+    tree.write(fileName, content);
+  } else {
+    const fileName = joinPathFragments(root, '.eslintrc.json');
+    updateJson(tree, fileName, (json) => {
+      json.overrides = overrides;
       return json;
     });
   }

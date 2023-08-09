@@ -256,7 +256,7 @@ export async function addLint(
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
   });
-  // Also update the root .eslintrc.json lintProjectGenerator will not generate it for root projects.
+  // Also update the root ESLint config. The lintProjectGenerator will not generate it for root projects.
   // But we need to set the package.json checks.
   if (options.rootProject) {
     const {

@@ -3,8 +3,8 @@ import {
   addBlockToFlatConfigExport,
   generateAst,
   addImportToFlatConfig,
-  generateRequire,
   addCompatToFlatConfig,
+  removeRulesFromLintConfig,
 } from './ast-utils';
 
 describe('ast-utils', () => {
@@ -218,12 +218,12 @@ describe('ast-utils', () => {
       "const FlatCompat = require("@eslint/eslintrc");
       const js = require("@eslint/js");
       const baseConfig = require("../../eslint.config.js");
-         
+
       const compat = new FlatCompat({
             baseDirectory: __dirname,
             recommendedConfig: js.configs.recommended,
           });
-        
+
        module.exports = [
             ...baseConfig,
             {
@@ -257,12 +257,12 @@ describe('ast-utils', () => {
       "const FlatCompat = require("@eslint/eslintrc");
       const baseConfig = require("../../eslint.config.js");
           const js = require("@eslint/js");
-         
+
       const compat = new FlatCompat({
             baseDirectory: __dirname,
             recommendedConfig: js.configs.recommended,
           });
-        
+
        module.exports = [
             ...baseConfig,
             {
@@ -300,5 +300,101 @@ describe('ast-utils', () => {
     ];`;
     const result = addCompatToFlatConfig(content);
     expect(result).toEqual(content);
+  });
+
+  it('should remove all rules from config', () => {
+    const content = `const FlatCompat = require("@eslint/eslintrc");
+    const baseConfig = require("../../eslint.config.js");
+    const js = require("@eslint/js");
+
+    const compat = new FlatCompat({
+      baseDirectory: __dirname,
+      recommendedConfig: js.configs.recommended,
+    });
+
+    module.exports = [
+      ...baseConfig,
+      {
+        files: [
+          "mylib/**/*.ts",
+          "mylib/**/*.tsx"
+        ],
+        rules: {}
+      },
+      ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+        ...config,
+        files: [
+          "**/*.ts",
+          "**/*.tsx"
+        ],
+        rules: {}
+      })),
+      ...compat.config({ env: { jest: true } }).map(config => ({
+        ...config,
+        files: [
+          "**/*.spec.ts",
+          "**/*.spec.tsx",
+          "**/*.spec.js",
+          "**/*.spec.jsx"
+        ],
+        rules: {}
+      })),
+      { ignores: ["mylib/.cache/**/*"] },
+    ];`;
+    const result = removeRulesFromLintConfig(content);
+    expect(result).toMatchInlineSnapshot(`
+      "const FlatCompat = require("@eslint/eslintrc");
+          const baseConfig = require("../../eslint.config.js");
+          const js = require("@eslint/js");
+
+          const compat = new FlatCompat({
+            baseDirectory: __dirname,
+            recommendedConfig: js.configs.recommended,
+          });
+
+          module.exports = [
+            ...baseConfig,
+            { ignores: ["mylib/.cache/**/*"] },
+          ];"
+    `);
+  });
+
+  it('should remove all rules from starting with first', () => {
+    const content = `const baseConfig = require("../../eslint.config.js");
+
+    module.exports = [
+      {
+        files: [
+          "mylib/**/*.ts",
+          "mylib/**/*.tsx"
+        ],
+        rules: {}
+      },
+      ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+        ...config,
+        files: [
+          "**/*.ts",
+          "**/*.tsx"
+        ],
+        rules: {}
+      })),
+      ...compat.config({ env: { jest: true } }).map(config => ({
+        ...config,
+        files: [
+          "**/*.spec.ts",
+          "**/*.spec.tsx",
+          "**/*.spec.js",
+          "**/*.spec.jsx"
+        ],
+        rules: {}
+      }))
+    ];`;
+    const result = removeRulesFromLintConfig(content);
+    expect(result).toMatchInlineSnapshot(`
+      "const baseConfig = require("../../eslint.config.js");
+
+          module.exports = [
+          ];"
+    `);
   });
 });

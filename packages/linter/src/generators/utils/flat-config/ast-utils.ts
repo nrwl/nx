@@ -1,10 +1,59 @@
 import {
   ChangeType,
+  StringChange,
   applyChangesToString,
   joinPathFragments,
 } from '@nx/devkit';
 import { Linter } from 'eslint';
 import * as ts from 'typescript';
+
+export function removeRulesFromLintConfig(content: string): string {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+
+  const exportsArray = ts.forEachChild(source, function analyze(node) {
+    if (
+      ts.isExpressionStatement(node) &&
+      ts.isBinaryExpression(node.expression) &&
+      node.expression.left.getText() === 'module.exports' &&
+      ts.isArrayLiteralExpression(node.expression.right)
+    ) {
+      return node.expression.right.elements;
+    }
+  });
+
+  if (!exportsArray) {
+    return content;
+  }
+
+  const changes: StringChange[] = [];
+  exportsArray.forEach((node, i) => {
+    if (
+      (ts.isObjectLiteralExpression(node) &&
+        node.properties.some((p) => p.name.getText() === 'files')) ||
+      // detect ...compat.config(...).map(...)
+      (ts.isSpreadElement(node) &&
+        ts.isCallExpression(node.expression) &&
+        ts.isPropertyAccessExpression(node.expression.expression) &&
+        ts.isArrowFunction(node.expression.arguments[0]))
+    ) {
+      const commaOffset =
+        i < exportsArray.length - 1 || exportsArray.hasTrailingComma ? 1 : 0;
+      changes.push({
+        type: ChangeType.Delete,
+        start: node.pos,
+        length: node.end - node.pos + commaOffset,
+      });
+    }
+  });
+
+  return applyChangesToString(content, changes);
+}
 
 export function addImportToFlatConfig(
   content: string,

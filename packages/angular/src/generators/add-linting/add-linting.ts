@@ -4,13 +4,13 @@ import {
   joinPathFragments,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
-import { extendAngularEslintJson } from './lib/create-eslint-configuration';
 import type { AddLintingGeneratorSchema } from './schema';
+import { replaceOverridesInLintConfig } from '@nx/linter/src/generators/utils/eslint-file';
+import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
 
 export async function addLintingGenerator(
   tree: Tree,
@@ -35,11 +35,42 @@ export async function addLintingGenerator(
   });
   tasks.push(lintTask);
 
-  updateJson(
-    tree,
-    joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    (json) => extendAngularEslintJson(json, options)
-  );
+  replaceOverridesInLintConfig(tree, options.projectRoot, [
+    {
+      files: ['*.ts'],
+      extends: [
+        'plugin:@nx/angular',
+        'plugin:@angular-eslint/template/process-inline-templates',
+      ],
+      rules: {
+        '@angular-eslint/directive-selector': [
+          'error',
+          {
+            type: 'attribute',
+            prefix: camelize(options.prefix),
+            style: 'camelCase',
+          },
+        ],
+        '@angular-eslint/component-selector': [
+          'error',
+          {
+            type: 'element',
+            prefix: dasherize(options.prefix),
+            style: 'kebab-case',
+          },
+        ],
+      },
+    },
+    {
+      files: ['*.html'],
+      extends: ['plugin:@nx/angular-template'],
+      /**
+       * Having an empty rules object present makes it more obvious to the user where they would
+       * extend things from if they needed to
+       */
+      rules: {},
+    },
+  ]);
 
   if (!options.skipPackageJson) {
     const installTask = addAngularEsLintDependencies(tree);

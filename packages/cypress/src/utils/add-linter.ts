@@ -13,7 +13,6 @@ import { installedCypressVersion } from './cypress-version';
 import { eslintPluginCypressVersion } from './versions';
 import {
   addExtendsToLintConfig,
-  addOverrideToLintConfig,
   findEslintFile,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
