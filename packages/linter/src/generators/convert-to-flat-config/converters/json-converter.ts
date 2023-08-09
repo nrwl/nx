@@ -5,10 +5,18 @@ import {
   readJson,
 } from '@nx/devkit';
 import { join } from 'path';
-import { ESLint, Linter } from 'eslint';
+import { ESLint } from 'eslint';
 import * as ts from 'typescript';
 import { eslintrcVersion } from '../../../utils/versions';
-import { generateAst, generateFlatOverride, generatePluginExtendsElement, generateRequire, generateSpreadElement, mapFilePath } from '../../utils/flat-config/ast-utils';
+import {
+  createNodeList,
+  generateAst,
+  generateFlatOverride,
+  generatePluginExtendsElement,
+  generateSpreadElement,
+  mapFilePath,
+  stringifyNodeList,
+} from '../../utils/flat-config/ast-utils';
 
 /**
  * Converts an ESLint JSON config to a flat config.
@@ -176,20 +184,8 @@ export function convertEslintJsonToFlatConfig(
     exportElements,
     isFlatCompatNeeded
   );
-  const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
-  const resultFile = ts.createSourceFile(
-    join(root, destinationFile),
-    '',
-    ts.ScriptTarget.Latest,
-    true,
-    ts.ScriptKind.JS
-  );
-  const result = printer.printList(
-    ts.ListFormat.MultiLine,
-    nodeList,
-    resultFile
-  );
-  tree.write(join(root, destinationFile), result);
+  const content = stringifyNodeList(nodeList, root, destinationFile);
+  tree.write(join(root, destinationFile), content);
 
   if (isFlatCompatNeeded) {
     addDependenciesToPackageJson(
@@ -200,19 +196,6 @@ export function convertEslintJsonToFlatConfig(
       }
     );
   }
-}
-
-function updateFiles(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
-  root: string
-) {
-  if (override.files) {
-    override.files = Array.isArray(override.files)
-      ? override.files
-      : [override.files];
-    override.files = override.files.map((file) => mapFilePath(file, root));
-  }
-  return override;
 }
 
 // add parsed extends to export blocks and add import statements
@@ -235,9 +218,7 @@ function addExtends(
     .forEach((imp, index) => {
       if (imp.match(/\.eslintrc(.base)?\.json$/)) {
         const localName = index ? `baseConfig${index}` : 'baseConfig';
-        configBlocks.push(
-          generateSpreadElement(localName)
-        );
+        configBlocks.push(generateSpreadElement(localName));
         const newImport = imp.replace(
           /^(.*)\.eslintrc(.base)?\.json$/,
           '$1eslint$2.config.js'
@@ -342,11 +323,11 @@ function addPlugins(
       ),
       ...(config.processor
         ? [
-          ts.factory.createPropertyAssignment(
-            'processor',
-            ts.factory.createStringLiteral(config.processor)
-          ),
-        ]
+            ts.factory.createPropertyAssignment(
+              'processor',
+              ts.factory.createStringLiteral(config.processor)
+            ),
+          ]
         : []),
     ],
     false
@@ -366,62 +347,4 @@ function addParser(
     'parser',
     ts.factory.createIdentifier(parserName)
   );
-}
-
-const DEFAULT_FLAT_CONFIG = `
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-  recommendedConfig: js.configs.recommended,
-});
-`;
-
-function createNodeList(
-  importsMap: Map<string, string>,
-  exportElements: ts.Expression[],
-  isFlatCompatNeeded: boolean
-): ts.NodeArray<
-  ts.VariableStatement | ts.Identifier | ts.ExpressionStatement | ts.SourceFile
-> {
-  const importsList = [];
-  if (isFlatCompatNeeded) {
-    importsMap.set('@eslint/js', 'js');
-
-    importsList.push(
-      generateRequire(
-        ts.factory.createObjectBindingPattern([
-          ts.factory.createBindingElement(undefined, undefined, 'FlatCompat'),
-        ]),
-        '@eslint/eslintrc'
-      )
-    );
-  }
-
-  // generateRequire(varName, imp, ts.factory);
-  Array.from(importsMap.entries()).forEach(([imp, varName]) => {
-    importsList.push(generateRequire(varName, imp));
-  });
-
-  return ts.factory.createNodeArray([
-    // add plugin imports
-    ...importsList,
-    ts.createSourceFile(
-      '',
-      isFlatCompatNeeded ? DEFAULT_FLAT_CONFIG : '',
-      ts.ScriptTarget.Latest,
-      false,
-      ts.ScriptKind.JS
-    ),
-    // creates:
-    // module.exports = [ ... ];
-    ts.factory.createExpressionStatement(
-      ts.factory.createBinaryExpression(
-        ts.factory.createPropertyAccessExpression(
-          ts.factory.createIdentifier('module'),
-          ts.factory.createIdentifier('exports')
-        ),
-        ts.factory.createToken(ts.SyntaxKind.EqualsToken),
-        ts.factory.createArrayLiteralExpression(exportElements, true)
-      )
-    ),
-  ]);
 }

@@ -116,7 +116,9 @@ export function generateSpreadElement(name: string): ts.SpreadElement {
   return ts.factory.createSpreadElement(ts.factory.createIdentifier(name));
 }
 
-export function generatePluginExtendsElement(plugins: string[]): ts.SpreadElement {
+export function generatePluginExtendsElement(
+  plugins: string[]
+): ts.SpreadElement {
   return ts.factory.createSpreadElement(
     ts.factory.createCallExpression(
       ts.factory.createPropertyAccessExpression(
@@ -124,7 +126,7 @@ export function generatePluginExtendsElement(plugins: string[]): ts.SpreadElemen
         ts.factory.createIdentifier('extends')
       ),
       undefined,
-      plugins.map(plugin => ts.factory.createStringLiteral(plugin))
+      plugins.map((plugin) => ts.factory.createStringLiteral(plugin))
     )
   );
 }
@@ -132,7 +134,7 @@ export function generatePluginExtendsElement(plugins: string[]): ts.SpreadElemen
 /**
  * Stringifies TS nodes to file content string
  */
-export function stringifyAst(
+export function stringifyNodeList(
   nodes: ts.NodeArray<
     | ts.VariableStatement
     | ts.Identifier
@@ -244,8 +246,10 @@ export function generateFlatOverride(
   );
 }
 
-function mapFilePaths(override: Linter.ConfigOverride<Linter.RulesRecord>,
-  root: string) {
+function mapFilePaths(
+  override: Linter.ConfigOverride<Linter.RulesRecord>,
+  root: string
+) {
   if (override.files) {
     override.files = Array.isArray(override.files)
       ? override.files
@@ -256,7 +260,9 @@ function mapFilePaths(override: Linter.ConfigOverride<Linter.RulesRecord>,
     override.excludedFiles = Array.isArray(override.excludedFiles)
       ? override.excludedFiles
       : [override.excludedFiles];
-    override.excludedFiles = override.excludedFiles.map((file) => mapFilePath(file, root));
+    override.excludedFiles = override.excludedFiles.map((file) =>
+      mapFilePath(file, root)
+    );
   }
 }
 
