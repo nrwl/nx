@@ -33,7 +33,10 @@ export function ProjectNodeToolTip({
             title="Edit project.json in editor"
             onClick={openConfigCallback}
           >
-            <PencilSquareIcon className="h-5 w-5" />
+            <PencilSquareIcon
+              className="h-5 w-5"
+              data-cy="project-open-config-button"
+            />
           </button>
         ) : undefined}
       </h4>

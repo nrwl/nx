@@ -32,7 +32,7 @@ export function TaskNodeTooltip({
             title="Run Task"
             onClick={runTargetCallback}
           >
-            <PlayIcon className="h-5 w-5" />
+            <PlayIcon className="h-5 w-5" data-cy="task-run-button" />
           </button>
         ) : undefined}
       </h4>

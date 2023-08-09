@@ -45,6 +45,7 @@ export function ProjectEdgeNodeTooltip({
                     ? () => fileClickCallback(fileDep.fileName)
                     : () => {}
                 }
+                data-cy="project-edge-file-entry"
               >
                 <span className="block truncate font-normal">
                   {fileDep.fileName}

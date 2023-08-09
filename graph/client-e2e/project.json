@@ -30,6 +30,11 @@
           "cypressConfig": "graph/client-e2e/cypress-release-static.config.ts",
           "devServerTarget": "graph-client:serve-base:release-static",
           "baseUrl": "http://localhost:4205"
+        },
+        "nx-console": {
+          "cypressConfig": "graph/client-e2e/cypress-nx-console.config.ts",
+          "devServerTarget": "graph-client:serve-base:nx-console",
+          "baseUrl": "http://localhost:4202"
         }
       },
       "defaultConfiguration": "dev"
@@ -42,7 +47,8 @@
           "npx nx e2e-base e2e-graph-client --configuration dev",
           "npx nx e2e-base e2e-graph-client --configuration watch",
           "npx nx e2e-base e2e-graph-client --configuration release",
-          "npx nx e2e-base e2e-graph-client --configuration release-static"
+          "npx nx e2e-base e2e-graph-client --configuration release-static",
+          "npx nx e2e-base e2e-graph-client --configuration nx-console"
         ],
         "parallel": false
       }
@@ -54,7 +60,8 @@
         "commands": [
           "npx nx e2e-base e2e-graph-client --configuration dev",
           "npx nx e2e-base e2e-graph-client --configuration release",
-          "npx nx e2e-base e2e-graph-client --configuration release-static"
+          "npx nx e2e-base e2e-graph-client --configuration release-static",
+          "npx nx e2e-base e2e-graph-client --configuration nx-console"
         ],
         "parallel": false
       }
