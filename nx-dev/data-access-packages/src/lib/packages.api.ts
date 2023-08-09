@@ -104,12 +104,14 @@ export class PackagesApi {
           } else {
             readdirSync('../../docs/generated/devkit/' + fileName).forEach(
               (subFileName) => {
-                generateSegments(
-                  `packages/devkit/documents/${fileName}/${subFileName.replace(
-                    '.md',
-                    ''
-                  )}`,
-                  this.options.prefix
+                experiment.documents.push(
+                  generateSegments(
+                    `packages/devkit/documents/${fileName}/${subFileName.replace(
+                      '.md',
+                      ''
+                    )}`,
+                    this.options.prefix
+                  )
                 );
               }
             );
