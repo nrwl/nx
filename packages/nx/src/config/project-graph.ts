@@ -113,6 +113,7 @@ export interface ProjectGraphDependency {
 
 /**
  * Additional information to be used to process a project graph
+ * @deprecated The {@link ProjectGraphProcessor} is deprecated. This will be removed in Nx 18.
  */
 export interface ProjectGraphProcessorContext {
   /**
@@ -138,7 +139,7 @@ export interface ProjectGraphProcessorContext {
 
 /**
  * A function that produces an updated ProjectGraph
- * @deprecated(v18) Use `buildProjectDependencies` and `buildProjectNodes` instead.
+ * @deprecated Use {@link CreateNodes} and {@link CreateDependencies} instead. This will be removed in Nx 18.
  */
 export type ProjectGraphProcessor = (
   currentGraph: ProjectGraph,

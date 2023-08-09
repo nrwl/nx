@@ -23,6 +23,8 @@ It only uses language primitives and immutable objects
 
 ### Interfaces
 
+- [CreateDependenciesContext](../../devkit/documents/CreateDependenciesContext)
+- [CreateNodesContext](../../devkit/documents/CreateNodesContext)
 - [DefaultTasksRunnerOptions](../../devkit/documents/DefaultTasksRunnerOptions)
 - [ExecutorContext](../../devkit/documents/ExecutorContext)
 - [ExecutorsJson](../../devkit/documents/ExecutorsJson)
@@ -64,6 +66,7 @@ It only uses language primitives and immutable objects
 - [AdditionalSharedConfig](../../devkit/documents/AdditionalSharedConfig)
 - [CreateDependencies](../../devkit/documents/CreateDependencies)
 - [CreateNodes](../../devkit/documents/CreateNodes)
+- [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 - [CustomHasher](../../devkit/documents/CustomHasher)
 - [Executor](../../devkit/documents/Executor)
 - [Generator](../../devkit/documents/Generator)

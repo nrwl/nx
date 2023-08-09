@@ -1,6 +1,8 @@
 # Class: ProjectGraphBuilder
 
-@deprecated(v18): General project graph processors are deprecated. Replace usage with a plugin that utilizes `projectConfigurationsConstructor` and `projectDependencyLocator`.
+**`Deprecated`**
+
+The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/documents/CreateNodes) and/or a [CreateDependencies](../../devkit/documents/CreateDependencies) instead. This will be removed in Nx 18.
 
 ## Hierarchy
 

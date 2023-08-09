@@ -199,7 +199,7 @@ export class ProjectDependencyBuilder {
 }
 
 /**
- * @deprecated(v18): General project graph processors are deprecated. Replace usage with a plugin that utilizes `projectConfigurationsConstructor` and `projectDependencyLocator`.
+ * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 18.
  */
 export class ProjectGraphBuilder extends ProjectDependencyBuilder {
   // TODO(FrozenPandaz): make this private

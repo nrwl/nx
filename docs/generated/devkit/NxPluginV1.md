@@ -2,13 +2,15 @@
 
 Ƭ **NxPluginV1**: `Object`
 
-@deprecated(v18) Use v2 plugins w/ buildProjectNodes and buildProjectDependencies instead.
+**`Deprecated`**
+
+Use [NxPluginV2](../../devkit/documents/NxPluginV2) instead. This will be removed in Nx 18
 
 #### Type declaration
 
-| Name                      | Type                                                                            | Description                                                                                                                                |
-| :------------------------ | :------------------------------------------------------------------------------ | :----------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                    | `string`                                                                        | -                                                                                                                                          |
-| `processProjectGraph?`    | `ProjectGraphProcessor`                                                         | @deprecated(v18) Use buildProjectNodes and buildProjectDependencies instead.                                                               |
-| `projectFilePatterns?`    | `string`[]                                                                      | A glob pattern to search for non-standard project files. @example: ["*.csproj", "pom.xml"] @deprecated(v18) Use buildProjectNodes instead. |
-| `registerProjectTargets?` | [`ProjectTargetConfigurator`](../../devkit/documents/ProjectTargetConfigurator) | @deprecated(v18) Add targets to the nodes inside of buildProjectNodes instead.                                                             |
+| Name                      | Type                                                                            | Description                                                                                                                                                                       |
+| :------------------------ | :------------------------------------------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                    | `string`                                                                        | -                                                                                                                                                                                 |
+| `processProjectGraph?`    | `ProjectGraphProcessor`                                                         | **`Deprecated`** Use [CreateNodes](../../devkit/documents/CreateNodes) and [CreateDependencies](../../devkit/documents/CreateDependencies) instead. This will be removed in Nx 18 |
+| `projectFilePatterns?`    | `string`[]                                                                      | A glob pattern to search for non-standard project files. @example: ["*.csproj", "pom.xml"] **`Deprecated`** Use buildProjectNodes instead. This will be removed in Nx 18          |
+| `registerProjectTargets?` | [`ProjectTargetConfigurator`](../../devkit/documents/ProjectTargetConfigurator) | **`Deprecated`** Add targets to the projects inside of [CreateNodes](../../devkit/documents/CreateNodes) instead. This will be removed in Nx 18                                   |

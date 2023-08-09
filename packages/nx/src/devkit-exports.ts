@@ -52,8 +52,11 @@ export type {
   NxPluginV1,
   NxPluginV2,
   ProjectTargetConfigurator,
-  CreateDependencies,
   CreateNodes,
+  CreateNodesFunction,
+  CreateNodesContext,
+  CreateDependencies,
+  CreateDependenciesContext,
 } from './utils/nx-plugin';
 
 /**

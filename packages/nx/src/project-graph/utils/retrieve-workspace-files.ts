@@ -44,7 +44,7 @@ export async function retrieveWorkspaceFiles(
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
   );
-  let globs = await configurationGlobs(workspaceRoot, plugins);
+  let globs = configurationGlobs(workspaceRoot, plugins);
   performance.mark('native-file-deps:end');
   performance.measure(
     'native-file-deps',
@@ -106,7 +106,7 @@ export async function retrieveProjectConfigurations(
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
   );
-  const globs = await configurationGlobs(workspaceRoot, plugins);
+  const globs = configurationGlobs(workspaceRoot, plugins);
   return getProjectConfigurations(workspaceRoot, globs, (configs: string[]) => {
     const projectConfigurations = createProjectConfigurations(
       workspaceRoot,

@@ -229,7 +229,7 @@ async function updateProjectGraphWithPlugins(
         // output.warn({
         //   title: `${plugin.name} is a v1 plugin.`,
         //   bodyLines: [
-        //     'Nx has recently released a v2 model for project graph plugins. The `processProjectGraph` method is deprecated. Plugins should use some combination of `projectConfigurationsConstructors` and `projectDependencyLocator` instead.',
+        //     'Nx has recently released a v2 model for project graph plugins. The `processProjectGraph` method is deprecated. Plugins should use some combination of `createNodes` and `createDependencies` instead.',
         //   ],
         // });
         graph = await plugin.processProjectGraph(graph, context);

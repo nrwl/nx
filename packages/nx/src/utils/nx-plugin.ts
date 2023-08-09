@@ -38,22 +38,39 @@ import { NxPluginV1 } from './nx-plugin.deprecated';
 import { ProjectGraphDependencyWithFile } from '../project-graph/project-graph-builder';
 import { combineGlobPatterns } from './globs';
 
+/**
+ * Context for {@link CreateNodesFunction}
+ */
+export interface CreateNodesContext {
+  readonly projectsConfigurations: Record<string, ProjectConfiguration>;
+  readonly nxJsonConfiguration: NxJsonConfiguration;
+  readonly workspaceRoot: string;
+}
+
+/**
+ * A function which parses a configuration file into a set of nodes.
+ * Used for creating nodes for the {@link ProjectGraph}
+ */
+export type CreateNodesFunction = (
+  projectConfigurationFile: string,
+  context: CreateNodesContext
+) => {
+  projects?: Record<string, ProjectConfiguration>;
+  externalNodes?: Record<string, ProjectGraphExternalNode>;
+};
+
+/**
+ * A pair of file patterns and {@link CreateNodesFunction}
+ */
 export type CreateNodes = [
   projectFilePattern: string,
-  constructorMethod: (
-    projectConfigurationFile: string,
-    context: {
-      readonly projectsConfigurations: Record<string, ProjectConfiguration>;
-      readonly nxJsonConfiguration: NxJsonConfiguration;
-      readonly workspaceRoot: string;
-    }
-  ) => {
-    projects?: Record<string, ProjectConfiguration>;
-    externalNodes?: Record<string, ProjectGraphExternalNode>;
-  }
+  createNodesFunction: CreateNodesFunction
 ];
 
-export type CreateDependencies = (context: {
+/**
+ * Context for {@link CreateDependencies}
+ */
+export interface CreateDependenciesContext {
   /**
    * The current project graph,
    */
@@ -78,10 +95,20 @@ export type CreateDependencies = (context: {
    * Files changes since last invocation
    */
   readonly filesToProcess: ProjectFileMap;
-}) =>
+}
+
+/**
+ * A function which parses files in the workspace to create dependencies in the {@link ProjectGraph}
+ */
+export type CreateDependencies = (
+  context: CreateDependenciesContext
+) =>
   | ProjectGraphDependencyWithFile[]
   | Promise<ProjectGraphDependencyWithFile[]>;
 
+/**
+ * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}
+ */
 export type NxPluginV2 = {
   name: string;
 
@@ -92,6 +119,9 @@ export type NxPluginV2 = {
   createNodes?: CreateNodes;
 
   // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
+  /**
+   * Provides a function to analyze files to create dependencies for the {@link ProjectGraph}
+   */
   createDependencies?: CreateDependencies;
 };
 
@@ -255,10 +285,7 @@ function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
 }
 
 export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
-  return (
-    'projectConfigurationsConstructor' in plugin ||
-    'projectDependencyLocator' in plugin
-  );
+  return 'createNodes' in plugin || 'createDependencies' in plugin;
 }
 
 export function isNxPluginV1(plugin: NxPlugin): plugin is NxPluginV1 {

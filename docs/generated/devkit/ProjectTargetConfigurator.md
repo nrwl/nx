@@ -6,7 +6,9 @@
 
 ▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
 
-@deprecated(v18) Add targets to the nodes when building them instead.
+**`Deprecated`**
+
+Add targets to the projects in a [CreateNodes](../../devkit/documents/CreateNodes) function instead. This will be removed in Nx 18
 
 ##### Parameters
 
