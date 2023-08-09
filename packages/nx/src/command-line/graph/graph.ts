@@ -345,7 +345,7 @@ export async function generateGraph(
 
       const taskGraphClientResponse = await createTaskGraphClientResponse();
       const taskInputsReponse = await createExpandedTaskInputResponse(
-        taskGraphClientResponse.taskGraphs,
+        taskGraphClientResponse,
         depGraphClientResponse
       );
 
@@ -716,39 +716,31 @@ async function createTaskGraphClientResponse(
 }
 
 async function createExpandedTaskInputResponse(
-  taskGraphs: Record<string, TaskGraph>,
+  taskGraphClientResponse: TaskGraphClientResponse,
   depGraphClientResponse: ProjectGraphClientResponse
 ): Promise<ExpandedTaskInputsReponse> {
-  performance.mark('task input generation:start');
+  performance.mark('task input static generation:start');
 
   const allWorkspaceFiles = await allFileData();
   const response: Record<string, Record<string, string[]>> = {};
 
-  const projectInputCache = new Map();
-
-  Object.entries(taskGraphs).forEach(([key, taskGraph]) => {
-    const task = taskGraph.tasks[key];
-
-    if (!task) {
-      return;
-    }
+  Object.entries(taskGraphClientResponse.plans).forEach(([key, inputs]) => {
     const [project] = key.split(':');
 
     const expandedInputs = expandInputs(
-      task.inputs,
+      inputs,
       depGraphClientResponse.projects.find((p) => p.name === project),
       allWorkspaceFiles,
-      projectInputCache,
       depGraphClientResponse
     );
 
     response[key] = expandedInputs;
   });
-  performance.mark('task input generation:end');
-  const perf = performance.measure(
-    'task input generation',
-    'task input generation:start',
-    'task input generation:end'
+  performance.mark('task input static generation:end');
+  performance.measure(
+    'task input static generation',
+    'task input static generation:start',
+    'task input static generation:end'
   );
   return response;
 }
@@ -842,17 +834,17 @@ async function getExpandedTaskInputs(
   taskId: string
 ): Promise<Record<string, string[]>> {
   const [project, target] = taskId.split(':');
-  const taskGraphs = await createTaskGraphClientResponse(false);
+  const taskGraphResponse = await createTaskGraphClientResponse(false);
 
   const allWorkspaceFiles = await allFileData();
 
-  const taskGraph = taskGraphs.taskGraphs[taskId];
-  const task = taskGraph.tasks[taskId];
-  if (task.inputs) {
+  const inputs = taskGraphResponse.plans[taskId];
+  if (inputs) {
     return expandInputs(
-      task.inputs,
+      inputs,
       currentDepGraphClientResponse.projects.find((p) => p.name === project),
-      allWorkspaceFiles
+      allWorkspaceFiles,
+      currentDepGraphClientResponse
     );
   }
   return {};
@@ -862,8 +854,7 @@ function expandInputs(
   inputs: string[],
   project: ProjectGraphProjectNode,
   allWorkspaceFiles: FileData[],
-  projectInputCache: Map<string, Record<string, string[]>> = new Map(),
-  depGraphClientResponse = currentDepGraphClientResponse
+  depGraphClientResponse: ProjectGraphClientResponse
 ): Record<string, string[]> {
   const projectNames = depGraphClientResponse.projects.map((p) => p.name);
 
@@ -933,9 +924,6 @@ function expandInputs(
 
   const projectRootsExpanded = projectRootInputs
     .map((input) => {
-      if (projectInputCache.has(input)) {
-        return projectInputCache.get(input);
-      }
       const fileSetProjectName = input.split(':')[0];
       const fileSetProject = depGraphClientResponse.projects.find(
         (p) => p.name === fileSetProjectName
@@ -950,7 +938,6 @@ function expandInputs(
         ).map((f) => f.file),
       };
 
-      projectInputCache.set(input, projectInputExpanded);
       return projectInputExpanded;
     })
     .reduce((curr, acc) => {
