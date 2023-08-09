@@ -12,6 +12,7 @@ import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
+  addOverrideToLintConfig,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
 export async function addLinting(
@@ -31,21 +32,38 @@ export async function addLinting(
   });
 
   if (options.linter === Linter.EsLint) {
-    addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+    addExtendsToLintConfig(
+      host,
+      options.appProjectRoot,
+      'plugin:@nx/react-typescript'
+    );
+    addExtendsToLintConfig(host, options.appProjectRoot, 'next');
+    addExtendsToLintConfig(
+      host,
+      options.appProjectRoot,
+      'next/core-web-vitals'
+    );
     addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
+
+    // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
+    // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
+    addOverrideToLintConfig(host, options.appProjectRoot, {
+      files: ['*.*'],
+      rules: {
+        '@next/next/no-html-link-for-pages': 'off',
+      },
+    });
+    addOverrideToLintConfig(host, options.appProjectRoot, {
+      files: ['*.spec.ts', '*.spec.tsx', '*.spec.js', '*.spec.jsx'],
+      env: {
+        jest: true,
+      },
+    });
 
     updateJson(
       host,
       joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
       (json) => {
-        // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
-        // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
-
-        json.rules = {
-          '@next/next/no-html-link-for-pages': 'off',
-          ...json.rules,
-        };
-
         // Find the override that handles both TS and JS files.
         const commonOverride = json.overrides?.find((o) =>
           ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) =>
@@ -53,12 +71,6 @@ export async function addLinting(
           )
         );
         if (commonOverride) {
-          // Only set parserOptions.project if it already exists (defined by options.setParserOptionsProject)
-          if (commonOverride.parserOptions?.project) {
-            commonOverride.parserOptions.project = [
-              `${options.appProjectRoot}/tsconfig(.*)?.json`,
-            ];
-          }
           // Configure custom pages directory for next rule
           if (commonOverride.rules) {
             commonOverride.rules = {
@@ -70,24 +82,6 @@ export async function addLinting(
             };
           }
         }
-
-        json.extends ??= [];
-        if (typeof json.extends === 'string') {
-          json.extends = [json.extends];
-        }
-        // add next.js configuration
-        json.extends.unshift(...['next', 'next/core-web-vitals']);
-        // remove nx/react plugin, as it conflicts with the next.js one
-        json.extends = json.extends.filter(
-          (name) =>
-            name !== 'plugin:@nx/react' && name !== 'plugin:@nrwl/nx/react'
-        );
-
-        json.extends.unshift('plugin:@nx/react-typescript');
-        if (!json.env) {
-          json.env = {};
-        }
-        json.env.jest = true;
 
         return json;
       }

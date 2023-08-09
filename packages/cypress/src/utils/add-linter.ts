@@ -13,7 +13,9 @@ import { installedCypressVersion } from './cypress-version';
 import { eslintPluginCypressVersion } from './versions';
 import {
   addExtendsToLintConfig,
+  addOverrideToLintConfig,
   findEslintFile,
+  replaceOverridesInLintConfig,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
 export interface CyLinterOptions {
@@ -83,54 +85,50 @@ export async function addLinterToCyProject(
     projectConfig.root,
     'plugin:cypress/recommended'
   );
-  updateJson(
-    tree,
-    joinPathFragments(projectConfig.root, '.eslintrc.json'),
-    (json) => {
-      json.overrides ??= [];
-      const globals = options.rootProject ? [javaScriptOverride] : [];
-      const override = {
-        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-        parserOptions: !options.setParserOptionsProject
-          ? undefined
-          : {
-              project: `${projectConfig.root}/tsconfig.*?.json`,
-            },
-        rules: {},
-      };
-      const cyFiles = [
-        {
-          ...override,
-          files: [
-            '*.cy.{ts,js,tsx,jsx}',
-            `${options.cypressDir}/**/*.{ts,js,tsx,jsx}`,
-          ],
-        },
-      ];
-      if (options.overwriteExisting) {
-        json.overrides = [...globals, override];
-      } else {
-        json.overrides.push(...globals);
-        json.overrides.push(...cyFiles);
-      }
+  const overrides = [];
+  const cyVersion = installedCypressVersion();
+  if (cyVersion && cyVersion < 7) {
+    /**
+     * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
+     * That however leads to issues with the CommonJS Cypress plugin file.
+     */
+    overrides.push({
+      files: [`${options.cypressDir}/plugins/index.js`],
+      rules: {
+        '@typescript-eslint/no-var-requires': 'off',
+        'no-undef': 'off',
+      },
+    });
+  }
 
-      const cyVersion = installedCypressVersion();
-      if (cyVersion && cyVersion < 7) {
-        /**
-         * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
-         * That however leads to issues with the CommonJS Cypress plugin file.
-         */
-        json.overrides.push({
-          files: [`${options.cypressDir}/plugins/index.js`],
-          rules: {
-            '@typescript-eslint/no-var-requires': 'off',
-            'no-undef': 'off',
+  if (options.overwriteExisting) {
+    overrides.unshift({
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      parserOptions: !options.setParserOptionsProject
+        ? undefined
+        : {
+            project: `${projectConfig.root}/tsconfig.*?.json`,
           },
-        });
-      }
-      return json;
-    }
-  );
+      rules: {},
+    });
+    replaceOverridesInLintConfig(tree, projectConfig.root, overrides);
+  } else {
+    overrides.unshift({
+      files: [
+        '*.cy.{ts,js,tsx,jsx}',
+        `${options.cypressDir}/**/*.{ts,js,tsx,jsx}`,
+      ],
+      parserOptions: !options.setParserOptionsProject
+        ? undefined
+        : {
+            project: `${projectConfig.root}/tsconfig.*?.json`,
+          },
+      rules: {},
+    });
+    overrides.forEach((override) =>
+      addOverrideToLintConfig(tree, projectConfig.root, override)
+    );
+  }
 
   return runTasksInSerial(...tasks);
 }
