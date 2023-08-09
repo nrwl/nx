@@ -11,6 +11,11 @@ import { Linter, lintProjectGenerator } from '@nx/linter';
 import { javaScriptOverride } from '@nx/linter/src/generators/init/global-eslint-config';
 import { installedCypressVersion } from './cypress-version';
 import { eslintPluginCypressVersion } from './versions';
+import {
+  addExtendsToLintConfig,
+  addOverrideToLintConfig,
+  findEslintFile,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 export interface CyLinterOptions {
   project: string;
@@ -42,7 +47,8 @@ export async function addLinterToCyProject(
   const tasks: GeneratorCallback[] = [];
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  if (!tree.exists(joinPathFragments(projectConfig.root, '.eslintrc.json'))) {
+  const eslintFile = findEslintFile(tree, projectConfig.root);
+  if (!eslintFile) {
     tasks.push(
       await lintProjectGenerator(tree, {
         project: options.project,
@@ -73,16 +79,15 @@ export async function addLinterToCyProject(
       : () => {}
   );
 
+  addExtendsToLintConfig(
+    tree,
+    projectConfig.root,
+    'plugin:cypress/recommended'
+  );
   updateJson(
     tree,
     joinPathFragments(projectConfig.root, '.eslintrc.json'),
     (json) => {
-      if (options.rootProject) {
-        json.plugins = ['@nx'];
-        json.extends = ['plugin:cypress/recommended'];
-      } else {
-        json.extends = ['plugin:cypress/recommended', ...json.extends];
-      }
       json.overrides ??= [];
       const globals = options.rootProject ? [javaScriptOverride] : [];
       const override = {
