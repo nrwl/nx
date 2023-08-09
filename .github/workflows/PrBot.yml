@@ -24,8 +24,9 @@ jobs:
              echo "----------Authenticating Snyk-----------"
              snyk auth ${{ secrets.SNYK_TOKEN }}
              echo "----------Snyk Scanning-----------"
-             #snyk test --all-projects -d
-             snyk test --all-projects --strict-out-of-sync=false --yarn-workspaces --detection-depth=5 -d
+             snyk test --all-projects  -d
+             snyk test --yarn-workspaces --detection-depth=6 -d
+             snyk test --file=build.gradle --all-sub-projects -d
             
   TruffleHog_scanning:
     permissions: write-all
