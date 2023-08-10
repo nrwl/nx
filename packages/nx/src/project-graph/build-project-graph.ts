@@ -245,9 +245,9 @@ async function updateProjectGraphWithPlugins(
   }
   for (const plugin of plugins) {
     try {
-      if (isNxPluginV2(plugin)) {
+      if (isNxPluginV2(plugin) && plugin.createDependencies) {
         const builder = new ProjectGraphBuilder(graph, context.fileMap);
-        const newDependencies = await plugin.createDependencies?.({
+        const newDependencies = await plugin.createDependencies({
           ...context,
           graph,
         });
