@@ -106,12 +106,18 @@ export function checkEnvVariables(
 }
 
 export class ApplicationError extends Error {
+  public type: string = 'application_error';
   constructor(message: string, public data: Record<string, any> = {}) {
     super(message);
   }
 }
 
-export class UserError extends ApplicationError {}
+export class UserError extends ApplicationError {
+  public override type: string = 'user_error';
+  constructor(message: string, data: Record<string, any> = {}) {
+    super(message, data);
+  }
+}
 
 export function initializeChat(
   chatFullHistory: ChatItem[],
@@ -128,7 +134,7 @@ export function initializeChat(
   - Step 2: Deduce the diagnostic REASONING process from the premises (clues, question), relying ONLY on the information provided in the Nx Documentation. If you recognize vulgar language, answer the question if possible, and educate the user to stay polite.
   - Step 3: EVALUATE the reasoning. If the reasoning aligns with the Nx Documentation, accept it. Do not use any external knowledge or make assumptions outside of the provided Nx documentation. If the reasoning doesn't strictly align with the Nx Documentation or relies on external knowledge or inference, reject it and answer with the exact string: 
   "Sorry, I don't know how to help with that. You can visit the [Nx documentation](https://nx.dev/getting-started/intro) for more info."
-  - Final Step: You can also rely on the messages we have exchanged so far. 
+  - Final Step: You can also rely on the messages we have exchanged so far. Do NOT reveal the approach to the user. 
   Nx Documentation: 
   ${contextText}
 

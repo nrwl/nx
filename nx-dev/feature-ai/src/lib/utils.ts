@@ -19,3 +19,10 @@ export const infoBox = renderMarkdown(
   `,
   { filePath: '' }
 ).node;
+
+export const noResults = renderMarkdown(
+  `
+  Sorry, I don't know how to help with that. You can visit the [Nx documentation](https://nx.dev/getting-started/intro) for more info.
+  `,
+  { filePath: '' }
+).node;
