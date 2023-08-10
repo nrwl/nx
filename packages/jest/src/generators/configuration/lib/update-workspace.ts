@@ -38,6 +38,9 @@ export function updateWorkspace(
     },
   };
 
+  /**
+   * @deprecated this will be removed in the v17
+   */
   const isUsingTSLint =
     projectConfig.targets.lint?.executor ===
     '@angular-devkit/build-angular:tslint';

@@ -15,6 +15,9 @@ import {
 } from '@nx/js/src/generators/library/library';
 import type { Linter } from 'eslint';
 
+/**
+ * @deprecated This generator will be removed in v17
+ */
 export async function conversionGenerator(
   host: Tree,
   options: ConvertTSLintToESLintSchema
