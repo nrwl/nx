@@ -252,14 +252,18 @@ describe('determineProjectNamesAndDirectories', () => {
           type: 'select',
           name: 'format',
           message:
-            'What project name and directory format would you like to use?',
+            'What should be the project name and where should it be generated?',
           choices: [
             {
-              message: 'lib-name @ shared (recommended)',
+              message: `Recommended:
+    Name: lib-name
+    Root: shared`,
               name: 'as-provided',
             },
             {
-              message: 'shared-lib-name @ shared/lib-name (legacy)',
+              message: `Legacy:
+    Name: shared-lib-name
+    Root: shared/lib-name`,
               name: 'derived',
             },
           ],
@@ -524,14 +528,18 @@ describe('determineProjectNamesAndDirectories', () => {
           type: 'select',
           name: 'format',
           message:
-            'What project name and directory format would you like to use?',
+            'What should be the project name and where should it be generated?',
           choices: [
             {
-              message: 'lib-name @ shared (recommended)',
+              message: `Recommended:
+    Name: lib-name
+    Root: shared`,
               name: 'as-provided',
             },
             {
-              message: 'shared-lib-name @ libs/shared/lib-name (legacy)',
+              message: `Legacy:
+    Name: shared-lib-name
+    Root: libs/shared/lib-name`,
               name: 'derived',
             },
           ],

@@ -116,7 +116,8 @@ async function determineFormat(
   return await prompt<{ format: ProjectNameDirectoryFormat }>({
     type: 'select',
     name: 'format',
-    message: 'What project name and directory format would you like to use?',
+    message:
+      'What should be the project name and where should it be generated?',
     choices: [
       {
         message: formats['as-provided'].description,
@@ -149,7 +150,9 @@ function getProjectNameDirectoryFormats(
     const nameWithoutScope = asProvidedProjectName.split('/')[1];
     return {
       'as-provided': {
-        description: `${asProvidedProjectName} @ ${asProvidedProjectDirectory} (recommended)`,
+        description: `Recommended:
+    Name: ${asProvidedProjectName}
+    Root: ${asProvidedProjectDirectory}`,
         options: {
           projectName: asProvidedProjectName,
           names: {
@@ -215,7 +218,9 @@ function getProjectNameDirectoryFormats(
 
   return {
     'as-provided': {
-      description: `${asProvidedProjectName} @ ${asProvidedProjectDirectory} (recommended)`,
+      description: `Recommended:
+    Name: ${asProvidedProjectName}
+    Root: ${asProvidedProjectDirectory}`,
       options: {
         projectName: asProvidedProjectName,
         names: {
@@ -227,7 +232,9 @@ function getProjectNameDirectoryFormats(
       },
     },
     derived: {
-      description: `${derivedProjectName} @ ${derivedProjectDirectory} (legacy)`,
+      description: `Legacy:
+    Name: ${derivedProjectName}
+    Root: ${derivedProjectDirectory}`,
       options: {
         projectName: derivedProjectName,
         names: {
