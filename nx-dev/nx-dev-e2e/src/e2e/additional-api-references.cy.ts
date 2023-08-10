@@ -47,11 +47,11 @@ describe('nx-dev: Additional API references section', () => {
       path: '/storybook/storybook-composition-setup',
     },
     {
-      title: 'Module: @nx/devkit',
+      title: '@nx/devkit',
       path: '/devkit/index',
     },
     {
-      title: 'Module: ngcli-adapter',
+      title: '@nx/devkit',
       path: '/devkit/ngcli_adapter',
     },
   ]).forEach((page) => assertTextOnPage(page.path, page.title));
