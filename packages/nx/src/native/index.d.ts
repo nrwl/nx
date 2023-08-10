@@ -19,6 +19,52 @@ export function hashArray(input: Array<string>): string
 export function hashFile(file: string): FileData | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
+export interface ExternalNodeData {
+  version: string
+  hash: string
+}
+export interface ExternalNode {
+  version: string
+  hash: string
+}
+export interface InputsInput {
+  input: string
+  dependencies?: boolean
+}
+export interface FileSetInput {
+  fileset: string
+}
+export interface RuntimeInput {
+  runtime: string
+}
+export interface EnvironmentInput {
+  env: string
+}
+export interface ExternalDependenciesInput {
+  externalDependencies: Array<string>
+}
+export interface DepsOutputsInput {
+  dependentTasksOutputFiles: string
+  transitive?: boolean
+}
+export interface ProjectsInput {
+  projects: string | Array<string>
+}
+export interface Target {
+  executor: string
+  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | ProjectsInput>
+  outputs?: Array<string>
+}
+export interface Project {
+  root: string
+  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | ProjectsInput>>
+  targets: Record<string, Target>
+}
+export interface ProjectGraph {
+  nodes: Record<string, Project>
+  dependencies: Record<string, Array<string>>
+  externalNodes: Record<string, ExternalNode>
+}
 export interface FileData {
   file: string
   hash: string
