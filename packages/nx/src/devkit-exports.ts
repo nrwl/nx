@@ -157,8 +157,11 @@ export { DependencyType } from './config/project-graph';
  * @category Project Graph
  */
 export {
+  /**
+   * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 18.
+   */
   ProjectGraphBuilder,
-  validateDependency as validateNewDependency,
+  validateDependency,
 } from './project-graph/project-graph-builder';
 
 /**

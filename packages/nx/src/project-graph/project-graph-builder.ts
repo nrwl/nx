@@ -13,225 +13,21 @@ import {
 } from '../config/project-graph';
 import { getProjectFileMap } from './build-project-graph';
 
-export class ProjectDependencyBuilder {
+export class ProjectGraphBuilder {
   protected readonly removedEdges: { [source: string]: Set<string> } = {};
-
-  constructor(
-    private readonly _graph: ProjectGraph,
-    protected readonly fileMap: ProjectFileMap = getProjectFileMap()
-      .projectFileMap
-  ) {}
-
-  getUpdatedProjectGraph(): ProjectGraph {
-    for (const sourceProject of Object.keys(this._graph.nodes)) {
-      const alreadySetTargetProjects =
-        this.calculateAlreadySetTargetDeps(sourceProject);
-      this._graph.dependencies[sourceProject] = [
-        ...alreadySetTargetProjects.values(),
-      ].flatMap((depsMap) => [...depsMap.values()]);
-
-      const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
-      for (const [targetProject, types] of fileDeps.entries()) {
-        // only add known nodes
-        if (
-          !this._graph.nodes[targetProject] &&
-          !this._graph.externalNodes[targetProject]
-        ) {
-          continue;
-        }
-        for (const type of types.values()) {
-          if (
-            !alreadySetTargetProjects.has(targetProject) ||
-            !alreadySetTargetProjects.get(targetProject).has(type)
-          ) {
-            if (
-              !this.removedEdges[sourceProject] ||
-              !this.removedEdges[sourceProject].has(targetProject)
-            ) {
-              this._graph.dependencies[sourceProject].push({
-                source: sourceProject,
-                target: targetProject,
-                type,
-              });
-            }
-          }
-        }
-      }
-    }
-    return this._graph;
-  }
-
-  private calculateTargetDepsFromFiles(
-    sourceProject: string
-  ): Map<string, Set<DependencyType | string>> {
-    const fileDeps = new Map<string, Set<DependencyType | string>>();
-    const files = this.fileMap?.[sourceProject] || [];
-    if (!files) {
-      return fileDeps;
-    }
-    for (let f of files) {
-      if (f.deps) {
-        for (let d of f.deps) {
-          const target = fileDataDepTarget(d);
-          if (!fileDeps.has(target)) {
-            fileDeps.set(target, new Set([fileDataDepType(d)]));
-          } else {
-            fileDeps.get(target).add(fileDataDepType(d));
-          }
-        }
-      }
-    }
-    return fileDeps;
-  }
-
-  private calculateAlreadySetTargetDeps(
-    sourceProject: string
-  ): Map<string, Map<DependencyType | string, ProjectGraphDependency>> {
-    const alreadySetTargetProjects = new Map<
-      string,
-      Map<DependencyType | string, ProjectGraphDependency>
-    >();
-    if (this._graph.dependencies[sourceProject]) {
-      const removed = this.removedEdges[sourceProject];
-      for (const d of this._graph.dependencies[sourceProject]) {
-        // static and dynamic dependencies of internal projects
-        // will be rebuilt based on the file dependencies
-        // we only need to keep the implicit dependencies
-        if (d.type === DependencyType.implicit && !removed?.has(d.target)) {
-          if (!alreadySetTargetProjects.has(d.target)) {
-            alreadySetTargetProjects.set(d.target, new Map([[d.type, d]]));
-          } else {
-            alreadySetTargetProjects.get(d.target).set(d.type, d);
-          }
-        }
-      }
-    }
-    return alreadySetTargetProjects;
-  }
-
-  public addDependency(
-    source: string,
-    target: string,
-    type: DependencyType,
-    sourceFile?: string
-  ): void {
-    if (source === target) {
-      return;
-    }
-
-    validateDependency(this._graph, {
-      source,
-      target,
-      dependencyType: type,
-      sourceFile,
-    });
-
-    if (!this._graph.dependencies[source]) {
-      this._graph.dependencies[source] = [];
-    }
-    const isDuplicate = !!this._graph.dependencies[source].find(
-      (d) => d.target === target && d.type === type
-    );
-
-    if (sourceFile) {
-      const sourceProject = this._graph.nodes[source];
-      if (!sourceProject) {
-        throw new Error(
-          `Source project is not a project node: ${sourceProject}`
-        );
-      }
-      const fileData = (this.fileMap[source] || []).find(
-        (f) => f.file === sourceFile
-      );
-      if (!fileData) {
-        throw new Error(
-          `Source project ${source} does not have a file: ${sourceFile}`
-        );
-      }
-
-      if (!fileData.deps) {
-        fileData.deps = [];
-      }
-      if (
-        !fileData.deps.find(
-          (t) => fileDataDepTarget(t) === target && fileDataDepType(t) === type
-        )
-      ) {
-        const dep: string | [string, string] =
-          type === 'static' ? target : [target, type];
-        fileData.deps.push(dep);
-      }
-    } else if (!isDuplicate) {
-      // only add to dependencies section if the source file is not specified
-      // and not already added
-      this._graph.dependencies[source].push({
-        source: source,
-        target: target,
-        type,
-      });
-    }
-  }
-
-  /**
-   * Removes a dependency from source project to target project
-   */
-  removeDependency(sourceProjectName: string, targetProjectName: string): void {
-    if (sourceProjectName === targetProjectName) {
-      return;
-    }
-    if (!this._graph.nodes[sourceProjectName]) {
-      throw new Error(`Source project does not exist: ${sourceProjectName}`);
-    }
-    if (
-      !this._graph.nodes[targetProjectName] &&
-      !this._graph.externalNodes[targetProjectName]
-    ) {
-      throw new Error(`Target project does not exist: ${targetProjectName}`);
-    }
-    // this._graph.dependencies[sourceProjectName] = this._graph.dependencies[
-    //   sourceProjectName
-    // ].filter((d) => d.target !== targetProjectName);
-    if (!this.removedEdges[sourceProjectName]) {
-      this.removedEdges[sourceProjectName] = new Set<string>();
-    }
-    this.removedEdges[sourceProjectName].add(targetProjectName);
-  }
-}
-
-/**
- * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 18.
- */
-export class ProjectGraphBuilder extends ProjectDependencyBuilder {
   // TODO(FrozenPandaz): make this private
-  readonly graph: ProjectGraph;
-
-  constructor(g?: ProjectGraph, fileMap?: ProjectFileMap) {
-    const graph = g
-      ? g
-      : {
-          nodes: {},
-          externalNodes: {},
-          dependencies: {},
-        };
-    const normalizedFileMap = g
+  constructor(
+    public readonly graph?: ProjectGraph,
+    private readonly fileMap?: ProjectFileMap
+  ) {
+    this.graph = graph ?? {
+      nodes: {},
+      externalNodes: {},
+      dependencies: {},
+    };
+    this.fileMap = graph
       ? fileMap ?? getProjectFileMap().projectFileMap
       : fileMap ?? {};
-    super(graph, normalizedFileMap);
-
-    //TODO(@FrozenPandaz) Remove whenever we make this private.
-    this.graph = graph;
-  }
-
-  /**
-   * Merges the nodes and dependencies of p into the built project graph.
-   */
-  mergeProjectGraph(p: ProjectGraph) {
-    this.graph.nodes = { ...this.graph.nodes, ...p.nodes };
-    this.graph.externalNodes = {
-      ...this.graph.externalNodes,
-      ...p.externalNodes,
-    };
-    this.graph.dependencies = { ...this.graph.dependencies, ...p.dependencies };
   }
 
   /**
@@ -286,6 +82,94 @@ export class ProjectGraphBuilder extends ProjectDependencyBuilder {
       );
     }
     this.graph.externalNodes[node.name] = node;
+  }
+
+  public addDependency(
+    source: string,
+    target: string,
+    type: DependencyType,
+    sourceFile?: string
+  ): void {
+    if (source === target) {
+      return;
+    }
+
+    validateDependency(this.graph, {
+      source,
+      target,
+      dependencyType: type,
+      sourceFile,
+    });
+
+    if (!this.graph.dependencies[source]) {
+      this.graph.dependencies[source] = [];
+    }
+    const isDuplicate = !!this.graph.dependencies[source].find(
+      (d) => d.target === target && d.type === type
+    );
+
+    if (sourceFile) {
+      const sourceProject = this.graph.nodes[source];
+      if (!sourceProject) {
+        throw new Error(
+          `Source project is not a project node: ${sourceProject}`
+        );
+      }
+      const fileData = (this.fileMap[source] || []).find(
+        (f) => f.file === sourceFile
+      );
+      if (!fileData) {
+        throw new Error(
+          `Source project ${source} does not have a file: ${sourceFile}`
+        );
+      }
+
+      if (!fileData.deps) {
+        fileData.deps = [];
+      }
+      if (
+        !fileData.deps.find(
+          (t) => fileDataDepTarget(t) === target && fileDataDepType(t) === type
+        )
+      ) {
+        const dep: string | [string, string] =
+          type === 'static' ? target : [target, type];
+        fileData.deps.push(dep);
+      }
+    } else if (!isDuplicate) {
+      // only add to dependencies section if the source file is not specified
+      // and not already added
+      this.graph.dependencies[source].push({
+        source: source,
+        target: target,
+        type,
+      });
+    }
+  }
+
+  /**
+   * Removes a dependency from source project to target project
+   */
+  removeDependency(sourceProjectName: string, targetProjectName: string): void {
+    if (sourceProjectName === targetProjectName) {
+      return;
+    }
+    if (!this.graph.nodes[sourceProjectName]) {
+      throw new Error(`Source project does not exist: ${sourceProjectName}`);
+    }
+    if (
+      !this.graph.nodes[targetProjectName] &&
+      !this.graph.externalNodes[targetProjectName]
+    ) {
+      throw new Error(`Target project does not exist: ${targetProjectName}`);
+    }
+    // this._graph.dependencies[sourceProjectName] = this._graph.dependencies[
+    //   sourceProjectName
+    // ].filter((d) => d.target !== targetProjectName);
+    if (!this.removedEdges[sourceProjectName]) {
+      this.removedEdges[sourceProjectName] = new Set<string>();
+    }
+    this.removedEdges[sourceProjectName].add(targetProjectName);
   }
 
   /**
@@ -355,6 +239,105 @@ export class ProjectGraphBuilder extends ProjectDependencyBuilder {
    */
   setVersion(version: string): void {
     this.graph.version = version;
+  }
+
+  /**
+   * Merges the nodes and dependencies of p into the built project graph.
+   */
+  mergeProjectGraph(p: ProjectGraph) {
+    this.graph.nodes = { ...this.graph.nodes, ...p.nodes };
+    this.graph.externalNodes = {
+      ...this.graph.externalNodes,
+      ...p.externalNodes,
+    };
+    this.graph.dependencies = { ...this.graph.dependencies, ...p.dependencies };
+  }
+
+  getUpdatedProjectGraph(): ProjectGraph {
+    for (const sourceProject of Object.keys(this.graph.nodes)) {
+      const alreadySetTargetProjects =
+        this.calculateAlreadySetTargetDeps(sourceProject);
+      this.graph.dependencies[sourceProject] = [
+        ...alreadySetTargetProjects.values(),
+      ].flatMap((depsMap) => [...depsMap.values()]);
+
+      const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
+      for (const [targetProject, types] of fileDeps.entries()) {
+        // only add known nodes
+        if (
+          !this.graph.nodes[targetProject] &&
+          !this.graph.externalNodes[targetProject]
+        ) {
+          continue;
+        }
+        for (const type of types.values()) {
+          if (
+            !alreadySetTargetProjects.has(targetProject) ||
+            !alreadySetTargetProjects.get(targetProject).has(type)
+          ) {
+            if (
+              !this.removedEdges[sourceProject] ||
+              !this.removedEdges[sourceProject].has(targetProject)
+            ) {
+              this.graph.dependencies[sourceProject].push({
+                source: sourceProject,
+                target: targetProject,
+                type,
+              });
+            }
+          }
+        }
+      }
+    }
+    return this.graph;
+  }
+
+  private calculateTargetDepsFromFiles(
+    sourceProject: string
+  ): Map<string, Set<DependencyType | string>> {
+    const fileDeps = new Map<string, Set<DependencyType | string>>();
+    const files = this.fileMap?.[sourceProject] || [];
+    if (!files) {
+      return fileDeps;
+    }
+    for (let f of files) {
+      if (f.deps) {
+        for (let d of f.deps) {
+          const target = fileDataDepTarget(d);
+          if (!fileDeps.has(target)) {
+            fileDeps.set(target, new Set([fileDataDepType(d)]));
+          } else {
+            fileDeps.get(target).add(fileDataDepType(d));
+          }
+        }
+      }
+    }
+    return fileDeps;
+  }
+
+  private calculateAlreadySetTargetDeps(
+    sourceProject: string
+  ): Map<string, Map<DependencyType | string, ProjectGraphDependency>> {
+    const alreadySetTargetProjects = new Map<
+      string,
+      Map<DependencyType | string, ProjectGraphDependency>
+    >();
+    if (this.graph.dependencies[sourceProject]) {
+      const removed = this.removedEdges[sourceProject];
+      for (const d of this.graph.dependencies[sourceProject]) {
+        // static and dynamic dependencies of internal projects
+        // will be rebuilt based on the file dependencies
+        // we only need to keep the implicit dependencies
+        if (d.type === DependencyType.implicit && !removed?.has(d.target)) {
+          if (!alreadySetTargetProjects.has(d.target)) {
+            alreadySetTargetProjects.set(d.target, new Map([[d.type, d]]));
+          } else {
+            alreadySetTargetProjects.get(d.target).set(d.type, d);
+          }
+        }
+      }
+    }
+    return alreadySetTargetProjects;
   }
 
   private removeDependenciesWithNode(name: string) {

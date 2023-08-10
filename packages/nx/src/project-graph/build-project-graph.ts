@@ -22,10 +22,7 @@ import {
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
-import {
-  ProjectDependencyBuilder,
-  ProjectGraphBuilder,
-} from './project-graph-builder';
+import { ProjectGraphBuilder } from './project-graph-builder';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
@@ -33,7 +30,6 @@ import {
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
-import { output } from '../utils/output';
 
 let storedProjectFileMap: ProjectFileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -224,7 +220,11 @@ async function updateProjectGraphWithPlugins(
   let graph = initProjectGraph;
   for (const plugin of plugins) {
     try {
-      if (isNxPluginV1(plugin) && plugin.processProjectGraph) {
+      if (
+        isNxPluginV1(plugin) &&
+        plugin.processProjectGraph &&
+        !plugin.createDependencies
+      ) {
         // TODO(@AgentEnder): Enable after rewriting nx-js-graph-plugin to v2
         // output.warn({
         //   title: `${plugin.name} is a v1 plugin.`,
@@ -246,7 +246,7 @@ async function updateProjectGraphWithPlugins(
   for (const plugin of plugins) {
     try {
       if (isNxPluginV2(plugin)) {
-        const builder = new ProjectDependencyBuilder(graph);
+        const builder = new ProjectGraphBuilder(graph, context.fileMap);
         const newDependencies = await plugin.createDependencies?.({
           ...context,
           graph,

@@ -290,10 +290,7 @@ export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
 }
 
 export function isNxPluginV1(plugin: NxPlugin): plugin is NxPluginV1 {
-  return (
-    ('processProjectGraph' in plugin || 'projectFilePatterns' in plugin) &&
-    !isNxPluginV2(plugin)
-  );
+  return 'processProjectGraph' in plugin || 'projectFilePatterns' in plugin;
 }
 
 export function readPluginPackageJson(
