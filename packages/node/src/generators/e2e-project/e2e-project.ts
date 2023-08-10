@@ -167,7 +167,3 @@ async function normalizeOptions(
 
 export default e2eProjectGenerator;
 export const e2eProjectSchematic = convertNxGenerator(e2eProjectGenerator);
-function isEslintConfigSupported(host: Tree) {
-  throw new Error('Function not implemented.');
-}
-
