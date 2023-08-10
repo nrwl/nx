@@ -31,13 +31,22 @@ export function normalizeExecutorSchema(
   };
 }
 
+function cacheKey(nodeModule: string, executor: string, root: string) {
+  return `${root}:${nodeModule}:${executor}`;
+}
+
+const cachedExecutorInformation = {};
+
 export function getExecutorInformation(
   nodeModule: string,
   executor: string,
   root: string
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
   try {
-    const { executorsFilePath, executorConfig, isNgCompat } = readExecutorsJson(
+    const key = cacheKey(nodeModule, executor, root);
+    if (cachedExecutorInformation[key]) return cachedExecutorInformation[key];
+
+    const { executorsFilePath, executorConfig, isNgCompat } = readExecutorJson(
       nodeModule,
       executor,
       root
@@ -65,7 +74,7 @@ export function getExecutorInformation(
         )
       : null;
 
-    return {
+    const res = {
       schema,
       implementationFactory,
       batchImplementationFactory,
@@ -73,6 +82,9 @@ export function getExecutorInformation(
       isNgCompat,
       isNxExecutor: !isNgCompat,
     };
+
+    cachedExecutorInformation[key] = res;
+    return res;
   } catch (e) {
     throw new Error(
       `Unable to resolve ${nodeModule}:${executor}.\n${e.message}`
@@ -80,7 +92,7 @@ export function getExecutorInformation(
   }
 }
 
-function readExecutorsJson(
+function readExecutorJson(
   nodeModule: string,
   executor: string,
   root: string

@@ -81,6 +81,7 @@
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
               "typescript",
+              "@nrwl/angular",
               "@angular-devkit/build-angular",
               "@angular-devkit/core",
               "@angular-devkit/architect",
