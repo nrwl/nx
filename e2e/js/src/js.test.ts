@@ -230,4 +230,55 @@ export function ${lib}Wildcard() {
     // restore nx.json
     updateFile('nx.json', () => originalNxJson);
   });
+
+  it('should generate project with name and directory as provided when --project-name-and-root-format=as-provided', async () => {
+    const lib1 = uniq('lib1');
+    runCLI(
+      `generate @nx/js:lib ${lib1} --directory=shared --bundler=tsc --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // in the directory provided (no project name appended)
+    checkFilesExist('shared/src/index.ts');
+    // check project name is as provided (no prefixed directory name)
+    expect(runCLI(`build ${lib1}`)).toContain(
+      'Done compiling TypeScript files'
+    );
+    // check tests pass
+    const testResult = await runCLIAsync(`test ${lib1}`);
+    expect(testResult.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+  }, 500_000);
+
+  it('should support generating with a scoped project name when --project-name-and-root-format=as-provided', async () => {
+    const scopedLib = uniq('@my-org/lib1');
+
+    // assert scoped project names are not supported when --project-name-and-root-format=derived
+    expect(() =>
+      runCLI(
+        `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=derived`
+      )
+    ).toThrow();
+
+    runCLI(
+      `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(
+      `${scopedLib}/src/index.ts`,
+      `${scopedLib}/src/lib/${scopedLib.split('/')[1]}.ts`
+    );
+    // check build works
+    expect(runCLI(`build ${scopedLib}`)).toContain(
+      'Done compiling TypeScript files'
+    );
+    // check tests pass
+    const testResult = await runCLIAsync(`test ${scopedLib}`);
+    expect(testResult.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+  }, 500_000);
 });

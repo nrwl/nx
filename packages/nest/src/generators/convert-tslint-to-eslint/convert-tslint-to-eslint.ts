@@ -9,10 +9,7 @@ import {
   addLintingToApplication,
   NormalizedSchema as AddLintForApplicationSchema,
 } from '@nx/node/src/generators/application/application';
-import {
-  addLint as addLintingToLibraryGenerator,
-  NormalizedSchema as AddLintForLibrarySchema,
-} from '@nx/js/src/generators/library/library';
+import { addLint as addLintingToLibraryGenerator } from '@nx/js/src/generators/library/library';
 import type { Linter } from 'eslint';
 
 /**
@@ -68,11 +65,7 @@ export async function conversionGenerator(
           projectRoot: projectConfig.root,
           js,
           setParserOptionsProject,
-          projectDirectory: '',
-          fileName: '',
-          parsedTags: [],
-          skipFormat: true,
-        } as AddLintForLibrarySchema);
+        });
       }
     },
   });
