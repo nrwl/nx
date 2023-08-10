@@ -137,9 +137,7 @@ export async function nxDevDataAccessAi(
     // Note: this is experimental. I think it should work
     // mainly because we're testing previous response + query.
     if (!pageSections || pageSections.length === 0) {
-      throw new UserError(
-        'Nothing relevant found in the Nx documentation! Please try another query.'
-      );
+      throw new UserError('No results found.', { no_results: true });
     }
 
     const tokenizer = new GPT3Tokenizer({ type: 'gpt3' });

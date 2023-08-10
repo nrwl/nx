@@ -8,7 +8,7 @@ import {
   getProcessedHistory,
   ChatItem,
 } from '@nx/nx-dev/data-access-ai';
-import { warning, infoBox } from './utils';
+import { warning, infoBox, noResults } from './utils';
 
 export function FeatureAi(): JSX.Element {
   const [chatHistory, setChatHistory] = useState<ChatItem[] | null>([]);
@@ -54,8 +54,8 @@ export function FeatureAi(): JSX.Element {
       sourcesMarkdown = aiResponse.sourcesMarkdown;
 
       setLoading(false);
-    } catch (error) {
-      setError(error as any);
+    } catch (error: any) {
+      setError(error);
       setLoading(false);
     }
     sendCustomEvent('ai_query', 'ai', 'query', undefined, {
@@ -66,9 +66,12 @@ export function FeatureAi(): JSX.Element {
       sourcesMarkdown.length === 0
         ? ''
         : `
-        {% callout type="info" title="Sources" %}
-        ${sourcesMarkdown}
-        {% /callout %}`;
+\n
+{% callout type="info" title="Sources" %}
+${sourcesMarkdown}
+{% /callout %}
+\n
+        `;
 
     setFinalResult(
       renderMarkdown(completeText + sourcesMd, { filePath: '' }).node
@@ -124,7 +127,7 @@ export function FeatureAi(): JSX.Element {
 
   function renderChatHistory(history: ChatItem[]) {
     return (
-      <div className="mx-auto bg-white p-6 rounded shadow">
+      <div className="mx-auto bg-white p-6 rounded shadow flex flex-col">
         {history.length > 30 && (
           <div>
             You've reached the maximum message history limit. Some previous
@@ -149,16 +152,26 @@ export function FeatureAi(): JSX.Element {
         ref={index === historyLength - 1 ? lastMessageRef : null}
         className={` p-2 m-2 rounded-lg ${
           chatItem.role === 'assistant' ? 'bg-blue-200' : 'bg-gray-300'
+        } ${chatItem.role === 'user' ? 'text-right' : ''} ${
+          chatItem.role === 'user' ? 'self-end' : ''
         }`}
       >
-        <strong className="text-gray-700">
-          {chatItem.role === 'user' ? 'you' : 'nx assistant'}:
-        </strong>
-        <div className="text-gray-600 mt-1">
-          {renderMarkdown(chatItem.content, { filePath: '' }).node}
-        </div>
-
+        {chatItem.role === 'assistant' && (
+          <strong className="text-gray-700">
+            nx assistant{' '}
+            <span role="img" aria-label="Narwhal">
+              🐳
+            </span>
+          </strong>
+        )}
+        {((chatItem.role === 'assistant' && !error) ||
+          chatItem.role === 'user') && (
+          <div className="text-gray-600 mt-1">
+            {renderMarkdown(chatItem.content, { filePath: '' }).node}
+          </div>
+        )}
         {chatItem.role === 'assistant' &&
+          !error &&
           chatHistory?.length &&
           (index === chatHistory.length - 1 && loading ? null : !feedbackSent[
               index
@@ -194,8 +207,12 @@ export function FeatureAi(): JSX.Element {
             </p>
           ))}
 
-        {error && !loading ? (
-          <div>There was an error: {error['message']}</div>
+        {error && !loading && chatItem.role === 'assistant' ? (
+          error['data']?.['no_results'] ? (
+            noResults
+          ) : (
+            <div>There was an error: {error['message']}</div>
+          )
         ) : null}
       </div>
     );
