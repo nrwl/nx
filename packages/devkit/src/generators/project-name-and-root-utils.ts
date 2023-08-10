@@ -191,12 +191,13 @@ function getProjectNameAndRootFormats(
     ? '.'
     : name;
   // the project name uses the directory without the layout directory
-  const derivedProjectName = options.rootProject
-    ? name
-    : derivedProjectDirectoryWithoutLayout.replace(/\//g, '-');
+  const derivedProjectName =
+    derivedProjectDirectoryWithoutLayout === '.'
+      ? name
+      : derivedProjectDirectoryWithoutLayout.replace(/\//g, '-');
   const derivedSimpleProjectName = name;
   let derivedProjectDirectory = derivedProjectDirectoryWithoutLayout;
-  if (!options.rootProject) {
+  if (derivedProjectDirectoryWithoutLayout !== '.') {
     // prepend the layout directory
     derivedProjectDirectory = joinPathFragments(
       layoutDirectory,
