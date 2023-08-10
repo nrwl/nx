@@ -180,6 +180,7 @@
       - [Add a Solid Project](/showcase/example-repos/add-solid)
       - [Add a Qwik Project](/showcase/example-repos/add-qwik)
       - [Add an Astro Project](/showcase/example-repos/add-astro)
+      - [Add a Vue Project](/showcase/example-repos/add-vue)
       - [Powering Up React Development With Nx](/showcase/example-repos/react-nx)
       - [Using Apollo GraphQL](/showcase/example-repos/apollo-react)
       - [Using Prisma with NestJS](/showcase/example-repos/nestjs-prisma)

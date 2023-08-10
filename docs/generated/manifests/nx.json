@@ -4528,6 +4528,16 @@
             "tags": []
           },
           {
+            "id": "add-vue",
+            "name": "Add a Vue Project",
+            "description": "Add a Vue project to your repo",
+            "file": "shared/recipes/add-stack/add-vue",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-vue",
+            "tags": []
+          },
+          {
             "id": "react-nx",
             "name": "Powering Up React Development With Nx",
             "description": "",
@@ -4684,6 +4694,16 @@
         "tags": []
       },
       {
+        "id": "add-vue",
+        "name": "Add a Vue Project",
+        "description": "Add a Vue project to your repo",
+        "file": "shared/recipes/add-stack/add-vue",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-vue",
+        "tags": []
+      },
+      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -4826,6 +4846,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-astro",
+    "tags": []
+  },
+  "/showcase/example-repos/add-vue": {
+    "id": "add-vue",
+    "name": "Add a Vue Project",
+    "description": "Add a Vue project to your repo",
+    "file": "shared/recipes/add-stack/add-vue",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-vue",
     "tags": []
   },
   "/showcase/example-repos/react-nx": {
