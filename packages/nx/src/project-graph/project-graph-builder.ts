@@ -164,7 +164,7 @@ export class ProjectGraphBuilder {
     ) {
       throw new Error(`Target project does not exist: ${targetProjectName}`);
     }
-    // this._graph.dependencies[sourceProjectName] = this._graph.dependencies[
+    // this.graph.dependencies[sourceProjectName] = this.graph.dependencies[
     //   sourceProjectName
     // ].filter((d) => d.target !== targetProjectName);
     if (!this.removedEdges[sourceProjectName]) {
@@ -323,7 +323,7 @@ export class ProjectGraphBuilder {
     sourceProject: string
   ): Map<string, Set<DependencyType | string>> {
     const fileDeps = new Map<string, Set<DependencyType | string>>();
-    const files = this.fileMap?.[sourceProject] || [];
+    const files = this.fileMap[sourceProject] || [];
     if (!files) {
       return fileDeps;
     }

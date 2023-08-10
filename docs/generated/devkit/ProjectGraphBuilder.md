@@ -53,13 +53,13 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### fileMap
 
-• `Private` `Optional` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
+• `Private` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
 
 ---
 
 ### graph
 
-• `Optional` `Readonly` **graph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+• `Readonly` **graph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
 
 ---
 
