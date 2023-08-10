@@ -38,7 +38,7 @@
     "@jest/test-result": "^29.4.1",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "chalk": "^4.1.0",
-    "dotenv": "~10.0.0",
+    "dotenv": "~16.3.1",
     "identity-obj-proxy": "3.0.0",
     "jest-config": "^29.4.1",
     "jest-resolve": "^29.4.1",
