@@ -17,9 +17,9 @@ import {
   writeJson,
 } from '@nx/devkit';
 import {
-  determineProjectNamesAndDirectories,
-  type ProjectNamesAndDirectories,
-} from '@nx/devkit/src/generators/project-name-directory-utils';
+  determineProjectNameAndRootOptions,
+  type ProjectNameAndRootOptions,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 
 import {
   addTsConfigPath,
@@ -47,9 +47,9 @@ export async function libraryGenerator(
   schema: LibraryGeneratorSchema
 ) {
   return await libraryGeneratorInternal(tree, {
-    // provide a default nameDirectoryFormat to avoid breaking changes
+    // provide a default projectNameAndRootFormat to avoid breaking changes
     // to external generators invoking this one
-    nameDirectoryFormat: 'derived',
+    projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
@@ -142,7 +142,7 @@ export async function libraryGeneratorInternal(
 
 export interface NormalizedSchema extends LibraryGeneratorSchema {
   name: string;
-  projectNames: ProjectNamesAndDirectories['names'];
+  projectNames: ProjectNameAndRootOptions['names'];
   fileName: string;
   projectRoot: string;
   parsedTags: string[];
@@ -543,12 +543,12 @@ async function normalizeOptions(
     names: projectNames,
     projectDirectory,
     importPath,
-  } = await determineProjectNamesAndDirectories(tree, {
+  } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
     projectType: 'library',
     directory: options.directory,
     importPath: options.importPath,
-    nameDirectoryFormat: options.nameDirectoryFormat,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
   });
   options.rootProject = projectDirectory === '.';

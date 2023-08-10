@@ -10,21 +10,21 @@ import { names } from '../utils/names';
 
 const { joinPathFragments, readJson, readNxJson } = requireNx();
 
-export type ProjectNameDirectoryFormat = 'as-provided' | 'derived';
+export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
 export type ProjectGenerationOptions = {
   name: string;
   projectType: ProjectType;
   directory?: string;
   importPath?: string;
-  nameDirectoryFormat?: ProjectNameDirectoryFormat;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   rootProject?: boolean;
 };
 
-export type ProjectNamesAndDirectories = {
+export type ProjectNameAndRootOptions = {
   /**
    * Normalized full project name, including scope if name was provided with
-   * scope (e.g., `@scope/name`, only available when `nameDirectoryFormat` is
-   * `as-provided`).
+   * scope (e.g., `@scope/name`, only available when `projectNameAndRootFormat`
+   * is `as-provided`).
    */
   projectName: string;
   /**
@@ -49,36 +49,36 @@ export type ProjectNamesAndDirectories = {
   importPath?: string;
 };
 
-type ProjectNameDirectoryFormats = {
+type ProjectNameAndRootFormats = {
   'as-provided': {
     description: string;
-    options: ProjectNamesAndDirectories;
+    options: ProjectNameAndRootOptions;
   };
   derived?: {
     description: string;
-    options: ProjectNamesAndDirectories;
+    options: ProjectNameAndRootOptions;
   };
 };
 
-export async function determineProjectNamesAndDirectories(
+export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
-): Promise<ProjectNamesAndDirectories> {
-  validateName(options.name, options.nameDirectoryFormat);
-  const formats = getProjectNameDirectoryFormats(tree, options);
+): Promise<ProjectNameAndRootOptions> {
+  validateName(options.name, options.projectNameAndRootFormat);
+  const formats = getProjectNameAndRootFormats(tree, options);
   const format =
-    options.nameDirectoryFormat ?? (await determineFormat(formats));
+    options.projectNameAndRootFormat ?? (await determineFormat(formats));
 
   return formats[format].options;
 }
 
 function validateName(
   name: string,
-  nameDirectoryFormat?: ProjectNameDirectoryFormat
+  projectNameAndRootFormat?: ProjectNameAndRootFormat
 ): void {
-  if (nameDirectoryFormat === 'derived' && name.startsWith('@')) {
+  if (projectNameAndRootFormat === 'derived' && name.startsWith('@')) {
     throw new Error(
-      `The project name "${name}" cannot start with "@" when the "nameDirectoryFormat" is "derived".`
+      `The project name "${name}" cannot start with "@" when the "projectNameAndRootFormat" is "derived".`
     );
   }
 
@@ -103,8 +103,8 @@ function validateName(
 }
 
 async function determineFormat(
-  formats: ProjectNameDirectoryFormats
-): Promise<ProjectNameDirectoryFormat> {
+  formats: ProjectNameAndRootFormats
+): Promise<ProjectNameAndRootFormat> {
   if (!formats.derived) {
     return 'as-provided';
   }
@@ -113,7 +113,7 @@ async function determineFormat(
     return 'derived';
   }
 
-  return await prompt<{ format: ProjectNameDirectoryFormat }>({
+  return await prompt<{ format: ProjectNameAndRootFormat }>({
     type: 'select',
     name: 'format',
     message:
@@ -132,10 +132,10 @@ async function determineFormat(
   }).then(({ format }) => format);
 }
 
-function getProjectNameDirectoryFormats(
+function getProjectNameAndRootFormats(
   tree: Tree,
   options: ProjectGenerationOptions
-): ProjectNameDirectoryFormats {
+): ProjectNameAndRootFormats {
   const name = names(options.name).fileName;
   const directory = options.directory?.replace(/^\.?\//, '');
 

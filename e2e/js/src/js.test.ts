@@ -231,10 +231,10 @@ export function ${lib}Wildcard() {
     updateFile('nx.json', () => originalNxJson);
   });
 
-  it('should generate project with name and directory as provided when --nameDirectoryFormat=as-provided', async () => {
+  it('should generate project with name and directory as provided when --project-name-and-root-format=as-provided', async () => {
     const lib1 = uniq('lib1');
     runCLI(
-      `generate @nx/js:lib ${lib1} --directory=shared --bundler=tsc --name-directory-format=as-provided`
+      `generate @nx/js:lib ${lib1} --directory=shared --bundler=tsc --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -251,18 +251,18 @@ export function ${lib}Wildcard() {
     );
   }, 500_000);
 
-  it('should support generating with a scoped project name when --nameDirectoryFormat=as-provided', async () => {
+  it('should support generating with a scoped project name when --project-name-and-root-format=as-provided', async () => {
     const scopedLib = uniq('@my-org/lib1');
 
-    // assert scoped project names are not supported when --nameDirectoryFormat=derived
+    // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/js:lib ${scopedLib} --bundler=tsc --name-directory-format=derived`
+        `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=derived`
       )
     ).toThrow();
 
     runCLI(
-      `generate @nx/js:lib ${scopedLib} --bundler=tsc --name-directory-format=as-provided`
+      `generate @nx/js:lib ${scopedLib} --bundler=tsc --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and

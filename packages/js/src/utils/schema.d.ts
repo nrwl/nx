@@ -1,4 +1,4 @@
-import type { ProjectNameDirectoryFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
 // nx-ignore-next-line
 const { Linter } = require('@nx/linter'); // use require to import to avoid circular dependency
 import type { AssetGlob, FileInputOutput } from './assets/assets';
@@ -10,7 +10,7 @@ export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
 export interface LibraryGeneratorSchema {
   name: string;
   directory?: string;
-  nameDirectoryFormat?: ProjectNameDirectoryFormat;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   skipFormat?: boolean;
   tags?: string;
   skipTsConfig?: boolean;

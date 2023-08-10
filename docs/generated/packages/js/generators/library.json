@@ -21,11 +21,10 @@
         "description": "A directory where the lib is placed.",
         "x-priority": "important"
       },
-      "nameDirectoryFormat": {
-        "description": "Whether to generate the name and directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
         "type": "string",
-        "enum": ["as-provided", "derived"],
-        "x-priority": "important"
+        "enum": ["as-provided", "derived"]
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
