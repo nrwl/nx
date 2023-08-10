@@ -28,10 +28,7 @@ import {
 import { StorybookConfigureSchema } from '../schema';
 import { UiFramework7 } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
-import {
-  addOverrideToLintConfig,
-  findEslintFile,
-} from '@nx/linter/src/generators/utils/eslint-file';
+import { findEslintFile } from '@nx/linter/src/generators/utils/eslint-file';
 
 const DEFAULT_PORT = 4400;
 

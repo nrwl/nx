@@ -17,6 +17,7 @@ import {
   mapFilePath,
   stringifyNodeList,
 } from '../../utils/flat-config/ast-utils';
+import { getPluginImport } from '../../utils/eslint-file';
 
 /**
  * Converts an ESLint JSON config to a flat config.
@@ -277,20 +278,6 @@ function addExtends(
   }
 
   return isFlatCompatNeeded;
-}
-
-function getPluginImport(pluginName: string): string {
-  if (pluginName.includes('eslint-plugin-')) {
-    return pluginName;
-  }
-  if (!pluginName.startsWith('@')) {
-    return `eslint-plugin-${pluginName}`;
-  }
-  if (!pluginName.includes('/')) {
-    return `${pluginName}/eslint-plugin`;
-  }
-  const [scope, name] = pluginName.split('/');
-  return `${scope}/eslint-plugin-${name}`;
 }
 
 function addPlugins(

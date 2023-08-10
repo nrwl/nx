@@ -1,9 +1,11 @@
-import { joinPathFragments, Tree, updateJson } from '@nx/devkit';
+import { joinPathFragments, names, Tree, updateJson } from '@nx/devkit';
 import { Linter } from 'eslint';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
   addBlockToFlatConfigExport,
   addCompatToFlatConfig,
+  addImportToFlatConfig,
+  addPluginsToExportsBlock,
   generateAst,
   generateFlatOverride,
   generatePluginExtendsElement,
@@ -119,6 +121,35 @@ export function addExtendsToLintConfig(
   }
 }
 
+export function addPluginsToLintConfig(
+  tree: Tree,
+  root: string,
+  plugin: string | string[]
+) {
+  const plugins = Array.isArray(plugin) ? plugin : [plugin];
+  if (useFlatConfig()) {
+    const fileName = joinPathFragments(root, 'eslint.config.js');
+    let content = tree.read(fileName, 'utf8');
+    const mappedPlugins: { name: string; varName: string; imp: string }[] = [];
+    plugins.forEach((name) => {
+      const imp = getPluginImport(name);
+      const varName = names(imp).propertyName;
+      mappedPlugins.push({ name, varName, imp });
+    });
+    mappedPlugins.forEach(({ varName, imp }) => {
+      content = addImportToFlatConfig(content, varName, imp);
+    });
+    content = addPluginsToExportsBlock(content, mappedPlugins);
+    tree.write(fileName, content);
+  } else {
+    const fileName = joinPathFragments(root, '.eslintrc.json');
+    updateJson(tree, fileName, (json) => {
+      json.plugins = [...plugins, ...(json.plugins ?? [])];
+      return json;
+    });
+  }
+}
+
 export function addIgnoresToLintConfig(
   tree: Tree,
   root: string,
@@ -144,4 +175,18 @@ export function addIgnoresToLintConfig(
       return json;
     });
   }
+}
+
+export function getPluginImport(pluginName: string): string {
+  if (pluginName.includes('eslint-plugin-')) {
+    return pluginName;
+  }
+  if (!pluginName.startsWith('@')) {
+    return `eslint-plugin-${pluginName}`;
+  }
+  if (!pluginName.includes('/')) {
+    return `${pluginName}/eslint-plugin`;
+  }
+  const [scope, name] = pluginName.split('/');
+  return `${scope}/eslint-plugin-${name}`;
 }

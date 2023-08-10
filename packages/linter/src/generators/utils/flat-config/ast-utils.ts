@@ -224,6 +224,31 @@ export function addBlockToFlatConfigExport(
   }
 }
 
+export function addPluginsToExportsBlock(
+  content: string,
+  plugins: { name: string; varName: string; imp: string }[]
+): string {
+  const pluginsBlock = ts.factory.createObjectLiteralExpression(
+    [
+      ts.factory.createPropertyAssignment(
+        'plugins',
+        ts.factory.createObjectLiteralExpression(
+          plugins.map(({ name, varName }) => {
+            return ts.factory.createPropertyAssignment(
+              ts.factory.createStringLiteral(name),
+              ts.factory.createIdentifier(varName)
+            );
+          })
+        )
+      ),
+    ],
+    false
+  );
+  return addBlockToFlatConfigExport(content, pluginsBlock, {
+    insertAtTheEnd: false,
+  });
+}
+
 /**
  * Adds compat if missing to flat config
  */

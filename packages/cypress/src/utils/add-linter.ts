@@ -12,9 +12,11 @@ import { eslintPluginCypressVersion } from './versions';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
+  addPluginsToLintConfig,
   findEslintFile,
   replaceOverridesInLintConfig,
 } from '@nx/linter/src/generators/utils/eslint-file';
+import { javaScriptOverride } from '@nx/linter/src/generators/init/global-eslint-config';
 
 export interface CyLinterOptions {
   project: string;
@@ -78,12 +80,16 @@ export async function addLinterToCyProject(
       : () => {}
   );
 
+  const overrides = [];
+  if (options.rootProject) {
+    addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+    overrides.push(javaScriptOverride);
+  }
   addExtendsToLintConfig(
     tree,
     projectConfig.root,
     'plugin:cypress/recommended'
   );
-  const overrides = [];
   const cyVersion = installedCypressVersion();
   if (cyVersion && cyVersion < 7) {
     /**

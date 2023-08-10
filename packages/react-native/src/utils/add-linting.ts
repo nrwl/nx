@@ -6,7 +6,10 @@ import {
   Tree,
 } from '@nx/devkit';
 import { extraEslintDependencies } from '@nx/react/src/utils/lint';
-import { addIgnoresToLintConfig } from '@nx/linter/src/generators/utils/eslint-file';
+import {
+  addExtendsToLintConfig,
+  addIgnoresToLintConfig,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 interface NormalizedSchema {
   linter?: Linter;
@@ -34,6 +37,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
   tasks.push(lintTask);
 
+  addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
   addIgnoresToLintConfig(host, options.projectRoot, [
     'public',
     '.cache',

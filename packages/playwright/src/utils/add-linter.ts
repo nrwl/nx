@@ -12,6 +12,7 @@ import { eslintPluginPlaywrightVersion } from './versions';
 import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
+  addPluginsToLintConfig,
   findEslintFile,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
@@ -77,6 +78,7 @@ export async function addLinterToPlaywrightProject(
     'plugin:playwright/recommended'
   );
   if (options.rootProject) {
+    addPluginsToLintConfig(tree, projectConfig.root, '@nx');
     addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
   }
   addOverrideToLintConfig(tree, projectConfig.root, {
