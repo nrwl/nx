@@ -34,21 +34,21 @@ create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=true
 {%tab label="npm"%}
 
 ```shell
-npm install --save-dev @nx/vite vue vue-tsc vitest vite-tsconfig-paths vite-plugin-dts vite @vitejs/plugin-vue @vitejs/plugin-vue-jsx
+npm install --save-dev @nx/vite @nx/js vue vue-tsc vitest vite-tsconfig-paths vite-plugin-dts vite @vitejs/plugin-vue @vitejs/plugin-vue-jsx
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx/vite vue vue-tsc vitest vite-tsconfig-paths vite-plugin-dts vite @vitejs/plugin-vue @vitejs/plugin-vue-jsx
+yarn add --dev @nx/vite @nx/js vue vue-tsc vitest vite-tsconfig-paths vite-plugin-dts vite @vitejs/plugin-vue @vitejs/plugin-vue-jsx
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-pnpm add --dev @nx/vite vue vue-tsc vitest vite-tsconfig-paths vite-plugin-dts vite @vitejs/plugin-vue @vitejs/plugin-vue-jsx
+pnpm add --dev @nx/vite @nx/js vue vue-tsc vitest vite-tsconfig-paths vite-plugin-dts vite @vitejs/plugin-vue @vitejs/plugin-vue-jsx
 ```
 
 {% /tab %}
@@ -90,7 +90,7 @@ createApp(App).mount('#app');
 
 Create a new file `src/App.vue` with the following content:
 
-```vue
+```ts
 <script setup lang="ts">
 import { ref } from 'vue';
 
@@ -108,7 +108,7 @@ function increment() {
 
 ## Configure Nx to use build and serve your Vue application
 
-1. Navigate to `vite.config.ts` and add the following content:
+Navigate to `vite.config.ts` and add the following content:
 
 ```ts
 // Add this to your imports
@@ -124,7 +124,7 @@ export default defineConfig({
 });
 ```
 
-2. Create a new file `env.d.ts` for example at the root of the project and add the following content:
+Create a new file `env.d.ts` for example at the root of the project and add the following content:
 
 ```ts
 /// <reference types="vite/client" />
@@ -139,7 +139,7 @@ declare module '*.vue' {
 
 We need this file to ensure that Vue types are available to the compiler.
 
-3. Update your `tsconfig.lib.json` to be `tsconfig.app.json` an add the following content:
+Update your `tsconfig.lib.json` to be `tsconfig.app.json` an add the following content:
 
 ```json
 {
@@ -173,7 +173,7 @@ We need this file to ensure that Vue types are available to the compiler.
 
 We include `vite.config.ts` and `env.d.ts` to ensure that the types are available to the compiler.
 
-4. Navigate to `project.json` and update it with the following content:
+Navigate to `project.json` and update it with the following content:
 
 ```json
     "build": {
@@ -212,6 +212,80 @@ We include `vite.config.ts` and `env.d.ts` to ensure that the types are availabl
 ```
 
 This allows us to use `nx build` and `nx serve` to build and serve our Vue application.
+
+Test it out
+
+**Build**
+
+```shell
+nx build acme
+```
+
+**Serve**
+
+```shell
+nx serve acme
+```
+
+## Create a library
+
+Instead of having our Counter directly defined in the app we can instead create a library that exports the Counter component.
+
+Create a new library `nx generate @nx/js:library --name=Counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter`
+
+Create your Counter component at `counter/src/lib/Counter.vue` and copy the contents of your `src/App.vue` into it.
+
+Update your `libs/counter/src/lib/index.ts` to export your Counter component.
+
+```ts
+export { default as Counter } from './Counter.vue';
+```
+
+{% callout "Note" %}
+The `default` is very import here as it allows us to import the component using `import { Counter } from '@acme/counter'` instead of `import Counter from '@acme/counter'`.
+{% /callout %}
+
+Update your root `./vite.config.ts` to include the following:
+
+```ts
+export default defineConfig({
+  //... other config
+  resolve: {
+    alias: {
+      '@acme/counter': fileURLToPath(
+        new URL('./counter/src/index.ts', import.meta.url)
+      ),
+    },
+  },
+});
+```
+
+This allows the runtime to resolve the `@acme/counter` import to the correct location.
+
+Finally update your `src/App.vue` to use the Counter component.
+
+```ts
+<script setup lang="ts">
+import { Counter } from '@acme/counter';
+</script>
+<template>
+    <Counter />
+</template>
+```
+
+Test it out
+
+**Build**
+
+```shell
+nx build acme
+```
+
+**Serve**
+
+```shell
+nx serve acme
+```
 
 ## More Documentation
 
