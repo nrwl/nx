@@ -18,20 +18,34 @@ import { getProjectFileMap } from './build-project-graph';
  * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 18.
  */
 export class ProjectGraphBuilder {
-  readonly removedEdges: { [source: string]: Set<string> } = {};
   // TODO(FrozenPandaz): make this private
-  constructor(
-    public readonly graph?: ProjectGraph,
-    private readonly fileMap?: ProjectFileMap
-  ) {
-    this.graph = graph ?? {
-      nodes: {},
-      externalNodes: {},
-      dependencies: {},
+  readonly graph: ProjectGraph;
+  private readonly fileMap: ProjectFileMap;
+  readonly removedEdges: { [source: string]: Set<string> } = {};
+  constructor(graph?: ProjectGraph, fileMap?: ProjectFileMap) {
+    if (graph) {
+      this.graph = graph;
+      this.fileMap = fileMap || getProjectFileMap().projectFileMap;
+    } else {
+      this.graph = {
+        nodes: {},
+        externalNodes: {},
+        dependencies: {},
+      };
+      this.fileMap = fileMap || {};
+    }
+  }
+
+  /**
+   * Merges the nodes and dependencies of p into the built project graph.
+   */
+  mergeProjectGraph(p: ProjectGraph) {
+    this.graph.nodes = { ...this.graph.nodes, ...p.nodes };
+    this.graph.externalNodes = {
+      ...this.graph.externalNodes,
+      ...p.externalNodes,
     };
-    this.fileMap = graph
-      ? fileMap ?? getProjectFileMap().projectFileMap
-      : fileMap ?? {};
+    this.graph.dependencies = { ...this.graph.dependencies, ...p.dependencies };
   }
 
   /**
@@ -88,7 +102,140 @@ export class ProjectGraphBuilder {
     this.graph.externalNodes[node.name] = node;
   }
 
-  public addDependency(
+  /**
+   * Adds static dependency from source project to target project
+   */
+  addStaticDependency(
+    sourceProjectName: string,
+    targetProjectName: string,
+    sourceProjectFile?: string
+  ): void {
+    this.addDependency(
+      sourceProjectName,
+      targetProjectName,
+      DependencyType.static,
+      sourceProjectFile
+    );
+  }
+
+  /**
+   * Adds dynamic dependency from source project to target project
+   */
+  addDynamicDependency(
+    sourceProjectName: string,
+    targetProjectName: string,
+    sourceProjectFile: string
+  ): void {
+    this.addDependency(
+      sourceProjectName,
+      targetProjectName,
+      DependencyType.dynamic,
+      sourceProjectFile
+    );
+  }
+
+  /**
+   * Adds implicit dependency from source project to target project
+   */
+  addImplicitDependency(
+    sourceProjectName: string,
+    targetProjectName: string
+  ): void {
+    this.addDependency(
+      sourceProjectName,
+      targetProjectName,
+      DependencyType.implicit
+    );
+  }
+
+  /**
+   * Removes a dependency from source project to target project
+   */
+  removeDependency(sourceProjectName: string, targetProjectName: string): void {
+    if (sourceProjectName === targetProjectName) {
+      return;
+    }
+    if (!this.graph.nodes[sourceProjectName]) {
+      throw new Error(`Source project does not exist: ${sourceProjectName}`);
+    }
+    if (
+      !this.graph.nodes[targetProjectName] &&
+      !this.graph.externalNodes[targetProjectName]
+    ) {
+      throw new Error(`Target project does not exist: ${targetProjectName}`);
+    }
+    // this._graph.dependencies[sourceProjectName] = this._graph.dependencies[
+    //   sourceProjectName
+    // ].filter((d) => d.target !== targetProjectName);
+    if (!this.removedEdges[sourceProjectName]) {
+      this.removedEdges[sourceProjectName] = new Set<string>();
+    }
+    this.removedEdges[sourceProjectName].add(targetProjectName);
+  }
+
+  /**
+   * Add an explicit dependency from a file in source project to target project
+   * @deprecated this method will be removed in v17. Use {@link addStaticDependency} or {@link addDynamicDependency} instead
+   */
+  addExplicitDependency(
+    sourceProjectName: string,
+    sourceProjectFile: string,
+    targetProjectName: string
+  ): void {
+    this.addStaticDependency(
+      sourceProjectName,
+      targetProjectName,
+      sourceProjectFile
+    );
+  }
+
+  /**
+   * Set version of the project graph
+   */
+  setVersion(version: string): void {
+    this.graph.version = version;
+  }
+
+  getUpdatedProjectGraph(): ProjectGraph {
+    for (const sourceProject of Object.keys(this.graph.nodes)) {
+      const alreadySetTargetProjects =
+        this.calculateAlreadySetTargetDeps(sourceProject);
+      this.graph.dependencies[sourceProject] = [
+        ...alreadySetTargetProjects.values(),
+      ].flatMap((depsMap) => [...depsMap.values()]);
+
+      const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
+      for (const [targetProject, types] of fileDeps.entries()) {
+        // only add known nodes
+        if (
+          !this.graph.nodes[targetProject] &&
+          !this.graph.externalNodes[targetProject]
+        ) {
+          continue;
+        }
+        for (const type of types.values()) {
+          if (
+            !alreadySetTargetProjects.has(targetProject) ||
+            !alreadySetTargetProjects.get(targetProject).has(type)
+          ) {
+            if (
+              !this.removedEdges[sourceProject] ||
+              !this.removedEdges[sourceProject].has(targetProject)
+            ) {
+              this.graph.dependencies[sourceProject].push({
+                source: sourceProject,
+                target: targetProject,
+                type,
+              });
+            }
+          }
+        }
+      }
+    }
+    return this.graph;
+  }
+
+  addDependency(
     source: string,
     target: string,
     type: DependencyType,
@@ -151,149 +298,25 @@ export class ProjectGraphBuilder {
     }
   }
 
-  /**
-   * Removes a dependency from source project to target project
-   */
-  removeDependency(sourceProjectName: string, targetProjectName: string): void {
-    if (sourceProjectName === targetProjectName) {
-      return;
-    }
-    if (!this.graph.nodes[sourceProjectName]) {
-      throw new Error(`Source project does not exist: ${sourceProjectName}`);
-    }
-    if (
-      !this.graph.nodes[targetProjectName] &&
-      !this.graph.externalNodes[targetProjectName]
-    ) {
-      throw new Error(`Target project does not exist: ${targetProjectName}`);
-    }
-    // this._graph.dependencies[sourceProjectName] = this._graph.dependencies[
-    //   sourceProjectName
-    // ].filter((d) => d.target !== targetProjectName);
-    if (!this.removedEdges[sourceProjectName]) {
-      this.removedEdges[sourceProjectName] = new Set<string>();
-    }
-    this.removedEdges[sourceProjectName].add(targetProjectName);
-  }
+  private removeDependenciesWithNode(name: string) {
+    // remove all source dependencies
+    delete this.graph.dependencies[name];
 
-  /**
-   * Adds static dependency from source project to target project
-   */
-  addStaticDependency(
-    sourceProjectName: string,
-    targetProjectName: string,
-    sourceProjectFile?: string
-  ): void {
-    this.addDependency(
-      sourceProjectName,
-      targetProjectName,
-      DependencyType.static,
-      sourceProjectFile
-    );
-  }
-
-  /**
-   * Adds dynamic dependency from source project to target project
-   */
-  addDynamicDependency(
-    sourceProjectName: string,
-    targetProjectName: string,
-    sourceProjectFile: string
-  ): void {
-    this.addDependency(
-      sourceProjectName,
-      targetProjectName,
-      DependencyType.dynamic,
-      sourceProjectFile
-    );
-  }
-
-  /**
-   * Adds implicit dependency from source project to target project
-   */
-  addImplicitDependency(
-    sourceProjectName: string,
-    targetProjectName: string
-  ): void {
-    this.addDependency(
-      sourceProjectName,
-      targetProjectName,
-      DependencyType.implicit
-    );
-  }
-
-  /**
-   * Add an explicit dependency from a file in source project to target project
-   * @deprecated this method will be removed in v17. Use {@link addStaticDependency} or {@link addDynamicDependency} instead
-   */
-  addExplicitDependency(
-    sourceProjectName: string,
-    sourceProjectFile: string,
-    targetProjectName: string
-  ): void {
-    this.addStaticDependency(
-      sourceProjectName,
-      targetProjectName,
-      sourceProjectFile
-    );
-  }
-
-  /**
-   * Set version of the project graph
-   */
-  setVersion(version: string): void {
-    this.graph.version = version;
-  }
-
-  /**
-   * Merges the nodes and dependencies of p into the built project graph.
-   */
-  mergeProjectGraph(p: ProjectGraph) {
-    this.graph.nodes = { ...this.graph.nodes, ...p.nodes };
-    this.graph.externalNodes = {
-      ...this.graph.externalNodes,
-      ...p.externalNodes,
-    };
-    this.graph.dependencies = { ...this.graph.dependencies, ...p.dependencies };
-  }
-
-  getUpdatedProjectGraph(): ProjectGraph {
-    for (const sourceProject of Object.keys(this.graph.nodes)) {
-      const alreadySetTargetProjects =
-        this.calculateAlreadySetTargetDeps(sourceProject);
-      this.graph.dependencies[sourceProject] = [
-        ...alreadySetTargetProjects.values(),
-      ].flatMap((depsMap) => [...depsMap.values()]);
-
-      const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
-      for (const [targetProject, types] of fileDeps.entries()) {
-        // only add known nodes
-        if (
-          !this.graph.nodes[targetProject] &&
-          !this.graph.externalNodes[targetProject]
-        ) {
-          continue;
-        }
-        for (const type of types.values()) {
-          if (
-            !alreadySetTargetProjects.has(targetProject) ||
-            !alreadySetTargetProjects.get(targetProject).has(type)
-          ) {
-            if (
-              !this.removedEdges[sourceProject] ||
-              !this.removedEdges[sourceProject].has(targetProject)
-            ) {
-              this.graph.dependencies[sourceProject].push({
-                source: sourceProject,
-                target: targetProject,
-                type,
-              });
-            }
+    // remove all target dependencies
+    for (const dependencies of Object.values(this.graph.dependencies)) {
+      for (const [index, { source, target }] of dependencies.entries()) {
+        if (target === name) {
+          const deps = this.graph.dependencies[source];
+          this.graph.dependencies[source] = [
+            ...deps.slice(0, index),
+            ...deps.slice(index + 1),
+          ];
+          if (this.graph.dependencies[source].length === 0) {
+            delete this.graph.dependencies[source];
           }
         }
       }
     }
-    return this.graph;
   }
 
   private calculateTargetDepsFromFiles(
@@ -342,27 +365,6 @@ export class ProjectGraphBuilder {
       }
     }
     return alreadySetTargetProjects;
-  }
-
-  private removeDependenciesWithNode(name: string) {
-    // remove all source dependencies
-    delete this.graph.dependencies[name];
-
-    // remove all target dependencies
-    for (const dependencies of Object.values(this.graph.dependencies)) {
-      for (const [index, { source, target }] of dependencies.entries()) {
-        if (target === name) {
-          const deps = this.graph.dependencies[source];
-          this.graph.dependencies[source] = [
-            ...deps.slice(0, index),
-            ...deps.slice(index + 1),
-          ];
-          if (this.graph.dependencies[source].length === 0) {
-            delete this.graph.dependencies[source];
-          }
-        }
-      }
-    }
   }
 }
 
