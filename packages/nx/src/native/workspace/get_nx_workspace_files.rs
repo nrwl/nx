@@ -12,14 +12,14 @@ use crate::native::utils::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
 use crate::native::walker::nx_walker;
 use crate::native::workspace::errors::WorkspaceErrors;
-use crate::native::workspace::get_config_files::insert_config_file_into_map;
-use crate::native::workspace::types::FileLocation;
+use crate::native::workspace::types::{ConfigurationParserResult, FileLocation};
 
 #[napi(object)]
 pub struct NxWorkspaceFiles {
     pub project_file_map: HashMap<String, Vec<FileData>>,
     pub global_files: Vec<FileData>,
     pub project_configurations: HashMap<String, JsObject>,
+    pub external_nodes: HashMap<String, JsObject>,
 }
 
 #[napi]
@@ -29,7 +29,7 @@ pub fn get_workspace_files_native<ConfigurationParser>(
     parse_configurations: ConfigurationParser,
 ) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
 where
-    ConfigurationParser: Fn(Vec<String>) -> napi::Result<HashMap<String, JsObject>>,
+    ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
 {
     enable_logger();
 
@@ -40,10 +40,10 @@ where
 
     let projects_vec: Vec<String> = projects.iter().map(|p| p.to_normalized_string()).collect();
 
-    let project_configurations = parse_configurations(projects_vec)
+    let parsed_graph_nodes = parse_configurations(projects_vec)
         .map_err(|e| napi::Error::new(WorkspaceErrors::ParseError, e.to_string()))?;
 
-    let root_map = create_root_map(&project_configurations);
+    let root_map = create_root_map(&parsed_graph_nodes.project_nodes);
 
     trace!(?root_map);
 
@@ -94,7 +94,8 @@ where
     Ok(NxWorkspaceFiles {
         project_file_map,
         global_files,
-        project_configurations,
+        external_nodes: parsed_graph_nodes.external_nodes,
+        project_configurations: parsed_graph_nodes.project_nodes,
     })
 }
 
@@ -114,16 +115,18 @@ type WorkspaceData = (HashSet<PathBuf>, Vec<FileData>);
 fn get_file_data(workspace_root: &str, globs: Vec<String>) -> anyhow::Result<WorkspaceData> {
     let globs = build_glob_set(&globs)?;
     let (projects, file_data) = nx_walker(workspace_root, move |rec| {
-        let mut projects: HashMap<PathBuf, PathBuf> = HashMap::new();
+        let mut projects: HashSet<PathBuf> = HashSet::new();
         let mut file_hashes: Vec<FileData> = vec![];
         for (path, content) in rec {
             file_hashes.push(FileData {
                 file: path.to_normalized_string(),
                 hash: xxh3::xxh3_64(&content).to_string(),
             });
-            insert_config_file_into_map(path, &mut projects, &globs)
+            if globs.is_match(&path) {
+                projects.insert(path);
+            }
         }
         (projects, file_hashes)
     });
-    Ok((projects.into_values().collect(), file_data))
+    Ok((projects, file_data))
 }

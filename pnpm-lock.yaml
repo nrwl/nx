@@ -45,6 +45,9 @@ dependencies:
   '@types/license-checker':
     specifier: ^25.0.3
     version: 25.0.3
+  '@types/minimatch':
+    specifier: ^5.1.2
+    version: 5.1.2
   '@yarnpkg/lockfile':
     specifier: ^1.1.0
     version: 1.1.0

@@ -3,6 +3,7 @@ import {
   FileData,
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphExternalNode,
 } from '../../config/project-graph';
 import { buildProjectGraphUsingProjectFileMap } from '../../project-graph/build-project-graph';
 import { updateProjectFileMap } from '../../project-graph/file-map-utils';
@@ -43,6 +44,7 @@ const collectedDeletedFiles = new Set<string>();
 let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
 let scheduledTimeoutId;
+let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 
 export async function getCachedSerializedProjectGraphPromise() {
   try {
@@ -173,14 +175,12 @@ async function processCollectedUpdatedAndDeletedFiles() {
 
     let nxJson = readNxJson(workspaceRoot);
 
-    const projectConfigurations = await retrieveProjectConfigurations(
+    const { projectNodes } = await retrieveProjectConfigurations(
       workspaceRoot,
       nxJson
     );
 
-    const workspaceConfigHash = computeWorkspaceConfigHash(
-      projectConfigurations
-    );
+    const workspaceConfigHash = computeWorkspaceConfigHash(projectNodes);
     serverLogger.requestLog(
       `Updated file-hasher based on watched changes, recomputing project graph...`
     );
@@ -191,14 +191,12 @@ async function processCollectedUpdatedAndDeletedFiles() {
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
       storedWorkspaceConfigHash = workspaceConfigHash;
 
-      projectFileMapWithFiles = await retrieveWorkspaceFiles(
-        workspaceRoot,
-        nxJson
-      );
+      ({ externalNodes: knownExternalNodes, ...projectFileMapWithFiles } =
+        await retrieveWorkspaceFiles(workspaceRoot, nxJson));
     } else {
       if (projectFileMapWithFiles) {
         projectFileMapWithFiles = updateProjectFileMap(
-          projectConfigurations,
+          projectNodes,
           projectFileMapWithFiles.projectFileMap,
           projectFileMapWithFiles.allWorkspaceFiles,
           updatedFiles,
@@ -276,6 +274,7 @@ async function createAndSerializeProjectGraph(): Promise<{
     const { projectGraph, projectFileMapCache } =
       await buildProjectGraphUsingProjectFileMap(
         projectsConfigurations,
+        knownExternalNodes,
         projectFileMap,
         allWorkspaceFiles,
         currentProjectFileMapCache || readProjectFileMapCache(),

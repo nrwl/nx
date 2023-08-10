@@ -15,7 +15,10 @@ describe('workspace files', () => {
           root: dirname(filename),
         };
       }
-      return res;
+      return {
+        projectNodes: res,
+        externalNodes: {}
+      };
     };
   }
 
@@ -234,7 +237,7 @@ describe('workspace files', () => {
 
     let globs = ['project.json', '**/project.json', '**/package.json'];
 
-    let projectConfigurations = getProjectConfigurations(
+    let nodes = getProjectConfigurations(
       fs.tempDir,
       globs,
       (filenames) => {
@@ -246,21 +249,21 @@ describe('workspace files', () => {
             root: dirname(filename),
           };
         }
-        return res;
+        return {
+          externalNodes: {}, projectNodes: res
+        };
       }
     );
-    expect(projectConfigurations).toMatchInlineSnapshot(`
-      {
+    expect(nodes.projectNodes).toEqual({
         "project1": {
           "name": "project1",
           "root": "libs/project1",
         },
-        "repo-name": {
+        "repo-name": expect.objectContaining({
           "name": "repo-name",
           "root": ".",
-        },
-      }
-    `);
+        }),
+      });
   });
 
   // describe('errors', () => {

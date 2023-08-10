@@ -6,6 +6,10 @@
 
 ▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
 
+**`Deprecated`**
+
+Add targets to the projects in a [CreateNodes](../../devkit/documents/CreateNodes) function instead. This will be removed in Nx 18
+
 ##### Parameters
 
 | Name   | Type     |

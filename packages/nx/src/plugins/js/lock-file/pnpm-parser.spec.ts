@@ -5,7 +5,13 @@ import { vol } from 'memfs';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 
-jest.mock('fs', () => require('memfs').fs);
+jest.mock('fs', () => {
+  const memFs = require('memfs').fs;
+  return {
+    ...memFs,
+    existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),
+  };
+});
 
 jest.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',

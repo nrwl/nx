@@ -313,6 +313,7 @@
     "@tailwindcss/line-clamp": "^0.4.2",
     "@tailwindcss/typography": "^0.5.7",
     "@types/license-checker": "^25.0.3",
+    "@types/minimatch": "^5.1.2",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
     "@zkochan/js-yaml": "0.0.6",

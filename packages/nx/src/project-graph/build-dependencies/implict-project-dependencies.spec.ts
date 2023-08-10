@@ -2,7 +2,13 @@ import { ProjectGraphProcessorContext } from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { buildImplicitProjectDependencies } from './implicit-project-dependencies';
 
-jest.mock('fs', () => require('memfs').fs);
+jest.mock('fs', () => {
+  const memFs = require('memfs').fs;
+  return {
+    ...memFs,
+    existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),
+  };
+});
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));

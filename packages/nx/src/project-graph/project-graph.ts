@@ -71,13 +71,18 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   const nxJson = readNxJson();
 
-  const { allWorkspaceFiles, projectFileMap, projectConfigurations } =
-    await retrieveWorkspaceFiles(workspaceRoot, nxJson);
+  const {
+    allWorkspaceFiles,
+    projectFileMap,
+    projectConfigurations,
+    externalNodes,
+  } = await retrieveWorkspaceFiles(workspaceRoot, nxJson);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   return (
     await buildProjectGraphUsingProjectFileMap(
       projectConfigurations,
+      externalNodes,
       projectFileMap,
       allWorkspaceFiles,
       cacheEnabled ? readProjectFileMapCache() : null,

@@ -1,5 +1,11 @@
 # Class: ProjectGraphBuilder
 
+A class which builds up a project graph
+
+**`Deprecated`**
+
+The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/documents/CreateNodes) and/or a [CreateDependencies](../../devkit/documents/CreateDependencies) instead. This will be removed in Nx 18.
+
 ## Table of contents
 
 ### Constructors
@@ -34,13 +40,13 @@
 
 ### constructor
 
-• **new ProjectGraphBuilder**(`g?`, `fileMap?`)
+• **new ProjectGraphBuilder**(`graph?`, `fileMap?`)
 
 #### Parameters
 
 | Name       | Type                                                      |
 | :--------- | :-------------------------------------------------------- |
-| `g?`       | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
+| `graph?`   | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
 | `fileMap?` | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
 
 ## Properties
@@ -69,16 +75,16 @@
 
 ### addDependency
 
-▸ `Private` **addDependency**(`sourceProjectName`, `targetProjectName`, `type`, `sourceProjectFile?`): `void`
+▸ **addDependency**(`source`, `target`, `type`, `sourceFile?`): `void`
 
 #### Parameters
 
-| Name                 | Type                                                      |
-| :------------------- | :-------------------------------------------------------- |
-| `sourceProjectName`  | `string`                                                  |
-| `targetProjectName`  | `string`                                                  |
-| `type`               | [`DependencyType`](../../devkit/documents/DependencyType) |
-| `sourceProjectFile?` | `string`                                                  |
+| Name          | Type                                                      |
+| :------------ | :-------------------------------------------------------- |
+| `source`      | `string`                                                  |
+| `target`      | `string`                                                  |
+| `type`        | [`DependencyType`](../../devkit/documents/DependencyType) |
+| `sourceFile?` | `string`                                                  |
 
 #### Returns
 

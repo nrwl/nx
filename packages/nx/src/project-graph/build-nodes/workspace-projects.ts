@@ -2,10 +2,6 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import {
-  loadNxPlugins,
-  mergePluginTargetsWithNxTargets,
-} from '../../utils/nx-plugin';
-import {
   ProjectGraphProcessorContext,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
@@ -24,9 +20,9 @@ import {
   mergeTargetConfigurations,
   readTargetDefaultsForTarget,
   resolveNxTokensInOptions,
-} from '../../config/workspaces';
+} from '../utils/project-configuration-utils';
 
-export async function buildWorkspaceProjectNodes(
+export async function normalizeProjectNodes(
   ctx: ProjectGraphProcessorContext,
   builder: ProjectGraphBuilder,
   nxJson: NxJsonConfiguration
@@ -51,6 +47,11 @@ export async function buildWorkspaceProjectNodes(
     const p = ctx.projectsConfigurations.projects[key];
     const projectRoot = join(workspaceRoot, p.root);
 
+    // Todo(@AgentEnder) we can move a lot of this to
+    // builtin plugin inside workspaces.ts, but there would be some functional differences
+    // - The plugin would only apply to package.json files found via the workspaces globs
+    //   - This means that scripts / tags / etc from the `nx` property wouldn't be read if a project
+    //     is being found by project.json and not included in the workspaces configuration. Maybe this is fine?
     if (existsSync(join(projectRoot, 'package.json'))) {
       p.targets = mergeNpmScriptsWithTargets(projectRoot, p.targets);
 
@@ -79,12 +80,6 @@ export async function buildWorkspaceProjectNodes(
       key,
       p.implicitDependencies,
       partialProjectGraphNodes
-    );
-
-    p.targets = mergePluginTargetsWithNxTargets(
-      p.root,
-      p.targets,
-      await loadNxPlugins(ctx.nxJsonConfiguration.plugins)
     );
 
     p.targets = normalizeProjectTargets(p, nxJson.targetDefaults, key);
@@ -131,7 +126,7 @@ export function normalizeProjectTargets(
   project: ProjectConfiguration,
   targetDefaults: NxJsonConfiguration['targetDefaults'],
   projectName: string
-) {
+): Record<string, TargetConfiguration> {
   const targets = project.targets;
   for (const target in targets) {
     const executor =
@@ -158,7 +153,9 @@ export function normalizeProjectTargets(
       project,
       `${projectName}:${target}`
     );
-    for (const configuration in targets[target].configurations ?? {}) {
+
+    targets[target].configurations ??= {};
+    for (const configuration in targets[target].configurations) {
       targets[target].configurations[configuration] = resolveNxTokensInOptions(
         targets[target].configurations[configuration],
         project,

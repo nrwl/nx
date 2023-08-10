@@ -47,7 +47,17 @@ export {
   workspaceLayout,
 } from './config/configuration';
 
-export type { NxPlugin, ProjectTargetConfigurator } from './utils/nx-plugin';
+export type {
+  NxPlugin,
+  NxPluginV1,
+  NxPluginV2,
+  ProjectTargetConfigurator,
+  CreateNodes,
+  CreateNodesFunction,
+  CreateNodesContext,
+  CreateDependencies,
+  CreateDependenciesContext,
+} from './utils/nx-plugin';
 
 /**
  * @category Workspace
@@ -146,7 +156,11 @@ export { DependencyType } from './config/project-graph';
 /**
  * @category Project Graph
  */
-export { ProjectGraphBuilder } from './project-graph/project-graph-builder';
+export {
+  ProjectGraphBuilder,
+  ProjectGraphDependencyWithFile,
+  validateDependency,
+} from './project-graph/project-graph-builder';
 
 /**
  * @category Utils

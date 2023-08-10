@@ -15,6 +15,7 @@ import {
 
 import * as projectSchema from '../../../schemas/project-schema.json';
 import { joinPathFragments } from '../../utils/path';
+import { PackageJson } from '../../utils/package-json';
 
 const projectConfiguration: ProjectConfiguration = {
   name: 'test',
@@ -171,6 +172,11 @@ describe('project configuration', () => {
   describe('for npm workspaces', () => {
     beforeEach(() => {
       tree = createTree();
+      writeJson<PackageJson>(tree, 'package.json', {
+        name: '@testing/root',
+        version: '0.0.1',
+        workspaces: ['*/**/package.json'],
+      });
     });
 
     it('should read project configuration from package.json files', () => {
@@ -182,9 +188,8 @@ describe('project configuration', () => {
       const proj = readProjectConfiguration(tree, 'proj');
 
       expect(proj).toEqual({
+        name: 'proj',
         root: 'proj',
-        sourceRoot: 'proj',
-        projectType: 'library',
       });
     });
 
@@ -197,9 +202,8 @@ describe('project configuration', () => {
 
       expect(projects.size).toEqual(1);
       expect(projects.get('proj')).toEqual({
+        name: 'proj',
         root: 'proj',
-        sourceRoot: 'proj',
-        projectType: 'library',
       });
     });
   });

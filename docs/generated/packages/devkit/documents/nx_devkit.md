@@ -23,6 +23,8 @@ It only uses language primitives and immutable objects
 
 ### Interfaces
 
+- [CreateDependenciesContext](../../devkit/documents/CreateDependenciesContext)
+- [CreateNodesContext](../../devkit/documents/CreateNodesContext)
 - [DefaultTasksRunnerOptions](../../devkit/documents/DefaultTasksRunnerOptions)
 - [ExecutorContext](../../devkit/documents/ExecutorContext)
 - [ExecutorsJson](../../devkit/documents/ExecutorsJson)
@@ -38,11 +40,11 @@ It only uses language primitives and immutable objects
 - [ModuleFederationConfig](../../devkit/documents/ModuleFederationConfig)
 - [NxAffectedConfig](../../devkit/documents/NxAffectedConfig)
 - [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration)
-- [NxPlugin](../../devkit/documents/NxPlugin)
 - [ProjectConfiguration](../../devkit/documents/ProjectConfiguration)
 - [ProjectFileMap](../../devkit/documents/ProjectFileMap)
 - [ProjectGraph](../../devkit/documents/ProjectGraph)
 - [ProjectGraphDependency](../../devkit/documents/ProjectGraphDependency)
+- [ProjectGraphDependencyWithFile](../../devkit/documents/ProjectGraphDependencyWithFile)
 - [ProjectGraphExternalNode](../../devkit/documents/ProjectGraphExternalNode)
 - [ProjectGraphProcessorContext](../../devkit/documents/ProjectGraphProcessorContext)
 - [ProjectGraphProjectNode](../../devkit/documents/ProjectGraphProjectNode)
@@ -63,6 +65,9 @@ It only uses language primitives and immutable objects
 ### Type Aliases
 
 - [AdditionalSharedConfig](../../devkit/documents/AdditionalSharedConfig)
+- [CreateDependencies](../../devkit/documents/CreateDependencies)
+- [CreateNodes](../../devkit/documents/CreateNodes)
+- [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 - [CustomHasher](../../devkit/documents/CustomHasher)
 - [Executor](../../devkit/documents/Executor)
 - [Generator](../../devkit/documents/Generator)
@@ -70,6 +75,9 @@ It only uses language primitives and immutable objects
 - [Hasher](../../devkit/documents/Hasher)
 - [ImplicitDependencyEntry](../../devkit/documents/ImplicitDependencyEntry)
 - [ModuleFederationLibrary](../../devkit/documents/ModuleFederationLibrary)
+- [NxPlugin](../../devkit/documents/NxPlugin)
+- [NxPluginV1](../../devkit/documents/NxPluginV1)
+- [NxPluginV2](../../devkit/documents/NxPluginV2)
 - [PackageManager](../../devkit/documents/PackageManager)
 - [ProjectGraphNode](../../devkit/documents/ProjectGraphNode)
 - [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
@@ -156,6 +164,7 @@ It only uses language primitives and immutable objects
 - [updateProjectConfiguration](../../devkit/documents/updateProjectConfiguration)
 - [updateTsConfigsToJs](../../devkit/documents/updateTsConfigsToJs)
 - [updateWorkspaceConfiguration](../../devkit/documents/updateWorkspaceConfiguration)
+- [validateDependency](../../devkit/documents/validateDependency)
 - [visitNotIgnoredFiles](../../devkit/documents/visitNotIgnoredFiles)
 - [workspaceLayout](../../devkit/documents/workspaceLayout)
 - [writeJson](../../devkit/documents/writeJson)
