@@ -419,7 +419,7 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
         json.parserOptions.project = [json.parserOptions.project];
       }
 
-      if (Array.isArray(json.parserOptions?.project)) {
+      if (json.parserOptions?.project) {
         json.parserOptions.project = dedupe([
           ...json.parserOptions.project,
           parserConfigPath,
@@ -431,7 +431,7 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
         if (typeof o.parserOptions?.project === 'string') {
           o.parserOptions.project = [o.parserOptions.project];
         }
-        if (Array.isArray(o.parserOptions?.project)) {
+        if (o.parserOptions?.project) {
           o.parserOptions.project = dedupe([
             ...o.parserOptions.project,
             parserConfigPath,
