@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "dotenv": "~10.0.0",
+    "dotenv": "~16.3.1",
     "fs-extra": "^11.1.0",
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
