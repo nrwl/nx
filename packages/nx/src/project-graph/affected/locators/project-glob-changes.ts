@@ -5,7 +5,7 @@ import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { join } from 'path';
 import { existsSync } from 'fs';
 import { configurationGlobs } from '../../utils/retrieve-workspace-files';
-import { ensurePluginIsV2, loadNxPlugins } from '../../../utils/nx-plugin';
+import { loadNxPlugins } from '../../../utils/nx-plugin';
 import { combineGlobPatterns } from '../../../utils/globs';
 
 export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
@@ -17,7 +17,7 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
           nxJson?.plugins,
           getNxRequirePaths(workspaceRoot),
           workspaceRoot
-        ).then((p) => p.map((plugin) => ensurePluginIsV2(plugin)))
+        )
       )
     );
 

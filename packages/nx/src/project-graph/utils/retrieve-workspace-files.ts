@@ -20,7 +20,6 @@ import { getProjectConfigurationFiles, NxWorkspaceFiles } from '../../native';
 import { getGlobPatternsFromPackageManagerWorkspaces } from '../../../plugins/package-json-workspaces';
 import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './project-configuration-utils';
 import {
-  ensurePluginIsV2,
   loadNxPlugins,
   loadNxPluginsSync,
   NxPluginV2,
@@ -44,7 +43,7 @@ export async function retrieveWorkspaceFiles(
     nxJson?.plugins ?? [],
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
-  ).then((plugins) => plugins.map((p) => ensurePluginIsV2(p)));
+  );
   let globs = configurationGlobs(workspaceRoot, plugins);
   performance.mark('native-file-deps:end');
   performance.measure(
@@ -106,7 +105,7 @@ export async function retrieveProjectConfigurations(
     nxJson?.plugins ?? [],
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
-  ).then((plugins) => plugins.map((p) => ensurePluginIsV2(p)));
+  );
   const globs = configurationGlobs(workspaceRoot, plugins);
   return getProjectConfigurations(workspaceRoot, globs, (configs: string[]) => {
     const projectConfigurations = createProjectConfigurations(
@@ -132,9 +131,7 @@ export function retrieveProjectConfigurationPaths(
 ): string[] {
   const projectGlobPatterns = configurationGlobs(
     root,
-    loadNxPluginsSync(nxJson?.plugins ?? [], getNxRequirePaths(root), root).map(
-      (p) => ensurePluginIsV2(p)
-    )
+    loadNxPluginsSync(nxJson?.plugins ?? [], getNxRequirePaths(root), root)
   );
   const { getProjectConfigurationFiles } =
     require('../../native') as typeof import('../../native');
