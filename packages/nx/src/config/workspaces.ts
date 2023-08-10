@@ -1,7 +1,11 @@
 import { dirname, join } from 'path';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
-import { loadNxPlugins, loadNxPluginsSync } from '../utils/nx-plugin';
+import {
+  ensurePluginIsV2,
+  loadNxPlugins,
+  loadNxPluginsSync,
+} from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration } from './nx-json';
 import { readNxJson } from './nx-json';
@@ -43,7 +47,7 @@ export class Workspaces {
       buildProjectsConfigurationsFromProjectPathsAndPlugins(
         nxJson,
         projectPaths,
-        loadNxPluginsSync(),
+        loadNxPluginsSync().map((p) => ensurePluginIsV2(p)),
         this.root
       ).projects;
     if (

@@ -212,7 +212,7 @@ export function loadNxPluginsSync(
   plugins?: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
-): (NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>)[] {
+): NxPlugin[] {
   const result: NxPlugin[] = [];
 
   // TODO: This should be specified in nx.json
@@ -236,14 +236,14 @@ export function loadNxPluginsSync(
     }
   }
 
-  return result.map(ensurePluginIsV2);
+  return result;
 }
 
 export async function loadNxPlugins(
   plugins?: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
-): Promise<(NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>)[]> {
+): Promise<NxPlugin[]> {
   const result: NxPlugin[] = [];
 
   // TODO: This should be specified in nx.json
@@ -258,10 +258,10 @@ export async function loadNxPlugins(
     result.push(await loadNxPluginAsync(plugin, paths, root));
   }
 
-  return result.map(ensurePluginIsV2);
+  return result;
 }
 
-function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
+export function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
   if (isNxPluginV1(plugin) && plugin.projectFilePatterns) {
     return {
       ...plugin,
