@@ -1,14 +1,10 @@
 # Class: ProjectGraphBuilder
 
+A class which builds up a project graph
+
 **`Deprecated`**
 
 The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/documents/CreateNodes) and/or a [CreateDependencies](../../devkit/documents/CreateDependencies) instead. This will be removed in Nx 18.
-
-## Hierarchy
-
-- `ProjectDependencyBuilder`
-
-  ↳ **`ProjectGraphBuilder`**
 
 ## Table of contents
 
@@ -31,6 +27,8 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 - [addImplicitDependency](../../devkit/documents/ProjectGraphBuilder#addimplicitdependency)
 - [addNode](../../devkit/documents/ProjectGraphBuilder#addnode)
 - [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency)
+- [calculateAlreadySetTargetDeps](../../devkit/documents/ProjectGraphBuilder#calculatealreadysettargetdeps)
+- [calculateTargetDepsFromFiles](../../devkit/documents/ProjectGraphBuilder#calculatetargetdepsfromfiles)
 - [getUpdatedProjectGraph](../../devkit/documents/ProjectGraphBuilder#getupdatedprojectgraph)
 - [mergeProjectGraph](../../devkit/documents/ProjectGraphBuilder#mergeprojectgraph)
 - [removeDependenciesWithNode](../../devkit/documents/ProjectGraphBuilder#removedependencieswithnode)
@@ -42,48 +40,36 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### constructor
 
-• **new ProjectGraphBuilder**(`g?`, `fileMap?`)
+• **new ProjectGraphBuilder**(`graph?`, `fileMap?`)
 
 #### Parameters
 
 | Name       | Type                                                      |
 | :--------- | :-------------------------------------------------------- |
-| `g?`       | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
+| `graph?`   | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
 | `fileMap?` | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
-
-#### Overrides
-
-ProjectDependencyBuilder.constructor
 
 ## Properties
 
 ### fileMap
 
-• `Protected` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
-
-#### Inherited from
-
-ProjectDependencyBuilder.fileMap
+• `Private` `Optional` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
 
 ---
 
 ### graph
 
-• `Readonly` **graph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+• `Optional` `Readonly` **graph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
 
 ---
 
 ### removedEdges
 
-• `Protected` `Readonly` **removedEdges**: `Object` = `{}`
+• `Readonly` **removedEdges**: `Object` = `{}`
 
 #### Index signature
 
 ▪ [source: `string`]: `Set`<`string`\>
-
-#### Inherited from
-
-ProjectDependencyBuilder.removedEdges
 
 ## Methods
 
@@ -103,10 +89,6 @@ ProjectDependencyBuilder.removedEdges
 #### Returns
 
 `void`
-
-#### Inherited from
-
-ProjectDependencyBuilder.addDependency
 
 ---
 
@@ -229,6 +211,38 @@ Adds static dependency from source project to target project
 
 ---
 
+### calculateAlreadySetTargetDeps
+
+▸ `Private` **calculateAlreadySetTargetDeps**(`sourceProject`): `Map`<`string`, `Map`<`string`, [`ProjectGraphDependency`](../../devkit/documents/ProjectGraphDependency)\>\>
+
+#### Parameters
+
+| Name            | Type     |
+| :-------------- | :------- |
+| `sourceProject` | `string` |
+
+#### Returns
+
+`Map`<`string`, `Map`<`string`, [`ProjectGraphDependency`](../../devkit/documents/ProjectGraphDependency)\>\>
+
+---
+
+### calculateTargetDepsFromFiles
+
+▸ `Private` **calculateTargetDepsFromFiles**(`sourceProject`): `Map`<`string`, `Set`<`string`\>\>
+
+#### Parameters
+
+| Name            | Type     |
+| :-------------- | :------- |
+| `sourceProject` | `string` |
+
+#### Returns
+
+`Map`<`string`, `Set`<`string`\>\>
+
+---
+
 ### getUpdatedProjectGraph
 
 ▸ **getUpdatedProjectGraph**(): [`ProjectGraph`](../../devkit/documents/ProjectGraph)
@@ -236,10 +250,6 @@ Adds static dependency from source project to target project
 #### Returns
 
 [`ProjectGraph`](../../devkit/documents/ProjectGraph)
-
-#### Inherited from
-
-ProjectDependencyBuilder.getUpdatedProjectGraph
 
 ---
 
@@ -293,10 +303,6 @@ Removes a dependency from source project to target project
 #### Returns
 
 `void`
-
-#### Inherited from
-
-ProjectDependencyBuilder.removeDependency
 
 ---
 
