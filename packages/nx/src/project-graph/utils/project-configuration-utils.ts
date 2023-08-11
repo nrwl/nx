@@ -2,6 +2,11 @@ import { basename } from 'node:path';
 
 import { getNxPackageJsonWorkspacesPlugin } from '../../../plugins/package-json-workspaces';
 import { getNxProjectJsonPlugin } from '../../../plugins/project-json';
+import {
+  getNxAngularJsonPlugin,
+  NX_ANGULAR_JSON_PLUGIN_NAME,
+  shouldMergeAngularProjects,
+} from '../../adapter/angular-json';
 import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
@@ -89,6 +94,13 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
 } {
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+
+  if (
+    shouldMergeAngularProjects(root, false) &&
+    !plugins.some((p) => p.name === NX_ANGULAR_JSON_PLUGIN_NAME)
+  ) {
+    plugins.push(getNxAngularJsonPlugin(root));
+  }
 
   // We push the nx core node builder onto the end, s.t. it overwrites any user specified behavior
   plugins.push(

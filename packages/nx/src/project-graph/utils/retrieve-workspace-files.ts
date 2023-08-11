@@ -1,13 +1,12 @@
 import { performance } from 'perf_hooks';
 import { getNxRequirePaths } from '../../utils/installation-directory';
-import { readJsonFile } from '../../utils/fileutils';
-import { join } from 'path';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import {
-  mergeAngularJsonAndProjects,
+  getNxAngularJsonPlugin,
+  NX_ANGULAR_JSON_PLUGIN_NAME,
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
@@ -22,6 +21,7 @@ import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './project
 import {
   loadNxPlugins,
   loadNxPluginsSync,
+  NxPlugin,
   NxPluginV2,
 } from '../../utils/nx-plugin';
 
@@ -104,8 +104,19 @@ export async function retrieveProjectConfigurations(
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
   );
+
+  if (shouldMergeAngularProjects(workspaceRoot, false)) {
+    addAngularPlugin(plugins, workspaceRoot);
+  }
+
   const globs = configurationGlobs(workspaceRoot, plugins);
   return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins, globs);
+}
+
+function addAngularPlugin(plugins: NxPlugin[], root: string) {
+  if (!plugins.some((p) => p.name === NX_ANGULAR_JSON_PLUGIN_NAME)) {
+    plugins.push(getNxAngularJsonPlugin(root));
+  }
 }
 
 export async function retrieveProjectConfigurationsWithAngularProjects(
@@ -120,13 +131,17 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
   );
+
+  if (shouldMergeAngularProjects(workspaceRoot, true)) {
+    addAngularPlugin(plugins, workspaceRoot);
+  }
+
   const globs = configurationGlobs(workspaceRoot, plugins);
   return _retrieveProjectConfigurations(
     workspaceRoot,
     nxJson,
     plugins,
     globs,
-    true
   );
 }
 
@@ -145,6 +160,9 @@ export function retrieveProjectConfigurationsSync(
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
   );
+  if (shouldMergeAngularProjects(workspaceRoot, false)) {
+    addAngularPlugin(plugins, workspaceRoot);
+  }
   const globs = configurationGlobs(workspaceRoot, plugins);
   return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins, globs);
 }
@@ -154,7 +172,6 @@ function _retrieveProjectConfigurations(
   nxJson: NxJsonConfiguration,
   plugins: NxPluginV2[],
   globs: string[],
-  includeProjectsFromAngularJson: boolean = false
 ): {
   externalNodes: Record<string, ProjectGraphExternalNode>;
   projectNodes: Record<string, ProjectConfiguration>;
@@ -166,8 +183,7 @@ function _retrieveProjectConfigurations(
       workspaceRoot,
       nxJson,
       configs,
-      plugins,
-      includeProjectsFromAngularJson
+      plugins
     );
 
     return {
@@ -265,8 +281,7 @@ function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[],
-  plugins: NxPluginV2[],
-  includeProjectsFromAngularJson: boolean = false
+  plugins: NxPluginV2[]
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
@@ -283,14 +298,6 @@ function createProjectConfigurations(
 
   let projectConfigurations = projects;
 
-  if (
-    shouldMergeAngularProjects(workspaceRoot, includeProjectsFromAngularJson)
-  ) {
-    projectConfigurations = mergeAngularJsonAndProjects(
-      projectConfigurations,
-      workspaceRoot
-    );
-  }
   performance.mark('build-project-configs:end');
   performance.measure(
     'build-project-configs',
