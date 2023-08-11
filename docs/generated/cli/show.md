@@ -44,7 +44,7 @@ Show affected projects in the workspace:
 Show affected projects in the workspace, excluding end-to-end projects:
 
 ```shell
- nx show projects --affected --exclude *-e2e
+ nx show projects --affected --exclude=*-e2e
 ```
 
 Show detailed information about "my-app" in a json format.:

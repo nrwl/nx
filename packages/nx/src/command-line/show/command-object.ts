@@ -92,7 +92,7 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         'Show affected projects in the workspace'
       )
       .example(
-        '$0 show projects --affected --exclude *-e2e',
+        '$0 show projects --affected --exclude=*-e2e',
         'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
   handler: (args) => import('./show').then((m) => m.showProjectsHandler(args)),

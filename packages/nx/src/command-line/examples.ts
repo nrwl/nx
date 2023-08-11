@@ -65,7 +65,7 @@ export const examples: Record<string, Example[]> = {
         'Run tests for all the projects affected by the last commit on main',
     },
     {
-      command: "affected -t build --exclude '*,!tag:dotnet'",
+      command: "affected -t=build --exclude='*,!tag:dotnet'",
       description: 'Run build for only projects with the tag `dotnet`',
     },
     {
@@ -370,7 +370,7 @@ export const examples: Record<string, Example[]> = {
     },
 
     {
-      command: 'show projects --affected --exclude *-e2e',
+      command: 'show projects --affected --exclude=*-e2e',
       description:
         'Show affected projects in the workspace, excluding end-to-end projects',
     },
