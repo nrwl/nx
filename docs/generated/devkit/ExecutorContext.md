@@ -6,18 +6,18 @@ Context that is passed into an executor
 
 ### Properties
 
-- [configurationName](../../devkit/documents/ExecutorContext#configurationname)
-- [cwd](../../devkit/documents/ExecutorContext#cwd)
-- [isVerbose](../../devkit/documents/ExecutorContext#isverbose)
-- [nxJsonConfiguration](../../devkit/documents/ExecutorContext#nxjsonconfiguration)
-- [projectGraph](../../devkit/documents/ExecutorContext#projectgraph)
-- [projectName](../../devkit/documents/ExecutorContext#projectname)
-- [projectsConfigurations](../../devkit/documents/ExecutorContext#projectsconfigurations)
-- [root](../../devkit/documents/ExecutorContext#root)
-- [target](../../devkit/documents/ExecutorContext#target)
-- [targetName](../../devkit/documents/ExecutorContext#targetname)
-- [taskGraph](../../devkit/documents/ExecutorContext#taskgraph)
-- [workspace](../../devkit/documents/ExecutorContext#workspace)
+- [configurationName](../../devkit/documents/ExecutorContext#configurationname): string
+- [cwd](../../devkit/documents/ExecutorContext#cwd): string
+- [isVerbose](../../devkit/documents/ExecutorContext#isverbose): boolean
+- [nxJsonConfiguration](../../devkit/documents/ExecutorContext#nxjsonconfiguration): NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
+- [projectGraph](../../devkit/documents/ExecutorContext#projectgraph): ProjectGraph
+- [projectName](../../devkit/documents/ExecutorContext#projectname): string
+- [projectsConfigurations](../../devkit/documents/ExecutorContext#projectsconfigurations): ProjectsConfigurations
+- [root](../../devkit/documents/ExecutorContext#root): string
+- [target](../../devkit/documents/ExecutorContext#target): TargetConfiguration&lt;any&gt;
+- [targetName](../../devkit/documents/ExecutorContext#targetname): string
+- [taskGraph](../../devkit/documents/ExecutorContext#taskgraph): TaskGraph
+- [workspace](../../devkit/documents/ExecutorContext#workspace): ProjectsConfigurations &amp; NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
 
 ## Properties
 

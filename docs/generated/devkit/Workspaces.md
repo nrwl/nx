@@ -8,7 +8,7 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 
 ### Constructors
 
-- [constructor](../../devkit/documents/Workspaces#constructor)
+- [constructor](../../devkit/documents/Workspaces#constructor): Constructor constructor
 
 ### Properties
 

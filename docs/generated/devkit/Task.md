@@ -6,14 +6,14 @@ A representation of the invocation of an Executor
 
 ### Properties
 
-- [endTime](../../devkit/documents/Task#endtime)
-- [hash](../../devkit/documents/Task#hash)
-- [hashDetails](../../devkit/documents/Task#hashdetails)
-- [id](../../devkit/documents/Task#id)
-- [overrides](../../devkit/documents/Task#overrides)
-- [projectRoot](../../devkit/documents/Task#projectroot)
-- [startTime](../../devkit/documents/Task#starttime)
-- [target](../../devkit/documents/Task#target)
+- [endTime](../../devkit/documents/Task#endtime): number
+- [hash](../../devkit/documents/Task#hash): string
+- [hashDetails](../../devkit/documents/Task#hashdetails): Object
+- [id](../../devkit/documents/Task#id): string
+- [overrides](../../devkit/documents/Task#overrides): any
+- [projectRoot](../../devkit/documents/Task#projectroot): string
+- [startTime](../../devkit/documents/Task#starttime): number
+- [target](../../devkit/documents/Task#target): Object
 
 ## Properties
 

@@ -6,19 +6,19 @@ Virtual file system tree.
 
 ### Properties
 
-- [root](../../devkit/documents/Tree#root)
+- [root](../../devkit/documents/Tree#root): string
 
 ### Methods
 
-- [changePermissions](../../devkit/documents/Tree#changepermissions)
-- [children](../../devkit/documents/Tree#children)
-- [delete](../../devkit/documents/Tree#delete)
-- [exists](../../devkit/documents/Tree#exists)
-- [isFile](../../devkit/documents/Tree#isfile)
-- [listChanges](../../devkit/documents/Tree#listchanges)
-- [read](../../devkit/documents/Tree#read)
-- [rename](../../devkit/documents/Tree#rename)
-- [write](../../devkit/documents/Tree#write)
+- [changePermissions](../../devkit/documents/Tree#changepermissions): Method changePermissions
+- [children](../../devkit/documents/Tree#children): Method children
+- [delete](../../devkit/documents/Tree#delete): Method delete
+- [exists](../../devkit/documents/Tree#exists): Method exists
+- [isFile](../../devkit/documents/Tree#isfile): Method isFile
+- [listChanges](../../devkit/documents/Tree#listchanges): Method listChanges
+- [read](../../devkit/documents/Tree#read): Method read
+- [rename](../../devkit/documents/Tree#rename): Method rename
+- [write](../../devkit/documents/Tree#write): Method write
 
 ## Properties
 

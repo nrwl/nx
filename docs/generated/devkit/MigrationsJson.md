@@ -4,12 +4,12 @@
 
 ### Properties
 
-- [collection](../../devkit/documents/MigrationsJson#collection)
-- [generators](../../devkit/documents/MigrationsJson#generators)
-- [name](../../devkit/documents/MigrationsJson#name)
-- [packageJsonUpdates](../../devkit/documents/MigrationsJson#packagejsonupdates)
-- [schematics](../../devkit/documents/MigrationsJson#schematics)
-- [version](../../devkit/documents/MigrationsJson#version)
+- [collection](../../devkit/documents/MigrationsJson#collection): string
+- [generators](../../devkit/documents/MigrationsJson#generators): Object
+- [name](../../devkit/documents/MigrationsJson#name): string
+- [packageJsonUpdates](../../devkit/documents/MigrationsJson#packagejsonupdates): PackageJsonUpdates
+- [schematics](../../devkit/documents/MigrationsJson#schematics): Object
+- [version](../../devkit/documents/MigrationsJson#version): string
 
 ## Properties
 

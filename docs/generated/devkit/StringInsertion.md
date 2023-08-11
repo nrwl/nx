@@ -4,9 +4,9 @@
 
 ### Properties
 
-- [index](../../devkit/documents/StringInsertion#index)
-- [text](../../devkit/documents/StringInsertion#text)
-- [type](../../devkit/documents/StringInsertion#type)
+- [index](../../devkit/documents/StringInsertion#index): number
+- [text](../../devkit/documents/StringInsertion#text): string
+- [type](../../devkit/documents/StringInsertion#type): Insert
 
 ## Properties
 

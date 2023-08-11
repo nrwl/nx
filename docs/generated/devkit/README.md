@@ -13,93 +13,93 @@ It only uses language primitives and immutable objects
 
 ### Enumerations
 
-- [ChangeType](../../devkit/documents/ChangeType)
-- [DependencyType](../../devkit/documents/DependencyType)
+- [ChangeType](../../devkit/documents/ChangeType): Enum ChangeType
+- [DependencyType](../../devkit/documents/DependencyType): Enum DependencyType
 
 ### Classes
 
-- [ProjectGraphBuilder](../../devkit/documents/ProjectGraphBuilder)
-- [Workspaces](../../devkit/documents/Workspaces)
+- [ProjectGraphBuilder](../../devkit/documents/ProjectGraphBuilder): Class ProjectGraphBuilder
+- [Workspaces](../../devkit/documents/Workspaces): Class Workspaces
 
 ### Interfaces
 
-- [CreateDependenciesContext](../../devkit/documents/CreateDependenciesContext)
-- [CreateNodesContext](../../devkit/documents/CreateNodesContext)
-- [DefaultTasksRunnerOptions](../../devkit/documents/DefaultTasksRunnerOptions)
-- [ExecutorContext](../../devkit/documents/ExecutorContext)
-- [ExecutorsJson](../../devkit/documents/ExecutorsJson)
-- [FileChange](../../devkit/documents/FileChange)
-- [FileData](../../devkit/documents/FileData)
-- [GeneratorsJson](../../devkit/documents/GeneratorsJson)
-- [Hash](../../devkit/documents/Hash)
-- [HasherContext](../../devkit/documents/HasherContext)
-- [ImplicitJsonSubsetDependency](../../devkit/documents/ImplicitJsonSubsetDependency)
-- [JsonParseOptions](../../devkit/documents/JsonParseOptions)
-- [JsonSerializeOptions](../../devkit/documents/JsonSerializeOptions)
-- [MigrationsJson](../../devkit/documents/MigrationsJson)
-- [ModuleFederationConfig](../../devkit/documents/ModuleFederationConfig)
-- [NxAffectedConfig](../../devkit/documents/NxAffectedConfig)
-- [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration)
-- [ProjectConfiguration](../../devkit/documents/ProjectConfiguration)
-- [ProjectFileMap](../../devkit/documents/ProjectFileMap)
-- [ProjectGraph](../../devkit/documents/ProjectGraph)
-- [ProjectGraphDependency](../../devkit/documents/ProjectGraphDependency)
-- [ProjectGraphDependencyWithFile](../../devkit/documents/ProjectGraphDependencyWithFile)
-- [ProjectGraphExternalNode](../../devkit/documents/ProjectGraphExternalNode)
-- [ProjectGraphProcessorContext](../../devkit/documents/ProjectGraphProcessorContext)
-- [ProjectGraphProjectNode](../../devkit/documents/ProjectGraphProjectNode)
-- [ProjectsConfigurations](../../devkit/documents/ProjectsConfigurations)
-- [RemoteCache](../../devkit/documents/RemoteCache)
-- [SharedLibraryConfig](../../devkit/documents/SharedLibraryConfig)
-- [StringDeletion](../../devkit/documents/StringDeletion)
-- [StringInsertion](../../devkit/documents/StringInsertion)
-- [Target](../../devkit/documents/Target)
-- [TargetConfiguration](../../devkit/documents/TargetConfiguration)
-- [TargetDependencyConfig](../../devkit/documents/TargetDependencyConfig)
-- [Task](../../devkit/documents/Task)
-- [TaskGraph](../../devkit/documents/TaskGraph)
-- [TaskHasher](../../devkit/documents/TaskHasher)
-- [Tree](../../devkit/documents/Tree)
-- [Workspace](../../devkit/documents/Workspace)
+- [CreateDependenciesContext](../../devkit/documents/CreateDependenciesContext): Interface CreateDependenciesContext
+- [CreateNodesContext](../../devkit/documents/CreateNodesContext): Interface CreateNodesContext
+- [DefaultTasksRunnerOptions](../../devkit/documents/DefaultTasksRunnerOptions): Interface DefaultTasksRunnerOptions
+- [ExecutorContext](../../devkit/documents/ExecutorContext): Interface ExecutorContext
+- [ExecutorsJson](../../devkit/documents/ExecutorsJson): Interface ExecutorsJson
+- [FileChange](../../devkit/documents/FileChange): Interface FileChange
+- [FileData](../../devkit/documents/FileData): Interface FileData
+- [GeneratorsJson](../../devkit/documents/GeneratorsJson): Interface GeneratorsJson
+- [Hash](../../devkit/documents/Hash): Interface Hash
+- [HasherContext](../../devkit/documents/HasherContext): Interface HasherContext
+- [ImplicitJsonSubsetDependency](../../devkit/documents/ImplicitJsonSubsetDependency): Interface ImplicitJsonSubsetDependency&lt;T&gt;
+- [JsonParseOptions](../../devkit/documents/JsonParseOptions): Interface JsonParseOptions
+- [JsonSerializeOptions](../../devkit/documents/JsonSerializeOptions): Interface JsonSerializeOptions
+- [MigrationsJson](../../devkit/documents/MigrationsJson): Interface MigrationsJson
+- [ModuleFederationConfig](../../devkit/documents/ModuleFederationConfig): Interface ModuleFederationConfig
+- [NxAffectedConfig](../../devkit/documents/NxAffectedConfig): Interface NxAffectedConfig
+- [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration): Interface NxJsonConfiguration&lt;T&gt;
+- [ProjectConfiguration](../../devkit/documents/ProjectConfiguration): Interface ProjectConfiguration
+- [ProjectFileMap](../../devkit/documents/ProjectFileMap): Interface ProjectFileMap
+- [ProjectGraph](../../devkit/documents/ProjectGraph): Interface ProjectGraph
+- [ProjectGraphDependency](../../devkit/documents/ProjectGraphDependency): Interface ProjectGraphDependency
+- [ProjectGraphDependencyWithFile](../../devkit/documents/ProjectGraphDependencyWithFile): Interface ProjectGraphDependencyWithFile
+- [ProjectGraphExternalNode](../../devkit/documents/ProjectGraphExternalNode): Interface ProjectGraphExternalNode
+- [ProjectGraphProcessorContext](../../devkit/documents/ProjectGraphProcessorContext): Interface ProjectGraphProcessorContext
+- [ProjectGraphProjectNode](../../devkit/documents/ProjectGraphProjectNode): Interface ProjectGraphProjectNode
+- [ProjectsConfigurations](../../devkit/documents/ProjectsConfigurations): Interface ProjectsConfigurations
+- [RemoteCache](../../devkit/documents/RemoteCache): Interface RemoteCache
+- [SharedLibraryConfig](../../devkit/documents/SharedLibraryConfig): Interface SharedLibraryConfig
+- [StringDeletion](../../devkit/documents/StringDeletion): Interface StringDeletion
+- [StringInsertion](../../devkit/documents/StringInsertion): Interface StringInsertion
+- [Target](../../devkit/documents/Target): Interface Target
+- [TargetConfiguration](../../devkit/documents/TargetConfiguration): Interface TargetConfiguration&lt;T&gt;
+- [TargetDependencyConfig](../../devkit/documents/TargetDependencyConfig): Interface TargetDependencyConfig
+- [Task](../../devkit/documents/Task): Interface Task
+- [TaskGraph](../../devkit/documents/TaskGraph): Interface TaskGraph
+- [TaskHasher](../../devkit/documents/TaskHasher): Interface TaskHasher
+- [Tree](../../devkit/documents/Tree): Interface Tree
+- [Workspace](../../devkit/documents/Workspace): Interface Workspace
 
 ### Type Aliases
 
-- [AdditionalSharedConfig](../../devkit/documents/AdditionalSharedConfig)
-- [CreateDependencies](../../devkit/documents/CreateDependencies)
-- [CreateNodes](../../devkit/documents/CreateNodes)
-- [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
-- [CustomHasher](../../devkit/documents/CustomHasher)
-- [Executor](../../devkit/documents/Executor)
-- [Generator](../../devkit/documents/Generator)
-- [GeneratorCallback](../../devkit/documents/GeneratorCallback)
-- [Hasher](../../devkit/documents/Hasher)
-- [ImplicitDependencyEntry](../../devkit/documents/ImplicitDependencyEntry)
-- [ModuleFederationLibrary](../../devkit/documents/ModuleFederationLibrary)
-- [NxPlugin](../../devkit/documents/NxPlugin)
-- [NxPluginV1](../../devkit/documents/NxPluginV1)
-- [NxPluginV2](../../devkit/documents/NxPluginV2)
-- [PackageManager](../../devkit/documents/PackageManager)
-- [ProjectGraphNode](../../devkit/documents/ProjectGraphNode)
-- [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
-- [ProjectType](../../devkit/documents/ProjectType)
-- [Remotes](../../devkit/documents/Remotes)
-- [SharedFunction](../../devkit/documents/SharedFunction)
-- [SharedWorkspaceLibraryConfig](../../devkit/documents/SharedWorkspaceLibraryConfig)
-- [StringChange](../../devkit/documents/StringChange)
-- [TaskGraphExecutor](../../devkit/documents/TaskGraphExecutor)
-- [WorkspaceConfiguration](../../devkit/documents/WorkspaceConfiguration)
-- [WorkspaceJsonConfiguration](../../devkit/documents/WorkspaceJsonConfiguration)
-- [WorkspaceLibrary](../../devkit/documents/WorkspaceLibrary)
-- [WorkspaceLibrarySecondaryEntryPoint](../../devkit/documents/WorkspaceLibrarySecondaryEntryPoint)
+- [AdditionalSharedConfig](../../devkit/documents/AdditionalSharedConfig): (string | [libraryName: string, sharedConfig: SharedLibraryConfig] | Object)[]
+- [CreateDependencies](../../devkit/documents/CreateDependencies): Function
+- [CreateNodes](../../devkit/documents/CreateNodes): [projectFilePattern: string, createNodesFunction: CreateNodesFunction]
+- [CreateNodesFunction](../../devkit/documents/CreateNodesFunction): Function
+- [CustomHasher](../../devkit/documents/CustomHasher): Function
+- [Executor](../../devkit/documents/Executor): Function
+- [Generator](../../devkit/documents/Generator): Function
+- [GeneratorCallback](../../devkit/documents/GeneratorCallback): Function
+- [Hasher](../../devkit/documents/Hasher): TaskHasher
+- [ImplicitDependencyEntry](../../devkit/documents/ImplicitDependencyEntry): Object
+- [ModuleFederationLibrary](../../devkit/documents/ModuleFederationLibrary): Object
+- [NxPlugin](../../devkit/documents/NxPlugin): NxPluginV1 | NxPluginV2
+- [NxPluginV1](../../devkit/documents/NxPluginV1): Object
+- [NxPluginV2](../../devkit/documents/NxPluginV2): Object
+- [PackageManager](../../devkit/documents/PackageManager): &quot;yarn&quot; | &quot;pnpm&quot; | &quot;npm&quot;
+- [ProjectGraphNode](../../devkit/documents/ProjectGraphNode): ProjectGraphProjectNode | ProjectGraphExternalNode
+- [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator): Function
+- [ProjectType](../../devkit/documents/ProjectType): &quot;library&quot; | &quot;application&quot;
+- [Remotes](../../devkit/documents/Remotes): string[] | [remoteName: string, remoteUrl: string][]
+- [SharedFunction](../../devkit/documents/SharedFunction): Function
+- [SharedWorkspaceLibraryConfig](../../devkit/documents/SharedWorkspaceLibraryConfig): Object
+- [StringChange](../../devkit/documents/StringChange): StringInsertion | StringDeletion
+- [TaskGraphExecutor](../../devkit/documents/TaskGraphExecutor): Function
+- [WorkspaceConfiguration](../../devkit/documents/WorkspaceConfiguration): Omit&lt;ProjectsConfigurations, &quot;projects&quot;&gt; &amp; Partial&lt;NxJsonConfiguration&gt;
+- [WorkspaceJsonConfiguration](../../devkit/documents/WorkspaceJsonConfiguration): ProjectsConfigurations
+- [WorkspaceLibrary](../../devkit/documents/WorkspaceLibrary): Object
+- [WorkspaceLibrarySecondaryEntryPoint](../../devkit/documents/WorkspaceLibrarySecondaryEntryPoint): Object
 
 ### Variables
 
-- [NX_VERSION](../../devkit/documents/NX_VERSION)
-- [appRootPath](../../devkit/documents/appRootPath)
-- [cacheDir](../../devkit/documents/cacheDir)
-- [logger](../../devkit/documents/logger)
-- [output](../../devkit/documents/output)
-- [workspaceRoot](../../devkit/documents/workspaceRoot)
+- [NX_VERSION](../../devkit/documents/NX_VERSION): string
+- [appRootPath](../../devkit/documents/appRootPath): string
+- [cacheDir](../../devkit/documents/cacheDir): string
+- [logger](../../devkit/documents/logger): Object
+- [output](../../devkit/documents/output): CLIOutput
+- [workspaceRoot](../../devkit/documents/workspaceRoot): string
 
 ### Functions
 

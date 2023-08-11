@@ -1,5 +1,7 @@
 import { PageEvent, Reflection, ReflectionKind, RenderTemplate } from 'typedoc';
 import { MarkdownTheme } from 'typedoc-plugin-markdown/dist/theme';
+import comment from './comment';
+import toc from './toc';
 
 /**
  * The MarkdownTheme is based on TypeDoc's DefaultTheme @see https://github.com/TypeStrong/typedoc/blob/master/src/lib/output/themes/DefaultTheme.ts.
@@ -10,6 +12,8 @@ import { MarkdownTheme } from 'typedoc-plugin-markdown/dist/theme';
 export default class NxMarkdownTheme extends MarkdownTheme {
   constructor(renderer) {
     super(renderer);
+    toc(this);
+    comment();
   }
 
   render(

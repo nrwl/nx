@@ -13,9 +13,9 @@ while allowing tracking of the full tree of different nested versions
 
 ### Properties
 
-- [data](../../devkit/documents/ProjectGraphExternalNode#data)
-- [name](../../devkit/documents/ProjectGraphExternalNode#name)
-- [type](../../devkit/documents/ProjectGraphExternalNode#type)
+- [data](../../devkit/documents/ProjectGraphExternalNode#data): Object
+- [name](../../devkit/documents/ProjectGraphExternalNode#name): &#x60;npm:${string}&#x60;
+- [type](../../devkit/documents/ProjectGraphExternalNode#type): &quot;npm&quot;
 
 ## Properties
 

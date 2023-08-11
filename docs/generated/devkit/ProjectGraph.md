@@ -6,10 +6,10 @@ A Graph of projects in the workspace and dependencies between them
 
 ### Properties
 
-- [dependencies](../../devkit/documents/ProjectGraph#dependencies)
-- [externalNodes](../../devkit/documents/ProjectGraph#externalnodes)
-- [nodes](../../devkit/documents/ProjectGraph#nodes)
-- [version](../../devkit/documents/ProjectGraph#version)
+- [dependencies](../../devkit/documents/ProjectGraph#dependencies): Record&lt;string, ProjectGraphDependency[]&gt;
+- [externalNodes](../../devkit/documents/ProjectGraph#externalnodes): Record&lt;string, ProjectGraphExternalNode&gt;
+- [nodes](../../devkit/documents/ProjectGraph#nodes): Record&lt;string, ProjectGraphProjectNode&gt;
+- [version](../../devkit/documents/ProjectGraph#version): string
 
 ## Properties
 
