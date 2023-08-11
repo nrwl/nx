@@ -586,6 +586,14 @@ describe('app', () => {
             "overrides": [
               {
                 "files": [
+                  "*.*",
+                ],
+                "rules": {
+                  "@next/next/no-html-link-for-pages": "off",
+                },
+              },
+              {
+                "files": [
                   "*.ts",
                   "*.tsx",
                   "*.js",
@@ -611,14 +619,6 @@ describe('app', () => {
                   "*.jsx",
                 ],
                 "rules": {},
-              },
-              {
-                "files": [
-                  "*.*",
-                ],
-                "rules": {
-                  "@next/next/no-html-link-for-pages": "off",
-                },
               },
               {
                 "env": {

@@ -5,7 +5,10 @@ import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 
 import { NormalizedSchema } from '../schema';
 import { extraEslintDependencies } from '../../../utils/lint';
-import { addExtendsToLintConfig } from '@nx/linter/src/generators/utils/eslint-file';
+import {
+  addExtendsToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.EsLint) {
@@ -22,7 +25,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       setParserOptionsProject: options.setParserOptionsProject,
     });
 
-    addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    if (isEslintConfigSupported(host)) {
+      addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    }
 
     let installTask = () => {};
     if (!options.skipPackageJson) {

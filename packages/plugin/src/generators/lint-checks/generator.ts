@@ -12,8 +12,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import type { Linter as ESLint } from 'eslint';
-
 import type { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/eslint/schema';
 
 import { PluginLintChecksGeneratorSchema } from './schema';
@@ -21,7 +19,7 @@ import { NX_PREFIX } from 'nx/src/utils/logger';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import {
   addOverrideToLintConfig,
-  isMigrationSupported,
+  isEslintConfigSupported,
   lintConfigHasOverride,
   updateOverrideInLintConfig,
 } from '@nx/linter/src/generators/utils/eslint-file';
@@ -182,7 +180,7 @@ function updateProjectEslintConfig(
   options: ProjectConfiguration,
   packageJson: PackageJson
 ) {
-  if (isMigrationSupported(host, options.root)) {
+  if (isEslintConfigSupported(host, options.root)) {
     const lookup = (o) =>
       Object.keys(o.rules ?? {}).includes('@nx/nx-plugin-checks') ||
       Object.keys(o.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks');
@@ -232,7 +230,7 @@ function updateProjectEslintConfig(
 // This is required, otherwise every json file that is not overriden
 // will display false errors in the IDE
 function updateRootEslintConfig(host: Tree) {
-  if (isMigrationSupported(host)) {
+  if (isEslintConfigSupported(host)) {
     if (
       !lintConfigHasOverride(
         host,

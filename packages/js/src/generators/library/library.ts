@@ -261,16 +261,19 @@ export async function addLint(
   if (options.rootProject) {
     const {
       addOverrideToLintConfig,
+      isEslintConfigSupported,
       // nx-ignore-next-line
     } = require('@nx/linter/src/generators/utils/eslint-file');
 
-    addOverrideToLintConfig(tree, '', {
-      files: ['*.json'],
-      parser: 'jsonc-eslint-parser',
-      rules: {
-        '@nx/dependency-checks': 'error',
-      },
-    });
+    if (isEslintConfigSupported(tree)) {
+      addOverrideToLintConfig(tree, '', {
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': 'error',
+        },
+      });
+    }
   }
   return task;
 }

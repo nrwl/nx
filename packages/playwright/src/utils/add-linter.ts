@@ -14,6 +14,7 @@ import {
   addOverrideToLintConfig,
   addPluginsToLintConfig,
   findEslintFile,
+  isEslintConfigSupported,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
 export interface PlaywrightLinterOptions {
@@ -72,24 +73,26 @@ export async function addLinterToPlaywrightProject(
       : () => {}
   );
 
-  addExtendsToLintConfig(
-    tree,
-    projectConfig.root,
-    'plugin:playwright/recommended'
-  );
-  if (options.rootProject) {
-    addPluginsToLintConfig(tree, projectConfig.root, '@nx');
-    addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
+  if (isEslintConfigSupported(tree)) {
+    addExtendsToLintConfig(
+      tree,
+      projectConfig.root,
+      'plugin:playwright/recommended'
+    );
+    if (options.rootProject) {
+      addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+      addOverrideToLintConfig(tree, projectConfig.root, javaScriptOverride);
+    }
+    addOverrideToLintConfig(tree, projectConfig.root, {
+      files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
+      parserOptions: !options.setParserOptionsProject
+        ? undefined
+        : {
+            project: `${projectConfig.root}/tsconfig.*?.json`,
+          },
+      rules: {},
+    });
   }
-  addOverrideToLintConfig(tree, projectConfig.root, {
-    files: [`${options.directory}/**/*.{ts,js,tsx,jsx}`],
-    parserOptions: !options.setParserOptionsProject
-      ? undefined
-      : {
-          project: `${projectConfig.root}/tsconfig.*?.json`,
-        },
-    rules: {},
-  });
 
   return runTasksInSerial(...tasks);
 }

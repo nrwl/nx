@@ -11,6 +11,7 @@ import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependenc
 import type { AddLintingGeneratorSchema } from './schema';
 import {
   findEslintFile,
+  isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/linter/src/generators/utils/eslint-file';
 import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
@@ -38,55 +39,57 @@ export async function addLintingGenerator(
   });
   tasks.push(lintTask);
 
-  const eslintFile = findEslintFile(tree, options.projectRoot);
-  // keep parser options if they exist
-  const hasParserOptions = tree
-    .read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
-    .includes(`${options.projectRoot}/tsconfig.*?.json`);
+  if (isEslintConfigSupported(tree)) {
+    const eslintFile = findEslintFile(tree, options.projectRoot);
+    // keep parser options if they exist
+    const hasParserOptions = tree
+      .read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
+      .includes(`${options.projectRoot}/tsconfig.*?.json`);
 
-  replaceOverridesInLintConfig(tree, options.projectRoot, [
-    {
-      files: ['*.ts'],
-      ...(hasParserOptions
-        ? {
-            parserOptions: {
-              project: [`${options.projectRoot}/tsconfig.*?.json`],
+    replaceOverridesInLintConfig(tree, options.projectRoot, [
+      {
+        files: ['*.ts'],
+        ...(hasParserOptions
+          ? {
+              parserOptions: {
+                project: [`${options.projectRoot}/tsconfig.*?.json`],
+              },
+            }
+          : {}),
+        extends: [
+          'plugin:@nx/angular',
+          'plugin:@angular-eslint/template/process-inline-templates',
+        ],
+        rules: {
+          '@angular-eslint/directive-selector': [
+            'error',
+            {
+              type: 'attribute',
+              prefix: camelize(options.prefix),
+              style: 'camelCase',
             },
-          }
-        : {}),
-      extends: [
-        'plugin:@nx/angular',
-        'plugin:@angular-eslint/template/process-inline-templates',
-      ],
-      rules: {
-        '@angular-eslint/directive-selector': [
-          'error',
-          {
-            type: 'attribute',
-            prefix: camelize(options.prefix),
-            style: 'camelCase',
-          },
-        ],
-        '@angular-eslint/component-selector': [
-          'error',
-          {
-            type: 'element',
-            prefix: dasherize(options.prefix),
-            style: 'kebab-case',
-          },
-        ],
+          ],
+          '@angular-eslint/component-selector': [
+            'error',
+            {
+              type: 'element',
+              prefix: dasherize(options.prefix),
+              style: 'kebab-case',
+            },
+          ],
+        },
       },
-    },
-    {
-      files: ['*.html'],
-      extends: ['plugin:@nx/angular-template'],
-      /**
-       * Having an empty rules object present makes it more obvious to the user where they would
-       * extend things from if they needed to
-       */
-      rules: {},
-    },
-  ]);
+      {
+        files: ['*.html'],
+        extends: ['plugin:@nx/angular-template'],
+        /**
+         * Having an empty rules object present makes it more obvious to the user where they would
+         * extend things from if they needed to
+         */
+        rules: {},
+      },
+    ]);
+  }
 
   if (!options.skipPackageJson) {
     const installTask = addAngularEsLintDependencies(tree);

@@ -12,7 +12,7 @@ import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
   addOverrideToLintConfig,
-  findEslintFile,
+  isEslintConfigSupported,
   updateOverrideInLintConfig,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
@@ -31,7 +31,7 @@ export async function addLinting(
     skipFormat: true,
     rootProject: options.rootProject,
   });
-  if (options.linter === Linter.EsLint) {
+  if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
     addExtendsToLintConfig(host, options.appProjectRoot, [
       'plugin:@nx/react-typescript',
       'next',

@@ -9,6 +9,7 @@ import { extraEslintDependencies } from '@nx/react/src/utils/lint';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
+  isEslintConfigSupported,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
 interface NormalizedSchema {
@@ -37,13 +38,15 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
   tasks.push(lintTask);
 
-  addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
-  addIgnoresToLintConfig(host, options.projectRoot, [
-    '.expo',
-    'web-build',
-    'cache',
-    'dist',
-  ]);
+  if (isEslintConfigSupported(host)) {
+    addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    addIgnoresToLintConfig(host, options.projectRoot, [
+      '.expo',
+      'web-build',
+      'cache',
+      'dist',
+    ]);
+  }
 
   if (!options.skipPackageJson) {
     const installTask = await addDependenciesToPackageJson(

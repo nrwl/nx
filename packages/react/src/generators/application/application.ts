@@ -35,7 +35,10 @@ import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import * as chalk from 'chalk';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 import { addE2e } from './lib/add-e2e';
-import { addExtendsToLintConfig } from '@nx/linter/src/generators/utils/eslint-file';
+import {
+  addExtendsToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -60,7 +63,9 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     });
     tasks.push(lintTask);
 
-    addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+    if (isEslintConfigSupported(host)) {
+      addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+    }
 
     if (!options.skipPackageJson) {
       const installTask = addDependenciesToPackageJson(

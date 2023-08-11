@@ -51,7 +51,7 @@ export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
   return null;
 }
 
-export function isMigrationSupported(tree: Tree, projectRoot = ''): boolean {
+export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
   const eslintFile = findEslintFile(tree, projectRoot);
   if (!eslintFile) {
     return;
