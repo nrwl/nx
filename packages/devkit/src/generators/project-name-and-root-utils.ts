@@ -50,14 +50,8 @@ export type ProjectNameAndRootOptions = {
 };
 
 type ProjectNameAndRootFormats = {
-  'as-provided': {
-    description: string;
-    options: ProjectNameAndRootOptions;
-  };
-  derived?: {
-    description: string;
-    options: ProjectNameAndRootOptions;
-  };
+  'as-provided': ProjectNameAndRootOptions;
+  derived?: ProjectNameAndRootOptions;
 };
 
 export async function determineProjectNameAndRootOptions(
@@ -69,7 +63,7 @@ export async function determineProjectNameAndRootOptions(
   const format =
     options.projectNameAndRootFormat ?? (await determineFormat(formats));
 
-  return formats[format].options;
+  return formats[format];
 }
 
 function validateName(
@@ -113,6 +107,15 @@ async function determineFormat(
     return 'derived';
   }
 
+  const asProvidedDescription = `As provided:
+    Name: ${formats['as-provided'].projectName}
+    Root: ${formats['as-provided'].projectRoot}`;
+  const asProvidedSelectedValue = `${formats['as-provided'].projectName} @ ${formats['as-provided'].projectRoot}`;
+  const derivedDescription = `Derived:
+    Name: ${formats['derived'].projectName}
+    Root: ${formats['derived'].projectRoot}`;
+  const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot} (This was derived from the folder structure. Please provide the exact name and directory in the future)`;
+
   return await prompt<{ format: ProjectNameAndRootFormat }>({
     type: 'select',
     name: 'format',
@@ -120,16 +123,18 @@ async function determineFormat(
       'What should be the project name and where should it be generated?',
     choices: [
       {
-        message: formats['as-provided'].description,
-        name: 'as-provided',
+        message: asProvidedDescription,
+        name: asProvidedSelectedValue,
       },
       {
-        message: formats['derived'].description,
-        name: 'derived',
+        message: derivedDescription,
+        name: derivedSelectedValue,
       },
     ],
     initial: 'as-provided' as any,
-  }).then(({ format }) => format);
+  }).then(({ format }) =>
+    format === asProvidedSelectedValue ? 'as-provided' : 'derived'
+  );
 }
 
 function getProjectNameAndRootFormats(
@@ -150,18 +155,13 @@ function getProjectNameAndRootFormats(
     const nameWithoutScope = asProvidedProjectName.split('/')[1];
     return {
       'as-provided': {
-        description: `Recommended:
-    Name: ${asProvidedProjectName}
-    Root: ${asProvidedProjectDirectory}`,
-        options: {
-          projectName: asProvidedProjectName,
-          names: {
-            projectSimpleName: nameWithoutScope,
-            projectFileName: nameWithoutScope,
-          },
-          importPath: options.importPath ?? asProvidedProjectName,
-          projectRoot: asProvidedProjectDirectory,
+        projectName: asProvidedProjectName,
+        names: {
+          projectSimpleName: nameWithoutScope,
+          projectFileName: nameWithoutScope,
         },
+        importPath: options.importPath ?? asProvidedProjectName,
+        projectRoot: asProvidedProjectDirectory,
       },
     };
   }
@@ -219,32 +219,22 @@ function getProjectNameAndRootFormats(
 
   return {
     'as-provided': {
-      description: `Recommended:
-    Name: ${asProvidedProjectName}
-    Root: ${asProvidedProjectDirectory}`,
-      options: {
-        projectName: asProvidedProjectName,
-        names: {
-          projectSimpleName: asProvidedProjectName,
-          projectFileName: asProvidedProjectName,
-        },
-        importPath: asProvidedImportPath,
-        projectRoot: asProvidedProjectDirectory,
+      projectName: asProvidedProjectName,
+      names: {
+        projectSimpleName: asProvidedProjectName,
+        projectFileName: asProvidedProjectName,
       },
+      importPath: asProvidedImportPath,
+      projectRoot: asProvidedProjectDirectory,
     },
     derived: {
-      description: `Legacy:
-    Name: ${derivedProjectName}
-    Root: ${derivedProjectDirectory}`,
-      options: {
-        projectName: derivedProjectName,
-        names: {
-          projectSimpleName: derivedSimpleProjectName,
-          projectFileName: derivedProjectName,
-        },
-        importPath: derivedImportPath,
-        projectRoot: derivedProjectDirectory,
+      projectName: derivedProjectName,
+      names: {
+        projectSimpleName: derivedSimpleProjectName,
+        projectFileName: derivedProjectName,
       },
+      importPath: derivedImportPath,
+      projectRoot: derivedProjectDirectory,
     },
   };
 }

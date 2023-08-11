@@ -247,29 +247,22 @@ describe('determineProjectNameAndRootOptions', () => {
         directory: 'shared',
       });
 
-      expect(promptSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'select',
-          name: 'format',
-          message:
-            'What should be the project name and where should it be generated?',
-          choices: [
-            {
-              message: `Recommended:
+      expect(promptSpy).toHaveBeenCalled();
+      const promptCallOptions = promptSpy.mock.calls[0][0] as any;
+      expect(promptCallOptions.choices).toStrictEqual([
+        {
+          message: `As provided:
     Name: lib-name
     Root: shared`,
-              name: 'as-provided',
-            },
-            {
-              message: `Legacy:
+          name: 'lib-name @ shared',
+        },
+        {
+          message: `Derived:
     Name: shared-lib-name
     Root: shared/lib-name`,
-              name: 'derived',
-            },
-          ],
-          initial: 'as-provided',
-        })
-      );
+          name: 'shared-lib-name @ shared/lib-name (This was derived from the folder structure. Please provide the exact name and directory in the future)',
+        },
+      ]);
 
       // restore original interactive mode
       restoreOriginalInteractiveMode();
@@ -523,29 +516,22 @@ describe('determineProjectNameAndRootOptions', () => {
         directory: 'shared',
       });
 
-      expect(promptSpy).toHaveBeenCalledWith(
-        expect.objectContaining({
-          type: 'select',
-          name: 'format',
-          message:
-            'What should be the project name and where should it be generated?',
-          choices: [
-            {
-              message: `Recommended:
+      expect(promptSpy).toHaveBeenCalled();
+      const promptCallOptions = promptSpy.mock.calls[0][0] as any;
+      expect(promptCallOptions.choices).toStrictEqual([
+        {
+          message: `As provided:
     Name: lib-name
     Root: shared`,
-              name: 'as-provided',
-            },
-            {
-              message: `Legacy:
+          name: 'lib-name @ shared',
+        },
+        {
+          message: `Derived:
     Name: shared-lib-name
     Root: libs/shared/lib-name`,
-              name: 'derived',
-            },
-          ],
-          initial: 'as-provided',
-        })
-      );
+          name: 'shared-lib-name @ libs/shared/lib-name (This was derived from the folder structure. Please provide the exact name and directory in the future)',
+        },
+      ]);
 
       // restore original interactive mode
       restoreOriginalInteractiveMode();
