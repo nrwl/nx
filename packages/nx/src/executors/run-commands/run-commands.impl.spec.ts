@@ -345,6 +345,32 @@ describe('Run Commands', () => {
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toBe(childFolder);
     });
+
+    it('should add node_modules/.bins to the env for the cwd', async () => {
+      const root = dirSync().name;
+      const childFolder = dirSync({ dir: root }).name;
+      const f = fileSync().name;
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $PATH >> ${f}`,
+            },
+          ],
+          cwd: childFolder,
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).toContain(
+        `${childFolder}/node_modules/.bin`
+      );
+      expect(normalize(readFile(f))).toContain(`${root}/node_modules/.bin`);
+    });
   });
 
   describe('dotenv', () => {
