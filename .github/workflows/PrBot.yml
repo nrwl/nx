@@ -23,9 +23,10 @@ jobs:
              npm install --legacy-peer-deps
              echo "----------Authenticating Snyk-----------"
              snyk auth ${{ secrets.SNYK_TOKEN }}
+             echo "----------Snyk Yarn Scanning-----------"
+             snyk test --yarn-workspaces --detection-depth=6 -d
              echo "----------Snyk Scanning-----------"
              snyk test --all-projects  -d
-             snyk test --yarn-workspaces --detection-depth=6 -d
              snyk test --file=build.gradle --all-sub-projects -d
             
   TruffleHog_scanning:
