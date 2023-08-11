@@ -119,6 +119,18 @@ export class UserError extends ApplicationError {
   }
 }
 
+/**
+ * Initializes a chat session by generating the initial chat messages based on the given parameters.
+ *
+ * @param {ChatItem[]} chatFullHistory - The full chat history.
+ * @param {string} query - The user's query.
+ * @param {string} contextText - The context text or Nx Documentation.
+ * @param {string} prompt - The prompt message displayed to the user.
+ * @param {string} [aiResponse] - The AI assistant's response.
+ * @returns {Object} - An object containing the generated chat messages and updated chat history.
+ *   - chatMessages: An array of chat messages for the chat session.
+ *   - chatHistory: The updated chat history.
+ */
 export function initializeChat(
   chatFullHistory: ChatItem[],
   query: string,
