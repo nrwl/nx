@@ -1,7 +1,11 @@
 // based on:
 // https://github.com/supabase-community/nextjs-openai-doc-search/blob/main/pages/api/vector-search.ts
 
-import { createClient } from '@supabase/supabase-js';
+import {
+  PostgrestSingleResponse,
+  SupabaseClient,
+  createClient,
+} from '@supabase/supabase-js';
 import GPT3Tokenizer from 'gpt3-tokenizer';
 import {
   Configuration,
@@ -45,6 +49,8 @@ let chatFullHistory: ChatItem[] = [];
 
 let totalTokensSoFar = 0;
 
+let supabaseClient: SupabaseClient<any, 'public', any>;
+
 export async function nxDevDataAccessAi(
   query: string,
   aiResponse?: string
@@ -54,6 +60,13 @@ export async function nxDevDataAccessAi(
   sources: { heading: string; url: string }[];
   sourcesMarkdown: string;
 }> {
+  if (!supabaseClient) {
+    supabaseClient = createClient(
+      supabaseUrl as string,
+      supabaseServiceKey as string
+    );
+  }
+
   if (chatFullHistory.length > MAX_HISTORY_LENGTH) {
     chatFullHistory.slice(0, MAX_HISTORY_LENGTH - 4);
   }
@@ -64,11 +77,6 @@ export async function nxDevDataAccessAi(
     if (!query) {
       throw new UserError('Missing query in request data');
     }
-
-    const supabaseClient = createClient(
-      supabaseUrl as string,
-      supabaseServiceKey as string
-    );
 
     // Moderate the content to comply with OpenAI T&C
     const sanitizedQuery = query.trim();
@@ -210,7 +218,7 @@ export async function nxDevDataAccessAi(
 
     return {
       textResponse: responseWithoutBadLinks,
-      usage: response.data.usage,
+      usage: response.data.usage as CreateCompletionResponseUsage,
       sources,
       sourcesMarkdown: toMarkdownList(sources),
     };
@@ -238,4 +246,18 @@ export function resetHistory() {
 
 export function getHistory(): ChatItem[] {
   return chatFullHistory;
+}
+
+export async function handleFeedback(feedback: {}): Promise<
+  PostgrestSingleResponse<null>
+> {
+  return supabaseClient.from('feedback').insert(feedback);
+}
+
+export async function handleQueryReporting(queryInfo: {}) {
+  const { error } = await supabaseClient.from('user_queries').insert(queryInfo);
+
+  if (error) {
+    console.error('Error storing the query info in Supabase: ', error);
+  }
 }
