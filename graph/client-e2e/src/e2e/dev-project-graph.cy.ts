@@ -46,7 +46,9 @@ describe('dev mode - project graph', () => {
     });
 
     it('should hide when a project is selected', () => {
-      cy.contains('cart').scrollIntoView().should('be.visible');
+      cy.contains('cart').as('cart');
+      cy.get('@cart').scrollIntoView();
+      cy.get('@cart').should('be.visible');
       cy.get('[data-project="cart"]').should('be.visible');
       cy.get('[data-project="cart"]').click({ force: true });
       getSelectProjectsMessage().should('not.exist');
@@ -253,7 +255,9 @@ describe('dev mode - project graph', () => {
 
   describe('focusing projects in sidebar', () => {
     it('should select appropriate projects', () => {
-      cy.contains('cart').scrollIntoView().should('be.visible');
+      cy.contains('cart').as('cart');
+      cy.get('@cart').scrollIntoView();
+      cy.get('@cart').should('be.visible');
       getFocusButtonForProject('cart').click({ force: true });
 
       const dependencies = nxExamplesJson.dependencies.cart;
@@ -288,7 +292,9 @@ describe('dev mode - project graph', () => {
 
   describe('toggle all projects in folder button', () => {
     it('should check all projects in folder if at least one project checked', () => {
-      cy.contains('shared-product-state').scrollIntoView().should('be.visible');
+      cy.contains('shared-product-state').as('shared-product-state');
+      cy.get('@shared-product-state').scrollIntoView();
+      cy.get('@shared-product-state').should('be.visible');
       cy.get('[data-project="shared-product-state"]').should('be.visible');
       cy.get('[data-project="shared-product-state"]').click({ force: true });
       getToggleAllButtonForFolder('shared/product').click({ force: true });
@@ -327,7 +333,9 @@ describe('dev mode - project graph', () => {
 
   describe('setting url params', () => {
     it('should set focused project', () => {
-      cy.contains('cart').scrollIntoView().should('be.visible');
+      cy.contains('cart').as('cart');
+      cy.get('@cart').scrollIntoView();
+      cy.get('@cart').should('be.visible');
       getFocusButtonForProject('cart').click({ force: true });
       getUnfocusProjectButton().should('exist');
       cy.url().should('contain', '/projects/cart');
