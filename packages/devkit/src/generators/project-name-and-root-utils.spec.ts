@@ -49,7 +49,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@proj/lib-name',
-        projectDirectory: 'shared',
+        projectRoot: 'shared',
       });
     });
 
@@ -68,7 +68,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@scope/lib-name',
-        projectDirectory: 'shared',
+        projectRoot: 'shared',
       });
     });
 
@@ -88,7 +88,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@custom-scope/lib-name',
-        projectDirectory: 'shared',
+        projectRoot: 'shared',
       });
     });
 
@@ -110,7 +110,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@scope/lib-name',
-        projectDirectory: '@scope/lib-name',
+        projectRoot: '@scope/lib-name',
       });
     });
 
@@ -134,7 +134,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: 'lib-name',
-        projectDirectory: '.',
+        projectRoot: '.',
       });
     });
 
@@ -180,7 +180,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'shared-lib-name',
         },
         importPath: '@proj/shared/lib-name',
-        projectDirectory: 'shared/lib-name',
+        projectRoot: 'shared/lib-name',
       });
     });
 
@@ -214,7 +214,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: 'lib-name',
-        projectDirectory: '.',
+        projectRoot: '.',
       });
     });
 
@@ -294,7 +294,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@scope/lib-name',
-        projectDirectory: 'shared',
+        projectRoot: 'shared',
       });
 
       // restore original interactive mode
@@ -323,7 +323,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@proj/lib-name',
-        projectDirectory: 'shared',
+        projectRoot: 'shared',
       });
     });
 
@@ -342,7 +342,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@scope/lib-name',
-        projectDirectory: 'shared',
+        projectRoot: 'shared',
       });
     });
 
@@ -362,7 +362,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@custom-scope/lib-name',
-        projectDirectory: 'shared',
+        projectRoot: 'shared',
       });
     });
 
@@ -385,7 +385,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@scope/lib-name',
-        projectDirectory: '@scope/lib-name',
+        projectRoot: '@scope/lib-name',
       });
     });
 
@@ -409,7 +409,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: 'lib-name',
-        projectDirectory: '.',
+        projectRoot: '.',
       });
     });
 
@@ -455,7 +455,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'shared-lib-name',
         },
         importPath: '@proj/shared/lib-name',
-        projectDirectory: 'libs/shared/lib-name',
+        projectRoot: 'libs/shared/lib-name',
       });
     });
 
@@ -490,7 +490,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: 'lib-name',
-        projectDirectory: '.',
+        projectRoot: '.',
       });
     });
 
@@ -570,7 +570,7 @@ describe('determineProjectNameAndRootOptions', () => {
           projectFileName: 'lib-name',
         },
         importPath: '@scope/lib-name',
-        projectDirectory: 'shared',
+        projectRoot: 'shared',
       });
 
       // restore original interactive mode

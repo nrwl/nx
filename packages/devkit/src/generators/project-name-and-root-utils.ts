@@ -28,9 +28,9 @@ export type ProjectNameAndRootOptions = {
    */
   projectName: string;
   /**
-   * Normalized project directory, including the layout directory if configured.
+   * Normalized project root, including the layout directory if configured.
    */
-  projectDirectory: string;
+  projectRoot: string;
   names: {
     /**
      * Normalized project name without scope. It's meant to be used when
@@ -160,7 +160,7 @@ function getProjectNameAndRootFormats(
             projectFileName: nameWithoutScope,
           },
           importPath: options.importPath ?? asProvidedProjectName,
-          projectDirectory: asProvidedProjectDirectory,
+          projectRoot: asProvidedProjectDirectory,
         },
       },
     };
@@ -229,7 +229,7 @@ function getProjectNameAndRootFormats(
           projectFileName: asProvidedProjectName,
         },
         importPath: asProvidedImportPath,
-        projectDirectory: asProvidedProjectDirectory,
+        projectRoot: asProvidedProjectDirectory,
       },
     },
     derived: {
@@ -243,7 +243,7 @@ function getProjectNameAndRootFormats(
           projectFileName: derivedProjectName,
         },
         importPath: derivedImportPath,
-        projectDirectory: derivedProjectDirectory,
+        projectRoot: derivedProjectDirectory,
       },
     },
   };
