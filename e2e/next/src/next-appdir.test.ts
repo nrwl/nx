@@ -23,7 +23,9 @@ describe('Next.js App Router', () => {
     const appName = uniq('app');
     const jsLib = uniq('tslib');
 
-    runCLI(`generate @nx/next:app ${appName} --e2eTestRunner=playwright`);
+    runCLI(
+      `generate @nx/next:app ${appName} --e2eTestRunner=playwright --appDir=true`
+    );
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
 
     updateFile(
@@ -37,6 +39,20 @@ describe('Next.js App Router', () => {
             <p>{${jsLib}()}</p>
           );
         };
+      `
+    );
+
+    updateFile(
+      `apps/${appName}-e2e/src/example.spec.ts`,
+      `
+      import { test, expect } from '@playwright/test';
+
+      test('has ${jsLib}', async ({ page }) => {
+        await page.goto('/');
+
+        // Expect h1 to contain a substring.
+        expect(await page.locator('p').innerText()).toContain('${jsLib}');
+      });
       `
     );
 

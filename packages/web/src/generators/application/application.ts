@@ -8,6 +8,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -288,6 +289,10 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
+      webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
+        options.name
+      }`,
+      webServerAddress: 'http://localhost:4200',
     });
     tasks.push(playwrightTask);
   }

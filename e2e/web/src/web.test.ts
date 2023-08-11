@@ -6,7 +6,6 @@ import {
   ensurePlaywrightBrowsersInstallation,
   isNotWindows,
   killPorts,
-  listFiles,
   newProject,
   readFile,
   rmDist,

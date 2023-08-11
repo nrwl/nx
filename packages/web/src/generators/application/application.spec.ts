@@ -156,7 +156,7 @@ describe('app', () => {
             "config": "apps/cool-app-e2e/playwright.config.ts",
           },
           "outputs": [
-            "dist/.playwright/apps/cool-app-e2e",
+            "{workspaceRoot}/dist/.playwright/apps/cool-app-e2e",
           ],
         }
       `);

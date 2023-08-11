@@ -81,6 +81,12 @@ export async function playwrightExecutor(
 
   const args = createArgs(options);
   const p = runPlaywright(args, context.root);
+  p.stdout.on('data', (message) => {
+    process.stdout.write(message);
+  });
+  p.stderr.on('data', (message) => {
+    process.stderr.write(message);
+  });
 
   return new Promise<{ success: boolean }>((resolve) => {
     p.on('close', (code) => {
@@ -117,7 +123,7 @@ function runPlaywright(args: string[], cwd: string) {
     const cli = require.resolve('@playwright/test/cli');
 
     return fork(cli, ['test', ...args], {
-      stdio: 'inherit',
+      stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
       cwd,
     });
   } catch (e) {
