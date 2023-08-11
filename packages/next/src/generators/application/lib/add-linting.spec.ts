@@ -134,7 +134,8 @@ describe('updateEslint', () => {
           files: ["apps/my-app/**/*.*"],
           rules: { "@next/next/no-html-link-for-pages": "off" }
       },
-          ...baseConfig,{
+          ...baseConfig,
+          {
         "files": [
           "apps/my-app/**/*.ts",
           "apps/my-app/**/*.tsx",
@@ -147,7 +148,7 @@ describe('updateEslint', () => {
             "apps/my-app/pages"
           ]
         }
-      },
+          },
           {
               files: [
                   "apps/my-app/**/*.ts",

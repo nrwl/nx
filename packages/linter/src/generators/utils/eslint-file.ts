@@ -120,7 +120,7 @@ export function updateOverrideInLintConfig(
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
     let content = tree.read(fileName, 'utf8');
-    content = replaceOverride(content, lookup, update);
+    content = replaceOverride(content, root, lookup, update);
     tree.write(fileName, content);
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');

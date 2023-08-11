@@ -111,6 +111,7 @@ export function hasOverride(
  */
 export function replaceOverride(
   content: string,
+  root: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   update: (
     override: Linter.ConfigOverride<Linter.RulesRecord>
@@ -158,10 +159,12 @@ export function replaceOverride(
           start,
           length: end - start,
         });
+        const updatedData = update(data);
+        mapFilePaths(updatedData, root);
         changes.push({
           type: ChangeType.Insert,
           index: start,
-          text: JSON.stringify(update(data), null, 2).slice(2, -2), // remove curly braces and start/end line breaks since we are injecting just properties
+          text: JSON.stringify(updatedData, null, 2).slice(2, -2), // remove curly braces and start/end line breaks since we are injecting just properties
         });
       }
     }
@@ -589,7 +592,7 @@ export function generateFlatOverride(
   );
 }
 
-function mapFilePaths(
+export function mapFilePaths(
   override: Linter.ConfigOverride<Linter.RulesRecord>,
   root: string
 ) {
@@ -614,15 +617,17 @@ export function mapFilePath(filePath: string, root: string) {
     const fileWithoutBang = filePath.slice(1);
     if (fileWithoutBang.startsWith('*.')) {
       return `!${joinPathFragments(root, '**', fileWithoutBang)}`;
-    } else {
+    } else if (!fileWithoutBang.startsWith(root)) {
       return `!${joinPathFragments(root, fileWithoutBang)}`;
     }
+    return filePath;
   }
   if (filePath.startsWith('*.')) {
     return joinPathFragments(root, '**', filePath);
-  } else {
+  } else if (!filePath.startsWith(root)) {
     return joinPathFragments(root, filePath);
   }
+  return filePath;
 }
 
 function addTSObjectProperty(

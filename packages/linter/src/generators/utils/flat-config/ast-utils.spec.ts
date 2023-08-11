@@ -16,12 +16,12 @@ describe('ast-utils', () => {
         ...baseConfig,
         {
             files: [
-                "mylib/**/*.ts",
-                "mylib/**/*.tsx"
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
             ],
             rules: {}
         },
-        { ignores: ["mylib/.cache/**/*"] },
+        { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addBlockToFlatConfigExport(
         content,
@@ -38,12 +38,12 @@ describe('ast-utils', () => {
                       ...baseConfig,
                       {
                           files: [
-                              "mylib/**/*.ts",
-                              "mylib/**/*.tsx"
+                              "my-lib/**/*.ts",
+                              "my-lib/**/*.tsx"
                           ],
                           rules: {}
                       },
-                      { ignores: ["mylib/.cache/**/*"] },
+                      { ignores: ["my-lib/.cache/**/*"] },
               {
                   files: ["**/*.svg"],
                   rules: { "@nx/do-something-with-svg": "error" }
@@ -58,12 +58,12 @@ describe('ast-utils', () => {
         ...baseConfig,
         {
             files: [
-                "mylib/**/*.ts",
-                "mylib/**/*.tsx"
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
             ],
             rules: {}
         },
-        { ignores: ["mylib/.cache/**/*"] },
+        { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addBlockToFlatConfigExport(
         content,
@@ -77,12 +77,12 @@ describe('ast-utils', () => {
                       ...baseConfig,
                       {
                           files: [
-                              "mylib/**/*.ts",
-                              "mylib/**/*.tsx"
+                              "my-lib/**/*.ts",
+                              "my-lib/**/*.tsx"
                           ],
                           rules: {}
                       },
-                      { ignores: ["mylib/.cache/**/*"] },
+                      { ignores: ["my-lib/.cache/**/*"] },
                   ];"
           `);
     });
@@ -95,12 +95,12 @@ describe('ast-utils', () => {
         ...baseConfig,
         {
             files: [
-                "mylib/**/*.ts",
-                "mylib/**/*.tsx"
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
             ],
             rules: {}
         },
-        { ignores: ["mylib/.cache/**/*"] },
+        { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addImportToFlatConfig(
         content,
@@ -114,12 +114,12 @@ describe('ast-utils', () => {
                       ...baseConfig,
                       {
                           files: [
-                              "mylib/**/*.ts",
-                              "mylib/**/*.tsx"
+                              "my-lib/**/*.ts",
+                              "my-lib/**/*.tsx"
                           ],
                           rules: {}
                       },
-                      { ignores: ["mylib/.cache/**/*"] },
+                      { ignores: ["my-lib/.cache/**/*"] },
                   ];"
           `);
     });
@@ -131,12 +131,12 @@ describe('ast-utils', () => {
         ...baseConfig,
         {
             files: [
-                "mylib/**/*.ts",
-                "mylib/**/*.tsx"
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
             ],
             rules: {}
         },
-        { ignores: ["mylib/.cache/**/*"] },
+        { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addImportToFlatConfig(
         content,
@@ -150,12 +150,12 @@ describe('ast-utils', () => {
                       ...baseConfig,
                       {
                           files: [
-                              "mylib/**/*.ts",
-                              "mylib/**/*.tsx"
+                              "my-lib/**/*.ts",
+                              "my-lib/**/*.tsx"
                           ],
                           rules: {}
                       },
-                      { ignores: ["mylib/.cache/**/*"] },
+                      { ignores: ["my-lib/.cache/**/*"] },
                   ];"
           `);
     });
@@ -167,12 +167,12 @@ describe('ast-utils', () => {
         ...baseConfig,
         {
             files: [
-                "mylib/**/*.ts",
-                "mylib/**/*.tsx"
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
             ],
             rules: {}
         },
-        { ignores: ["mylib/.cache/**/*"] },
+        { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addImportToFlatConfig(
         content,
@@ -189,12 +189,12 @@ describe('ast-utils', () => {
         ...baseConfig,
         {
             files: [
-                "mylib/**/*.ts",
-                "mylib/**/*.tsx"
+                "my-lib/**/*.ts",
+                "my-lib/**/*.tsx"
             ],
             rules: {}
         },
-        { ignores: ["mylib/.cache/**/*"] },
+        { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addImportToFlatConfig(
         content,
@@ -212,12 +212,12 @@ describe('ast-utils', () => {
       ...baseConfig,
       {
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.tsx"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.tsx"
         ],
         rules: {}
       },
-      { ignores: ["mylib/.cache/**/*"] },
+      { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
@@ -234,12 +234,12 @@ describe('ast-utils', () => {
               ...baseConfig,
               {
                 files: [
-                  "mylib/**/*.ts",
-                  "mylib/**/*.tsx"
+                  "my-lib/**/*.ts",
+                  "my-lib/**/*.tsx"
                 ],
                 rules: {}
               },
-              { ignores: ["mylib/.cache/**/*"] },
+              { ignores: ["my-lib/.cache/**/*"] },
             ];"
       `);
     });
@@ -251,12 +251,12 @@ describe('ast-utils', () => {
       ...baseConfig,
       {
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.tsx"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.tsx"
         ],
         rules: {}
       },
-      { ignores: ["mylib/.cache/**/*"] },
+      { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addCompatToFlatConfig(content);
       expect(result).toMatchInlineSnapshot(`
@@ -273,12 +273,12 @@ describe('ast-utils', () => {
               ...baseConfig,
               {
                 files: [
-                  "mylib/**/*.ts",
-                  "mylib/**/*.tsx"
+                  "my-lib/**/*.ts",
+                  "my-lib/**/*.tsx"
                 ],
                 rules: {}
               },
-              { ignores: ["mylib/.cache/**/*"] },
+              { ignores: ["my-lib/.cache/**/*"] },
             ];"
       `);
     });
@@ -297,12 +297,12 @@ describe('ast-utils', () => {
       ...baseConfig,
       {
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.tsx"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.tsx"
         ],
         rules: {}
       },
-      { ignores: ["mylib/.cache/**/*"] },
+      { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = addCompatToFlatConfig(content);
       expect(result).toEqual(content);
@@ -324,8 +324,8 @@ describe('ast-utils', () => {
       ...baseConfig,
       {
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.tsx"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.tsx"
         ],
         rules: {}
       },
@@ -347,7 +347,7 @@ describe('ast-utils', () => {
         ],
         rules: {}
       })),
-      { ignores: ["mylib/.cache/**/*"] },
+      { ignores: ["my-lib/.cache/**/*"] },
     ];`;
       const result = removeOverridesFromLintConfig(content);
       expect(result).toMatchInlineSnapshot(`
@@ -362,7 +362,7 @@ describe('ast-utils', () => {
 
                   module.exports = [
                     ...baseConfig,
-                    { ignores: ["mylib/.cache/**/*"] },
+                    { ignores: ["my-lib/.cache/**/*"] },
                   ];"
           `);
     });
@@ -373,8 +373,8 @@ describe('ast-utils', () => {
     module.exports = [
       {
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.tsx"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.tsx"
         ],
         rules: {}
       },
@@ -414,8 +414,8 @@ describe('ast-utils', () => {
     module.exports = [
       {
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.tsx"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.tsx"
         ],
         rules: {
           'my-ts-rule': 'error'
@@ -423,15 +423,15 @@ describe('ast-utils', () => {
       },
       {
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.js"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.js"
         ],
         rules: {}
       },
       {
         files: [
-          "mylib/**/*.js",
-          "mylib/**/*.jsx"
+          "my-lib/**/*.js",
+          "my-lib/**/*.jsx"
         ],
         rules: {
           'my-js-rule': 'error'
@@ -441,7 +441,8 @@ describe('ast-utils', () => {
 
       const result = replaceOverride(
         content,
-        (o) => o.files.includes('mylib/**/*.ts'),
+        'my-lib',
+        (o) => o.files.includes('my-lib/**/*.ts'),
         (o) => ({
           ...o,
           rules: {
@@ -455,8 +456,8 @@ describe('ast-utils', () => {
             module.exports = [
               {
           "files": [
-            "mylib/**/*.ts",
-            "mylib/**/*.tsx"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.tsx"
           ],
           "rules": {
             "my-rule": "error"
@@ -464,8 +465,8 @@ describe('ast-utils', () => {
               },
               {
           "files": [
-            "mylib/**/*.ts",
-            "mylib/**/*.js"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.js"
           ],
           "rules": {
             "my-rule": "error"
@@ -473,8 +474,8 @@ describe('ast-utils', () => {
               },
               {
                 files: [
-                  "mylib/**/*.js",
-                  "mylib/**/*.jsx"
+                  "my-lib/**/*.js",
+                  "my-lib/**/*.jsx"
                 ],
                 rules: {
                   'my-js-rule': 'error'
@@ -490,8 +491,8 @@ describe('ast-utils', () => {
     module.exports = [
       {
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.tsx"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.tsx"
         ],
         rules: {
           'my-ts-rule': 'error'
@@ -499,8 +500,8 @@ describe('ast-utils', () => {
       },
       {
         files: [
-          "mylib/**/*.js",
-          "mylib/**/*.jsx"
+          "my-lib/**/*.js",
+          "my-lib/**/*.jsx"
         ],
         rules: {
           'my-js-rule': 'error'
@@ -510,7 +511,8 @@ describe('ast-utils', () => {
 
       const result = replaceOverride(
         content,
-        (o) => o.files.includes('mylib/**/*.ts'),
+        'my-lib',
+        (o) => o.files.includes('my-lib/**/*.ts'),
         (o) => ({
           ...o,
           rules: {
@@ -525,8 +527,8 @@ describe('ast-utils', () => {
             module.exports = [
               {
           "files": [
-            "mylib/**/*.ts",
-            "mylib/**/*.tsx"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.tsx"
           ],
           "rules": {
             "my-ts-rule": "error",
@@ -535,8 +537,8 @@ describe('ast-utils', () => {
               },
               {
                 files: [
-                  "mylib/**/*.js",
-                  "mylib/**/*.jsx"
+                  "my-lib/**/*.js",
+                  "my-lib/**/*.jsx"
                 ],
                 rules: {
                   'my-js-rule': 'error'
@@ -553,8 +555,8 @@ describe('ast-utils', () => {
       ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
         ...config,
         files: [
-          "mylib/**/*.ts",
-          "mylib/**/*.tsx"
+          "my-lib/**/*.ts",
+          "my-lib/**/*.tsx"
         ],
         rules: {
           'my-ts-rule': 'error'
@@ -564,7 +566,8 @@ describe('ast-utils', () => {
 
       const result = replaceOverride(
         content,
-        (o) => o.files.includes('mylib/**/*.ts'),
+        'my-lib',
+        (o) => o.files.includes('my-lib/**/*.ts'),
         (o) => ({
           ...o,
           rules: {
@@ -580,8 +583,8 @@ describe('ast-utils', () => {
               ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
                 ...config,
           "files": [
-            "mylib/**/*.ts",
-            "mylib/**/*.tsx"
+            "my-lib/**/*.ts",
+            "my-lib/**/*.tsx"
           ],
           "rules": {
             "my-ts-rule": "error",
