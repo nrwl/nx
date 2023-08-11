@@ -1420,6 +1420,12 @@
               "file": "shared/recipes/plugins/create-preset"
             },
             {
+              "name": "Create an Install Package",
+              "id": "create-install-package",
+              "tags": ["create-your-own-plugin"],
+              "file": "shared/recipes/plugins/create-install-package"
+            },
+            {
               "name": "Modify the Project Graph",
               "id": "project-graph-plugins",
               "tags": ["create-your-own-plugin", "explore-graph"],

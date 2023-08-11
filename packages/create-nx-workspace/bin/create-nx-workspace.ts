@@ -105,7 +105,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
               .map((p) => `"${p}"`)
               .join(
                 ', '
-              )}]. To build your own see https://nx.dev/plugins/recipes/create-preset`,
+              )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset`,
             type: 'string',
           })
           .option('interactive', {
