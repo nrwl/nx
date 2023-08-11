@@ -5,7 +5,6 @@ import {
   joinPathFragments,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 import { extraEslintDependencies } from '@nx/react/src/utils/lint';
 import { NormalizedSchema } from './normalize-options';
@@ -13,6 +12,8 @@ import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
   addOverrideToLintConfig,
+  findEslintFile,
+  updateOverrideInLintConfig,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
 export async function addLinting(
@@ -30,56 +31,56 @@ export async function addLinting(
     skipFormat: true,
     rootProject: options.rootProject,
   });
-
   if (options.linter === Linter.EsLint) {
     addExtendsToLintConfig(host, options.appProjectRoot, [
       'plugin:@nx/react-typescript',
       'next',
       'next/core-web-vitals',
     ]);
-    addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
 
     // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
     // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
-    addOverrideToLintConfig(host, options.appProjectRoot, {
-      files: ['*.*'],
-      rules: {
-        '@next/next/no-html-link-for-pages': 'off',
-      },
-    });
-    addOverrideToLintConfig(host, options.appProjectRoot, {
-      files: ['*.spec.ts', '*.spec.tsx', '*.spec.js', '*.spec.jsx'],
-      env: {
-        jest: true,
-      },
-    });
-
-    updateJson(
+    addOverrideToLintConfig(
       host,
-      joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      (json) => {
-        // Find the override that handles both TS and JS files.
-        const commonOverride = json.overrides?.find((o) =>
-          ['*.ts', '*.tsx', '*.js', '*.jsx'].every((ext) =>
-            o.files.includes(ext)
-          )
-        );
-        if (commonOverride) {
-          // Configure custom pages directory for next rule
-          if (commonOverride.rules) {
-            commonOverride.rules = {
-              ...commonOverride.rules,
-              '@next/next/no-html-link-for-pages': [
-                'error',
-                `${options.appProjectRoot}/pages`,
-              ],
-            };
-          }
-        }
-
-        return json;
-      }
+      options.appProjectRoot,
+      {
+        files: ['*.*'],
+        rules: {
+          '@next/next/no-html-link-for-pages': 'off',
+        },
+      },
+      { insertAtTheEnd: false }
     );
+    updateOverrideInLintConfig(
+      host,
+      options.appProjectRoot,
+      (o) =>
+        Array.isArray(o.files) &&
+        o.files.some((f) => f.match(/\*\.ts$/)) &&
+        o.files.some((f) => f.match(/\*\.tsx$/)) &&
+        o.files.some((f) => f.match(/\*\.js$/)) &&
+        o.files.some((f) => f.match(/\*\.jsx$/)),
+      (o) => ({
+        ...o,
+        rules: {
+          ...o.rules,
+          '@next/next/no-html-link-for-pages': [
+            'error',
+            `${options.appProjectRoot}/pages`,
+          ],
+        },
+      })
+    );
+    // add jest specific config
+    if (options.unitTestRunner === 'jest') {
+      addOverrideToLintConfig(host, options.appProjectRoot, {
+        files: ['*.spec.ts', '*.spec.tsx', '*.spec.js', '*.spec.jsx'],
+        env: {
+          jest: true,
+        },
+      });
+    }
+    addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
   }
 
   const installTask = addDependenciesToPackageJson(

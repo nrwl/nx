@@ -1,11 +1,10 @@
-import { ExecutorContext, joinPathFragments } from '@nx/devkit';
+import { ExecutorContext, joinPathFragments, workspaceRoot } from '@nx/devkit';
 import { ESLint } from 'eslint';
-import { mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 
 import type { Schema } from './schema';
 import { resolveAndInstantiateESLint } from './utility/eslint-utils';
-import { useFlatConfig } from '../../utils/flat-config';
 
 export default async function run(
   options: Schema,
@@ -47,7 +46,9 @@ export default async function run(
    * we only want to support it if the user has explicitly opted into it by converting
    * their root ESLint config to use eslint.config.js
    */
-  const hasFlatConfig = useFlatConfig();
+  const hasFlatConfig = existsSync(
+    joinPathFragments(workspaceRoot, 'eslint.config.js')
+  );
 
   if (!eslintConfigPath && hasFlatConfig) {
     const projectRoot =

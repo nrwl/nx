@@ -98,10 +98,6 @@ export function updateEslintConfig(
         offset,
         schema.relativeToRootDestination
       )
-      // config.replace(
-      //   /require(['"](.*)['"])/g,
-      //   `require('` + offsetFilePath(project, `$1`, offset) + `')`
-      // )
     );
   }
 }

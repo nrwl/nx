@@ -4,7 +4,7 @@ import {
   generateAst,
   addImportToFlatConfig,
   addCompatToFlatConfig,
-  removeRulesFromLintConfig,
+  removeOverridesFromLintConfig,
 } from './ast-utils';
 
 describe('ast-utils', () => {
@@ -341,7 +341,7 @@ describe('ast-utils', () => {
       })),
       { ignores: ["mylib/.cache/**/*"] },
     ];`;
-    const result = removeRulesFromLintConfig(content);
+    const result = removeOverridesFromLintConfig(content);
     expect(result).toMatchInlineSnapshot(`
       "const FlatCompat = require("@eslint/eslintrc");
           const baseConfig = require("../../eslint.config.js");
@@ -389,7 +389,7 @@ describe('ast-utils', () => {
         rules: {}
       }))
     ];`;
-    const result = removeRulesFromLintConfig(content);
+    const result = removeOverridesFromLintConfig(content);
     expect(result).toMatchInlineSnapshot(`
       "const baseConfig = require("../../eslint.config.js");
 

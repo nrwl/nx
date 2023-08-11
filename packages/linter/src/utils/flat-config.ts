@@ -1,6 +1,5 @@
-import { joinPathFragments, workspaceRoot } from '@nx/devkit';
-import { existsSync } from 'fs';
+import { Tree } from '@nx/devkit';
 
-export function useFlatConfig(): boolean {
-  return existsSync(joinPathFragments(workspaceRoot, 'eslint.config.js'));
+export function useFlatConfig(tree: Tree): boolean {
+  return tree.exists('eslint.config.js');
 }

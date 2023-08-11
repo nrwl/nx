@@ -395,7 +395,7 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
       : 'tsconfig.storybook.json'
   );
 
-  if (useFlatConfig()) {
+  if (useFlatConfig(tree)) {
     let config = tree.read(eslintFile, 'utf-8');
     const projectRegex = RegExp(/project:\s?\[?['"](.*)['"]\]?/g);
     let match;

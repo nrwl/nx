@@ -7,7 +7,10 @@ import {
 import { Linter } from 'eslint';
 import * as ts from 'typescript';
 
-export function removeRulesFromLintConfig(content: string): string {
+/**
+ * Remove all overrides from the config file
+ */
+export function removeOverridesFromLintConfig(content: string): string {
   const source = ts.createSourceFile(
     '',
     content,
@@ -16,32 +19,14 @@ export function removeRulesFromLintConfig(content: string): string {
     ts.ScriptKind.JS
   );
 
-  const exportsArray = ts.forEachChild(source, function analyze(node) {
-    if (
-      ts.isExpressionStatement(node) &&
-      ts.isBinaryExpression(node.expression) &&
-      node.expression.left.getText() === 'module.exports' &&
-      ts.isArrayLiteralExpression(node.expression.right)
-    ) {
-      return node.expression.right.elements;
-    }
-  });
-
+  const exportsArray = findAllBlocks(source);
   if (!exportsArray) {
     return content;
   }
 
   const changes: StringChange[] = [];
   exportsArray.forEach((node, i) => {
-    if (
-      (ts.isObjectLiteralExpression(node) &&
-        node.properties.some((p) => p.name.getText() === 'files')) ||
-      // detect ...compat.config(...).map(...)
-      (ts.isSpreadElement(node) &&
-        ts.isCallExpression(node.expression) &&
-        ts.isPropertyAccessExpression(node.expression.expression) &&
-        ts.isArrowFunction(node.expression.arguments[0]))
-    ) {
+    if (isOverride(node)) {
       const commaOffset =
         i < exportsArray.length - 1 || exportsArray.hasTrailingComma ? 1 : 0;
       changes.push({
@@ -55,6 +40,80 @@ export function removeRulesFromLintConfig(content: string): string {
   return applyChangesToString(content, changes);
 }
 
+function findAllBlocks(source: ts.SourceFile): ts.NodeArray<ts.Node> {
+  return ts.forEachChild(source, function analyze(node) {
+    if (
+      ts.isExpressionStatement(node) &&
+      ts.isBinaryExpression(node.expression) &&
+      node.expression.left.getText() === 'module.exports' &&
+      ts.isArrayLiteralExpression(node.expression.right)
+    ) {
+      return node.expression.right.elements;
+    }
+  });
+}
+
+function isOverride(node: ts.Node): boolean {
+  return (
+    (ts.isObjectLiteralExpression(node) &&
+      node.properties.some((p) => p.name.getText() === 'files')) ||
+    // detect ...compat.config(...).map(...)
+    (ts.isSpreadElement(node) &&
+      ts.isCallExpression(node.expression) &&
+      ts.isPropertyAccessExpression(node.expression.expression) &&
+      ts.isArrowFunction(node.expression.arguments[0]))
+  );
+}
+
+export function replaceOverride(
+  content: string,
+  lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
+  update: (
+    override: Linter.ConfigOverride<Linter.RulesRecord>
+  ) => Linter.ConfigOverride<Linter.RulesRecord>
+): string {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const exportsArray = findAllBlocks(source);
+  if (!exportsArray) {
+    return content;
+  }
+  const changes: StringChange[] = [];
+  exportsArray.forEach((node) => {
+    if (isOverride(node)) {
+      // ensure property names have double quotes so that JSON.parse works
+      const data = JSON.parse(
+        node
+          .getFullText()
+          .replace(/'/g, '"')
+          .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
+      );
+      if (lookup(data)) {
+        changes.push({
+          type: ChangeType.Delete,
+          start: node.pos,
+          length: node.end - node.pos,
+        });
+        changes.push({
+          type: ChangeType.Insert,
+          index: node.pos,
+          text: JSON.stringify(update(data), null, 2),
+        });
+      }
+    }
+  });
+
+  return applyChangesToString(content, changes);
+}
+
+/**
+ * Adding require statement to the top of the file
+ */
 export function addImportToFlatConfig(
   content: string,
   variable: string | string[],
@@ -224,6 +283,9 @@ export function addBlockToFlatConfigExport(
   }
 }
 
+/**
+ * Add plugins block to the top of the export blocks
+ */
 export function addPluginsToExportsBlock(
   content: string,
   plugins: { name: string; varName: string; imp: string }[]
@@ -277,6 +339,10 @@ const compat = new FlatCompat({
     });
   `;
 
+/**
+ * Generate node list representing the imports and the exports blocks
+ * Optionally add flat compat initialization
+ */
 export function createNodeList(
   importsMap: Map<string, string>,
   exportElements: ts.Expression[],
