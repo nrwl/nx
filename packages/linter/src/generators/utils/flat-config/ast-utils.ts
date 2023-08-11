@@ -61,10 +61,14 @@ function isOverride(node: ts.Node): boolean {
     (ts.isSpreadElement(node) &&
       ts.isCallExpression(node.expression) &&
       ts.isPropertyAccessExpression(node.expression.expression) &&
-      ts.isArrowFunction(node.expression.arguments[0]))
+      ts.isArrowFunction(node.expression.arguments[0]) &&
+      ts.isParenthesizedExpression(node.expression.arguments[0].body))
   );
 }
 
+/**
+ * Finds an override matching the lookup function and applies the update function to it
+ */
 export function replaceOverride(
   content: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
@@ -86,23 +90,38 @@ export function replaceOverride(
   const changes: StringChange[] = [];
   exportsArray.forEach((node) => {
     if (isOverride(node)) {
-      // ensure property names have double quotes so that JSON.parse works
+      let objSource;
+      let start, end;
+      if (ts.isObjectLiteralExpression(node)) {
+        objSource = node.getFullText();
+        start = node.properties.pos + 1; // keep leading line break
+        end = node.properties.end;
+      } else {
+        const fullNodeText =
+          node['expression'].arguments[0].body.expression.getFullText();
+        // strip any spread elements
+        objSource = fullNodeText.replace(/\s*\.\.\.[a-zA-Z0-9_]+,?\n?/, '');
+        start =
+          node['expression'].arguments[0].body.expression.properties.pos +
+          (fullNodeText.length - objSource.length);
+        end = node['expression'].arguments[0].body.expression.properties.end;
+      }
       const data = JSON.parse(
-        node
-          .getFullText()
+        objSource
+          // ensure property names have double quotes so that JSON.parse works
           .replace(/'/g, '"')
           .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
       );
       if (lookup(data)) {
         changes.push({
           type: ChangeType.Delete,
-          start: node.pos,
-          length: node.end - node.pos,
+          start,
+          length: end - start,
         });
         changes.push({
           type: ChangeType.Insert,
-          index: node.pos,
-          text: JSON.stringify(update(data), null, 2),
+          index: start,
+          text: JSON.stringify(update(data), null, 2).slice(2, -2), // remove curly braces and start/end line breaks since we are injecting just properties
         });
       }
     }
