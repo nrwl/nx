@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@nx/nx-dev/ui-common';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
@@ -7,12 +7,13 @@ import {
   resetHistory,
   getProcessedHistory,
   ChatItem,
+  handleFeedback,
+  handleQueryReporting,
 } from '@nx/nx-dev/data-access-ai';
 import { warning, infoBox, noResults } from './utils';
 
 export function FeatureAi(): JSX.Element {
   const [chatHistory, setChatHistory] = useState<ChatItem[] | null>([]);
-  const [finalResult, setFinalResult] = useState<null | ReactNode>(null);
   const [textResponse, setTextResponse] = useState<undefined | string>('');
   const [error, setError] = useState(null);
   const [query, setSearchTerm] = useState('');
@@ -60,6 +61,10 @@ export function FeatureAi(): JSX.Element {
     }
     sendCustomEvent('ai_query', 'ai', 'query', undefined, {
       query,
+    });
+    handleQueryReporting({
+      action: 'ai_query',
+      query,
       ...usage,
     });
     const sourcesMd =
@@ -73,9 +78,6 @@ ${sourcesMarkdown}
 \n
         `;
 
-    setFinalResult(
-      renderMarkdown(completeText + sourcesMd, { filePath: '' }).node
-    );
     if (completeText) {
       setChatHistory([
         ...getProcessedHistory(),
@@ -84,11 +86,14 @@ ${sourcesMarkdown}
     }
   };
 
-  const handleFeedback = (type: 'good' | 'bad', index: number) => {
+  const handleUserFeedback = (result: 'good' | 'bad', index: number) => {
     try {
-      sendCustomEvent('ai_feedback', 'ai', type, undefined, {
+      sendCustomEvent('ai_feedback', 'ai', result);
+      handleFeedback({
+        action: 'evaluation',
+        result,
         query,
-        result: finalResult,
+        response: textResponse,
         sources,
       });
       setFeedbackSent((prev) => ({ ...prev, [index]: true }));
@@ -99,7 +104,6 @@ ${sourcesMarkdown}
 
   const handleReset = () => {
     resetHistory();
-    setFinalResult(null);
     setSearchTerm('');
     setTextResponse('');
     setSources('');
@@ -180,7 +184,7 @@ ${sourcesMarkdown}
               <Button
                 variant="primary"
                 size="small"
-                onClick={() => handleFeedback('good', index)}
+                onClick={() => handleUserFeedback('good', index)}
               >
                 Answer was helpful{' '}
                 <span role="img" aria-label="thumbs-up">
@@ -190,7 +194,7 @@ ${sourcesMarkdown}
               <Button
                 variant="primary"
                 size="small"
-                onClick={() => handleFeedback('bad', index)}
+                onClick={() => handleUserFeedback('bad', index)}
               >
                 Answer looks wrong{' '}
                 <span role="img" aria-label="thumbs-down">
