@@ -3640,6 +3640,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Add a Svelte Project",
+                "path": "/showcase/example-repos/add-svelte",
+                "id": "add-svelte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Powering Up React Development With Nx",
                 "path": "/showcase/example-repos/react-nx",
                 "id": "react-nx",
@@ -3772,6 +3780,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Add a Svelte Project",
+            "path": "/showcase/example-repos/add-svelte",
+            "id": "add-svelte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Powering Up React Development With Nx",
             "path": "/showcase/example-repos/react-nx",
             "id": "react-nx",
@@ -3890,6 +3906,14 @@
         "name": "Add a Vue Project",
         "path": "/showcase/example-repos/add-vue",
         "id": "add-vue",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Svelte Project",
+        "path": "/showcase/example-repos/add-svelte",
+        "id": "add-svelte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

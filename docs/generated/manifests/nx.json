@@ -4538,6 +4538,16 @@
             "tags": []
           },
           {
+            "id": "add-svelte",
+            "name": "Add a Svelte Project",
+            "description": "Add a Svelte project to your repo",
+            "file": "shared/recipes/add-stack/add-svelte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-svelte",
+            "tags": []
+          },
+          {
             "id": "react-nx",
             "name": "Powering Up React Development With Nx",
             "description": "",
@@ -4704,6 +4714,16 @@
         "tags": []
       },
       {
+        "id": "add-svelte",
+        "name": "Add a Svelte Project",
+        "description": "Add a Svelte project to your repo",
+        "file": "shared/recipes/add-stack/add-svelte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-svelte",
+        "tags": []
+      },
+      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -4856,6 +4876,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-vue",
+    "tags": []
+  },
+  "/showcase/example-repos/add-svelte": {
+    "id": "add-svelte",
+    "name": "Add a Svelte Project",
+    "description": "Add a Svelte project to your repo",
+    "file": "shared/recipes/add-stack/add-svelte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-svelte",
     "tags": []
   },
   "/showcase/example-repos/react-nx": {
