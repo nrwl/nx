@@ -8,7 +8,6 @@ import {
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
-  updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -20,6 +19,13 @@ import type { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/e
 import { PluginLintChecksGeneratorSchema } from './schema';
 import { NX_PREFIX } from 'nx/src/utils/logger';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
+import {
+  addOverrideToLintConfig,
+  isMigrationSupported,
+  lintConfigHasOverride,
+  updateOverrideInLintConfig,
+} from '@nx/linter/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/linter/src/utils/flat-config';
 
 export default async function pluginLintCheckGenerator(
   host: Tree,
@@ -101,22 +107,19 @@ export function addMigrationJsonChecks(
     updateProjectConfiguration(host, options.projectName, projectConfiguration);
 
     // Update project level eslintrc
-    updateJson<ESLint.Config>(
+    updateOverrideInLintConfig(
       host,
-      `${projectConfiguration.root}/.eslintrc.json`,
-      (c) => {
-        const override = c.overrides.find(
-          (o) =>
-            Object.keys(o.rules ?? {})?.includes('@nx/nx-plugin-checks') ||
-            Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks')
-        );
-        if (
-          Array.isArray(override?.files) &&
-          !override.files.includes(relativeMigrationsJsonPath)
-        ) {
-          override.files.push(relativeMigrationsJsonPath);
-        }
-        return c;
+      projectConfiguration.root,
+      (o) =>
+        Object.keys(o.rules ?? {})?.includes('@nx/nx-plugin-checks') ||
+        Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks'),
+      (o) => {
+        const fileSet = new Set(Array.isArray(o.files) ? o.files : [o.files]);
+        fileSet.add(relativeMigrationsJsonPath);
+        return {
+          ...o,
+          files: Array.from(fileSet),
+        };
       }
     );
   }
@@ -179,42 +182,49 @@ function updateProjectEslintConfig(
   options: ProjectConfiguration,
   packageJson: PackageJson
 ) {
-  // Update the project level lint configuration to specify
-  // the plugin schema rule for generated files
-  const eslintPath = `${options.root}/.eslintrc.json`;
-  if (host.exists(eslintPath)) {
-    const eslintConfig = readJson<ESLint.Config>(host, eslintPath);
-    eslintConfig.overrides ??= [];
-    let entry: ESLint.ConfigOverride<ESLint.RulesRecord> =
-      eslintConfig.overrides.find(
-        (x) =>
-          Object.keys(x.rules ?? {}).includes('@nx/nx-plugin-checks') ||
-          Object.keys(x.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks')
-      );
-    const newentry = !entry;
-    entry ??= { files: [] };
-    entry.files = [
-      ...new Set([
-        ...(entry.files ?? []),
-        ...[
-          './package.json',
-          packageJson.generators,
-          packageJson.executors,
-          packageJson.schematics,
-          packageJson.builders,
-        ].filter((f) => !!f),
-      ]),
-    ];
-    entry.parser = 'jsonc-eslint-parser';
-    entry.rules ??= {
-      '@nx/nx-plugin-checks': 'error',
-    };
+  if (isMigrationSupported(host, options.root)) {
+    const lookup = (o) =>
+      Object.keys(o.rules ?? {}).includes('@nx/nx-plugin-checks') ||
+      Object.keys(o.rules ?? {}).includes('@nrwl/nx/nx-plugin-checks');
 
-    if (newentry) {
-      eslintConfig.overrides.push(entry);
+    const files = [
+      './package.json',
+      packageJson.generators,
+      packageJson.executors,
+      packageJson.schematics,
+      packageJson.builders,
+    ].filter((f) => !!f);
+
+    const parser = useFlatConfig(host)
+      ? { languageOptions: { parser: 'jsonc-eslint-parser' } }
+      : { parser: 'jsonc-eslint-parser' };
+
+    if (lintConfigHasOverride(host, options.root, lookup)) {
+      // update it
+      updateOverrideInLintConfig(host, options.root, lookup, (o) => ({
+        ...o,
+        files: [
+          ...new Set([
+            ...(Array.isArray(o.files) ? o.files : [o.files]),
+            ...files,
+          ]),
+        ],
+        ...parser,
+        rules: {
+          ...o.rules,
+          '@nx/nx-plugin-checks': 'error',
+        },
+      }));
+    } else {
+      // add it
+      addOverrideToLintConfig(host, options.root, {
+        files,
+        ...parser,
+        rules: {
+          '@nx/nx-plugin-checks': 'error',
+        },
+      });
     }
-
-    writeJson(host, eslintPath, eslintConfig);
   }
 }
 
@@ -222,22 +232,34 @@ function updateProjectEslintConfig(
 // This is required, otherwise every json file that is not overriden
 // will display false errors in the IDE
 function updateRootEslintConfig(host: Tree) {
-  if (host.exists('.eslintrc.json')) {
-    const rootESLint = readJson<ESLint.Config>(host, '.eslintrc.json');
-    rootESLint.overrides ??= [];
-    if (!eslintConfigContainsJsonOverride(rootESLint)) {
-      rootESLint.overrides.push({
-        files: '*.json',
-        parser: 'jsonc-eslint-parser',
-        rules: {},
-      });
-      writeJson(host, '.eslintrc.json', rootESLint);
+  if (isMigrationSupported(host)) {
+    if (
+      !lintConfigHasOverride(
+        host,
+        '',
+        (o) =>
+          Array.isArray(o.files)
+            ? o.files.some((f) => f.match(/\.json$/))
+            : !!o.files?.match(/\.json$/),
+        true
+      )
+    ) {
+      addOverrideToLintConfig(
+        host,
+        '',
+        {
+          files: '*.json',
+          parser: 'jsonc-eslint-parser',
+          rules: {},
+        },
+        { checkBaseConfig: true }
+      );
     }
   } else {
     output.note({
       title: 'Unable to update root eslint config.',
       bodyLines: [
-        'We only automatically update the root eslint config if it is json.',
+        'We only automatically update the root eslint config if it is json or flat config.',
         'If you are using a different format, you will need to update it manually.',
         'You need to set the parser to jsonc-eslint-parser for json files.',
       ],
@@ -261,15 +283,6 @@ function setupVsCodeLintingForJsonFiles(host: Tree) {
     existing['eslint.validate'] = [...eslintValidate, 'json'];
   }
   writeJson(host, '.vscode/settings.json', existing);
-}
-
-function eslintConfigContainsJsonOverride(eslintConfig: ESLint.Config) {
-  return eslintConfig.overrides.some((x) => {
-    if (typeof x.files === 'string' && x.files.includes('.json')) {
-      return true;
-    }
-    return Array.isArray(x.files) && x.files.some((f) => f.includes('.json'));
-  });
 }
 
 function projectIsEsLintEnabled(project: ProjectConfiguration) {

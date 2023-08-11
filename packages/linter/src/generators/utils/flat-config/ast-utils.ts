@@ -66,6 +66,46 @@ function isOverride(node: ts.Node): boolean {
   );
 }
 
+export function hasOverride(
+  content: string,
+  lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean
+): boolean {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const exportsArray = findAllBlocks(source);
+  if (!exportsArray) {
+    return false;
+  }
+  for (const node of exportsArray) {
+    if (isOverride(node)) {
+      let objSource;
+      if (ts.isObjectLiteralExpression(node)) {
+        objSource = node.getFullText();
+      } else {
+        const fullNodeText =
+          node['expression'].arguments[0].body.expression.getFullText();
+        // strip any spread elements
+        objSource = fullNodeText.replace(/\s*\.\.\.[a-zA-Z0-9_]+,?\n?/, '');
+      }
+      const data = JSON.parse(
+        objSource
+          // ensure property names have double quotes so that JSON.parse works
+          .replace(/'/g, '"')
+          .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
+      );
+      if (lookup(data)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 /**
  * Finds an override matching the lookup function and applies the update function to it
  */
@@ -261,7 +301,9 @@ export function addImportToFlatConfig(
 export function addBlockToFlatConfigExport(
   content: string,
   config: ts.Expression | ts.SpreadElement,
-  options: { insertAtTheEnd: boolean } = { insertAtTheEnd: true }
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
+    insertAtTheEnd: true,
+  }
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const source = ts.createSourceFile(

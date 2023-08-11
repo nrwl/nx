@@ -1,4 +1,10 @@
-import { joinPathFragments, names, Tree, updateJson } from '@nx/devkit';
+import {
+  joinPathFragments,
+  names,
+  readJson,
+  Tree,
+  updateJson,
+} from '@nx/devkit';
 import { Linter } from 'eslint';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
@@ -9,6 +15,7 @@ import {
   generateAst,
   generateFlatOverride,
   generatePluginExtendsElement,
+  hasOverride,
   mapFilePath,
   removeOverridesFromLintConfig,
   replaceOverride,
@@ -26,10 +33,14 @@ export const eslintConfigFileWhitelist = [
 ];
 
 export const baseEsLintConfigFile = '.eslintrc.base.json';
+export const baseEsLintFlatConfigFile = 'eslint.base.config.js';
 
 export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
   if (projectRoot === '' && tree.exists(baseEsLintConfigFile)) {
     return baseEsLintConfigFile;
+  }
+  if (projectRoot === '' && tree.exists(baseEsLintFlatConfigFile)) {
+    return baseEsLintFlatConfigFile;
   }
   for (const file of eslintConfigFileWhitelist) {
     if (tree.exists(joinPathFragments(projectRoot, file))) {
@@ -40,14 +51,29 @@ export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
   return null;
 }
 
+export function isMigrationSupported(tree: Tree, projectRoot = ''): boolean {
+  const eslintFile = findEslintFile(tree, projectRoot);
+  if (!eslintFile) {
+    return;
+  }
+  return eslintFile.endsWith('.json') || eslintFile.endsWith('.config.js');
+}
+
 export function addOverrideToLintConfig(
   tree: Tree,
   root: string,
   override: Linter.ConfigOverride<Linter.RulesRecord>,
-  options: { insertAtTheEnd: boolean } = { insertAtTheEnd: true }
+  options: { insertAtTheEnd?: boolean; checkBaseConfig?: boolean } = {
+    insertAtTheEnd: true,
+  }
 ) {
+  const isBase =
+    options.checkBaseConfig && findEslintFile(tree, root).includes('.base');
   if (useFlatConfig(tree)) {
-    const fileName = joinPathFragments(root, 'eslint.config.js');
+    const fileName = joinPathFragments(
+      root,
+      isBase ? baseEsLintFlatConfigFile : 'eslint.config.js'
+    );
     const flatOverride = generateFlatOverride(override, root);
     let content = tree.read(fileName, 'utf8');
     // we will be using compat here so we need to make sure it's added
@@ -59,7 +85,10 @@ export function addOverrideToLintConfig(
       addBlockToFlatConfigExport(content, flatOverride, options)
     );
   } else {
-    const fileName = joinPathFragments(root, '.eslintrc.json');
+    const fileName = joinPathFragments(
+      root,
+      isBase ? baseEsLintConfigFile : '.eslintrc.json'
+    );
     updateJson(tree, fileName, (json) => {
       json.overrides ?? [];
       if (options.insertAtTheEnd) {
@@ -102,6 +131,30 @@ export function updateOverrideInLintConfig(
       }
       return json;
     });
+  }
+}
+
+export function lintConfigHasOverride(
+  tree: Tree,
+  root: string,
+  lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
+  checkBaseConfig = false
+): boolean {
+  const isBase =
+    checkBaseConfig && findEslintFile(tree, root).includes('.base');
+  if (useFlatConfig(tree)) {
+    const fileName = joinPathFragments(
+      root,
+      isBase ? baseEsLintFlatConfigFile : 'eslint.config.js'
+    );
+    const content = tree.read(fileName, 'utf8');
+    return hasOverride(content, lookup);
+  } else {
+    const fileName = joinPathFragments(
+      root,
+      isBase ? baseEsLintConfigFile : '.eslintrc.json'
+    );
+    return readJson(tree, fileName).overrides?.some(lookup) || false;
   }
 }
 
