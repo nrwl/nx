@@ -541,7 +541,7 @@ async function normalizeOptions(
   const {
     projectName,
     names: projectNames,
-    projectDirectory,
+    projectRoot,
     importPath,
   } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
@@ -551,7 +551,7 @@ async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
   });
-  options.rootProject = projectDirectory === '.';
+  options.rootProject = projectRoot === '.';
   const fileName = getCaseAwareFileName({
     fileName: options.simpleName
       ? projectNames.projectSimpleName
@@ -570,7 +570,7 @@ async function normalizeOptions(
     fileName,
     name: projectName,
     projectNames,
-    projectRoot: projectDirectory,
+    projectRoot,
     parsedTags,
     importPath,
   };
