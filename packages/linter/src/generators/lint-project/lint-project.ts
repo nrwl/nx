@@ -8,7 +8,11 @@ import {
 } from '@nx/devkit';
 
 import { Linter as LinterEnum } from '../utils/linter';
-import { findEslintFile } from '../utils/eslint-file';
+import {
+  baseEsLintConfigFile,
+  baseEsLintFlatConfigFile,
+  findEslintFile,
+} from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
 import type { Linter } from 'eslint';
@@ -219,7 +223,10 @@ function isMigrationToMonorepoNeeded(
   tree: Tree
 ): boolean {
   // the base config is already created, migration has been done
-  if (tree.exists('.eslintrc.base.json')) {
+  if (
+    tree.exists(baseEsLintConfigFile) ||
+    tree.exists(baseEsLintFlatConfigFile)
+  ) {
     return false;
   }
 
