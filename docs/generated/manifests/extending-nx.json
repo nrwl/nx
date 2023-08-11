@@ -198,6 +198,16 @@
         "tags": ["create-your-own-plugin"]
       },
       {
+        "id": "create-install-package",
+        "name": "Create an Install Package",
+        "description": "",
+        "file": "shared/recipes/plugins/create-install-package",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/extending-nx/recipes/create-install-package",
+        "tags": ["create-your-own-plugin"]
+      },
+      {
         "id": "project-graph-plugins",
         "name": "Modify the Project Graph",
         "description": "",
@@ -310,6 +320,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/create-preset",
+    "tags": ["create-your-own-plugin"]
+  },
+  "/extending-nx/recipes/create-install-package": {
+    "id": "create-install-package",
+    "name": "Create an Install Package",
+    "description": "",
+    "file": "shared/recipes/plugins/create-install-package",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/extending-nx/recipes/create-install-package",
     "tags": ["create-your-own-plugin"]
   },
   "/extending-nx/recipes/project-graph-plugins": {

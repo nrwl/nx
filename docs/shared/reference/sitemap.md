@@ -233,6 +233,7 @@
     - [Modify Files](/extending-nx/recipes/modifying-files)
     - [Write a Migration](/extending-nx/recipes/migration-generators)
     - [Create a Preset](/extending-nx/recipes/create-preset)
+    - [Create an Install Package](/extending-nx/recipes/create-install-package)
     - [Modify the Project Graph](/extending-nx/recipes/project-graph-plugins)
     - [Identify Custom Projects](/extending-nx/recipes/project-inference-plugins)
 

@@ -656,6 +656,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/plugins/create-install-package",
+      "id": "create-install-package",
+      "name": "Create an Install Package",
+      "path": "/extending-nx/recipes/create-install-package"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/plugins/project-graph-plugins",
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
