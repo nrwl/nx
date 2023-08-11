@@ -51,6 +51,7 @@
               "@babel/preset-env",
               "@babel/preset-typescript",
               "@babel/runtime",
+              "@swc/cli",
               "babel-plugin-const-enum",
               "babel-plugin-macros",
               "babel-plugin-transform-typescript-metadata"
