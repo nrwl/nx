@@ -59,12 +59,19 @@ function normalizeOptions(
     outputPath
   );
 
+  const projectRootParts = projectRoot.split('/');
+  // We pop the last part of the `projectRoot` to pass
+  // the last part (projectDir) and the remainder (projectRootParts) to swc
+  const projectDir = projectRootParts.pop();
+  // default to current directory if projectRootParts is [].
+  // Eg: when a project is at the root level, outside of layout dir
+  const swcCwd = projectRootParts.join('/') || '.';
   const swcrcPath = getSwcrcPath(options, root, projectRoot);
-  // TODO(meeroslav): Check why this is needed in order for swc to properly nest folders
-  const distParent = outputPath.split('/').slice(0, -1).join('/');
+
   const swcCliOptions = {
-    srcPath: projectRoot,
-    destPath: relative(root, distParent),
+    srcPath: projectDir,
+    destPath: relative(join(root, swcCwd), outputPath),
+    swcCwd,
     swcrcPath,
   };
 
@@ -121,11 +128,13 @@ export async function* swcExecutor(
   if (!isInlineGraphEmpty(inlineProjectGraph)) {
     options.projectRoot = '.'; // set to root of workspace to include other libs for type check
 
-    options.swcCliOptions.srcPath = root.split('/').slice(0, -1).join('/'); // set to root of libraries to include other libs
-    options.swcCliOptions.destPath = join(
-      _options.outputPath,
-      options.swcCliOptions.srcPath
-    ); // new destPath is dist/{libs}/{parentLib}/{libs}
+    // remap paths for SWC compilation
+    options.swcCliOptions.srcPath = options.swcCliOptions.swcCwd;
+    options.swcCliOptions.swcCwd = '.';
+    options.swcCliOptions.destPath = options.swcCliOptions.destPath
+      .split('../')
+      .at(-1)
+      .concat('/', options.swcCliOptions.srcPath);
 
     // tmp swcrc with dependencies to exclude
     // - buildable libraries
