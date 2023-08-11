@@ -5,7 +5,7 @@ import {
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import {
-  getNxAngularJsonPlugin,
+  NxAngularJsonPlugin,
   NX_ANGULAR_JSON_PLUGIN_NAME,
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
@@ -105,18 +105,8 @@ export async function retrieveProjectConfigurations(
     workspaceRoot
   );
 
-  if (shouldMergeAngularProjects(workspaceRoot, false)) {
-    addAngularPlugin(plugins, workspaceRoot);
-  }
-
   const globs = configurationGlobs(workspaceRoot, plugins);
   return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins, globs);
-}
-
-function addAngularPlugin(plugins: NxPlugin[], root: string) {
-  if (!plugins.some((p) => p.name === NX_ANGULAR_JSON_PLUGIN_NAME)) {
-    plugins.push(getNxAngularJsonPlugin(root));
-  }
 }
 
 export async function retrieveProjectConfigurationsWithAngularProjects(
@@ -132,17 +122,15 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
     workspaceRoot
   );
 
-  if (shouldMergeAngularProjects(workspaceRoot, true)) {
-    addAngularPlugin(plugins, workspaceRoot);
+  if (
+    shouldMergeAngularProjects(workspaceRoot, true) &&
+    !plugins.some((p) => p.name === NX_ANGULAR_JSON_PLUGIN_NAME)
+  ) {
+    plugins.push(NxAngularJsonPlugin);
   }
 
   const globs = configurationGlobs(workspaceRoot, plugins);
-  return _retrieveProjectConfigurations(
-    workspaceRoot,
-    nxJson,
-    plugins,
-    globs,
-  );
+  return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins, globs);
 }
 
 /**
@@ -160,9 +148,7 @@ export function retrieveProjectConfigurationsSync(
     getNxRequirePaths(workspaceRoot),
     workspaceRoot
   );
-  if (shouldMergeAngularProjects(workspaceRoot, false)) {
-    addAngularPlugin(plugins, workspaceRoot);
-  }
+
   const globs = configurationGlobs(workspaceRoot, plugins);
   return _retrieveProjectConfigurations(workspaceRoot, nxJson, plugins, globs);
 }
@@ -171,7 +157,7 @@ function _retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   plugins: NxPluginV2[],
-  globs: string[],
+  globs: string[]
 ): {
   externalNodes: Record<string, ProjectGraphExternalNode>;
   projectNodes: Record<string, ProjectConfiguration>;
