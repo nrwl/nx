@@ -60,9 +60,11 @@ function normalizeOptions(
   );
 
   const swcrcPath = getSwcrcPath(options, root, projectRoot);
+  // TODO(meeroslav): Check why this is needed in order for swc to properly nest folders
+  const distParent = outputPath.split('/').slice(0, -1).join('/');
   const swcCliOptions = {
     srcPath: projectRoot,
-    destPath: relative(root, outputPath),
+    destPath: relative(root, distParent),
     swcrcPath,
   };
 
