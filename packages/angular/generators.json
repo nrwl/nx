@@ -309,6 +309,18 @@
       "schema": "./src/generators/setup-tailwind/schema.json",
       "description": "Configures Tailwind CSS for an application or a buildable/publishable library."
     },
+    "spectator-component": {
+      "factory": "./src/generators/spectator-component/spectator-component",
+      "schema": "./src/generators/spectator-component/schema.json",
+      "aliases": ["sc"],
+      "description": "Generate an Spectator Angular Component."
+    },
+    "spectator-service": {
+      "factory": "./src/generators/spectator-service/spectator-service",
+      "schema": "./src/generators/spectator-service/schema.json",
+      "aliases": ["ss"],
+      "description": "Generate an Spectator Angular Service."
+    },
     "stories": {
       "factory": "./src/generators/stories/stories",
       "schema": "./src/generators/stories/schema.json",

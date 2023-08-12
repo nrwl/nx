@@ -338,6 +338,8 @@
       - [setup-mf](/packages/angular/generators/setup-mf)
       - [setup-ssr](/packages/angular/generators/setup-ssr)
       - [setup-tailwind](/packages/angular/generators/setup-tailwind)
+      - [spectator-component](/packages/angular/generators/spectator-component)
+      - [spectator-service](/packages/angular/generators/spectator-service)
       - [stories](/packages/angular/generators/stories)
       - [storybook-configuration](/packages/angular/generators/storybook-configuration)
       - [cypress-component-configuration](/packages/angular/generators/cypress-component-configuration)

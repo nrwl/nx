@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`service Generator should create service files for application: service 1`] = `
+"import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ExampleService {
+
+  constructor() {}
+}"
+`;
+
+exports[`service Generator should create service files for application: service test file 1`] = `
+"import { createServiceFactory, SpectatorService } from '@ngneat/spectator';
+import { ExampleService } from './example.service';
+
+describe('ExampleService', () => {
+  let spectator: SpectatorService<ExampleService>;
+  const createService = createServiceFactory(ExampleService);
+
+  beforeEach(() => spectator = createService());
+
+  it('should...', () => {
+    expect(spectator.service).toBeTruthy();
+  });
+});"
+`;
+
+exports[`service Generator should create service files for library: service 1`] = `
+"import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ExampleService {
+
+  constructor() {}
+}"
+`;
+
+exports[`service Generator should create service files for library: service test file 1`] = `
+"import { createServiceFactory, SpectatorService } from '@ngneat/spectator';
+import { ExampleService } from './example.service';
+
+describe('ExampleService', () => {
+  let spectator: SpectatorService<ExampleService>;
+  const createService = createServiceFactory(ExampleService);
+
+  beforeEach(() => spectator = createService());
+
+  it('should...', () => {
+    expect(spectator.service).toBeTruthy();
+  });
+});"
+`;

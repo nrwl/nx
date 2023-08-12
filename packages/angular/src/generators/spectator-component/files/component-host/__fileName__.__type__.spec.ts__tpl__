@@ -1,0 +1,30 @@
+import { createHostFactory, SpectatorHost } from '@ngneat/spectator<% if (jest) { %>/jest<% } %>';
+
+import { <%= className %>Component } from './<%= fileName %>.component';
+
+describe('<%= className %>Component', () => {
+  let spectator: SpectatorHost<<%= className %>Component>;
+
+  const createHost = createHostFactory(<%= className %>Component);
+
+  beforeEach(() => {
+    spectator = createHost(`<app-<%= fileName %> title="Zippy title">Zippy content</app-<%= fileName %>>`);
+  });
+
+  it('should create', () => {
+    expect(spectator.component).toBeTruthy();
+  });
+
+  it('should...', () => {
+    spectator.click('.zippy__title');
+    expect(spectator.query('.arrow')).toHaveText('Close');
+  });
+
+  it('should...', () => {
+    spectator.click('.zippy__title');
+    expect(spectator.query('.zippy__content')).toExist();
+    spectator.click('.zippy__title');
+    expect('.zippy__content').not.toExist();
+  });
+
+});

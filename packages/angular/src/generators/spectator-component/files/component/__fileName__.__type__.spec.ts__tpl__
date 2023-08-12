@@ -1,0 +1,14 @@
+import { Spectator, createComponentFactory } from '@ngneat/spectator<% if (jest) { %>/jest<% } %>';
+
+import { <%= className %><%= typeClassName %> } from './<%= fileName %><%= type ? '.' + type: '' %>';
+
+describe('<%= className %><%= typeClassName %>', () => {
+  let spectator: Spectator<<%= className %><%= typeClassName %>>;
+  const createComponent = createComponentFactory(<%= className %><%= typeClassName %>);
+
+  it('should create', () => {
+    spectator = createComponent();
+
+    expect(spectator.component).toBeTruthy();
+  });
+});

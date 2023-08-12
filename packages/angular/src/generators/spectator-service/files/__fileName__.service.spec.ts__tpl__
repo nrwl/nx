@@ -1,0 +1,13 @@
+import { createServiceFactory, SpectatorService } from '@ngneat/spectator<% if (jest) { %>/jest<% } %>';
+import { <%= className %>Service } from './<%= fileName %>.service';
+
+describe('<%= className %>Service', () => {
+  let spectator: SpectatorService<<%= className %>Service>;
+  const createService = createServiceFactory(<%= className %>Service);
+
+  beforeEach(() => spectator = createService());
+
+  it('should...', () => {
+    expect(spectator.service).toBeTruthy();
+  });
+});

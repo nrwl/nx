@@ -6145,6 +6145,22 @@
                 "disableCollapsible": false
               },
               {
+                "id": "spectator-component",
+                "path": "/packages/angular/generators/spectator-component",
+                "name": "spectator-component",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "spectator-service",
+                "path": "/packages/angular/generators/spectator-service",
+                "name": "spectator-service",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "stories",
                 "path": "/packages/angular/generators/stories",
                 "name": "stories",

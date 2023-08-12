@@ -353,6 +353,24 @@
         "type": "generator"
       },
       {
+        "description": "Generate an Spectator Angular Component.",
+        "file": "generated/packages/angular/generators/spectator-component.json",
+        "hidden": false,
+        "name": "spectator-component",
+        "originalFilePath": "/packages/angular/src/generators/spectator-component/schema.json",
+        "path": "angular/generators/spectator-component",
+        "type": "generator"
+      },
+      {
+        "description": "Generate an Spectator Angular Service.",
+        "file": "generated/packages/angular/generators/spectator-service.json",
+        "hidden": false,
+        "name": "spectator-service",
+        "originalFilePath": "/packages/angular/src/generators/spectator-service/schema.json",
+        "path": "angular/generators/spectator-service",
+        "type": "generator"
+      },
+      {
         "description": "Creates stories/specs for all components declared in a project.",
         "file": "generated/packages/angular/generators/stories.json",
         "hidden": false,

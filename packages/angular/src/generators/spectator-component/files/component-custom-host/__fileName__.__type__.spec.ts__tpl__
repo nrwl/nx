@@ -1,0 +1,22 @@
+import { Component } from '@angular/core';
+import { createHostFactory, SpectatorHost } from '@ngneat/spectator<% if (jest) { %>/jest<% } %>';
+
+import { <%= className %>Component } from './<%= fileName %>.component';
+
+@Component({ template: '' })
+class CustomHostComponent {
+  title = 'Custom HostComponent';
+}
+
+describe('<%= className %>Component', () => {
+  let host: SpectatorHost<<%= className %>Component, CustomHostComponent>;
+  const createHost = createHostFactory({
+    component: <%= className %>Component,
+    host: CustomHostComponent
+  });
+
+  it('should display the host component title', () => {
+    host = createHost(`<zippy [title]="title"></zippy>`);
+    expect(host.query('.zippy__title')).toHaveText('Custom HostComponent');
+  });
+});

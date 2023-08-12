@@ -1,0 +1,48 @@
+{
+  "name": "spectator-service",
+  "factory": "./src/generators/spectator-service/spectator-service",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "SpectatorAngularService",
+    "title": "Angular Service Options Schema",
+    "type": "object",
+    "description": "Creates a new, generic service definition in the given project.",
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "The name of the service.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the service?"
+      },
+      "path": {
+        "type": "string",
+        "$default": { "$source": "workingDirectory" },
+        "description": "The path at which to create the service, relative to the workspace root.",
+        "visible": false
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "projectName" }
+      },
+      "skipTests": {
+        "type": "boolean",
+        "description": "Do not create \"spec.ts\" test files for the new service.",
+        "default": false
+      },
+      "jest": {
+        "type": "boolean",
+        "default": false,
+        "description": "When true, uses Jest to create mocks."
+      }
+    },
+    "required": ["name"],
+    "presets": []
+  },
+  "aliases": ["ss"],
+  "description": "Generate an Spectator Angular Service.",
+  "implementation": "/packages/angular/src/generators/spectator-service/spectator-service.ts",
+  "hidden": false,
+  "path": "/packages/angular/src/generators/spectator-service/schema.json",
+  "type": "generator"
+}
