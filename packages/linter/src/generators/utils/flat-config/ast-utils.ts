@@ -106,6 +106,17 @@ export function hasOverride(
   return false;
 }
 
+const STRIP_SPREAD_ELEMENTS = /\s*\.\.\.[a-zA-Z0-9_]+,?\n?/g;
+
+function parseTextToJson(text: string): any {
+  return JSON.parse(
+    text
+      // ensure property names have double quotes so that JSON.parse works
+      .replace(/'/g, '"')
+      .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
+  );
+}
+
 /**
  * Finds an override matching the lookup function and applies the update function to it
  */
@@ -141,18 +152,13 @@ export function replaceOverride(
         const fullNodeText =
           node['expression'].arguments[0].body.expression.getFullText();
         // strip any spread elements
-        objSource = fullNodeText.replace(/\s*\.\.\.[a-zA-Z0-9_]+,?\n?/, '');
+        objSource = fullNodeText.replace(STRIP_SPREAD_ELEMENTS, '');
         start =
           node['expression'].arguments[0].body.expression.properties.pos +
           (fullNodeText.length - objSource.length);
         end = node['expression'].arguments[0].body.expression.properties.end;
       }
-      const data = JSON.parse(
-        objSource
-          // ensure property names have double quotes so that JSON.parse works
-          .replace(/'/g, '"')
-          .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
-      );
+      const data = parseTextToJson(objSource);
       if (lookup(data)) {
         changes.push({
           type: ChangeType.Delete,
@@ -345,6 +351,203 @@ export function addBlockToFlatConfigExport(
       },
     ]);
   }
+}
+
+export function removePlugin(
+  content: string,
+  pluginName: string,
+  pluginImport: string
+) {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const changes: StringChange[] = [];
+  ts.forEachChild(source, function analyze(node) {
+    if (
+      ts.isVariableStatement(node) &&
+      ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
+      ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
+      node.declarationList.declarations[0].initializer.arguments.length &&
+      ts.isStringLiteral(
+        node.declarationList.declarations[0].initializer.arguments[0]
+      ) &&
+      node.declarationList.declarations[0].initializer.arguments[0].text ===
+        pluginImport
+    ) {
+      changes.push({
+        type: ChangeType.Delete,
+        start: node.pos,
+        length: node.end - node.pos,
+      });
+    }
+  });
+  ts.forEachChild(source, function analyze(node) {
+    if (
+      ts.isExpressionStatement(node) &&
+      ts.isBinaryExpression(node.expression) &&
+      node.expression.left.getText() === 'module.exports' &&
+      ts.isArrayLiteralExpression(node.expression.right)
+    ) {
+      const blockElements = node.expression.right.elements;
+      blockElements.forEach((element) => {
+        if (ts.isObjectLiteralExpression(element)) {
+          const pluginsElem = element.properties.find(
+            (prop) => prop.name?.getText() === 'plugins'
+          ) as ts.PropertyAssignment;
+          if (!pluginsElem) {
+            return;
+          }
+          if (ts.isArrayLiteralExpression(pluginsElem.initializer)) {
+            const pluginsArray = pluginsElem.initializer;
+            const plugins = parseTextToJson(
+              pluginsElem.initializer
+                .getText()
+                .replace(STRIP_SPREAD_ELEMENTS, '')
+            );
+
+            if (plugins.length > 1) {
+              changes.push({
+                type: ChangeType.Delete,
+                start: pluginsArray.pos,
+                length: pluginsArray.end - pluginsArray.pos,
+              });
+              changes.push({
+                type: ChangeType.Insert,
+                index: pluginsArray.pos,
+                text: JSON.stringify(plugins.filter((p) => p !== pluginName)),
+              });
+            } else {
+              const keys = element.properties.map((prop) =>
+                prop.name?.getText()
+              );
+              if (keys.length > 1) {
+                const removeComma =
+                  keys.indexOf('plugins') < keys.length - 1 ||
+                  element.properties.hasTrailingComma;
+                changes.push({
+                  type: ChangeType.Delete,
+                  start: pluginsElem.pos + (removeComma ? 1 : 0),
+                  length:
+                    pluginsElem.end - pluginsElem.pos + (removeComma ? 1 : 0),
+                });
+              } else {
+                const removeComma =
+                  blockElements.indexOf(element) < blockElements.length - 1 ||
+                  blockElements.hasTrailingComma;
+                changes.push({
+                  type: ChangeType.Delete,
+                  start: element.pos + (removeComma ? 1 : 0),
+                  length: element.end - element.pos + (removeComma ? 1 : 0),
+                });
+              }
+            }
+          } else if (ts.isObjectLiteralExpression(pluginsElem.initializer)) {
+            const pluginsObj = pluginsElem.initializer;
+            if (pluginsElem.initializer.properties.length > 1) {
+              const plugin = pluginsObj.properties.find(
+                (prop) => prop.name?.['text'] === pluginName
+              ) as ts.PropertyAssignment;
+              const removeComma =
+                pluginsObj.properties.indexOf(plugin) <
+                  pluginsObj.properties.length - 1 ||
+                pluginsObj.properties.hasTrailingComma;
+              changes.push({
+                type: ChangeType.Delete,
+                start: plugin.pos + (removeComma ? 1 : 0),
+                length: plugin.end - plugin.pos + (removeComma ? 1 : 0),
+              });
+            } else {
+              const keys = element.properties.map((prop) =>
+                prop.name?.getText()
+              );
+              if (keys.length > 1) {
+                const removeComma =
+                  keys.indexOf('plugins') < keys.length - 1 ||
+                  element.properties.hasTrailingComma;
+                changes.push({
+                  type: ChangeType.Delete,
+                  start: pluginsElem.pos + (removeComma ? 1 : 0),
+                  length:
+                    pluginsElem.end - pluginsElem.pos + (removeComma ? 1 : 0),
+                });
+              } else {
+                const removeComma =
+                  blockElements.indexOf(element) < blockElements.length - 1 ||
+                  blockElements.hasTrailingComma;
+                changes.push({
+                  type: ChangeType.Delete,
+                  start: element.pos + (removeComma ? 1 : 0),
+                  length: element.end - element.pos + (removeComma ? 1 : 0),
+                });
+              }
+            }
+          }
+        }
+      });
+    }
+  });
+  return applyChangesToString(content, changes);
+}
+
+export function removeCompatExtends(
+  content: string,
+  compatExtends: string[]
+): string {
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const changes: StringChange[] = [];
+  findAllBlocks(source).forEach((node) => {
+    if (
+      ts.isSpreadElement(node) &&
+      ts.isCallExpression(node.expression) &&
+      ts.isArrowFunction(node.expression.arguments[0]) &&
+      ts.isParenthesizedExpression(node.expression.arguments[0].body) &&
+      ts.isPropertyAccessExpression(node.expression.expression) &&
+      ts.isCallExpression(node.expression.expression.expression)
+    ) {
+      const callExp = node.expression.expression.expression;
+      if (
+        ((callExp.expression.getText() === 'compat.config' &&
+          callExp.arguments[0].getText().includes('extends')) ||
+          callExp.expression.getText() === 'compat.extends') &&
+        compatExtends.some((ext) =>
+          callExp.arguments[0].getText().includes(ext)
+        )
+      ) {
+        // remove the whole node
+        changes.push({
+          type: ChangeType.Delete,
+          start: node.pos,
+          length: node.end - node.pos,
+        });
+        // and replace it with new one
+        const paramName =
+          node.expression.arguments[0].parameters[0].name.getText();
+        const body = node.expression.arguments[0].body.expression.getFullText();
+        changes.push({
+          type: ChangeType.Insert,
+          index: node.pos,
+          text:
+            '\n' +
+            body.replace(
+              new RegExp('[ \t]s*...' + paramName + '[ \t]*,?\\s*', 'g'),
+              ''
+            ),
+        });
+      }
+    }
+  });
+
+  return applyChangesToString(content, changes);
 }
 
 /**

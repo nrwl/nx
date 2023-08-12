@@ -6,6 +6,8 @@ import {
   addCompatToFlatConfig,
   removeOverridesFromLintConfig,
   replaceOverride,
+  removePlugin,
+  removeCompatExtends,
 } from './ast-utils';
 
 describe('ast-utils', () => {
@@ -592,6 +594,242 @@ describe('ast-utils', () => {
           }
               }),
             ];"
+      `);
+    });
+  });
+
+  describe('removePlugin', () => {
+    it('should remove plugins from config', () => {
+      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
+      const js = require("@eslint/js");
+      const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
+      module.exports = [
+        { plugins: { "@nx": nxEslintPlugin } },
+        { ignores: ["src/ignore/to/keep.ts"] },
+        { ignores: ["something/else"] }
+      ];`;
+
+      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+      expect(result).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+              const js = require("@eslint/js");
+              const compat = new FlatCompat({
+                baseDirectory: __dirname,
+                recommendedConfig: js.configs.recommended,
+              });
+              module.exports = [
+                { ignores: ["src/ignore/to/keep.ts"] },
+                { ignores: ["something/else"] }
+              ];"
+      `);
+    });
+
+    it('should remove single plugin from config', () => {
+      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
+      const otherPlugin = require("other/eslint-plugin");
+      const js = require("@eslint/js");
+      const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
+      module.exports = [
+        { plugins: { "@nx": nxEslintPlugin, "@other": otherPlugin } },
+        { ignores: ["src/ignore/to/keep.ts"] },
+        { ignores: ["something/else"] }
+      ];`;
+
+      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+      expect(result).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+              const otherPlugin = require("other/eslint-plugin");
+              const js = require("@eslint/js");
+              const compat = new FlatCompat({
+                baseDirectory: __dirname,
+                recommendedConfig: js.configs.recommended,
+              });
+              module.exports = [
+                { plugins: { "@other": otherPlugin } },
+                { ignores: ["src/ignore/to/keep.ts"] },
+                { ignores: ["something/else"] }
+              ];"
+      `);
+    });
+
+    it('should leave other properties in config', () => {
+      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
+      const js = require("@eslint/js");
+      const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
+      module.exports = [
+        { plugins: { "@nx": nxEslintPlugin }, rules: {} },
+        { ignores: ["src/ignore/to/keep.ts"] },
+        { ignores: ["something/else"] }
+      ];`;
+
+      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+      expect(result).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+              const js = require("@eslint/js");
+              const compat = new FlatCompat({
+                baseDirectory: __dirname,
+                recommendedConfig: js.configs.recommended,
+              });
+              module.exports = [
+                { rules: {} },
+                { ignores: ["src/ignore/to/keep.ts"] },
+                { ignores: ["something/else"] }
+              ];"
+      `);
+    });
+
+    it('should remove single plugin from config array', () => {
+      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
+      const js = require("@eslint/js");
+      const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
+      module.exports = [
+        { plugins: ["@nx", "something-else"] },
+        { ignores: ["src/ignore/to/keep.ts"] },
+        { ignores: ["something/else"] }
+      ];`;
+
+      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+      expect(result).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+              const js = require("@eslint/js");
+              const compat = new FlatCompat({
+                baseDirectory: __dirname,
+                recommendedConfig: js.configs.recommended,
+              });
+              module.exports = [
+                { plugins:["something-else"] },
+                { ignores: ["src/ignore/to/keep.ts"] },
+                { ignores: ["something/else"] }
+              ];"
+      `);
+    });
+
+    it('should leave other fields in the object', () => {
+      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
+      const js = require("@eslint/js");
+      const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
+      module.exports = [
+        { plugins: ["@nx"], rules: { } },
+        { ignores: ["src/ignore/to/keep.ts"] },
+        { ignores: ["something/else"] }
+      ];`;
+
+      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+      expect(result).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+              const js = require("@eslint/js");
+              const compat = new FlatCompat({
+                baseDirectory: __dirname,
+                recommendedConfig: js.configs.recommended,
+              });
+              module.exports = [
+                { rules: { } },
+                { ignores: ["src/ignore/to/keep.ts"] },
+                { ignores: ["something/else"] }
+              ];"
+      `);
+    });
+
+    it('should remove entire plugin when array with single element', () => {
+      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
+      const js = require("@eslint/js");
+      const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
+      module.exports = [
+        { plugins: ["@nx"] },
+        { ignores: ["src/ignore/to/keep.ts"] },
+        { ignores: ["something/else"] }
+      ];`;
+
+      const result = removePlugin(content, '@nx', '@nx/eslint-plugin');
+      expect(result).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+              const js = require("@eslint/js");
+              const compat = new FlatCompat({
+                baseDirectory: __dirname,
+                recommendedConfig: js.configs.recommended,
+              });
+              module.exports = [
+                { ignores: ["src/ignore/to/keep.ts"] },
+                { ignores: ["something/else"] }
+              ];"
+      `);
+    });
+  });
+
+  describe('removeCompatExtends', () => {
+    it('should remove compat extends from config', () => {
+      const content = `const { FlatCompat } = require("@eslint/eslintrc");
+      const nxEslintPlugin = require("@nx/eslint-plugin");
+      const js = require("@eslint/js");
+      const compat = new FlatCompat({
+        baseDirectory: __dirname,
+        recommendedConfig: js.configs.recommended,
+      });
+      module.exports = [
+        { plugins: { "@nx": nxEslintPlugin } },
+        ...compat.config({ extends: ["plugin:@nx/typescript"] }).map(config => ({
+          ...config,
+          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+          rules: {}
+        })),
+        { ignores: ["src/ignore/to/keep.ts"] },
+        ...compat.config({ extends: ["plugin:@nrwl/javascript"] }).map(config => ({
+          files: ['*.js', '*.jsx'],
+          ...config,
+          rules: {}
+        }))
+      ];`;
+
+      const result = removeCompatExtends(content, [
+        'plugin:@nx/typescript',
+        'plugin:@nx/javascript',
+        'plugin:@nrwl/typescript',
+        'plugin:@nrwl/javascript',
+      ]);
+      expect(result).toMatchInlineSnapshot(`
+        "const { FlatCompat } = require("@eslint/eslintrc");
+              const nxEslintPlugin = require("@nx/eslint-plugin");
+              const js = require("@eslint/js");
+              const compat = new FlatCompat({
+                baseDirectory: __dirname,
+                recommendedConfig: js.configs.recommended,
+              });
+              module.exports = [
+                { plugins: { "@nx": nxEslintPlugin } },
+        {
+                 files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+                  rules: {}
+                },
+                { ignores: ["src/ignore/to/keep.ts"] },
+        {
+                  files: ['*.js', '*.jsx'],
+                 rules: {}
+                }
+              ];"
       `);
     });
   });

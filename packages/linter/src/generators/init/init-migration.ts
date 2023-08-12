@@ -16,6 +16,13 @@ import {
 } from './global-eslint-config';
 import { useFlatConfig } from '../../utils/flat-config';
 import { eslintrcVersion } from '../../utils/versions';
+import {
+  addBlockToFlatConfigExport,
+  addImportToFlatConfig,
+  generateSpreadElement,
+  removeCompatExtends,
+  removePlugin,
+} from '../utils/flat-config/ast-utils';
 
 export function migrateConfigToMonorepoStyle(
   projects: ProjectConfiguration[],
@@ -71,9 +78,26 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
   if (isEslintConfigSupported(tree)) {
     if (useFlatConfig(tree)) {
       let config = tree.read(projectEslintPath, 'utf-8');
-      // TODO 1. remove `@nx` plugin
-      // TODO 2. extend eslint.base.config.js
-      // TODO 3. remove @nx/js|ts from extends
+      // remove @nx plugin
+      config = removePlugin(config, '@nx', '@nx/eslint-plugin-nx');
+      // extend eslint.base.config.js
+      config = addImportToFlatConfig(
+        config,
+        'baseConfig',
+        `${offsetFromRoot(dirname(projectEslintPath))}eslint.base.config.js`
+      );
+      config = addBlockToFlatConfigExport(
+        config,
+        generateSpreadElement('baseConfig'),
+        { insertAtTheEnd: false }
+      );
+      // cleanup file extends
+      config = removeCompatExtends(config, [
+        'plugin:@nx/typescript',
+        'plugin:@nx/javascript',
+        'plugin:@nrwl/typescript',
+        'plugin:@nrwl/javascript',
+      ]);
       console.warn('Flat eslint config is not supported yet for migration');
       tree.write(projectEslintPath, config);
     } else {
