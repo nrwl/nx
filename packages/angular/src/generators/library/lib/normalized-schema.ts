@@ -35,7 +35,6 @@ export interface NormalizedSchema {
     entryFile: string;
     modulePath: string;
     moduleName: string;
-    projectDirectory: string;
     parsedTags: string[];
     ngCliSchematicLibRoot: string;
     standaloneComponentName: string;

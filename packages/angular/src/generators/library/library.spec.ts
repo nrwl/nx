@@ -571,7 +571,7 @@ describe('lib', () => {
     it('should accept numbers in the path', async () => {
       await runLibraryGeneratorWithOpts({ directory: 'src/1-api' });
 
-      expect(readProjectConfiguration(tree, 'src-api-my-lib').root).toEqual(
+      expect(readProjectConfiguration(tree, 'src-1-api-my-lib').root).toEqual(
         'src/1-api/my-lib'
       );
     });
