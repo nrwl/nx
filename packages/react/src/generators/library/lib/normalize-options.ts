@@ -1,42 +1,32 @@
-import {
-  extractLayoutDirectory,
-  getProjects,
-  getWorkspaceLayout,
-  joinPathFragments,
-  logger,
-  names,
-  normalizePath,
-  Tree,
-} from '@nx/devkit';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
-
+import { getProjects, logger, normalizePath, Tree } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   host: Tree,
   options: Schema
-): NormalizedSchema {
-  const name = names(options.name).fileName;
-  const { projectDirectory, layoutDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const fullProjectDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`
-    : name;
+): Promise<NormalizedSchema> {
+  const {
+    projectName,
+    names: projectNames,
+    projectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+  });
 
-  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = options.simpleName ? name : projectName;
-  const { libsDir: defaultLibsDir } = getWorkspaceLayout(host);
-  const libsDir = layoutDirectory ?? defaultLibsDir;
-  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
+  const fileName = options.simpleName
+    ? projectNames.projectSimpleName
+    : projectNames.projectFileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
-
-  const importPath =
-    options.importPath || getImportPath(host, fullProjectDirectory);
 
   let bundler = options.bundler ?? 'none';
 
@@ -60,13 +50,11 @@ export function normalizeOptions(
     compiler: options.compiler ?? 'babel',
     bundler,
     fileName,
-    routePath: `/${name}`,
+    routePath: `/${projectNames.projectSimpleName}`,
     name: projectName,
     projectRoot,
-    projectDirectory: fullProjectDirectory,
     parsedTags,
     importPath,
-    libsDir,
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.
