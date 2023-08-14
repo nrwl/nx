@@ -36,21 +36,30 @@ const targetFolder: string = resolve(
 );
 
 const data: { title: string; content: string; filename: string }[] = [];
-documents.map((category) => {
+documents.forEach((category) => {
   data.push({
     title: category.name,
     content: category.description,
     filename: [category.sidebarId, category.id].filter(Boolean).join('-'),
   });
-  category.itemList.map((item) =>
+  category.itemList.forEach((item) => {
     data.push({
       title: item.name,
-      content: category.name,
+      content: item.description || category.name,
       filename: [category.sidebarId, category.id, item.id]
         .filter(Boolean)
         .join('-'),
-    })
-  );
+    });
+    item.itemList?.forEach((subItem) => {
+      data.push({
+        title: subItem.name,
+        content: subItem.description || category.name,
+        filename: [category.sidebarId, category.id, item.id, subItem.id]
+          .filter(Boolean)
+          .join('-'),
+      });
+    });
+  });
 });
 packages.map((pkg) => {
   data.push({
@@ -137,7 +146,7 @@ function splitLines(
   if (words.length <= 1) {
     return words;
   }
-  const lines = [];
+  const lines: string[] = [];
   let currentLine = words[0];
 
   for (let i = 1; i < words.length; i++) {
