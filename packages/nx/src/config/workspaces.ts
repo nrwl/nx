@@ -1,6 +1,7 @@
 import { dirname, join } from 'path';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
+import { getNxRequirePaths } from '../utils/installation-directory';
 import { loadNxPlugins, loadNxPluginsSync } from '../utils/nx-plugin';
 
 import type { NxJsonConfiguration } from './nx-json';
@@ -43,7 +44,11 @@ export class Workspaces {
       buildProjectsConfigurationsFromProjectPathsAndPlugins(
         nxJson,
         projectPaths,
-        loadNxPluginsSync(),
+        loadNxPluginsSync(
+          nxJson.plugins,
+          getNxRequirePaths(this.root),
+          this.root
+        ),
         this.root
       ).projects;
     if (
@@ -59,10 +64,7 @@ export class Workspaces {
     }
     this.cachedProjectsConfig = {
       version: 2,
-      projects: this.mergeTargetDefaultsIntoProjectDescriptions(
-        projectsConfigurations,
-        nxJson
-      ),
+      projects: projectsConfigurations,
     };
     return this.cachedProjectsConfig;
   }
