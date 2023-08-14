@@ -34,7 +34,6 @@ describe('@nx/linter:init', () => {
             'default',
             '{workspaceRoot}/.eslintrc.json',
             '{workspaceRoot}/.eslintignore',
-            '{workspaceRoot}/eslint.config.js',
           ],
         });
       });

@@ -1140,15 +1140,6 @@
         "originalFilePath": "/packages/linter/src/generators/workspace-rule/schema.json",
         "path": "/packages/linter/generators/workspace-rule",
         "type": "generator"
-      },
-      "/packages/linter/generators/convert-to-flat-config": {
-        "description": "Convert an Nx workspace to a Flat ESLint config.",
-        "file": "generated/packages/linter/generators/convert-to-flat-config.json",
-        "hidden": false,
-        "name": "convert-to-flat-config",
-        "originalFilePath": "/packages/linter/src/generators/convert-to-flat-config/schema.json",
-        "path": "/packages/linter/generators/convert-to-flat-config",
-        "type": "generator"
       }
     },
     "path": "/packages/linter"

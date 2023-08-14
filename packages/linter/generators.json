@@ -25,11 +25,6 @@
       "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator",
       "schema": "./src/generators/workspace-rule/schema.json",
       "description": "Create a new Workspace ESLint rule."
-    },
-    "convert-to-flat-config": {
-      "factory": "./src/generators/convert-to-flat-config/generator",
-      "schema": "./src/generators/convert-to-flat-config/schema.json",
-      "description": "Convert an Nx workspace to a Flat ESLint config."
     }
   }
 }
