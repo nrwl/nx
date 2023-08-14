@@ -411,20 +411,21 @@ function mapSnapshots(
   });
 
   // remove keys that match version ranges that have been pruned away
-  snapshotMap.forEach((keysSet) => {
-    for (const key of keysSet.values()) {
+  snapshotMap.forEach((snapshotValue, snapshotKey) => {
+    for (const key of snapshotValue.values()) {
       const packageName = key.slice(0, key.indexOf('@', 1));
       let normalizedKey = key;
       if (isBerry && key.includes('@patch:') && key.includes('#')) {
         normalizedKey = key
           .slice(0, key.indexOf('#'))
-          .replace(`@patch:${packageName}@`, '@npm:');
+          .replace(`@patch:${packageName}@`, '@npm:')
+          .replace(/:.*$/u, ':' + snapshotKey.version);
       }
       if (
         !existingKeys.get(packageName) ||
         !existingKeys.get(packageName).has(normalizedKey)
       ) {
-        keysSet.delete(key);
+        snapshotValue.delete(key);
       }
     }
   });
