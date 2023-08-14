@@ -8,7 +8,7 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 
 ### Constructors
 
-- [constructor](../../devkit/documents/Workspaces#constructor):
+- [constructor](../../devkit/documents/Workspaces#constructor)
 
 ### Properties
 
@@ -16,6 +16,8 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 
 ### Methods
 
+- [mergeTargetDefaultsIntoProjectDescriptions](../../devkit/documents/Workspaces#mergetargetdefaultsintoprojectdescriptions)
+- [readProjectsConfigurations](../../devkit/documents/Workspaces#readprojectsconfigurations)
 - [readWorkspaceConfiguration](../../devkit/documents/Workspaces#readworkspaceconfiguration)
 
 ## Constructors

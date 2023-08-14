@@ -4,8 +4,8 @@
 
 ### Enumeration Members
 
-- [Delete](../../devkit/documents/ChangeType#delete):
-- [Insert](../../devkit/documents/ChangeType#insert):
+- [Delete](../../devkit/documents/ChangeType#delete)
+- [Insert](../../devkit/documents/ChangeType#insert)
 
 ## Enumeration Members
 

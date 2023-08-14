@@ -10,15 +10,15 @@ Virtual file system tree.
 
 ### Methods
 
-- [changePermissions](../../devkit/documents/Tree#changepermissions):
-- [children](../../devkit/documents/Tree#children):
-- [delete](../../devkit/documents/Tree#delete):
-- [exists](../../devkit/documents/Tree#exists):
-- [isFile](../../devkit/documents/Tree#isfile):
-- [listChanges](../../devkit/documents/Tree#listchanges):
-- [read](../../devkit/documents/Tree#read):
-- [rename](../../devkit/documents/Tree#rename):
-- [write](../../devkit/documents/Tree#write):
+- [changePermissions](../../devkit/documents/Tree#changepermissions)
+- [children](../../devkit/documents/Tree#children)
+- [delete](../../devkit/documents/Tree#delete)
+- [exists](../../devkit/documents/Tree#exists)
+- [isFile](../../devkit/documents/Tree#isfile)
+- [listChanges](../../devkit/documents/Tree#listchanges)
+- [read](../../devkit/documents/Tree#read)
+- [rename](../../devkit/documents/Tree#rename)
+- [write](../../devkit/documents/Tree#write)
 
 ## Properties
 
