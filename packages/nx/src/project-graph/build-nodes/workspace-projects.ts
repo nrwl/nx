@@ -127,13 +127,18 @@ export function normalizeProjectTargets(
   targetDefaults: NxJsonConfiguration['targetDefaults'],
   projectName: string
 ): Record<string, TargetConfiguration> {
-  const targets = project.targets;
+  // Any node on the graph will have a targets object, it just may be empty
+  const targets = project.targets ?? {};
+
   for (const target in targets) {
+    // We need to know the executor for use in readTargetDefaultsForTarget,
+    // but we haven't resolved the `command` syntactic sugar yet.
     const executor =
       targets[target].executor ?? targets[target].command
         ? 'nx:run-commands'
         : null;
 
+    // Allows things like { targetDefaults: { build: { command: tsc } } }
     const defaults = resolveCommandSyntacticSugar(
       readTargetDefaultsForTarget(target, targetDefaults, executor),
       `targetDefaults:${target}`
