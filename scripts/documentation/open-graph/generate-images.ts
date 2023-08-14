@@ -81,6 +81,9 @@ packages.map((pkg) => {
   });
 });
 
+const TITLE_LINE_HEIGHT = 60;
+const SUB_LINE_HEIGHT = 38;
+
 function createOpenGraphImage(
   backgroundImagePath: string,
   targetFolder: string,
@@ -106,7 +109,10 @@ function createOpenGraphImage(
     context.textAlign = 'center';
     context.textBaseline = 'top';
     context.fillStyle = '#0F172A';
-    context.fillText(title.toUpperCase(), 600, 220);
+    const titleLines = splitLines(context, title.toUpperCase(), 1100);
+    titleLines.forEach((line, index) => {
+      context.fillText(line, 600, 220 + index * TITLE_LINE_HEIGHT);
+    });
 
     context.font = 'normal 32px system-ui';
     context.textAlign = 'center';
@@ -115,7 +121,11 @@ function createOpenGraphImage(
 
     const lines = splitLines(context, content, 1100);
     lines.forEach((line, index) => {
-      context.fillText(line, 600, 310 + index * 55);
+      context.fillText(
+        line,
+        600,
+        310 + index * SUB_LINE_HEIGHT + titleLines.length * TITLE_LINE_HEIGHT
+      );
     });
 
     console.log('Generating: ', `${filename}.jpg`);
