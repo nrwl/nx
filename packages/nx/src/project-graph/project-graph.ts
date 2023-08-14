@@ -117,7 +117,7 @@ function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
  * * It is running in the docker container.
  * * The daemon process is disabled because of the previous error when starting the daemon.
  * * `NX_DAEMON` is set to `false`.
- * * `useDaemon` is set to false in `nx.json`
+ * * `useDaemonProcess` is set to false in the options of the tasks runner inside `nx.json`
  *
  * `NX_DAEMON` env variable takes precedence:
  * * If it is set to true, the daemon will always be used.
