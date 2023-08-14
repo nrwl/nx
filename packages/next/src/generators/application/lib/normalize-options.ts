@@ -45,7 +45,7 @@ export function normalizeOptions(
     : joinPathFragments(appsDir, appDirectory);
 
   const e2eProjectRoot = options.rootProject
-    ? '.'
+    ? 'e2e'
     : joinPathFragments(appsDir, `${appDirectory}-e2e`);
 
   const outputPath = joinPathFragments(
