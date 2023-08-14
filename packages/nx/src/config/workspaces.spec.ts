@@ -47,7 +47,7 @@ describe('Workspaces', () => {
       });
 
       const workspaces = new Workspaces(fs.tempDir);
-      const resolved = workspaces.readProjectsConfigurations();
+      const resolved = workspaces.readWorkspaceConfiguration();
       expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
@@ -76,7 +76,7 @@ describe('Workspaces', () => {
       });
 
       const workspaces = new Workspaces(fs.tempDir);
-      const { projects } = workspaces.readProjectsConfigurations();
+      const { projects } = workspaces.readWorkspaceConfiguration();
 
       // projects got merged for lib1
       expect(projects['lib1']).toEqual({

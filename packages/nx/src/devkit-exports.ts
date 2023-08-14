@@ -39,10 +39,6 @@ export type {
 
 // TODO(v18): Remove this export
 /**
- * @deprecated These will be removed in v18.
- * - For Workspaces.readWorkspaceConfiguration, use retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead.
- * - For Workspaces.readProjectsConfigurations, use retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead.
- * - For Workspaces.readNxJson, use readNxJsonFromDisk instead.
  * @category Workspace
  */
 export { Workspaces } from './config/workspaces';
@@ -210,6 +206,7 @@ export { reverse } from './project-graph/operators';
 export {
   createProjectGraphAsync,
   readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
 } from './project-graph/project-graph';
 
 /**

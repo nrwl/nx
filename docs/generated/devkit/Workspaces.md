@@ -2,9 +2,7 @@
 
 **`Deprecated`**
 
-These will be removed in v18.
-
-- For Workspaces.readWorkspaceConfiguration, use retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead.
+This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph) instead.
 
 ## Table of contents
 
@@ -14,13 +12,10 @@ These will be removed in v18.
 
 ### Properties
 
-- [cachedProjectsConfig](../../devkit/documents/Workspaces#cachedprojectsconfig)
 - [root](../../devkit/documents/Workspaces#root)
 
 ### Methods
 
-- [mergeTargetDefaultsIntoProjectDescriptions](../../devkit/documents/Workspaces#mergetargetdefaultsintoprojectdescriptions)
-- [readProjectsConfigurations](../../devkit/documents/Workspaces#readprojectsconfigurations)
 - [readWorkspaceConfiguration](../../devkit/documents/Workspaces#readworkspaceconfiguration)
 
 ## Constructors
@@ -37,69 +32,19 @@ These will be removed in v18.
 
 ## Properties
 
-### cachedProjectsConfig
-
-• `Private` **cachedProjectsConfig**: [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
-
----
-
 ### root
 
 • `Private` **root**: `string`
 
 ## Methods
 
-### mergeTargetDefaultsIntoProjectDescriptions
+### readWorkspaceConfiguration
 
-▸ `Private` **mergeTargetDefaultsIntoProjectDescriptions**(`projects`, `nxJson`): `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
-
-#### Parameters
-
-| Name       | Type                                                                                       |
-| :--------- | :----------------------------------------------------------------------------------------- |
-| `projects` | `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\> |
-| `nxJson`   | [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>  |
-
-#### Returns
-
-`Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
-
----
-
-### readProjectsConfigurations
-
-▸ **readProjectsConfigurations**(`opts?`): [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
+▸ **readWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
 
 **`Deprecated`**
 
-se retrieveProjectConfigurations/retrieveProjectConfigurationsWithAngularProjects instead
-
-#### Parameters
-
-| Name                                    | Type      |
-| :-------------------------------------- | :-------- |
-| `opts?`                                 | `Object`  |
-| `opts._includeProjectsFromAngularJson?` | `boolean` |
-
-#### Returns
-
-[`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
-
----
-
-### readWorkspaceConfiguration
-
-▸ **readWorkspaceConfiguration**(`opts?`): [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
-
-Deprecated. Use readProjectsConfigurations
-
-#### Parameters
-
-| Name                                    | Type      |
-| :-------------------------------------- | :-------- |
-| `opts?`                                 | `Object`  |
-| `opts._ignorePluginInference?`          | `boolean` |
-| `opts._includeProjectsFromAngularJson?` | `boolean` |
+Use [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph) instead.
 
 #### Returns
 

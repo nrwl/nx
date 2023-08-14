@@ -54,6 +54,9 @@ export function readCachedProjectConfiguration(
   return node.data;
 }
 
+/**
+ * Get the {@link ProjectsConfigurations} from the {@link ProjectGraph}
+ */
 export function readProjectsConfigurationFromProjectGraph(
   projectGraph: ProjectGraph
 ): ProjectsConfigurations {

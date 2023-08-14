@@ -143,6 +143,7 @@ It only uses language primitives and immutable objects
 - [readJsonFile](../../devkit/documents/readJsonFile)
 - [readNxJson](../../devkit/documents/readNxJson)
 - [readProjectConfiguration](../../devkit/documents/readProjectConfiguration)
+- [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph)
 - [readRootPackageJson](../../devkit/documents/readRootPackageJson)
 - [readTargetOptions](../../devkit/documents/readTargetOptions)
 - [readWorkspaceConfiguration](../../devkit/documents/readWorkspaceConfiguration)
