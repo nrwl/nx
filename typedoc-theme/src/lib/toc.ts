@@ -43,11 +43,11 @@ export default function (theme: NxMarkdownTheme) {
             ReflectionKind.Property,
             ReflectionKind.Variable,
           ].includes(child.kind)
-            ? getPropertyType(child)
+            ? ': ' + getPropertyType(child)
             : '';
           return `- [${escapeChars(
             child.name
-          )}](${Handlebars.helpers.relativeURL(child.url)}): ${propertyType}`;
+          )}](${Handlebars.helpers.relativeURL(child.url)})${propertyType}`;
         });
         md.push(children.join('\n'));
       }
