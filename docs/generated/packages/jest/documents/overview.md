@@ -14,7 +14,7 @@ nx g @nx/web:app frontend
 
 ### Adding Jest to an Existing Project
 
-Add Jest to a project using the `jest-project` generator from `@nx/jest`.
+Add Jest to a project using the `configuration` generator from `@nx/jest`.
 
 First, install `@nx/jest`, if not already installed using your preferred package manager.
 
@@ -26,10 +26,10 @@ npm install --save-dev @nx/jest
 yarn add --dev @nx/jest
 ```
 
-Once installed, run the `jest-project` generator
+Once installed, run the `configuration` generator
 
 ```shell
-nx g @nx/jest:jest-project --project=<project-name>
+nx g @nx/jest:configuration --project=<project-name>
 ```
 
 > Hint: You can use the `--dry-run` flag to see what will be generated.

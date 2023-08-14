@@ -1,7 +1,7 @@
 Adding Cypress to an existing application requires two options. The name of the e2e app to create and what project that e2e app is for.
 
 ```bash
-nx g cypress-project --name=my-app-e2e --project=my-app
+nx g configuration --name=my-app-e2e --project=my-app
 ```
 
 When providing `--project` option, the generator will look for the `serve` target in that given project. This allows the [cypress executor](/packages/cypress/executors/cypress) to spin up the project and start the cypress runner.
@@ -9,11 +9,11 @@ When providing `--project` option, the generator will look for the `serve` targe
 If you prefer to not have the project served automatically, you can provide a `--base-url` argument in place of `--project`
 
 ```bash
-nx g cypress-project --name=my-app-e2e --base-url=http://localhost:1234
+nx g configuration --name=my-app-e2e --base-url=http://localhost:1234
 ```
 
 {% callout type="note" title="What about API Projects?" %}
-You can also run the `cypress-project` generator against API projects like a [Nest API](/packages/nest/generators/application#@nx/nest:application).
+You can also run the `configuration` generator against API projects like a [Nest API](/packages/nest/generators/application#@nx/nest:application).
 If there is a URL to visit then you can test it with Cypress!
 {% /callout %}
 
@@ -22,7 +22,7 @@ If there is a URL to visit then you can test it with Cypress!
 Now, you can generate your Cypress project with Vite.js as the bundler:
 
 ```bash
-nx g cypress-project --name=my-app-e2e --project=my-app --bundler=vite
+nx g configuration --name=my-app-e2e --project=my-app --bundler=vite
 ```
 
 This generator will pass the `bundler` information (`bundler: 'vite'`) to our `nxE2EPreset`, in your project's `cypress.config.ts` file (eg. `my-app-e2e/cypress.config.ts`).
