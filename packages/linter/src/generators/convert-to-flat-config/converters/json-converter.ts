@@ -47,7 +47,16 @@ export function convertEslintJsonToFlatConfig(
   }
 
   if (config.parser) {
-    languageOptions.push(addParser(importsMap, config));
+    const imp = config.parser;
+    const parserName = names(imp).propertyName;
+    importsMap.set(imp, parserName);
+
+    languageOptions.push(
+      ts.factory.createPropertyAssignment(
+        'parser',
+        ts.factory.createIdentifier(parserName)
+      )
+    );
   }
 
   if (config.parserOptions) {
@@ -320,18 +329,4 @@ function addPlugins(
     false
   );
   configBlocks.push(pluginsAst);
-}
-
-function addParser(
-  importsMap: Map<string, string>,
-  config: ESLint.ConfigData
-): ts.PropertyAssignment {
-  const imp = config.parser;
-  const parserName = names(imp).propertyName;
-  importsMap.set(imp, parserName);
-
-  return ts.factory.createPropertyAssignment(
-    'parser',
-    ts.factory.createIdentifier(parserName)
-  );
 }
