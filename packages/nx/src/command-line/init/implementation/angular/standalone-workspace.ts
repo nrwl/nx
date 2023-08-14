@@ -90,9 +90,7 @@ function createNxJson(
             karmaProjectConfigFile ? '!{projectRoot}/karma.conf.js' : undefined,
           ].filter(Boolean)
         : []),
-      ...(eslintProjectConfigFile
-        ? ['!{projectRoot}/.eslintrc.json', '!{projectRoot}/eslint.config.js']
-        : []),
+      eslintProjectConfigFile ? '!{projectRoot}/.eslintrc.json' : undefined,
     ].filter(Boolean),
   };
   nxJson.targetDefaults = {};
@@ -116,9 +114,6 @@ function createNxJson(
     const inputs = ['default'];
     if (fileExists(join(repoRoot, '.eslintrc.json'))) {
       inputs.push('{workspaceRoot}/.eslintrc.json');
-    }
-    if (fileExists(join(repoRoot, 'eslint.config.js'))) {
-      inputs.push('{workspaceRoot}/eslint.config.js');
     }
     nxJson.targetDefaults.lint = { inputs };
   }

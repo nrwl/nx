@@ -1123,15 +1123,6 @@
         "originalFilePath": "/packages/linter/src/generators/workspace-rule/schema.json",
         "path": "linter/generators/workspace-rule",
         "type": "generator"
-      },
-      {
-        "description": "Convert an Nx workspace to a Flat ESLint config.",
-        "file": "generated/packages/linter/generators/convert-to-flat-config.json",
-        "hidden": false,
-        "name": "convert-to-flat-config",
-        "originalFilePath": "/packages/linter/src/generators/convert-to-flat-config/schema.json",
-        "path": "linter/generators/convert-to-flat-config",
-        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

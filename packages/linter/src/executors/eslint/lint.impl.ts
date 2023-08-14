@@ -130,13 +130,10 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
       .filter((pattern) => !!pattern)
       .map((pattern) => `- '${pattern}'`);
     if (ignoredPatterns.length) {
-      const ignoreSection = useFlatConfig
-        ? `'ignores' configuration`
-        : `'.eslintignore' file`;
       throw new Error(
         `All files matching the following patterns are ignored:\n${ignoredPatterns.join(
           '\n'
-        )}\n\nPlease check your ${ignoreSection}.`
+        )}\n\nPlease check your '.eslintignore' file.`
       );
     }
     throw new Error(

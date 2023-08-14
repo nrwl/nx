@@ -76,9 +76,7 @@ export function createNxJson(
               '!{projectRoot}/karma.conf.js',
             ]
           : []),
-        ...(targets.lint
-          ? ['!{projectRoot}/.eslintrc.json', '!{projectRoot}/eslint.config.js']
-          : []),
+        targets.lint ? '!{projectRoot}/.eslintrc.json' : undefined,
       ].filter(Boolean),
     },
     targetDefaults: {
@@ -93,11 +91,7 @@ export function createNxJson(
         : undefined,
       lint: targets.lint
         ? {
-            inputs: [
-              'default',
-              '{workspaceRoot}/.eslintrc.json',
-              '{workspaceRoot}/eslint.config.js',
-            ],
+            inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           }
         : undefined,
       e2e: targets.e2e
