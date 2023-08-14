@@ -41,7 +41,7 @@
       "hidden": true
     },
     "cypress-project": {
-      "factory": "./src/generators/cypress-project/cypress-project#cypressProjectGenerator",
+      "factory": "./src/generators/cypress-project/cypress-project#cypressProjectGeneratorInternal",
       "schema": "./src/generators/cypress-project/schema.json",
       "description": "Add a Cypress E2E Project.",
       "hidden": true

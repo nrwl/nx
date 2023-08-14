@@ -2,15 +2,12 @@ import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
-  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   getProjects,
-  getWorkspaceLayout,
   joinPathFragments,
   logger,
-  names,
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -20,20 +17,17 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { Linter } from '@nx/linter';
-
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-
+import { Linter } from '@nx/linter';
 import { join } from 'path';
+import { major } from 'semver';
+import { addLinterToCyProject } from '../../utils/add-linter';
 import { installedCypressVersion } from '../../utils/cypress-version';
-import { filePathPrefix } from '../../utils/project-name';
 import { cypressVersion, viteVersion } from '../../utils/versions';
 import { cypressInitGenerator } from '../init/init';
-// app
 import { Schema } from './schema';
-import { addLinterToCyProject } from '../../utils/add-linter';
-import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
-import { major } from 'semver';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -174,7 +168,20 @@ function addProject(tree: Tree, options: CypressProjectSchema) {
  * @deprecated use cypressE2EConfigurationGenerator instead
  **/
 export async function cypressProjectGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
+  return await cypressProjectGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+/**
+ * @deprecated use cypressE2EConfigurationGenerator instead
+ **/
+export async function cypressProjectGeneratorInternal(
+  host: Tree,
+  schema: Schema
+) {
+  const options = await normalizeOptions(host, schema);
   const tasks: GeneratorCallback[] = [];
   const cypressVersion = installedCypressVersion();
   // if there is an installed cypress version, then we don't call
@@ -211,19 +218,16 @@ export async function cypressProjectGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
-  let projectName: string;
-  let projectRoot: string;
+async function normalizeOptions(
+  host: Tree,
+  options: Schema
+): Promise<CypressProjectSchema> {
   let maybeRootProject: ProjectConfiguration;
   let isRootProject = false;
 
   const projects = getProjects(host);
   // nx will set the project option for generators when ran within a project.
-  // since the root project will always be set for standlone projects we can just check it here.
+  // since the root project will always be set for standalone projects we can just check it here.
   if (options.project) {
     maybeRootProject = projects.get(options.project);
   }
@@ -234,21 +238,20 @@ function normalizeOptions(host: Tree, options: Schema): CypressProjectSchema {
     (!maybeRootProject &&
       Array.from(projects.values()).some((config) => config.root === '.'))
   ) {
-    projectName = options.name;
-    projectRoot = options.name;
     isRootProject = true;
-  } else {
-    projectName = filePathPrefix(
-      projectDirectory ? `${projectDirectory}-${options.name}` : options.name
-    );
-    projectRoot = projectDirectory
-      ? joinPathFragments(
-          appsDir,
-          names(projectDirectory).fileName,
-          options.name
-        )
-      : joinPathFragments(appsDir, options.name);
   }
+
+  let { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    host,
+    {
+      name: options.name,
+      projectType: 'application',
+      directory: isRootProject ? options.name : options.directory,
+      projectNameAndRootFormat: isRootProject
+        ? 'as-provided'
+        : options.projectNameAndRootFormat,
+    }
+  );
 
   options.linter = options.linter || Linter.EsLint;
   options.bundler = options.bundler || 'webpack';
