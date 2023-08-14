@@ -3,6 +3,7 @@ import {
   DeclarationReflection,
   ProjectReflection,
   ReflectionGroup,
+  ReflectionKind,
 } from 'typedoc';
 import NxMarkdownTheme from './theme';
 
@@ -38,7 +39,12 @@ export default function (theme: NxMarkdownTheme) {
 
       function pushGroup(group: ReflectionGroup, md: string[]) {
         const children = group.children.map((child) => {
-          const propertyType = getPropertyType(child);
+          const propertyType = [
+            ReflectionKind.Property,
+            ReflectionKind.Variable,
+          ].includes(child.kind)
+            ? getPropertyType(child)
+            : '';
           return `- [${escapeChars(
             child.name
           )}](${Handlebars.helpers.relativeURL(child.url)}): ${propertyType}`;

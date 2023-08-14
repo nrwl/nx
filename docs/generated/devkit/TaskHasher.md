@@ -4,8 +4,8 @@
 
 ### Methods
 
-- [hashTask](../../devkit/documents/TaskHasher#hashtask): Method hashTask
-- [hashTasks](../../devkit/documents/TaskHasher#hashtasks): Method hashTasks
+- [hashTask](../../devkit/documents/TaskHasher#hashtask):
+- [hashTasks](../../devkit/documents/TaskHasher#hashtasks):
 
 ## Methods
 

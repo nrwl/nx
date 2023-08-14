@@ -10,7 +10,7 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### Constructors
 
-- [constructor](../../devkit/documents/ProjectGraphBuilder#constructor): Constructor constructor
+- [constructor](../../devkit/documents/ProjectGraphBuilder#constructor):
 
 ### Properties
 
@@ -20,21 +20,21 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### Methods
 
-- [addDependency](../../devkit/documents/ProjectGraphBuilder#adddependency): Method addDependency
-- [addDynamicDependency](../../devkit/documents/ProjectGraphBuilder#adddynamicdependency): Method addDynamicDependency
-- [addExplicitDependency](../../devkit/documents/ProjectGraphBuilder#addexplicitdependency): Method addExplicitDependency
-- [addExternalNode](../../devkit/documents/ProjectGraphBuilder#addexternalnode): Method addExternalNode
-- [addImplicitDependency](../../devkit/documents/ProjectGraphBuilder#addimplicitdependency): Method addImplicitDependency
-- [addNode](../../devkit/documents/ProjectGraphBuilder#addnode): Method addNode
-- [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency): Method addStaticDependency
-- [calculateAlreadySetTargetDeps](../../devkit/documents/ProjectGraphBuilder#calculatealreadysettargetdeps): Method calculateAlreadySetTargetDeps
-- [calculateTargetDepsFromFiles](../../devkit/documents/ProjectGraphBuilder#calculatetargetdepsfromfiles): Method calculateTargetDepsFromFiles
-- [getUpdatedProjectGraph](../../devkit/documents/ProjectGraphBuilder#getupdatedprojectgraph): Method getUpdatedProjectGraph
-- [mergeProjectGraph](../../devkit/documents/ProjectGraphBuilder#mergeprojectgraph): Method mergeProjectGraph
-- [removeDependenciesWithNode](../../devkit/documents/ProjectGraphBuilder#removedependencieswithnode): Method removeDependenciesWithNode
-- [removeDependency](../../devkit/documents/ProjectGraphBuilder#removedependency): Method removeDependency
-- [removeNode](../../devkit/documents/ProjectGraphBuilder#removenode): Method removeNode
-- [setVersion](../../devkit/documents/ProjectGraphBuilder#setversion): Method setVersion
+- [addDependency](../../devkit/documents/ProjectGraphBuilder#adddependency):
+- [addDynamicDependency](../../devkit/documents/ProjectGraphBuilder#adddynamicdependency):
+- [addExplicitDependency](../../devkit/documents/ProjectGraphBuilder#addexplicitdependency):
+- [addExternalNode](../../devkit/documents/ProjectGraphBuilder#addexternalnode):
+- [addImplicitDependency](../../devkit/documents/ProjectGraphBuilder#addimplicitdependency):
+- [addNode](../../devkit/documents/ProjectGraphBuilder#addnode):
+- [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency):
+- [calculateAlreadySetTargetDeps](../../devkit/documents/ProjectGraphBuilder#calculatealreadysettargetdeps):
+- [calculateTargetDepsFromFiles](../../devkit/documents/ProjectGraphBuilder#calculatetargetdepsfromfiles):
+- [getUpdatedProjectGraph](../../devkit/documents/ProjectGraphBuilder#getupdatedprojectgraph):
+- [mergeProjectGraph](../../devkit/documents/ProjectGraphBuilder#mergeprojectgraph):
+- [removeDependenciesWithNode](../../devkit/documents/ProjectGraphBuilder#removedependencieswithnode):
+- [removeDependency](../../devkit/documents/ProjectGraphBuilder#removedependency):
+- [removeNode](../../devkit/documents/ProjectGraphBuilder#removenode):
+- [setVersion](../../devkit/documents/ProjectGraphBuilder#setversion):
 
 ## Constructors
 
