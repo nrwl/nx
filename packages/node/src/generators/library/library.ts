@@ -1,10 +1,8 @@
 import {
   convertNxGenerator,
-  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -15,26 +13,31 @@ import {
   updateProjectConfiguration,
   updateTsConfigsToJs,
 } from '@nx/devkit';
-import { Schema } from './schema';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-
-import { join } from 'path';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
+import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { join } from 'path';
 import { initGenerator } from '../init/init';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
   projectRoot: string;
-  projectDirectory: string;
   parsedTags: string[];
   compiler: 'swc' | 'tsc';
 }
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
-  const options = normalizeOptions(tree, schema);
+  return await libraryGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
+  const options = await normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {
       ...options,
@@ -75,37 +78,39 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
 export default libraryGenerator;
 export const librarySchematic = convertNxGenerator(libraryGenerator);
 
-function normalizeOptions(tree: Tree, options: Schema): NormalizedSchema {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const { npmScope, libsDir: defaultLibsDir } = getWorkspaceLayout(tree);
-  const libsDir = layoutDirectory ?? defaultLibsDir;
-  const name = names(options.name).fileName;
-  const fullProjectDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`
-    : name;
+async function normalizeOptions(
+  tree: Tree,
+  options: Schema
+): Promise<NormalizedSchema> {
+  const {
+    projectName,
+    names: projectNames,
+    projectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(tree, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+  });
 
-  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
   const fileName = getCaseAwareFileName({
-    fileName: options.simpleModuleName ? name : projectName,
+    fileName: options.simpleModuleName
+      ? projectNames.projectSimpleName
+      : projectNames.projectFileName,
     pascalCaseFiles: options.pascalCaseFiles,
   });
-  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
-
-  const importPath =
-    options.importPath || getImportPath(tree, fullProjectDirectory);
 
   return {
     ...options,
     fileName,
     name: projectName,
     projectRoot,
-    projectDirectory: fullProjectDirectory,
     parsedTags,
     importPath,
   };
@@ -151,21 +156,13 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
   }
 
   const project = readProjectConfiguration(tree, options.name);
-  const { libsDir } = getWorkspaceLayout(tree);
-
-  const rootProject = options.projectRoot === '.' || options.projectRoot === '';
 
   project.targets = project.targets || {};
   project.targets.build = {
     executor: `@nx/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath: joinPathFragments(
-        'dist',
-        rootProject
-          ? options.projectDirectory
-          : `${libsDir}/${options.projectDirectory}`
-      ),
+      outputPath: joinPathFragments('dist', options.projectRoot),
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       packageJson: `${options.projectRoot}/package.json`,
       main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),

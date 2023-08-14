@@ -1,8 +1,10 @@
-import { Linter } from '@nx/linter';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { Linter } from '@nx/linter';
 
 export interface Schema {
   name: string;
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   simpleModuleName?: boolean;
   skipTsConfig?: boolean;
   skipFormat?: boolean;
