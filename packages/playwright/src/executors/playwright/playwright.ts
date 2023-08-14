@@ -76,7 +76,10 @@ export async function playwrightExecutor(
       bodyLines: ['use --skipInstall to skip installation.'],
     });
     const pmc = getPackageManagerCommand();
-    execSync(`${pmc.exec} playwright install`, { cwd: workspaceRoot });
+    execSync(`${pmc.exec} playwright install`, {
+      cwd: workspaceRoot,
+      stdio: 'inherit',
+    });
   }
 
   const args = createArgs(options);
