@@ -27,19 +27,19 @@
   },
   "devDependencies": {
     "@actions/core": "^1.10.0",
-    "@angular-devkit/architect": "~0.1602.0-rc.1",
-    "@angular-devkit/build-angular": "~16.2.0-rc.1",
-    "@angular-devkit/core": "~16.2.0-rc.1",
-    "@angular-devkit/schematics": "~16.2.0-rc.1",
+    "@angular-devkit/architect": "~0.1602.0",
+    "@angular-devkit/build-angular": "~16.2.0",
+    "@angular-devkit/core": "~16.2.0",
+    "@angular-devkit/schematics": "~16.2.0",
     "@angular-eslint/eslint-plugin": "~16.0.0",
     "@angular-eslint/eslint-plugin-template": "~16.0.0",
     "@angular-eslint/template-parser": "~16.0.0",
-    "@angular/cli": "~16.2.0-rc.1",
-    "@angular/common": "~16.2.0-rc.0",
-    "@angular/compiler": "~16.2.0-rc.0",
-    "@angular/compiler-cli": "~16.2.0-rc.0",
-    "@angular/core": "~16.2.0-rc.0",
-    "@angular/router": "~16.2.0-rc.0",
+    "@angular/cli": "~16.2.0",
+    "@angular/common": "~16.2.0",
+    "@angular/compiler": "~16.2.0",
+    "@angular/compiler-cli": "~16.2.0",
+    "@angular/core": "~16.2.0",
+    "@angular/router": "~16.2.0",
     "@babel/core": "^7.22.9",
     "@babel/helper-create-regexp-features-plugin": "^7.22.9",
     "@babel/plugin-transform-runtime": "^7.22.9",
@@ -64,7 +64,7 @@
     "@ngrx/effects": "~16.0.0",
     "@ngrx/router-store": "~16.0.0",
     "@ngrx/store": "~16.0.0",
-    "@nguniversal/builders": "~16.2.0-rc.0",
+    "@nguniversal/builders": "~16.2.0",
     "@nx/cypress": "16.7.0-beta.4",
     "@nx/devkit": "16.7.0-beta.4",
     "@nx/eslint-plugin": "16.7.0-beta.4",
@@ -90,7 +90,7 @@
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.0.4",
     "@rollup/plugin-url": "^7.0.0",
-    "@schematics/angular": "~16.2.0-rc.1",
+    "@schematics/angular": "~16.2.0",
     "@side/jest-runtime": "^1.1.0",
     "@storybook/addon-essentials": "7.2.2",
     "@storybook/core-server": "7.2.2",
@@ -221,7 +221,7 @@
     "mini-css-extract-plugin": "~2.4.7",
     "minimatch": "3.0.5",
     "next-sitemap": "^3.1.10",
-    "ng-packagr": "~16.2.0-next.1",
+    "ng-packagr": "~16.2.0",
     "node-fetch": "^2.6.7",
     "nx": "16.7.0-beta.4",
     "nx-cloud": "16.3.0",
@@ -367,9 +367,6 @@
   "pnpm": {
     "patchedDependencies": {
       "lerna@6.6.2": "patches/lerna@6.6.2.patch"
-    },
-    "overrides": {
-      "@angular-devkit/core": "$@angular-devkit/core"
     }
   }
 }
