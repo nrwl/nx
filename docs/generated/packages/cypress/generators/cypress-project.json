@@ -1,6 +1,6 @@
 {
   "name": "cypress-project",
-  "factory": "./src/generators/cypress-project/cypress-project#cypressProjectGenerator",
+  "factory": "./src/generators/cypress-project/cypress-project#cypressProjectGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxCypressProjectGeneratorSchema",
@@ -29,6 +29,11 @@
         "type": "string",
         "description": "A directory where the project is placed.",
         "x-priority": "important"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -78,7 +83,7 @@
   },
   "description": "Add a Cypress E2E Project.",
   "hidden": true,
-  "implementation": "/packages/cypress/src/generators/cypress-project/cypress-project#cypressProjectGenerator.ts",
+  "implementation": "/packages/cypress/src/generators/cypress-project/cypress-project#cypressProjectGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/cypress/src/generators/cypress-project/schema.json",
   "type": "generator"
