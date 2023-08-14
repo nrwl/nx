@@ -952,6 +952,24 @@
       "path": "/recipes/tips-n-tricks/yarn-pnp"
     }
   ],
+  "eslint": [
+    {
+      "description": "",
+      "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+      "id": "flat-config",
+      "name": "Switching to the ESLint's flat config format",
+      "path": "/recipes/tips-n-tricks/flat-config"
+    }
+  ],
+  "flat config": [
+    {
+      "description": "",
+      "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+      "id": "flat-config",
+      "name": "Switching to the ESLint's flat config format",
+      "path": "/recipes/tips-n-tricks/flat-config"
+    }
+  ],
   "deno": [
     {
       "description": "",

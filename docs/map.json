@@ -926,6 +926,12 @@
                   "id": "yarn-pnp",
                   "tags": ["yarn", "Plug and Play"],
                   "file": "shared/recipes/yarn-pnp"
+                },
+                {
+                  "name": "Switching to the ESLint's flat config format",
+                  "id": "flat-config",
+                  "tags": ["eslint", "flat config"],
+                  "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint"
                 }
               ]
             },

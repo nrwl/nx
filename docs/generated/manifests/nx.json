@@ -2728,6 +2728,16 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/yarn-pnp",
             "tags": ["yarn", "Plug and Play"]
+          },
+          {
+            "id": "flat-config",
+            "name": "Switching to the ESLint's flat config format",
+            "description": "",
+            "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/flat-config",
+            "tags": ["eslint", "flat config"]
           }
         ],
         "isExternal": false,
@@ -4056,6 +4066,16 @@
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/yarn-pnp",
         "tags": ["yarn", "Plug and Play"]
+      },
+      {
+        "id": "flat-config",
+        "name": "Switching to the ESLint's flat config format",
+        "description": "",
+        "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/flat-config",
+        "tags": ["eslint", "flat config"]
       }
     ],
     "isExternal": false,
@@ -4241,6 +4261,16 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/yarn-pnp",
     "tags": ["yarn", "Plug and Play"]
+  },
+  "/recipes/tips-n-tricks/flat-config": {
+    "id": "flat-config",
+    "name": "Switching to the ESLint's flat config format",
+    "description": "",
+    "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/flat-config",
+    "tags": ["eslint", "flat config"]
   },
   "/recipes/troubleshooting": {
     "id": "troubleshooting",
