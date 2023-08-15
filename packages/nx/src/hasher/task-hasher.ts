@@ -743,6 +743,7 @@ class TaskHasherImpl {
           runtime,
           {
             windowsHide: true,
+            cwd: workspaceRoot,
           },
           (err, stdout, stderr) => {
             if (err) {
