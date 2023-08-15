@@ -156,7 +156,7 @@ describe('cache', () => {
   it('should support using globs as outputs', async () => {
     const mylib = uniq('mylib');
     runCLI(`generate @nx/js:library ${mylib}`);
-    updateProjectConfig(mylib, (c) => {
+    await updateProjectConfig(mylib, (c) => {
       c.targets.build = {
         executor: 'nx:run-commands',
         outputs: ['{workspaceRoot}/dist/!(.next)/**/!(z|x).(txt|md)'],

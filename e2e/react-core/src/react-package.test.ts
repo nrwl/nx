@@ -36,7 +36,7 @@ describe('Build React libraries and apps', () => {
 
   let proj: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     app = uniq('app');
     parentLib = uniq('parentlib');
     childLib = uniq('childlib');
@@ -99,7 +99,7 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    updateProjectConfig(childLib, (json) => {
+    await updateProjectConfig(childLib, (json) => {
       json.targets.build.options.assets = [`libs/${childLib}/src/assets`];
       return json;
     });

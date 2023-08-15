@@ -1,4 +1,3 @@
-import { Workspaces } from '../config/workspaces';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
@@ -15,6 +14,7 @@ import {
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
 import { getIgnoreObject } from '../utils/ignore';
+import { retrieveProjectConfigurationsSync } from './utils/retrieve-workspace-files';
 
 export interface Change {
   type: string;
@@ -119,20 +119,28 @@ function defaultReadFileAtRevision(
   }
 }
 
+/**
+ * TODO(v18): Remove this function
+ * @deprecated To get projects use {@link retrieveProjectConfigurations} instead
+ */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
   path?: string;
 }): ProjectsConfigurations {
   let configuration: ProjectsConfigurations | null = null;
+  const root = opts.path || process.cwd();
+  const nxJson = readNxJson(root);
   try {
     const projectGraph = readCachedProjectGraph();
     configuration = {
-      ...readNxJson(),
+      ...nxJson,
       ...readProjectsConfigurationFromProjectGraph(projectGraph),
     };
   } catch {
-    const ws = new Workspaces(opts.path || process.cwd());
-    configuration = ws.readProjectsConfigurations();
+    configuration = {
+      version: 2,
+      projects: retrieveProjectConfigurationsSync(root, nxJson).projectNodes,
+    };
   }
   if (opts.format === 'angularCli') {
     return toOldFormat(configuration);
@@ -155,8 +163,4 @@ export function readPackageJson(): any {
 // Original Exports
 export { FileData };
 // TODO(17): Remove these exports
-export {
-  readNxJson,
-  readAllWorkspaceConfiguration,
-  workspaceLayout,
-} from '../config/configuration';
+export { readNxJson, workspaceLayout } from '../config/configuration';

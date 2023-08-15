@@ -268,7 +268,7 @@ describe('Angular Projects', () => {
     );
 
     // update the angular.json
-    updateProjectConfig(app1, (config) => {
+    await updateProjectConfig(app1, (config) => {
       config.targets.build.executor = '@nx/angular:webpack-browser';
       config.targets.build.options = {
         ...config.targets.build.options,
@@ -276,7 +276,7 @@ describe('Angular Projects', () => {
       };
       return config;
     });
-    updateProjectConfig(esbuildApp, (config) => {
+    await updateProjectConfig(esbuildApp, (config) => {
       config.targets.build.executor = '@nx/angular:browser-esbuild';
       config.targets.build.options = {
         ...config.targets.build.options,

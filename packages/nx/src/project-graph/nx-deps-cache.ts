@@ -8,7 +8,7 @@ import {
   ProjectFileMap,
   ProjectGraph,
 } from '../config/project-graph';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { projectGraphCacheDirectory } from '../utils/cache-directory';
 import {
   directoryExists,
@@ -171,7 +171,7 @@ export function writeCache(
 export function shouldRecomputeWholeGraph(
   cache: ProjectFileMapCache,
   packageJsonDeps: Record<string, string>,
-  projects: ProjectsConfigurations,
+  projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration,
   tsConfig: { compilerOptions: { paths: { [k: string]: any } } }
 ): boolean {
@@ -184,7 +184,7 @@ export function shouldRecomputeWholeGraph(
 
   // we have a cached project that is no longer present
   const cachedNodes = Object.keys(cache.projectFileMap);
-  if (cachedNodes.some((p) => projects.projects[p] === undefined)) {
+  if (cachedNodes.some((p) => projects[p] === undefined)) {
     return true;
   }
 

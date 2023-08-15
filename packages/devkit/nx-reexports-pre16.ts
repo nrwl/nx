@@ -47,10 +47,7 @@ export type {
  */
 export { Workspaces } from 'nx/src/config/workspaces';
 
-export {
-  readAllWorkspaceConfiguration,
-  workspaceLayout,
-} from 'nx/src/config/configuration';
+export { workspaceLayout } from 'nx/src/config/configuration';
 
 export type {
   NxPlugin,

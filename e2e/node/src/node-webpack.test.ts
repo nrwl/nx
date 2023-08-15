@@ -55,7 +55,7 @@ describe('Node Applications + webpack', () => {
     const lib = uniq('nodelib');
     runCLI(`generate @nx/js:lib ${lib} --bundler=esbuild --no-interactive`);
 
-    updateProjectConfig(app, (config) => {
+    await updateProjectConfig(app, (config) => {
       // Since we read from lib from dist, we should re-build it when lib changes.
       config.targets.build.options.buildLibsFromSource = false;
       config.targets.serve.options.runBuildTargetDependencies = true;

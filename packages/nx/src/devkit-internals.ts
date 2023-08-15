@@ -7,3 +7,4 @@ export { createTempNpmDirectory } from './utils/package-manager';
 export { getExecutorInformation } from './command-line/run/executor-utils';
 export { readNxJson as readNxJsonFromDisk } from './config/nx-json';
 export { calculateDefaultProjectName } from './config/calculate-default-project-name';
+export { retrieveProjectConfigurationsWithAngularProjects } from './project-graph/utils/retrieve-workspace-files';

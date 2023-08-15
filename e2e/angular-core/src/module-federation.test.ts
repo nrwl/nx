@@ -173,8 +173,10 @@ describe('Angular Module Federation', () => {
 
     // ports
     const hostPort = 4500;
-    const remote1Port = readProjectConfig(remote1).targets.serve.options.port;
-    const remote2Port = readProjectConfig(remote2).targets.serve.options.port;
+    const remote1Port = (await readProjectConfig(remote1)).targets.serve.options
+      .port;
+    const remote2Port = (await readProjectConfig(remote2)).targets.serve.options
+      .port;
 
     const process = await runCommandUntil(
       `serve-ssr ${host} --port=${hostPort}`,
