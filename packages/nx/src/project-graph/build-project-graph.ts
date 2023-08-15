@@ -23,10 +23,7 @@ import {
 import { readJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraphBuilder } from './project-graph-builder';
-import {
-  ProjectConfiguration,
-  ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
@@ -49,7 +46,7 @@ export function getProjectFileMap(): {
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
-  projectsConfigurations: ProjectsConfigurations,
+  projects: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
@@ -64,7 +61,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 
   const nxJson = readNxJson();
   const projectGraphVersion = '6.0';
-  assertWorkspaceValidity(projectsConfigurations, nxJson);
+  assertWorkspaceValidity(projects, nxJson);
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
@@ -75,7 +72,7 @@ export async function buildProjectGraphUsingProjectFileMap(
     !shouldRecomputeWholeGraph(
       fileMap,
       packageJsonDeps,
-      projectsConfigurations,
+      projects,
       nxJson,
       rootTsConfig
     );
@@ -89,7 +86,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   }
 
   const context = createContext(
-    projectsConfigurations,
+    projects,
     nxJson,
     projectFileMap,
     filesToProcess
@@ -185,27 +182,27 @@ async function buildProjectGraphUsingContext(
 }
 
 function createContext(
-  projectsConfigurations: ProjectsConfigurations,
+  projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration,
   fileMap: ProjectFileMap,
   filesToProcess: ProjectFileMap
 ): ProjectGraphProcessorContext {
-  const projects = Object.keys(projectsConfigurations.projects).reduce(
-    (map, projectName) => {
-      map[projectName] = {
-        ...projectsConfigurations.projects[projectName],
-      };
-      return map;
-    },
-    {} as Record<string, ProjectConfiguration>
-  );
+  const clonedProjects = Object.keys(projects).reduce((map, projectName) => {
+    map[projectName] = {
+      ...projects[projectName],
+    };
+    return map;
+  }, {} as Record<string, ProjectConfiguration>);
   return {
     nxJsonConfiguration: nxJson,
-    projectsConfigurations,
     workspace: {
-      ...projectsConfigurations,
+      version: 2,
+      projects: clonedProjects,
       ...nxJson,
-      projects,
+    },
+    projectsConfigurations: {
+      version: 2,
+      projects: clonedProjects,
     },
     fileMap,
     filesToProcess,

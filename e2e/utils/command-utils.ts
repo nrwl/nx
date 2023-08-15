@@ -14,10 +14,11 @@ import { TargetConfiguration } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
 import * as isCI from 'is-ci';
-import { Workspaces } from '../../packages/nx/src/config/workspaces';
 import { fileExists, readJson, updateFile } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
+import { retrieveProjectConfigurationsSync } from '../../packages/nx/src/project-graph/utils/retrieve-workspace-files';
+import { readNxJson } from '../../packages/nx/src/config/nx-json';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -36,11 +37,14 @@ export interface RunCmdOpts {
  */
 export function setMaxWorkers() {
   if (isCI) {
-    const ws = new Workspaces(tmpProjPath());
-    const projectsConfigurations = ws.readProjectsConfigurations();
+    const root = tmpProjPath();
+    const projects = retrieveProjectConfigurationsSync(
+      root,
+      readNxJson(root)
+    ).projectNodes;
 
-    Object.keys(projectsConfigurations.projects).forEach((appName) => {
-      let project = projectsConfigurations.projects[appName];
+    Object.keys(projects).forEach((appName) => {
+      let project = projects[appName];
       const { build } = project.targets as {
         [targetName: string]: TargetConfiguration<any>;
       };

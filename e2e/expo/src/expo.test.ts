@@ -85,8 +85,8 @@ describe('expo', () => {
   it('should prebuild', async () => {
     // run prebuild command with git check disable
     // set a mock package name for ios and android in expo's app.json
-    const workspace = readResolvedConfiguration();
-    const root = workspace.projects[appName].root;
+    const projects = await readResolvedConfiguration();
+    const root = projects[appName].root;
     const appJsonPath = join(root, `app.json`);
     const appJson = await readJson(appJsonPath);
     if (appJson.expo.ios) {

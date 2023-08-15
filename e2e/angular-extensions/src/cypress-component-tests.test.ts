@@ -30,7 +30,7 @@ describe('Angular Cypress Component Tests', () => {
 
     createBuildableLib(projectName, buildableLibName);
 
-    useWorkspaceAssetsInApp(appName);
+    await useWorkspaceAssetsInApp(appName);
   });
 
   afterAll(() => cleanupProject());
@@ -265,7 +265,7 @@ export class AppModule {}
   );
 }
 
-function useWorkspaceAssetsInApp(appName: string) {
+async function useWorkspaceAssetsInApp(appName: string) {
   // make sure assets from the workspace root work.
   createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
   createFile(
@@ -279,7 +279,7 @@ function useWorkspaceAssetsInApp(appName: string) {
   }
   `
   );
-  updateProjectConfig(appName, (config) => {
+  await updateProjectConfig(appName, (config) => {
     config.targets['build'].options.stylePreprocessorOptions = {
       includePaths: ['assets/styles'],
     };

@@ -37,7 +37,7 @@ describe('Rollup Plugin', () => {
     let output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
-    updateProjectConfig(myPkg, (config) => {
+    await updateProjectConfig(myPkg, (config) => {
       delete config.targets.build;
       return config;
     });
@@ -51,7 +51,7 @@ describe('Rollup Plugin', () => {
     output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
-    updateProjectConfig(myPkg, (config) => {
+    await updateProjectConfig(myPkg, (config) => {
       delete config.targets.build;
       return config;
     });
@@ -66,13 +66,13 @@ describe('Rollup Plugin', () => {
     expect(output).toMatch(/Hello/);
   }, 500000);
 
-  it('should support additional entry-points', () => {
+  it('should support additional entry-points', async () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=none`);
     runCLI(
       `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
-    updateProjectConfig(myPkg, (config) => {
+    await updateProjectConfig(myPkg, (config) => {
       config.targets.build.options.format = ['cjs', 'esm'];
       config.targets.build.options.generateExportsField = true;
       config.targets.build.options.additionalEntryPoints = [

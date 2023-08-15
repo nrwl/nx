@@ -54,6 +54,9 @@ export function readCachedProjectConfiguration(
   return node.data;
 }
 
+/**
+ * Get the {@link ProjectsConfigurations} from the {@link ProjectGraph}
+ */
 export function readProjectsConfigurationFromProjectGraph(
   projectGraph: ProjectGraph
 ): ProjectsConfigurations {
@@ -81,7 +84,7 @@ export async function buildProjectGraphWithoutDaemon() {
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   return (
     await buildProjectGraphUsingProjectFileMap(
-      projectConfigurations,
+      projectConfigurations.projects,
       externalNodes,
       projectFileMap,
       allWorkspaceFiles,

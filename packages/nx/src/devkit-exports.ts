@@ -37,15 +37,13 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
+// TODO(v18): Remove this export
 /**
  * @category Workspace
  */
 export { Workspaces } from './config/workspaces';
 
-export {
-  readAllWorkspaceConfiguration,
-  workspaceLayout,
-} from './config/configuration';
+export { workspaceLayout } from './config/configuration';
 
 export type {
   NxPlugin,
@@ -208,6 +206,7 @@ export { reverse } from './project-graph/operators';
 export {
   createProjectGraphAsync,
   readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
 } from './project-graph/project-graph';
 
 /**

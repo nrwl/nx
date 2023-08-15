@@ -262,7 +262,7 @@ describe('Web Components Applications', () => {
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
 
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       config.targets.build.options.webpackConfig = `apps/${appName}/webpack.config.js`;
       return config;
     });
@@ -411,7 +411,7 @@ describe('CLI - Environment Variables', () => {
 });
 
 describe('Build Options', () => {
-  it('should inject/bundle external scripts and styles', () => {
+  it('should inject/bundle external scripts and styles', async () => {
     newProject();
 
     const appName = uniq('app');
@@ -444,7 +444,7 @@ describe('Build Options', () => {
     const barScriptsBundleName = 'bar-scripts';
     const barStylesBundleName = 'bar-styles';
 
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       const buildOptions = config.targets.build.options;
 
       buildOptions.scripts = [
@@ -492,7 +492,7 @@ describe('Build Options', () => {
 });
 
 describe('index.html interpolation', () => {
-  test('should interpolate environment variables', () => {
+  test('should interpolate environment variables', async () => {
     const appName = uniq('app');
 
     runCLI(
@@ -530,7 +530,7 @@ describe('index.html interpolation', () => {
     updateFile(envFilePath, envFileContents);
     updateFile(indexPath, indexContent);
 
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       const buildOptions = config.targets.build.options;
       buildOptions.deployUrl = 'baz';
       return config;

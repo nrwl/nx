@@ -16,7 +16,7 @@ describe('js:node error handling', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should log out the error', () => {
+  it('should log out the error', async () => {
     const esbuildLib = uniq('esbuildlib');
 
     runCLI(
@@ -30,7 +30,7 @@ describe('js:node error handling', () => {
         `;
     });
 
-    updateProjectConfig(esbuildLib, (config) => {
+    await updateProjectConfig(esbuildLib, (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {
@@ -48,7 +48,7 @@ describe('js:node error handling', () => {
     expect(output).toContain('This is an error');
   }, 240_000);
 
-  it('should execute library compiled with rollup', () => {
+  it('should execute library compiled with rollup', async () => {
     const rollupLib = uniq('rolluplib');
 
     runCLI(
@@ -61,7 +61,7 @@ describe('js:node error handling', () => {
         `;
     });
 
-    updateProjectConfig(rollupLib, (config) => {
+    await updateProjectConfig(rollupLib, (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {
@@ -76,7 +76,7 @@ describe('js:node error handling', () => {
     expect(output).toContain('Hello from my library!');
   }, 240_000);
 
-  it('should execute library compiled with tsc', () => {
+  it('should execute library compiled with tsc', async () => {
     const tscLib = uniq('tsclib');
 
     runCLI(`generate @nx/js:lib ${tscLib} --bundler=tsc --no-interactive`);
@@ -87,7 +87,7 @@ describe('js:node error handling', () => {
         `;
     });
 
-    updateProjectConfig(tscLib, (config) => {
+    await updateProjectConfig(tscLib, (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {
@@ -102,7 +102,7 @@ describe('js:node error handling', () => {
     expect(output).toContain('Hello from my tsc library!');
   }, 240_000);
 
-  it('should execute library compiled with swc', () => {
+  it('should execute library compiled with swc', async () => {
     const swcLib = uniq('swclib');
 
     runCLI(`generate @nx/js:lib ${swcLib} --bundler=swc --no-interactive`);
@@ -113,7 +113,7 @@ describe('js:node error handling', () => {
         `;
     });
 
-    updateProjectConfig(swcLib, (config) => {
+    await updateProjectConfig(swcLib, (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {
@@ -128,7 +128,7 @@ describe('js:node error handling', () => {
     expect(output).toContain('Hello from my swc library!');
   }, 240_000);
 
-  it('should execute webpack app', () => {
+  it('should execute webpack app', async () => {
     const webpackProject = uniq('webpackproject');
 
     runCLI(
@@ -141,7 +141,7 @@ describe('js:node error handling', () => {
         `;
     });
 
-    updateProjectConfig(webpackProject, (config) => {
+    await updateProjectConfig(webpackProject, (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {

@@ -1,5 +1,3 @@
-import { Workspaces } from '../config/workspaces';
-
 import {
   calculateReverseDeps,
   getExecutorForTask,
@@ -10,7 +8,6 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskHasher } from '../hasher/task-hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { hashTask } from '../hasher/hash-task';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';

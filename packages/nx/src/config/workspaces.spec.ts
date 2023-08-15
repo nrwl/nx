@@ -1,6 +1,8 @@
 import { toProjectName, Workspaces } from './workspaces';
 import { TempFs } from '../utils/testing/temp-fs';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
+import { retrieveProjectConfigurations } from '../project-graph/utils/retrieve-workspace-files';
+import { readNxJson } from './configuration';
 
 const libConfig = (root, name?: string) => ({
   name: name ?? toProjectName(`${root}/some-file`),
@@ -45,7 +47,7 @@ describe('Workspaces', () => {
       });
 
       const workspaces = new Workspaces(fs.tempDir);
-      const resolved = workspaces.readProjectsConfigurations();
+      const resolved = workspaces.readWorkspaceConfiguration();
       expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
@@ -74,7 +76,7 @@ describe('Workspaces', () => {
       });
 
       const workspaces = new Workspaces(fs.tempDir);
-      const { projects } = workspaces.readProjectsConfigurations();
+      const { projects } = workspaces.readWorkspaceConfiguration();
 
       // projects got merged for lib1
       expect(projects['lib1']).toEqual({
@@ -112,10 +114,12 @@ describe('Workspaces', () => {
         {
           NX_WORKSPACE_ROOT: fs.tempDir,
         },
-        () => {
-          const workspaces = new Workspaces(fs.tempDir);
-          const resolved = workspaces.readProjectsConfigurations();
-          expect(resolved.projects['my-package']).toEqual({
+        async () => {
+          const resolved = await retrieveProjectConfigurations(
+            fs.tempDir,
+            readNxJson(fs.tempDir)
+          );
+          expect(resolved.projectNodes['my-package']).toEqual({
             name: 'my-package',
             root: 'packages/my-package',
             sourceRoot: 'packages/my-package',

@@ -123,7 +123,7 @@ describe('bundling libs', () => {
     expect(output).toContain(rollupLib);
   }, 500_000);
 
-  it('should support tsc and swc for building libs', () => {
+  it('should support tsc and swc for building libs', async () => {
     const tscLib = uniq('tsclib');
     const swcLib = uniq('swclib');
     const tscEsmLib = uniq('tscesmlib');
@@ -154,7 +154,7 @@ describe('bundling libs', () => {
     );
 
     // Add additional entry points for `exports` field
-    updateProjectConfig(tscLib, (json) => {
+    await updateProjectConfig(tscLib, (json) => {
       json.targets.build.options.additionalEntryPoints = [
         `libs/${tscLib}/src/foo/*.ts`,
       ];
@@ -162,7 +162,7 @@ describe('bundling libs', () => {
     });
     updateFile(`libs/${tscLib}/src/foo/bar.ts`, `export const bar = 'bar';`);
     updateFile(`libs/${tscLib}/src/foo/faz.ts`, `export const faz = 'faz';`);
-    updateProjectConfig(swcLib, (json) => {
+    await updateProjectConfig(swcLib, (json) => {
       json.targets.build.options.additionalEntryPoints = [
         `libs/${swcLib}/src/foo/*.ts`,
       ];

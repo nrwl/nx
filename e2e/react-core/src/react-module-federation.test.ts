@@ -114,8 +114,8 @@ describe('React Module Federation', () => {
     // }
   }, 500_000);
 
-  function readPort(appName: string): number {
-    const config = readProjectConfig(appName);
+  async function readPort(appName: string): Promise<number> {
+    const config = await readProjectConfig(appName);
     return config.targets.serve.options.port;
   }
 });
