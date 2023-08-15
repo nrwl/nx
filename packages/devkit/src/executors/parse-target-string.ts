@@ -1,10 +1,11 @@
 import type { Target } from 'nx/src/command-line/run/run';
 import type { ProjectGraph } from 'nx/src/config/project-graph';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { splitTarget } from 'nx/src/utils/split-target';
 import { requireNx } from '../../nx';
 
-const { readCachedProjectGraph } = requireNx();
+let { readCachedProjectGraph, splitTarget } = requireNx();
+
+// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+splitTarget = splitTarget ?? require('nx/src/utils/split-target').splitTarget;
 
 /**
  * @deprecated(v17) A project graph should be passed to parseTargetString for best accuracy.
