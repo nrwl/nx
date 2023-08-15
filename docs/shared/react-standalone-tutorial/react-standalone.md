@@ -40,7 +40,7 @@ title="Tutorial: Standalone React Application"
 
 Create a new standalone React application with the following command:
 
-```shell {% command="npx create-nx-workspace@latest myreactapp --preset=react-standalone" path="~" %}
+```{% command="npx create-nx-workspace@latest myreactapp --preset=react-standalone" path="~" %}
 ? Bundler to be used to build the application …
 Vite    [ https://vitejs.dev/ ]
 Webpack [ https://webpack.js.org/ ]
@@ -193,7 +193,7 @@ nx e2e e2e # runs e2e tests with Cypress
 
 More conveniently, we can also run them in parallel using the following syntax:
 
-```shell {% command="nx run-many -t test lint e2e" path="myreactapp" %}
+```{% command="nx run-many -t test lint e2e" path="myreactapp" %}
 
     ✔  nx run e2e:lint (2s)
     ✔  nx run myreactapp:lint (2s)
@@ -211,7 +211,7 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/core-fea
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
-```shell {% command="nx run-many -t test lint e2e" path="myreactapp" %}
+```{% command="nx run-many -t test lint e2e" path="myreactapp" %}
 
     ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
     ✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
@@ -245,7 +245,7 @@ So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabi
 
 You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/core-features/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
 
-```shell {% command="npx nx list @nx/react" path="myreactapp" %}
+```{% command="npx nx list @nx/react" path="myreactapp" %}
 
  >  NX   Capabilities in @nx/react:
 
@@ -284,7 +284,7 @@ More info can be found in [the integrate with editors article](/core-features/in
 
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
-```shell {% command="npx nx g @nx/react:component hello-world --dry-run" path="myreactapp" %}
+```{% command="npx nx g @nx/react:component hello-world --dry-run" path="myreactapp" %}
 >  NX  Generating @nx/react:component
 
 ✔ Should this component be exported in the project? (y/N) · false
@@ -320,7 +320,7 @@ export default HelloWorld;
 
 If you're ready and want to ship your application, you can build it using
 
-```shell {% command="npx nx build" path="myreactapp" %}
+```{% command="npx nx build" path="myreactapp" %}
 vite v4.3.5 building for production...
 ✓ 33 modules transformed.
 dist/myreactapp/index.html                   0.48 kB │ gzip:  0.30 kB
@@ -787,7 +787,7 @@ export default ProductList;
 
 If you lint your workspace you'll get an error now:
 
-```shell {% command="nx run-many -t lint" %}
+```{% command="nx run-many -t lint" %}
     ✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
     ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
     ✔  nx run modules-shared-ui:lint (1s)
