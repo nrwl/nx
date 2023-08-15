@@ -4,6 +4,8 @@ use std::path::PathBuf;
 use tracing::trace;
 use watchexec_events::{Event, Tag};
 
+use crate::native::watch::utils::transform_event;
+
 #[napi(string_enum)]
 #[derive(Debug)]
 /// Newly created files will have the `update` EventType as well.
@@ -52,6 +54,9 @@ pub(super) struct WatchEventInternal {
 
 impl From<&Event> for WatchEventInternal {
     fn from(value: &Event) -> Self {
+        let transformed = transform_event(value);
+        let value = transformed.as_ref().unwrap_or(value);
+
         let path = value.paths().next().expect("there should always be a path");
 
         let event_kind = value
