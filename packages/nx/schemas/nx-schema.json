@@ -6,7 +6,8 @@
   "properties": {
     "implicitDependencies": {
       "type": "object",
-      "description": "Map of files to projects that implicitly depend on them."
+      "description": "Map of files to projects that implicitly depend on them.",
+      "deprecated": "Use named inputs instead.  See https://nx.dev/deprecated/global-implicit-dependencies"
     },
     "affected": {
       "type": "object",
@@ -199,7 +200,7 @@
         },
         "defaultCollection": {
           "type": "string",
-          "description": "The default schematics collection to use."
+          "description": "The default generator collection to use."
         }
       }
     },
