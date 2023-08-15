@@ -209,7 +209,7 @@ function loadNxPluginSync(moduleName: string, paths: string[], root: string) {
  * @deprecated Use loadNxPlugins instead.
  */
 export function loadNxPluginsSync(
-  plugins?: string[],
+  plugins: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
 ): (NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>)[] {
@@ -240,7 +240,7 @@ export function loadNxPluginsSync(
 }
 
 export async function loadNxPlugins(
-  plugins?: string[],
+  plugins: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
 ): Promise<(NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>)[]> {
