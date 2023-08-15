@@ -3624,6 +3624,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Add a Rust Project",
+                "path": "/showcase/example-repos/add-rust",
+                "id": "add-rust",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Add an Astro Project",
                 "path": "/showcase/example-repos/add-astro",
                 "id": "add-astro",
@@ -3756,6 +3764,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Add a Rust Project",
+            "path": "/showcase/example-repos/add-rust",
+            "id": "add-rust",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Add an Astro Project",
             "path": "/showcase/example-repos/add-astro",
             "id": "add-astro",
@@ -3874,6 +3890,14 @@
         "name": "Add a Qwik Project",
         "path": "/showcase/example-repos/add-qwik",
         "id": "add-qwik",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Rust Project",
+        "path": "/showcase/example-repos/add-rust",
+        "id": "add-rust",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -4518,6 +4518,16 @@
             "tags": []
           },
           {
+            "id": "add-rust",
+            "name": "Add a Rust Project",
+            "description": "Add a Rust project to your repo",
+            "file": "shared/recipes/add-stack/add-rust",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-rust",
+            "tags": []
+          },
+          {
             "id": "add-astro",
             "name": "Add an Astro Project",
             "description": "Add Nx to an Astro project",
@@ -4684,6 +4694,16 @@
         "tags": []
       },
       {
+        "id": "add-rust",
+        "name": "Add a Rust Project",
+        "description": "Add a Rust project to your repo",
+        "file": "shared/recipes/add-stack/add-rust",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-rust",
+        "tags": []
+      },
+      {
         "id": "add-astro",
         "name": "Add an Astro Project",
         "description": "Add Nx to an Astro project",
@@ -4836,6 +4856,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-qwik",
+    "tags": []
+  },
+  "/showcase/example-repos/add-rust": {
+    "id": "add-rust",
+    "name": "Add a Rust Project",
+    "description": "Add a Rust project to your repo",
+    "file": "shared/recipes/add-stack/add-rust",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-rust",
     "tags": []
   },
   "/showcase/example-repos/add-astro": {
