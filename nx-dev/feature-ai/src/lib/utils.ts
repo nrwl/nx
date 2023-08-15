@@ -1,28 +1,7 @@
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
-
-export const warning = renderMarkdown(
-  `
-  {% callout type="warning" title="Always double check!" %}
-  This feature is still in Alpha.
-  The results may not be accurate, so please always double check with our documentation.
+export function formatMarkdownSources(sourcesMarkdown: string): string {
+  return `\n
+{% callout type="info" title="Sources" %}
+${sourcesMarkdown}
 {% /callout %}
-  `,
-  { filePath: '' }
-).node;
-
-export const infoBox = renderMarkdown(
-  `
-  {% callout type="info" title="New question or continue chat?" %}
-  This chat has memory. It will answer all it's questions in the context of the previous questions.
-  If you want to ask a new question, you can reset the chat history by clicking the "Ask new question" button.
-  {% /callout %}
-  `,
-  { filePath: '' }
-).node;
-
-export const noResults = renderMarkdown(
-  `
-  Sorry, I don't know how to help with that. You can visit the [Nx documentation](https://nx.dev/getting-started/intro) for more info.
-  `,
-  { filePath: '' }
-).node;
+\n`;
+}

@@ -51,7 +51,7 @@ let totalTokensSoFar = 0;
 
 let supabaseClient: SupabaseClient<any, 'public', any>;
 
-export async function nxDevDataAccessAi(
+export async function queryAi(
   query: string,
   aiResponse?: string
 ): Promise<{
@@ -208,7 +208,11 @@ export async function nxDevDataAccessAi(
       throw new ApplicationError('Failed to generate completion', error);
     }
 
-    const message = getMessageFromResponse(response.data);
+    // Message asking to double-check
+    const callout: string =
+      '{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n';
+    // Append the warning message asking to double-check!
+    const message = [callout, getMessageFromResponse(response.data)].join('');
 
     const responseWithoutBadLinks = await sanitizeLinksInResponse(message);
 
@@ -248,13 +252,13 @@ export function getHistory(): ChatItem[] {
   return chatFullHistory;
 }
 
-export async function handleFeedback(feedback: {}): Promise<
+export async function sendFeedbackAnalytics(feedback: {}): Promise<
   PostgrestSingleResponse<null>
 > {
   return supabaseClient.from('feedback').insert(feedback);
 }
 
-export async function handleQueryReporting(queryInfo: {}) {
+export async function sendQueryAnalytics(queryInfo: {}) {
   const { error } = await supabaseClient.from('user_queries').insert(queryInfo);
 
   if (error) {
