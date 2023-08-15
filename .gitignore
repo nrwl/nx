@@ -19,7 +19,10 @@ jest.debug.config.js
 /graph/client/src/assets/generated-task-graphs
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/images/open-graph
+
+# Issues scraper creates these files, stored by github's cache
 /scripts/issues-scraper/cached
+
 # Lerna creates this
 CHANGELOG.md
 
@@ -34,3 +37,6 @@ CHANGELOG.md
 .bashrc
 
 *.node
+
+# Fix for issue when working on the repo in a dev container
+.pnpm-store
