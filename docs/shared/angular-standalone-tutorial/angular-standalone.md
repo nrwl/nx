@@ -35,7 +35,7 @@ title="Tutorial: Standalone Angular Application"
 
 Create a new Angular application with the following command:
 
-```shell {% command="npx create-nx-workspace@latest myngapp --preset=angular-standalone" path="~" %}
+```{% command="npx create-nx-workspace@latest myngapp --preset=angular-standalone" path="~" %}
 ✔ Would you like to use Standalone Components in your application? · Yes
 
 ✔ Would you like to add routing? · Yes
@@ -199,7 +199,7 @@ nx e2e e2e # runs e2e tests with Cypress
 
 More conveniently, we can also run them in parallel using the following syntax:
 
-```shell {% command="nx run-many -t test lint e2e" path="myngapp" %}
+```{% command="nx run-many -t test lint e2e" path="myngapp" %}
 
     ✔  nx run e2e:lint (1s)
     ✔  nx run myngapp:lint (1s)
@@ -219,7 +219,7 @@ One thing to highlight is that Nx is able to [cache the tasks you run](/core-fea
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
-```shell {% command="nx run-many -t test lint e2e" path="myngapp" %}
+```{% command="nx run-many -t test lint e2e" path="myngapp" %}
 
     ✔  nx run myngapp:lint  [existing outputs match the cache, left as is]
     ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
@@ -243,7 +243,7 @@ Similar to the Angular CLI, Nx comes with code generation abilities. What the An
 
 Generators allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/angular` plugin ships with, run the following command and inspect the output:
 
-```shell {% command="npx nx list @nx/angular" path="myngapp" %}
+```{% command="npx nx list @nx/angular" path="myngapp" %}
 
  >  NX   Capabilities in @nx/angular:
 
@@ -295,7 +295,7 @@ More info can be found in [the integrate with editors article](/core-features/in
 
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
-```shell {% command="npx nx g @nx/angular:component hello-world --standalone --dry-run" path="myngapp" %}
+```{% command="npx nx g @nx/angular:component hello-world --standalone --dry-run" path="myngapp" %}
 >  NX  Generating @nx/angular:component
 
 CREATE src/app/hello-world/hello-world.component.css
@@ -328,7 +328,7 @@ export class HelloWorldComponent {}
 
 If you're ready and want to ship your application, you can build it using
 
-```shell {% command="npx nx build" path="myngapp" %}
+```{% command="npx nx build" path="myngapp" %}
 > nx run myngapp:build:production
 
 ✔ Browser application bundle generation complete.
@@ -782,7 +782,7 @@ export class ProductsComponent {}
 
 If you lint your workspace you'll get an error now:
 
-```shell {% command="nx run-many -t lint" %}
+```{% command="nx run-many -t lint" %}
     ✖  nx run modules-products:lint
        Linting "modules-products"...
 

@@ -90,7 +90,7 @@ console.log(
 
 Now if you run `nx serve cow`, you'll see this:
 
-```shell {% command="node index.js" %}
+```{% command="node index.js" %}
 ______________________________________________________
 < Welcome to the Restaurant at the End of the Universe >
 ------------------------------------------------------
