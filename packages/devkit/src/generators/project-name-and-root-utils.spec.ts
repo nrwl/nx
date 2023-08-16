@@ -50,6 +50,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@proj/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -69,6 +70,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@scope/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -89,6 +91,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@custom-scope/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -111,6 +114,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@scope/lib-name',
         projectRoot: '@scope/lib-name',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -135,6 +139,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: 'lib-name',
         projectRoot: '.',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -181,6 +186,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@proj/shared/lib-name',
         projectRoot: 'shared/lib-name',
+        projectNameAndRootFormat: 'derived',
       });
     });
 
@@ -215,6 +221,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: 'lib-name',
         projectRoot: '.',
+        projectNameAndRootFormat: 'derived',
       });
     });
 
@@ -288,6 +295,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@scope/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
       });
 
       // restore original interactive mode
@@ -317,6 +325,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@proj/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -336,6 +345,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@scope/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -356,6 +366,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@custom-scope/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -379,6 +390,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@scope/lib-name',
         projectRoot: '@scope/lib-name',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -403,6 +415,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: 'lib-name',
         projectRoot: '.',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
@@ -449,6 +462,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@proj/shared/lib-name',
         projectRoot: 'libs/shared/lib-name',
+        projectNameAndRootFormat: 'derived',
       });
     });
 
@@ -484,6 +498,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: 'lib-name',
         projectRoot: '.',
+        projectNameAndRootFormat: 'derived',
       });
     });
 
@@ -557,6 +572,7 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@scope/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
       });
 
       // restore original interactive mode
