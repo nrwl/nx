@@ -206,7 +206,7 @@ describe('Nx Running Tests', () => {
         return c;
       });
 
-      let withoutBail = runCLI(`run-many --target=error --all --parallel=1`, {
+      let withoutBail = runCLI(`run-many --target=error --parallel=1`, {
         silenceError: true,
       })
         .split('\n')
@@ -217,12 +217,9 @@ describe('Nx Running Tests', () => {
       expect(withoutBail).toContain(`- ${myapp1}:error`);
       expect(withoutBail).toContain(`- ${myapp2}:error`);
 
-      let withBail = runCLI(
-        `run-many --target=error --all --parallel=1 --nx-bail`,
-        {
-          silenceError: true,
-        }
-      )
+      let withBail = runCLI(`run-many --target=error --parallel=1 --nx-bail`, {
+        silenceError: true,
+      })
         .split('\n')
         .map((r) => r.trim())
         .filter((r) => r);

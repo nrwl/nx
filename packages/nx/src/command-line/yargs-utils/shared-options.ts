@@ -161,7 +161,8 @@ export function withRunManyOptions(yargs: Argv) {
         'Projects to run. (comma/space delimited project names and/or patterns)',
     })
     .option('all', {
-      describe: '[deprecated] Run the target on all projects in the workspace',
+      describe:
+        '[deprecated] `run-many` runs all targets on all projects in the workspace if no projects are provided. This option is no longer required.',
       type: 'boolean',
       default: true,
     });

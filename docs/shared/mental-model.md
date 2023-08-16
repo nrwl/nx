@@ -122,7 +122,7 @@ When you run `nx run-many -t test -p app1 lib`, you are telling Nx to do the sam
 tasks `app1:test`
 and `lib:test`.
 
-When you run `nx run-many -t test --all`, you are telling Nx to do this for all the projects.
+When you run `nx run-many -t test`, you are telling Nx to do this for all the projects.
 
 As your workspace grows, retesting all projects becomes too slow. To address this Nx implements code change analysis to
 get the min set of projects that need to be retested. How does it work?
