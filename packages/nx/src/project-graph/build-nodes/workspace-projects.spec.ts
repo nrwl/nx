@@ -312,6 +312,32 @@ describe('workspace-projects', () => {
       ).toEqual({ a: 'a', b: 'my/project' });
     });
 
+    it('should merge options when targets use executors with defaults', () => {
+      expect(
+        normalizeProjectTargets(
+          {
+            root: 'my/project',
+            targets: {
+              build: {
+                executor: '@nx/jest:jest',
+                options: {
+                  a: 'a',
+                },
+              },
+            },
+          },
+          {
+            '@nx/jest:jest': {
+              options: {
+                b: 'b',
+              },
+            },
+          },
+          'build'
+        ).build.options
+      ).toEqual({ a: 'a', b: 'b' });
+    });
+
     it('should not merge options when targets use different executors', () => {
       expect(
         normalizeProjectTargets(

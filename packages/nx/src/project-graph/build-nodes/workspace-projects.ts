@@ -134,9 +134,8 @@ export function normalizeProjectTargets(
     // We need to know the executor for use in readTargetDefaultsForTarget,
     // but we haven't resolved the `command` syntactic sugar yet.
     const executor =
-      targets[target].executor ?? targets[target].command
-        ? 'nx:run-commands'
-        : null;
+      targets[target].executor ??
+      (targets[target].command ? 'nx:run-commands' : null);
 
     // Allows things like { targetDefaults: { build: { command: tsc } } }
     const defaults = resolveCommandSyntacticSugar(
