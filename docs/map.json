@@ -1053,6 +1053,12 @@
                   "file": "shared/recipes/add-stack/add-rust"
                 },
                 {
+                  "name": "Add a Nuxt Project",
+                  "id": "add-nuxt",
+                  "description": "Add a nuxt project to your repo",
+                  "file": "shared/recipes/add-stack/add-nuxt"
+                },
+                {
                   "name": "Add an Astro Project",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
