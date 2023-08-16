@@ -224,7 +224,7 @@
       "description": "Creates a secondary entry point for an Angular publishable library."
     },
     "remote": {
-      "factory": "./src/generators/remote/remote",
+      "factory": "./src/generators/remote/remote#remoteInternal",
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
       "description": "Generate a Remote Angular Module Federation Application."
