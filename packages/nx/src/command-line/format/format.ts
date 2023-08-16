@@ -12,6 +12,7 @@ import * as yargs from 'yargs';
 
 import * as prettier from 'prettier';
 import { sortObjectByKeys } from '../../utils/object-sort';
+import { readModulePackageJson } from '../../utils/package-json';
 import {
   getRootTsConfigFileName,
   getRootTsConfigPath,
@@ -22,8 +23,9 @@ import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import { chunkify } from '../../utils/chunkify';
 import { allFileData } from '../../utils/all-file-data';
+import { gte } from 'semver';
 
-const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
+const PRETTIER_PATH = getPrettierPath();
 
 export async function format(
   command: 'check' | 'write',
@@ -201,4 +203,12 @@ function sortTsConfig() {
   } catch (e) {
     // catch noop
   }
+}
+
+function getPrettierPath() {
+  const prettierVersion = readModulePackageJson('prettier').packageJson.version;
+  if (gte(prettierVersion, '3.0.0')) {
+    return require.resolve('prettier/bin/prettier.cjs');
+  }
+  return require.resolve('prettier/bin-prettier');
 }
