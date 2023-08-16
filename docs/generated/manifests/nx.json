@@ -2560,6 +2560,16 @@
             "tags": []
           },
           {
+            "id": "enable-tsc-batch-mode",
+            "name": "Enable Typescript Batch Mode",
+            "description": "",
+            "file": "shared/recipes/enable-tsc-batch-mode",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+            "tags": []
+          },
+          {
             "id": "define-environment-variables",
             "name": "Define Environment Variables",
             "description": "",
@@ -3868,6 +3878,16 @@
         "tags": []
       },
       {
+        "id": "enable-tsc-batch-mode",
+        "name": "Enable Typescript Batch Mode",
+        "description": "",
+        "file": "shared/recipes/enable-tsc-batch-mode",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+        "tags": []
+      },
+      {
         "id": "define-environment-variables",
         "name": "Define Environment Variables",
         "description": "",
@@ -4030,6 +4050,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/eslint",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/enable-tsc-batch-mode": {
+    "id": "enable-tsc-batch-mode",
+    "name": "Enable Typescript Batch Mode",
+    "description": "",
+    "file": "shared/recipes/enable-tsc-batch-mode",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
     "tags": []
   },
   "/recipes/tips-n-tricks/define-environment-variables": {
@@ -4608,26 +4638,6 @@
             "tags": ["database", "node", "serverless"]
           },
           {
-            "id": "caching",
-            "name": "Large Repo and Caching",
-            "description": "",
-            "file": "shared/examples/caching",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/caching",
-            "tags": []
-          },
-          {
-            "id": "dte",
-            "name": "Large Repo and DTE",
-            "description": "",
-            "file": "shared/examples/dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/dte",
-            "tags": []
-          },
-          {
             "id": "mfe",
             "name": "Nx Micro-Frontend Example",
             "description": "",
@@ -4640,6 +4650,47 @@
         ],
         "isExternal": false,
         "path": "/showcase/example-repos",
+        "tags": []
+      },
+      {
+        "id": "benchmarks",
+        "name": "Benchmarks",
+        "description": "Benchmarks showing how fast Nx is",
+        "file": "",
+        "itemList": [
+          {
+            "id": "tsc-batch-mode",
+            "name": "Typescript Batch Mode Compilation",
+            "description": "",
+            "file": "shared/examples/tsc-batch-mode",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/benchmarks/tsc-batch-mode",
+            "tags": []
+          },
+          {
+            "id": "caching",
+            "name": "Large Repo and Caching",
+            "description": "",
+            "file": "shared/examples/caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/benchmarks/caching",
+            "tags": []
+          },
+          {
+            "id": "dte",
+            "name": "Large Repo and DTE",
+            "description": "",
+            "file": "shared/examples/dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/benchmarks/dte",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/showcase/benchmarks",
         "tags": []
       }
     ],
@@ -4772,26 +4823,6 @@
         "isExternal": false,
         "path": "/showcase/example-repos/serverless-fastify-planetscale",
         "tags": ["database", "node", "serverless"]
-      },
-      {
-        "id": "caching",
-        "name": "Large Repo and Caching",
-        "description": "",
-        "file": "shared/examples/caching",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/caching",
-        "tags": []
-      },
-      {
-        "id": "dte",
-        "name": "Large Repo and DTE",
-        "description": "",
-        "file": "shared/examples/dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/dte",
-        "tags": []
       },
       {
         "id": "mfe",
@@ -4928,26 +4959,6 @@
     "path": "/showcase/example-repos/serverless-fastify-planetscale",
     "tags": ["database", "node", "serverless"]
   },
-  "/showcase/example-repos/caching": {
-    "id": "caching",
-    "name": "Large Repo and Caching",
-    "description": "",
-    "file": "shared/examples/caching",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/caching",
-    "tags": []
-  },
-  "/showcase/example-repos/dte": {
-    "id": "dte",
-    "name": "Large Repo and DTE",
-    "description": "",
-    "file": "shared/examples/dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/dte",
-    "tags": []
-  },
   "/showcase/example-repos/mfe": {
     "id": "mfe",
     "name": "Nx Micro-Frontend Example",
@@ -4956,6 +4967,77 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/mfe",
+    "tags": []
+  },
+  "/showcase/benchmarks": {
+    "id": "benchmarks",
+    "name": "Benchmarks",
+    "description": "Benchmarks showing how fast Nx is",
+    "file": "",
+    "itemList": [
+      {
+        "id": "tsc-batch-mode",
+        "name": "Typescript Batch Mode Compilation",
+        "description": "",
+        "file": "shared/examples/tsc-batch-mode",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/benchmarks/tsc-batch-mode",
+        "tags": []
+      },
+      {
+        "id": "caching",
+        "name": "Large Repo and Caching",
+        "description": "",
+        "file": "shared/examples/caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/benchmarks/caching",
+        "tags": []
+      },
+      {
+        "id": "dte",
+        "name": "Large Repo and DTE",
+        "description": "",
+        "file": "shared/examples/dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/benchmarks/dte",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/showcase/benchmarks",
+    "tags": []
+  },
+  "/showcase/benchmarks/tsc-batch-mode": {
+    "id": "tsc-batch-mode",
+    "name": "Typescript Batch Mode Compilation",
+    "description": "",
+    "file": "shared/examples/tsc-batch-mode",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/benchmarks/tsc-batch-mode",
+    "tags": []
+  },
+  "/showcase/benchmarks/caching": {
+    "id": "caching",
+    "name": "Large Repo and Caching",
+    "description": "",
+    "file": "shared/examples/caching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/benchmarks/caching",
+    "tags": []
+  },
+  "/showcase/benchmarks/dte": {
+    "id": "dte",
+    "name": "Large Repo and DTE",
+    "description": "",
+    "file": "shared/examples/dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/benchmarks/dte",
     "tags": []
   },
   "/reference": {
