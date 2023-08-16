@@ -1,45 +1,39 @@
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nx/devkit';
-
+import { Tree } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
-
+import { Linter } from '@nx/linter';
+import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import { normalizeNewProjectPrefix } from '../../utils/project';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
-import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
-import { Linter } from '@nx/linter';
-import {
-  normalizeDirectory,
-  normalizeNewProjectPrefix,
-  normalizeProjectName,
-} from '../../utils/project';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   host: Tree,
   options: Partial<Schema>
-): NormalizedSchema {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const appDirectory = normalizeDirectory(options.name, projectDirectory);
-  const appProjectName = normalizeProjectName(options.name, projectDirectory);
-  const e2eProjectName = options.rootProject
-    ? 'e2e'
-    : `${names(options.name).fileName}-e2e`;
+): Promise<NormalizedSchema> {
+  const { projectName: appProjectName, projectRoot: appProjectRoot } =
+    await determineProjectNameAndRootOptions(host, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      projectNameAndRootFormat: options.projectNameAndRootFormat,
+      rootProject: options.rootProject,
+    });
+  options.rootProject = appProjectRoot === '.';
 
-  const { appsDir: defaultAppsDir, standaloneAsDefault } =
-    getWorkspaceLayout(host);
-  const appsDir = layoutDirectory ?? defaultAppsDir;
-  const appProjectRoot = options.rootProject
-    ? '.'
-    : joinPathFragments(appsDir, appDirectory);
-  const e2eProjectRoot = options.rootProject
-    ? 'e2e'
-    : joinPathFragments(appsDir, `${appDirectory}-e2e`);
+  let e2eProjectName = 'e2e';
+  let e2eProjectRoot = 'e2e';
+  if (!options.rootProject) {
+    const projectNameAndRoot = await determineProjectNameAndRootOptions(host, {
+      name: `${options.name}-e2e`,
+      projectType: 'application',
+      directory: options.directory,
+      projectNameAndRootFormat: options.projectNameAndRootFormat,
+      rootProject: options.rootProject,
+    });
+    e2eProjectName = projectNameAndRoot.projectName;
+    e2eProjectRoot = projectNameAndRoot.projectRoot;
+  }
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -50,11 +44,6 @@ export function normalizeOptions(
     getNpmScope(host),
     'app'
   );
-
-  options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
-
-  const ngCliSchematicAppRoot = appProjectName;
-  const ngCliSchematicE2ERoot = `${appProjectName}/e2e`;
 
   // Set defaults and then overwrite with user options
   return {
@@ -76,7 +65,5 @@ export function normalizeOptions(
     e2eProjectRoot,
     e2eProjectName,
     parsedTags,
-    ngCliSchematicAppRoot,
-    ngCliSchematicE2ERoot,
   };
 }

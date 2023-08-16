@@ -31,6 +31,16 @@ export async function applicationGenerator(
   tree: Tree,
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
+  return await applicationGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(
+  tree: Tree,
+  schema: Partial<Schema>
+): Promise<GeneratorCallback> {
   const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
 
   if (lt(installedAngularVersionInfo.version, '14.1.0') && schema.standalone) {
@@ -50,7 +60,7 @@ export async function applicationGenerator(
     }).then((a) => a['standalone-components']);
   }
 
-  const options = normalizeOptions(tree, schema);
+  const options = await normalizeOptions(tree, schema);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 
   await angularInitGenerator(tree, {
