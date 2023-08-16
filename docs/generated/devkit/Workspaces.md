@@ -12,12 +12,10 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 
 ### Properties
 
-- [root](../../devkit/documents/Workspaces#root)
+- [root](../../devkit/documents/Workspaces#root): string
 
 ### Methods
 
-- [mergeTargetDefaultsIntoProjectDescriptions](../../devkit/documents/Workspaces#mergetargetdefaultsintoprojectdescriptions)
-- [readProjectsConfigurations](../../devkit/documents/Workspaces#readprojectsconfigurations)
 - [readWorkspaceConfiguration](../../devkit/documents/Workspaces#readworkspaceconfiguration)
 
 ## Constructors
