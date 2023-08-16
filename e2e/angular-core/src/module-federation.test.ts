@@ -1,5 +1,6 @@
 import { names } from '@nx/devkit';
 import {
+  checkFilesExist,
   cleanupProject,
   killProcessAndPorts,
   newProject,
@@ -194,5 +195,40 @@ describe('Angular Module Federation', () => {
 
     // port and process cleanup
     await killProcessAndPorts(process.pid, hostPort, remote1Port, remote2Port);
+  }, 20_000_000);
+
+  it('should should support generating host and remote apps with the new name and root format', async () => {
+    const hostApp = uniq('host');
+    const remoteApp = uniq('remote');
+    const hostPort = 4800;
+    const remotePort = 4801;
+
+    // generate host app
+    runCLI(
+      `generate @nx/angular:host ${hostApp} --project-name-and-root-format=as-provided --no-interactive`
+    );
+    // generate remote app
+    runCLI(
+      `generate @nx/angular:remote ${remoteApp} --host=${hostApp} --port=${remotePort} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${hostApp}/src/app/app.module.ts`);
+    checkFilesExist(`${remoteApp}/src/app/app.module.ts`);
+
+    // check default generated host is built successfully
+    const buildOutput = runCLI(`build ${hostApp}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    const process = await runCommandUntil(
+      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
+      (output) =>
+        output.includes(`listening on localhost:${remotePort}`) &&
+        output.includes(`listening on localhost:${hostPort}`)
+    );
+
+    // port and process cleanup
+    await killProcessAndPorts(process.pid, hostPort, remotePort);
   }, 20_000_000);
 });
