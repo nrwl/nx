@@ -1047,6 +1047,12 @@
                   "file": "shared/recipes/add-stack/add-qwik"
                 },
                 {
+                  "name": "Add a Rust Project",
+                  "id": "add-rust",
+                  "description": "Add a Rust project to your repo",
+                  "file": "shared/recipes/add-stack/add-rust"
+                },
+                {
                   "name": "Add an Astro Project",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
@@ -1950,7 +1956,6 @@
             }
           ]
         },
-
         {
           "name": "playwright",
           "id": "playwright",
