@@ -45,7 +45,7 @@
       "description": "Create an application"
     },
     "library": {
-      "factory": "./src/generators/library/library#expoLibraryGenerator",
+      "factory": "./src/generators/library/library#expoLibraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
