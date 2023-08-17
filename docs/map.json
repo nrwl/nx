@@ -835,6 +835,11 @@
                   "file": "shared/eslint"
                 },
                 {
+                  "name": "Enable Typescript Batch Mode",
+                  "id": "enable-tsc-batch-mode",
+                  "file": "shared/recipes/enable-tsc-batch-mode"
+                },
+                {
                   "name": "Define Environment Variables",
                   "id": "define-environment-variables",
                   "tags": ["environment-variables"],
@@ -1053,6 +1058,12 @@
                   "file": "shared/recipes/add-stack/add-rust"
                 },
                 {
+                  "name": "Add a Nuxt Project",
+                  "id": "add-nuxt",
+                  "description": "Add a nuxt project to your repo",
+                  "file": "shared/recipes/add-stack/add-nuxt"
+                },
+                {
                   "name": "Add an Astro Project",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
@@ -1063,6 +1074,12 @@
                   "id": "add-vue",
                   "description": "Add a Vue project to your repo",
                   "file": "shared/recipes/add-stack/add-vue"
+                },
+                {
+                  "name": "Add a Svelte Project",
+                  "id": "add-svelte",
+                  "description": "Add a Svelte project to your repo",
+                  "file": "shared/recipes/add-stack/add-svelte"
                 },
                 {
                   "name": "Powering Up React Development With Nx",
@@ -1105,6 +1122,23 @@
                   "file": "shared/recipes/database/serverless-fastify-planetscale"
                 },
                 {
+                  "name": "Nx Micro-Frontend Example",
+                  "id": "mfe",
+                  "file": "shared/examples/nx-examples"
+                }
+              ]
+            },
+            {
+              "name": "Benchmarks",
+              "id": "benchmarks",
+              "description": "Benchmarks showing how fast Nx is",
+              "itemList": [
+                {
+                  "name": "Typescript Batch Mode Compilation",
+                  "id": "tsc-batch-mode",
+                  "file": "shared/examples/tsc-batch-mode"
+                },
+                {
                   "name": "Large Repo and Caching",
                   "id": "caching",
                   "file": "shared/examples/caching"
@@ -1113,11 +1147,6 @@
                   "name": "Large Repo and DTE",
                   "id": "dte",
                   "file": "shared/examples/dte"
-                },
-                {
-                  "name": "Nx Micro-Frontend Example",
-                  "id": "mfe",
-                  "file": "shared/examples/nx-examples"
                 }
               ]
             }

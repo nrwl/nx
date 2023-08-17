@@ -2054,6 +2054,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Enable Typescript Batch Mode",
+                "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+                "id": "enable-tsc-batch-mode",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Define Environment Variables",
                 "path": "/recipes/tips-n-tricks/define-environment-variables",
                 "id": "define-environment-variables",
@@ -3102,6 +3110,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Enable Typescript Batch Mode",
+            "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+            "id": "enable-tsc-batch-mode",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Define Environment Variables",
             "path": "/recipes/tips-n-tricks/define-environment-variables",
             "id": "define-environment-variables",
@@ -3228,6 +3244,14 @@
         "name": "Configuring ESLint with Typescript",
         "path": "/recipes/tips-n-tricks/eslint",
         "id": "eslint",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable Typescript Batch Mode",
+        "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+        "id": "enable-tsc-batch-mode",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3632,6 +3656,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Add a Nuxt Project",
+                "path": "/showcase/example-repos/add-nuxt",
+                "id": "add-nuxt",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Add an Astro Project",
                 "path": "/showcase/example-repos/add-astro",
                 "id": "add-astro",
@@ -3643,6 +3675,14 @@
                 "name": "Add a Vue Project",
                 "path": "/showcase/example-repos/add-vue",
                 "id": "add-vue",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add a Svelte Project",
+                "path": "/showcase/example-repos/add-svelte",
+                "id": "add-svelte",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3704,8 +3744,33 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Nx Micro-Frontend Example",
+                "path": "/showcase/example-repos/mfe",
+                "id": "mfe",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Benchmarks",
+            "path": "/showcase/benchmarks",
+            "id": "benchmarks",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Typescript Batch Mode Compilation",
+                "path": "/showcase/benchmarks/tsc-batch-mode",
+                "id": "tsc-batch-mode",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Large Repo and Caching",
-                "path": "/showcase/example-repos/caching",
+                "path": "/showcase/benchmarks/caching",
                 "id": "caching",
                 "isExternal": false,
                 "children": [],
@@ -3713,16 +3778,8 @@
               },
               {
                 "name": "Large Repo and DTE",
-                "path": "/showcase/example-repos/dte",
+                "path": "/showcase/benchmarks/dte",
                 "id": "dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx Micro-Frontend Example",
-                "path": "/showcase/example-repos/mfe",
-                "id": "mfe",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3772,6 +3829,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Add a Nuxt Project",
+            "path": "/showcase/example-repos/add-nuxt",
+            "id": "add-nuxt",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Add an Astro Project",
             "path": "/showcase/example-repos/add-astro",
             "id": "add-astro",
@@ -3783,6 +3848,14 @@
             "name": "Add a Vue Project",
             "path": "/showcase/example-repos/add-vue",
             "id": "add-vue",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add a Svelte Project",
+            "path": "/showcase/example-repos/add-svelte",
+            "id": "add-svelte",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3844,22 +3917,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Large Repo and Caching",
-            "path": "/showcase/example-repos/caching",
-            "id": "caching",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Large Repo and DTE",
-            "path": "/showcase/example-repos/dte",
-            "id": "dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx Micro-Frontend Example",
             "path": "/showcase/example-repos/mfe",
             "id": "mfe",
@@ -3903,6 +3960,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Add a Nuxt Project",
+        "path": "/showcase/example-repos/add-nuxt",
+        "id": "add-nuxt",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Add an Astro Project",
         "path": "/showcase/example-repos/add-astro",
         "id": "add-astro",
@@ -3914,6 +3979,14 @@
         "name": "Add a Vue Project",
         "path": "/showcase/example-repos/add-vue",
         "id": "add-vue",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Svelte Project",
+        "path": "/showcase/example-repos/add-svelte",
+        "id": "add-svelte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3975,8 +4048,57 @@
         "disableCollapsible": false
       },
       {
+        "name": "Nx Micro-Frontend Example",
+        "path": "/showcase/example-repos/mfe",
+        "id": "mfe",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Benchmarks",
+        "path": "/showcase/benchmarks",
+        "id": "benchmarks",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Typescript Batch Mode Compilation",
+            "path": "/showcase/benchmarks/tsc-batch-mode",
+            "id": "tsc-batch-mode",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Large Repo and Caching",
+            "path": "/showcase/benchmarks/caching",
+            "id": "caching",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Large Repo and DTE",
+            "path": "/showcase/benchmarks/dte",
+            "id": "dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Typescript Batch Mode Compilation",
+        "path": "/showcase/benchmarks/tsc-batch-mode",
+        "id": "tsc-batch-mode",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Large Repo and Caching",
-        "path": "/showcase/example-repos/caching",
+        "path": "/showcase/benchmarks/caching",
         "id": "caching",
         "isExternal": false,
         "children": [],
@@ -3984,16 +4106,8 @@
       },
       {
         "name": "Large Repo and DTE",
-        "path": "/showcase/example-repos/dte",
+        "path": "/showcase/benchmarks/dte",
         "id": "dte",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Micro-Frontend Example",
-        "path": "/showcase/example-repos/mfe",
-        "id": "mfe",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

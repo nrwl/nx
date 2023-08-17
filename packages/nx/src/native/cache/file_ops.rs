@@ -1,9 +1,14 @@
 use std::fs;
 use std::path::PathBuf;
 
+use fs_extra::error::ErrorKind;
+
 #[napi]
 pub fn remove(src: String) -> anyhow::Result<()> {
-    fs_extra::remove_items(&[src]).map_err(anyhow::Error::from)
+    fs_extra::remove_items(&[src]).map_err(|err| match err.kind {
+        ErrorKind::Io(err_kind) => anyhow::Error::new(err_kind),
+        _ => anyhow::Error::new(err),
+    })
 }
 
 #[napi]
@@ -19,7 +24,11 @@ pub fn copy(src: String, dest: String) -> anyhow::Result<()> {
         fs::create_dir_all(dest_parent)?;
     }
 
-    fs_extra::copy_items(&[src], dest_parent, &copy_options)?;
+    fs_extra::copy_items(&[src], dest_parent, &copy_options).map_err(|err| match err.kind {
+        ErrorKind::Io(err_kind) => anyhow::Error::new(err_kind),
+        _ => anyhow::Error::new(err),
+    })?;
+
     Ok(())
 }
 
