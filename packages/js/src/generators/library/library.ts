@@ -743,4 +743,4 @@ function determineEntryFields(
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGeneratorInternal);
+export const librarySchematic = convertNxGenerator(libraryGenerator);
