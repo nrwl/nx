@@ -57,13 +57,20 @@ type ProjectNameAndRootFormats = {
 export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
-): Promise<ProjectNameAndRootOptions> {
+): Promise<
+  ProjectNameAndRootOptions & {
+    projectNameAndRootFormat: ProjectNameAndRootFormat;
+  }
+> {
   validateName(options.name, options.projectNameAndRootFormat);
   const formats = getProjectNameAndRootFormats(tree, options);
   const format =
     options.projectNameAndRootFormat ?? (await determineFormat(formats));
 
-  return formats[format];
+  return {
+    ...formats[format],
+    projectNameAndRootFormat: format,
+  };
 }
 
 function validateName(
