@@ -21,11 +21,10 @@ export async function normalizeOptions<T extends Schema = Schema>(
   options: Schema,
   callingGenerator = '@nx/react:application'
 ): Promise<NormalizedSchema<T>> {
-  // TODO(leo): uncomment things below
   const {
     projectName: appProjectName,
     projectRoot: appProjectRoot,
-    // projectNameAndRootFormat,
+    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
@@ -35,7 +34,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
     callingGenerator,
   });
   options.rootProject = appProjectRoot === '.';
-  // options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   let e2eProjectName = 'e2e';
   let e2eProjectRoot = 'e2e';
