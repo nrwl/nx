@@ -456,11 +456,10 @@ async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  // TODO(leo): uncomment things below
   const {
     projectName: appProjectName,
     projectRoot: appProjectRoot,
-    // projectNameAndRootFormat,
+    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
@@ -469,7 +468,7 @@ async function normalizeOptions(
     rootProject: options.rootProject,
   });
   options.rootProject = appProjectRoot === '.';
-  // options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   options.bundler = options.bundler ?? 'esbuild';
   options.e2eTestRunner = options.e2eTestRunner ?? 'jest';

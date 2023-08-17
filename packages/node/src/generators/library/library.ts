@@ -22,8 +22,8 @@ import { initGenerator } from '../init/init';
 import { Schema } from './schema';
 
 export interface NormalizedSchema extends Schema {
-  name: string;
   fileName: string;
+  projectName: string;
   projectRoot: string;
   parsedTags: string[];
   compiler: 'swc' | 'tsc';
@@ -87,6 +87,7 @@ async function normalizeOptions(
     names: projectNames,
     projectRoot,
     importPath,
+    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
     projectType: 'library',
@@ -94,6 +95,7 @@ async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const fileName = getCaseAwareFileName({
     fileName: options.simpleModuleName
@@ -109,7 +111,7 @@ async function normalizeOptions(
   return {
     ...options,
     fileName,
-    name: projectName,
+    projectName,
     projectRoot,
     parsedTags,
     importPath,
@@ -155,7 +157,7 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
     return;
   }
 
-  const project = readProjectConfiguration(tree, options.name);
+  const project = readProjectConfiguration(tree, options.projectName);
 
   project.targets = project.targets || {};
   project.targets.build = {
@@ -179,5 +181,5 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
     project.targets.build.options.srcRootForCompilationRoot = options.rootDir;
   }
 
-  updateProjectConfiguration(tree, options.name, project);
+  updateProjectConfiguration(tree, options.projectName, project);
 }
