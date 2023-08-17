@@ -23,7 +23,6 @@ import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import { chunkify } from '../../utils/chunkify';
 import { allFileData } from '../../utils/all-file-data';
-import { gte } from 'semver';
 
 const PRETTIER_PATH = getPrettierPath();
 
@@ -206,9 +205,6 @@ function sortTsConfig() {
 }
 
 function getPrettierPath() {
-  const prettierVersion = readModulePackageJson('prettier').packageJson.version;
-  if (gte(prettierVersion, '3.0.0')) {
-    return require.resolve('prettier/bin/prettier.cjs');
-  }
-  return require.resolve('prettier/bin-prettier');
+  const { bin } = readModulePackageJson('prettier').packageJson;
+  return require.resolve(path.join('prettier', bin as string));
 }
