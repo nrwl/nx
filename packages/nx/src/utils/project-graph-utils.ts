@@ -28,27 +28,6 @@ export function projectHasTargetAndConfiguration(
   );
 }
 
-export function mergeNpmScriptsWithTargets(
-  projectRoot: string,
-  targets
-): Record<string, TargetConfiguration> {
-  try {
-    const { scripts, nx }: PackageJson = readJsonFile(
-      join(projectRoot, 'package.json')
-    );
-    const res: Record<string, TargetConfiguration> = {};
-    // handle no scripts
-    Object.keys(scripts || {}).forEach((script) => {
-      if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
-        res[script] = buildTargetFromScript(script, nx);
-      }
-    });
-    return { ...res, ...(targets || {}) };
-  } catch (e) {
-    return targets;
-  }
-}
-
 export function getSourceDirOfDependentProjects(
   projectName: string,
   projectGraph = readCachedProjectGraph()

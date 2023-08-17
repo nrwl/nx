@@ -186,8 +186,6 @@ export function getRelativeProjectJsonSchemaPath(
 function readAndCombineAllProjectConfigurations(tree: Tree): {
   [name: string]: ProjectConfiguration;
 } {
-  const nxJson = readNxJson(tree);
-
   /**
    * We can't update projects that come from plugins anyways, so we are going
    * to ignore them for now. Plugins should add their own add/create/update methods
