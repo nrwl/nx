@@ -1,4 +1,5 @@
-import { getWorkspaceLayout, joinPathFragments, names, Tree } from '@nx/devkit';
+import { names, Tree } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -9,39 +10,34 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
 }
 
-export function normalizeOptions(
+export async function normalizeOptions(
   host: Tree,
   options: Schema
-): NormalizedSchema {
-  const { fileName, className } = names(options.name);
-  const { appsDir } = getWorkspaceLayout(host);
+): Promise<NormalizedSchema> {
+  // TODO(leo): uncomment things below
+  const {
+    projectName: appProjectName,
+    names: projectNames,
+    projectRoot: appProjectRoot,
+    // projectNameAndRootFormat,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+  });
+  // options.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  const directoryName = options.directory
-    ? names(options.directory).fileName
-    : '';
-  const projectDirectory = directoryName
-    ? `${directoryName}/${fileName}`
-    : fileName;
-
-  const appProjectName = projectDirectory.replace(new RegExp('/', 'g'), '-');
-
-  const appProjectRoot = joinPathFragments(appsDir, projectDirectory);
-
+  const { className } = names(options.name);
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  /**
-   * if options.name is "my-app"
-   * name: "my-app", className: 'MyApp', lowerCaseName: 'myapp', displayName: 'MyApp', projectName: 'my-app', appProjectRoot: 'apps/my-app', androidProjectRoot: 'apps/my-app/android', iosProjectRoot: 'apps/my-app/ios'
-   * if options.name is "myApp"
-   * name: "my-app", className: 'MyApp', lowerCaseName: 'myapp', displayName: 'MyApp', projectName: 'my-app', appProjectRoot: 'apps/my-app', androidProjectRoot: 'apps/my-app/android', iosProjectRoot: 'apps/my-app/ios'
-   */
   return {
     ...options,
     unitTestRunner: options.unitTestRunner || 'jest',
     e2eTestRunner: options.e2eTestRunner || 'detox',
-    name: fileName,
+    name: projectNames.projectSimpleName,
     className,
     lowerCaseName: className.toLowerCase(),
     displayName: options.displayName || className,

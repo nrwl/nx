@@ -38,7 +38,7 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#expoApplicationGenerator",
+      "factory": "./src/generators/application/application#expoApplicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",

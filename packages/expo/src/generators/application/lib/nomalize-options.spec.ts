@@ -11,7 +11,7 @@ describe('Normalize Options', () => {
     appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should normalize options with name in kebab case', () => {
+  it('should normalize options with name in kebab case', async () => {
     const schema: Schema = {
       name: 'my-app',
       linter: Linter.EsLint,
@@ -20,7 +20,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/my-app',
       className: 'MyApp',
@@ -37,7 +37,7 @@ describe('Normalize Options', () => {
     });
   });
 
-  it('should normalize options with name in camel case', () => {
+  it('should normalize options with name in camel case', async () => {
     const schema: Schema = {
       name: 'myApp',
       linter: Linter.EsLint,
@@ -46,7 +46,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/my-app',
       className: 'MyApp',
@@ -63,7 +63,7 @@ describe('Normalize Options', () => {
     });
   });
 
-  it('should normalize options with directory', () => {
+  it('should normalize options with directory', async () => {
     const schema: Schema = {
       name: 'my-app',
       directory: 'directory',
@@ -73,7 +73,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/directory/my-app',
       className: 'MyApp',
@@ -91,7 +91,7 @@ describe('Normalize Options', () => {
     });
   });
 
-  it('should normalize options that has directory in its name', () => {
+  it('should normalize options that has directory in its name', async () => {
     const schema: Schema = {
       name: 'directory/my-app',
       linter: Linter.EsLint,
@@ -100,7 +100,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/directory/my-app',
       className: 'DirectoryMyApp',
@@ -117,7 +117,7 @@ describe('Normalize Options', () => {
     });
   });
 
-  it('should normalize options with display name', () => {
+  it('should normalize options with display name', async () => {
     const schema: Schema = {
       name: 'my-app',
       displayName: 'My App',
@@ -127,7 +127,7 @@ describe('Normalize Options', () => {
       js: true,
       unitTestRunner: 'jest',
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       appProjectRoot: 'apps/my-app',
       className: 'MyApp',
