@@ -10,8 +10,8 @@ import type {
   ResolvedDependencies,
 } from '@pnpm/lockfile-types';
 import { existsSync, readFileSync } from 'fs';
-import { workspaceRoot } from '../../../../utils/workspace-root';
 import { valid } from 'semver';
+import { workspaceRoot } from '../../../../utils/workspace-root';
 
 export function isV6Lockfile(data: InlineSpecifiersLockfile | Lockfile) {
   return data.lockfileVersion.toString().startsWith('6.');
@@ -25,7 +25,7 @@ export function loadPnpmHoistedDepsDefinition() {
     const { load } = require('@zkochan/js-yaml');
     return load(content)?.hoistedDependencies ?? {};
   } else {
-    throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
+    return {};
   }
 }
 
