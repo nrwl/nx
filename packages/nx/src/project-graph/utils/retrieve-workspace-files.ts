@@ -15,7 +15,7 @@ import {
   ProjectFileMap,
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
-import { getProjectConfigurationFiles, NxWorkspaceFiles } from '../../native';
+import type { NxWorkspaceFiles } from '../../native';
 import { getGlobPatternsFromPackageManagerWorkspaces } from '../../../plugins/package-json-workspaces';
 import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './project-configuration-utils';
 import {
@@ -198,6 +198,8 @@ export async function retrieveProjectConfigurationPaths(
 export function retrieveProjectConfigurationPathsWithoutPluginInference(
   root: string
 ): string[] {
+  const { getProjectConfigurationFiles } =
+    require('../../native') as typeof import('../../native');
   return getProjectConfigurationFiles(
     root,
     configurationGlobsWithoutPlugins(root)
