@@ -1,6 +1,11 @@
-import { TargetConfiguration } from '../../config/workspace-json-project-json';
 import {
+  ProjectConfiguration,
+  TargetConfiguration,
+} from '../../config/workspace-json-project-json';
+import {
+  mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
+  readProjectConfigurationsFromRootMap,
   readTargetDefaultsForTarget,
 } from './project-configuration-utils';
 
@@ -352,3 +357,146 @@ describe('target defaults', () => {
     });
   });
 });
+
+describe('mergeProjectConfigurationIntoRootMap', () => {
+  it('should merge targets from different configurations', () => {
+    const rootMap = new RootMapBuilder()
+      .addProject({
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          echo: {
+            command: 'echo lib-a',
+          },
+        },
+      })
+      .getRootMap();
+    mergeProjectConfigurationIntoRootMap(
+      rootMap,
+      {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        targets: {
+          build: {
+            command: 'tsc',
+          },
+        },
+      },
+      'inferred-project-config-file.ts'
+    );
+    expect(rootMap.get('libs/lib-a')).toMatchInlineSnapshot(`
+      {
+        "name": "lib-a",
+        "root": "libs/lib-a",
+        "targets": {
+          "build": {
+            "command": "tsc",
+          },
+          "echo": {
+            "command": "echo lib-a",
+          },
+        },
+      }
+    `);
+  });
+
+  it("shouldn't overwrite project name, unless merging project from project.json", () => {
+    const rootMap = new RootMapBuilder()
+      .addProject({
+        name: 'bad-name',
+        root: 'libs/lib-a',
+      })
+      .getRootMap();
+    mergeProjectConfigurationIntoRootMap(
+      rootMap,
+      {
+        name: 'other-bad-name',
+        root: 'libs/lib-a',
+      },
+      'libs/lib-a/package.json'
+    );
+    expect(rootMap.get('libs/lib-a').name).toEqual('bad-name');
+    mergeProjectConfigurationIntoRootMap(
+      rootMap,
+      {
+        name: 'lib-a',
+        root: 'libs/lib-a',
+      },
+      'libs/lib-a/project.json'
+    );
+    expect(rootMap.get('libs/lib-a').name).toEqual('lib-a');
+  });
+});
+
+describe('readProjectsConfigurationsFromRootMap', () => {
+  it('should error if multiple roots point to the same project', () => {
+    const rootMap = new RootMapBuilder()
+      .addProject({
+        name: 'lib',
+        root: 'apps/lib-a',
+      })
+      .addProject({
+        name: 'lib',
+        root: 'apps/lib-b',
+      })
+      .getRootMap();
+
+    expect(() => {
+      readProjectConfigurationsFromRootMap(rootMap);
+    }).toThrowErrorMatchingInlineSnapshot(`
+      "The following projects are defined in multiple locations:
+      - lib: 
+        - apps/lib-a
+        - apps/lib-b
+
+      To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name."
+    `);
+  });
+
+  it('should read root map into standard projects configurations form', () => {
+    const rootMap = new RootMapBuilder()
+      .addProject({
+        name: 'lib-a',
+        root: 'libs/a',
+      })
+      .addProject({
+        name: 'lib-b',
+        root: 'libs/b',
+      })
+      .addProject({
+        name: 'lib-shared-b',
+        root: 'libs/shared/b',
+      })
+      .getRootMap();
+    expect(readProjectConfigurationsFromRootMap(rootMap))
+      .toMatchInlineSnapshot(`
+      {
+        "lib-a": {
+          "name": "lib-a",
+          "root": "libs/a",
+        },
+        "lib-b": {
+          "name": "lib-b",
+          "root": "libs/b",
+        },
+        "lib-shared-b": {
+          "name": "lib-shared-b",
+          "root": "libs/shared/b",
+        },
+      }
+    `);
+  });
+});
+
+class RootMapBuilder {
+  private rootMap: Map<string, ProjectConfiguration> = new Map();
+
+  addProject(p: ProjectConfiguration) {
+    this.rootMap.set(p.root, p);
+    return this;
+  }
+
+  getRootMap() {
+    return this.rootMap;
+  }
+}

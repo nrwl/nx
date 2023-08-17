@@ -42,7 +42,6 @@ import { combineGlobPatterns } from './globs';
  * Context for {@link CreateNodesFunction}
  */
 export interface CreateNodesContext {
-  readonly projectsConfigurations: Record<string, ProjectConfiguration>;
   readonly nxJsonConfiguration: NxJsonConfiguration;
   readonly workspaceRoot: string;
 }
@@ -262,6 +261,9 @@ export async function loadNxPlugins(
 }
 
 function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
+  if (isNxPluginV2(plugin)) {
+    return plugin;
+  }
   if (isNxPluginV1(plugin) && plugin.projectFilePatterns) {
     return {
       ...plugin,

@@ -7,7 +7,6 @@ Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 ### Properties
 
 - [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration)
-- [projectsConfigurations](../../devkit/documents/CreateNodesContext#projectsconfigurations)
 - [workspaceRoot](../../devkit/documents/CreateNodesContext#workspaceroot)
 
 ## Properties
@@ -15,12 +14,6 @@ Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 ### nxJsonConfiguration
 
 • `Readonly` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
-
----
-
-### projectsConfigurations
-
-• `Readonly` **projectsConfigurations**: `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
 
 ---
 
