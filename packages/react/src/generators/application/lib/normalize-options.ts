@@ -1,13 +1,7 @@
-import { NormalizedSchema, Schema } from '../schema';
+import { Tree, extractLayoutDirectory, names } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  normalizePath,
-  Tree,
-} from '@nx/devkit';
+import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
 
 export function normalizeDirectory(options: Schema) {
@@ -22,24 +16,41 @@ export function normalizeProjectName(options: Schema) {
   return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
 }
 
-export function normalizeOptions<T extends Schema = Schema>(
+export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,
-  options: Schema
-): NormalizedSchema<T> {
-  const appDirectory = normalizeDirectory(options);
-  const appProjectName = normalizeProjectName(options);
-  const e2eProjectName = options.rootProject
-    ? 'e2e'
-    : `${names(options.name).fileName}-e2e`;
+  options: Schema,
+  callingGenerator = '@nx/react:application'
+): Promise<NormalizedSchema<T>> {
+  // TODO(leo): uncomment things below
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    // projectNameAndRootFormat,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    rootProject: options.rootProject,
+    callingGenerator,
+  });
+  options.rootProject = appProjectRoot === '.';
+  // options.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  const { layoutDirectory } = extractLayoutDirectory(options.directory);
-  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
-  const appProjectRoot = options.rootProject
-    ? '.'
-    : normalizePath(`${appsDir}/${appDirectory}`);
-  const e2eProjectRoot = options.rootProject
-    ? 'e2e'
-    : joinPathFragments(appsDir, `${appDirectory}-e2e`);
+  let e2eProjectName = 'e2e';
+  let e2eProjectRoot = 'e2e';
+  if (!options.rootProject) {
+    const projectNameAndRoot = await determineProjectNameAndRootOptions(host, {
+      name: `${options.name}-e2e`,
+      projectType: 'application',
+      directory: options.directory,
+      projectNameAndRootFormat: options.projectNameAndRootFormat,
+      rootProject: options.rootProject,
+      callingGenerator,
+    });
+    e2eProjectName = projectNameAndRoot.projectName;
+    e2eProjectRoot = projectNameAndRoot.projectRoot;
+  }
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

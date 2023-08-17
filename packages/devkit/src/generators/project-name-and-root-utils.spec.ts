@@ -56,6 +56,27 @@ describe('determineProjectNameAndRootOptions', () => {
       });
     });
 
+    it(`should handle window's style paths correctly when format is "as-provided"`, async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'libName',
+        directory: 'shared\\libName',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toStrictEqual({
+        projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@proj/lib-name',
+        projectRoot: 'shared/lib-name',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
     it('should use a scoped package name as the project name and import path when format is "as-provided"', async () => {
       const result = await determineProjectNameAndRootOptions(tree, {
         name: '@scope/libName',
@@ -253,6 +274,27 @@ describe('determineProjectNameAndRootOptions', () => {
       expect(result.importPath).toBe('@proj/lib-name');
     });
 
+    it(`should handle window's style paths correctly when format is "derived"`, async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'libName',
+        directory: 'shared\\sub-dir',
+        projectType: 'library',
+        projectNameAndRootFormat: 'derived',
+        callingGenerator: '',
+      });
+
+      expect(result).toStrictEqual({
+        projectName: 'shared-sub-dir-lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'shared-sub-dir-lib-name',
+        },
+        importPath: '@proj/shared/sub-dir/lib-name',
+        projectRoot: 'shared/sub-dir/lib-name',
+        projectNameAndRootFormat: 'derived',
+      });
+    });
+
     it('should prompt for the project name and root format', async () => {
       // simulate interactive mode
       ensureInteractiveMode();
@@ -366,6 +408,27 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@proj/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
+    it(`should handle window's style paths correctly when format is "as-provided"`, async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'libName',
+        directory: 'shared\\libName',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toStrictEqual({
+        projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@proj/lib-name',
+        projectRoot: 'shared/lib-name',
         projectNameAndRootFormat: 'as-provided',
       });
     });
@@ -510,6 +573,27 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@proj/shared/lib-name',
         projectRoot: 'libs/shared/lib-name',
+        projectNameAndRootFormat: 'derived',
+      });
+    });
+
+    it(`should handle window's style paths correctly when format is "derived"`, async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'libName',
+        directory: 'shared\\sub-dir',
+        projectType: 'library',
+        projectNameAndRootFormat: 'derived',
+        callingGenerator: '',
+      });
+
+      expect(result).toStrictEqual({
+        projectName: 'shared-sub-dir-lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'shared-sub-dir-lib-name',
+        },
+        importPath: '@proj/shared/sub-dir/lib-name',
+        projectRoot: 'libs/shared/sub-dir/lib-name',
         projectNameAndRootFormat: 'derived',
       });
     });
