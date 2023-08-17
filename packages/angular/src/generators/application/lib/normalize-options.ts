@@ -21,6 +21,7 @@ export async function normalizeOptions(
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
+    callingGenerator: '@nx/angular:application',
   });
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
@@ -34,6 +35,7 @@ export async function normalizeOptions(
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
       rootProject: options.rootProject,
+      callingGenerator: '@nx/angular:application',
     });
     e2eProjectName = projectNameAndRoot.projectName;
     e2eProjectRoot = projectNameAndRoot.projectRoot;

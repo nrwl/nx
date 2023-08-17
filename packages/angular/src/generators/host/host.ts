@@ -51,6 +51,7 @@ export async function hostInternal(tree: Tree, options: Schema) {
       projectType: 'application',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
+      callingGenerator: '@nx/angular:host',
     });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 

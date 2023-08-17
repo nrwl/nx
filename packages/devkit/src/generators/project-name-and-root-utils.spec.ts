@@ -2,6 +2,7 @@ import * as enquirer from 'enquirer';
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from 'nx/src/generators/tree';
 import { updateJson } from 'nx/src/generators/utils/json';
+import { readNxJson } from 'nx/src/generators/utils/nx-json';
 import { determineProjectNameAndRootOptions } from './project-name-and-root-utils';
 
 describe('determineProjectNameAndRootOptions', () => {
@@ -40,6 +41,7 @@ describe('determineProjectNameAndRootOptions', () => {
         directory: 'shared',
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
       });
 
       expect(result).toStrictEqual({
@@ -60,6 +62,7 @@ describe('determineProjectNameAndRootOptions', () => {
         directory: 'shared',
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -81,6 +84,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
         importPath: '@custom-scope/lib-name',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -104,6 +108,7 @@ describe('determineProjectNameAndRootOptions', () => {
         name: '@scope/libName',
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -129,6 +134,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
         rootProject: true,
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -154,6 +160,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
         rootProject: true,
+        callingGenerator: '',
       });
 
       expect(result.importPath).toBe('@proj/lib-name');
@@ -166,6 +173,7 @@ describe('determineProjectNameAndRootOptions', () => {
           directory: 'shared',
           projectType: 'library',
           projectNameAndRootFormat: 'as-provided',
+          callingGenerator: '',
         })
       ).rejects.toThrowError();
     });
@@ -176,6 +184,7 @@ describe('determineProjectNameAndRootOptions', () => {
         directory: 'shared',
         projectType: 'library',
         projectNameAndRootFormat: 'derived',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -197,6 +206,7 @@ describe('determineProjectNameAndRootOptions', () => {
           directory: 'shared',
           projectType: 'library',
           projectNameAndRootFormat: 'derived',
+          callingGenerator: '',
         })
       ).rejects.toThrowError();
     });
@@ -211,6 +221,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'derived',
         rootProject: true,
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -236,6 +247,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
         rootProject: true,
+        callingGenerator: '',
       });
 
       expect(result.importPath).toBe('@proj/lib-name');
@@ -252,6 +264,7 @@ describe('determineProjectNameAndRootOptions', () => {
         name: 'libName',
         projectType: 'library',
         directory: 'shared',
+        callingGenerator: '',
       });
 
       expect(promptSpy).toHaveBeenCalled();
@@ -275,6 +288,32 @@ describe('determineProjectNameAndRootOptions', () => {
       restoreOriginalInteractiveMode();
     });
 
+    it('should prompt to save default when as-provided is choosen', async () => {
+      // simulate interactive mode
+      ensureInteractiveMode();
+      const promptSpy = jest
+        .spyOn(enquirer, 'prompt')
+        .mockImplementation(() =>
+          Promise.resolve({ format: 'lib-name @ shared', saveDefault: true })
+        );
+
+      await determineProjectNameAndRootOptions(tree, {
+        name: 'libName',
+        projectType: 'library',
+        directory: 'shared',
+        callingGenerator: '@nx/some-plugin:app',
+      });
+
+      expect(promptSpy).toHaveBeenCalledTimes(2);
+
+      expect(readNxJson(tree).generators['@nx/some-plugin:app']).toEqual({
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
+    });
+
     it('should directly use format as-provided and not prompt when the name is a scoped package name', async () => {
       // simulate interactive mode
       ensureInteractiveMode();
@@ -284,6 +323,7 @@ describe('determineProjectNameAndRootOptions', () => {
         name: '@scope/libName',
         projectType: 'library',
         directory: 'shared',
+        callingGenerator: '',
       });
 
       expect(promptSpy).not.toHaveBeenCalled();
@@ -315,6 +355,7 @@ describe('determineProjectNameAndRootOptions', () => {
         directory: 'shared',
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -335,6 +376,7 @@ describe('determineProjectNameAndRootOptions', () => {
         directory: 'shared',
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -356,6 +398,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
         importPath: '@custom-scope/lib-name',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -380,6 +423,7 @@ describe('determineProjectNameAndRootOptions', () => {
         name: '@scope/libName',
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -405,6 +449,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
         rootProject: true,
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -430,6 +475,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
         rootProject: true,
+        callingGenerator: '',
       });
 
       expect(result.importPath).toBe('@proj/lib-name');
@@ -442,6 +488,7 @@ describe('determineProjectNameAndRootOptions', () => {
           directory: 'shared',
           projectType: 'library',
           projectNameAndRootFormat: 'as-provided',
+          callingGenerator: '',
         })
       ).rejects.toThrowError();
     });
@@ -452,6 +499,7 @@ describe('determineProjectNameAndRootOptions', () => {
         directory: 'shared',
         projectType: 'library',
         projectNameAndRootFormat: 'derived',
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -473,6 +521,7 @@ describe('determineProjectNameAndRootOptions', () => {
           directory: 'shared',
           projectType: 'library',
           projectNameAndRootFormat: 'derived',
+          callingGenerator: '',
         })
       ).rejects.toThrowError();
     });
@@ -488,6 +537,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'derived',
         rootProject: true,
+        callingGenerator: '',
       });
 
       expect(result).toEqual({
@@ -513,6 +563,7 @@ describe('determineProjectNameAndRootOptions', () => {
         projectType: 'library',
         projectNameAndRootFormat: 'as-provided',
         rootProject: true,
+        callingGenerator: '',
       });
 
       expect(result.importPath).toBe('@proj/lib-name');
@@ -529,6 +580,7 @@ describe('determineProjectNameAndRootOptions', () => {
         name: 'libName',
         projectType: 'library',
         directory: 'shared',
+        callingGenerator: '',
       });
 
       expect(promptSpy).toHaveBeenCalled();
@@ -561,6 +613,7 @@ describe('determineProjectNameAndRootOptions', () => {
         name: '@scope/libName',
         projectType: 'library',
         directory: 'shared',
+        callingGenerator: '',
       });
 
       expect(promptSpy).not.toHaveBeenCalled();

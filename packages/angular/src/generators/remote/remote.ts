@@ -42,6 +42,7 @@ export async function remoteInternal(tree: Tree, options: Schema) {
       projectType: 'application',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
+      callingGenerator: '@nx/angular:remote',
     });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 

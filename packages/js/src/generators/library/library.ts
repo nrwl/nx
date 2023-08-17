@@ -550,6 +550,7 @@ async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
+    callingGenerator: '@nx/js:library',
   });
   options.rootProject = projectRoot === '.';
   const fileName = getCaseAwareFileName({
