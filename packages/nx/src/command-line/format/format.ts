@@ -6,6 +6,7 @@ import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
+import { getIgnoreObject } from '../../utils/ignore';
 import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import * as yargs from 'yargs';
@@ -94,9 +95,16 @@ async function getPatterns(
       (f) => fileExists(f) && supportedExtensions.includes(path.extname(f))
     );
 
+    // exclude patterns in .nxignore or .gitignore
+    const nonIgnoredPatterns = getIgnoreObject().filter(patterns);
+
     return args.libsAndApps
-      ? await getPatternsFromApps(patterns, await allFileData(), graph)
-      : patterns;
+      ? await getPatternsFromApps(
+          nonIgnoredPatterns,
+          await allFileData(),
+          graph
+        )
+      : nonIgnoredPatterns;
   } catch {
     return allFilesPattern;
   }
