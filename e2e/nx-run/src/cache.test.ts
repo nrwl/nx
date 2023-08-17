@@ -6,6 +6,7 @@ import {
   readFile,
   rmDist,
   runCLI,
+  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -23,6 +24,7 @@ describe('cache', () => {
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nx/web:app ${myapp1}`);
     runCLI(`generate @nx/web:app ${myapp2}`);
+    await setMaxWorkers();
 
     // run build with caching
     // --------------------------------------------

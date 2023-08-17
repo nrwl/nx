@@ -11,6 +11,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -119,9 +120,10 @@ describe('Nx Running Tests', () => {
     describe('tokens support', () => {
       let app: string;
 
-      beforeAll(() => {
+      beforeAll(async () => {
         app = uniq('myapp');
         runCLI(`generate @nx/web:app ${app}`);
+        await setMaxWorkers();
       });
 
       it('should support using {projectRoot} in options blocks in project.json', async () => {
