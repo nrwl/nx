@@ -1,33 +1,30 @@
+import { Tree } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/utils/schema';
 import { Linter } from '@nx/linter';
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nx/devkit';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
-import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorOptions
-): NormalizedOptions {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const { libsDir: defaultLibsDir } = getWorkspaceLayout(tree);
-  const libsDir = layoutDirectory ?? defaultLibsDir;
-  const name = names(options.name).fileName;
-  const fullProjectDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`
-    : name;
+): Promise<NormalizedOptions> {
+  const {
+    projectName,
+    names: projectNames,
+    projectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(tree, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+  });
 
-  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = options.simpleName ? name : projectName;
-  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
-
+  const fileName = options.simpleName
+    ? projectNames.projectSimpleName
+    : projectNames.projectFileName;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
@@ -41,14 +38,13 @@ export function normalizeOptions(
     linter: options.linter ?? Linter.EsLint,
     parsedTags,
     prefix: getNpmScope(tree), // we could also allow customizing this
-    projectDirectory: fullProjectDirectory,
     projectName,
     projectRoot,
+    importPath,
     service: options.service ?? false,
     target: options.target ?? 'es6',
     testEnvironment: options.testEnvironment ?? 'node',
     unitTestRunner: options.unitTestRunner ?? 'jest',
-    libsDir,
   };
 
   return normalized;
