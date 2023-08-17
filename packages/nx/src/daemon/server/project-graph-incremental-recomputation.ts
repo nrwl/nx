@@ -27,6 +27,7 @@ import {
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/nx-json';
+import { updateFilesInContext } from '../../utils/workspace-context';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -174,6 +175,8 @@ async function processCollectedUpdatedAndDeletedFiles() {
       'hash-watched-changes-end'
     );
     fileHasher.incrementalUpdate(updatedFiles, deletedFiles);
+
+    updateFilesInContext(updatedFiles, deletedFiles);
 
     const nxJson = readNxJson(workspaceRoot);
 

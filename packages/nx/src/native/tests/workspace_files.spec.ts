@@ -1,4 +1,4 @@
-import { getProjectConfigurations, getWorkspaceFilesNative } from '../index';
+import { WorkspaceContext } from '../index';
 import { TempFs } from '../../utils/testing/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { dirname, join } from 'path';
@@ -17,7 +17,7 @@ describe('workspace files', () => {
       }
       return {
         projectNodes: res,
-        externalNodes: {}
+        externalNodes: {},
       };
     };
   }
@@ -54,11 +54,11 @@ describe('workspace files', () => {
       './libs/package-project/index.js': '',
       './nested/non-project/file.txt': '',
     });
-
     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
+
+    const context = new WorkspaceContext(fs.tempDir);
     let { projectFileMap, projectConfigurations, globalFiles } =
-      getWorkspaceFilesNative(
-        fs.tempDir,
+      context.getWorkspaceFiles(
         globs,
         createParseConfigurationsFunction(fs.tempDir)
       );
@@ -179,9 +179,11 @@ describe('workspace files', () => {
       './src/index.js': '',
       './jest.config.js': '',
     });
+
+    const context = new WorkspaceContext(fs.tempDir);
+
     const globs = ['project.json', '**/project.json', '**/package.json'];
-    const { globalFiles, projectFileMap } = getWorkspaceFilesNative(
-      fs.tempDir,
+    const { globalFiles, projectFileMap } = context.getWorkspaceFiles(
       globs,
       createParseConfigurationsFunction(fs.tempDir)
     );
@@ -235,35 +237,33 @@ describe('workspace files', () => {
       './libs/project1/index.js': '',
     });
 
+    const context = new WorkspaceContext(fs.tempDir);
     let globs = ['project.json', '**/project.json', '**/package.json'];
 
-    let nodes = getProjectConfigurations(
-      fs.tempDir,
-      globs,
-      (filenames) => {
-        const res = {};
-        for (const filename of filenames) {
-          const json = readJsonFile(join(fs.tempDir, filename));
-          res[json.name] = {
-            ...json,
-            root: dirname(filename),
-          };
-        }
-        return {
-          externalNodes: {}, projectNodes: res
+    let nodes = context.getProjectConfigurations(globs, (filenames) => {
+      const res = {};
+      for (const filename of filenames) {
+        const json = readJsonFile(join(fs.tempDir, filename));
+        res[json.name] = {
+          ...json,
+          root: dirname(filename),
         };
       }
-    );
+      return {
+        externalNodes: {},
+        projectNodes: res,
+      };
+    });
     expect(nodes.projectNodes).toEqual({
-        "project1": {
-          "name": "project1",
-          "root": "libs/project1",
-        },
-        "repo-name": expect.objectContaining({
-          "name": "repo-name",
-          "root": ".",
-        }),
-      });
+      project1: {
+        name: 'project1',
+        root: 'libs/project1',
+      },
+      'repo-name': expect.objectContaining({
+        name: 'repo-name',
+        root: '.',
+      }),
+    });
   });
 
   // describe('errors', () => {

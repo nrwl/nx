@@ -31,6 +31,7 @@ import {
 import { NxJsonConfiguration, output } from '@nx/devkit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 let projName: string;
 
@@ -566,4 +567,5 @@ export function cleanupProject({
       removeSync(tmpProjPath());
     } catch {}
   }
+  resetWorkspaceContext();
 }
