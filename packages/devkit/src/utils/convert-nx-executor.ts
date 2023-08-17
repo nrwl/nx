@@ -1,5 +1,7 @@
 import type { Observable } from 'rxjs';
 import type { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
+import type { ProjectsConfigurations } from 'nx/src/devkit-exports';
+
 import { requireNx } from '../../nx';
 
 const {
@@ -23,14 +25,14 @@ export function convertNxExecutor(executor: Executor) {
         (workspaces as any).readNxJson();
 
     const promise = async () => {
-      const projectsConfigurations =
+      const projectsConfigurations: ProjectsConfigurations =
         retrieveProjectConfigurationsWithAngularProjects
           ? {
               version: 2,
               projects: await retrieveProjectConfigurationsWithAngularProjects(
                 builderContext.workspaceRoot,
                 nxJsonConfiguration
-              ),
+              ).then((p) => p.projectNodes),
             }
           : // TODO(v18): remove retrieveProjectConfigurations. This is to be backwards compatible with Nx 16.5 and below.
             (workspaces as any).readProjectsConfigurations({
