@@ -104,7 +104,6 @@ export function Fence({
   const hash = decodeURIComponent(useUrlHash(''));
 
   function lineNumberStyle(lineNumber: number) {
-    console.log('lineNumberStyle', lineGroups, hash);
     if (lineGroups[hash] && lineGroups[hash].includes(lineNumber)) {
       return {
         fontSize: 0,

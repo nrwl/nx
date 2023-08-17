@@ -84,6 +84,7 @@ You can define groups of lines that can be interactively highlighted to illustra
 The line groups can be highlighted using a button on the code fence itself, or by clicking on a link that you provide that changes the url fragment.
 
 For example:
+
 ```
 [This will highlight the first group.](#first)
 ```
