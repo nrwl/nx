@@ -14,19 +14,18 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  // TODO(leo): uncomment things below
   const {
     projectName: appProjectName,
     names: projectNames,
     projectRoot: appProjectRoot,
-    // projectNameAndRootFormat,
+    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'application',
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
   });
-  // options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const { className } = names(options.name);
   const parsedTags = options.tags
