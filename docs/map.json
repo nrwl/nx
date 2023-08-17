@@ -1076,6 +1076,12 @@
                   "file": "shared/recipes/add-stack/add-vue"
                 },
                 {
+                  "name": "Add a Svelte Project",
+                  "id": "add-svelte",
+                  "description": "Add a Svelte project to your repo",
+                  "file": "shared/recipes/add-stack/add-svelte"
+                },
+                {
                   "name": "Powering Up React Development With Nx",
                   "id": "react-nx",
                   "file": "shared/examples/react-nx"
