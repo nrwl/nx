@@ -197,7 +197,7 @@ describe('app', () => {
 
       expect(() =>
         readProjectConfiguration(tree, 'my-dir-my-node-app-e2e')
-      ).toThrow(/Cannot find/);
+      ).not.toThrow();
     });
 
     it('should update tags', async () => {
