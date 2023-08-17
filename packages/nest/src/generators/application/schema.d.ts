@@ -1,8 +1,10 @@
-import { Linter } from '@nx/linter';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { Linter } from '@nx/linter';
 
 export interface ApplicationGeneratorOptions {
   name: string;
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   frontendProject?: string;
   linter?: Linter;
   skipFormat?: boolean;
@@ -17,5 +19,6 @@ export interface ApplicationGeneratorOptions {
 }
 
 interface NormalizedOptions extends ApplicationGeneratorOptions {
+  appProjectName: string;
   appProjectRoot: Path;
 }
