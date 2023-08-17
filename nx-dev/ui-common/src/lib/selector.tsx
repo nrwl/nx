@@ -3,6 +3,7 @@ import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/solid';
 import { Fragment } from 'react';
 
 export interface SelectorProps<T> {
+  children: JSX.Element;
   items: { label: string; value: string; data?: T }[];
   selected: { label: string; value: string };
   onChange: (item: { label: string; value: string; data?: T }) => void;
@@ -17,9 +18,14 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
       >
         {({ open }) => (
           <>
-            <div className="relative mt-1">
-              <Listbox.Button className="relative w-full cursor-pointer rounded border border-slate-200 bg-white py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm">
-                <span className="block truncate">{props.selected.label}</span>
+            <div className="relative">
+              <Listbox.Button className="relative w-full cursor-pointer border border-slate-200 dark:border-slate-700 py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm">
+                <span className="block truncate">
+                  <span className="inline-block align-bottom">
+                    {props.children}
+                  </span>
+                  {props.selected.label}
+                </span>
                 <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                   <ChevronUpDownIcon
                     className="h-5 w-5 text-slate-500"
@@ -39,18 +45,13 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
               >
                 <Listbox.Options
                   static
-                  className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-sm bg-white py-1 text-base shadow-md focus:outline-none sm:text-sm"
+                  className="absolute z-10 mt-1 pl-0 max-h-60 w-full overflow-auto rounded-sm py-1 text-base shadow-md focus:outline-none sm:text-sm bg-white dark:bg-slate-800/60 dark:focus-within:ring-sky-500"
                 >
                   {props.items.map((item, personIdx) => (
                     <Listbox.Option
                       key={personIdx}
                       className={({ active }) =>
-                        `${
-                          active
-                            ? 'bg-blue-nx-base text-white'
-                            : 'text-slate-500'
-                        }
-                          relative cursor-pointer select-none py-2 pl-10 pr-4`
+                        `relative list-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 select-none py-2 px-3`
                       }
                       value={item}
                     >
@@ -59,19 +60,6 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
                           <span className={'block truncate font-medium'}>
                             {item.label}
                           </span>
-                          {selected || item.value === props.selected.value ? (
-                            <span
-                              className={`${
-                                active ? 'text-white' : 'text-slate-500'
-                              }
-                                absolute inset-y-0 left-0 flex items-center pl-3`}
-                            >
-                              <CheckIcon
-                                className="h-5 w-5"
-                                aria-hidden="true"
-                              />
-                            </span>
-                          ) : null}
                         </>
                       )}
                     </Listbox.Option>
