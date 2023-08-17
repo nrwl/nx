@@ -69,10 +69,6 @@ export interface FileData {
   file: string
   hash: string
 }
-/**
- * Newly created files will have the `update` EventType as well.
- * This simplifies logic between OS's, IDEs and git operations
- */
 export const enum EventType {
   delete = 'delete',
   update = 'update',
@@ -87,19 +83,14 @@ export const enum WorkspaceErrors {
   ParseError = 'ParseError',
   Generic = 'Generic'
 }
-/** Get workspace config files based on provided globs */
-export function getProjectConfigurationFiles(workspaceRoot: string, globs: Array<string>): Array<string>
-/** Get workspace config files based on provided globs */
-export function getProjectConfigurations(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): ConfigurationParserResult
+export interface ConfigurationParserResult {
+  projectNodes: Record<string, object>
+  externalNodes: Record<string, object>
+}
 export interface NxWorkspaceFiles {
   projectFileMap: Record<string, Array<FileData>>
   globalFiles: Array<FileData>
   projectConfigurations: Record<string, object>
-  externalNodes: Record<string, object>
-}
-export function getWorkspaceFilesNative(workspaceRoot: string, globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): NxWorkspaceFiles
-export interface ConfigurationParserResult {
-  projectNodes: Record<string, object>
   externalNodes: Record<string, object>
 }
 export class ImportResult {
@@ -117,4 +108,11 @@ export class Watcher {
   constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
   watch(callback: (err: string | null, events: WatchEvent[]) => void): void
   stop(): Promise<void>
+}
+export class WorkspaceContext {
+  workspaceRoot: string
+  constructor(workspaceRoot: string)
+  getWorkspaceFiles(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): NxWorkspaceFiles
+  getProjectConfigurationFiles(globs: Array<string>): Array<string>
+  getProjectConfigurations(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): ConfigurationParserResult
 }

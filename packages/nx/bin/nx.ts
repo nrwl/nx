@@ -18,6 +18,8 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 import { performance } from 'perf_hooks';
+import { setupWorkspaceContext } from '../src/utils/workspace-context';
+import { daemonClient } from '../src/daemon/client/client';
 
 function main() {
   if (
@@ -83,6 +85,10 @@ function main() {
 
     if (!localNx) {
       handleMissingLocalInstallation();
+    }
+
+    if (!daemonClient.enabled()) {
+      setupWorkspaceContext(workspace.dir);
     }
 
     // this file is already in the local workspace

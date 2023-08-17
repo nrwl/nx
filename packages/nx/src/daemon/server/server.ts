@@ -58,6 +58,7 @@ import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { handleHashTasks } from './handle-hash-tasks';
 import { fileHasher, hashArray } from '../../hasher/file-hasher';
 import { handleRequestFileData } from './handle-request-file-data';
+import { setupWorkspaceContext } from '../../utils/workspace-context';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -397,6 +398,8 @@ const handleOutputsChanges: FileWatcherCallback = async (err, changeEvents) => {
 };
 
 export async function startServer(): Promise<Server> {
+  setupWorkspaceContext(workspaceRoot);
+
   // Persist metadata about the background process so that it can be cleaned up later if needed
   await writeDaemonJsonProcessCache({
     processId: process.pid,

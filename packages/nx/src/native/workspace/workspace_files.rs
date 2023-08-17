@@ -1,17 +1,14 @@
 use napi::JsObject;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use rayon::prelude::*;
 use tracing::trace;
-use xxhash_rust::xxh3;
 
-use crate::native::logger::enable_logger;
 use crate::native::types::FileData;
-use crate::native::utils::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
-use crate::native::walker::nx_walker;
-use crate::native::workspace::errors::WorkspaceErrors;
+use crate::native::workspace::config_files;
+use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
 use crate::native::workspace::types::{ConfigurationParserResult, FileLocation};
 
 #[napi(object)]
@@ -22,43 +19,36 @@ pub struct NxWorkspaceFiles {
     pub external_nodes: HashMap<String, JsObject>,
 }
 
-#[napi]
-pub fn get_workspace_files_native<ConfigurationParser>(
-    workspace_root: String,
+pub(super) fn get_files<ConfigurationParser>(
     globs: Vec<String>,
     parse_configurations: ConfigurationParser,
+    file_data: &[(PathBuf, String)],
 ) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
 where
     ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
 {
-    enable_logger();
-
-    trace!("{workspace_root}, {globs:?}");
-
-    let (projects, mut file_data) = get_file_data(&workspace_root, globs)
-        .map_err(|err| napi::Error::new(WorkspaceErrors::Generic, err.to_string()))?;
-
-    let projects_vec: Vec<String> = projects.iter().map(|p| p.to_normalized_string()).collect();
-
-    let parsed_graph_nodes = parse_configurations(projects_vec)
-        .map_err(|e| napi::Error::new(WorkspaceErrors::ParseError, e.to_string()))?;
+    trace!("{globs:?}");
+    let parsed_graph_nodes =
+        config_files::get_project_configurations(globs, file_data, parse_configurations)
+            .map_err(|e| InternalWorkspaceErrors::ParseError(e.to_string()))?;
 
     let root_map = create_root_map(&parsed_graph_nodes.project_nodes);
 
     trace!(?root_map);
 
-    // Files need to be sorted each time because when we do hashArray in the TaskHasher.js, the order of the files should be deterministic
-    file_data.par_sort();
-
     let file_locations = file_data
         .into_par_iter()
-        .map(|file_data| {
-            let file_path = Path::new(&file_data.file);
+        .map(|(file_path, hash)| {
             let mut parent = file_path.parent().unwrap_or_else(|| Path::new("."));
 
             while root_map.get(parent).is_none() && parent != Path::new(".") {
                 parent = parent.parent().unwrap_or_else(|| Path::new("."));
             }
+
+            let file_data = FileData {
+                file: file_path.to_normalized_string(),
+                hash: hash.clone(),
+            };
 
             match root_map.get(parent) {
                 Some(project_name) => (FileLocation::Project(project_name.into()), file_data),
@@ -109,24 +99,4 @@ fn create_root_map(
             (PathBuf::from(root), project_name.clone())
         })
         .collect()
-}
-
-type WorkspaceData = (HashSet<PathBuf>, Vec<FileData>);
-fn get_file_data(workspace_root: &str, globs: Vec<String>) -> anyhow::Result<WorkspaceData> {
-    let globs = build_glob_set(&globs)?;
-    let (projects, file_data) = nx_walker(workspace_root, move |rec| {
-        let mut projects: HashSet<PathBuf> = HashSet::new();
-        let mut file_hashes: Vec<FileData> = vec![];
-        for (path, content) in rec {
-            file_hashes.push(FileData {
-                file: path.to_normalized_string(),
-                hash: xxh3::xxh3_64(&content).to_string(),
-            });
-            if globs.is_match(&path) {
-                projects.insert(path);
-            }
-        }
-        (projects, file_hashes)
-    });
-    Ok((projects, file_data))
 }

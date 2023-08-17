@@ -24,6 +24,11 @@ import {
   NxPlugin,
   NxPluginV2,
 } from '../../utils/nx-plugin';
+import {
+  getProjectConfigurationFilesFromContext,
+  getProjectConfigurationsFromContext,
+  getNxWorkspaceFilesFromContext,
+} from '../../utils/workspace-context';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -35,9 +40,6 @@ export async function retrieveWorkspaceFiles(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ) {
-  const { getWorkspaceFilesNative } =
-    require('../../native') as typeof import('../../native');
-
   performance.mark('native-file-deps:start');
   const plugins = await loadNxPlugins(
     nxJson?.plugins ?? [],
@@ -55,7 +57,7 @@ export async function retrieveWorkspaceFiles(
   performance.mark('get-workspace-files:start');
 
   const { projectConfigurations, projectFileMap, globalFiles, externalNodes } =
-    getWorkspaceFilesNative(workspaceRoot, globs, (configs: string[]) => {
+    getNxWorkspaceFilesFromContext(globs, (configs: string[]) => {
       const projectConfigurations = createProjectConfigurations(
         workspaceRoot,
         nxJson,
@@ -190,18 +192,13 @@ export async function retrieveProjectConfigurationPaths(
     root,
     await loadNxPlugins(nxJson?.plugins ?? [], getNxRequirePaths(root), root)
   );
-  const { getProjectConfigurationFiles } =
-    require('../../native') as typeof import('../../native');
-  return getProjectConfigurationFiles(root, projectGlobPatterns);
+  return getProjectConfigurationFilesFromContext(projectGlobPatterns);
 }
 
 export function retrieveProjectConfigurationPathsWithoutPluginInference(
   root: string
 ): string[] {
-  const { getProjectConfigurationFiles } =
-    require('../../native') as typeof import('../../native');
-  return getProjectConfigurationFiles(
-    root,
+  return getProjectConfigurationFilesFromContext(
     configurationGlobsWithoutPlugins(root)
   );
 }
@@ -223,10 +220,7 @@ export function retrieveProjectConfigurationsWithoutPluginInference(
     return projectsWithoutPluginCache.get(cacheKey);
   }
 
-  const { getProjectConfigurations } =
-    require('../../native') as typeof import('../../native');
-  const projectConfigurations = getProjectConfigurations(
-    root,
+  const projectConfigurations = getProjectConfigurationsFromContext(
     projectGlobPatterns,
     (configs: string[]) => {
       const { projects } = createProjectConfigurations(
