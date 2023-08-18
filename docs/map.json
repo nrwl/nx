@@ -364,6 +364,12 @@
               "file": "shared/mental-model"
             },
             {
+              "name": "Types of Configuration",
+              "tags": [""],
+              "id": "types-of-configuration",
+              "file": "shared/concepts/types-of-configuration"
+            },
+            {
               "name": "How Caching Works",
               "tags": ["cache-task-results"],
               "id": "how-caching-works",

@@ -11,6 +11,7 @@ import {
   uniq,
   updateFile,
   updateProjectConfig,
+  setMaxWorkers,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 
@@ -23,6 +24,7 @@ describe('Node Applications + webpack', () => {
     const app = uniq('nodeapp');
 
     runCLI(`generate @nx/node:app ${app} --bundler=webpack --no-interactive`);
+    await setMaxWorkers();
 
     checkFilesExist(`apps/${app}/webpack.config.js`);
 

@@ -2,6 +2,7 @@ import {
   cleanupProject,
   newProject,
   runCLI,
+  setMaxWorkers,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -134,6 +135,7 @@ describe('js:node error handling', () => {
     runCLI(
       `generate @nx/node:application ${webpackProject} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     updateFile(`apps/${webpackProject}/src/main.ts`, () => {
       return `

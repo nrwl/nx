@@ -1,10 +1,10 @@
 # nx.json
 
-The `nx.json` file configures the Nx CLI and project defaults.
+The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on Github.
 
-The following is an expanded version showing all options. Your `nx.json` will likely be much shorter.
+The following is an expanded example showing all options. Your `nx.json` will likely be much shorter. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
 
-```json {% fileName="nx.json" %}
+```json {% fileName="nx.json" lineGroups={ Caching:[15,16,17,18,19,20,21,22,23,24,25,26,29], Orchestration:[3,4,5,28,30], Execution:[28,31,32,33,34] } %}
 {
   "extends": "nx/presets/npm.json",
   "affected": {
@@ -13,24 +13,6 @@ The following is an expanded version showing all options. Your `nx.json` will li
   "workspaceLayout": {
     "appsDir": "demos",
     "libsDir": "packages"
-  },
-  "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": "*"
-    },
-    "tsconfig.base.json": "*",
-    "nx.json": "*"
-  },
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*"],
-    "production": ["!{projectRoot}/**/*.spec.tsx"]
-  },
-  "targetDefaults": {
-    "build": {
-      "inputs": ["production", "^production"],
-      "dependsOn": ["^build"]
-    }
   },
   "generators": {
     "@nx/js:library": {
@@ -42,6 +24,20 @@ The following is an expanded version showing all options. Your `nx.json` will li
       "runner": "nx/tasks-runners/default",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
+      }
+    }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "production": ["!{projectRoot}/**/*.spec.tsx"]
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": ["production", "^production"],
+      "dependsOn": ["^build"],
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "{projectRoot}/src/index.ts"
       }
     }
   }

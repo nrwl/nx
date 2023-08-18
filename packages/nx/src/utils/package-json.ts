@@ -134,6 +134,16 @@ export function buildTargetFromScript(
   };
 }
 
+export function readTargetsFromPackageJson({ scripts, nx }: PackageJson) {
+  const res: Record<string, TargetConfiguration> = {};
+  Object.keys(scripts || {}).forEach((script) => {
+    if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
+      res[script] = buildTargetFromScript(script, nx);
+    }
+  });
+  return res;
+}
+
 /**
  * Uses `require.resolve` to read the package.json for a module.
  *

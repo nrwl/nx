@@ -1228,6 +1228,16 @@
         "tags": ["intro"]
       },
       {
+        "id": "types-of-configuration",
+        "name": "Types of Configuration",
+        "description": "",
+        "file": "shared/concepts/types-of-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/types-of-configuration",
+        "tags": [""]
+      },
+      {
         "id": "how-caching-works",
         "name": "How Caching Works",
         "description": "",
@@ -1527,6 +1537,16 @@
     "isExternal": false,
     "path": "/concepts/mental-model",
     "tags": ["intro"]
+  },
+  "/concepts/types-of-configuration": {
+    "id": "types-of-configuration",
+    "name": "Types of Configuration",
+    "description": "",
+    "file": "shared/concepts/types-of-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/types-of-configuration",
+    "tags": [""]
   },
   "/concepts/how-caching-works": {
     "id": "how-caching-works",

@@ -6,6 +6,7 @@ import {
   PackageJson,
   PackageJsonTargetConfiguration,
   readModulePackageJson,
+  readTargetsFromPackageJson,
 } from './package-json';
 
 describe('buildTargetFromScript', () => {
@@ -41,6 +42,76 @@ describe('buildTargetFromScript', () => {
 
     expect(target.options.script).toEqual('build');
     expect(target.executor).toEqual('nx:run-script');
+  });
+});
+
+describe('readTargetsFromPackageJson', () => {
+  const packageJson: PackageJson = {
+    name: 'my-app',
+    version: '0.0.0',
+    scripts: {
+      build: 'echo 1',
+    },
+  };
+
+  const packageJsonBuildTarget = {
+    executor: 'nx:run-script',
+    options: {
+      script: 'build',
+    },
+  };
+
+  it('should read targets from project.json and package.json', () => {
+    const result = readTargetsFromPackageJson(packageJson);
+    expect(result).toEqual({
+      build: {
+        executor: 'nx:run-script',
+        options: {
+          script: 'build',
+        },
+      },
+    });
+  });
+
+  it('should contain extended options from nx property in package.json', () => {
+    const result = readTargetsFromPackageJson({
+      name: 'my-other-app',
+      version: '',
+      scripts: {
+        build: 'echo 1',
+      },
+      nx: {
+        targets: {
+          build: {
+            outputs: ['custom'],
+          },
+        },
+      },
+    });
+    expect(result).toEqual({
+      build: { ...packageJsonBuildTarget, outputs: ['custom'] },
+    });
+  });
+
+  it('should ignore scripts that are not in includedScripts', () => {
+    const result = readTargetsFromPackageJson({
+      name: 'included-scripts-test',
+      version: '',
+      scripts: {
+        test: 'echo testing',
+        fail: 'exit 1',
+      },
+      nx: {
+        includedScripts: ['test'],
+      },
+    });
+
+    expect(result).toEqual({
+      test: {
+        executor: 'nx:run-script',
+        options: { script: 'test' },
+      },
+    });
   });
 });
 

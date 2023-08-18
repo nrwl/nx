@@ -1,7 +1,7 @@
 import * as memfs from 'memfs';
 
 import '../src/utils/testing/mock-fs';
-import { getNxPackageJsonWorkspacesPlugin } from './package-json-workspaces';
+import { createNodeFromPackageJson } from './package-json-workspaces';
 
 describe('nx package.json workspaces plugin', () => {
   it('should build projects from package.json files', () => {
@@ -15,21 +15,29 @@ describe('nx package.json workspaces plugin', () => {
           name: 'lib-a',
           scripts: { test: 'jest' },
         }),
+        'packages/lib-b/package.json': JSON.stringify({
+          name: 'lib-b',
+          scripts: {
+            build: 'tsc',
+            test: 'jest',
+            nonNxOperation: 'rm -rf .',
+          },
+          nx: {
+            implicitDependencies: ['lib-a'],
+            includedScripts: ['build', 'test'],
+            targets: {
+              build: {
+                outputs: ['{projectRoot}/dist'],
+              },
+            },
+          },
+        }),
       },
       '/root'
     );
 
-    const plugin = getNxPackageJsonWorkspacesPlugin('/root');
-
-    // Targets from package.json files are handled outside of `createNodes`,
-    // because they are recognized even if the package.json file is not included
-    // in the package manager workspaces configuration.
-    //
-    // If any project has a package.json file in its root directory, those scripts
-    // are targets regardless of this plugin. As such, all we have to do here is identify
-    // that the package.json represents an Nx project, and `normalizeProjectNodes`
-    // will handle the rest.
-    expect(plugin.createNodes[1]('package.json', null)).toMatchInlineSnapshot(`
+    expect(createNodeFromPackageJson('package.json', '/root'))
+      .toMatchInlineSnapshot(`
       {
         "projects": {
           "root": {
@@ -37,11 +45,19 @@ describe('nx package.json workspaces plugin', () => {
             "projectType": "library",
             "root": ".",
             "sourceRoot": ".",
+            "targets": {
+              "echo": {
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "echo",
+                },
+              },
+            },
           },
         },
       }
     `);
-    expect(plugin.createNodes[1]('packages/lib-a/package.json', null))
+    expect(createNodeFromPackageJson('packages/lib-a/package.json', '/root'))
       .toMatchInlineSnapshot(`
       {
         "projects": {
@@ -50,6 +66,51 @@ describe('nx package.json workspaces plugin', () => {
             "projectType": "library",
             "root": "packages/lib-a",
             "sourceRoot": "packages/lib-a",
+            "targets": {
+              "test": {
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "test",
+                },
+              },
+            },
+          },
+        },
+      }
+    `);
+    expect(createNodeFromPackageJson('packages/lib-b/package.json', '/root'))
+      .toMatchInlineSnapshot(`
+      {
+        "projects": {
+          "lib-b": {
+            "implicitDependencies": [
+              "lib-a",
+            ],
+            "includedScripts": [
+              "build",
+              "test",
+            ],
+            "name": "lib-b",
+            "projectType": "library",
+            "root": "packages/lib-b",
+            "sourceRoot": "packages/lib-b",
+            "targets": {
+              "build": {
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "build",
+                },
+                "outputs": [
+                  "{projectRoot}/dist",
+                ],
+              },
+              "test": {
+                "executor": "nx:run-script",
+                "options": {
+                  "script": "test",
+                },
+              },
+            },
           },
         },
       }
