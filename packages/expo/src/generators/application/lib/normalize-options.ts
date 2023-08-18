@@ -24,6 +24,7 @@ export async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/expo:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
