@@ -14,7 +14,7 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use as the remote application?",
-      "pattern": "^[a-zA-Z].*$",
+      "pattern": "^[a-zA-Z][^:]*$",
       "x-priority": "important"
     },
     "directory": {
@@ -22,6 +22,11 @@
       "type": "string",
       "alias": "dir",
       "x-priority": "important"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "style": {
       "description": "The file extension to be used for style files.",

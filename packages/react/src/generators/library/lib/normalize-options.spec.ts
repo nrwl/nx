@@ -11,7 +11,7 @@ describe('normalizeOptions', () => {
   });
 
   it('should set unitTestRunner=jest and bundler=none by default', async () => {
-    const options = normalizeOptions(tree, {
+    const options = await normalizeOptions(tree, {
       name: 'test',
       style: 'css',
       linter: Linter.None,
@@ -27,7 +27,7 @@ describe('normalizeOptions', () => {
   });
 
   it('should set buildable to true when bundler is not "none"', async () => {
-    let options = normalizeOptions(tree, {
+    let options = await normalizeOptions(tree, {
       name: 'test',
       style: 'css',
       linter: Linter.None,
@@ -39,7 +39,7 @@ describe('normalizeOptions', () => {
       bundler: 'rollup',
     });
 
-    options = normalizeOptions(tree, {
+    options = await normalizeOptions(tree, {
       name: 'test',
       style: 'css',
       linter: Linter.None,
@@ -53,7 +53,7 @@ describe('normalizeOptions', () => {
   });
 
   it('should set unitTestRunner=vitest by default when bundler is vite', async () => {
-    const options = normalizeOptions(tree, {
+    const options = await normalizeOptions(tree, {
       name: 'test',
       style: 'css',
       linter: Linter.None,
@@ -70,7 +70,7 @@ describe('normalizeOptions', () => {
   });
 
   it('should set maintain unitTestRunner when bundler is vite', async () => {
-    const options = normalizeOptions(tree, {
+    const options = await normalizeOptions(tree, {
       name: 'test',
       style: 'css',
       linter: Linter.None,
@@ -86,8 +86,8 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it('should set bundler to rollup if buildable is true not no bundler is passed', () => {
-    const options = normalizeOptions(tree, {
+  it('should set bundler to rollup if buildable is true not no bundler is passed', async () => {
+    const options = await normalizeOptions(tree, {
       name: 'test',
       style: 'css',
       linter: Linter.None,
@@ -102,8 +102,8 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it('should set bundler to rollup if buildable is true and bundler is none ', () => {
-    const options = normalizeOptions(tree, {
+  it('should set bundler to rollup if buildable is true and bundler is none ', async () => {
+    const options = await normalizeOptions(tree, {
       name: 'test',
       style: 'css',
       linter: Linter.None,

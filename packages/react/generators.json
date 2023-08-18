@@ -114,7 +114,7 @@
     },
 
     "application": {
-      "factory": "./src/generators/application/application#applicationGenerator",
+      "factory": "./src/generators/application/application#applicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
@@ -122,7 +122,7 @@
     },
 
     "library": {
-      "factory": "./src/generators/library/library#libraryGenerator",
+      "factory": "./src/generators/library/library#libraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
@@ -179,14 +179,14 @@
     },
 
     "host": {
-      "factory": "./src/generators/host/host#hostGenerator",
+      "factory": "./src/generators/host/host#hostGeneratorInternal",
       "schema": "./src/generators/host/schema.json",
       "x-type": "application",
       "description": "Generate a host react application"
     },
 
     "remote": {
-      "factory": "./src/generators/remote/remote#remoteGenerator",
+      "factory": "./src/generators/remote/remote#remoteGeneratorInternal",
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
       "description": "Generate a remote react application"

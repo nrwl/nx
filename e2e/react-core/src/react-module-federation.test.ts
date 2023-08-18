@@ -2,7 +2,6 @@ import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
-  killPort,
   newProject,
   readProjectConfig,
   runCLI,
@@ -114,12 +113,29 @@ describe('React Module Federation', () => {
     // }
   }, 500_000);
 
+  it('should should support generating host and remote apps with the new name and root format', async () => {
+    const shell = uniq('shell');
+    const remote = uniq('remote');
+
+    runCLI(
+      `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive`
+    );
+    runCLI(
+      `generate @nx/react:remote ${remote} --host=${shell} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${shell}/module-federation.config.js`);
+    checkFilesExist(`${remote}/module-federation.config.js`);
+
+    // check default generated host is built successfully
+    const buildOutput = runCLI(`run ${shell}:build:development`);
+    expect(buildOutput).toContain('Successfully ran target build');
+  }, 500_000);
+
   async function readPort(appName: string): Promise<number> {
     const config = await readProjectConfig(appName);
     return config.targets.serve.options.port;
   }
 });
-
-function killPorts(ports: number[]): Promise<boolean[]> {
-  return Promise.all(ports.map((p) => killPort(p)));
-}

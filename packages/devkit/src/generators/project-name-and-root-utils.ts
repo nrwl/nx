@@ -8,7 +8,8 @@ import {
 } from '../utils/get-workspace-layout';
 import { names } from '../utils/names';
 
-const { joinPathFragments, readJson, readNxJson, updateNxJson } = requireNx();
+const { joinPathFragments, normalizePath, readJson, readNxJson, updateNxJson } =
+  requireNx();
 
 export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
 export type ProjectGenerationOptions = {
@@ -169,7 +170,9 @@ function getProjectNameAndRootFormats(
   options: ProjectGenerationOptions
 ): ProjectNameAndRootFormats {
   const name = names(options.name).fileName;
-  const directory = options.directory?.replace(/^\.?\//, '');
+  const directory = options.directory
+    ? normalizePath(options.directory.replace(/^\.?\//, ''))
+    : undefined;
 
   const asProvidedProjectName = name;
   const asProvidedProjectDirectory = directory
