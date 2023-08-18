@@ -110,6 +110,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             workspaceRoot: root,
           });
         for (const node in projectNodes) {
+          projectNodes[node].name ??= node;
           mergeProjectConfigurationIntoRootMap(
             projectRootMap,
             projectNodes[node],
