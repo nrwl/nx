@@ -55,6 +55,9 @@ function main() {
     if (workspace && workspace.type === 'nx') {
       require('v8-compile-cache');
     }
+
+    setupWorkspaceContext(workspace.dir);
+
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
     // https://twitter.com/BenLesh/status/1192478226385428483?s=20
     if (!(Symbol as any).observable)
@@ -85,10 +88,6 @@ function main() {
 
     if (!localNx) {
       handleMissingLocalInstallation();
-    }
-
-    if (!daemonClient.enabled()) {
-      setupWorkspaceContext(workspace.dir);
     }
 
     // this file is already in the local workspace
