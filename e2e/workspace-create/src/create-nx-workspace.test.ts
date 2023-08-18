@@ -457,7 +457,7 @@ describe('create-nx-workspace yarn berry', () => {
     mkdirSync(tmpDir, { recursive: true });
     runCommand('corepack prepare yarn@stable --activate', { cwd: tmpDir });
     runCommand('yarn set version stable', { cwd: tmpDir });
-    yarnVersion = runCommand('yarn --version', { cwd: tmpDir });
+    yarnVersion = runCommand('yarn --version', { cwd: tmpDir }).trim();
     // previous command creates a package.json file which we don't want
     rmSync(`${tmpDir}/package.json`);
     process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
