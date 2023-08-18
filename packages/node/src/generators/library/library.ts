@@ -159,13 +159,17 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
   }
 
   const project = readProjectConfiguration(tree, options.projectName);
+  const rootProject = options.projectRoot === '.' || options.projectRoot === '';
 
   project.targets = project.targets || {};
   project.targets.build = {
     executor: `@nx/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath: joinPathFragments('dist', options.projectRoot),
+      outputPath: joinPathFragments(
+        'dist',
+        rootProject ? options.projectName : options.projectRoot
+      ),
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       packageJson: `${options.projectRoot}/package.json`,
       main: `${options.projectRoot}/src/index` + (options.js ? '.js' : '.ts'),
