@@ -191,7 +191,7 @@ export function addOrChangeTestTarget(
   } else {
     project.targets[target] = {
       executor: '@nx/vite:test',
-      outputs: [coveragePath],
+      outputs: ['{options.reportsDirectory}'],
       options: testOptions,
     };
   }
