@@ -45,10 +45,7 @@ export function convertNxExecutor(executor: Executor) {
         targetName: builderContext.target.target,
         target: builderContext.target.target,
         configurationName: builderContext.target.configuration,
-        projectsConfigurations: {
-          projects: projectsConfigurations,
-          version: 2,
-        },
+        projectsConfigurations,
         nxJsonConfiguration,
         cwd: process.cwd(),
         projectGraph: null,

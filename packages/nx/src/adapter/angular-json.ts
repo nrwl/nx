@@ -7,14 +7,14 @@ import { NxPluginV2 } from '../devkit-exports';
 export const NX_ANGULAR_JSON_PLUGIN_NAME = 'nx-angular-json-plugin';
 
 export const NxAngularJsonPlugin: NxPluginV2 = {
-    name: NX_ANGULAR_JSON_PLUGIN_NAME,
-    createNodes: [
-      'angular.json',
-      (f, ctx) => ({
-        projects: readAngularJson(ctx.workspaceRoot),
-      }),
-    ],
-}
+  name: NX_ANGULAR_JSON_PLUGIN_NAME,
+  createNodes: [
+    'angular.json',
+    (f, ctx) => ({
+      projects: readAngularJson(ctx.workspaceRoot),
+    }),
+  ],
+};
 
 export function shouldMergeAngularProjects(
   root: string,
