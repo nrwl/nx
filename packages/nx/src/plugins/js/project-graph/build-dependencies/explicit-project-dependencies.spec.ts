@@ -4,6 +4,7 @@ const tempFs = new TempFs('explicit-project-deps');
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { retrieveWorkspaceFiles } from '../../../../project-graph/utils/retrieve-workspace-files';
+import { setupWorkspaceContext } from '../../../../utils/workspace-context';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -581,6 +582,8 @@ async function createVirtualWorkspace(config: VirtualWorkspaceConfig) {
     ...fsJson,
     ...projectsFs,
   });
+
+  setupWorkspaceContext(tempFs.tempDir);
 
   const { projectFileMap, projectConfigurations } =
     await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
