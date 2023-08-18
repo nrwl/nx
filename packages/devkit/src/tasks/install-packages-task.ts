@@ -4,7 +4,6 @@ import { requireNx } from '../../nx';
 
 import type { Tree } from 'nx/src/generators/tree';
 import type { PackageManager } from 'nx/src/utils/package-manager';
-import { existsSync } from 'fs';
 const { detectPackageManager, getPackageManagerCommand, joinPathFragments } =
   requireNx();
 
@@ -43,11 +42,6 @@ export function installPackagesTask(
       cwd: join(tree.root, cwd),
       stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
     };
-    // only run preinstall if install hasn't been run yet
-    // this only happens during CNW when preset is adding its dependencies
-    if (pmc.preInstall && !existsSync(joinPathFragments(cwd, 'node_modules'))) {
-      execSync(pmc.preInstall, execSyncOptions);
-    }
     execSync(pmc.install, execSyncOptions);
   }
 }
