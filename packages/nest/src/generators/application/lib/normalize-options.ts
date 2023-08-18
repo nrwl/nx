@@ -8,20 +8,20 @@ export async function normalizeOptions(
   tree: Tree,
   options: ApplicationGeneratorOptions
 ): Promise<NormalizedOptions> {
-  // TODO(leo): uncomment things below
   const {
     projectName: appProjectName,
     projectRoot: appProjectRoot,
-    // projectNameAndRootFormat,
+    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(tree, {
     name: options.name,
     projectType: 'application',
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
+    callingGenerator: '@nx/nest:application',
   });
   options.rootProject = appProjectRoot === '.';
-  // options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   return {
     ...options,
