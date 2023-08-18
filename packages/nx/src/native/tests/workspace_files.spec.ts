@@ -1,4 +1,4 @@
-import { getProjectConfigurations, getWorkspaceFilesNative } from '../index';
+import { WorkspaceContext } from '../index';
 import { TempFs } from '../../utils/testing/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { dirname, join } from 'path';
@@ -17,7 +17,7 @@ describe('workspace files', () => {
       }
       return {
         projectNodes: res,
-        externalNodes: {}
+        externalNodes: {},
       };
     };
   }
@@ -54,11 +54,10 @@ describe('workspace files', () => {
       './libs/package-project/index.js': '',
       './nested/non-project/file.txt': '',
     });
-
     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
+
     let { projectFileMap, projectConfigurations, globalFiles } =
-      getWorkspaceFilesNative(
-        fs.tempDir,
+      new WorkspaceContext(fs.tempDir).getWorkspaceFiles(
         globs,
         createParseConfigurationsFunction(fs.tempDir)
       );
@@ -180,11 +179,9 @@ describe('workspace files', () => {
       './jest.config.js': '',
     });
     const globs = ['project.json', '**/project.json', '**/package.json'];
-    const { globalFiles, projectFileMap } = getWorkspaceFilesNative(
-      fs.tempDir,
-      globs,
-      createParseConfigurationsFunction(fs.tempDir)
-    );
+    const { globalFiles, projectFileMap } = new WorkspaceContext(
+      fs.tempDir
+    ).getWorkspaceFiles(globs, createParseConfigurationsFunction(fs.tempDir));
 
     expect(globalFiles).toEqual([]);
     expect(projectFileMap['repo-name']).toMatchInlineSnapshot(`
@@ -237,8 +234,7 @@ describe('workspace files', () => {
 
     let globs = ['project.json', '**/project.json', '**/package.json'];
 
-    let nodes = getProjectConfigurations(
-      fs.tempDir,
+    let nodes = new WorkspaceContext(fs.tempDir).getProjectConfigurations(
       globs,
       (filenames) => {
         const res = {};
@@ -250,20 +246,21 @@ describe('workspace files', () => {
           };
         }
         return {
-          externalNodes: {}, projectNodes: res
+          externalNodes: {},
+          projectNodes: res,
         };
       }
     );
     expect(nodes.projectNodes).toEqual({
-        "project1": {
-          "name": "project1",
-          "root": "libs/project1",
-        },
-        "repo-name": expect.objectContaining({
-          "name": "repo-name",
-          "root": ".",
-        }),
-      });
+      project1: {
+        name: 'project1',
+        root: 'libs/project1',
+      },
+      'repo-name': expect.objectContaining({
+        name: 'repo-name',
+        root: '.',
+      }),
+    });
   });
 
   // describe('errors', () => {

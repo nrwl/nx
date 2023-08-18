@@ -5,6 +5,7 @@ import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-bui
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { retrieveWorkspaceFiles } from '../../../../project-graph/utils/retrieve-workspace-files';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { setupWorkspaceContext } from '../../../../utils/workspace-context';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -558,6 +559,8 @@ async function createContext(
     ...fsJson,
     ...projectsFs,
   });
+
+  setupWorkspaceContext(tempFs.tempDir);
 
   const { projectFileMap, projectConfigurations } =
     await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
