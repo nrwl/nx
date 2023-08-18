@@ -1,6 +1,7 @@
 import {
   joinPathFragments,
   names,
+  offsetFromRoot,
   readJson,
   Tree,
   updateJson,
@@ -57,6 +58,98 @@ export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
     return;
   }
   return eslintFile.endsWith('.json') || eslintFile.endsWith('.config.js');
+}
+
+export function updateRelativePathsInConfig(
+  tree: Tree,
+  sourcePath: string,
+  destinationPath: string
+) {
+  if (
+    sourcePath === destinationPath ||
+    !isEslintConfigSupported(tree, destinationPath)
+  ) {
+    return;
+  }
+
+  const configPath = joinPathFragments(
+    destinationPath,
+    findEslintFile(tree, destinationPath)
+  );
+  const offset = offsetFromRoot(destinationPath);
+
+  if (useFlatConfig(tree)) {
+    const config = tree.read(configPath, 'utf-8');
+    tree.write(
+      configPath,
+      replaceFlatConfigPaths(config, sourcePath, offset, destinationPath)
+    );
+  } else {
+    updateJson(tree, configPath, (json) => {
+      if (typeof json.extends === 'string') {
+        json.extends = offsetFilePath(sourcePath, json.extends, offset);
+      } else if (json.extends) {
+        json.extends = json.extends.map((extend: string) =>
+          offsetFilePath(sourcePath, extend, offset)
+        );
+      }
+
+      json.overrides?.forEach(
+        (o: { parserOptions?: { project?: string | string[] } }) => {
+          if (o.parserOptions?.project) {
+            o.parserOptions.project = Array.isArray(o.parserOptions.project)
+              ? o.parserOptions.project.map((p) =>
+                  p.replace(sourcePath, destinationPath)
+                )
+              : o.parserOptions.project.replace(sourcePath, destinationPath);
+          }
+        }
+      );
+      return json;
+    });
+  }
+}
+
+function replaceFlatConfigPaths(
+  config: string,
+  sourceRoot: string,
+  offset: string,
+  destinationRoot: string
+): string {
+  let match;
+  let newConfig = config;
+
+  // replace requires
+  const requireRegex = RegExp(/require\(['"](.*)['"]\)/g);
+  while ((match = requireRegex.exec(newConfig)) !== null) {
+    const newPath = offsetFilePath(sourceRoot, match[1], offset);
+    newConfig =
+      newConfig.slice(0, match.index) +
+      `require('${newPath}')` +
+      newConfig.slice(match.index + match[0].length);
+  }
+  // replace projects
+  const projectRegex = RegExp(/project:\s?\[?['"](.*)['"]\]?/g);
+  while ((match = projectRegex.exec(newConfig)) !== null) {
+    const newProjectDef = match[0].replaceAll(sourceRoot, destinationRoot);
+    newConfig =
+      newConfig.slice(0, match.index) +
+      newProjectDef +
+      newConfig.slice(match.index + match[0].length);
+  }
+  return newConfig;
+}
+
+function offsetFilePath(
+  projectRoot: string,
+  pathToFile: string,
+  offset: string
+): string {
+  if (!pathToFile.startsWith('..')) {
+    // not a relative path
+    return pathToFile;
+  }
+  return joinPathFragments(offset, projectRoot, pathToFile);
 }
 
 export function addOverrideToLintConfig(

@@ -248,6 +248,8 @@ describe('updateEslint (flat config)', () => {
     };
 
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.delete('.eslintrc.json');
+    tree.write('eslint.config.js', `module.exports = [];`);
   });
 
   it('should handle config not existing', async () => {
