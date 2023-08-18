@@ -23,6 +23,9 @@ repo/
 
 All three libraries have a similar project configuration. Here is what their `project.json` files look like:
 
+{% tabs %}
+{% tab label="lib1" %}
+
 ```json {% fileName="libs/lib1/project.json" %}
 {
   "name": "lib1",
@@ -65,6 +68,9 @@ All three libraries have a similar project configuration. Here is what their `pr
   "tags": []
 }
 ```
+
+{% /tab %}
+{% tab label="lib2" %}
 
 ```json {% fileName="libs/lib2/project.json" %}
 {
@@ -110,6 +116,9 @@ All three libraries have a similar project configuration. Here is what their `pr
 }
 ```
 
+{% /tab %}
+{% tab label="lib3" %}
+
 ```json {% fileName="libs/lib3/project.json" %}
 {
   "name": "lib3",
@@ -152,6 +161,9 @@ All three libraries have a similar project configuration. Here is what their `pr
   "tags": []
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 If you scan through these three files, they look very similar. The only differences aside from the project paths are that `lib1` has different assets defined for the `build` target and `lib2` has a `testTimeout` set for the `test` target.
 
@@ -197,6 +209,11 @@ Let's use the `targetDefaults` property in `nx.json` to reduce some of this dupl
 }
 ```
 
+Now the `project.json` files can be reduced to this:
+
+{% tabs %}
+{% tab label="lib1" %}
+
 ```json {% fileName="libs/lib1/project.json" %}
 {
   "name": "lib1",
@@ -213,6 +230,9 @@ Let's use the `targetDefaults` property in `nx.json` to reduce some of this dupl
   "tags": []
 }
 ```
+
+{% /tab %}
+{% tab label="lib2" %}
 
 ```json {% fileName="libs/lib2/project.json" %}
 {
@@ -231,6 +251,9 @@ Let's use the `targetDefaults` property in `nx.json` to reduce some of this dupl
 }
 ```
 
+{% /tab %}
+{% tab label="lib3" %}
+
 ```json {% fileName="libs/lib3/project.json" %}
 {
   "name": "lib3",
@@ -240,6 +263,9 @@ Let's use the `targetDefaults` property in `nx.json` to reduce some of this dupl
   "tags": []
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Ramifications
 
