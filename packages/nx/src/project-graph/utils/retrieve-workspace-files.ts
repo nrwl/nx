@@ -182,13 +182,13 @@ function _retrieveProjectConfigurations(
   };
 }
 
-export function retrieveProjectConfigurationPaths(
+export async function retrieveProjectConfigurationPaths(
   root: string,
   nxJson: NxJsonConfiguration
-): string[] {
+): Promise<string[]> {
   const projectGlobPatterns = configurationGlobs(
     root,
-    loadNxPluginsSync(nxJson?.plugins ?? [], getNxRequirePaths(root), root)
+    await loadNxPlugins(nxJson?.plugins ?? [], getNxRequirePaths(root), root)
   );
   const { getProjectConfigurationFiles } =
     require('../../native') as typeof import('../../native');
