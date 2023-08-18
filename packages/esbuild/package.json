@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "chalk": "^4.1.0",
-    "dotenv": "~16.3.1",
     "fast-glob": "3.2.7",
     "fs-extra": "^11.1.0",
     "tslib": "^2.3.0",

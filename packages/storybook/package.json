@@ -30,7 +30,6 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "dotenv": "~16.3.1",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "semver": "7.5.3",
     "tslib": "^2.3.0",

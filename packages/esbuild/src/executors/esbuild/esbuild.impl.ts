@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import * as chalk from 'chalk';
 import type { ExecutorContext } from '@nx/devkit';
 import { cacheDir, joinPathFragments, logger, stripIndents } from '@nx/devkit';
