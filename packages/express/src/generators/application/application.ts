@@ -98,6 +98,7 @@ async function normalizeOptions(
     projectType: 'application',
     directory: options.directory,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/express:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
