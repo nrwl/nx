@@ -532,6 +532,10 @@ function findPatchedKeys(
     if (!keys[0].startsWith(`${node.data.packageName}@patch:`)) {
       continue;
     }
+    // local patches are currently not supported
+    if (keys[0].includes('.yarn/patches')) {
+      continue;
+    }
     if (snapshot.version === node.data.version) {
       return [keys, snapshot];
     }
