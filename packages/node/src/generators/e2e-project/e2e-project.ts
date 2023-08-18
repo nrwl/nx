@@ -168,6 +168,8 @@ async function normalizeOptions(
       projectNameAndRootFormat: options.rootProject
         ? 'as-provided'
         : options.projectNameAndRootFormat,
+      // this is an internal generator, don't save defaults
+      callingGenerator: undefined,
     });
 
   return {

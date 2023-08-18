@@ -94,6 +94,7 @@ async function normalizeOptions(
     directory: options.directory,
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/node:library',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
