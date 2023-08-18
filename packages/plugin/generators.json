@@ -9,7 +9,7 @@
       "description": "Create a Nx Plugin."
     },
     "create-package": {
-      "factory": "./src/generators/create-package/create-package",
+      "factory": "./src/generators/create-package/create-package#createPackageGeneratorInternal",
       "schema": "./src/generators/create-package/schema.json",
       "description": "Create a package which can be used by npx to create a new workspace"
     },
