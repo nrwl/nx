@@ -22,6 +22,8 @@ import manifestsPackages from '../../../../docs/generated/manifests/packages.jso
 import manifestsRecipes from '../../../../docs/generated/manifests/recipes.json' assert { type: 'json' };
 import manifestsTags from '../../../../docs/generated/manifests/tags.json' assert { type: 'json' };
 
+let identityMap = {};
+
 dotenv.config();
 
 type ProcessedMdx = {
@@ -184,11 +186,14 @@ async function generateEmbeddings() {
     }
   );
 
-  const allFilesPaths = [
+  // Ensures that indentityMap gets populated first
+  let allFilesPaths = [...getAllFilesWithItemList(manifestsNx)];
+
+  allFilesPaths = [
+    ...allFilesPaths,
     ...getAllFilesFromMapJson(mapJson),
     ...getAllFilesWithItemList(manifestsCloud),
     ...getAllFilesWithItemList(manifestsExtending),
-    ...getAllFilesWithItemList(manifestsNx),
     ...getAllFilesWithItemList(manifestsPackages),
     ...getAllFilesWithItemList(manifestsRecipes),
     ...getAllFilesWithItemList(manifestsTags),
@@ -370,14 +375,16 @@ function delay(ms: number) {
 
 function getAllFilesFromMapJson(doc): WalkEntry[] {
   const files: WalkEntry[] = [];
-
   function traverse(itemList) {
     for (const item of itemList) {
       if (item.file && item.file.length > 0) {
         // we can exclude some docs here, eg. the deprecated ones
         // the path is the relative path to the file within the nx repo
         // the url_partial is the relative path to the file within the docs site - under nx.dev
-        files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
+        files.push({
+          path: `docs/${item.file}.md`,
+          url_partial: identityMap[item.id]?.path || '',
+        });
       }
 
       if (item.itemList) {
@@ -401,6 +408,9 @@ function getAllFilesWithItemList(data): WalkEntry[] {
         // the path is the relative path to the file within the nx repo
         // the url_partial is the relative path to the file within the docs site - under nx.dev
         files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
+        if (!identityMap[item.id]) {
+          identityMap = { ...identityMap, [item.id]: item };
+        }
       }
 
       if (item.itemList) {
