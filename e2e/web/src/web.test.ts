@@ -400,7 +400,7 @@ describe('CLI - Environment Variables', () => {
     updateFile(main2, `${newCode2}\n${content2}`);
 
     runCLI(
-      `run-many --target build --all --outputHashing=none --optimization=false`,
+      `run-many --target build --outputHashing=none --optimization=false`,
       {
         env: {
           ...process.env,

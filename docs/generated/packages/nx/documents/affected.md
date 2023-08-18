@@ -29,12 +29,6 @@ Run tests in parallel:
  nx affected -t test --parallel=5
 ```
 
-Run the test target for all projects:
-
-```shell
- nx affected -t test --all
-```
-
 Run lint, test, and build targets for affected projects. Requires Nx v15.4+:
 
 ```shell
