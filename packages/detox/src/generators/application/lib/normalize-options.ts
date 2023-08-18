@@ -21,6 +21,7 @@ export async function normalizeOptions(
       projectType: 'application',
       directory: options.e2eDirectory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
+      callingGenerator: '@nx/detox:application',
     });
 
   const { fileName: appFileName, className: appClassName } = names(
