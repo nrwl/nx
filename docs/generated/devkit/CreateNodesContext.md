@@ -6,8 +6,8 @@ Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 
 ### Properties
 
-- [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration)
-- [workspaceRoot](../../devkit/documents/CreateNodesContext#workspaceroot)
+- [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration): NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
+- [workspaceRoot](../../devkit/documents/CreateNodesContext#workspaceroot): string
 
 ## Properties
 

@@ -6,7 +6,7 @@ Virtual file system tree.
 
 ### Properties
 
-- [root](../../devkit/documents/Tree#root)
+- [root](../../devkit/documents/Tree#root): string
 
 ### Methods
 

@@ -4,10 +4,10 @@
 
 ### Properties
 
-- [dependencies](../../devkit/documents/TargetDependencyConfig#dependencies)
-- [params](../../devkit/documents/TargetDependencyConfig#params)
-- [projects](../../devkit/documents/TargetDependencyConfig#projects)
-- [target](../../devkit/documents/TargetDependencyConfig#target)
+- [dependencies](../../devkit/documents/TargetDependencyConfig#dependencies): boolean
+- [params](../../devkit/documents/TargetDependencyConfig#params): &quot;ignore&quot; | &quot;forward&quot;
+- [projects](../../devkit/documents/TargetDependencyConfig#projects): string | string[]
+- [target](../../devkit/documents/TargetDependencyConfig#target): string
 
 ## Properties
 

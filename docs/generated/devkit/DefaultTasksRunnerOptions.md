@@ -4,15 +4,15 @@
 
 ### Properties
 
-- [cacheDirectory](../../devkit/documents/DefaultTasksRunnerOptions#cachedirectory)
-- [cacheableOperations](../../devkit/documents/DefaultTasksRunnerOptions#cacheableoperations)
-- [cacheableTargets](../../devkit/documents/DefaultTasksRunnerOptions#cacheabletargets)
-- [captureStderr](../../devkit/documents/DefaultTasksRunnerOptions#capturestderr)
-- [lifeCycle](../../devkit/documents/DefaultTasksRunnerOptions#lifecycle)
-- [parallel](../../devkit/documents/DefaultTasksRunnerOptions#parallel)
-- [remoteCache](../../devkit/documents/DefaultTasksRunnerOptions#remotecache)
-- [runtimeCacheInputs](../../devkit/documents/DefaultTasksRunnerOptions#runtimecacheinputs)
-- [skipNxCache](../../devkit/documents/DefaultTasksRunnerOptions#skipnxcache)
+- [cacheDirectory](../../devkit/documents/DefaultTasksRunnerOptions#cachedirectory): string
+- [cacheableOperations](../../devkit/documents/DefaultTasksRunnerOptions#cacheableoperations): string[]
+- [cacheableTargets](../../devkit/documents/DefaultTasksRunnerOptions#cacheabletargets): string[]
+- [captureStderr](../../devkit/documents/DefaultTasksRunnerOptions#capturestderr): boolean
+- [lifeCycle](../../devkit/documents/DefaultTasksRunnerOptions#lifecycle): LifeCycle
+- [parallel](../../devkit/documents/DefaultTasksRunnerOptions#parallel): number
+- [remoteCache](../../devkit/documents/DefaultTasksRunnerOptions#remotecache): RemoteCache
+- [runtimeCacheInputs](../../devkit/documents/DefaultTasksRunnerOptions#runtimecacheinputs): string[]
+- [skipNxCache](../../devkit/documents/DefaultTasksRunnerOptions#skipnxcache): boolean
 
 ## Properties
 

@@ -4,7 +4,7 @@
 
 ### Properties
 
-- [defaultBase](../../devkit/documents/NxAffectedConfig#defaultbase)
+- [defaultBase](../../devkit/documents/NxAffectedConfig#defaultbase): string
 
 ## Properties
 

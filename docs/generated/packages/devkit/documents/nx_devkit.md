@@ -94,12 +94,12 @@ It only uses language primitives and immutable objects
 
 ### Variables
 
-- [NX_VERSION](../../devkit/documents/NX_VERSION)
-- [appRootPath](../../devkit/documents/appRootPath)
-- [cacheDir](../../devkit/documents/cacheDir)
-- [logger](../../devkit/documents/logger)
-- [output](../../devkit/documents/output)
-- [workspaceRoot](../../devkit/documents/workspaceRoot)
+- [NX_VERSION](../../devkit/documents/NX_VERSION): string
+- [appRootPath](../../devkit/documents/appRootPath): string
+- [cacheDir](../../devkit/documents/cacheDir): string
+- [logger](../../devkit/documents/logger): Object
+- [output](../../devkit/documents/output): CLIOutput
+- [workspaceRoot](../../devkit/documents/workspaceRoot): string
 
 ### Functions
 

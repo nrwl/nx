@@ -181,6 +181,7 @@
     "fs-extra": "^11.1.0",
     "github-slugger": "^2.0.0",
     "gpt3-tokenizer": "^1.1.5",
+    "handlebars": "4.7.7",
     "html-webpack-plugin": "5.5.0",
     "http-server": "14.1.0",
     "husky": "^8.0.1",

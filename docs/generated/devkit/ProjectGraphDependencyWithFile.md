@@ -7,10 +7,10 @@ Optional: Specifies a file from where the dependency is made
 
 ### Properties
 
-- [dependencyType](../../devkit/documents/ProjectGraphDependencyWithFile#dependencytype)
-- [source](../../devkit/documents/ProjectGraphDependencyWithFile#source)
-- [sourceFile](../../devkit/documents/ProjectGraphDependencyWithFile#sourcefile)
-- [target](../../devkit/documents/ProjectGraphDependencyWithFile#target)
+- [dependencyType](../../devkit/documents/ProjectGraphDependencyWithFile#dependencytype): DependencyType
+- [source](../../devkit/documents/ProjectGraphDependencyWithFile#source): string
+- [sourceFile](../../devkit/documents/ProjectGraphDependencyWithFile#sourcefile): string
+- [target](../../devkit/documents/ProjectGraphDependencyWithFile#target): string
 
 ## Properties
 
