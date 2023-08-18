@@ -42,9 +42,6 @@ export function installPackagesTask(
       cwd: join(tree.root, cwd),
       stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
     };
-    if (pmc.preInstall) {
-      execSync(pmc.preInstall, execSyncOptions);
-    }
     execSync(pmc.install, execSyncOptions);
   }
 }
