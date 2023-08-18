@@ -37,6 +37,10 @@ import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-
 import { NxPluginV1 } from './nx-plugin.deprecated';
 import { ProjectGraphDependencyWithFile } from '../project-graph/project-graph-builder';
 import { combineGlobPatterns } from './globs';
+import {
+  NxAngularJsonPlugin,
+  shouldMergeAngularProjects,
+} from '../adapter/angular-json';
 
 /**
  * Context for {@link CreateNodesFunction}
@@ -251,6 +255,10 @@ export async function loadNxPlugins(
   const jsPlugin: any = await import('../plugins/js');
   jsPlugin.name = 'nx-js-graph-plugin';
   result.push(jsPlugin as NxPlugin);
+
+  if (shouldMergeAngularProjects(root, false)) {
+    result.push(NxAngularJsonPlugin);
+  }
 
   plugins ??= [];
   for (const plugin of plugins) {
