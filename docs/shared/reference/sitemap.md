@@ -151,6 +151,7 @@
       - [Include Assets in Build](/recipes/tips-n-tricks/include-assets-in-build)
       - [Include All package.json Files as Projects](/recipes/tips-n-tricks/include-all-packagejson)
       - [Identify Dependencies Between Folders](/recipes/tips-n-tricks/identify-dependencies-between-folders)
+      - [Reduce Repetitive Configuration](/recipes/tips-n-tricks/reduce-repetitive-configuration)
       - [Run Root-Level NPM Scripts with Nx](/recipes/tips-n-tricks/root-level-scripts)
       - [Disable Graph Links Created from Analyzing Source Files](/recipes/tips-n-tricks/analyze-source-files)
       - [Workspace Watching](/recipes/tips-n-tricks/workspace-watching)

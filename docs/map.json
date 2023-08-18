@@ -365,7 +365,7 @@
             },
             {
               "name": "Types of Configuration",
-              "tags": [""],
+              "tags": [],
               "id": "types-of-configuration",
               "file": "shared/concepts/types-of-configuration"
             },
@@ -873,6 +873,12 @@
                   "id": "identify-dependencies-between-folders",
                   "tags": [],
                   "file": "shared/recipes/identify-dependencies-between-folders"
+                },
+                {
+                  "name": "Reduce Repetitive Configuration",
+                  "id": "reduce-repetitive-configuration",
+                  "tags": [],
+                  "file": "shared/recipes/reduce-repetitive-configuration"
                 },
                 {
                   "name": "Run Root-Level NPM Scripts with Nx",

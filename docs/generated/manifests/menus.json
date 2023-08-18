@@ -2118,6 +2118,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Reduce Repetitive Configuration",
+                "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+                "id": "reduce-repetitive-configuration",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Root-Level NPM Scripts with Nx",
                 "path": "/recipes/tips-n-tricks/root-level-scripts",
                 "id": "root-level-scripts",
@@ -3174,6 +3182,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Reduce Repetitive Configuration",
+            "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+            "id": "reduce-repetitive-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Root-Level NPM Scripts with Nx",
             "path": "/recipes/tips-n-tricks/root-level-scripts",
             "id": "root-level-scripts",
@@ -3308,6 +3324,14 @@
         "name": "Identify Dependencies Between Folders",
         "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
         "id": "identify-dependencies-between-folders",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce Repetitive Configuration",
+        "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+        "id": "reduce-repetitive-configuration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

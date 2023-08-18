@@ -632,15 +632,6 @@
       "path": "/recipes/tips-n-tricks/standalone-to-integrated"
     }
   ],
-  "": [
-    {
-      "description": "",
-      "file": "shared/concepts/types-of-configuration",
-      "id": "types-of-configuration",
-      "name": "Types of Configuration",
-      "path": "/concepts/types-of-configuration"
-    }
-  ],
   "create-your-own-plugin": [
     {
       "description": "",
