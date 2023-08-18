@@ -22,7 +22,7 @@ export function getNxWorkspaceFilesFromContext(
   globs: string[],
   parseConfigurations: (files: string[]) => ConfigurationParserResult
 ) {
-  checkIfContextIsAvailable(workspaceRoot);
+  ensureContextAvailable(workspaceRoot);
   return workspaceContext.getWorkspaceFiles(globs, parseConfigurations);
 }
 
@@ -30,7 +30,7 @@ export function getProjectConfigurationFilesFromContext(
   workspaceRoot: string,
   globs: string[]
 ) {
-  checkIfContextIsAvailable(workspaceRoot);
+  ensureContextAvailable(workspaceRoot);
   return workspaceContext.getProjectConfigurationFiles(globs);
 }
 
@@ -39,15 +39,12 @@ export function getProjectConfigurationsFromContext(
   globs: string[],
   parseConfigurations: (files: string[]) => ConfigurationParserResult
 ) {
-  checkIfContextIsAvailable(workspaceRoot);
+  ensureContextAvailable(workspaceRoot);
   return workspaceContext.getProjectConfigurations(globs, parseConfigurations);
 }
 
-function checkIfContextIsAvailable(workspaceRoot: string) {
+function ensureContextAvailable(workspaceRoot: string) {
   if (!workspaceContext) {
-    // throw new Error(
-    //   'Workspace context is not available. Please call setupWorkspaceContext() first.'
-    // );
     setupWorkspaceContext(workspaceRoot);
   }
 }
