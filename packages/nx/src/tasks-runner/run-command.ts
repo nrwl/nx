@@ -117,7 +117,7 @@ function createTaskGraphAndValidateCycles(
 
   const cycle = findCycle(taskGraph);
   if (cycle) {
-    if (nxArgs.nxIgnoreCycles) {
+    if (process.env.NX_IGNORE_CYCLES === 'true' || nxArgs.nxIgnoreCycles) {
       output.warn({
         title: `The task graph has a circular dependency`,
         bodyLines: [`${cycle.join(' --> ')}`],
