@@ -1,4 +1,4 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
 export interface Schema {
   project: string;
