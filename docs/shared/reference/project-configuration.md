@@ -47,12 +47,12 @@ The following configuration creates `build` and `test` targets for Nx.
 
 You can invoke `nx build mylib` or `nx test mylib` without any extra configuration.
 
-Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to [task orchestration](#Orchestration), [task execution](#Execution) and [task caching](#Caching).
+Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
 
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc {% fileName="package.json" lineGroups={ Orchestration:[17,22],Execution:[4,5,6],Caching:[9,10,11,12,15,16,20,21] } %}
+```jsonc {% fileName="package.json" lineGroups={ Orchestration:[14,17,19,22,25],Execution:[4,5,6],Caching:[9,10,11,12,15,16,20,21] } %}
 {
   "name": "mylib",
   "scripts": {
@@ -85,7 +85,7 @@ Below are some more complete examples of project configuration files. For a more
 {% /tab %}
 {% tab label="project.json" %}
 
-```json {% fileName="project.json" lineGroups={ "Caching": [7,8,9,10,13,14,20,21], "Orchestration": [5,6,15,22], "Execution": [16,17,22,23] } %}
+```json {% fileName="project.json" lineGroups={ "Orchestration": [5,6,12,15,19,22], "Execution": [12,16,17,19,22,23], "Caching": [7,8,9,10,13,14,20,21] } %}
 {
   "root": "libs/mylib/",
   "sourceRoot": "libs/mylib/src",

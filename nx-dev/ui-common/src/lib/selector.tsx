@@ -4,6 +4,7 @@ import { Fragment } from 'react';
 
 export interface SelectorProps<T> {
   children: JSX.Element;
+  className?: string;
   items: { label: string; value: string; data?: T }[];
   selected: { label: string; value: string };
   onChange: (item: { label: string; value: string; data?: T }) => void;
@@ -19,7 +20,12 @@ export function Selector<T = {}>(props: SelectorProps<T>): JSX.Element {
         {({ open }) => (
           <>
             <div className="relative">
-              <Listbox.Button className="relative w-full cursor-pointer border border-slate-200 dark:border-slate-700 py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm">
+              <Listbox.Button
+                className={
+                  'relative w-full cursor-pointer border border-slate-200 dark:border-slate-700 py-2 pl-3 pr-10 text-left font-medium focus:outline-none focus-visible:border-blue-500 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75 focus-visible:ring-offset-2 focus-visible:ring-offset-blue-300 sm:text-sm' +
+                  (props.className ? ` ${props.className}` : '')
+                }
+              >
                 <span className="block truncate">
                   <span className="inline-block align-bottom">
                     {props.children}

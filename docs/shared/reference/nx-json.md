@@ -2,9 +2,9 @@
 
 The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on Github.
 
-The following is an expanded example showing all options. Your `nx.json` will likely be much shorter. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to [task orchestration](#Orchestration), [task execution](#Execution) and [task caching](#Caching).
+The following is an expanded example showing all options. Your `nx.json` will likely be much shorter. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
 
-```json {% fileName="nx.json" lineGroups={ Caching:[15,16,17,18,19,20,21,22,23,24,25,26,29], Orchestration:[3,4,5,30], Execution:[31,32,33,34] } %}
+```json {% fileName="nx.json" lineGroups={ Caching:[15,16,17,18,19,20,21,22,23,24,25,26,29], Orchestration:[3,4,5,28,30], Execution:[28,31,32,33,34] } %}
 {
   "extends": "nx/presets/npm.json",
   "affected": {

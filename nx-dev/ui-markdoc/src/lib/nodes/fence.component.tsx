@@ -114,6 +114,7 @@ export function Fence({
         zIndex: -1,
         borderLeftStyle: 'solid',
         borderLeftWidth: 10,
+        lineHeight: '21px',
       };
     }
     return {
@@ -155,16 +156,7 @@ export function Fence({
     <div className="my-8 w-full">
       <div className="code-block group relative w-full">
         <div>
-          <div className="absolute top-0 right-0 z-10 flex opacity-0 transition-opacity group-hover:opacity-100">
-            {highlightOptions && highlightOptions[0] && (
-              <Selector
-                items={highlightOptions}
-                selected={selectedOption}
-                onChange={highlightChange}
-              >
-                <SparklesIcon className="h-5 w-5 mr-1"></SparklesIcon>
-              </Selector>
-            )}
+          <div className="absolute top-0 right-0 z-10 flex">
             {enableCopy && enableCopy === true && (
               <CopyToClipboard
                 text={command && command !== '' ? command : children}
@@ -174,7 +166,12 @@ export function Fence({
               >
                 <button
                   type="button"
-                  className="not-prose flex rounded-tr-lg border border-slate-200 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/60"
+                  className={
+                    'opacity-0 transition-opacity group-hover:opacity-100 not-prose flex border border-slate-200 bg-slate-50/50 p-2 dark:border-slate-700 dark:bg-slate-800/60' +
+                    (highlightOptions && highlightOptions[0]
+                      ? ''
+                      : ' rounded-tr-lg')
+                  }
                 >
                   {copied ? (
                     <ClipboardDocumentCheckIcon className="h-5 w-5 text-blue-500 dark:text-sky-500" />
@@ -183,6 +180,16 @@ export function Fence({
                   )}
                 </button>
               </CopyToClipboard>
+            )}
+            {highlightOptions && highlightOptions[0] && (
+              <Selector
+                className="rounded-tr-lg"
+                items={highlightOptions}
+                selected={selectedOption}
+                onChange={highlightChange}
+              >
+                <SparklesIcon className="h-5 w-5 mr-1"></SparklesIcon>
+              </Selector>
             )}
           </div>
           <SyntaxHighlighter
