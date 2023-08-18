@@ -98,11 +98,11 @@ export function PluginDirectory({
                 <ClockIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></ClockIcon>
                 Release Date
                 {modifiers.orderBy === 'lastPublishDate' &&
-                modifiers.orderDirection === 'DESC' ? (
+                modifiers.orderDirection === 'ASC' ? (
                   <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'lastPublishDate' &&
-                modifiers.orderDirection === 'ASC' ? (
+                modifiers.orderDirection === 'DESC' ? (
                   <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
@@ -113,11 +113,11 @@ export function PluginDirectory({
                 <ArrowDownIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></ArrowDownIcon>
                 Downloads
                 {modifiers.orderBy === 'npmDownloads' &&
-                modifiers.orderDirection === 'DESC' ? (
+                modifiers.orderDirection === 'ASC' ? (
                   <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'npmDownloads' &&
-                modifiers.orderDirection === 'ASC' ? (
+                modifiers.orderDirection === 'DESC' ? (
                   <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
@@ -128,11 +128,11 @@ export function PluginDirectory({
                 <StarIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></StarIcon>
                 GH Stars
                 {modifiers.orderBy === 'githubStars' &&
-                modifiers.orderDirection === 'DESC' ? (
+                modifiers.orderDirection === 'ASC' ? (
                   <ArrowLongUpIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongUpIcon>
                 ) : null}
                 {modifiers.orderBy === 'githubStars' &&
-                modifiers.orderDirection === 'ASC' ? (
+                modifiers.orderDirection === 'DESC' ? (
                   <ArrowLongDownIcon className="h-4 w-4 inline-block ml-0.5 align-bottom"></ArrowLongDownIcon>
                 ) : null}
               </button>
