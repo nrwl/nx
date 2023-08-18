@@ -63,6 +63,7 @@
   - [Concepts](/concepts)
     - [Integrated Repos vs. Package-Based Repos vs. Standalone Apps](/concepts/integrated-vs-package-based)
     - [Mental Model](/concepts/mental-model)
+    - [Types of Configuration](/concepts/types-of-configuration)
     - [How Caching Works](/concepts/how-caching-works)
     - [Improve Worst Case CI Times](/concepts/dte)
     - [Task Pipeline Configuration](/concepts/task-pipeline-configuration)
