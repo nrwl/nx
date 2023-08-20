@@ -86,9 +86,19 @@ export async function applicationGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  return await applicationGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(
+  host: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   const tasks = [];
 
-  const options = normalizeOptions(host, schema);
+  const options = await normalizeOptions(host, schema);
   showPossibleWarnings(host, options);
 
   const initTask = await reactInitGenerator(host, {

@@ -7,7 +7,10 @@ import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/ret
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
-  const projectFiles = retrieveProjectConfigurationPaths(tree.root, nxJson);
+  const projectFiles = await retrieveProjectConfigurationPaths(
+    tree.root,
+    nxJson
+  );
   const projectJsons = projectFiles.filter((f) => f.endsWith('project.json'));
 
   for (let f of projectJsons) {

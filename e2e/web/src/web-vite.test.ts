@@ -6,10 +6,10 @@ import {
   isNotWindows,
   killPorts,
   newProject,
-  removeFile,
   runCLI,
   runCLIAsync,
   runE2ETests,
+  setMaxWorkers,
   uniq,
 } from '@nx/e2e/utils';
 
@@ -20,6 +20,7 @@ describe('Web Components Applications with bundler set as vite', () => {
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(`generate @nx/web:app ${appName} --bundler=vite --no-interactive`);
+    await setMaxWorkers();
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -50,6 +51,7 @@ describe('Web Components Applications with bundler set as vite', () => {
     runCLI(
       `generate @nx/react:lib ${libName} --bundler=vite --no-interactive --unitTestRunner=vitest`
     );
+    await setMaxWorkers();
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
     createFile(`dist/libs/${libName}/_should_remove.txt`);

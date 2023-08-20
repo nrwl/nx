@@ -8,53 +8,42 @@ import {
   ProjectConfiguration,
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
-import { readJsonFile } from '../../utils/fileutils';
 import { NX_PREFIX } from '../../utils/logger';
 import { NxPluginV2 } from '../../utils/nx-plugin';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import minimatch = require('minimatch');
-export function mergeProjectConfigurationIntoProjectsConfigurations(
-  // projectName -> ProjectConfiguration
-  existingProjects: Record<string, ProjectConfiguration>,
-  // projectRoot -> projectName
-  existingProjectRootMap: Map<string, string>,
+
+export function mergeProjectConfigurationIntoRootMap(
+  projectRootMap: Map<string, ProjectConfiguration>,
   project: ProjectConfiguration,
   // project.json is a special case, so we need to detect it.
   file: string
 ): void {
-  let matchingProjectName = existingProjectRootMap.get(project.root);
+  const matchingProject = projectRootMap.get(project.root);
 
-  if (!matchingProjectName) {
-    existingProjects[project.name] = project;
-    existingProjectRootMap.set(project.root, project.name);
+  if (!matchingProject) {
+    projectRootMap.set(project.root, project);
     return;
-    // There are some special cases for handling project.json - mainly
-    // that it should override any name the project already has.
   } else if (
     project.name &&
-    project.name !== matchingProjectName &&
+    project.name !== matchingProject.name &&
     basename(file) === 'project.json'
   ) {
-    // Copy config to new name
-    existingProjects[project.name] = existingProjects[matchingProjectName];
-    // Update name in project config
-    existingProjects[project.name].name = project.name;
-    // Update root map to point to new name
-    existingProjectRootMap[project.root] = project.name;
-    // Remove entry for old name
-    delete existingProjects[matchingProjectName];
-    // Update name that config should be merged to
-    matchingProjectName = project.name;
+    // `name` inside project.json overrides any names from
+    // inference plugins
+    matchingProject.name = project.name;
   }
 
-  const matchingProject = existingProjects[matchingProjectName];
-
-  // This handles top level properties that are overwritten. `srcRoot`, `projectType`, or fields that Nx doesn't know about.
+  // This handles top level properties that are overwritten.
+  // e.g. `srcRoot`, `projectType`, or other fields that shouldn't be extended
+  // Note: `name` is set specifically here to keep it from changing. The name is
+  // always determined by the first inference plugin to ID a project, unless it has
+  // a project.json in which case it was already updated above.
   const updatedProjectConfiguration = {
     ...matchingProject,
     ...project,
-    name: matchingProjectName,
+    name: matchingProject.name,
   };
 
   // The next blocks handle properties that should be themselves merged (e.g. targets, tags, and implicit dependencies)
@@ -83,11 +72,10 @@ export function mergeProjectConfigurationIntoProjectsConfigurations(
     };
   }
 
-  if (updatedProjectConfiguration.name !== matchingProject.name) {
-    delete existingProjects[matchingProject.name];
-  }
-  existingProjects[updatedProjectConfiguration.name] =
-    updatedProjectConfiguration;
+  projectRootMap.set(
+    updatedProjectConfiguration.root,
+    updatedProjectConfiguration
+  );
 }
 
 export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
@@ -99,8 +87,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
 } {
-  const projectRootMap: Map<string, string> = new Map();
-  const projects: Record<string, ProjectConfiguration> = {};
+  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
 
   // We push the nx core node builder onto the end, s.t. it overwrites any user specified behavior
@@ -119,13 +106,12 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       if (minimatch(file, pattern)) {
         const { projects: projectNodes, externalNodes: pluginExternalNodes } =
           configurationConstructor(file, {
-            projectsConfigurations: projects,
             nxJsonConfiguration: nxJson,
             workspaceRoot: root,
           });
         for (const node in projectNodes) {
-          mergeProjectConfigurationIntoProjectsConfigurations(
-            projects,
+          projectNodes[node].name ??= node;
+          mergeProjectConfigurationIntoRootMap(
             projectRootMap,
             projectNodes[node],
             file
@@ -136,7 +122,48 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     }
   }
 
-  return { projects, externalNodes };
+  return {
+    projects: readProjectConfigurationsFromRootMap(projectRootMap),
+    externalNodes,
+  };
+}
+
+export function readProjectConfigurationsFromRootMap(
+  projectRootMap: Map<string, ProjectConfiguration>
+) {
+  const projects: Record<string, ProjectConfiguration> = {};
+  // If there are projects that have the same name, that is an error.
+  // This object tracks name -> (all roots of projects with that name)
+  // to provide better error messaging.
+  const errors: Map<string, string[]> = new Map();
+
+  for (const [root, configuration] of projectRootMap.entries()) {
+    if (!configuration.name) {
+      throw new Error(`Project at ${root} has no name provided.`);
+    } else if (configuration.name in projects) {
+      let rootErrors = errors.get(configuration.name) ?? [
+        projects[configuration.name].root,
+      ];
+      rootErrors.push(root);
+      errors.set(configuration.name, rootErrors);
+    } else {
+      projects[configuration.name] = configuration;
+    }
+  }
+
+  if (errors.size > 0) {
+    throw new Error(
+      [
+        `The following projects are defined in multiple locations:`,
+        ...Array.from(errors.entries()).map(([project, roots]) =>
+          [`- ${project}: `, ...roots.map((r) => `  - ${r}`)].join('\n')
+        ),
+        '',
+        "To fix this, set a unique name for each project in a project.json inside the project's root. If the project does not currently have a project.json, you can create one that contains only a name.",
+      ].join('\n')
+    );
+  }
+  return projects;
 }
 
 export function mergeTargetConfigurations(

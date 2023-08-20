@@ -50,13 +50,17 @@ export function parseYarnLockfile(
   addDependencies(groupedDependencies, builder, keyMap);
 }
 
-function getPackageNames(keys: string): string[] {
-  const packageNames = new Set<string>();
+function getPackageNameKeyPairs(keys: string): Map<string, Set<string>> {
+  const result = new Map<string, Set<string>>();
   keys.split(', ').forEach((key) => {
     const packageName = key.slice(0, key.indexOf('@', 1));
-    packageNames.add(packageName);
+    if (result.has(packageName)) {
+      result.get(packageName).add(key);
+    } else {
+      result.set(packageName, new Set([key]));
+    }
   });
-  return Array.from(packageNames);
+  return result;
 }
 
 function addNodes(
@@ -79,16 +83,14 @@ function addNodes(
     if (snapshot.linkType === 'soft' || keys.includes('@patch:')) {
       return;
     }
-    const packageNames = getPackageNames(keys);
-    packageNames.forEach((packageName) => {
-      const version = findVersion(
-        packageName,
-        keys.split(', ')[0],
-        snapshot,
-        isBerry
-      );
+    const nameKeyPairs = getPackageNameKeyPairs(keys);
+    nameKeyPairs.forEach((keySet, packageName) => {
+      const keysArray = Array.from(keySet);
+      // use key relevant to the package name
+      const version = findVersion(packageName, keysArray[0], snapshot, isBerry);
 
-      keys.split(', ').forEach((key) => {
+      // use keys linked to the extracted package name
+      keysArray.forEach((key) => {
         // we don't need to keep duplicates, we can just track the keys
         const existingNode = nodes.get(packageName)?.get(version);
         if (existingNode) {
@@ -182,11 +184,12 @@ function findVersion(
   snapshot: YarnDependency,
   isBerry: boolean
 ): string {
-  const versionRange = key.slice(packageName.length + 1);
+  const versionRange = key.slice(key.indexOf('@', 1) + 1);
   // check for alias packages
   const isAlias = isBerry
     ? snapshot.resolution && !snapshot.resolution.startsWith(`${packageName}@`)
     : versionRange.startsWith('npm:');
+
   if (isAlias) {
     return versionRange;
   }
@@ -527,6 +530,10 @@ function findPatchedKeys(
     const snapshot = dependencies[keyExpr];
     const keys = keyExpr.split(', ');
     if (!keys[0].startsWith(`${node.data.packageName}@patch:`)) {
+      continue;
+    }
+    // local patches are currently not supported
+    if (keys[0].includes('.yarn/patches')) {
       continue;
     }
     if (snapshot.version === node.data.version) {

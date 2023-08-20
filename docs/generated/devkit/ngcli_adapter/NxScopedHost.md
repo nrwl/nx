@@ -14,9 +14,9 @@
 
 ### Properties
 
-- [\_delegate](../../devkit/documents/ngcli_adapter/NxScopedHost#_delegate)
-- [\_root](../../devkit/documents/ngcli_adapter/NxScopedHost#_root)
-- [root](../../devkit/documents/ngcli_adapter/NxScopedHost#root)
+- [\_delegate](../../devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host&lt;any&gt;
+- [\_root](../../devkit/documents/ngcli_adapter/NxScopedHost#_root): Path
+- [root](../../devkit/documents/ngcli_adapter/NxScopedHost#root): string
 
 ### Accessors
 

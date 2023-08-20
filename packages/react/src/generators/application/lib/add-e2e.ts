@@ -29,7 +29,9 @@ export async function addE2e(
       return await cypressProjectGenerator(tree, {
         ...options,
         name: options.e2eProjectName,
-        directory: options.directory,
+        directory: options.e2eProjectRoot,
+        // the name and root are already normalized, instruct the generator to use them as is
+        projectNameAndRootFormat: 'as-provided',
         project: options.projectName,
         bundler: options.bundler === 'rspack' ? 'webpack' : options.bundler,
         skipFormat: true,

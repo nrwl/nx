@@ -450,11 +450,13 @@ describe('create-nx-workspace parent folder', () => {
 describe('create-nx-workspace yarn berry', () => {
   const tmpDir = `${e2eCwd}/${uniq('yarn-berry')}`;
   let wsName: string;
+  let yarnVersion: string;
 
   beforeAll(() => {
     mkdirSync(tmpDir, { recursive: true });
-    runCommand('corepack prepare yarn@stable --activate', { cwd: tmpDir });
-    runCommand('yarn set version stable', { cwd: tmpDir });
+    runCommand('corepack prepare yarn@3.6.1 --activate', { cwd: tmpDir });
+    runCommand('yarn set version 3.6.1', { cwd: tmpDir });
+    yarnVersion = runCommand('yarn --version', { cwd: tmpDir }).trim();
     // previous command creates a package.json file which we don't want
     rmSync(`${tmpDir}/package.json`);
     process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
@@ -477,7 +479,7 @@ describe('create-nx-workspace yarn berry', () => {
     ).toMatchInlineSnapshot(`
       "nodeLinker: node-modules
 
-      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      yarnPath: .yarn/releases/yarn-${yarnVersion}.cjs
       "
     `);
   });
@@ -497,7 +499,7 @@ describe('create-nx-workspace yarn berry', () => {
     ).toMatchInlineSnapshot(`
       "nodeLinker: node-modules
 
-      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      yarnPath: .yarn/releases/yarn-${yarnVersion}.cjs
       "
     `);
   });

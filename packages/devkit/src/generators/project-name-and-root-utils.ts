@@ -8,12 +8,14 @@ import {
 } from '../utils/get-workspace-layout';
 import { names } from '../utils/names';
 
-const { joinPathFragments, readJson, readNxJson } = requireNx();
+const { joinPathFragments, normalizePath, readJson, readNxJson, updateNxJson } =
+  requireNx();
 
 export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
 export type ProjectGenerationOptions = {
   name: string;
   projectType: ProjectType;
+  callingGenerator: string;
   directory?: string;
   importPath?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
@@ -57,13 +59,21 @@ type ProjectNameAndRootFormats = {
 export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
-): Promise<ProjectNameAndRootOptions> {
+): Promise<
+  ProjectNameAndRootOptions & {
+    projectNameAndRootFormat: ProjectNameAndRootFormat;
+  }
+> {
   validateName(options.name, options.projectNameAndRootFormat);
   const formats = getProjectNameAndRootFormats(tree, options);
   const format =
-    options.projectNameAndRootFormat ?? (await determineFormat(formats));
+    options.projectNameAndRootFormat ??
+    (await determineFormat(tree, formats, options.callingGenerator));
 
-  return formats[format];
+  return {
+    ...formats[format],
+    projectNameAndRootFormat: format,
+  };
 }
 
 function validateName(
@@ -97,7 +107,9 @@ function validateName(
 }
 
 async function determineFormat(
-  formats: ProjectNameAndRootFormats
+  tree: Tree,
+  formats: ProjectNameAndRootFormats,
+  callingGenerator: string
 ): Promise<ProjectNameAndRootFormat> {
   if (!formats.derived) {
     return 'as-provided';
@@ -116,7 +128,7 @@ async function determineFormat(
     Root: ${formats['derived'].projectRoot}`;
   const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot} (This was derived from the folder structure. Please provide the exact name and directory in the future)`;
 
-  return await prompt<{ format: ProjectNameAndRootFormat }>({
+  const result = await prompt<{ format: ProjectNameAndRootFormat }>({
     type: 'select',
     name: 'format',
     message:
@@ -135,6 +147,22 @@ async function determineFormat(
   }).then(({ format }) =>
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
+  if (result === 'as-provided' && callingGenerator) {
+    const { saveDefault } = await prompt<{ saveDefault: boolean }>({
+      type: 'confirm',
+      message: 'Would you like to save this layout as a default?',
+      name: 'saveDefault',
+    });
+    if (saveDefault) {
+      const nxJson = readNxJson(tree);
+      nxJson.generators ??= {};
+      nxJson.generators[callingGenerator] ??= {};
+      nxJson.generators[callingGenerator].projectNameAndRootFormat = result;
+      updateNxJson(tree, nxJson);
+    }
+  }
+
+  return result;
 }
 
 function getProjectNameAndRootFormats(
@@ -142,7 +170,9 @@ function getProjectNameAndRootFormats(
   options: ProjectGenerationOptions
 ): ProjectNameAndRootFormats {
   const name = names(options.name).fileName;
-  const directory = options.directory?.replace(/^\.?\//, '');
+  const directory = options.directory
+    ? normalizePath(options.directory.replace(/^\.?\//, ''))
+    : undefined;
 
   const asProvidedProjectName = name;
   const asProvidedProjectDirectory = directory

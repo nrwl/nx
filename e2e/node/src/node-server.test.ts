@@ -11,6 +11,7 @@ import {
   uniq,
   updateProjectConfig,
   updateFile,
+  setMaxWorkers,
 } from '@nx/e2e/utils';
 
 describe('Node Applications + webpack', () => {
@@ -79,6 +80,7 @@ describe('Node Applications + webpack', () => {
     runCLI(
       `generate @nx/node:app ${nestApp} --framework=nest --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     // Use esbuild by default
     checkFilesDoNotExist(`apps/${expressApp}/webpack.config.js`);
@@ -138,6 +140,7 @@ describe('Node Applications + webpack', () => {
     runCLI(
       `generate @nx/node:app  ${expressApp} --framework=express --docker --no-interactive`
     );
+    await setMaxWorkers();
 
     checkFilesExist(`apps/${expressApp}/Dockerfile`);
   }, 300_000);
@@ -151,6 +154,7 @@ describe('Node Applications + webpack', () => {
     runCLI(
       `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive`
     );
+    await setMaxWorkers();
     await updateProjectConfig(nodeApp1, (config) => {
       config.targets.serve.options.waitUntilTargets = [`${nodeApp2}:build`];
       return config;

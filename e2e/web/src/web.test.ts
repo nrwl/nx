@@ -12,6 +12,7 @@ import {
   runCLI,
   runCLIAsync,
   runE2ETests,
+  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -29,6 +30,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -103,6 +105,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --e2eTestRunner=playwright --no-interactive`
     );
+    await setMaxWorkers();
 
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
@@ -128,6 +131,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
     );
+    await setMaxWorkers();
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
     createFile(`dist/libs/${libName}/_should_remove.txt`);
@@ -164,6 +168,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
     );
+    await setMaxWorkers();
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
       const newContent = `${content}
@@ -219,6 +224,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
     );
+    await setMaxWorkers();
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
       const newContent = `${content}
@@ -261,6 +267,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     await updateProjectConfig(appName, (config) => {
       config.targets.build.options.webpackConfig = `apps/${appName}/webpack.config.js`;
@@ -313,7 +320,7 @@ describe('Web Components Applications', () => {
 });
 
 describe('CLI - Environment Variables', () => {
-  it('should automatically load workspace and per-project environment variables', () => {
+  it('should automatically load workspace and per-project environment variables', async () => {
     newProject();
 
     const appName = uniq('app');
@@ -360,6 +367,7 @@ describe('CLI - Environment Variables', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
     );
+    await setMaxWorkers();
 
     const content = readFile(main);
 
@@ -385,13 +393,14 @@ describe('CLI - Environment Variables', () => {
     runCLI(
       `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
     );
+    await setMaxWorkers();
 
     const content2 = readFile(main2);
 
     updateFile(main2, `${newCode2}\n${content2}`);
 
     runCLI(
-      `run-many --target build --all --outputHashing=none --optimization=false`,
+      `run-many --target build --outputHashing=none --optimization=false`,
       {
         env: {
           ...process.env,
@@ -419,6 +428,7 @@ describe('Build Options', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     const srcPath = `apps/${appName}/src`;
     const fooCss = `${srcPath}/foo.css`;
@@ -498,6 +508,7 @@ describe('index.html interpolation', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;

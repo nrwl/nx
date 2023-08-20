@@ -4,10 +4,10 @@
 
 ### Properties
 
-- [eager](../../devkit/documents/SharedLibraryConfig#eager)
-- [requiredVersion](../../devkit/documents/SharedLibraryConfig#requiredversion)
-- [singleton](../../devkit/documents/SharedLibraryConfig#singleton)
-- [strictVersion](../../devkit/documents/SharedLibraryConfig#strictversion)
+- [eager](../../devkit/documents/SharedLibraryConfig#eager): boolean
+- [requiredVersion](../../devkit/documents/SharedLibraryConfig#requiredversion): string | false
+- [singleton](../../devkit/documents/SharedLibraryConfig#singleton): boolean
+- [strictVersion](../../devkit/documents/SharedLibraryConfig#strictversion): boolean
 
 ## Properties
 

@@ -350,4 +350,53 @@ describe('Angular Projects', () => {
     );
     expect(buildOutput).toContain('Successfully ran target build');
   });
+
+  it('should support generating projects with the new name and root format', () => {
+    const appName = uniq('app1');
+    const libName = uniq('@my-org/lib1');
+
+    runCLI(
+      `generate @nx/angular:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${appName}/src/app/app.module.ts`);
+    // check build works
+    expect(runCLI(`build ${appName}`)).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+    // check tests pass
+    const appTestResult = runCLI(`test ${appName}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${appName}`
+    );
+
+    // assert scoped project names are not supported when --project-name-and-root-format=derived
+    expect(() =>
+      runCLI(
+        `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=derived`
+      )
+    ).toThrow();
+
+    runCLI(
+      `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(
+      `${libName}/src/index.ts`,
+      `${libName}/src/lib/${libName.split('/')[1]}.module.ts`
+    );
+    // check build works
+    expect(runCLI(`build ${libName}`)).toContain(
+      `Successfully ran target build for project ${libName}`
+    );
+    // check tests pass
+    const libTestResult = runCLI(`test ${libName}`);
+    expect(libTestResult).toContain(
+      `Successfully ran target test for project ${libName}`
+    );
+  }, 500_000);
 });

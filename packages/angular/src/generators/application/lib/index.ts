@@ -7,7 +7,5 @@ export * from './create-project';
 export * from './enable-strict-type-checking';
 export * from './normalize-options';
 export * from './normalized-schema';
-export * from './remove-scaffolded-e2e';
 export * from './set-app-strict-default';
-export * from './update-e2e-project';
 export * from './update-editor-tsconfig';

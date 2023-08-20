@@ -38,17 +38,15 @@ export function getPackageManagerCommand(
   exec: string;
   preInstall?: string;
 } {
-  const [pmMajor, pmMinor] =
-    getPackageManagerVersion(packageManager).split('.');
+  const pmVersion = getPackageManagerVersion(packageManager);
+  const [pmMajor, pmMinor] = pmVersion.split('.');
 
   switch (packageManager) {
     case 'yarn':
       const useBerry = +pmMajor >= 2;
       const installCommand = 'yarn install --silent';
       return {
-        preInstall: useBerry
-          ? 'yarn set version stable'
-          : 'yarn set version classic',
+        preInstall: `yarn set version ${pmVersion}`,
         install: useBerry
           ? installCommand
           : `${installCommand} --ignore-scripts`,

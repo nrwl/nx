@@ -4,12 +4,12 @@
 
 ### Properties
 
-- [additionalShared](../../devkit/documents/ModuleFederationConfig#additionalshared)
-- [exposes](../../devkit/documents/ModuleFederationConfig#exposes)
-- [library](../../devkit/documents/ModuleFederationConfig#library)
-- [name](../../devkit/documents/ModuleFederationConfig#name)
-- [remotes](../../devkit/documents/ModuleFederationConfig#remotes)
-- [shared](../../devkit/documents/ModuleFederationConfig#shared)
+- [additionalShared](../../devkit/documents/ModuleFederationConfig#additionalshared): AdditionalSharedConfig
+- [exposes](../../devkit/documents/ModuleFederationConfig#exposes): Record&lt;string, string&gt;
+- [library](../../devkit/documents/ModuleFederationConfig#library): ModuleFederationLibrary
+- [name](../../devkit/documents/ModuleFederationConfig#name): string
+- [remotes](../../devkit/documents/ModuleFederationConfig#remotes): Remotes
+- [shared](../../devkit/documents/ModuleFederationConfig#shared): SharedFunction
 
 ## Properties
 

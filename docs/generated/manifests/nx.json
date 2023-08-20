@@ -1228,6 +1228,16 @@
         "tags": ["intro"]
       },
       {
+        "id": "types-of-configuration",
+        "name": "Types of Configuration",
+        "description": "",
+        "file": "shared/concepts/types-of-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/types-of-configuration",
+        "tags": []
+      },
+      {
         "id": "how-caching-works",
         "name": "How Caching Works",
         "description": "",
@@ -1527,6 +1537,16 @@
     "isExternal": false,
     "path": "/concepts/mental-model",
     "tags": ["intro"]
+  },
+  "/concepts/types-of-configuration": {
+    "id": "types-of-configuration",
+    "name": "Types of Configuration",
+    "description": "",
+    "file": "shared/concepts/types-of-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/types-of-configuration",
+    "tags": []
   },
   "/concepts/how-caching-works": {
     "id": "how-caching-works",
@@ -2617,6 +2637,16 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
+            "tags": []
+          },
+          {
+            "id": "reduce-repetitive-configuration",
+            "name": "Reduce Repetitive Configuration",
+            "description": "",
+            "file": "shared/recipes/reduce-repetitive-configuration",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
             "tags": []
           },
           {
@@ -3938,6 +3968,16 @@
         "tags": []
       },
       {
+        "id": "reduce-repetitive-configuration",
+        "name": "Reduce Repetitive Configuration",
+        "description": "",
+        "file": "shared/recipes/reduce-repetitive-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+        "tags": []
+      },
+      {
         "id": "root-level-scripts",
         "name": "Run Root-Level NPM Scripts with Nx",
         "description": "",
@@ -4110,6 +4150,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/reduce-repetitive-configuration": {
+    "id": "reduce-repetitive-configuration",
+    "name": "Reduce Repetitive Configuration",
+    "description": "",
+    "file": "shared/recipes/reduce-repetitive-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
     "tags": []
   },
   "/recipes/tips-n-tricks/root-level-scripts": {

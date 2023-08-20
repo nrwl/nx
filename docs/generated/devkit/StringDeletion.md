@@ -4,9 +4,9 @@
 
 ### Properties
 
-- [length](../../devkit/documents/StringDeletion#length)
-- [start](../../devkit/documents/StringDeletion#start)
-- [type](../../devkit/documents/StringDeletion#type)
+- [length](../../devkit/documents/StringDeletion#length): number
+- [start](../../devkit/documents/StringDeletion#start): number
+- [type](../../devkit/documents/StringDeletion#type): Delete
 
 ## Properties
 

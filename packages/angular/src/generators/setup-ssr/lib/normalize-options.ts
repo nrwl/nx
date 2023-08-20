@@ -15,5 +15,6 @@ export function normalizeOptions(tree: Tree, options: Schema) {
     rootModuleClassName: options.rootModuleClassName ?? 'AppServerModule',
     skipFormat: options.skipFormat ?? false,
     standalone: options.standalone ?? isStandaloneApp,
+    hydration: options.hydration ?? false,
   };
 }

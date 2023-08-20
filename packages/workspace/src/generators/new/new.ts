@@ -1,6 +1,8 @@
 import {
   addDependenciesToPackageJson,
+  getPackageManagerCommand,
   installPackagesTask,
+  joinPathFragments,
   names,
   PackageManager,
   Tree,
@@ -11,6 +13,7 @@ import { Preset } from '../utils/presets';
 import { Linter } from '../../utils/lint';
 import { generateWorkspaceFiles } from './generate-workspace-files';
 import { addPresetDependencies, generatePreset } from './generate-preset';
+import { execSync } from 'child_process';
 
 interface Schema {
   directory: string;
@@ -48,6 +51,13 @@ export async function newGenerator(host: Tree, opts: Schema) {
   addCloudDependencies(host, options);
 
   return async () => {
+    const pmc = getPackageManagerCommand(options.packageManager);
+    if (pmc.preInstall) {
+      execSync(pmc.preInstall, {
+        cwd: joinPathFragments(host.root, options.directory),
+        stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+      });
+    }
     installPackagesTask(host, false, options.directory, options.packageManager);
     // TODO: move all of these into create-nx-workspace
     if (

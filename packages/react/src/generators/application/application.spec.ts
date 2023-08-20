@@ -284,7 +284,8 @@ describe('app', () => {
         appTree.exists('apps/my-dir/my-app-e2e/src/example.spec.ts')
       ).toBeTruthy();
       expect(
-        readProjectConfiguration(appTree, 'my-app-e2e')?.targets?.e2e?.executor
+        readProjectConfiguration(appTree, 'my-dir-my-app-e2e')?.targets?.e2e
+          ?.executor
       ).toEqual('@nx/playwright:playwright');
     });
   });

@@ -989,6 +989,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Types of Configuration",
+            "path": "/concepts/types-of-configuration",
+            "id": "types-of-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "How Caching Works",
             "path": "/concepts/how-caching-works",
             "id": "how-caching-works",
@@ -1220,6 +1228,14 @@
         "name": "Mental Model",
         "path": "/concepts/mental-model",
         "id": "mental-model",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Types of Configuration",
+        "path": "/concepts/types-of-configuration",
+        "id": "types-of-configuration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -2097,6 +2113,14 @@
                 "name": "Identify Dependencies Between Folders",
                 "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
                 "id": "identify-dependencies-between-folders",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Reduce Repetitive Configuration",
+                "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+                "id": "reduce-repetitive-configuration",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3158,6 +3182,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Reduce Repetitive Configuration",
+            "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+            "id": "reduce-repetitive-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Root-Level NPM Scripts with Nx",
             "path": "/recipes/tips-n-tricks/root-level-scripts",
             "id": "root-level-scripts",
@@ -3292,6 +3324,14 @@
         "name": "Identify Dependencies Between Folders",
         "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
         "id": "identify-dependencies-between-folders",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce Repetitive Configuration",
+        "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+        "id": "reduce-repetitive-configuration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

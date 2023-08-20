@@ -237,6 +237,78 @@ describe('setupSSR', () => {
     `);
   });
 
+  it('should add hydration correctly for NgModule apps', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await generateTestApplication(tree, {
+      name: 'app1',
+    });
+
+    // ACT
+    await setupSsr(tree, { project: 'app1', hydration: true });
+
+    // ASSERT
+    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import {
+        BrowserModule,
+        provideClientHydration,
+      } from '@angular/platform-browser';
+      import { AppComponent } from './app.component';
+      import { NxWelcomeComponent } from './nx-welcome.component';
+
+      @NgModule({
+        declarations: [AppComponent, NxWelcomeComponent],
+        imports: [BrowserModule],
+        providers: [provideClientHydration()],
+        bootstrap: [AppComponent],
+      })
+      export class AppModule {}
+      "
+    `);
+  });
+
+  it('should add hydration correctly to standalone', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await generateTestApplication(tree, {
+      name: 'app1',
+      standalone: true,
+    });
+
+    // ACT
+    await setupSsr(tree, { project: 'app1', hydration: true });
+
+    // ASSERT
+    expect(tree.read('apps/app1/src/app/app.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { ApplicationConfig } from '@angular/core';
+      import { provideClientHydration } from '@angular/platform-browser';
+
+      export const appConfig: ApplicationConfig = {
+        providers: [provideClientHydration()],
+      };
+      "
+    `);
+
+    expect(tree.read('apps/app1/src/app/app.config.server.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+      import { provideServerRendering } from '@angular/platform-server';
+      import { appConfig } from './app.config';
+
+      const serverConfig: ApplicationConfig = {
+        providers: [provideServerRendering()],
+      };
+
+      export const config = mergeApplicationConfig(appConfig, serverConfig);
+      "
+    `);
+  });
+
   describe('compat', () => {
     it('should install the correct versions when using older versions of Angular', async () => {
       // ARRANGE
@@ -319,20 +391,20 @@ describe('setupSSR', () => {
       // ASSERT
       expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-      "import { NgModule } from '@angular/core';
-      import { BrowserModule } from '@angular/platform-browser';
-      import { AppComponent } from './app.component';
-      import { NxWelcomeComponent } from './nx-welcome.component';
+              "import { NgModule } from '@angular/core';
+              import { BrowserModule } from '@angular/platform-browser';
+              import { AppComponent } from './app.component';
+              import { NxWelcomeComponent } from './nx-welcome.component';
 
-      @NgModule({
-        declarations: [AppComponent, NxWelcomeComponent],
-        imports: [BrowserModule.withServerTransition({ appId: 'serverApp' })],
-        providers: [],
-        bootstrap: [AppComponent],
-      })
-      export class AppModule {}
-      "
-    `);
+              @NgModule({
+                declarations: [AppComponent, NxWelcomeComponent],
+                imports: [BrowserModule.withServerTransition({ appId: 'serverApp' })],
+                providers: [],
+                bootstrap: [AppComponent],
+              })
+              export class AppModule {}
+              "
+          `);
     });
 
     it('should wrap bootstrap call for Angular versions lower than 15.2', async () => {
@@ -352,22 +424,22 @@ describe('setupSSR', () => {
       // ASSERT
       expect(tree.read('apps/app1/src/main.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-      import { AppModule } from './app/app.module';
+              "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+              import { AppModule } from './app/app.module';
 
-      function bootstrap() {
-        platformBrowserDynamic()
-          .bootstrapModule(AppModule)
-          .catch((err) => console.error(err));
-      }
+              function bootstrap() {
+                platformBrowserDynamic()
+                  .bootstrapModule(AppModule)
+                  .catch((err) => console.error(err));
+              }
 
-      if (document.readyState !== 'loading') {
-        bootstrap();
-      } else {
-        document.addEventListener('DOMContentLoaded', bootstrap);
-      }
-      "
-    `);
+              if (document.readyState !== 'loading') {
+                bootstrap();
+              } else {
+                document.addEventListener('DOMContentLoaded', bootstrap);
+              }
+              "
+          `);
     });
   });
 });
