@@ -114,7 +114,7 @@ export function nxE2EPreset(
   }
 
   return defineConfig({
-    testDir: options.testDir ?? './src',
+    testDir: options?.testDir ?? './src',
     outputDir: testResultOuputDir,
     /* Run tests in files in parallel */
     fullyParallel: true,
