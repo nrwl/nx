@@ -957,7 +957,7 @@
       "description": "",
       "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
       "id": "flat-config",
-      "name": "Switching to the ESLint's flat config format",
+      "name": "Switching to ESLint's flat config format",
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
@@ -966,7 +966,7 @@
       "description": "",
       "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
       "id": "flat-config",
-      "name": "Switching to the ESLint's flat config format",
+      "name": "Switching to ESLint's flat config format",
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],

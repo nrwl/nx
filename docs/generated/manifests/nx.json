@@ -2731,7 +2731,7 @@
           },
           {
             "id": "flat-config",
-            "name": "Switching to the ESLint's flat config format",
+            "name": "Switching to ESLint's flat config format",
             "description": "",
             "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
             "itemList": [],
@@ -4069,7 +4069,7 @@
       },
       {
         "id": "flat-config",
-        "name": "Switching to the ESLint's flat config format",
+        "name": "Switching to ESLint's flat config format",
         "description": "",
         "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
         "itemList": [],
@@ -4264,7 +4264,7 @@
   },
   "/recipes/tips-n-tricks/flat-config": {
     "id": "flat-config",
-    "name": "Switching to the ESLint's flat config format",
+    "name": "Switching to ESLint's flat config format",
     "description": "",
     "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
     "itemList": [],

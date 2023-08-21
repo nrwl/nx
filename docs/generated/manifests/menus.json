@@ -2190,7 +2190,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Switching to the ESLint's flat config format",
+                "name": "Switching to ESLint's flat config format",
                 "path": "/recipes/tips-n-tricks/flat-config",
                 "id": "flat-config",
                 "isExternal": false,
@@ -3262,7 +3262,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Switching to the ESLint's flat config format",
+            "name": "Switching to ESLint's flat config format",
             "path": "/recipes/tips-n-tricks/flat-config",
             "id": "flat-config",
             "isExternal": false,
@@ -3417,7 +3417,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Switching to the ESLint's flat config format",
+        "name": "Switching to ESLint's flat config format",
         "path": "/recipes/tips-n-tricks/flat-config",
         "id": "flat-config",
         "isExternal": false,
