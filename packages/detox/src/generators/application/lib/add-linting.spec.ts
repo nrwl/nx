@@ -12,7 +12,6 @@ describe('Add Linting', () => {
     addProject(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
-      e2eProjectDirectory: 'apps',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
@@ -29,7 +28,6 @@ describe('Add Linting', () => {
     addLinting(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
-      e2eProjectDirectory: 'apps',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
@@ -50,7 +48,6 @@ describe('Add Linting', () => {
     addLinting(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
-      e2eProjectDirectory: 'apps',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
