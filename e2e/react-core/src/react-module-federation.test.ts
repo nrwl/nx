@@ -44,10 +44,10 @@ describe('React Module Federation', () => {
       combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
     });
 
-    expect(readPort(shell)).toEqual(4200);
-    expect(readPort(remote1)).toEqual(4201);
-    expect(readPort(remote2)).toEqual(4202);
-    expect(readPort(remote3)).toEqual(4203);
+    expect(await readPort(shell)).toEqual(4200);
+    expect(await readPort(remote1)).toEqual(4201);
+    expect(await readPort(remote2)).toEqual(4202);
+    expect(await readPort(remote3)).toEqual(4203);
 
     updateFile(
       `apps/${shell}/webpack.config.js`,
@@ -63,10 +63,10 @@ describe('React Module Federation', () => {
           ...baseConfig,
               remotes: [
                 '${remote1}',
-                ['${remote2}', 'http://localhost:${readPort(
+                ['${remote2}', 'http://localhost:${await readPort(
         remote2
       )}/remoteEntry.js'],
-                ['${remote3}', 'http://localhost:${readPort(remote3)}'],
+                ['${remote3}', 'http://localhost:${await readPort(remote3)}'],
               ],
         };
 
@@ -110,10 +110,10 @@ describe('React Module Federation', () => {
     //   expect(e2eResults).toContain('All specs passed!');
     //   expect(
     //     await killPorts([
-    //       readPort(shell),
-    //       readPort(remote1),
-    //       readPort(remote2),
-    //       readPort(remote3),
+    //       await readPort(shell),
+    //       await readPort(remote1),
+    //       await readPort(remote2),
+    //       await readPort(remote3),
     //     ])
     //   ).toBeTruthy();
     // }
