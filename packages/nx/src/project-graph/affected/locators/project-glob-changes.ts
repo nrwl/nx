@@ -23,7 +23,9 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
 
     const touchedProjects = new Set<string>();
     for (const touchedFile of touchedFiles) {
-      const isProjectFile = minimatch(touchedFile.file, globPattern);
+      const isProjectFile = minimatch(touchedFile.file, globPattern, {
+        dot: true,
+      });
       if (isProjectFile) {
         // If the file no longer exists on disk, then it was deleted
         if (!existsSync(join(workspaceRoot, touchedFile.file))) {

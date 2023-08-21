@@ -408,7 +408,7 @@ class TaskHasherImpl {
       const filteredFiles = outputFiles.filter(
         (p) =>
           p === dependentTasksOutputFiles ||
-          minimatch(p, dependentTasksOutputFiles)
+          minimatch(p, dependentTasksOutputFiles, { dot: true })
       );
       const hashDetails = {};
       const hashes: string[] = [];

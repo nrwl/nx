@@ -103,7 +103,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       continue;
     }
     for (const file of projectFiles) {
-      if (minimatch(file, pattern)) {
+      if (minimatch(file, pattern, { dot: true })) {
         const { projects: projectNodes, externalNodes: pluginExternalNodes } =
           configurationConstructor(file, {
             nxJsonConfiguration: nxJson,
