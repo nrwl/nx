@@ -1,8 +1,7 @@
 use crate::native::logger::enable_logger;
-use parking_lot::Mutex;
 use rayon::prelude::*;
 use std::path::PathBuf;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread;
 use tracing::trace;
 use xxhash_rust::xxh3;
@@ -31,7 +30,7 @@ impl WorkspaceContext {
         let workspace_root_moved = workspace_root.clone();
         // start walking the workspace in the background
         thread::spawn(move || {
-            let mut workspace_files = workspace_files_moved.lock();
+            let mut workspace_files = workspace_files_moved.lock().unwrap();
             let files = nx_walker(workspace_root_moved, |rec| {
                 let mut file_hashes: Vec<(PathBuf, String)> = vec![];
                 for (path, content) in rec {
@@ -61,7 +60,7 @@ impl WorkspaceContext {
     where
         ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
     {
-        let file_data = self.workspace_files.lock();
+        let file_data = self.workspace_files.lock().unwrap();
         workspace_files::get_files(globs, parse_configurations, &file_data)
     }
 
@@ -70,7 +69,7 @@ impl WorkspaceContext {
         &self,
         globs: Vec<String>,
     ) -> napi::Result<Vec<String>, WorkspaceErrors> {
-        let file_data = self.workspace_files.lock();
+        let file_data = self.workspace_files.lock().unwrap();
         config_files::get_project_configuration_files(globs, &file_data)
     }
 
@@ -83,7 +82,7 @@ impl WorkspaceContext {
     where
         ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
     {
-        let file_data = self.workspace_files.lock();
+        let file_data = self.workspace_files.lock().unwrap();
         config_files::get_project_configurations(globs, &file_data, parse_configurations)
     }
 }
