@@ -160,7 +160,8 @@ We send out emails with every new NxCloud release to all our Enterprise customer
 To upgrade to a newer version, add the below line to your `myconfiguration.yml` file:
 
 ```yaml
-global.imageTag: '2306.01.2' # set the version of nx-cloud you'd like
+global:
+   imageTag: '2306.01.2' # set the version of nx-cloud you'd like
 ```
 
 And apply the changes:
