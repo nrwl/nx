@@ -98,6 +98,10 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 # Docker Containers
 
+## 2306.01.2.patch4
+
+- Fixes an issue with new licenses expiring sooner than original end date
+
 ## 2306.01.2.patch3
 
 - Fixes an issue with multiple admin organizations being created on new installations
