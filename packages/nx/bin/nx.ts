@@ -108,7 +108,7 @@ function main() {
  * - .env.local
  */
 function loadDotEnvFiles() {
-  for (const file of ['.env', '.local.env', '.env.local']) {
+  for (const file of ['.local.env', '.env.local', '.env']) {
     loadDotEnvFile({
       path: file,
     });

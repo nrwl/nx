@@ -437,9 +437,9 @@ export class ForkedProcessTaskRunner {
       `.${task.target.target}.env`,
 
       // Load base DotEnv Files at workspace root
-      `.env`,
       `.local.env`,
       `.env.local`,
+      `.env`,
     ];
 
     for (const file of dotEnvFiles) {
