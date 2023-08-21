@@ -317,6 +317,27 @@ describe('Web Components Applications', () => {
     runCLI(`build ${appName} --outputHashing none`);
     checkFilesExist(`dist/apps/${appName}/main.js`);
   }, 100000);
+
+  it('should support generating applications with the new name and root format', () => {
+    const appName = uniq('app1');
+
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${appName}/src/main.ts`);
+    // check build works
+    expect(runCLI(`build ${appName}`)).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+    // check tests pass
+    const appTestResult = runCLI(`test ${appName}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${appName}`
+    );
+  }, 500_000);
 });
 
 describe('CLI - Environment Variables', () => {
