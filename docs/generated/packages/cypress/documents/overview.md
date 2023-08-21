@@ -11,7 +11,7 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 
 > Info about [Cypress Component Testing can be found here](/packages/cypress/documents/cypress-component-testing)
 >
-> Info about [using Cypress and Storybook can be found here](/packages/storybook/documents/overview-react#cypress-tests-for-storiesbook)
+> Info about [using Cypress and Storybook can be found here](/recipes/storybook/overview-react#cypress-tests-for-storiesbook)
 
 If the `@nx/cypress` package is not installed, install the version that matches your `nx` package version.
 

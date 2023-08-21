@@ -6,7 +6,7 @@ description: This guide explains how to set up Compodoc for Storybook on Angular
 # Set up Compodoc for Storybook on Nx
 
 {% callout type="note" title="Note" %}
-This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/packages/storybook/documents/overview-angular).
+This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/recipes/storybook/overview-angular).
 {% /callout %}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular" /%}
@@ -31,11 +31,11 @@ Let's take for example an Angular component - a button - that has an `@Input` fo
 
 This comment would result in the following documentation in Compodoc:
 
-![Button size `@Input` generated documentation](/shared/packages/storybook/button-size-input.png)
+![Button size `@Input` generated documentation](/shared/recipes/storybook/button-size-input.png)
 
 If we add a description and a default value to each of our component `@Input`s, we will end up with a full documentation page. See a full example of the button component [here](https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular/apps/web/src/app/butn/butn.component.ts). The generated documentation of this example will look like this:
 
-![Generated Docs page for the Button](/shared/packages/storybook/button-docs.png)
+![Generated Docs page for the Button](/shared/recipes/storybook/button-docs.png)
 
 When you run Compodoc, it will generate a `documentation.json` file. Storybook will then use that file to render the documentation in the `Docs` tab.
 
@@ -52,7 +52,7 @@ The main things that you need to do are:
 Let's see how you can do that.
 
 {% callout type="note" title="Note" %}
-This guide assumes that you have an Angular project with Storybook configured in your Nx workspace. If you do not know how to set these up, please read about [setting up Storybook for Angular](/packages/storybook/documents/overview-angular) on the Nx documentation website.
+This guide assumes that you have an Angular project with Storybook configured in your Nx workspace. If you do not know how to set these up, please read about [setting up Storybook for Angular](/recipes/storybook/overview-angular) on the Nx documentation website.
 {% /callout %}
 
 ### 1. Install the necessary packages

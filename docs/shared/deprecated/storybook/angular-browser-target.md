@@ -6,7 +6,7 @@ description: This document explains the role of the browserTarget in Angular pro
 # The `browserTarget` for Angular projects with a Storybook configuration
 
 {% callout type="note" title="Note" %}
-This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/packages/storybook/documents/overview-angular).
+This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/recipes/storybook/overview-angular).
 {% /callout %}
 
 ## Setting up `browserTarget`

@@ -144,9 +144,9 @@ Depending on your Cypress version, the file will end with `.spec.ts` or `.cy.ts`
 
 ## More Documentation
 
-- [Set up Compodoc for Storybook on Nx](/packages/storybook/documents/angular-storybook-compodoc)
+- [Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
 - [Information about the `storybook` targets](/deprecated/storybook/angular-storybook-targets)
-- [Configuring styles and preprocessor options](/packages/storybook/documents/angular-configuring-styles)
+- [Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
 - [The `browserTarget`](/deprecated/storybook/angular-browser-target)
 
 You can find all Storybook-related Nx topics [here](/packages#storybook).

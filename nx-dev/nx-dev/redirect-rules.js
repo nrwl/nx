@@ -573,19 +573,35 @@ const packagesDocuments = {
   '/cypress/v11-migration-guide':
     '/packages/cypress/documents/v11-migration-guide',
   '/storybook/overview-react': '/packages/storybook/documents/overview-react',
+  '/packages/storybook/documents/overview-react':
+    '/recipes/storybook/overview-react',
   '/storybook/overview-angular':
     '/packages/storybook/documents/overview-angular',
+  '/packages/storybook/documents/overview-angular':
+    '/recipes/storybook/overview-angular',
+  '/packages/storybook/documents/configuring-storybook':
+    '/recipes/storybook/configuring-storybook',
+  '/packages/storybook/documents/custom-builder-configs':
+    '/recipes/storybook/custom-builder-configs',
+  '/packages/storybook/documents/storybook-interaction-tests':
+    '/recipes/storybook/storybook-interaction-tests',
   '/storybook/best-practices': '/packages/storybook/documents/best-practices',
   '/storybook/storybook-composition-setup':
     '/packages/storybook/documents/storybook-composition-setup',
+  '/packages/storybook/documents/storybook-composition-setup':
+    '/recipes/storybook/storybook-composition-setup',
   '/storybook/angular-storybook-compodoc':
     '/packages/storybook/documents/angular-storybook-compodoc',
+  '/packages/storybook/documents/angular-storybook-compodoc':
+    '/recipes/storybook/angular-storybook-compodoc',
   '/storybook/angular-storybook-targets':
     '/deprecated/storybook/angular-storybook-targets',
   '/packages/storybook/documents/angular-storybook-targets':
     '/deprecated/storybook/angular-storybook-targets',
   '/storybook/angular-configuring-styles':
     '/packages/storybook/documents/angular-configuring-styles',
+  '/packages/storybook/documents/angular-configuring-styles':
+    '/recipes/storybook/angular-configuring-styles',
   '/storybook/angular-browser-target':
     '/deprecated/storybook/angular-browser-target',
   '/storybook/migrate-webpack-final-angular':
