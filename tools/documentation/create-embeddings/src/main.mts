@@ -2,7 +2,8 @@
 // https://github.com/supabase-community/nextjs-openai-doc-search/blob/main/lib/generate-embeddings.ts
 
 import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
+import { config as loadDotEnvFile } from 'dotenv';
+import { expand } from 'dotenv-expand';
 import { readFile } from 'fs/promises';
 import 'openai';
 import { Configuration, OpenAIApi } from 'openai';
@@ -24,7 +25,8 @@ import manifestsTags from '../../../../docs/generated/manifests/tags.json' asser
 
 let identityMap = {};
 
-dotenv.config();
+const myEnv = loadDotEnvFile();
+expand(myEnv);
 
 type ProcessedMdx = {
   checksum: string;

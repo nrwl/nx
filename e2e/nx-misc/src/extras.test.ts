@@ -273,4 +273,51 @@ describe('Extra Nx Misc Tests', () => {
       expect(output).not.toContain('Installed');
     });
   });
+
+  describe('Env File', () => {
+    it('should have the right env', () => {
+      const appName = uniq('app');
+      runCLI(
+        `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive`
+      );
+      updateFile(
+        '.env',
+        `FIRSTNAME="firstname"
+  LASTNAME="lastname"
+  NX_USERNAME=$FIRSTNAME $LASTNAME`
+      );
+      updateFile(
+        `apps/${appName}/src/app/app.tsx`,
+        `
+      import NxWelcome from './nx-welcome';
+  
+      export function App() {
+        return (
+          <>
+            <NxWelcome title={process.env.NX_USERNAME} />
+          </>
+        );
+      }
+  
+      export default App;
+    `
+      );
+      updateFile(
+        `apps/${appName}/src/app/app.spec.tsx`,
+        `import { render } from '@testing-library/react';
+  
+    import App from './app';
+    
+    describe('App', () => {
+      it('should have a greeting as the title', () => {
+        const { getByText } = render(<App />);
+        expect(getByText(/Welcome firstname lastname/gi)).toBeTruthy();
+      });
+    });
+  `
+      );
+      const unitTestsOutput = runCLI(`test ${appName}`);
+      expect(unitTestsOutput).toContain('Successfully ran target test');
+    });
+  });
 });
