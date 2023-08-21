@@ -62,7 +62,7 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#reactNativeApplicationGenerator",
+      "factory": "./src/generators/application/application#reactNativeApplicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",

@@ -11,14 +11,14 @@ describe('Normalize Options', () => {
     appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should normalize options with name in kebab case', () => {
+  it('should normalize options with name in kebab case', async () => {
     const schema: Schema = {
       name: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -29,6 +29,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
+      projectNameAndRootFormat: 'derived',
       linter: Linter.EsLint,
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
@@ -37,13 +38,13 @@ describe('Normalize Options', () => {
     });
   });
 
-  it('should normalize options with name in camel case', () => {
+  it('should normalize options with name in camel case', async () => {
     const schema: Schema = {
       name: 'myApp',
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -54,6 +55,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
+      projectNameAndRootFormat: 'derived',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
@@ -61,14 +63,14 @@ describe('Normalize Options', () => {
     });
   });
 
-  it('should normalize options with directory', () => {
+  it('should normalize options with directory', async () => {
     const schema: Schema = {
       name: 'my-app',
       directory: 'directory',
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/directory/my-app/android',
       appProjectRoot: 'apps/directory/my-app',
@@ -80,6 +82,7 @@ describe('Normalize Options', () => {
       directory: 'directory',
       parsedTags: [],
       projectName: 'directory-my-app',
+      projectNameAndRootFormat: 'derived',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
@@ -87,13 +90,13 @@ describe('Normalize Options', () => {
     });
   });
 
-  it('should normalize options that has directory in its name', () => {
+  it('should normalize options that has directory in its name', async () => {
     const schema: Schema = {
       name: 'directory/my-app',
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/directory/my-app/android',
       appProjectRoot: 'apps/directory/my-app',
@@ -104,6 +107,7 @@ describe('Normalize Options', () => {
       name: 'directory/my-app',
       parsedTags: [],
       projectName: 'directory-my-app',
+      projectNameAndRootFormat: 'derived',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
@@ -111,14 +115,14 @@ describe('Normalize Options', () => {
     });
   });
 
-  it('should normalize options with display name', () => {
+  it('should normalize options with display name', async () => {
     const schema: Schema = {
       name: 'my-app',
       displayName: 'My App',
       e2eTestRunner: 'none',
       install: false,
     };
-    const options = normalizeOptions(appTree, schema);
+    const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'apps/my-app/android',
       appProjectRoot: 'apps/my-app',
@@ -129,6 +133,7 @@ describe('Normalize Options', () => {
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
+      projectNameAndRootFormat: 'derived',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
