@@ -371,7 +371,7 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
   const { name: projectName } = schema;
 
   const { targets, root } = readProjectConfiguration(tree, projectName);
-  const tslintTargets = Object.values(targets).filter(
+  const tslintTargets = Object.values(targets ?? {}).filter(
     (target) => target.executor === '@angular-devkit/build-angular:tslint'
   );
 
