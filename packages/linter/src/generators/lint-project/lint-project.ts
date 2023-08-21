@@ -50,7 +50,7 @@ export async function lintProjectGenerator(
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  const lintFilePatterns = options.eslintFilePatterns;
+  const lintFilePatterns = options.eslintFilePatterns ?? [];
   if (isBuildableLibraryProject(projectConfig)) {
     lintFilePatterns.push(`${projectConfig.root}/package.json`);
   }
