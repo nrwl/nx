@@ -1,3 +1,8 @@
+---
+title: Publishing Storybook - One main Storybook instance for all projects
+description: Dive into a comprehensive guide on how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.
+---
+
 # Publishing Storybook: One main Storybook instance for all projects
 
 This guide extends the

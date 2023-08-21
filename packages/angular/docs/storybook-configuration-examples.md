@@ -4,7 +4,7 @@ This generator will set up Storybook for your **Angular** project. By default, s
 nx g @nx/angular:storybook-configuration project-name
 ```
 
-You can read more about how this generator works, in the [Storybook for Angular overview page](/packages/storybook/documents/overview-angular#generate-storybook-configuration-for-an-angular-project).
+You can read more about how this generator works, in the [Storybook for Angular overview page](/recipes/storybook/overview-angular#generate-storybook-configuration-for-an-angular-project).
 
 When running this generator, you will be prompted to provide the following:
 

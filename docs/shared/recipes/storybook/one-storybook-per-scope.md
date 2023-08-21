@@ -1,3 +1,8 @@
+---
+title: Publishing Storybook - One Storybook instance per scope
+description: Learn how to set up individual Storybook instances for each scope within an Nx workspace. This guide provides a structured approach, emphasizing folder organization and thematic scope separation.
+---
+
 # Publishing Storybook: One Storybook instance per scope
 
 This guide extends the

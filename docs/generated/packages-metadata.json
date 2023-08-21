@@ -2412,28 +2412,6 @@
         "originalFilePath": "shared/packages/storybook/plugin-overview"
       },
       {
-        "id": "overview-react",
-        "name": "Set up Storybook for React Projects",
-        "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
-        "file": "generated/packages/storybook/documents/overview-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/overview-react",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/plugin-react"
-      },
-      {
-        "id": "overview-angular",
-        "name": "Set up Storybook for Angular Projects",
-        "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
-        "file": "generated/packages/storybook/documents/overview-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/overview-angular",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/plugin-angular"
-      },
-      {
         "id": "best-practices",
         "name": "Storybook best practices for making the most out of Nx",
         "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
@@ -2454,72 +2432,6 @@
         "path": "storybook/documents/storybook-7-setup",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/storybook-7-setup"
-      },
-      {
-        "id": "configuring-storybook",
-        "name": "Configuring Storybook on Nx",
-        "description": "This guide explains how Storybook is configured on your Nx workspace.",
-        "file": "generated/packages/storybook/documents/configuring-storybook",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/configuring-storybook",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/configuring-storybook"
-      },
-      {
-        "id": "custom-builder-configs",
-        "name": "How to configure Webpack and Vite for Storybook",
-        "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
-        "file": "generated/packages/storybook/documents/custom-builder-configs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/custom-builder-configs",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/custom-builder-configs"
-      },
-      {
-        "id": "storybook-interaction-tests",
-        "name": "Setting up Storybook Interaction Tests with Nx",
-        "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
-        "file": "generated/packages/storybook/documents/storybook-interaction-tests",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/storybook-interaction-tests",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/interaction-tests"
-      },
-      {
-        "id": "storybook-composition-setup",
-        "name": "Setting up Storybook Composition with Nx",
-        "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
-        "file": "generated/packages/storybook/documents/storybook-composition-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/storybook-composition-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-composition-setup"
-      },
-      {
-        "id": "angular-storybook-compodoc",
-        "name": "Angular: Set up Compodoc for Storybook on Nx",
-        "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
-        "file": "generated/packages/storybook/documents/angular-storybook-compodoc",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/angular-storybook-compodoc",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-storybook-compodoc"
-      },
-      {
-        "id": "angular-configuring-styles",
-        "name": "Angular: Configuring styles and preprocessor options",
-        "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
-        "file": "generated/packages/storybook/documents/angular-configuring-styles",
-        "itemList": [],
-        "isExternal": false,
-        "path": "storybook/documents/angular-configuring-styles",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-configuring-styles"
       }
     ],
     "executors": [

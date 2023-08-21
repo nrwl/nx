@@ -39,9 +39,9 @@ If you are on a project using Angular, React or React Native, you can also gener
 
 If your project is not configured yet, check out one of these guides:
 
-- [Set up Storybook for React Projects](/packages/storybook/documents/overview-react)
+- [Set up Storybook for React Projects](/recipes/storybook/overview-react)
 
-- [Set up Storybook for Angular Projects](/packages/storybook/documents/overview-angular)
+- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
 
 If your project is [already configured](/packages/storybook), you can use the `stories` generator:
 
@@ -55,7 +55,7 @@ The stories generator will read your inputs (if you’re using Angular), or your
 
 #### Cypress tests generation
 
-Nx also generates Cypress tests for your components, that point to the corresponding component’s story. You can read more about how the Cypress tests are generated and how they look like in the [storybook-configuration generator documentation](/packages/storybook/documents/overview-react#cypress-tests-for-stories).
+Nx also generates Cypress tests for your components, that point to the corresponding component’s story. You can read more about how the Cypress tests are generated and how they look like in the [storybook-configuration generator documentation](/recipes/storybook/overview-react#cypress-tests-for-stories).
 
 Take a look at the generated code of the Cypress test file, specifically at the URL which Cypress visits:
 
@@ -128,7 +128,7 @@ You can think of the central Storybook container as a grouping of similar-concep
 Then, according to your use-case, you can have one central Storybook for your whole workspace, importing all the stories from all the projects. Alternatively, you can have one Storybook per "scope", which imports all the stories from projects the same scope. Or even one Storybook per application, importing all the stories of all the libraries that it is depending on. As you can see, there are many options, and you can choose the one that best suits your needs.
 
 {% callout type="note" title="Storybook Composition" %}
-In order to achieve some things mentioned above, you may use [Storybook Composition](/packages/storybook/documents/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
+In order to achieve some things mentioned above, you may use [Storybook Composition](/recipes/storybook/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
 {% /callout %}
 
 Before moving on to the examples section, it could be useful to read the [Library Types](/concepts/more-concepts/library-types) documentation page and the [Grouping libraries](/concepts/more-concepts/grouping-libraries) documentation page. These could help you decide which way fits your use case better.

@@ -1899,6 +1899,30 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Set up Storybook for React Projects",
+                "path": "/recipes/storybook/overview-react",
+                "id": "overview-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Set up Storybook for Angular Projects",
+                "path": "/recipes/storybook/overview-angular",
+                "id": "overview-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Configuring Storybook on Nx",
+                "path": "/recipes/storybook/configuring-storybook",
+                "id": "configuring-storybook",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "One main Storybook instance for all projects",
                 "path": "/recipes/storybook/one-storybook-for-all",
                 "id": "one-storybook-for-all",
@@ -1918,6 +1942,46 @@
                 "name": "One main Storybook instance using Storybook Composition",
                 "path": "/recipes/storybook/one-storybook-with-composition",
                 "id": "one-storybook-with-composition",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "How to configure Webpack and Vite for Storybook",
+                "path": "/recipes/storybook/custom-builder-configs",
+                "id": "custom-builder-configs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up Storybook Interaction Tests with Nx",
+                "path": "/recipes/storybook/storybook-interaction-tests",
+                "id": "storybook-interaction-tests",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up Storybook Composition with Nx",
+                "path": "/recipes/storybook/storybook-composition-setup",
+                "id": "storybook-composition-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular: Set up Compodoc for Storybook on Nx",
+                "path": "/recipes/storybook/angular-storybook-compodoc",
+                "id": "angular-storybook-compodoc",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular: Configuring styles and preprocessor options",
+                "path": "/recipes/storybook/angular-configuring-styles",
+                "id": "angular-configuring-styles",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2843,6 +2907,30 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Set up Storybook for React Projects",
+            "path": "/recipes/storybook/overview-react",
+            "id": "overview-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Set up Storybook for Angular Projects",
+            "path": "/recipes/storybook/overview-angular",
+            "id": "overview-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Configuring Storybook on Nx",
+            "path": "/recipes/storybook/configuring-storybook",
+            "id": "configuring-storybook",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "One main Storybook instance for all projects",
             "path": "/recipes/storybook/one-storybook-for-all",
             "id": "one-storybook-for-all",
@@ -2865,8 +2953,72 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "How to configure Webpack and Vite for Storybook",
+            "path": "/recipes/storybook/custom-builder-configs",
+            "id": "custom-builder-configs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Setting up Storybook Interaction Tests with Nx",
+            "path": "/recipes/storybook/storybook-interaction-tests",
+            "id": "storybook-interaction-tests",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Setting up Storybook Composition with Nx",
+            "path": "/recipes/storybook/storybook-composition-setup",
+            "id": "storybook-composition-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular: Set up Compodoc for Storybook on Nx",
+            "path": "/recipes/storybook/angular-storybook-compodoc",
+            "id": "angular-storybook-compodoc",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular: Configuring styles and preprocessor options",
+            "path": "/recipes/storybook/angular-configuring-styles",
+            "id": "angular-configuring-styles",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Storybook for React Projects",
+        "path": "/recipes/storybook/overview-react",
+        "id": "overview-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Storybook for Angular Projects",
+        "path": "/recipes/storybook/overview-angular",
+        "id": "overview-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configuring Storybook on Nx",
+        "path": "/recipes/storybook/configuring-storybook",
+        "id": "configuring-storybook",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -2889,6 +3041,46 @@
         "name": "One main Storybook instance using Storybook Composition",
         "path": "/recipes/storybook/one-storybook-with-composition",
         "id": "one-storybook-with-composition",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to configure Webpack and Vite for Storybook",
+        "path": "/recipes/storybook/custom-builder-configs",
+        "id": "custom-builder-configs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Setting up Storybook Interaction Tests with Nx",
+        "path": "/recipes/storybook/storybook-interaction-tests",
+        "id": "storybook-interaction-tests",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Setting up Storybook Composition with Nx",
+        "path": "/recipes/storybook/storybook-composition-setup",
+        "id": "storybook-composition-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular: Set up Compodoc for Storybook on Nx",
+        "path": "/recipes/storybook/angular-storybook-compodoc",
+        "id": "angular-storybook-compodoc",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular: Configuring styles and preprocessor options",
+        "path": "/recipes/storybook/angular-configuring-styles",
+        "id": "angular-configuring-styles",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -7838,22 +8030,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Set up Storybook for React Projects",
-                "path": "/packages/storybook/documents/overview-react",
-                "id": "overview-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Set up Storybook for Angular Projects",
-                "path": "/packages/storybook/documents/overview-angular",
-                "id": "overview-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Storybook best practices for making the most out of Nx",
                 "path": "/packages/storybook/documents/best-practices",
                 "id": "best-practices",
@@ -7865,54 +8041,6 @@
                 "name": "Storybook 7 overview",
                 "path": "/packages/storybook/documents/storybook-7-setup",
                 "id": "storybook-7-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Configuring Storybook on Nx",
-                "path": "/packages/storybook/documents/configuring-storybook",
-                "id": "configuring-storybook",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How to configure Webpack and Vite for Storybook",
-                "path": "/packages/storybook/documents/custom-builder-configs",
-                "id": "custom-builder-configs",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setting up Storybook Interaction Tests with Nx",
-                "path": "/packages/storybook/documents/storybook-interaction-tests",
-                "id": "storybook-interaction-tests",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setting up Storybook Composition with Nx",
-                "path": "/packages/storybook/documents/storybook-composition-setup",
-                "id": "storybook-composition-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Set up Compodoc for Storybook on Nx",
-                "path": "/packages/storybook/documents/angular-storybook-compodoc",
-                "id": "angular-storybook-compodoc",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Configuring styles and preprocessor options",
-                "path": "/packages/storybook/documents/angular-configuring-styles",
-                "id": "angular-configuring-styles",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
