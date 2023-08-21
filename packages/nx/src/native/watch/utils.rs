@@ -53,7 +53,7 @@ pub(super) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
 static OS_PLATFORM: Lazy<OSInformation> = Lazy::new(os_type::current_platform);
 
 pub(super) fn transform_event(watch_event: &Event) -> Option<Event> {
-    if OS_PLATFORM.os_type == OSType::Debian {
+    if OS_PLATFORM.os_type == OSType::Debian || OS_PLATFORM.os_type == OSType::Arch {
         let tags = watch_event
             .tags
             .clone()
