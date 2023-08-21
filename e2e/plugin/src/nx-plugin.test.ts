@@ -434,4 +434,43 @@ describe('Nx Plugin', () => {
       )
     ).toThrow();
   });
+
+  it('should support the new name and root format', async () => {
+    const plugin = uniq('plugin');
+    const createAppName = `create-${plugin}-app`;
+
+    runCLI(
+      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${plugin}/src/index.ts`);
+    // check build works
+    expect(runCLI(`build ${plugin}`)).toContain(
+      `Successfully ran target build for project ${plugin}`
+    );
+    // check tests pass
+    const appTestResult = runCLI(`test ${plugin}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${plugin}`
+    );
+
+    runCLI(
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${plugin}/src/generators/preset`, `${createAppName}`);
+    // check build works
+    expect(runCLI(`build ${createAppName}`)).toContain(
+      `Successfully ran target build for project ${createAppName}`
+    );
+    // check tests pass
+    const libTestResult = runCLI(`test ${createAppName}`);
+    expect(libTestResult).toContain(
+      `Successfully ran target test for project ${createAppName}`
+    );
+  });
 });
