@@ -1,13 +1,26 @@
-import type * as ts from 'typescript';
+import type {
+  Identifier,
+  Node,
+  PropertyAssignment,
+  PropertyName,
+  Scanner,
+  StringLiteral,
+} from 'typescript';
 import * as path from 'path';
-import { stripSourceCode } from './strip-source-code';
 import { DependencyType } from '../../../../config/project-graph';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
 
+let SyntaxKind: typeof import('typescript').SyntaxKind;
+
 let tsModule: typeof import('typescript');
 
+/**
+ * @deprecated This is deprecated and will be removed in Nx 18.
+ * This was not intended to be exposed.
+ * Please talk to us if you need this.
+ */
 export class TypeScriptImportLocator {
-  private readonly scanner: ts.Scanner;
+  private readonly scanner: Scanner;
 
   constructor() {
     tsModule = require('typescript');
@@ -94,10 +107,10 @@ export class TypeScriptImportLocator {
 
     if (node.kind === tsModule.SyntaxKind.PropertyAssignment) {
       const name = this.getPropertyAssignmentName(
-        (node as ts.PropertyAssignment).name
+        (node as PropertyAssignment).name
       );
       if (name === 'loadChildren') {
-        const init = (node as ts.PropertyAssignment).initializer;
+        const init = (node as PropertyAssignment).initializer;
         if (
           init.kind === tsModule.SyntaxKind.StringLiteral &&
           !this.ignoreLoadChildrenDependency(node.getFullText())
@@ -117,7 +130,7 @@ export class TypeScriptImportLocator {
     );
   }
 
-  private ignoreStatement(node: ts.Node) {
+  private ignoreStatement(node: Node) {
     return stripSourceCode(this.scanner, node.getFullText()) === '';
   }
 
@@ -146,18 +159,187 @@ export class TypeScriptImportLocator {
     return false;
   }
 
-  private getPropertyAssignmentName(nameNode: ts.PropertyName) {
+  private getPropertyAssignmentName(nameNode: PropertyName) {
     switch (nameNode.kind) {
       case tsModule.SyntaxKind.Identifier:
-        return (nameNode as ts.Identifier).getText();
+        return (nameNode as Identifier).getText();
       case tsModule.SyntaxKind.StringLiteral:
-        return (nameNode as ts.StringLiteral).text;
+        return (nameNode as StringLiteral).text;
       default:
         return null;
     }
   }
 
-  private getStringLiteralValue(node: ts.Node): string {
+  private getStringLiteralValue(node: Node): string {
     return node.getText().slice(1, -1);
   }
+}
+function shouldRescanSlashToken(
+  lastNonTriviaToken: import('typescript').SyntaxKind
+) {
+  switch (lastNonTriviaToken) {
+    case SyntaxKind.Identifier:
+    case SyntaxKind.StringLiteral:
+    case SyntaxKind.NumericLiteral:
+    case SyntaxKind.BigIntLiteral:
+    case SyntaxKind.RegularExpressionLiteral:
+    case SyntaxKind.ThisKeyword:
+    case SyntaxKind.PlusPlusToken:
+    case SyntaxKind.MinusMinusToken:
+    case SyntaxKind.CloseParenToken:
+    case SyntaxKind.CloseBracketToken:
+    case SyntaxKind.CloseBraceToken:
+    case SyntaxKind.TrueKeyword:
+    case SyntaxKind.FalseKeyword:
+      return false;
+    default:
+      return true;
+  }
+}
+
+export function stripSourceCode(scanner: Scanner, contents: string): string {
+  if (!SyntaxKind) {
+    SyntaxKind = require('typescript').SyntaxKind;
+  }
+
+  if (contents.indexOf('loadChildren') > -1) {
+    return contents;
+  }
+
+  scanner.setText(contents);
+  let token = scanner.scan();
+  let lastNonTriviaToken = SyntaxKind.Unknown;
+  const statements = [];
+  const templateStack = [];
+  let ignoringLine = false;
+  let braceDepth = 0;
+  let start = null;
+  while (token !== SyntaxKind.EndOfFileToken) {
+    const currentToken = token;
+    const potentialStart = scanner.getStartPos();
+    switch (token) {
+      case SyntaxKind.MultiLineCommentTrivia:
+      case SyntaxKind.SingleLineCommentTrivia: {
+        const isMultiLineCommentTrivia =
+          token === SyntaxKind.MultiLineCommentTrivia;
+        const start = potentialStart + 2;
+        token = scanner.scan();
+        const end = scanner.getStartPos() - (isMultiLineCommentTrivia ? 2 : 0);
+        const comment = contents.substring(start, end).trim();
+        if (comment === 'nx-ignore-next-line') {
+          // reading till the end of the line
+          while (
+            token === SyntaxKind.WhitespaceTrivia ||
+            token === SyntaxKind.NewLineTrivia
+          ) {
+            token = scanner.scan();
+          }
+          ignoringLine = true;
+        }
+        break;
+      }
+
+      case SyntaxKind.NewLineTrivia: {
+        ignoringLine = false;
+        token = scanner.scan();
+        break;
+      }
+
+      case SyntaxKind.RequireKeyword:
+      case SyntaxKind.ImportKeyword: {
+        token = scanner.scan();
+        if (ignoringLine) {
+          break;
+        }
+        while (
+          token === SyntaxKind.WhitespaceTrivia ||
+          token === SyntaxKind.NewLineTrivia
+        ) {
+          token = scanner.scan();
+        }
+        start = potentialStart;
+        break;
+      }
+
+      case SyntaxKind.TemplateHead: {
+        templateStack.push(braceDepth);
+        braceDepth = 0;
+        token = scanner.scan();
+        break;
+      }
+
+      case SyntaxKind.SlashToken: {
+        if (shouldRescanSlashToken(lastNonTriviaToken)) {
+          token = scanner.reScanSlashToken();
+        }
+        token = scanner.scan();
+        break;
+      }
+
+      case SyntaxKind.OpenBraceToken: {
+        ++braceDepth;
+        token = scanner.scan();
+        break;
+      }
+
+      case SyntaxKind.CloseBraceToken: {
+        if (braceDepth) {
+          --braceDepth;
+        } else if (templateStack.length) {
+          token = scanner.reScanTemplateToken(false);
+          if (token === SyntaxKind.LastTemplateToken) {
+            braceDepth = templateStack.pop();
+          }
+        }
+        token = scanner.scan();
+        break;
+      }
+
+      case SyntaxKind.ExportKeyword: {
+        token = scanner.scan();
+        if (ignoringLine) {
+          break;
+        }
+        while (
+          token === SyntaxKind.WhitespaceTrivia ||
+          token === SyntaxKind.NewLineTrivia
+        ) {
+          token = scanner.scan();
+        }
+        if (
+          token === SyntaxKind.OpenBraceToken ||
+          token === SyntaxKind.AsteriskToken ||
+          token === SyntaxKind.TypeKeyword
+        ) {
+          start = potentialStart;
+        }
+        break;
+      }
+
+      case SyntaxKind.StringLiteral: {
+        if (start !== null) {
+          token = scanner.scan();
+          if (token === SyntaxKind.CloseParenToken) {
+            token = scanner.scan();
+          }
+          const end = scanner.getStartPos();
+          statements.push(contents.substring(start, end));
+          start = null;
+        } else {
+          token = scanner.scan();
+        }
+        break;
+      }
+
+      default: {
+        token = scanner.scan();
+      }
+    }
+
+    if (currentToken > SyntaxKind.LastTriviaToken) {
+      lastNonTriviaToken = currentToken;
+    }
+  }
+
+  return statements.join('\n');
 }
