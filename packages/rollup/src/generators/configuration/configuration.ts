@@ -50,19 +50,30 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
       version: '0.0.1',
     });
   }
-  const tsConfig =
-    options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.lib.json');
+
+  const prevBuildOptions = project.targets?.[options.buildTarget]?.options;
 
   const buildOptions: RollupExecutorOptions = {
-    main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
-    outputPath: joinPathFragments(
-      'dist',
-      project.root === '.' ? project.name : project.root
-    ),
+    main:
+      options.main ??
+      prevBuildOptions?.main ??
+      joinPathFragments(project.root, 'src/main.ts'),
+    outputPath:
+      prevBuildOptions?.outputPath ??
+      joinPathFragments(
+        'dist',
+        project.root === '.' ? project.name : project.root
+      ),
+    tsConfig:
+      options.tsConfig ??
+      prevBuildOptions?.tsConfig ??
+      joinPathFragments(project.root, 'tsconfig.lib.json'),
+    additionalEntryPoints: prevBuildOptions?.additionalEntryPoints,
+    generateExportsField: prevBuildOptions?.generateExportsField,
     compiler: options.compiler ?? 'babel',
-    tsConfig,
     project: `${project.root}/package.json`,
     external: options.external,
+    format: options.format,
   };
 
   if (options.rollupConfig) {

@@ -3,6 +3,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -95,6 +96,48 @@ describe('configurationGenerator', () => {
         defaultConfiguration: 'production',
         options: {
           tsConfig: 'libs/mypkg/tsconfig.custom.json',
+        },
+      },
+    });
+  });
+
+  it('should carry over known executor options from existing build target', async () => {
+    updateProjectConfiguration(tree, 'mypkg', {
+      root: 'libs/mypkg',
+      sourceRoot: 'libs/mypkg/src',
+      targets: {
+        build: {
+          executor: '@nx/js:tsc',
+          options: {
+            main: 'libs/mypkg/src/custom.ts',
+            outputPath: 'dist/custom',
+            tsConfig: 'libs/mypkg/src/tsconfig.custom.json',
+            additionalEntryPoints: ['libs/mypkg/src/extra.ts'],
+            generateExportsField: true,
+          },
+        },
+      },
+    });
+
+    await configurationGenerator(tree, {
+      project: 'mypkg',
+      buildTarget: 'build',
+      skipValidation: true,
+    });
+
+    const project = readProjectConfiguration(tree, 'mypkg');
+
+    expect(project.targets).toMatchObject({
+      build: {
+        executor: '@nx/rollup:rollup',
+        outputs: ['{options.outputPath}'],
+        defaultConfiguration: 'production',
+        options: {
+          main: 'libs/mypkg/src/custom.ts',
+          outputPath: 'dist/custom',
+          tsConfig: 'libs/mypkg/src/tsconfig.custom.json',
+          additionalEntryPoints: ['libs/mypkg/src/extra.ts'],
+          generateExportsField: true,
         },
       },
     });
