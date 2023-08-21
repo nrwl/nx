@@ -31,10 +31,17 @@ export function getListOfSources(
       }
       return false;
     })
-    .map((section) => ({
-      heading: section.heading ?? section.url_partial,
-      url: `https://nx.dev${section.url_partial}`,
-    }));
+    .map((section) => {
+      const url = new URL('https://nx.dev');
+      url.pathname = section.url_partial as string;
+      if (section.slug) {
+        url.hash = section.slug;
+      }
+      return {
+        heading: section.heading,
+        url: url.toString(),
+      };
+    });
 
   return result;
 }
