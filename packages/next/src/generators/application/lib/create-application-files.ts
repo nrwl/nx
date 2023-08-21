@@ -41,7 +41,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host,
       options.appProjectRoot
     ),
-    appContent: createAppJsx(options.name),
+    appContent: createAppJsx(options.projectName),
     styleContent: createStyleRules(),
     pageStyleContent: `.page {}`,
 
@@ -133,7 +133,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
             ...(updatedJson.exclude || []),
             ...(appJSON.exclude || []),
             '**e2e/**/*',
-            `dist/${options.name}/**/*`,
+            `dist/${options.projectName}/**/*`,
           ]),
         ],
       };
