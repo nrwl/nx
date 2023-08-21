@@ -245,7 +245,7 @@ export const getMatchingStringsWithCache = (() => {
     }
     const patternCache = minimatchCache.get(pattern)!;
     if (!regexCache.has(pattern)) {
-      const regex = minimatch.makeRe(pattern);
+      const regex = minimatch.makeRe(pattern, { dot: true });
       if (regex) {
         regexCache.set(pattern, regex);
       } else {
