@@ -33,7 +33,7 @@ async function normalizeOptions(
       projectType: 'library',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: '@nx/node:library',
+      callingGenerator: '@nx/workspace:npm-package',
     }
   );
 
