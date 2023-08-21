@@ -57,7 +57,7 @@
       "description": "Create a component."
     },
     "library": {
-      "factory": "./src/generators/library/library#libraryGenerator",
+      "factory": "./src/generators/library/library#libraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",

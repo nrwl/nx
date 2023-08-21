@@ -1,9 +1,11 @@
-import { Linter } from '@nx/linter';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { Linter } from '@nx/linter';
 import type { SupportedStyles } from '@nx/react';
 
 export interface Schema {
   name: string;
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   style: SupportedStyles;
   skipTsConfig?: boolean;
   skipFormat?: boolean;
