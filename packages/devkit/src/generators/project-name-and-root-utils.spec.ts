@@ -322,7 +322,7 @@ describe('determineProjectNameAndRootOptions', () => {
           message: `Derived:
     Name: shared-lib-name
     Root: shared/lib-name`,
-          name: 'shared-lib-name @ shared/lib-name (This was derived from the folder structure. Please provide the exact name and directory in the future)',
+          name: 'shared-lib-name @ shared/lib-name',
         },
       ]);
 
@@ -680,7 +680,7 @@ describe('determineProjectNameAndRootOptions', () => {
           message: `Derived:
     Name: shared-lib-name
     Root: libs/shared/lib-name`,
-          name: 'shared-lib-name @ libs/shared/lib-name (This was derived from the folder structure. Please provide the exact name and directory in the future)',
+          name: 'shared-lib-name @ libs/shared/lib-name',
         },
       ]);
 

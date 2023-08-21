@@ -8,8 +8,14 @@ import {
 } from '../utils/get-workspace-layout';
 import { names } from '../utils/names';
 
-const { joinPathFragments, normalizePath, readJson, readNxJson, updateNxJson } =
-  requireNx();
+const {
+  joinPathFragments,
+  normalizePath,
+  logger,
+  readJson,
+  readNxJson,
+  updateNxJson,
+} = requireNx();
 
 export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
 export type ProjectGenerationOptions = {
@@ -109,7 +115,7 @@ function validateName(
 async function determineFormat(
   tree: Tree,
   formats: ProjectNameAndRootFormats,
-  callingGenerator: string
+  callingGenerator: string | null
 ): Promise<ProjectNameAndRootFormat> {
   if (!formats.derived) {
     return 'as-provided';
@@ -126,7 +132,7 @@ async function determineFormat(
   const derivedDescription = `Derived:
     Name: ${formats['derived'].projectName}
     Root: ${formats['derived'].projectRoot}`;
-  const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot} (This was derived from the folder structure. Please provide the exact name and directory in the future)`;
+  const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot}`;
 
   const result = await prompt<{ format: ProjectNameAndRootFormat }>({
     type: 'select',
@@ -147,11 +153,16 @@ async function determineFormat(
   }).then(({ format }) =>
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
+
+  const deprecationWarning =
+    'In Nx 18, generating projects will no longer derive the name and root. Please provide the exact project name and root in the future.';
+
   if (result === 'as-provided' && callingGenerator) {
     const { saveDefault } = await prompt<{ saveDefault: boolean }>({
       type: 'confirm',
-      message: 'Would you like to save this layout as a default?',
+      message: `Would you like to configure Nx to always take project name and root as provided for ${callingGenerator}?`,
       name: 'saveDefault',
+      initial: true,
     });
     if (saveDefault) {
       const nxJson = readNxJson(tree);
@@ -159,7 +170,11 @@ async function determineFormat(
       nxJson.generators[callingGenerator] ??= {};
       nxJson.generators[callingGenerator].projectNameAndRootFormat = result;
       updateNxJson(tree, nxJson);
+    } else {
+      logger.warn(deprecationWarning);
     }
+  } else {
+    logger.warn(deprecationWarning);
   }
 
   return result;
