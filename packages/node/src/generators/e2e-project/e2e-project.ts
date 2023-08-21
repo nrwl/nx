@@ -1,13 +1,10 @@
-import * as path from 'path';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
-  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -16,19 +13,30 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter, lintProjectGenerator } from '@nx/linter';
-
-import { Schema } from './schema';
-import { axiosVersion } from '../../utils/versions';
-import { join } from 'path';
 import {
   globalJavaScriptOverrides,
   globalTypeScriptOverrides,
 } from '@nx/linter/src/generators/init/global-eslint-config';
+import * as path from 'path';
+import { join } from 'path';
+import { axiosVersion } from '../../utils/versions';
+import { Schema } from './schema';
 
-export async function e2eProjectGenerator(host: Tree, _options: Schema) {
+export async function e2eProjectGenerator(host: Tree, options: Schema) {
+  return await e2eProjectGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...options,
+  });
+}
+
+export async function e2eProjectGeneratorInternal(
+  host: Tree,
+  _options: Schema
+) {
   const tasks: GeneratorCallback[] = [];
-  const options = normalizeOptions(host, _options);
+  const options = await normalizeOptions(host, _options);
   const appProject = readProjectConfiguration(host, options.project);
 
   addProjectConfiguration(host, options.e2eProjectName, {
@@ -146,25 +154,23 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-function normalizeOptions(
+async function normalizeOptions(
   tree: Tree,
   options: Schema
-): Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string } {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const appsDir = layoutDirectory ?? getWorkspaceLayout(tree).appsDir;
-  const name = options.name ?? `${options.project}-e2e`;
-
-  const appDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(name).fileName}`
-    : names(name).fileName;
-
-  const e2eProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
-
-  const e2eProjectRoot = options.rootProject
-    ? 'e2e'
-    : joinPathFragments(appsDir, appDirectory);
+): Promise<
+  Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string }
+> {
+  const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: options.name ?? `${options.project}-e2e`,
+      projectType: 'library',
+      directory: options.rootProject ? 'e2e' : options.directory,
+      projectNameAndRootFormat: options.rootProject
+        ? 'as-provided'
+        : options.projectNameAndRootFormat,
+      // this is an internal generator, don't save defaults
+      callingGenerator: null,
+    });
 
   return {
     ...options,
