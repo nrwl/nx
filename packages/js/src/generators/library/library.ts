@@ -550,6 +550,7 @@ async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
+    callingGenerator: '@nx/js:library',
   });
   options.rootProject = projectRoot === '.';
   const fileName = getCaseAwareFileName({
@@ -743,4 +744,4 @@ function determineEntryFields(
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGeneratorInternal);
+export const librarySchematic = convertNxGenerator(libraryGenerator);

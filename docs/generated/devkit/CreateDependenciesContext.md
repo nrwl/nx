@@ -6,11 +6,11 @@ Context for [CreateDependencies](../../devkit/documents/CreateDependencies)
 
 ### Properties
 
-- [fileMap](../../devkit/documents/CreateDependenciesContext#filemap)
-- [filesToProcess](../../devkit/documents/CreateDependenciesContext#filestoprocess)
-- [graph](../../devkit/documents/CreateDependenciesContext#graph)
-- [nxJsonConfiguration](../../devkit/documents/CreateDependenciesContext#nxjsonconfiguration)
-- [projectsConfigurations](../../devkit/documents/CreateDependenciesContext#projectsconfigurations)
+- [fileMap](../../devkit/documents/CreateDependenciesContext#filemap): ProjectFileMap
+- [filesToProcess](../../devkit/documents/CreateDependenciesContext#filestoprocess): ProjectFileMap
+- [graph](../../devkit/documents/CreateDependenciesContext#graph): ProjectGraph
+- [nxJsonConfiguration](../../devkit/documents/CreateDependenciesContext#nxjsonconfiguration): NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
+- [projectsConfigurations](../../devkit/documents/CreateDependenciesContext#projectsconfigurations): ProjectsConfigurations
 
 ## Properties
 

@@ -53,6 +53,10 @@
       "type": "boolean",
       "description": "Use Standalone Components to bootstrap SSR. _Note: This is only supported in Angular versions >= 14.1.0_."
     },
+    "hydration": {
+      "type": "boolean",
+      "description": "Set up Hydration for the SSR application. _Note: This is only supported in Angular versions >= 16.0.0_."
+    },
     "skipFormat": {
       "type": "boolean",
       "description": "Skip formatting the workspace after the generator completes.",

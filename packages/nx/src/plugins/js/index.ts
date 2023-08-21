@@ -34,11 +34,15 @@ export const processProjectGraph: ProjectGraphProcessor = async (
       let parsedLockFile: ProjectGraph;
       if (lockFileNeedsReprocessing(lockHash)) {
         parsedLockFile = parseLockFile();
-        writeLastProcessedLockfileHash(lockHash, parsedLockFile);
+        if (parsedLockFile) {
+          writeLastProcessedLockfileHash(lockHash, parsedLockFile);
+        }
       } else {
         parsedLockFile = readParsedLockFile();
       }
-      builder.mergeProjectGraph(parsedLockFile);
+      if (parsedLockFile) {
+        builder.mergeProjectGraph(parsedLockFile);
+      }
     }
   }
 

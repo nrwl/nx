@@ -39,8 +39,19 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
+  return await remoteGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-  const options = normalizeOptions<Schema>(host, schema);
+  const options = await normalizeOptions<Schema>(
+    host,
+    schema,
+    '@nx/react:remote'
+  );
   const initAppTask = await applicationGenerator(host, {
     ...options,
     // Only webpack works with module federation for now.

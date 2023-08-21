@@ -250,6 +250,7 @@ async function normalizeOptions(
       projectNameAndRootFormat: isRootProject
         ? 'as-provided'
         : options.projectNameAndRootFormat,
+      callingGenerator: '@nx/cypress:cypress-project',
     }
   );
 

@@ -5,6 +5,7 @@ import {
   newProject,
   runCLI,
   runCommandUntil,
+  setMaxWorkers,
   tmpProjPath,
   uniq,
 } from '@nx/e2e/utils';
@@ -14,11 +15,12 @@ import { createFileSync } from 'fs-extra';
 describe('Storybook generators and executors for monorepos', () => {
   const reactStorybookApp = uniq('react-app');
   let proj;
-  beforeAll(() => {
+  beforeAll(async () => {
     proj = newProject();
     runCLI(
       `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
     runCLI(
       `generate @nx/react:storybook-configuration ${reactStorybookApp} --generateStories --no-interactive --bundler=webpack`
     );

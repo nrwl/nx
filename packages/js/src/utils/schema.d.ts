@@ -1,4 +1,4 @@
-import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 // nx-ignore-next-line
 const { Linter } = require('@nx/linter'); // use require to import to avoid circular dependency
 import type { AssetGlob, FileInputOutput } from './assets/assets';

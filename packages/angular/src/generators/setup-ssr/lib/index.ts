@@ -3,3 +3,4 @@ export * from './normalize-options';
 export * from './update-app-module';
 export * from './update-project-config';
 export * from './validate-options';
+export * from './add-hydration';

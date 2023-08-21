@@ -2,8 +2,6 @@
 
 Nx.json configuration
 
-@note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
-
 ## Type parameters
 
 | Name | Type                |
@@ -20,20 +18,20 @@ Nx.json configuration
 
 ### Properties
 
-- [affected](../../devkit/documents/NxJsonConfiguration#affected)
-- [cli](../../devkit/documents/NxJsonConfiguration#cli)
-- [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject)
-- [extends](../../devkit/documents/NxJsonConfiguration#extends)
-- [generators](../../devkit/documents/NxJsonConfiguration#generators)
-- [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies)
-- [installation](../../devkit/documents/NxJsonConfiguration#installation)
-- [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs)
-- [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope)
-- [plugins](../../devkit/documents/NxJsonConfiguration#plugins)
-- [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig)
-- [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults)
-- [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
-- [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout)
+- [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
+- [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
+- [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
+- [extends](../../devkit/documents/NxJsonConfiguration#extends): string
+- [generators](../../devkit/documents/NxJsonConfiguration#generators): Object
+- [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry&lt;T&gt;
+- [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
+- [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
+- [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope): string
+- [plugins](../../devkit/documents/NxJsonConfiguration#plugins): string[]
+- [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record&lt;string, unknown&gt;
+- [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
+- [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
+- [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
 

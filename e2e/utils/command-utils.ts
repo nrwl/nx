@@ -1,4 +1,4 @@
-import { output, PackageManager } from '@nx/devkit';
+import { output, PackageManager, ProjectConfiguration } from '@nx/devkit';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
@@ -17,7 +17,7 @@ import * as isCI from 'is-ci';
 import { fileExists, readJson, updateFile } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
-import { retrieveProjectConfigurationsSync } from '../../packages/nx/src/project-graph/utils/retrieve-workspace-files';
+import { retrieveProjectConfigurations } from '../../packages/nx/src/project-graph/utils/retrieve-workspace-files';
 import { readNxJson } from '../../packages/nx/src/config/nx-json';
 
 export interface RunCmdOpts {
@@ -35,12 +35,11 @@ export interface RunCmdOpts {
  *
  * maxWorkers required for: node, web, jest
  */
-export function setMaxWorkers() {
+export async function setMaxWorkers() {
   if (isCI) {
     const root = tmpProjPath();
-    const projects = retrieveProjectConfigurationsSync(
-      root,
-      readNxJson(root)
+    const projects: Record<string, ProjectConfiguration> = (
+      await retrieveProjectConfigurations(root, readNxJson(root))
     ).projectNodes;
 
     Object.keys(projects).forEach((appName) => {
@@ -376,10 +375,6 @@ export function runCLI(
     }
 
     const r = stripConsoleColors(logs);
-    const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
-    if (needsMaxWorkers.test(command)) {
-      setMaxWorkers();
-    }
 
     return r;
   } catch (e) {

@@ -10,6 +10,7 @@ import {
   readJson,
   runCLI,
   runCreateWorkspace,
+  setMaxWorkers,
   uniq,
   updateFile,
   updateJson,
@@ -722,13 +723,14 @@ describe('Linter', () => {
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
     });
 
-    it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
+    it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', async () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
       runCLI(
         `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`
       );
+      await setMaxWorkers();
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');

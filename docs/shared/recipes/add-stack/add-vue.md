@@ -181,7 +181,7 @@ Navigate to `project.json` and update it with the following content:
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/test-vue"
+        "outputPath": "dist/acme"
       },
       "configurations": {
         "development": {
@@ -196,15 +196,15 @@ Navigate to `project.json` and update it with the following content:
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "test-vue:build"
+        "buildTarget": "acme:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "test-vue:build:development",
+          "buildTarget": "acme:build:development",
           "hmr": true
         },
         "production": {
-          "buildTarget": "test-vue:build:production",
+          "buildTarget": "acme:build:production",
           "hmr": false
         }
       }
@@ -241,7 +241,7 @@ Update your `libs/counter/src/lib/index.ts` to export your Counter component.
 export { default as Counter } from './Counter.vue';
 ```
 
-{% callout "Note" %}
+{% callout type="Note" %}
 The `default` is very import here as it allows us to import the component using `import { Counter } from '@acme/counter'` instead of `import Counter from '@acme/counter'`.
 {% /callout %}
 
@@ -291,6 +291,6 @@ nx serve acme
 
 A larger example including libraries, tests, and more is available at [Nx Vue Example](https://github.com/nrwl/nx-recipes/tree/main/vue) on Github.
 
-- [Nx Vite Plugin](https://nx.dev/latest/vue/vite/overview)
+- [Nx Vite Plugin](https://nx.dev/packages/vite)
 - [Vite](https://vitejs.dev/)
 - [Vue](https://v3.vuejs.org/)

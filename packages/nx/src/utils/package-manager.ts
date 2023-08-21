@@ -65,9 +65,7 @@ export function getPackageManagerCommand(
       const useBerry = gte(yarnVersion, '2.0.0');
 
       return {
-        preInstall: useBerry
-          ? 'yarn set version stable'
-          : 'yarn set version classic',
+        preInstall: `yarn set version ${yarnVersion}`,
         install: 'yarn',
         ciInstall: useBerry
           ? 'yarn install --immutable'

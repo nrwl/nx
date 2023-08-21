@@ -4,7 +4,7 @@
 
 ### Properties
 
-- [spaces](../../devkit/documents/JsonSerializeOptions#spaces)
+- [spaces](../../devkit/documents/JsonSerializeOptions#spaces): number
 
 ## Properties
 

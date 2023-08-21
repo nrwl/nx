@@ -1,11 +1,13 @@
-import { Linter } from '@nx/linter';
-import { SupportedStyles } from '../../../typings';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import type { Linter } from '@nx/linter';
+import type { SupportedStyles } from '../../../typings';
 
 export interface Schema {
   classComponent?: boolean;
   compiler?: 'babel' | 'swc';
   devServerPort?: number;
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   e2eTestRunner: 'cypress' | 'none';
   globalCss?: boolean;
   js?: boolean;

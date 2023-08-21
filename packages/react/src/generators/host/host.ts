@@ -21,8 +21,19 @@ import setupSsrGenerator from '../setup-ssr/setup-ssr';
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
 
 export async function hostGenerator(host: Tree, schema: Schema) {
+  return hostGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function hostGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-  const options = normalizeOptions<Schema>(host, schema);
+  const options = await normalizeOptions<Schema>(
+    host,
+    schema,
+    '@nx/react:host'
+  );
 
   const initTask = await applicationGenerator(host, {
     ...options,
