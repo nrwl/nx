@@ -21,7 +21,7 @@ export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
 export type ProjectGenerationOptions = {
   name: string;
   projectType: ProjectType;
-  callingGenerator: string | undefined;
+  callingGenerator: string;
   directory?: string;
   importPath?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
