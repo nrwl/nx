@@ -4,7 +4,7 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "plugin": {
-      "factory": "./src/generators/plugin/plugin",
+      "factory": "./src/generators/plugin/plugin#pluginGeneratorInternal",
       "schema": "./src/generators/plugin/schema.json",
       "description": "Create a Nx Plugin."
     },
@@ -14,7 +14,7 @@
       "description": "Create a package which can be used by npx to create a new workspace"
     },
     "e2e-project": {
-      "factory": "./src/generators/e2e-project/e2e",
+      "factory": "./src/generators/e2e-project/e2e#e2eProjectGeneratorInternal",
       "schema": "./src/generators/e2e-project/schema.json",
       "description": "Create a E2E application for a Nx Plugin."
     },

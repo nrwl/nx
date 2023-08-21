@@ -20,11 +20,17 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the plugin?",
-      "x-priority": "important"
+      "x-priority": "important",
+      "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
     },
     "directory": {
       "type": "string",
       "description": "A directory where the plugin is placed."
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "importPath": {
       "type": "string",
