@@ -23,8 +23,15 @@ import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
+  return await applicationGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-  const options = normalizeOptions(host, schema);
+  const options = await normalizeOptions(host, schema);
 
   showPossibleWarnings(host, options);
 
@@ -58,7 +65,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
 
   if (options.customServer) {
     await customServerGenerator(host, {
-      project: options.name,
+      project: options.projectName,
       compiler: options.swc ? 'swc' : 'tsc',
     });
   }
