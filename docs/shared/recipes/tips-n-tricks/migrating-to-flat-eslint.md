@@ -6,12 +6,12 @@ Version 8 of ESLint introduced a new configuration format called [Flat Config](h
 - enforce explicit native loading (instead of the implicit imports in `JSON` and `Yaml`)
 - use a flat cascading of rules (instead of a mix of rules and overrides)
 
-See below direct comparison between `JSON`, `JS` and `Flat` config:
+See below a direct comparison between `JSON`, `JS` and `Flat` config:
 {% tabs %}
-{% tab label="eslint.config.js" %}
+{% tab label="Flat" %}
 
-```js
-// the older version were magically interpreting all the imports
+```js {% fileName="eslint.config.js" %}
+// the older versions were magically interpreting all the imports
 // in flat config we do it explicitly
 const nxPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
@@ -66,9 +66,9 @@ module.exports = [
 ```
 
 {% /tab %}
-{% tab label=".eslintrc.json" %}
+{% tab label="JSON" %}
 
-```json
+```json {% fileName=".eslintrc.json" %}
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
@@ -109,9 +109,9 @@ module.exports = [
 ```
 
 {% /tab %}
-{% tab label=".eslintrc.js" %}
+{% tab label="JS" %}
 
-```js
+```js {% fileName=".eslintrc.js" %}
 module.exports = {
   root: true,
   env: {
