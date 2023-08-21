@@ -69,7 +69,7 @@
       "description": "Create a React Native application."
     },
     "library": {
-      "factory": "./src/generators/library/library#reactNativeLibraryGenerator",
+      "factory": "./src/generators/library/library#reactNativeLibraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
