@@ -26,6 +26,7 @@ import {
 } from '../../utils/versions';
 
 import { addTsLibDependencies } from '@nx/js';
+import { join } from 'path';
 
 export async function vitestGenerator(
   tree: Tree,
@@ -141,7 +142,7 @@ function createFiles(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
-  generateFiles(tree, joinPathFragments(__dirname, 'files'), projectRoot, {
+  generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
     ...options,
     projectRoot,

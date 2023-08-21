@@ -120,7 +120,7 @@ function uppercase(val: string) {
 
 // later
 
-generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
+generateFiles(tree, join(__dirname, './files'), libraryRoot, {
   uppercase,
   name: schema.name,
 });
@@ -141,7 +141,7 @@ This is the short version.
 
 ```typescript
 // typescript file
-generateFiles(tree, joinPathFragments(__dirname, './files'), libraryRoot, {
+generateFiles(tree, join(__dirname, './files'), libraryRoot, {
   shortVersion: false,
   numRepetitions: 3,
 });
