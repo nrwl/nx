@@ -1,8 +1,14 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import type {
+  NxJsonConfiguration,
+  ProjectConfiguration,
+  Tree,
+} from '@nx/devkit';
 import {
   formatFiles,
   offsetFromRoot,
+  readJson,
   readProjectConfiguration,
+  updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -108,6 +114,19 @@ export async function lintProjectGenerator(
     );
   }
 
+  // Buildable libs need source analysis enabled for linting `package.json`.
+  if (
+    isBuildableLibraryProject(projectConfig) &&
+    !isJsAnalyzeSourceFilesEnabled(tree)
+  ) {
+    updateJson(tree, 'nx.json', (json) => {
+      json.pluginsConfig ??= {};
+      json.pluginsConfig['@nx/js'] ??= {};
+      json.pluginsConfig['@nx/js'].analyzeSourceFiles = true;
+      return json;
+    });
+  }
+
   updateProjectConfiguration(tree, options.project, projectConfig);
 
   if (!options.skipFormat) {
@@ -163,18 +182,17 @@ function createEsLintConfiguration(
       files: ['*.js', '*.jsx'],
       rules: {},
     },
-    ...(isBuildableLibraryProject(projectConfig)
-      ? [
-          {
-            files: ['*.json'],
-            parser: 'jsonc-eslint-parser',
-            rules: {
-              '@nx/dependency-checks': 'error',
-            } as Linter.RulesRecord,
-          },
-        ]
-      : []),
   ];
+
+  if (isBuildableLibraryProject(projectConfig)) {
+    overrides.push({
+      files: ['*.json'],
+      parser: 'jsonc-eslint-parser',
+      rules: {
+        '@nx/dependency-checks': 'error',
+      },
+    });
+  }
 
   if (useFlatConfig(tree)) {
     const isCompatNeeded = addDependencyChecks;
@@ -202,6 +220,18 @@ function createEsLintConfiguration(
       overrides,
     });
   }
+}
+
+function isJsAnalyzeSourceFilesEnabled(tree: Tree): boolean {
+  const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+  const jsPluginConfig = nxJson.pluginsConfig?.['@nx/js'] as {
+    analyzeSourceFiles?: boolean;
+  };
+
+  return (
+    jsPluginConfig?.analyzeSourceFiles ??
+    nxJson.extends !== 'nx/presets/npm.json'
+  );
 }
 
 function isBuildableLibraryProject(

@@ -1,7 +1,9 @@
 import {
   addProjectConfiguration,
   readProjectConfiguration,
+  updateJson,
   Tree,
+  readJson,
 } from '@nx/devkit';
 
 import { Linter } from '../utils/linter';
@@ -174,5 +176,49 @@ describe('@nx/linter:lint-project', () => {
       }
       "
     `);
+  });
+
+  it('should update nx.json to enable source analysis when using npm.json preset', async () => {
+    updateJson(tree, 'nx.json', (json) => {
+      // npm preset disables source analysis
+      json.extends = 'nx/presets/npm.json';
+      return json;
+    });
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['libs/buildable-lib/**/*.ts'],
+      project: 'buildable-lib',
+      setParserOptionsProject: false,
+    });
+
+    expect(readJson(tree, 'nx.json').pluginsConfig['@nx/js']).toEqual({
+      analyzeSourceFiles: true,
+    });
+  });
+
+  it('should update nx.json to enable source analysis when it is disabled', async () => {
+    updateJson(tree, 'nx.json', (json) => {
+      // npm preset disables source analysis
+      json.pluginsConfig = {
+        '@nx/js': {
+          analyzeSourceFiles: false,
+        },
+      };
+      return json;
+    });
+
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['libs/buildable-lib/**/*.ts'],
+      project: 'buildable-lib',
+      setParserOptionsProject: false,
+    });
+
+    expect(readJson(tree, 'nx.json').pluginsConfig['@nx/js']).toEqual({
+      analyzeSourceFiles: true,
+    });
   });
 });
