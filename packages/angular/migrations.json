@@ -325,6 +325,10 @@
           "version": "~14.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/core": {
           "version": "~14.0.0",
           "alwaysAddToPackageJson": true
@@ -542,6 +546,10 @@
           "version": "~14.1.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
         "@schematics/angular": {
           "version": "~14.1.0",
           "alwaysAddToPackageJson": false
@@ -602,6 +610,10 @@
           "version": "~14.1.1",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
         "@schematics/angular": {
           "version": "~14.1.1",
           "alwaysAddToPackageJson": false
@@ -653,6 +665,10 @@
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
           "version": "~14.2.0",
           "alwaysAddToPackageJson": false
         },
@@ -767,6 +783,10 @@
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
           "version": "~15.0.0",
           "alwaysAddToPackageJson": false
         },
@@ -903,6 +923,10 @@
           "version": "~15.1.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/core": {
           "version": "~15.1.0",
           "alwaysAddToPackageJson": true
@@ -965,6 +989,10 @@
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
           "version": "~15.2.0",
           "alwaysAddToPackageJson": false
         },
@@ -1101,6 +1129,10 @@
           "version": "~16.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "@schematics/angular": {
           "version": "~16.0.0",
           "alwaysAddToPackageJson": false
@@ -1211,6 +1243,10 @@
           "version": "~16.1.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/core": {
           "version": "~16.1.0",
           "alwaysAddToPackageJson": true
@@ -1269,6 +1305,10 @@
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
           "version": "~16.2.0",
           "alwaysAddToPackageJson": false
         },
