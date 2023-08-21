@@ -252,7 +252,11 @@ function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
   for (const change of tree.listChanges()) {
     if (change.type === 'CREATE') {
       const fileName = basename(change.path);
-      if (globPatterns.some((pattern) => minimatch(change.path, pattern))) {
+      if (
+        globPatterns.some((pattern) =>
+          minimatch(change.path, pattern, { dot: true })
+        )
+      ) {
         createdProjectFiles.push(change.path);
       } else if (fileName === 'package.json') {
         try {
