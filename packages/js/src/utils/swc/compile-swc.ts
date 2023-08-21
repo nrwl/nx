@@ -11,7 +11,7 @@ function getSwcCmd(
   watch = false
 ) {
   const swcCLI = require.resolve('@swc/cli/bin/swc.js');
-  let swcCmd = `${swcCLI} ${
+  let swcCmd = `node ${swcCLI} ${
     // TODO(jack): clean this up when we remove inline module support
     // Handle root project
     srcPath === '.' ? 'src' : srcPath
