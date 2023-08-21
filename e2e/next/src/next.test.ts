@@ -213,6 +213,47 @@ describe('Next.js Applications', () => {
     await killPort(selfContainedPort);
   }, 600_000);
 
+  it('should support generating projects with the new name and root format', () => {
+    const appName = uniq('app1');
+    const libName = uniq('@my-org/lib1');
+
+    runCLI(
+      `generate @nx/next:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${appName}/app/page.tsx`);
+    // check build works
+    expect(runCLI(`build ${appName}`)).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+    // check tests pass
+    const appTestResult = runCLI(`test ${appName}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${appName}`
+    );
+
+    // assert scoped project names are not supported when --project-name-and-root-format=derived
+    expect(() =>
+      runCLI(
+        `generate @nx/next:lib ${libName} --buildable --project-name-and-root-format=derived --no-interactive`
+      )
+    ).toThrow();
+
+    runCLI(
+      `generate @nx/next:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${libName}/src/index.ts`);
+    // check build works
+    expect(runCLI(`build ${libName}`)).toContain(
+      `Successfully ran target build for project ${libName}`
+    );
+  }, 600_000);
+
   it('should build and install pruned lock file', () => {
     const appName = uniq('app');
     runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
