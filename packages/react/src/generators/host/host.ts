@@ -7,18 +7,19 @@ import {
   Tree,
   updateProjectConfiguration,
 } from '@nx/devkit';
-
+import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import applicationGenerator from '../application/application';
 import { normalizeOptions } from '../application/lib/normalize-options';
-import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
-import { addModuleFederationFiles } from './lib/add-module-federation-files';
-import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
-
-import { Schema } from './schema';
 import remoteGenerator from '../remote/remote';
-
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
+import { addModuleFederationFiles } from './lib/add-module-federation-files';
+import {
+  normalizeRemoteDirectory,
+  normalizeRemoteName,
+} from './lib/normalize-remote';
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
+import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
+import { Schema } from './schema';
 
 export async function hostGenerator(host: Tree, schema: Schema) {
   return hostGeneratorInternal(host, {
@@ -50,10 +51,12 @@ export async function hostGeneratorInternal(host: Tree, schema: Schema) {
   if (schema.remotes) {
     let remotePort = options.devServerPort + 1;
     for (const remote of schema.remotes) {
-      remotesWithPorts.push({ name: remote, port: remotePort });
+      const remoteName = await normalizeRemoteName(host, remote, options);
+      remotesWithPorts.push({ name: remoteName, port: remotePort });
+
       await remoteGenerator(host, {
         name: remote,
-        directory: options.directory,
+        directory: normalizeRemoteDirectory(remote, options),
         style: options.style,
         unitTestRunner: options.unitTestRunner,
         e2eTestRunner: options.e2eTestRunner,
@@ -61,6 +64,7 @@ export async function hostGeneratorInternal(host: Tree, schema: Schema) {
         devServerPort: remotePort,
         ssr: options.ssr,
         skipFormat: true,
+        projectNameAndRootFormat: options.projectNameAndRootFormat,
       });
       remotePort++;
     }
