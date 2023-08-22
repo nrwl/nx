@@ -71,4 +71,26 @@ describe('hostGenerator', () => {
       include: ['src/remotes.d.ts', 'src/main.server.tsx', 'server.ts'],
     });
   });
+
+  it('should generate a host and remotes in a directory correctly when using --projectNameAndRootFormat=as-provided', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await hostGenerator(tree, {
+      name: 'hostApp',
+      directory: 'foo/hostApp',
+      remotes: ['remote1', 'remote2', 'remote3'],
+      projectNameAndRootFormat: 'as-provided',
+      e2eTestRunner: 'none',
+      linter: Linter.None,
+      style: 'css',
+      unitTestRunner: 'none',
+    });
+
+    expect(tree.exists('foo/remote1/project.json')).toBeTruthy();
+    expect(tree.exists('foo/remote2/project.json')).toBeTruthy();
+    expect(tree.exists('foo/remote3/project.json')).toBeTruthy();
+    expect(
+      tree.read('foo/host-app/module-federation.config.js', 'utf-8')
+    ).toContain(`'remote1', 'remote2', 'remote3'`);
+  });
 });
