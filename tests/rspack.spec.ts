@@ -1,11 +1,16 @@
+import { getPackageManagerCommand } from '@nx/devkit';
 import {
   checkFilesExist,
   ensureNxProject,
   listFiles,
   runNxCommandAsync,
+  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/plugin/testing';
+import { execSync } from 'child_process';
+import { writeFileSync } from 'fs';
+import { join } from 'path';
 
 describe('rspack e2e', () => {
   // Setting up individual workspaces per
@@ -29,6 +34,33 @@ describe('rspack e2e', () => {
     await runNxCommandAsync(
       `generate @nx/rspack:preset ${project} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress`
     );
+
+    // Added this so that the nx-ecosystem-ci tests don't throw jest error
+    writeFileSync(
+      join(tmpProjPath(), '.babelrc'),
+      `    
+        {
+          "presets": [
+            "@babel/preset-env", "@babel/preset-react", "@babel/preset-typescript",
+            [
+              "@nx/react/babel",
+              {
+                "runtime": "automatic"
+              }
+            ]
+          ],
+          "plugins": ["@babel/plugin-transform-runtime"]
+        }
+      `
+    );
+
+    const pm = getPackageManagerCommand();
+    execSync(
+      pm.addDev +
+        ' @babel/preset-react @babel/preset-env @babel/preset-typescript',
+      { cwd: tmpProjPath() }
+    );
+
     let result = await runNxCommandAsync(`build ${project}`, {
       env: { NODE_ENV: 'production' },
     });
@@ -59,6 +91,26 @@ describe('rspack e2e', () => {
       `generate @nx/rspack:app ${app2} --framework=react --unitTestRunner=jest --e2eTestRunner=cypress --style=css`
     );
     checkFilesExist(`${app2}/project.json`, `${app2}-e2e/project.json`);
+
+    // Added this so that the nx-ecosystem-ci tests don't throw jest error
+    writeFileSync(
+      join(tmpProjPath(), app2, '.babelrc'),
+      `    
+        {
+          "presets": [
+            "@babel/preset-env", "@babel/preset-react", "@babel/preset-typescript",
+            [
+              "@nx/react/babel",
+              {
+                "runtime": "automatic"
+              }
+            ]
+          ],
+          "plugins": ["@babel/plugin-transform-runtime"]
+        }
+      `
+    );
+
     result = await runNxCommandAsync(`build ${app2}`, {
       env: { NODE_ENV: 'production' },
     });
