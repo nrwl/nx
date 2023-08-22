@@ -35,10 +35,9 @@ describe('Storybook executors for Angular', () => {
       p.kill();
     }, 200_000);
 
-    // TODO(@mandarini): reenable test after debugging flakiness
-    xit('shoud build an Angular based storybook', () => {
-      runCLI(`run ${angularStorybookLib}:build-storybook --verbose`);
+    it('shoud build an Angular based storybook', () => {
+      runCLI(`run ${angularStorybookLib}:build-storybook`);
       checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-    }, 200_000);
+    }, 300_000);
   });
 });
