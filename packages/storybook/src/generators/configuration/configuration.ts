@@ -198,6 +198,17 @@ export async function configurationGenerator(
     devDeps['core-js'] = coreJsVersion;
   }
 
+  if (
+    schema.uiFramework.endsWith('-vite') &&
+    (!viteBuildTarget || !viteConfigFilePath)
+  ) {
+    // This means that the user has selected a Vite framework
+    // but the project does not have Vite configuration.
+    // We need to install the @nx/vite plugin in order to be able to use
+    // the nxViteTsPaths plugin to register the tsconfig paths in Vite.
+    devDeps['@nx/vite'] = nxVersion;
+  }
+
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));
 
   if (!schema.skipFormat) {
