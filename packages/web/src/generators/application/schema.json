@@ -14,11 +14,16 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z].*$"
+      "pattern": "^[a-zA-Z][^:]*$"
     },
     "directory": {
       "description": "The directory of the new application.",
       "type": "string"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "style": {
       "description": "The file extension to be used for style files.",
