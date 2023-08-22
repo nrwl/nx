@@ -45,11 +45,10 @@ async function normalizeOptions(
       {
         name: projectName,
         projectType: 'application',
-        directory: options.rootProject
-          ? projectName
-          : options.projectDirectory
-          ? `${options.projectDirectory}-e2e`
-          : `${options.pluginName}-e2e`,
+        directory:
+          options.rootProject || !options.projectDirectory
+            ? projectName
+            : `${options.projectDirectory}-e2e`,
         projectNameAndRootFormat: `as-provided`,
         callingGenerator: '@nx/plugin:e2e-project',
       }
@@ -62,12 +61,11 @@ async function normalizeOptions(
     const { appsDir: defaultAppsDir } = getWorkspaceLayout(host);
     const appsDir = layoutDirectory ?? defaultAppsDir;
 
-    projectRoot =
-      projectDirectory && !options.rootProject
-        ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
-        : options.rootProject
-        ? projectName
-        : joinPathFragments(appsDir, projectName);
+    projectRoot = options.rootProject
+      ? projectName
+      : projectDirectory
+      ? joinPathFragments(appsDir, `${projectDirectory}-e2e`)
+      : joinPathFragments(appsDir, projectName);
   }
 
   const pluginPropertyName = names(options.pluginName).propertyName;
