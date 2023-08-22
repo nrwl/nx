@@ -77,7 +77,7 @@ describe('Web Components Applications', () => {
       customElements.define('app-root', AppElement);
     `
     );
-    runCLI(`build ${appName} --outputHashing none --compiler babel`);
+    runCLI(`build ${appName} --outputHashing none`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,

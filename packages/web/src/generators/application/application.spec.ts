@@ -586,6 +586,9 @@ describe('app', () => {
         };
         "
       `);
+
+      expect(tree.exists('apps/my-app/.babelrc')).toBeTruthy();
+      expect(tree.exists('apps/my-app/.swcrc')).toBeFalsy();
     });
 
     it('should support swc compiler', async () => {
@@ -609,6 +612,9 @@ describe('app', () => {
         };
         "
       `);
+
+      expect(tree.exists('apps/my-app/.babelrc')).toBeFalsy();
+      expect(tree.exists('apps/my-app/.swcrc')).toBeTruthy();
     });
   });
 

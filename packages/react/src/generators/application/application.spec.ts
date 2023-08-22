@@ -967,6 +967,17 @@ describe('app', () => {
         'swc-loader': expect.any(String),
       });
     });
+
+    it('should add .swcrc when --compiler=swc', async () => {
+      await applicationGenerator(appTree, {
+        ...schema,
+        compiler: 'swc',
+      });
+
+      expect(readJson(appTree, '/apps/my-app/.swcrc')).toEqual({
+        jsc: { target: 'es2016' },
+      });
+    });
   });
 
   describe('--root-project', () => {

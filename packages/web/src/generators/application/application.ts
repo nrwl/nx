@@ -20,6 +20,7 @@ import {
   Tree,
   updateNxJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
 import type { Linter } from '@nx/linter';
@@ -312,12 +313,24 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.compiler === 'swc') {
+    writeJson(host, joinPathFragments(options.appProjectRoot, '.swcrc'), {
+      jsc: {
+        parser: {
+          syntax: 'typescript',
+        },
+        target: 'es2016',
+      },
+    });
     const installTask = addDependenciesToPackageJson(
       host,
       {},
       { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
     );
     tasks.push(installTask);
+  } else {
+    writeJson(host, joinPathFragments(options.appProjectRoot, '.babelrc'), {
+      presets: ['@nx/js/babel'],
+    });
   }
 
   setDefaults(host, options);
