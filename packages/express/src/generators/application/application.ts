@@ -1,20 +1,13 @@
-import {
-  convertNxGenerator,
-  extractLayoutDirectory,
-  formatFiles,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  toJS,
-  updateJson,
-} from '@nx/devkit';
 import type { Tree } from '@nx/devkit';
+import { convertNxGenerator, formatFiles, toJS, updateJson } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { join } from 'path';
 import { initGenerator } from '../init/init';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
+  appProjectName: string;
   appProjectRoot: string;
 }
 
@@ -45,7 +38,7 @@ const app = express();
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 app.get('/api', (req, res) => {
-  res.send({ message: 'Welcome to ${options.name}!' });
+  res.send({ message: 'Welcome to ${options.appProjectName}!' });
 });
 
 const port = process.env.PORT || 3333;
@@ -62,7 +55,14 @@ server.on('error', console.error);
 }
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
-  const options = normalizeOptions(tree, schema);
+  return await applicationGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  const options = await normalizeOptions(tree, schema);
   const initTask = await initGenerator(tree, { ...options, skipFormat: true });
   const applicationTask = await nodeApplicationGenerator(tree, {
     ...schema,
@@ -85,19 +85,26 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 export default applicationGenerator;
 export const applicationSchematic = convertNxGenerator(applicationGenerator);
 
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const appDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-
-  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
-  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
+async function normalizeOptions(
+  host: Tree,
+  options: Schema
+): Promise<NormalizedSchema> {
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    projectNameAndRootFormat,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/express:application',
+  });
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   return {
     ...options,
+    appProjectName,
     appProjectRoot,
   };
 }
