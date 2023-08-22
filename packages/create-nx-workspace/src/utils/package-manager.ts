@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, copyFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
+import { homedir } from 'os';
 
 /*
  * Because we don't want to depend on @nx/workspace (to speed up the workspace creation)
@@ -76,6 +77,12 @@ export function generatePackageManagerFiles(
   root: string,
   packageManager: PackageManager = detectPackageManager()
 ) {
+  // copy .npmrc file from user's home directory
+  const userHomeDir = homedir();
+  if (existsSync(join(userHomeDir, '.npmrc'))) {
+    copyFileSync(join(userHomeDir, '.npmrc'), join(root, '.npmrc'));
+  }
+
   const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
   switch (packageManager) {
     case 'yarn':

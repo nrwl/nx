@@ -1,4 +1,4 @@
-import { writeFileSync, existsSync, copyFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { dirSync } from 'tmp';
 import * as ora from 'ora';
 import { join } from 'path';
@@ -12,7 +12,6 @@ import { execAndWait } from './utils/child-process-utils';
 import { output } from './utils/output';
 import { nxVersion } from './utils/nx/nx-version';
 import { mapErrorToBodyLines } from './utils/error-utils';
-import { homedir } from 'os';
 
 /**
  * Creates a temporary directory and installs Nx in it.
@@ -39,12 +38,6 @@ export async function createSandbox(packageManager: PackageManager) {
       })
     );
     generatePackageManagerFiles(tmpDir, packageManager);
-
-    // copy .npmrc file from user's home directory
-    const userHomeDir = homedir();
-    if (existsSync(join(userHomeDir, '.npmrc'))) {
-      copyFileSync(join(userHomeDir, '.npmrc'), join(tmpDir, '.npmrc'));
-    }
 
     if (preInstall) {
       await execAndWait(preInstall, tmpDir);
