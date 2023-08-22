@@ -451,11 +451,11 @@ export class ForkedProcessTaskRunner {
         override: false,
       });
       environmentVariables = {
-        ...environmentVariables,
         ...expand({
           ...myEnv,
           ignoreProcessEnv: true, // Do not override existing env variables as we load
         }).parsed,
+        ...environmentVariables,
       };
     }
 
