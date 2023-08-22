@@ -21,6 +21,7 @@ describe('Cypress e2e configuration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree.write('.eslintrc.json', '{}'); // we are explicitly checking for existance of config type
   });
 
   afterAll(() => {

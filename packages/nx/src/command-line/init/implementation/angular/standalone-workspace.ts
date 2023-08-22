@@ -217,7 +217,10 @@ function projectHasKarmaConfig(
 function projectHasEslintConfig(
   project: AngularJsonProjectConfiguration
 ): boolean {
-  return fileExists(join(project.root, '.eslintrc.json'));
+  return (
+    fileExists(join(project.root, '.eslintrc.json')) ||
+    fileExists(join(project.root, 'eslint.config.js'))
+  );
 }
 
 function replaceNgWithNxInPackageJsonScripts(repoRoot: string): void {
