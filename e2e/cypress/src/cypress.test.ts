@@ -153,33 +153,35 @@ describe('env vars', () => {
     TEN_MINS_MS
   );
 
-  it('should run e2e in parallel', async () => {
-    // ensure ports are free before running tests
-    await killPort(4200);
-
-    const ngAppName = uniq('ng-app');
-    runCLI(
-      `generate @nx/angular:app ${ngAppName} --e2eTestRunner=cypress --linter=eslint --no-interactive`
-    );
-
-    const results = runCLI(
-      `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`
-    );
-    expect(results).toContain('Using port 4200');
-    expect(results).toContain('Using port 4201');
-    expect(results).toContain('Successfully ran target e2e for 2 projects');
-    checkFilesDoNotExist(
-      `node_modules/@nx/cypress/src/executors/cypress/4200.txt`,
-      `node_modules/@nx/cypress/src/executors/cypress/4201.txt`
-    );
-  });
-
   it(
-    'should allow CT and e2e in the same project',
+    'should run e2e in parallel',
     async () => {
-      await testCtAndE2eInProject('next');
-      await testCtAndE2eInProject('angular');
-      await testCtAndE2eInProject('react');
+      // ensure ports are free before running tests
+      await killPort(4200);
+
+      const ngAppName = uniq('ng-app');
+      runCLI(
+        `generate @nx/angular:app ${ngAppName} --e2eTestRunner=cypress --linter=eslint --no-interactive`
+      );
+
+      const results = runCLI(
+        `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`
+      );
+      expect(results).toContain('Using port 4200');
+      expect(results).toContain('Using port 4201');
+      expect(results).toContain('Successfully ran target e2e for 2 projects');
+      checkFilesDoNotExist(
+        `node_modules/@nx/cypress/src/executors/cypress/4200.txt`,
+        `node_modules/@nx/cypress/src/executors/cypress/4201.txt`
+      );
+    },
+    TEN_MINS_MS
+  );
+
+  it.each(['react', 'next', 'angular'])(
+    `should allow CT and e2e in same project - %s`,
+    async (framework: 'react' | 'next' | 'angular') => {
+      await testCtAndE2eInProject(framework);
     },
     TEN_MINS_MS
   );
