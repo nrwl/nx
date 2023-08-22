@@ -1,6 +1,7 @@
 import {
   formatFiles,
   getProjects,
+  joinPathFragments,
   runTasksInSerial,
   stripIndents,
   Tree,
@@ -86,9 +87,23 @@ export async function hostInternal(tree: Tree, options: Schema) {
   }
 
   for (const remote of remotesToGenerate) {
+    let remoteDirectory = options.directory;
+    if (
+      options.projectNameAndRootFormat === 'as-provided' &&
+      options.directory
+    ) {
+      /**
+       * With the `as-provided` format, the provided directory would be the root
+       * of the host application. Append the remote name to the host parent
+       * directory to get the remote directory.
+       */
+      remoteDirectory = joinPathFragments(options.directory, '..', remote);
+    }
+
     await remoteGenerator(tree, {
       ...options,
       name: remote,
+      directory: remoteDirectory,
       host: hostProjectName,
       skipFormat: true,
       standalone: options.standalone,
