@@ -39,7 +39,7 @@ Once you have your NxCloud URL proceed to the below steps!
 # This is all you need to get the baseline of your nx-cloud instance configured!
 
 # Set the external URL your instance is running on. This is the URL from the previous step
-nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca'
+nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at the end
 
 secret:
   # set your initial admin password for logging into the app
@@ -98,7 +98,7 @@ You can optionally enable authentication using your preferred SSO provider:
 # global.imageTag: ''
 
 # Set the external URL your instance is running on
-nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca'
+nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at the end
 
 # Uncomment (along with github secrets below) to enable working with GitHub pull requests or github auth
 #github:
