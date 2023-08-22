@@ -38,7 +38,7 @@ function getTargets(options: NormalizedSchema) {
   architect.serve = {
     executor: 'nx:run-commands',
     options: {
-      command: `nx start ${options.name}`,
+      command: `nx start ${options.projectName}`,
     },
   };
 
