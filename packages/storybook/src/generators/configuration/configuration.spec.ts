@@ -98,7 +98,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         standaloneConfig: false,
-
         uiFramework: '@storybook/react-webpack5',
       });
       const tsconfigJson = readJson<TsConfig>(
