@@ -1,6 +1,6 @@
 {
   "name": "e2e-project",
-  "factory": "./src/generators/e2e-project/e2e",
+  "factory": "./src/generators/e2e-project/e2e#e2eProjectGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -23,6 +23,11 @@
       "projectDirectory": {
         "type": "string",
         "description": "the directory where the plugin is placed."
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "pluginOutputPath": {
         "type": "string",
@@ -52,7 +57,7 @@
     "presets": []
   },
   "description": "Create a E2E application for a Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/e2e-project/e2e.ts",
+  "implementation": "/packages/plugin/src/generators/e2e-project/e2e#e2eProjectGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/e2e-project/schema.json",
