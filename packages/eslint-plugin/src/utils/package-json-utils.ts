@@ -13,6 +13,16 @@ export function getAllDependencies(
   };
 }
 
+export function getProductionDependencies(
+  packageJson: PackageJson
+): Record<string, string> {
+  return {
+    ...packageJson.dependencies,
+    ...packageJson.peerDependencies,
+    ...packageJson.optionalDependencies,
+  };
+}
+
 export function getPackageJson(path: string): PackageJson {
   if (existsSync(path)) {
     return readJsonFile(path);
