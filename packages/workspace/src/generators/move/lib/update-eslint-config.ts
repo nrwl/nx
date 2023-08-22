@@ -1,6 +1,5 @@
-import { ensurePackage, ProjectConfiguration, Tree } from '@nx/devkit';
+import { output, ProjectConfiguration, Tree } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
-import { nxVersion } from '../../../utils/versions';
 
 /**
  * Update the .eslintrc file of the project if it exists.
@@ -16,14 +15,22 @@ export function updateEslintConfig(
   if (!tree.exists('.eslintrc.json') && !tree.exists('eslint.config.js')) {
     return;
   }
-  ensurePackage('@nx/linter', nxVersion);
-  const {
-    updateRelativePathsInConfig,
-    // nx-ignore-next-line
-  } = require('@nx/linter/src/generators/utils/eslint-file');
-  updateRelativePathsInConfig(
-    tree,
-    project.root,
-    schema.relativeToRootDestination
-  );
+  try {
+    const {
+      updateRelativePathsInConfig,
+      // nx-ignore-next-line
+    } = require('@nx/linter/src/generators/utils/eslint-file');
+    updateRelativePathsInConfig(
+      tree,
+      project.root,
+      schema.relativeToRootDestination
+    );
+  } catch {
+    output.warn({
+      title: `Could not update the eslint config file.`,
+      bodyLines: [
+        'The @nx/linter package could not be loaded. Please update the paths in eslint config manually.',
+      ],
+    });
+  }
 }
