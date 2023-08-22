@@ -304,6 +304,7 @@ export function Header(): JSX.Element {
           </div>
         </div>
         <div className="items-justified flex flex-shrink-0 justify-center space-x-1 text-sm">
+          <AlgoliaSearch tiny={true} />
           <ThemeSwitcher />
           <a
             title="Nx is open source, check the code on GitHub"
