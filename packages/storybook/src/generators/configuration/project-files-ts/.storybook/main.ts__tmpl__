@@ -1,4 +1,8 @@
 import type { StorybookConfig } from '<%= uiFramework %>';
+<% if (usesVite && !viteConfigFilePath) { %>
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { mergeConfig } from 'vite';
+<% } %>
 
 const config: StorybookConfig = {
   stories: [
@@ -10,13 +14,19 @@ const config: StorybookConfig = {
   framework: {
     name: '<%= uiFramework %>',
     options: {
-      <% if (usesVite) { %>
+      <% if (usesVite && viteConfigFilePath) { %>
       builder: {
         viteConfigPath: '<%= viteConfigFilePath %>',
       },
       <% } %>
     },
   },
+  <% if (usesVite && !viteConfigFilePath) { %>
+  viteFinal: async (config) =>
+    mergeConfig(config, {
+      plugins: [nxViteTsPaths()],
+    }),
+  <% } %>
 };
 
 export default config;
