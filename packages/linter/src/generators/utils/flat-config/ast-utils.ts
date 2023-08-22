@@ -596,7 +596,6 @@ export function addCompatToFlatConfig(content: string) {
       text: `${DEFAULT_FLAT_CONFIG}\n`,
     },
   ]);
-  // TODO DEFAULT_FLAT_CONFIG before module.exports
 }
 
 const DEFAULT_FLAT_CONFIG = `
