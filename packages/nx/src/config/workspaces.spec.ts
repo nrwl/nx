@@ -3,6 +3,7 @@ import { TempFs } from '../utils/testing/temp-fs';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { retrieveProjectConfigurations } from '../project-graph/utils/retrieve-workspace-files';
 import { readNxJson } from './configuration';
+import { setupWorkspaceContext } from '../utils/workspace-context';
 
 const libConfig = (root, name?: string) => ({
   name: name ?? toProjectName(`${root}/some-file`),
@@ -21,16 +22,9 @@ const packageLibConfig = (root, name?: string) => ({
 });
 
 describe('Workspaces', () => {
-  let fs: TempFs;
-  beforeEach(() => {
-    fs = new TempFs('Workspaces');
-  });
-  afterEach(() => {
-    fs.cleanup();
-  });
-
   describe('readWorkspaceConfiguration', () => {
     it('should be able to inline project configurations', async () => {
+      const fs = new TempFs('Workspaces');
       const standaloneConfig = libConfig('lib1');
 
       const config = {
@@ -47,6 +41,8 @@ describe('Workspaces', () => {
         'libs/domain/lib4/project.json': JSON.stringify({}),
         'workspace.json': JSON.stringify(config),
       });
+      setupWorkspaceContext(fs.tempDir);
+      await wait();
 
       const workspaces = new Workspaces(fs.tempDir);
       const resolved = workspaces.readWorkspaceConfiguration();
@@ -54,6 +50,7 @@ describe('Workspaces', () => {
     });
 
     it('should build project configurations from glob', async () => {
+      const fs = new TempFs('Workspaces');
       const lib1Config = libConfig('lib1');
       const lib2Config = packageLibConfig('libs/lib2');
       const domainPackageConfig = packageLibConfig(
@@ -103,6 +100,7 @@ describe('Workspaces', () => {
     });
 
     it('should use the workspace globs in package.json', async () => {
+      const fs = new TempFs('Workspaces');
       await fs.createFiles({
         'packages/my-package/package.json': JSON.stringify({
           name: 'my-package',
@@ -112,6 +110,8 @@ describe('Workspaces', () => {
           workspaces: ['packages/**'],
         }),
       });
+      setupWorkspaceContext(fs.tempDir);
+      await wait();
 
       withEnvironmentVariables(
         {
@@ -134,3 +134,7 @@ describe('Workspaces', () => {
     });
   });
 });
+
+function wait() {
+  return new Promise((res) => setTimeout(res, 150));
+}

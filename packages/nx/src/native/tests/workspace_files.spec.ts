@@ -56,8 +56,10 @@ describe('workspace files', () => {
     });
     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
 
+    const context = new WorkspaceContext(fs.tempDir);
+    await wait();
     let { projectFileMap, projectConfigurations, globalFiles } =
-      new WorkspaceContext(fs.tempDir).getWorkspaceFiles(
+      context.getWorkspaceFiles(
         globs,
         createParseConfigurationsFunction(fs.tempDir)
       );
@@ -165,7 +167,7 @@ describe('workspace files', () => {
   it('should assign files to the root project if it exists', async () => {
     const fs = new TempFs('workspace-files');
     const nxJson: NxJsonConfiguration = {};
-    await fs.createFiles({
+    fs.createFiles({
       './nx.json': JSON.stringify(nxJson),
       './package.json': JSON.stringify({
         name: 'repo-name',
@@ -178,10 +180,15 @@ describe('workspace files', () => {
       './src/index.js': '',
       './jest.config.js': '',
     });
+
+    const context = new WorkspaceContext(fs.tempDir);
+    await wait();
+
     const globs = ['project.json', '**/project.json', '**/package.json'];
-    const { globalFiles, projectFileMap } = new WorkspaceContext(
-      fs.tempDir
-    ).getWorkspaceFiles(globs, createParseConfigurationsFunction(fs.tempDir));
+    const { globalFiles, projectFileMap } = context.getWorkspaceFiles(
+      globs,
+      createParseConfigurationsFunction(fs.tempDir)
+    );
 
     expect(globalFiles).toEqual([]);
     expect(projectFileMap['repo-name']).toMatchInlineSnapshot(`
@@ -232,25 +239,24 @@ describe('workspace files', () => {
       './libs/project1/index.js': '',
     });
 
+    const context = new WorkspaceContext(fs.tempDir);
+    await wait();
     let globs = ['project.json', '**/project.json', '**/package.json'];
 
-    let nodes = new WorkspaceContext(fs.tempDir).getProjectConfigurations(
-      globs,
-      (filenames) => {
-        const res = {};
-        for (const filename of filenames) {
-          const json = readJsonFile(join(fs.tempDir, filename));
-          res[json.name] = {
-            ...json,
-            root: dirname(filename),
-          };
-        }
-        return {
-          externalNodes: {},
-          projectNodes: res,
+    let nodes = context.getProjectConfigurations(globs, (filenames) => {
+      const res = {};
+      for (const filename of filenames) {
+        const json = readJsonFile(join(fs.tempDir, filename));
+        res[json.name] = {
+          ...json,
+          root: dirname(filename),
         };
       }
-    );
+      return {
+        externalNodes: {},
+        projectNodes: res,
+      };
+    });
     expect(nodes.projectNodes).toEqual({
       project1: {
         name: 'project1',
@@ -347,3 +353,8 @@ describe('workspace files', () => {
   //   });
   // });
 });
+
+// use this wait to trigger a new microtask to give the system a chance to create the background thread
+function wait() {
+  return new Promise((res) => setTimeout(res, 150));
+}
