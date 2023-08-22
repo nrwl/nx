@@ -272,8 +272,7 @@ const diataxis = {
     '/concepts/more-concepts/monorepo-nx-enterprise',
   '/guides/performance-profiling': '/recipes/other/performance-profiling',
   '/guides/eslint': '/recipes/other/eslint',
-  '/guides/customize-webpack':
-    '/packages/webpack/documents/webpack-config-setup',
+  '/guides/customize-webpack': '/recipes/webpack/webpack-config-setup',
   '/guides/nx-daemon': '/concepts/more-concepts/nx-daemon',
   '/guides/js-and-ts': '/recipes/other/js-and-ts',
   '/guides/browser-support': '/recipes/other/browser-support',
@@ -300,8 +299,7 @@ const diataxis = {
   '/examples/caching': '/recipes/other/caching',
   '/examples/dte': '/recipes/other/dte',
   '/recipe/workspace-generators': '/recipes/generators/local-generators',
-  '/recipes/other/customize-webpack':
-    '/packages/webpack/documents/webpack-config-setup',
+  '/recipes/other/customize-webpack': '/recipes/webpack/webpack-config-setup',
 };
 
 /**
@@ -378,6 +376,18 @@ const recipesUrls = {
   '/recipes/other/advanced-update':
     '/recipes/managing-repository/advanced-update',
   '/recipes/other/js-and-ts': '/recipes/managing-repository/js-and-ts',
+  '/packages/cypress/documents/cypress-component-testing':
+    '/recipes/cypress/cypress-component-testing',
+  '/packages/cypress/documents/cypress-v11-migration':
+    '/recipes/cypress/cypress-v11-migration',
+  '/packages/next/documents/next-config-setup':
+    '/recipes/next/next-config-setup',
+  '/packages/vite/documents/set-up-vite-manually':
+    '/recipes/vite/set-up-vite-manually',
+  '/packages/webpack/documents/webpack-plugins':
+    '/recipes/webpack/webpack-plugins',
+  '/packages/webpack/documents/webpack-config-setup':
+    '/recipes/webpack/webpack-config-setup',
 };
 
 /**

@@ -436,28 +436,6 @@
         "path": "/packages/cypress/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/cypress/cypress-plugin"
-      },
-      "/packages/cypress/documents/cypress-component-testing": {
-        "id": "cypress-component-testing",
-        "name": "Component Testing",
-        "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
-        "file": "generated/packages/cypress/documents/cypress-component-testing",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/cypress/documents/cypress-component-testing",
-        "tags": [],
-        "originalFilePath": "shared/packages/cypress/cypress-component-testing"
-      },
-      "/packages/cypress/documents/v11-migration-guide": {
-        "id": "v11-migration-guide",
-        "name": "v11 Migration Guide",
-        "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
-        "file": "generated/packages/cypress/documents/v11-migration-guide",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/cypress/documents/v11-migration-guide",
-        "tags": [],
-        "originalFilePath": "shared/packages/cypress/cypress-v11-migration"
       }
     },
     "root": "/packages/cypress",
@@ -1365,17 +1343,6 @@
         "path": "/packages/next/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/next/plugin-overview"
-      },
-      "/packages/next/documents/next-config-setup": {
-        "id": "next-config-setup",
-        "name": "How to configure Next.js plugins",
-        "description": "A guide for configuring Next.js plugins with Nx",
-        "file": "generated/packages/next/documents/next-config-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/next/documents/next-config-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/next/next-config-setup"
       }
     },
     "root": "/packages/next",
@@ -2549,17 +2516,6 @@
         "path": "/packages/vite/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/vite/vite-plugin"
-      },
-      "/packages/vite/documents/set-up-vite-manually": {
-        "id": "set-up-vite-manually",
-        "name": "Manually set up your project to use Vite.js",
-        "description": "This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.",
-        "file": "generated/packages/vite/documents/set-up-vite-manually",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/vite/documents/set-up-vite-manually",
-        "tags": [],
-        "originalFilePath": "shared/packages/vite/set-up-vite-manually"
       }
     },
     "root": "/packages/vite",
@@ -2711,28 +2667,6 @@
         "path": "/packages/webpack/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/webpack/plugin-overview"
-      },
-      "/packages/webpack/documents/webpack-config-setup": {
-        "id": "webpack-config-setup",
-        "name": "How to configure webpack on your Nx workspace",
-        "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
-        "file": "generated/packages/webpack/documents/webpack-config-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/webpack/documents/webpack-config-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/webpack/webpack-config-setup"
-      },
-      "/packages/webpack/documents/webpack-plugins": {
-        "id": "webpack-plugins",
-        "name": "Webpack plugins",
-        "description": "Webpack plugins",
-        "file": "generated/packages/webpack/documents/webpack-plugins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/webpack/documents/webpack-plugins",
-        "tags": [],
-        "originalFilePath": "shared/packages/webpack/webpack-plugins"
       }
     },
     "root": "/packages/webpack",

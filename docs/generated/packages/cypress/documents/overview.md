@@ -9,7 +9,7 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 
 ## Setting Up Cypress
 
-> Info about [Cypress Component Testing can be found here](/packages/cypress/documents/cypress-component-testing)
+> Info about [Cypress Component Testing can be found here](/recipes/cypress/cypress-component-testing)
 >
 > Info about [using Cypress and Storybook can be found here](/recipes/storybook/overview-react#cypress-tests-for-storiesbook)
 

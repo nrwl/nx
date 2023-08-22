@@ -1990,6 +1990,90 @@
             "disableCollapsible": false
           },
           {
+            "name": "Cypress",
+            "path": "/recipes/cypress",
+            "id": "cypress",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Component Testing",
+                "path": "/recipes/cypress/cypress-component-testing",
+                "id": "cypress-component-testing",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Cypress v11 Migration Guide",
+                "path": "/recipes/cypress/cypress-v11-migration",
+                "id": "cypress-v11-migration",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Next",
+            "path": "/recipes/next",
+            "id": "next",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "How to configure Next.js plugins",
+                "path": "/recipes/next/next-config-setup",
+                "id": "next-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Vite",
+            "path": "/recipes/vite",
+            "id": "vite",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Manually set up your project to use Vite.js",
+                "path": "/recipes/vite/set-up-vite-manually",
+                "id": "set-up-vite-manually",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Webpack",
+            "path": "/recipes/webpack",
+            "id": "webpack",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "How to configure webpack on your Nx workspace",
+                "path": "/recipes/webpack/webpack-config-setup",
+                "id": "webpack-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Webpack plugins",
+                "path": "/recipes/webpack/webpack-plugins",
+                "id": "webpack-plugins",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Enforce Module Boundaries",
             "path": "/recipes/enforce-module-boundaries",
             "id": "enforce-module-boundaries",
@@ -3089,6 +3173,138 @@
         "name": "Angular: Configuring styles and preprocessor options",
         "path": "/recipes/storybook/angular-configuring-styles",
         "id": "angular-configuring-styles",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Cypress",
+        "path": "/recipes/cypress",
+        "id": "cypress",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Component Testing",
+            "path": "/recipes/cypress/cypress-component-testing",
+            "id": "cypress-component-testing",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Cypress v11 Migration Guide",
+            "path": "/recipes/cypress/cypress-v11-migration",
+            "id": "cypress-v11-migration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Component Testing",
+        "path": "/recipes/cypress/cypress-component-testing",
+        "id": "cypress-component-testing",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Cypress v11 Migration Guide",
+        "path": "/recipes/cypress/cypress-v11-migration",
+        "id": "cypress-v11-migration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Next",
+        "path": "/recipes/next",
+        "id": "next",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "How to configure Next.js plugins",
+            "path": "/recipes/next/next-config-setup",
+            "id": "next-config-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to configure Next.js plugins",
+        "path": "/recipes/next/next-config-setup",
+        "id": "next-config-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Vite",
+        "path": "/recipes/vite",
+        "id": "vite",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Manually set up your project to use Vite.js",
+            "path": "/recipes/vite/set-up-vite-manually",
+            "id": "set-up-vite-manually",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Manually set up your project to use Vite.js",
+        "path": "/recipes/vite/set-up-vite-manually",
+        "id": "set-up-vite-manually",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Webpack",
+        "path": "/recipes/webpack",
+        "id": "webpack",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "How to configure webpack on your Nx workspace",
+            "path": "/recipes/webpack/webpack-config-setup",
+            "id": "webpack-config-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Webpack plugins",
+            "path": "/recipes/webpack/webpack-plugins",
+            "id": "webpack-plugins",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to configure webpack on your Nx workspace",
+        "path": "/recipes/webpack/webpack-config-setup",
+        "id": "webpack-config-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Webpack plugins",
+        "path": "/recipes/webpack/webpack-plugins",
+        "id": "webpack-plugins",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6001,22 +6217,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Component Testing",
-                "path": "/packages/cypress/documents/cypress-component-testing",
-                "id": "cypress-component-testing",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "v11 Migration Guide",
-                "path": "/packages/cypress/documents/v11-migration-guide",
-                "id": "v11-migration-guide",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -6996,14 +7196,6 @@
                 "name": "Overview",
                 "path": "/packages/next/documents/overview",
                 "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How to configure Next.js plugins",
-                "path": "/packages/next/documents/next-config-setup",
-                "id": "next-config-setup",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -8168,14 +8360,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Manually set up your project to use Vite.js",
-                "path": "/packages/vite/documents/set-up-vite-manually",
-                "id": "set-up-vite-manually",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -8349,22 +8533,6 @@
                 "name": "Overview of the Nx Webpack Plugin",
                 "path": "/packages/webpack/documents/overview",
                 "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How to configure webpack on your Nx workspace",
-                "path": "/packages/webpack/documents/webpack-config-setup",
-                "id": "webpack-config-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Webpack plugins",
-                "path": "/packages/webpack/documents/webpack-plugins",
-                "id": "webpack-plugins",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
