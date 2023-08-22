@@ -352,14 +352,8 @@ async function normalizeOptions(
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
-    await determineProjectNameAndRootOptions(host, {
-      name: `${options.name}-e2e`,
-      projectType: 'application',
-      directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: null,
-    });
+  const e2eProjectName = `${appProjectName}-e2e`;
+  const e2eProjectRoot = `${appProjectRoot}-e2e`;
 
   const { npmScope } = getWorkspaceLayout(host);
 
