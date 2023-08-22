@@ -11,10 +11,14 @@ export const eslintConfigFileWhitelist = [
 ];
 
 export const baseEsLintConfigFile = '.eslintrc.base.json';
+export const baseEsLintFlatConfigFile = 'eslint.base.config.js';
 
 export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
   if (projectRoot === '' && tree.exists(baseEsLintConfigFile)) {
     return baseEsLintConfigFile;
+  }
+  if (projectRoot === '' && tree.exists(baseEsLintFlatConfigFile)) {
+    return baseEsLintFlatConfigFile;
   }
   for (const file of eslintConfigFileWhitelist) {
     if (tree.exists(joinPathFragments(projectRoot, file))) {
