@@ -35,20 +35,8 @@ export async function normalizeOptions(
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  let e2eProjectName = 'e2e';
-  let e2eProjectRoot = 'e2e';
-  if (!options.rootProject) {
-    const projectNameAndRoot = await determineProjectNameAndRootOptions(host, {
-      name: `${options.name}-e2e`,
-      projectType: 'application',
-      directory: options.directory,
-      projectNameAndRootFormat: options.projectNameAndRootFormat,
-      rootProject: options.rootProject,
-      callingGenerator: '@nx/next:application',
-    });
-    e2eProjectName = projectNameAndRoot.projectName;
-    e2eProjectRoot = projectNameAndRoot.projectRoot;
-  }
+  const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
+  const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
 
   const name = names(options.name).fileName;
 
