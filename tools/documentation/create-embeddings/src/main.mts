@@ -20,7 +20,6 @@ import manifestsCloud from '../../../../docs/generated/manifests/cloud.json' ass
 import manifestsExtending from '../../../../docs/generated/manifests/extending-nx.json' assert { type: 'json' };
 import manifestsNx from '../../../../docs/generated/manifests/nx.json' assert { type: 'json' };
 import manifestsPackages from '../../../../docs/generated/manifests/packages.json' assert { type: 'json' };
-import manifestsRecipes from '../../../../docs/generated/manifests/recipes.json' assert { type: 'json' };
 import manifestsTags from '../../../../docs/generated/manifests/tags.json' assert { type: 'json' };
 
 let identityMap = {};
@@ -197,7 +196,6 @@ async function generateEmbeddings() {
     ...getAllFilesWithItemList(manifestsCloud),
     ...getAllFilesWithItemList(manifestsExtending),
     ...getAllFilesWithItemList(manifestsPackages),
-    ...getAllFilesWithItemList(manifestsRecipes),
     ...getAllFilesWithItemList(manifestsTags),
   ].filter(
     (entry) =>
