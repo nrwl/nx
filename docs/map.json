@@ -798,6 +798,70 @@
               ]
             },
             {
+              "name": "Cypress",
+              "id": "cypress",
+              "description": "Cypress related recipes",
+              "itemList": [
+                {
+                  "id": "cypress-component-testing",
+                  "name": "Component Testing",
+                  "description": "Component Testing",
+                  "file": "shared/packages/cypress/cypress-component-testing"
+                },
+                {
+                  "id": "cypress-v11-migration",
+                  "name": "Cypress v11 Migration Guide",
+                  "description": "Cypress v11 Migration Guide",
+                  "file": "shared/packages/cypress/cypress-v11-migration"
+                }
+              ]
+            },
+            {
+              "name": "Next",
+              "id": "next",
+              "description": "Next related recipes",
+              "itemList": [
+                {
+                  "id": "next-config-setup",
+                  "name": "How to configure Next.js plugins",
+                  "description": "How to configure Next.js plugins",
+                  "file": "shared/packages/next/next-config-setup"
+                }
+              ]
+            },
+            {
+              "name": "Vite",
+              "id": "vite",
+              "description": "Vite related recipes",
+              "itemList": [
+                {
+                  "id": "set-up-vite-manually",
+                  "name": "Manually set up your project to use Vite.js",
+                  "description": "Manually set up your project to use Vite.js",
+                  "file": "shared/packages/vite/set-up-vite-manually"
+                }
+              ]
+            },
+            {
+              "name": "Webpack",
+              "id": "webpack",
+              "description": "Webpack related recipes",
+              "itemList": [
+                {
+                  "id": "webpack-config-setup",
+                  "name": "How to configure webpack on your Nx workspace",
+                  "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+                  "file": "shared/packages/webpack/webpack-config-setup"
+                },
+                {
+                  "id": "webpack-plugins",
+                  "name": "Webpack plugins",
+                  "description": "Webpack plugins",
+                  "file": "shared/packages/webpack/webpack-plugins"
+                }
+              ]
+            },
+            {
               "name": "Enforce Module Boundaries",
               "id": "enforce-module-boundaries",
               "description": "Configuring the enforce module boundaries rule",
@@ -1959,12 +2023,6 @@
               "name": "Overview of the Nx Vite Plugin",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
-            },
-            {
-              "id": "set-up-vite-manually",
-              "name": "Manually set up your project to use Vite.js",
-              "description": "This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.",
-              "file": "shared/packages/vite/set-up-vite-manually"
             }
           ]
         },
@@ -1979,18 +2037,6 @@
               "name": "Overview of the Nx Webpack Plugin",
               "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
               "file": "shared/packages/webpack/plugin-overview"
-            },
-            {
-              "id": "webpack-config-setup",
-              "name": "How to configure webpack on your Nx workspace",
-              "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
-              "file": "shared/packages/webpack/webpack-config-setup"
-            },
-            {
-              "id": "webpack-plugins",
-              "name": "Webpack plugins",
-              "description": "Webpack plugins",
-              "file": "shared/packages/webpack/webpack-plugins"
             }
           ]
         },
@@ -2049,16 +2095,6 @@
               "id": "overview",
               "path": "/packages/cypress",
               "file": "shared/packages/cypress/cypress-plugin"
-            },
-            {
-              "name": "Component Testing",
-              "id": "cypress-component-testing",
-              "file": "shared/packages/cypress/cypress-component-testing"
-            },
-            {
-              "name": "v11 Migration Guide",
-              "id": "v11-migration-guide",
-              "file": "shared/packages/cypress/cypress-v11-migration"
             }
           ]
         },
@@ -2188,12 +2224,6 @@
               "name": "Overview",
               "path": "/packages/next",
               "file": "shared/packages/next/plugin-overview"
-            },
-            {
-              "id": "next-config-setup",
-              "name": "How to configure Next.js plugins",
-              "description": "A guide for configuring Next.js plugins with Nx",
-              "file": "shared/packages/next/next-config-setup"
             }
           ]
         },

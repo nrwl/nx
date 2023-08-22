@@ -2482,6 +2482,110 @@
         "tags": []
       },
       {
+        "id": "cypress",
+        "name": "Cypress",
+        "description": "Cypress related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "cypress-component-testing",
+            "name": "Component Testing",
+            "description": "Component Testing",
+            "file": "shared/packages/cypress/cypress-component-testing",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/cypress/cypress-component-testing",
+            "tags": []
+          },
+          {
+            "id": "cypress-v11-migration",
+            "name": "Cypress v11 Migration Guide",
+            "description": "Cypress v11 Migration Guide",
+            "file": "shared/packages/cypress/cypress-v11-migration",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/cypress/cypress-v11-migration",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/cypress",
+        "tags": []
+      },
+      {
+        "id": "next",
+        "name": "Next",
+        "description": "Next related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "next-config-setup",
+            "name": "How to configure Next.js plugins",
+            "description": "How to configure Next.js plugins",
+            "file": "shared/packages/next/next-config-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/next/next-config-setup",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/next",
+        "tags": []
+      },
+      {
+        "id": "vite",
+        "name": "Vite",
+        "description": "Vite related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "set-up-vite-manually",
+            "name": "Manually set up your project to use Vite.js",
+            "description": "Manually set up your project to use Vite.js",
+            "file": "shared/packages/vite/set-up-vite-manually",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/vite/set-up-vite-manually",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/vite",
+        "tags": []
+      },
+      {
+        "id": "webpack",
+        "name": "Webpack",
+        "description": "Webpack related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "webpack-config-setup",
+            "name": "How to configure webpack on your Nx workspace",
+            "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+            "file": "shared/packages/webpack/webpack-config-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/webpack/webpack-config-setup",
+            "tags": []
+          },
+          {
+            "id": "webpack-plugins",
+            "name": "Webpack plugins",
+            "description": "Webpack plugins",
+            "file": "shared/packages/webpack/webpack-plugins",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/webpack/webpack-plugins",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/webpack",
+        "tags": []
+      },
+      {
         "id": "enforce-module-boundaries",
         "name": "Enforce Module Boundaries",
         "description": "Configuring the enforce module boundaries rule",
@@ -3858,6 +3962,170 @@
     "isExternal": false,
     "path": "/recipes/storybook/angular-configuring-styles",
     "tags": ["storybook"]
+  },
+  "/recipes/cypress": {
+    "id": "cypress",
+    "name": "Cypress",
+    "description": "Cypress related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "cypress-component-testing",
+        "name": "Component Testing",
+        "description": "Component Testing",
+        "file": "shared/packages/cypress/cypress-component-testing",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/cypress/cypress-component-testing",
+        "tags": []
+      },
+      {
+        "id": "cypress-v11-migration",
+        "name": "Cypress v11 Migration Guide",
+        "description": "Cypress v11 Migration Guide",
+        "file": "shared/packages/cypress/cypress-v11-migration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/cypress/cypress-v11-migration",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/cypress",
+    "tags": []
+  },
+  "/recipes/cypress/cypress-component-testing": {
+    "id": "cypress-component-testing",
+    "name": "Component Testing",
+    "description": "Component Testing",
+    "file": "shared/packages/cypress/cypress-component-testing",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/cypress/cypress-component-testing",
+    "tags": []
+  },
+  "/recipes/cypress/cypress-v11-migration": {
+    "id": "cypress-v11-migration",
+    "name": "Cypress v11 Migration Guide",
+    "description": "Cypress v11 Migration Guide",
+    "file": "shared/packages/cypress/cypress-v11-migration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/cypress/cypress-v11-migration",
+    "tags": []
+  },
+  "/recipes/next": {
+    "id": "next",
+    "name": "Next",
+    "description": "Next related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "next-config-setup",
+        "name": "How to configure Next.js plugins",
+        "description": "How to configure Next.js plugins",
+        "file": "shared/packages/next/next-config-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/next/next-config-setup",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/next",
+    "tags": []
+  },
+  "/recipes/next/next-config-setup": {
+    "id": "next-config-setup",
+    "name": "How to configure Next.js plugins",
+    "description": "How to configure Next.js plugins",
+    "file": "shared/packages/next/next-config-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/next/next-config-setup",
+    "tags": []
+  },
+  "/recipes/vite": {
+    "id": "vite",
+    "name": "Vite",
+    "description": "Vite related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "set-up-vite-manually",
+        "name": "Manually set up your project to use Vite.js",
+        "description": "Manually set up your project to use Vite.js",
+        "file": "shared/packages/vite/set-up-vite-manually",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/vite/set-up-vite-manually",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/vite",
+    "tags": []
+  },
+  "/recipes/vite/set-up-vite-manually": {
+    "id": "set-up-vite-manually",
+    "name": "Manually set up your project to use Vite.js",
+    "description": "Manually set up your project to use Vite.js",
+    "file": "shared/packages/vite/set-up-vite-manually",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/vite/set-up-vite-manually",
+    "tags": []
+  },
+  "/recipes/webpack": {
+    "id": "webpack",
+    "name": "Webpack",
+    "description": "Webpack related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "webpack-config-setup",
+        "name": "How to configure webpack on your Nx workspace",
+        "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+        "file": "shared/packages/webpack/webpack-config-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/webpack/webpack-config-setup",
+        "tags": []
+      },
+      {
+        "id": "webpack-plugins",
+        "name": "Webpack plugins",
+        "description": "Webpack plugins",
+        "file": "shared/packages/webpack/webpack-plugins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/webpack/webpack-plugins",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/webpack",
+    "tags": []
+  },
+  "/recipes/webpack/webpack-config-setup": {
+    "id": "webpack-config-setup",
+    "name": "How to configure webpack on your Nx workspace",
+    "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+    "file": "shared/packages/webpack/webpack-config-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/webpack/webpack-config-setup",
+    "tags": []
+  },
+  "/recipes/webpack/webpack-plugins": {
+    "id": "webpack-plugins",
+    "name": "Webpack plugins",
+    "description": "Webpack plugins",
+    "file": "shared/packages/webpack/webpack-plugins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/webpack/webpack-plugins",
+    "tags": []
   },
   "/recipes/enforce-module-boundaries": {
     "id": "enforce-module-boundaries",

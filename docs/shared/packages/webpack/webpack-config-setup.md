@@ -88,7 +88,7 @@ This gives you the ability to customize the webpack configuration as needed, and
 
 ### Add configurations for other functionalities
 
-In addition to the basic configuration, you can add configurations for other frameworks or features. The `@nx/webpack` package provides plugins such as `withWeb` and `withReact`. This plugins provide features such as TS support, CSS support, JSX support, etc. You can read more about how these plugins work and how to use them in our [Webpack Plugins guide](/packages/webpack/documents/webpack-plugins).
+In addition to the basic configuration, you can add configurations for other frameworks or features. The `@nx/webpack` package provides plugins such as `withWeb` and `withReact`. This plugins provide features such as TS support, CSS support, JSX support, etc. You can read more about how these plugins work and how to use them in our [Webpack Plugins guide](/recipes/webpack/webpack-plugins).
 
 You may still reconfigure everything manually, without using the Nx plugins. However, these plugins ensure that you have the necessary configuration for Nx to work with your project.
 
