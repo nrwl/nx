@@ -358,7 +358,7 @@ async function normalizeOptions(
       projectType: 'application',
       directory: options.directory,
       projectNameAndRootFormat: options.projectNameAndRootFormat,
-      callingGenerator: undefined,
+      callingGenerator: null,
     });
 
   const { npmScope } = getWorkspaceLayout(host);
