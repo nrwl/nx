@@ -57,7 +57,7 @@ export interface PackageJson {
   peerDependenciesMeta?: Record<string, { optional: boolean }>;
   resolutions?: Record<string, string>;
   overrides?: PackageOverride;
-  bin?: Record<string, string>;
+  bin?: Record<string, string> | string;
   workspaces?:
     | string[]
     | {
