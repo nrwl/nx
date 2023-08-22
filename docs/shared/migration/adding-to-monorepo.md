@@ -14,6 +14,11 @@ Nx has first-class support for [package-based monorepos](/getting-started/tutori
 
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and add an `nx.json` for configuring caching and task pipelines.
 
+{% youtube
+src="https://www.youtube.com/embed/ngdoUQBvAjo"
+title="Add Nx to a PNPM workspaces monorepo"
+width="100%" /%}
+
 ## Installing Nx
 
 Run the following command to automatically set up Nx:
