@@ -2252,6 +2252,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Switching to ESLint's flat config format",
+                "path": "/recipes/tips-n-tricks/flat-config",
+                "id": "flat-config",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3444,6 +3452,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Switching to ESLint's flat config format",
+            "path": "/recipes/tips-n-tricks/flat-config",
+            "id": "flat-config",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3588,6 +3604,14 @@
         "name": "Using Yarn PnP",
         "path": "/recipes/tips-n-tricks/yarn-pnp",
         "id": "yarn-pnp",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Switching to ESLint's flat config format",
+        "path": "/recipes/tips-n-tricks/flat-config",
+        "id": "flat-config",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
