@@ -11,7 +11,7 @@ import {
   writeCache,
 } from './nx-deps-cache';
 import { buildImplicitProjectDependencies } from './build-dependencies';
-import { normalizeProjectNodes } from './build-nodes';
+import { normalizeProjectNodes } from './utils/normalize-project-nodes';
 import { isNxPluginV1, isNxPluginV2, loadNxPlugins } from '../utils/nx-plugin';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {

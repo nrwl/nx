@@ -1,5 +1,3 @@
-import { join } from 'path';
-import { workspaceRoot } from '../../utils/workspace-root';
 import {
   ProjectGraphProcessorContext,
   ProjectGraphProjectNode,

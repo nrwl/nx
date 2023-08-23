@@ -1,7 +1,7 @@
 import { basename } from 'node:path';
 
 import { getNxPackageJsonWorkspacesPlugin } from '../../../plugins/package-json-workspaces';
-import { getNxProjectJsonPlugin } from '../../../plugins/project-json';
+import { CreateProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
 import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
@@ -93,19 +93,19 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   // We push the nx core node builder onto the end, s.t. it overwrites any user specified behavior
   plugins.push(
     getNxPackageJsonWorkspacesPlugin(root),
-    getNxProjectJsonPlugin(root)
+    CreateProjectJsonProjectsPlugin
   );
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const plugin of plugins) {
-    const [pattern, configurationConstructor] = plugin.createNodes ?? [];
+    const [pattern, createNodes] = plugin.createNodes ?? [];
     if (!pattern) {
       continue;
     }
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
         const { projects: projectNodes, externalNodes: pluginExternalNodes } =
-          configurationConstructor(file, {
+          createNodes(file, {
             nxJsonConfiguration: nxJson,
             workspaceRoot: root,
           });

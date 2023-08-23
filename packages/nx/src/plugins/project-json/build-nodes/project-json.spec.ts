@@ -1,15 +1,25 @@
 import * as memfs from 'memfs';
 
-import '../src/utils/testing/mock-fs';
+import '../../../utils/testing/mock-fs';
 
-import { PackageJson } from '../src/utils/package-json';
+import { PackageJson } from '../../../utils/package-json';
 
 import {
-  getNxProjectJsonPlugin,
+  CreateProjectJsonProjectsPlugin,
   mergeNpmScriptsWithTargets,
 } from './project-json';
+import { CreateNodesContext } from '../../../utils/nx-plugin';
+const { createNodes } = CreateProjectJsonProjectsPlugin;
 
 describe('nx project.json plugin', () => {
+  let context: CreateNodesContext;
+  beforeEach(() => {
+    context = {
+      nxJsonConfiguration: {},
+      workspaceRoot: '/root',
+    };
+  });
+
   it('should build projects from project.json', () => {
     memfs.vol.fromJSON(
       {
@@ -37,8 +47,7 @@ describe('nx project.json plugin', () => {
       '/root'
     );
 
-    const plugin = getNxProjectJsonPlugin('/root');
-    expect(plugin.createNodes[1]('project.json', null)).toMatchInlineSnapshot(`
+    expect(createNodes[1]('project.json', context)).toMatchInlineSnapshot(`
       {
         "projects": {
           "root": {
@@ -51,7 +60,7 @@ describe('nx project.json plugin', () => {
         },
       }
     `);
-    expect(plugin.createNodes[1]('packages/lib-a/project.json', null))
+    expect(createNodes[1]('packages/lib-a/project.json', context))
       .toMatchInlineSnapshot(`
       {
         "projects": {
