@@ -2,7 +2,7 @@ import { ProjectGraphProjectNode } from '../../config/project-graph';
 import {
   normalizeImplicitDependencies,
   normalizeProjectTargets,
-} from './workspace-projects';
+} from './normalize-project-nodes';
 
 describe('workspace-projects', () => {
   let projectGraph: Record<string, ProjectGraphProjectNode> = {
