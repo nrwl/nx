@@ -160,11 +160,11 @@ exports[`Host App Generator --ssr should generate the correct files 9`] = `
   "executor": "@nx/angular:webpack-server",
   "options": {
     "customWebpackConfig": {
-      "path": "apps/test/webpack.server.config.js",
+      "path": "test/webpack.server.config.js",
     },
-    "main": "apps/test/server.ts",
-    "outputPath": "dist/apps/test/server",
-    "tsConfig": "apps/test/tsconfig.server.json",
+    "main": "test/server.ts",
+    "outputPath": "dist/test/server",
+    "tsConfig": "test/tsconfig.server.json",
   },
 }
 `;
@@ -359,11 +359,11 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
   "executor": "@nx/angular:webpack-server",
   "options": {
     "customWebpackConfig": {
-      "path": "apps/test/webpack.server.config.js",
+      "path": "test/webpack.server.config.js",
     },
-    "main": "apps/test/server.ts",
-    "outputPath": "dist/apps/test/server",
-    "tsConfig": "apps/test/tsconfig.server.json",
+    "main": "test/server.ts",
+    "outputPath": "dist/test/server",
+    "tsConfig": "test/tsconfig.server.json",
   },
 }
 `;
@@ -509,10 +509,10 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(\`should have as title 'test-dashboard'\`, () => {
+  it(\`should have as title 'dashboard'\`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('test-dashboard');
+    expect(app.title).toEqual('dashboard');
   });
 
   it('should render title', fakeAsync(() => {
@@ -523,7 +523,7 @@ describe('AppComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Welcome test-dashboard'
+      'Welcome dashboard'
     );
   }));
 });

@@ -25,7 +25,7 @@ describe('updateModuleName Rule', () => {
       destination: 'my/first',
       updateImportPath: true,
       newProjectName: 'my-first',
-      oldProjectRoot: 'libs/my-first',
+      oldProjectRoot: 'my-first',
     };
     await moveGenerator(tree, schema);
 
@@ -42,14 +42,14 @@ describe('updateModuleName Rule', () => {
     const updatedModuleSpecPath =
       '/libs/shared/my-first/src/lib/shared-my-first.module.spec.ts';
     const indexPath = '/libs/shared/my-first/src/index.ts';
-    const secondModulePath = '/libs/my-second/src/lib/my-second.module.ts';
+    const secondModulePath = 'my-second/src/lib/my-second.module.ts';
 
     const schema: NormalizedSchema = {
       projectName: 'my-first',
       destination: 'shared/my-first',
       updateImportPath: true,
       newProjectName: 'shared-my-first',
-      oldProjectRoot: 'libs/my-first',
+      oldProjectRoot: 'my-first',
     };
 
     beforeEach(async () => {
@@ -72,7 +72,7 @@ describe('updateModuleName Rule', () => {
         unitTestRunner: UnitTestRunner.Jest,
       });
       tree.write(
-        '/libs/my-first/src/lib/my-first.module.ts',
+        'my-first/src/lib/my-first.module.ts',
         `import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
 
@@ -83,7 +83,7 @@ describe('updateModuleName Rule', () => {
       );
 
       tree.write(
-        '/libs/my-first/src/lib/my-first.module.spec.ts',
+        'my-first/src/lib/my-first.module.spec.ts',
         `import { async, TestBed } from '@angular/core/testing';
     import { MyFirstModule } from './my-first.module';
 
@@ -159,14 +159,14 @@ describe('updateModuleName Rule', () => {
       destination: 'my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
-      oldProjectRoot: 'libs/my-source',
+      oldProjectRoot: 'my-source',
     };
 
-    const modulePath = '/libs/my-destination/src/lib/my-destination.module.ts';
+    const modulePath = 'my-destination/src/lib/my-destination.module.ts';
     const moduleSpecPath =
-      '/libs/my-destination/src/lib/my-destination.module.spec.ts';
-    const indexPath = '/libs/my-destination/src/index.ts';
-    const importerPath = '/libs/my-importer/src/lib/my-importing-file.ts';
+      'my-destination/src/lib/my-destination.module.spec.ts';
+    const indexPath = 'my-destination/src/index.ts';
+    const importerPath = 'my-importer/src/lib/my-importing-file.ts';
 
     beforeEach(async () => {
       // fake a mid-move tree:
@@ -181,7 +181,7 @@ describe('updateModuleName Rule', () => {
       });
 
       tree.write(
-        '/libs/my-destination/src/lib/my-source.module.ts',
+        'my-destination/src/lib/my-source.module.ts',
         `import { NgModule } from '@angular/core';
         import { CommonModule } from '@angular/common';
         @NgModule({
@@ -191,7 +191,7 @@ describe('updateModuleName Rule', () => {
       );
 
       tree.write(
-        '/libs/my-destination/src/lib/my-source.module.spec.ts',
+        'my-destination/src/lib/my-source.module.spec.ts',
         `import { async, TestBed } from '@angular/core/testing';
         import { MySourceModule } from './my-source.module';
         describe('MySourceModule', () => {
@@ -292,7 +292,7 @@ describe('updateModuleName Rule', () => {
       updateModuleName(tree, schema);
 
       const moduleFile = tree.read(
-        '/libs/my-source-demo/src/lib/my-source-demo.module.ts',
+        'my-source-demo/src/lib/my-source-demo.module.ts',
         'utf-8'
       );
       expect(moduleFile).toContain(`export class MySourceDemoModule {}`);
