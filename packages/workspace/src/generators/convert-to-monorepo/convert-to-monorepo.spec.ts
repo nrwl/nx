@@ -76,6 +76,34 @@ describe('monorepo generator', () => {
     expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
   });
 
+  it('should respect nested libraries', async () => {
+    await reactAppGenerator(tree, {
+      name: 'demo',
+      style: 'css',
+      bundler: 'vite',
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'none',
+      linter: 'eslint',
+      rootProject: true,
+    });
+
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      directory: 'inner',
+      style: 'css',
+      bundler: 'vite',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      linter: 'eslint',
+      rootProject: true,
+    });
+
+    await monorepoGenerator(tree, {});
+
+    expect(tree.exists('libs/inner/my-lib/tsconfig.json')).toBeTruthy();
+    expect(tree.exists('libs/inner/my-lib/src/index.ts')).toBeTruthy();
+  });
+
   it('should convert root React app (Webpack, Jest)', async () => {
     await reactAppGenerator(tree, {
       name: 'demo',
