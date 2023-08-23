@@ -34,10 +34,18 @@ describe('Angular Module Federation', () => {
     const remotePort = 4301;
 
     // generate host app
-    runCLI(`generate @nx/angular:host ${hostApp} --style=css --no-interactive`);
+    runCLI(
+      `generate @nx/angular:host ${hostApp} --style=css --project-name-and-root-format=as-provided --no-interactive`
+    );
     // generate remote app
     runCLI(
-      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-interactive`
+      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/")
+    checkFilesExist(
+      `${hostApp}/src/app/app.module.ts`,
+      `${remoteApp1}/src/app/app.module.ts`
     );
 
     // check default generated host is built successfully
@@ -46,14 +54,14 @@ describe('Angular Module Federation', () => {
 
     // generate a shared lib with a seconary entry point
     runCLI(
-      `generate @nx/angular:library ${sharedLib} --buildable --no-interactive`
+      `generate @nx/angular:library ${sharedLib} --buildable --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
       `generate @nx/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
     );
     // update host & remote files to use shared library
     updateFile(
-      `apps/${hostApp}/src/app/app.module.ts`,
+      `${hostApp}/src/app/app.module.ts`,
       `import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
       import { ${
@@ -91,7 +99,7 @@ describe('Angular Module Federation', () => {
       `
     );
     updateFile(
-      `apps/${remoteApp1}/src/app/remote-entry/entry.module.ts`,
+      `${remoteApp1}/src/app/remote-entry/entry.module.ts`,
       `import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
     import { RouterModule } from '@angular/router';
@@ -138,9 +146,11 @@ describe('Angular Module Federation', () => {
 
     // generate apps
     runCLI(
-      `generate @nx/angular:application ${app1} --routing --no-interactive`
+      `generate @nx/angular:application ${app1} --routing --project-name-and-root-format=as-provided --no-interactive`
     );
-    runCLI(`generate @nx/angular:application ${app2} --no-interactive`);
+    runCLI(
+      `generate @nx/angular:application ${app2} --project-name-and-root-format=as-provided --no-interactive`
+    );
 
     // convert apps
     runCLI(
@@ -168,7 +178,7 @@ describe('Angular Module Federation', () => {
 
     // generate remote apps
     runCLI(
-      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
+      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --project-name-and-root-format=as-provided --no-interactive`
     );
 
     // ports
@@ -196,7 +206,7 @@ describe('Angular Module Federation', () => {
     await killProcessAndPorts(process.pid, hostPort, remote1Port, remote2Port);
   }, 20_000_000);
 
-  it('should should support generating host and remote apps with the new name and root format', async () => {
+  it('should should support generating host and remote apps with --project-name-and-root-format=derived', async () => {
     const hostApp = uniq('host');
     const remoteApp = uniq('remote');
     const hostPort = 4800;
@@ -204,17 +214,18 @@ describe('Angular Module Federation', () => {
 
     // generate host app
     runCLI(
-      `generate @nx/angular:host ${hostApp} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:host ${hostApp} --project-name-and-root-format=derived --no-interactive`
     );
     // generate remote app
     runCLI(
-      `generate @nx/angular:remote ${remoteApp} --host=${hostApp} --port=${remotePort} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:remote ${remoteApp} --host=${hostApp} --port=${remotePort} --project-name-and-root-format=derived --no-interactive`
     );
 
-    // check files are generated without the layout directory ("apps/") and
-    // using the project name as the directory when no directory is provided
-    checkFilesExist(`${hostApp}/src/app/app.module.ts`);
-    checkFilesExist(`${remoteApp}/src/app/app.module.ts`);
+    // check files are generated with the layout directory ("apps/")
+    checkFilesExist(
+      `apps/${hostApp}/src/app/app.module.ts`,
+      `apps/${remoteApp}/src/app/app.module.ts`
+    );
 
     // check default generated host is built successfully
     const buildOutput = runCLI(`build ${hostApp}`);
