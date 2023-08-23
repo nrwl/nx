@@ -1,7 +1,6 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { Stats } from '@rspack/core';
-import Watching from '@rspack/core/dist/watching';
 import { rmSync } from 'fs';
 import * as path from 'path';
 import { createCompiler } from '../../utils/create-compiler';
@@ -30,7 +29,7 @@ export default async function* runExecutor(
     outfile?: string;
   }>(async ({ next, done }) => {
     if (options.watch) {
-      const watcher: Watching = compiler.watch(
+      const watcher= compiler.watch(
         {},
         async (err, stats: Stats) => {
           if (err) {

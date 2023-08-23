@@ -4,12 +4,12 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { DevServer } from '@rspack/core/dist/config';
+import { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
 import { createCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { DevServerExecutorSchema } from './schema';
-
+type DevServer = Configuration['devServer'];
 export default async function* runExecutor(
   options: DevServerExecutorSchema,
   context: ExecutorContext
