@@ -10,7 +10,6 @@ import {
   output,
 } from '@nx/devkit';
 import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
-import 'dotenv/config';
 import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';
 import { getTempTailwindPath } from '../../utils/ct-helpers';

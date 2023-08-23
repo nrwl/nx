@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import * as ts from 'typescript';
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';

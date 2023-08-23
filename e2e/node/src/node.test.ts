@@ -144,6 +144,43 @@ describe('Node Applications', () => {
     expect(additionalResult).toContain('Hello Additional World!');
   }, 60000);
 
+  it('should be able to generate an empty application with variable in .env file', async () => {
+    const originalEnvPort = process.env.PORT;
+    const port = 3457;
+    process.env.PORT = `${port}`;
+    const nodeapp = uniq('nodeapp');
+
+    runCLI(
+      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack --framework=none`
+    );
+    await setMaxWorkers();
+
+    updateFile('.env', `NX_FOOBAR="test foo bar"`);
+
+    updateFile(
+      `apps/${nodeapp}/src/main.ts`,
+      `console.log('foobar: ' + process.env['NX_FOOBAR']);`
+    );
+
+    await runCLIAsync(`build ${nodeapp}`);
+    checkFilesExist(`dist/apps/${nodeapp}/main.js`);
+
+    // check serving
+    const p = await runCommandUntil(
+      `serve ${nodeapp} --port=${port} --watch=false`,
+      (output) => {
+        process.stdout.write(output);
+        return output.includes(`foobar: test foo bar`);
+      }
+    );
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      await killPorts(port);
+    } finally {
+      process.env.port = originalEnvPort;
+    }
+  }, 60000);
+
   it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const originalEnvPort = process.env.PORT;
