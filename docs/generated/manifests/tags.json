@@ -836,6 +836,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/node/application-proxies",
+      "id": "application-proxies",
+      "name": "Set Up Application Proxies",
+      "path": "/recipes/node/application-proxies"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/deployment/node-aws-lambda",
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js",

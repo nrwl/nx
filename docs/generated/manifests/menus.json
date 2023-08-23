@@ -1882,6 +1882,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Set Up Application Proxies",
+                "path": "/recipes/node/application-proxies",
+                "id": "application-proxies",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Deploying AWS lambda in Node.js",
                 "path": "/recipes/node/node-aws-lambda",
                 "id": "node-aws-lambda",
@@ -2318,6 +2326,14 @@
                 "name": "Disable Graph Links Created from Analyzing Source Files",
                 "path": "/recipes/tips-n-tricks/analyze-source-files",
                 "id": "analyze-source-files",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Wait for Tasks to Finish",
+                "path": "/recipes/tips-n-tricks/wait-for-tasks",
+                "id": "wait-for-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2975,6 +2991,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Set Up Application Proxies",
+            "path": "/recipes/node/application-proxies",
+            "id": "application-proxies",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Deploying AWS lambda in Node.js",
             "path": "/recipes/node/node-aws-lambda",
             "id": "node-aws-lambda",
@@ -2997,6 +3021,14 @@
         "name": "Add and Deploy Netlify Edge Functions with Node",
         "path": "/recipes/node/node-serverless-functions-netlify",
         "id": "node-serverless-functions-netlify",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set Up Application Proxies",
+        "path": "/recipes/node/application-proxies",
+        "id": "application-proxies",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3696,6 +3728,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Wait for Tasks to Finish",
+            "path": "/recipes/tips-n-tricks/wait-for-tasks",
+            "id": "wait-for-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Workspace Watching",
             "path": "/recipes/tips-n-tricks/workspace-watching",
             "id": "workspace-watching",
@@ -3846,6 +3886,14 @@
         "name": "Disable Graph Links Created from Analyzing Source Files",
         "path": "/recipes/tips-n-tricks/analyze-source-files",
         "id": "analyze-source-files",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Wait for Tasks to Finish",
+        "path": "/recipes/tips-n-tricks/wait-for-tasks",
+        "id": "wait-for-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4138,6 +4186,14 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Add an Express Project",
+                "path": "/showcase/example-repos/add-express",
+                "id": "add-express",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Add a Lit Project",
                 "path": "/showcase/example-repos/add-lit",
                 "id": "add-lit",
@@ -4319,6 +4375,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Add an Express Project",
+            "path": "/showcase/example-repos/add-express",
+            "id": "add-express",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Add a Lit Project",
             "path": "/showcase/example-repos/add-lit",
             "id": "add-lit",
@@ -4455,6 +4519,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add an Express Project",
+        "path": "/showcase/example-repos/add-express",
+        "id": "add-express",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {

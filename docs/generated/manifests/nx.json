@@ -2346,6 +2346,16 @@
             "tags": ["deployment", "node"]
           },
           {
+            "id": "application-proxies",
+            "name": "Set Up Application Proxies",
+            "description": "",
+            "file": "shared/recipes/node/application-proxies",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/node/application-proxies",
+            "tags": ["node"]
+          },
+          {
             "id": "node-aws-lambda",
             "name": "Deploying AWS lambda in Node.js",
             "description": "",
@@ -2893,6 +2903,16 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/analyze-source-files",
             "tags": ["explore-graph"]
+          },
+          {
+            "id": "wait-for-tasks",
+            "name": "Wait for Tasks to Finish",
+            "description": "",
+            "file": "shared/recipes/tips-n-tricks/wait-for-tasks",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/wait-for-tasks",
+            "tags": []
           },
           {
             "id": "workspace-watching",
@@ -3709,6 +3729,16 @@
         "tags": ["deployment", "node"]
       },
       {
+        "id": "application-proxies",
+        "name": "Set Up Application Proxies",
+        "description": "",
+        "file": "shared/recipes/node/application-proxies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/application-proxies",
+        "tags": ["node"]
+      },
+      {
         "id": "node-aws-lambda",
         "name": "Deploying AWS lambda in Node.js",
         "description": "",
@@ -3742,6 +3772,16 @@
     "isExternal": false,
     "path": "/recipes/node/node-serverless-functions-netlify",
     "tags": ["deployment", "node"]
+  },
+  "/recipes/node/application-proxies": {
+    "id": "application-proxies",
+    "name": "Set Up Application Proxies",
+    "description": "",
+    "file": "shared/recipes/node/application-proxies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/application-proxies",
+    "tags": ["node"]
   },
   "/recipes/node/node-aws-lambda": {
     "id": "node-aws-lambda",
@@ -4608,6 +4648,16 @@
         "tags": ["explore-graph"]
       },
       {
+        "id": "wait-for-tasks",
+        "name": "Wait for Tasks to Finish",
+        "description": "",
+        "file": "shared/recipes/tips-n-tricks/wait-for-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/wait-for-tasks",
+        "tags": []
+      },
+      {
         "id": "workspace-watching",
         "name": "Workspace Watching",
         "description": "",
@@ -4801,6 +4851,16 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/analyze-source-files",
     "tags": ["explore-graph"]
+  },
+  "/recipes/tips-n-tricks/wait-for-tasks": {
+    "id": "wait-for-tasks",
+    "name": "Wait for Tasks to Finish",
+    "description": "",
+    "file": "shared/recipes/tips-n-tricks/wait-for-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/wait-for-tasks",
+    "tags": []
   },
   "/recipes/tips-n-tricks/workspace-watching": {
     "id": "workspace-watching",
@@ -5158,6 +5218,16 @@
         "file": "",
         "itemList": [
           {
+            "id": "add-express",
+            "name": "Add an Express Project",
+            "description": "Add an Express application to your repo",
+            "file": "shared/recipes/add-stack/add-express",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-express",
+            "tags": []
+          },
+          {
             "id": "add-lit",
             "name": "Add a Lit Project",
             "description": "Add a Lit project to your repo",
@@ -5385,6 +5455,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "add-express",
+        "name": "Add an Express Project",
+        "description": "Add an Express application to your repo",
+        "file": "shared/recipes/add-stack/add-express",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-express",
+        "tags": []
+      },
+      {
         "id": "add-lit",
         "name": "Add a Lit Project",
         "description": "Add a Lit project to your repo",
@@ -5557,6 +5637,16 @@
     ],
     "isExternal": false,
     "path": "/showcase/example-repos",
+    "tags": []
+  },
+  "/showcase/example-repos/add-express": {
+    "id": "add-express",
+    "name": "Add an Express Project",
+    "description": "Add an Express application to your repo",
+    "file": "shared/recipes/add-stack/add-express",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-express",
     "tags": []
   },
   "/showcase/example-repos/add-lit": {
