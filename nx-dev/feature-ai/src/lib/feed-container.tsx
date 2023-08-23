@@ -2,7 +2,6 @@ import {
   ChatItem,
   getProcessedHistory,
   queryAi,
-  resetHistory,
   sendFeedbackAnalytics,
   sendQueryAnalytics,
 } from '@nx/nx-dev/data-access-ai';
@@ -12,7 +11,6 @@ import { ErrorMessage } from './error-message';
 import { Feed } from './feed/feed';
 import { LoadingState } from './loading-state';
 import { Prompt } from './prompt';
-import { WarningMessage } from './sidebar/warning-message';
 import { formatMarkdownSources } from './utils';
 
 interface LastQueryMetadata {
@@ -33,7 +31,7 @@ const assistantWelcome: ChatItem = {
 
 export function FeedContainer(): JSX.Element {
   const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
-  const [hasError, setHasError] = useState<any | null>(null);
+  const [queryError, setQueryError] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [lastQueryMetadata, setLastQueryMetadata] =
     useState<LastQueryMetadata | null>(null);
@@ -54,7 +52,7 @@ export function FeedContainer(): JSX.Element {
     currentHistory.push({ role: 'user', content: query });
 
     setIsLoading(true);
-    setHasError(null);
+    setQueryError(null);
 
     try {
       const lastAnswerChatItem =
@@ -94,7 +92,7 @@ export function FeedContainer(): JSX.Element {
         ...aiResponse.usage,
       });
     } catch (error: any) {
-      setHasError(error);
+      setQueryError(error);
     }
 
     setIsLoading(false);
@@ -120,12 +118,6 @@ export function FeedContainer(): JSX.Element {
         ? JSON.stringify(lastQueryMetadata.sources)
         : 'Could not retrieve last answer sources',
     });
-  };
-
-  const handleReset = () => {
-    resetHistory();
-    setChatHistory([]);
-    setHasError(null);
   };
 
   return (
@@ -158,7 +150,7 @@ export function FeedContainer(): JSX.Element {
                 />
 
                 {isLoading && <LoadingState />}
-                {hasError && <ErrorMessage error={hasError} />}
+                {queryError && <ErrorMessage error={queryError} />}
 
                 <div className="sticky bottom-0 left-0 right-0 w-full pt-6 pb-4 bg-gradient-to-t from-white via-white dark:from-slate-900 dark:via-slate-900">
                   <Prompt

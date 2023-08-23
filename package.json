@@ -245,6 +245,7 @@
     "react-redux": "8.0.5",
     "react-refresh": "^0.10.0",
     "react-router-dom": "^6.11.2",
+    "react-textarea-autosize": "^8.3.0",
     "regenerator-runtime": "0.13.7",
     "resolve.exports": "1.1.0",
     "rollup": "^2.56.2",
