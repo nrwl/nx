@@ -1,25 +1,18 @@
-import {
-  DependencyType,
-  ProjectGraphProcessorContext,
-} from '../../../../config/project-graph';
-import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
-import {
-  buildExplicitTypeScriptDependencies,
-  ExplicitDependency,
-} from './explicit-project-dependencies';
+import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
+import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { ProjectGraphDependencyWithFile } from '../../../../project-graph/project-graph-builder';
 
 export function buildExplicitDependencies(
   jsPluginConfig: {
     analyzeSourceFiles?: boolean;
     analyzePackageJson?: boolean;
   },
-  ctx: ProjectGraphProcessorContext,
-  builder: ProjectGraphBuilder
-) {
-  if (totalNumberOfFilesToProcess(ctx) === 0) return;
+  ctx: CreateDependenciesContext
+): ProjectGraphDependencyWithFile[] {
+  if (totalNumberOfFilesToProcess(ctx) === 0) return [];
 
-  let dependencies: ExplicitDependency[] = [];
+  let dependencies: ProjectGraphDependencyWithFile[] = [];
 
   if (
     jsPluginConfig.analyzeSourceFiles === undefined ||
@@ -32,7 +25,7 @@ export function buildExplicitDependencies(
     } catch {}
     if (tsExists) {
       dependencies = dependencies.concat(
-        buildExplicitTypeScriptDependencies(builder.graph, ctx.filesToProcess)
+        buildExplicitTypeScriptDependencies(ctx)
       );
     }
   }
@@ -41,40 +34,17 @@ export function buildExplicitDependencies(
     jsPluginConfig.analyzePackageJson === true
   ) {
     dependencies = dependencies.concat(
-      buildExplicitPackageJsonDependencies(
-        ctx.nxJsonConfiguration,
-        ctx.projectsConfigurations,
-        builder.graph,
-        ctx.filesToProcess
-      )
+      buildExplicitPackageJsonDependencies(ctx)
     );
   }
 
-  dependencies.forEach((r) => addDependency(builder, r));
+  return dependencies;
 }
 
-function totalNumberOfFilesToProcess(ctx: ProjectGraphProcessorContext) {
+function totalNumberOfFilesToProcess(ctx: CreateDependenciesContext) {
   let totalNumOfFilesToProcess = 0;
   Object.values(ctx.filesToProcess).forEach(
     (t) => (totalNumOfFilesToProcess += t.length)
   );
   return totalNumOfFilesToProcess;
-}
-function addDependency(
-  builder: ProjectGraphBuilder,
-  dependency: ExplicitDependency
-) {
-  if (dependency.type === DependencyType.static) {
-    builder.addStaticDependency(
-      dependency.sourceProjectName,
-      dependency.targetProjectName,
-      dependency.sourceProjectFile
-    );
-  } else {
-    builder.addDynamicDependency(
-      dependency.sourceProjectName,
-      dependency.targetProjectName,
-      dependency.sourceProjectFile
-    );
-  }
 }

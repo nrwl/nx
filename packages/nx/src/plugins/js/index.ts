@@ -2,7 +2,10 @@ import {
   ProjectGraph,
   ProjectGraphProcessor,
 } from '../../config/project-graph';
-import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
+import {
+  ProjectGraphBuilder,
+  ProjectGraphDependencyWithFile,
+} from '../../project-graph/project-graph-builder';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
 import { readNxJson } from '../../config/configuration';
 import { fileExists, readJsonFile } from '../../utils/fileutils';
@@ -19,6 +22,24 @@ import { readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
 import { performance } from 'perf_hooks';
+import {
+  CreateDependencies,
+  CreateDependenciesContext,
+} from '../../utils/nx-plugin';
+
+const createDependencies: CreateDependencies = (context) => {
+  const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
+
+  performance.mark('build typescript dependencies - start');
+  const dependencies = buildExplicitDependencies(pluginConfig, context);
+  performance.mark('build typescript dependencies - end');
+  performance.measure(
+    'build typescript dependencies',
+    'build typescript dependencies - start',
+    'build typescript dependencies - end'
+  );
+  return dependencies;
+};
 
 export const processProjectGraph: ProjectGraphProcessor = async (
   graph,
@@ -42,14 +63,23 @@ export const processProjectGraph: ProjectGraphProcessor = async (
     }
   }
 
-  performance.mark('build typescript dependencies - start');
-  await buildExplicitDependencies(pluginConfig, context, builder);
-  performance.mark('build typescript dependencies - end');
-  performance.measure(
-    'build typescript dependencies',
-    'build typescript dependencies - start',
-    'build typescript dependencies - end'
-  );
+  const createDependenciesContext: CreateDependenciesContext = {
+    ...context,
+    graph,
+  };
+
+  const dependencies = createDependencies(
+    createDependenciesContext
+  ) as ProjectGraphDependencyWithFile[];
+
+  for (const dep of dependencies) {
+    builder.addDependency(
+      dep.source,
+      dep.target,
+      dep.dependencyType,
+      dep.sourceFile
+    );
+  }
 
   return builder.getUpdatedProjectGraph();
 };
