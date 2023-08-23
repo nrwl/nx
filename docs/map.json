@@ -706,6 +706,12 @@
                   "file": "shared/recipes/deployment/node-serverless-functions-netlify"
                 },
                 {
+                  "name": "Set Up Application Proxies",
+                  "id": "application-proxies",
+                  "tags": ["node"],
+                  "file": "shared/recipes/node/application-proxies"
+                },
+                {
                   "name": "Deploying AWS lambda in Node.js",
                   "id": "node-aws-lambda",
                   "tags": ["deployment", "node"],
@@ -952,6 +958,12 @@
                   "file": "shared/recipes/analyze-source-files"
                 },
                 {
+                  "name": "Wait for Tasks to Finish",
+                  "id": "wait-for-tasks",
+                  "tags": [],
+                  "file": "shared/recipes/tips-n-tricks/wait-for-tasks"
+                },
+                {
                   "name": "Workspace Watching",
                   "id": "workspace-watching",
                   "tags": ["workspace-watching"],
@@ -1110,6 +1122,12 @@
               "id": "example-repos",
               "description": "Examples of different ways to use Nx",
               "itemList": [
+                {
+                  "name": "Add an Express Project",
+                  "id": "add-express",
+                  "description": "Add an Express application to your repo",
+                  "file": "shared/recipes/add-stack/add-express"
+                },
                 {
                   "name": "Add a Lit Project",
                   "id": "add-lit",
