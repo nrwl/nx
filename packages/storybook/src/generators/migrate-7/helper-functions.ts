@@ -686,7 +686,7 @@ export function logResult(
     color: 'green',
   });
 
-  generateFiles(tree, joinPathFragments(__dirname, 'files'), '.', {
+  generateFiles(tree, join(__dirname, 'files'), '.', {
     tmpl: '',
     successfulProjects: Object.entries(
       migrationSummary?.successfulProjects

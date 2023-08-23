@@ -10,6 +10,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { CustomServerSchema } from './schema';
+import { join } from 'path';
 
 export async function customServerGenerator(
   host: Tree,
@@ -52,7 +53,7 @@ export async function customServerGenerator(
     return;
   }
 
-  generateFiles(host, joinPathFragments(__dirname, 'files'), project.root, {
+  generateFiles(host, join(__dirname, 'files'), project.root, {
     ...options,
     offsetFromRoot: offsetFromRoot(project.root),
     projectRoot: project.root,

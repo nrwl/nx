@@ -12,6 +12,7 @@ import {
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { join } from 'path';
 
 export async function reactNativeComponentGenerator(
   host: Tree,
@@ -31,7 +32,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
     options.directory
   );
 
-  generateFiles(host, joinPathFragments(__dirname, './files'), componentDir, {
+  generateFiles(host, join(__dirname, './files'), componentDir, {
     ...options,
     tmpl: '',
   });
