@@ -15,6 +15,7 @@ const {
   readJson,
   readNxJson,
   updateNxJson,
+  stripIndents,
 } = requireNx();
 
 export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
@@ -154,8 +155,9 @@ async function determineFormat(
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
 
-  const deprecationWarning =
-    'In Nx 18, generating projects will no longer derive the name and root. Please provide the exact project name and root in the future.';
+  const deprecationWarning = stripIndents`
+    In Nx 18, generating projects will no longer derive the name and root.
+    Please provide the exact project name and root in the future.`;
 
   if (result === 'as-provided' && callingGenerator) {
     const { saveDefault } = await prompt<{ saveDefault: boolean }>({
@@ -174,7 +176,8 @@ async function determineFormat(
       logger.warn(deprecationWarning);
     }
   } else {
-    logger.warn(deprecationWarning);
+    const example = `Example: nx g ${callingGenerator} ${formats[result].projectName} --directory ${formats[result].projectRoot}`;
+    logger.warn(deprecationWarning + '\n' + example);
   }
 
   return result;
