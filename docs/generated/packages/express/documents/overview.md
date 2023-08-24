@@ -13,4 +13,4 @@ To create a new workspace with a pre-created Express app, run the following comm
 
 - [Add an Express Application to Your Workspace](/showcase/example-repos/add-express)
 - [Set Up Application Proxies](/recipes/node/application-proxies)
-- [Wait For Tasks To Finish](/recipes/tips-n-tricks/wait-for-tasks)
+- [Wait For Tasks To Finish](/recipes/node/wait-for-tasks)
