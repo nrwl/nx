@@ -83,6 +83,12 @@
       "version": "16.6.0-beta.6",
       "description": "Prefix outputs with {workspaceRoot}/{projectRoot} if needed",
       "implementation": "./src/migrations/update-15-0-0/prefix-outputs"
+    },
+    "16.8.0-escape-dollar-sign-env": {
+      "cli": "nx",
+      "version": "16.8.0-beta.3",
+      "description": "Escape $ in env variables",
+      "implementation": "./src/migrations/update-16-8-0/escape-dollar-sign-env-variables"
     }
   }
 }
