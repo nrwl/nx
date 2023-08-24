@@ -1,5 +1,6 @@
 /* eslint-disable */
 export default {
+  displayName: 'e2e-next-extensions',
   transform: {
     '^.+\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
@@ -8,6 +9,5 @@ export default {
   globals: {},
   globalSetup: '../utils/global-setup.ts',
   globalTeardown: '../utils/global-teardown.ts',
-  displayName: 'e2e-next',
   preset: '../../jest.preset.js',
 };

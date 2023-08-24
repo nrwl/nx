@@ -1,7 +1,7 @@
 import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e/utils';
 import { checkApp } from './utils';
 
-describe('Next.js apps', () => {
+describe('Next.js Styles', () => {
   let originalEnv: string;
 
   beforeAll(() => {
