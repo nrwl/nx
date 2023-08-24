@@ -1,8 +1,8 @@
-# Add a New Lit Project
+# Add a New Express Project
 
 **Supported Features**
 
-Because we are using an Nx plugin for Lit, there are few items we'll have to configure manually. We'll have to configure our own build system. There are no pre-created Lit-specific code generators. And we'll have to take care of updating any framework dependencies as needed.
+Because we are using an Nx plugin for Express, all the features of Nx are available.
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}

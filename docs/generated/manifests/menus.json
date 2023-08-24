@@ -1882,6 +1882,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Deploying AWS lambda in Node.js",
+                "path": "/recipes/node/node-aws-lambda",
+                "id": "node-aws-lambda",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Set Up Application Proxies",
                 "path": "/recipes/node/application-proxies",
                 "id": "application-proxies",
@@ -1890,9 +1898,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Deploying AWS lambda in Node.js",
-                "path": "/recipes/node/node-aws-lambda",
-                "id": "node-aws-lambda",
+                "name": "Wait for Tasks to Finish",
+                "path": "/recipes/node/wait-for-tasks",
+                "id": "wait-for-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2209,14 +2217,6 @@
                 "name": "Disable Graph Links Created from Analyzing Source Files",
                 "path": "/recipes/tips-n-tricks/analyze-source-files",
                 "id": "analyze-source-files",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Wait for Tasks to Finish",
-                "path": "/recipes/tips-n-tricks/wait-for-tasks",
-                "id": "wait-for-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2890,6 +2890,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Deploying AWS lambda in Node.js",
+            "path": "/recipes/node/node-aws-lambda",
+            "id": "node-aws-lambda",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Set Up Application Proxies",
             "path": "/recipes/node/application-proxies",
             "id": "application-proxies",
@@ -2898,9 +2906,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Deploying AWS lambda in Node.js",
-            "path": "/recipes/node/node-aws-lambda",
-            "id": "node-aws-lambda",
+            "name": "Wait for Tasks to Finish",
+            "path": "/recipes/node/wait-for-tasks",
+            "id": "wait-for-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -2925,6 +2933,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Deploying AWS lambda in Node.js",
+        "path": "/recipes/node/node-aws-lambda",
+        "id": "node-aws-lambda",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Set Up Application Proxies",
         "path": "/recipes/node/application-proxies",
         "id": "application-proxies",
@@ -2933,9 +2949,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Deploying AWS lambda in Node.js",
-        "path": "/recipes/node/node-aws-lambda",
-        "id": "node-aws-lambda",
+        "name": "Wait for Tasks to Finish",
+        "path": "/recipes/node/wait-for-tasks",
+        "id": "wait-for-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3438,14 +3454,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Wait for Tasks to Finish",
-            "path": "/recipes/tips-n-tricks/wait-for-tasks",
-            "id": "wait-for-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Workspace Watching",
             "path": "/recipes/tips-n-tricks/workspace-watching",
             "id": "workspace-watching",
@@ -3596,14 +3604,6 @@
         "name": "Disable Graph Links Created from Analyzing Source Files",
         "path": "/recipes/tips-n-tricks/analyze-source-files",
         "id": "analyze-source-files",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Wait for Tasks to Finish",
-        "path": "/recipes/tips-n-tricks/wait-for-tasks",
-        "id": "wait-for-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

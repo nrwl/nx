@@ -2346,6 +2346,16 @@
             "tags": ["deployment", "node"]
           },
           {
+            "id": "node-aws-lambda",
+            "name": "Deploying AWS lambda in Node.js",
+            "description": "",
+            "file": "shared/recipes/deployment/node-aws-lambda",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/node/node-aws-lambda",
+            "tags": ["deployment", "node"]
+          },
+          {
             "id": "application-proxies",
             "name": "Set Up Application Proxies",
             "description": "",
@@ -2356,14 +2366,14 @@
             "tags": ["node"]
           },
           {
-            "id": "node-aws-lambda",
-            "name": "Deploying AWS lambda in Node.js",
+            "id": "wait-for-tasks",
+            "name": "Wait for Tasks to Finish",
             "description": "",
-            "file": "shared/recipes/deployment/node-aws-lambda",
+            "file": "shared/recipes/node/wait-for-tasks",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/node/node-aws-lambda",
-            "tags": ["deployment", "node"]
+            "path": "/recipes/node/wait-for-tasks",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -2758,16 +2768,6 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/analyze-source-files",
             "tags": ["explore-graph"]
-          },
-          {
-            "id": "wait-for-tasks",
-            "name": "Wait for Tasks to Finish",
-            "description": "",
-            "file": "shared/recipes/tips-n-tricks/wait-for-tasks",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/wait-for-tasks",
-            "tags": []
           },
           {
             "id": "workspace-watching",
@@ -3604,6 +3604,16 @@
         "tags": ["deployment", "node"]
       },
       {
+        "id": "node-aws-lambda",
+        "name": "Deploying AWS lambda in Node.js",
+        "description": "",
+        "file": "shared/recipes/deployment/node-aws-lambda",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/node-aws-lambda",
+        "tags": ["deployment", "node"]
+      },
+      {
         "id": "application-proxies",
         "name": "Set Up Application Proxies",
         "description": "",
@@ -3614,14 +3624,14 @@
         "tags": ["node"]
       },
       {
-        "id": "node-aws-lambda",
-        "name": "Deploying AWS lambda in Node.js",
+        "id": "wait-for-tasks",
+        "name": "Wait for Tasks to Finish",
         "description": "",
-        "file": "shared/recipes/deployment/node-aws-lambda",
+        "file": "shared/recipes/node/wait-for-tasks",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/node/node-aws-lambda",
-        "tags": ["deployment", "node"]
+        "path": "/recipes/node/wait-for-tasks",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -3648,6 +3658,16 @@
     "path": "/recipes/node/node-serverless-functions-netlify",
     "tags": ["deployment", "node"]
   },
+  "/recipes/node/node-aws-lambda": {
+    "id": "node-aws-lambda",
+    "name": "Deploying AWS lambda in Node.js",
+    "description": "",
+    "file": "shared/recipes/deployment/node-aws-lambda",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/node-aws-lambda",
+    "tags": ["deployment", "node"]
+  },
   "/recipes/node/application-proxies": {
     "id": "application-proxies",
     "name": "Set Up Application Proxies",
@@ -3658,15 +3678,15 @@
     "path": "/recipes/node/application-proxies",
     "tags": ["node"]
   },
-  "/recipes/node/node-aws-lambda": {
-    "id": "node-aws-lambda",
-    "name": "Deploying AWS lambda in Node.js",
+  "/recipes/node/wait-for-tasks": {
+    "id": "wait-for-tasks",
+    "name": "Wait for Tasks to Finish",
     "description": "",
-    "file": "shared/recipes/deployment/node-aws-lambda",
+    "file": "shared/recipes/node/wait-for-tasks",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/node/node-aws-lambda",
-    "tags": ["deployment", "node"]
+    "path": "/recipes/node/wait-for-tasks",
+    "tags": []
   },
   "/recipes/storybook": {
     "id": "storybook",
@@ -4288,16 +4308,6 @@
         "tags": ["explore-graph"]
       },
       {
-        "id": "wait-for-tasks",
-        "name": "Wait for Tasks to Finish",
-        "description": "",
-        "file": "shared/recipes/tips-n-tricks/wait-for-tasks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/wait-for-tasks",
-        "tags": []
-      },
-      {
         "id": "workspace-watching",
         "name": "Workspace Watching",
         "description": "",
@@ -4491,16 +4501,6 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/analyze-source-files",
     "tags": ["explore-graph"]
-  },
-  "/recipes/tips-n-tricks/wait-for-tasks": {
-    "id": "wait-for-tasks",
-    "name": "Wait for Tasks to Finish",
-    "description": "",
-    "file": "shared/recipes/tips-n-tricks/wait-for-tasks",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/wait-for-tasks",
-    "tags": []
   },
   "/recipes/tips-n-tricks/workspace-watching": {
     "id": "workspace-watching",
