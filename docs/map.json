@@ -706,16 +706,22 @@
                   "file": "shared/recipes/deployment/node-serverless-functions-netlify"
                 },
                 {
+                  "name": "Deploying AWS lambda in Node.js",
+                  "id": "node-aws-lambda",
+                  "tags": ["deployment", "node"],
+                  "file": "shared/recipes/deployment/node-aws-lambda"
+                },
+                {
                   "name": "Set Up Application Proxies",
                   "id": "application-proxies",
                   "tags": ["node"],
                   "file": "shared/recipes/node/application-proxies"
                 },
                 {
-                  "name": "Deploying AWS lambda in Node.js",
-                  "id": "node-aws-lambda",
-                  "tags": ["deployment", "node"],
-                  "file": "shared/recipes/deployment/node-aws-lambda"
+                  "name": "Wait for Tasks to Finish",
+                  "id": "wait-for-tasks",
+                  "tags": [],
+                  "file": "shared/recipes/node/wait-for-tasks"
                 }
               ]
             },
@@ -1045,12 +1051,6 @@
                   "id": "analyze-source-files",
                   "tags": ["explore-graph"],
                   "file": "shared/recipes/analyze-source-files"
-                },
-                {
-                  "name": "Wait for Tasks to Finish",
-                  "id": "wait-for-tasks",
-                  "tags": [],
-                  "file": "shared/recipes/tips-n-tricks/wait-for-tasks"
                 },
                 {
                   "name": "Workspace Watching",
