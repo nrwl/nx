@@ -165,9 +165,9 @@ async function generateEmbeddings() {
     );
   }
 
-  if (!process.env.NX_SUPABASE_SERVICE_ROLE_KEY) {
+  if (!process.env.NX_NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     throw new Error(
-      'Environment variable NX_SUPABASE_SERVICE_ROLE_KEY is required: skipping embeddings generation'
+      'Environment variable NX_NEXT_PUBLIC_SUPABASE_ANON_KEY is required: skipping embeddings generation'
     );
   }
 
@@ -179,7 +179,7 @@ async function generateEmbeddings() {
 
   const supabaseClient = createClient(
     process.env.NX_NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NX_SUPABASE_SERVICE_ROLE_KEY,
+    process.env.NX_NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       auth: {
         persistSession: false,

@@ -107,7 +107,7 @@ export function checkEnvVariables(
   }
   if (!supabaseServiceKey) {
     throw new ApplicationError(
-      'Missing environment variable NX_SUPABASE_SERVICE_ROLE_KEY'
+      'Missing environment variable NX_NEXT_PUBLIC_SUPABASE_ANON_KEY'
     );
   }
 }

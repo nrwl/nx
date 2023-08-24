@@ -49,5 +49,5 @@ jobs:
         run: pnpm exec nx run tools-documentation-create-embeddings:run-node 
         env:
             NX_NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NX_NEXT_PUBLIC_SUPABASE_URL }}
-            NX_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NX_SUPABASE_SERVICE_ROLE_KEY }}
+            NX_NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NX_NEXT_PUBLIC_SUPABASE_ANON_KEY }}
             NX_OPENAI_KEY: ${{ secrets.NX_OPENAI_KEY }}

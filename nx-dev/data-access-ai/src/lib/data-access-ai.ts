@@ -39,7 +39,7 @@ const MAX_HISTORY_LENGTH = 30;
 
 const openAiKey = process.env['NX_OPENAI_KEY'];
 const supabaseUrl = process.env['NX_NEXT_PUBLIC_SUPABASE_URL'];
-const supabaseServiceKey = process.env['NX_SUPABASE_SERVICE_ROLE_KEY'];
+const supabaseServiceKey = process.env['NX_NEXT_PUBLIC_SUPABASE_ANON_KEY'];
 const config = new Configuration({
   apiKey: openAiKey,
 });
