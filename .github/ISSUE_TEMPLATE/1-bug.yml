@@ -54,7 +54,7 @@ body:
       description: Please include any relevant log snippets or files here. This will be automatically formatted into code, so no need for backticks.
       render: shell
   - type: input
-    id: repo
+    id: package-manager-version
     attributes:
       label: Package Manager Version
       description: |
