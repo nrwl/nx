@@ -7,13 +7,7 @@ import {
   createClient,
 } from '@supabase/supabase-js';
 import GPT3Tokenizer from 'gpt3-tokenizer';
-import {
-  Configuration,
-  OpenAIApi,
-  CreateModerationResponse,
-  CreateEmbeddingResponse,
-  CreateCompletionResponseUsage,
-} from 'openai';
+import { CreateEmbeddingResponse, CreateCompletionResponseUsage } from 'openai';
 import {
   ApplicationError,
   ChatItem,
@@ -23,6 +17,7 @@ import {
   getListOfSources,
   getMessageFromResponse,
   initializeChat,
+  openAiCall,
   sanitizeLinksInResponse,
   toMarkdownList,
 } from './utils';
@@ -37,13 +32,8 @@ const MIN_CONTENT_LENGTH = 50;
 // This is a temporary solution
 const MAX_HISTORY_LENGTH = 30;
 
-const openAiKey = process.env['NX_OPENAI_KEY'];
 const supabaseUrl = process.env['NX_NEXT_PUBLIC_SUPABASE_URL'];
 const supabaseServiceKey = process.env['NX_SUPABASE_SERVICE_ROLE_KEY'];
-const config = new Configuration({
-  apiKey: openAiKey,
-});
-const openai = new OpenAIApi(config);
 
 let chatFullHistory: ChatItem[] = [];
 
@@ -72,7 +62,7 @@ export async function queryAi(
   }
 
   try {
-    checkEnvVariables(openAiKey, supabaseUrl, supabaseServiceKey);
+    checkEnvVariables(supabaseUrl, supabaseServiceKey);
 
     if (!query) {
       throw new UserError('Missing query in request data');
@@ -80,10 +70,12 @@ export async function queryAi(
 
     // Moderate the content to comply with OpenAI T&C
     const sanitizedQuery = query.trim();
-    const moderationResponse: CreateModerationResponse = await openai
-      .createModeration({ input: sanitizedQuery })
-      .then((res) => res.data);
+    const moderationResponseObj = await openAiCall(
+      { input: sanitizedQuery },
+      'moderation'
+    );
 
+    const moderationResponse = await moderationResponseObj.json();
     const [results] = moderationResponse.results;
 
     if (results.flagged) {
@@ -104,29 +96,29 @@ export async function queryAi(
      *
      * How the solution looks like with previous response:
      *
-     *     const embeddingResponse = await openai.createEmbedding({
-     *         model: 'text-embedding-ada-002',
-     *         input: sanitizedQuery + aiResponse,
-     *       });
+     *     const embeddingResponse = await openAiCall(
+     *      { input: sanitizedQuery + aiResponse },
+     *      'embedding'
+     *     );
      *
-     * This costs more tokens, so if we see conts skyrocket we remove it.
+     * This costs more tokens, so if we see costs skyrocket we remove it.
      * As it says in the docs, it's a design decision, and it may or may not really improve results.
      */
-    const embeddingResponse = await openai.createEmbedding({
-      model: 'text-embedding-ada-002',
-      input: sanitizedQuery + aiResponse,
-    });
+    const embeddingResponseObj = await openAiCall(
+      { input: sanitizedQuery + aiResponse, model: 'text-embedding-ada-002' },
+      'embedding'
+    );
 
-    if (embeddingResponse.status !== 200) {
-      throw new ApplicationError(
-        'Failed to create embedding for question',
-        embeddingResponse
-      );
+    if (!embeddingResponseObj.ok) {
+      throw new ApplicationError('Failed to create embedding for question', {
+        data: embeddingResponseObj.status,
+      });
     }
 
+    const embeddingResponse = await embeddingResponseObj.json();
     const {
       data: [{ embedding }],
-    }: CreateEmbeddingResponse = embeddingResponse.data;
+    }: CreateEmbeddingResponse = embeddingResponse;
 
     const { error: matchError, data: pageSections } = await supabaseClient.rpc(
       'match_page_sections_2',
@@ -196,33 +188,39 @@ export async function queryAi(
 
     chatFullHistory = chatHistory;
 
-    const response = await openai.createChatCompletion({
-      model: 'gpt-3.5-turbo-16k',
-      messages: chatGptMessages,
-      temperature: 0,
-      stream: false,
-    });
+    const responseObj = await openAiCall(
+      {
+        model: 'gpt-3.5-turbo-16k',
+        messages: chatGptMessages,
+        temperature: 0,
+        stream: false,
+      },
+      'chatCompletion'
+    );
 
-    if (response.status !== 200) {
-      const error = response.data;
-      throw new ApplicationError('Failed to generate completion', error);
+    if (!responseObj.ok) {
+      throw new ApplicationError('Failed to generate completion', {
+        data: responseObj.status,
+      });
     }
+
+    const response = await responseObj.json();
 
     // Message asking to double-check
     const callout: string =
       '{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n';
     // Append the warning message asking to double-check!
-    const message = [callout, getMessageFromResponse(response.data)].join('');
+    const message = [callout, getMessageFromResponse(response)].join('');
 
     const responseWithoutBadLinks = await sanitizeLinksInResponse(message);
 
     const sources = getListOfSources(pageSections);
 
-    totalTokensSoFar += response.data.usage?.total_tokens ?? 0;
+    totalTokensSoFar += response.usage?.total_tokens ?? 0;
 
     return {
       textResponse: responseWithoutBadLinks,
-      usage: response.data.usage as CreateCompletionResponseUsage,
+      usage: response.usage as CreateCompletionResponseUsage,
       sources,
       sourcesMarkdown: toMarkdownList(sources),
     };

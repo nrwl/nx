@@ -93,13 +93,9 @@ async function is404(url: string): Promise<boolean> {
 }
 
 export function checkEnvVariables(
-  openAiKey?: string,
   supabaseUrl?: string,
   supabaseServiceKey?: string
 ) {
-  if (!openAiKey) {
-    throw new ApplicationError('Missing environment variable NX_OPENAI_KEY');
-  }
   if (!supabaseUrl) {
     throw new ApplicationError(
       'Missing environment variable NX_NEXT_PUBLIC_SUPABASE_URL'
@@ -210,4 +206,18 @@ export function getProcessedHistory(): ChatItem[] {
 export interface ChatItem {
   role: ChatCompletionRequestMessageRoleEnum;
   content: string;
+}
+
+export function openAiCall(
+  input: object,
+  action: 'moderation' | 'embedding' | 'chatCompletion'
+) {
+  return fetch('/api/openai-handler', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action,
+      input: { ...input },
+    }),
+  });
 }
