@@ -1,6 +1,6 @@
 name: 🐞 Bug Report
 description: This form is to report unexpected behavior in Nx.
-labels: [ "type: bug" ]
+labels: ["type: bug"]
 body:
   - type: markdown
     attributes:
@@ -54,7 +54,7 @@ body:
       description: Please include any relevant log snippets or files here. This will be automatically formatted into code, so no need for backticks.
       render: shell
   - type: input
-    id: repo
+    id: pm
     attributes:
       label: Package Manager Version
       description: |
