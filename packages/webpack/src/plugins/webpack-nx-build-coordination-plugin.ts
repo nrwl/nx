@@ -1,5 +1,5 @@
 import { watch } from 'chokidar';
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
 import { workspaceLayout } from '@nx/devkit';
 import { joinPathFragments } from '@nx/devkit';
 import ignore from 'ignore';
@@ -8,6 +8,7 @@ import type { Compiler } from 'webpack';
 
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
+  private buildQueued = false;
 
   constructor(private readonly buildCmd: string, skipInitialBuild?: boolean) {
     if (!skipInitialBuild) {
@@ -38,15 +39,24 @@ export class WebpackNxBuildCoordinationPlugin {
   }
 
   async buildChangedProjects() {
-    while (this.currentlyRunning === 'webpack-build') {
-      await sleep(50);
+    if (!this.buildQueued) {
+      this.buildQueued = true;
+      while (this.currentlyRunning === 'webpack-build') {
+        await sleep(50);
+      }
+      this.currentlyRunning = 'nx-build';
+      try {
+        await new Promise((res) => {
+          const cp = exec(this.buildCmd);
+          cp.on('exit', (code) => res(code));
+          cp.stdout.pipe(process.stdout);
+          cp.stderr.pipe(process.stderr);
+        });
+        this.buildQueued = false;
+        // eslint-disable-next-line no-empty
+      } catch (e) {}
+      this.currentlyRunning = 'none';
     }
-    this.currentlyRunning = 'nx-build';
-    try {
-      execSync(this.buildCmd, { stdio: [0, 1, 2] });
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-    this.currentlyRunning = 'none';
   }
 }
 
