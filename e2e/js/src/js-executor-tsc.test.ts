@@ -3,6 +3,7 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  createFile,
   detectPackageManager,
   getPackageManagerCommand,
   newProject,
@@ -21,11 +22,10 @@ import {
   waitUntil,
 } from '../../utils';
 
-describe('js e2e', () => {
+describe('js:tsc executor', () => {
   let scope;
-
-  beforeEach(() => (scope = newProject()));
-  afterEach(() => cleanupProject());
+  beforeAll(() => (scope = newProject()));
+  afterAll(() => cleanupProject());
 
   it('should create libs with js executors (--compiler=tsc)', async () => {
     const lib = uniq('lib');
@@ -212,12 +212,58 @@ describe('js e2e', () => {
 
     checkFilesDoNotExist(`libs/${lib}/.babelrc`);
   });
-});
 
-describe('package.json updates', () => {
-  beforeEach(() => newProject({ name: 'proj', packageManager: 'npm' }));
+  it('should allow wildcard ts path alias', async () => {
+    const base = uniq('base');
+    runCLI(`generate @nx/js:lib ${base} --bundler=tsc --no-interactive`);
 
-  afterEach(() => cleanupProject());
+    const lib = uniq('lib');
+    runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
+
+    updateFile(`libs/${base}/src/index.ts`, () => {
+      return `
+        import { ${lib} } from '@${scope}/${lib}'
+        export * from './lib/${base}';
+
+        ${lib}();
+      `;
+    });
+
+    expect(runCLI(`build ${base}`)).toContain(
+      'Done compiling TypeScript files'
+    );
+
+    updateJson('tsconfig.base.json', (json) => {
+      json['compilerOptions']['paths'][`@${scope}/${lib}/*`] = [
+        `libs/${lib}/src/*`,
+      ];
+      return json;
+    });
+
+    createFile(
+      `libs/${lib}/src/${lib}.ts`,
+      `
+export function ${lib}Wildcard() {
+  return '${lib}-wildcard';
+};
+    `
+    );
+
+    updateFile(`libs/${base}/src/index.ts`, () => {
+      return `
+        import { ${lib} } from '@${scope}/${lib}';
+        import { ${lib}Wildcard } from '@${scope}/${lib}/src/${lib}';
+        export * from './lib/${base}';
+
+        ${lib}();
+        ${lib}Wildcard();
+      `;
+    });
+
+    expect(runCLI(`build ${base}`)).toContain(
+      'Done compiling TypeScript files'
+    );
+  }, 240_000);
 
   it('should update package.json with detected dependencies', async () => {
     const pmc = getPackageManagerCommand();
