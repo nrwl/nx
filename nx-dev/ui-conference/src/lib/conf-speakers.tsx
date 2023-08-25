@@ -48,6 +48,12 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'juristr',
     },
     {
+      description: `Simon Critchley is a Senior Software Architect at Nx and has been working on developing Nx Cloud Workflows since he joined in February 2023. In previous roles he's architected large scale web services handling billions of HTTP requests per day.`,
+      imageUrl: '/images/conf/simon-critchley.webp',
+      name: 'Simon Critchley',
+      // twitter: 'MrJamesHenry',
+    },
+    {
       description:
         'As Director of Engineering at Nx, James manages our European Nxians and leads our efforts on the Lerna project. He is a prolific open-source contributor, 5x Microsoft MVP, ESLint Core Team Alum, and has worked on a number of projects alongside the TypeScript Team.',
       imageUrl: '/images/conf/james-henry.webp',
