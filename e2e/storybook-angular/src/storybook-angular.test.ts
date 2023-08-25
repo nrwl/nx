@@ -35,9 +35,10 @@ describe('Storybook executors for Angular', () => {
       p.kill();
     }, 200_000);
 
+    // Increased timeout because 92% sealing asset processing TerserPlugin
     it('shoud build an Angular based storybook', () => {
       runCLI(`run ${angularStorybookLib}:build-storybook`);
       checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-    }, 300_000);
+    }, 600_000);
   });
 });
