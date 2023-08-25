@@ -13,10 +13,11 @@ import {
   updateJson,
   updateProjectConfig,
 } from '@nx/e2e/utils';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('cache', () => {
   beforeEach(() => newProject());
-
+  afterEach(() => resetWorkspaceContext());
   afterEach(() => cleanupProject());
 
   it('should cache command execution', async () => {

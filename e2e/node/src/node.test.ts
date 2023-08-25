@@ -29,6 +29,7 @@ import { exec, execSync } from 'child_process';
 import * as http from 'http';
 import { getLockFileName } from '@nx/js';
 import { satisfies } from 'semver';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
@@ -51,7 +52,7 @@ function getData(port, path = '/api'): Promise<any> {
 
 describe('Node Applications', () => {
   beforeEach(() => newProject());
-
+  afterEach(() => resetWorkspaceContext());
   afterEach(() => cleanupProject());
 
   it('should be able to generate an empty application', async () => {
@@ -332,7 +333,7 @@ describe('Node Applications', () => {
 
 describe('Build Node apps', () => {
   beforeEach(() => newProject());
-
+  afterEach(() => resetWorkspaceContext());
   afterEach(() => cleanupProject());
 
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
@@ -579,6 +580,7 @@ ${jslib}();
 });
 
 describe('nest libraries', function () {
+  afterEach(() => resetWorkspaceContext());
   beforeEach(() => newProject());
 
   it('should be able to generate a nest library', async () => {

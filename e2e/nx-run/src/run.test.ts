@@ -20,10 +20,12 @@ import {
 } from '@nx/e2e/utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Nx Running Tests', () => {
   let proj: string;
   beforeAll(() => (proj = newProject()));
+  afterEach(() => resetWorkspaceContext());
   afterAll(() => cleanupProject());
 
   describe('running targets', () => {

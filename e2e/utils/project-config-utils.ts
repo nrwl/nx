@@ -10,6 +10,7 @@ export async function updateProjectConfig(
   callback: (c: ProjectConfiguration) => ProjectConfiguration
 ) {
   const projects = await readResolvedConfiguration();
+  console.log({ projectName, projects });
   const root = projects[projectName].root;
   const path = join(root, 'project.json');
   const current = readJson(path);
@@ -21,8 +22,16 @@ export async function readResolvedConfiguration(): Promise<
 > {
   process.env.NX_PROJECT_GLOB_CACHE = 'false';
   const root = tmpProjPath();
-  return (await retrieveProjectConfigurations(root, readNxJson(root)))
-    .projectNodes;
+  try {
+    const projects = await retrieveProjectConfigurations(
+      root,
+      readNxJson(root)
+    );
+    return projects.projectNodes;
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
 }
 
 export async function readProjectConfig(

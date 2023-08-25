@@ -1,9 +1,10 @@
 use crate::native::logger::enable_logger;
+use parking_lot::lock_api::MutexGuard;
+use parking_lot::{Condvar, Mutex, RawMutex};
 use rayon::prelude::*;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::Arc;
 use std::thread;
-use std::thread::JoinHandle;
 use tracing::trace;
 use xxhash_rust::xxh3;
 
@@ -20,18 +21,19 @@ pub struct WorkspaceContext {
     background_thread: BackgroundThread,
 }
 
-struct BackgroundThread {
-    files: Arc<Mutex<Vec<(PathBuf, String)>>>,
-    _handle: JoinHandle<()>,
-}
-impl BackgroundThread {
-    fn process(workspace_root: &str) -> Self {
-        let files = Arc::new(Mutex::new(Vec::new()));
+type Files = Vec<(PathBuf, String)>;
+struct BackgroundThread(Arc<(Mutex<Files>, Condvar)>);
 
-        let files_moved = Arc::clone(&files);
+impl BackgroundThread {
+    fn gather_files(workspace_root: &str) -> Self {
+        let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
+
+        let files_lock_clone = Arc::clone(&files_lock);
         let workspace_root = workspace_root.to_string();
-        let handle = thread::spawn(move || {
-            let mut workspace_files = files_moved.lock().expect("should get a lock on the mutex");
+        thread::spawn(move || {
+            trace!("locking files");
+            let (lock, cvar) = &*files_lock_clone;
+            let mut workspace_files = lock.lock();
             let files = nx_walker(workspace_root, |rec| {
                 let mut file_hashes: Vec<(PathBuf, String)> = vec![];
                 for (path, content) in rec {
@@ -42,17 +44,26 @@ impl BackgroundThread {
 
             workspace_files.extend(files);
             workspace_files.par_sort();
+            let files_len = workspace_files.len();
+            trace!(?files_len, "files retrieved");
+
+            cvar.notify_all();
         });
 
-        BackgroundThread {
-            files,
-            // add the thread handle to this struct so that we dont drop the thread until this struct is dropped
-            _handle: handle,
-        }
+        BackgroundThread(files_lock)
     }
 
-    pub fn get_files(&self) -> MutexGuard<'_, Vec<(PathBuf, String)>> {
-        self.files.lock().unwrap()
+    pub fn get_files(&self) -> MutexGuard<'_, RawMutex, Files> {
+        let (lock, cvar) = &*self.0;
+        let mut files = lock.lock();
+        let files_len = files.len();
+        if files_len == 0 {
+            trace!("waiting for files");
+            cvar.wait(&mut files);
+        }
+        let files_len = files.len();
+        trace!(?files_len, "getting files");
+        files
     }
 }
 
@@ -62,10 +73,10 @@ impl WorkspaceContext {
     pub fn new(workspace_root: String) -> Self {
         enable_logger();
 
-        trace!("{workspace_root:?}");
+        trace!(?workspace_root);
 
         WorkspaceContext {
-            background_thread: BackgroundThread::process(&workspace_root),
+            background_thread: BackgroundThread::gather_files(&workspace_root),
             workspace_root,
         }
     }

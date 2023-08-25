@@ -42,7 +42,6 @@ describe('Workspaces', () => {
         'workspace.json': JSON.stringify(config),
       });
       setupWorkspaceContext(fs.tempDir);
-      await wait();
 
       const workspaces = new Workspaces(fs.tempDir);
       const resolved = workspaces.readWorkspaceConfiguration();
@@ -111,7 +110,6 @@ describe('Workspaces', () => {
         }),
       });
       setupWorkspaceContext(fs.tempDir);
-      await wait();
 
       withEnvironmentVariables(
         {
@@ -134,7 +132,3 @@ describe('Workspaces', () => {
     });
   });
 });
-
-function wait() {
-  return new Promise((res) => setTimeout(res, 150));
-}

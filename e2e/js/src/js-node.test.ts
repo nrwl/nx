@@ -7,6 +7,7 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nx/e2e/utils';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('js:node error handling', () => {
   let scope: string;
@@ -14,7 +15,7 @@ describe('js:node error handling', () => {
   beforeEach(() => {
     scope = newProject();
   });
-
+  afterEach(() => resetWorkspaceContext());
   afterEach(() => cleanupProject());
 
   it('should log out the error', async () => {

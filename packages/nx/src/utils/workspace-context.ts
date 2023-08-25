@@ -48,3 +48,7 @@ function ensureContextAvailable(workspaceRoot: string) {
     setupWorkspaceContext(workspaceRoot);
   }
 }
+
+export function resetWorkspaceContext() {
+  workspaceContext = undefined;
+}

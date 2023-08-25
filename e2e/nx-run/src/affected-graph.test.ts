@@ -18,11 +18,13 @@ import {
   removeFile,
   readResolvedConfiguration,
 } from '@nx/e2e/utils';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Nx Affected and Graph Tests', () => {
   let proj: string;
 
   beforeAll(() => (proj = newProject()));
+  afterEach(() => resetWorkspaceContext());
   afterAll(() => cleanupProject());
 
   describe('affected:*', () => {
