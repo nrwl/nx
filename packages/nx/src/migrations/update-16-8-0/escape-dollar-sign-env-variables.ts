@@ -64,6 +64,11 @@ function parseEnvFile(tree: Tree, envFilePath: string) {
     .split('\n')
     .map((line) => {
       line = line.trim();
+
+      if (!line.includes('$')) {
+        return line;
+      }
+
       const declarations = line.split('=');
       if (declarations[1].includes('$') && !declarations[1].includes(`\\$`)) {
         declarations[1] = declarations[1].replace('$', `\\$`);
