@@ -367,6 +367,9 @@ const recipesUrls = {
   '/recipes/other/dte': '/showcase/example-repos/dte',
   '/recipes/other/deploy-nextjs-to-vercel':
     '/recipes/deployment/deploy-nextjs-to-vercel',
+  '/recipes/other/deno-deploy': '/recipes/deno/deno-deploy',
+  '/recipes/other/deno-netlify-functions':
+    '/recipes/deno/deno-netlify-functions',
   '/recipes/other/root-level-scripts':
     '/recipes/managing-repository/root-level-scripts',
   '/recipes/other/analyze-source-files':

@@ -2513,6 +2513,47 @@
         "tags": []
       },
       {
+        "id": "deno",
+        "name": "Deno",
+        "description": "Deno related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "add-deno",
+            "name": "Add a Deno Project",
+            "description": "",
+            "file": "shared/recipes/add-stack/add-deno",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/deno/add-deno",
+            "tags": ["deno"]
+          },
+          {
+            "id": "deno-deploy",
+            "name": "Serverless deployment with Deno Deploy",
+            "description": "",
+            "file": "shared/recipes/deployment/deno-deploy",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/deno/deno-deploy",
+            "tags": ["deployment", "deno"]
+          },
+          {
+            "id": "deno-netlify-functions",
+            "name": "Add and Deploy Netlify Edge Functions with Deno",
+            "description": "",
+            "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/deno/deno-netlify-functions",
+            "tags": ["deployment", "deno"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/deno",
+        "tags": []
+      },
+      {
         "id": "next",
         "name": "Next",
         "description": "Next related recipes",
@@ -3066,26 +3107,6 @@
         "description": "Other recipes you will find useful.",
         "file": "",
         "itemList": [
-          {
-            "id": "deno-deploy",
-            "name": "Serverless deployment with Deno Deploy",
-            "description": "",
-            "file": "shared/recipes/deployment/deno-deploy",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/other/deno-deploy",
-            "tags": ["deployment", "deno"]
-          },
-          {
-            "id": "deno-netlify-functions",
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "description": "",
-            "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/other/deno-netlify-functions",
-            "tags": ["deployment", "deno"]
-          },
           {
             "id": "rescope",
             "name": "Rescope Packages from @nrwl to @nx",
@@ -4013,6 +4034,77 @@
     "isExternal": false,
     "path": "/recipes/cypress/cypress-v11-migration",
     "tags": []
+  },
+  "/recipes/deno": {
+    "id": "deno",
+    "name": "Deno",
+    "description": "Deno related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "add-deno",
+        "name": "Add a Deno Project",
+        "description": "",
+        "file": "shared/recipes/add-stack/add-deno",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deno/add-deno",
+        "tags": ["deno"]
+      },
+      {
+        "id": "deno-deploy",
+        "name": "Serverless deployment with Deno Deploy",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-deploy",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deno/deno-deploy",
+        "tags": ["deployment", "deno"]
+      },
+      {
+        "id": "deno-netlify-functions",
+        "name": "Add and Deploy Netlify Edge Functions with Deno",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deno/deno-netlify-functions",
+        "tags": ["deployment", "deno"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/deno",
+    "tags": []
+  },
+  "/recipes/deno/add-deno": {
+    "id": "add-deno",
+    "name": "Add a Deno Project",
+    "description": "",
+    "file": "shared/recipes/add-stack/add-deno",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deno/add-deno",
+    "tags": ["deno"]
+  },
+  "/recipes/deno/deno-deploy": {
+    "id": "deno-deploy",
+    "name": "Serverless deployment with Deno Deploy",
+    "description": "",
+    "file": "shared/recipes/deployment/deno-deploy",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deno/deno-deploy",
+    "tags": ["deployment", "deno"]
+  },
+  "/recipes/deno/deno-netlify-functions": {
+    "id": "deno-netlify-functions",
+    "name": "Add and Deploy Netlify Edge Functions with Deno",
+    "description": "",
+    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deno/deno-netlify-functions",
+    "tags": ["deployment", "deno"]
   },
   "/recipes/next": {
     "id": "next",
@@ -5029,26 +5121,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "deno-deploy",
-        "name": "Serverless deployment with Deno Deploy",
-        "description": "",
-        "file": "shared/recipes/deployment/deno-deploy",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/deno-deploy",
-        "tags": ["deployment", "deno"]
-      },
-      {
-        "id": "deno-netlify-functions",
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "description": "",
-        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/deno-netlify-functions",
-        "tags": ["deployment", "deno"]
-      },
-      {
         "id": "rescope",
         "name": "Rescope Packages from @nrwl to @nx",
         "description": "",
@@ -5062,26 +5134,6 @@
     "isExternal": false,
     "path": "/recipes/other",
     "tags": []
-  },
-  "/recipes/other/deno-deploy": {
-    "id": "deno-deploy",
-    "name": "Serverless deployment with Deno Deploy",
-    "description": "",
-    "file": "shared/recipes/deployment/deno-deploy",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/deno-deploy",
-    "tags": ["deployment", "deno"]
-  },
-  "/recipes/other/deno-netlify-functions": {
-    "id": "deno-netlify-functions",
-    "name": "Add and Deploy Netlify Edge Functions with Deno",
-    "description": "",
-    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/deno-netlify-functions",
-    "tags": ["deployment", "deno"]
   },
   "/recipes/other/rescope": {
     "id": "rescope",
