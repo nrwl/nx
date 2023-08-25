@@ -97,6 +97,6 @@ Now when you serve your app, you'll see the content from the library being displ
 ## More Documentation
 
 - [@nx/deno](https://github.com/nrwl/nx-labs/tree/main/packages/deno)
-- [Serverless deployment with Deno Deploy](/recipes/other/deno-deploy)
-- [Add and Deploy Netlify Edge Functions with Deno](/recipes/other/deno-netlify-functions)
+- [Serverless deployment with Deno Deploy](/recipes/deno/deno-deploy)
+- [Add and Deploy Netlify Edge Functions with Deno](/recipes/deno/deno-netlify-functions)
 - [Deno](https://deno.com)
