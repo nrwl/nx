@@ -28,3 +28,5 @@ export const tsNodeVersion = '10.9.1';
 export const jestPresetAngularVersion = '~13.1.0';
 export const typesNodeVersion = '16.11.7';
 export const jasmineMarblesVersion = '^0.9.2';
+
+export const jsoncEslintParserVersion = '^2.1.0';

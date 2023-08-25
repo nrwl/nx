@@ -591,6 +591,52 @@ describe('lib', () => {
         expect(tree.exists(path)).toBeTruthy();
       });
 
+      expect(tree.read('my-dir/my-lib/.eslintrc.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "{
+          "extends": ["../../.eslintrc.json"],
+          "ignorePatterns": ["!**/*"],
+          "overrides": [
+            {
+              "files": ["*.json"],
+              "parser": "jsonc-eslint-parser",
+              "rules": {}
+            },
+            {
+              "files": ["*.ts"],
+              "extends": [
+                "plugin:@nx/angular",
+                "plugin:@angular-eslint/template/process-inline-templates"
+              ],
+              "rules": {
+                "@angular-eslint/directive-selector": [
+                  "error",
+                  {
+                    "type": "attribute",
+                    "prefix": "proj",
+                    "style": "camelCase"
+                  }
+                ],
+                "@angular-eslint/component-selector": [
+                  "error",
+                  {
+                    "type": "element",
+                    "prefix": "proj",
+                    "style": "kebab-case"
+                  }
+                ]
+              }
+            },
+            {
+              "files": ["*.html"],
+              "extends": ["plugin:@nx/angular-template"],
+              "rules": {}
+            }
+          ]
+        }
+        "
+      `);
+
       // Make sure these have properties
       [
         {
@@ -1111,6 +1157,13 @@ describe('lib', () => {
               "!**/*",
             ],
             "overrides": [
+              {
+                "files": [
+                  "*.json",
+                ],
+                "parser": "jsonc-eslint-parser",
+                "rules": {},
+              },
               {
                 "extends": [
                   "plugin:@nx/angular",
