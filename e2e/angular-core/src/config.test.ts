@@ -13,11 +13,13 @@ describe('angular.json v1 config', () => {
 
   beforeAll(() => {
     newProject();
-    runCLI(`generate @nx/angular:app ${app1} --no-interactive`);
+    runCLI(
+      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
+    );
     // reset workspace to use v1 config
     updateFile(`angular.json`, angularV1Json(app1));
-    removeFile(`apps/${app1}/project.json`);
-    removeFile(`apps/${app1}-e2e/project.json`);
+    removeFile(`${app1}/project.json`);
+    removeFile(`${app1}-e2e/project.json`);
   });
   afterAll(() => cleanupProject());
 
@@ -31,10 +33,12 @@ describe('angular.json v1 config', () => {
   it('should generate new app with project.json and keep the existing in angular.json', async () => {
     // create new app
     const app2 = uniq('app2');
-    runCLI(`generate @nx/angular:app ${app2} --no-interactive`);
+    runCLI(
+      `generate @nx/angular:app ${app2} --project-name-and-root-format=as-provided --no-interactive`
+    );
 
     // should generate project.json for new projects
-    checkFilesExist(`apps/${app2}/project.json`);
+    checkFilesExist(`${app2}/project.json`);
     // check it works correctly
     expect(runCLI(`build ${app2}`)).toContain('Successfully ran target build');
     expect(runCLI(`test ${app2} --no-watch`)).toContain(
@@ -53,21 +57,21 @@ const angularV1Json = (appName: string) => `{
   "projects": {
     "${appName}": {
       "projectType": "application",
-      "root": "apps/${appName}",
-      "sourceRoot": "apps/${appName}/src",
+      "root": "${appName}",
+      "sourceRoot": "${appName}/src",
       "prefix": "v1angular",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "outputs": ["{options.outputPath}"],
           "options": {
-            "outputPath": "dist/apps/${appName}",
-            "index": "apps/${appName}/src/index.html",
-            "main": "apps/${appName}/src/main.ts",
+            "outputPath": "dist${appName}",
+            "index": "${appName}/src/index.html",
+            "main": "${appName}/src/main.ts",
             "polyfills": ["zone.js"],
-            "tsConfig": "apps/${appName}/tsconfig.app.json",
-            "assets": ["apps/${appName}/src/favicon.ico", "apps/${appName}/src/assets"],
-            "styles": ["apps/${appName}/src/styles.css"],
+            "tsConfig": "${appName}/tsconfig.app.json",
+            "assets": ["${appName}/src/favicon.ico", "${appName}/src/assets"],
+            "styles": ["${appName}/src/styles.css"],
             "scripts": []
           },
           "configurations": {
@@ -119,16 +123,16 @@ const angularV1Json = (appName: string) => `{
           "builder": "@nx/linter:eslint",
           "options": {
             "lintFilePatterns": [
-              "apps/${appName}/src/**/*.ts",
-              "apps/${appName}/src/**/*.html"
+              "${appName}/src/**/*.ts",
+              "${appName}/src/**/*.html"
             ]
           }
         },
         "test": {
           "builder": "@nx/jest:jest",
-          "outputs": ["coverage/apps/${appName}"],
+          "outputs": ["coverage${appName}"],
           "options": {
-            "jestConfig": "apps/${appName}/jest.config.ts",
+            "jestConfig": "${appName}/jest.config.ts",
             "passWithNoTests": true
           }
         }
@@ -136,14 +140,14 @@ const angularV1Json = (appName: string) => `{
       "tags": []
     },
     "${appName}-e2e": {
-      "root": "apps/${appName}-e2e",
-      "sourceRoot": "apps/${appName}-e2e/src",
+      "root": "${appName}-e2e",
+      "sourceRoot": "${appName}-e2e/src",
       "projectType": "application",
       "architect": {
         "e2e": {
           "builder": "@nx/cypress:cypress",
           "options": {
-            "cypressConfig": "apps/${appName}-e2e/cypress.json",
+            "cypressConfig": "${appName}-e2e/cypress.json",
             "devServerTarget": "${appName}:serve:development",
             "testingType": "e2e"
           },
@@ -157,7 +161,7 @@ const angularV1Json = (appName: string) => `{
           "builder": "@nx/linter:eslint",
           "outputs": ["{options.outputFile}"],
           "options": {
-            "lintFilePatterns": ["apps/${appName}-e2e/**/*.{js,ts}"]
+            "lintFilePatterns": ["${appName}-e2e/**/*.{js,ts}"]
           }
         }
       },

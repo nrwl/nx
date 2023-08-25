@@ -36,20 +36,15 @@ describe('Init MF', () => {
       });
 
       // ASSERT
-      expect(
-        tree.exists(`apps/${app}/module-federation.config.js`)
-      ).toBeTruthy();
-      expect(tree.exists(`apps/${app}/webpack.config.js`)).toBeTruthy();
-      expect(tree.exists(`apps/${app}/webpack.prod.config.js`)).toBeTruthy();
+      expect(tree.exists(`${app}/module-federation.config.js`)).toBeTruthy();
+      expect(tree.exists(`${app}/webpack.config.js`)).toBeTruthy();
+      expect(tree.exists(`${app}/webpack.prod.config.js`)).toBeTruthy();
 
-      const webpackContents = tree.read(
-        `apps/${app}/webpack.config.js`,
-        'utf-8'
-      );
+      const webpackContents = tree.read(`${app}/webpack.config.js`, 'utf-8');
       expect(webpackContents).toMatchSnapshot();
 
       const mfConfigContents = tree.read(
-        `apps/${app}/module-federation.config.js`,
+        `${app}/module-federation.config.js`,
         'utf-8'
       );
       expect(mfConfigContents).toMatchSnapshot();
@@ -63,7 +58,7 @@ describe('Init MF', () => {
     'create bootstrap file with the contents of main.ts',
     async (app, type: 'host' | 'remote') => {
       // ARRANGE
-      const mainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
+      const mainContents = tree.read(`${app}/src/main.ts`, 'utf-8');
 
       // ACT
       await setupMf(tree, {
@@ -72,11 +67,8 @@ describe('Init MF', () => {
       });
 
       // ASSERT
-      const bootstrapContents = tree.read(
-        `apps/${app}/src/bootstrap.ts`,
-        'utf-8'
-      );
-      const updatedMainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
+      const bootstrapContents = tree.read(`${app}/src/bootstrap.ts`, 'utf-8');
+      const updatedMainContents = tree.read(`${app}/src/main.ts`, 'utf-8');
 
       expect(bootstrapContents).toEqual(mainContents);
       expect(updatedMainContents).not.toEqual(mainContents);
@@ -90,7 +82,7 @@ describe('Init MF', () => {
     'should alter main.ts to import the bootstrap file dynamically',
     async (app, type: 'host' | 'remote') => {
       // ARRANGE
-      const mainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
+      const mainContents = tree.read(`${app}/src/main.ts`, 'utf-8');
 
       // ACT
       await setupMf(tree, {
@@ -99,7 +91,7 @@ describe('Init MF', () => {
       });
 
       // ASSERT
-      const updatedMainContents = tree.read(`apps/${app}/src/main.ts`, 'utf-8');
+      const updatedMainContents = tree.read(`${app}/src/main.ts`, 'utf-8');
 
       expect(updatedMainContents).toEqual(
         `import('./bootstrap').catch((err) => console.error(err));\n`
@@ -130,7 +122,7 @@ describe('Init MF', () => {
       );
       expect(build.executor).toEqual('@nx/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
-        `apps/${app}/webpack.config.js`
+        `${app}/webpack.config.js`
       );
     }
   );
@@ -145,7 +137,7 @@ describe('Init MF', () => {
 
     // ASSERT
     const { build } = readProjectConfiguration(tree, 'app1').targets;
-    expect(tree.exists('apps/app1/webpack.prod.config.js')).toBeFalsy();
+    expect(tree.exists('app1/webpack.prod.config.js')).toBeFalsy();
     expect(build.configurations.production.customWebpackConfig).toBeUndefined();
   });
 
@@ -159,10 +151,10 @@ describe('Init MF', () => {
 
     // ASSERT
     expect(
-      tree.read('apps/remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
+      tree.read('remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      tree.read('apps/remote1/src/app/remote-entry/entry.module.ts', 'utf-8')
+      tree.read('remote1/src/app/remote-entry/entry.module.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -172,7 +164,7 @@ describe('Init MF', () => {
 
     // ASSERT
     expect(
-      tree.read('apps/remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
+      tree.read('remote1/src/app/remote-entry/entry.component.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -186,7 +178,7 @@ describe('Init MF', () => {
 
     // ASSERT
     const mfConfigContents = tree.read(
-      `apps/app1/module-federation.config.js`,
+      `app1/module-federation.config.js`,
       'utf-8'
     );
 
@@ -208,10 +200,7 @@ describe('Init MF', () => {
     });
 
     // ASSERT
-    const hostMfConfig = tree.read(
-      'apps/app1/module-federation.config.js',
-      'utf-8'
-    );
+    const hostMfConfig = tree.read('app1/module-federation.config.js', 'utf-8');
     expect(hostMfConfig).toMatchSnapshot();
   });
 
@@ -242,10 +231,7 @@ describe('Init MF', () => {
     });
 
     // ASSERT
-    const hostMfConfig = tree.read(
-      'apps/app1/module-federation.config.js',
-      'utf-8'
-    );
+    const hostMfConfig = tree.read('app1/module-federation.config.js', 'utf-8');
     expect(hostMfConfig).toMatchSnapshot();
   });
 
@@ -280,7 +266,7 @@ describe('Init MF', () => {
     });
 
     // ASSERT
-    const hostAppRoutes = tree.read('apps/app1/src/app/app.routes.ts', 'utf-8');
+    const hostAppRoutes = tree.read('app1/src/app/app.routes.ts', 'utf-8');
     expect(hostAppRoutes).toMatchSnapshot();
   });
 
@@ -301,7 +287,7 @@ describe('Init MF', () => {
 
     // ASSERT
     const cypressCommands = tree.read(
-      'apps/test-app-e2e/src/support/e2e.ts',
+      'test-app-e2e/src/support/e2e.ts',
       'utf-8'
     );
     expect(cypressCommands).toContain(
@@ -320,13 +306,13 @@ describe('Init MF', () => {
       });
 
       // ASSERT
+      expect(tree.read('app1/module-federation.config.js', 'utf-8')).toContain(
+        'remotes: []'
+      );
       expect(
-        tree.read('apps/app1/module-federation.config.js', 'utf-8')
-      ).toContain('remotes: []');
-      expect(
-        tree.exists('apps/app1/src/assets/module-federation.manifest.json')
+        tree.exists('app1/src/assets/module-federation.manifest.json')
       ).toBeTruthy();
-      expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -355,8 +341,7 @@ describe('Init MF', () => {
     });
 
     // ASSERT
-    expect(tree.read('apps/ng14/src/bootstrap.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+    expect(tree.read('ng14/src/bootstrap.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { bootstrapApplication } from '@angular/platform-browser';
       import { appConfig } from './app/app.config';
       import { RemoteEntryComponent } from './app/remote-entry/entry.component';
@@ -392,17 +377,15 @@ describe('Init MF', () => {
     });
 
     // ASSERT
+    expect(tree.read('app1/module-federation.config.js', 'utf-8')).toContain(
+      'remotes: []'
+    );
     expect(
-      tree.read('apps/app1/module-federation.config.js', 'utf-8')
-    ).toContain('remotes: []');
-    expect(
-      readJson(tree, 'apps/app1/src/assets/module-federation.manifest.json')
+      readJson(tree, 'app1/src/assets/module-federation.manifest.json')
     ).toEqual({
       remote1: 'http://localhost:4201',
     });
-    expect(
-      tree.read('apps/app1/src/app/app.routes.ts', 'utf-8')
-    ).toMatchSnapshot();
+    expect(tree.read('app1/src/app/app.routes.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should throw an error when installed version of angular < 14.1.0 and --standalone is used', async () => {

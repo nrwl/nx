@@ -206,6 +206,486 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 "
 `;
 
+exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided 1`] = `
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "my-dir-my-app",
+  "prefix": "proj",
+  "projectType": "application",
+  "root": "apps/my-dir/my-app",
+  "sourceRoot": "apps/my-dir/my-app/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "configurations": {
+        "development": {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
+        "production": {
+          "budgets": [
+            {
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
+              "type": "initial",
+            },
+            {
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
+              "type": "anyComponentStyle",
+            },
+          ],
+          "outputHashing": "all",
+        },
+      },
+      "defaultConfiguration": "production",
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": {
+        "assets": [
+          "apps/my-dir/my-app/src/favicon.ico",
+          "apps/my-dir/my-app/src/assets",
+        ],
+        "index": "apps/my-dir/my-app/src/index.html",
+        "main": "apps/my-dir/my-app/src/main.ts",
+        "outputPath": "dist/apps/my-dir/my-app",
+        "polyfills": [
+          "zone.js",
+        ],
+        "scripts": [],
+        "styles": [
+          "apps/my-dir/my-app/src/styles.css",
+        ],
+        "tsConfig": "apps/my-dir/my-app/tsconfig.app.json",
+      },
+      "outputs": [
+        "{options.outputPath}",
+      ],
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "my-dir-my-app:build",
+      },
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "apps/my-dir/my-app/**/*.ts",
+          "apps/my-dir/my-app/**/*.html",
+        ],
+      },
+      "outputs": [
+        "{options.outputFile}",
+      ],
+    },
+    "serve": {
+      "configurations": {
+        "development": {
+          "browserTarget": "my-dir-my-app:build:development",
+        },
+        "production": {
+          "browserTarget": "my-dir-my-app:build:production",
+        },
+      },
+      "defaultConfiguration": "development",
+      "executor": "@angular-devkit/build-angular:dev-server",
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "my-dir-my-app:build",
+      },
+    },
+    "test": {
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true,
+        },
+      },
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
+        "passWithNoTests": true,
+      },
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+      ],
+    },
+  },
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided 2`] = `
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "my-dir-my-app",
+  ],
+  "name": "my-dir-my-app-e2e",
+  "projectType": "application",
+  "root": "apps/my-dir/my-app-e2e",
+  "sourceRoot": "apps/my-dir/my-app-e2e/src",
+  "tags": [],
+  "targets": {
+    "e2e": {
+      "configurations": {
+        "ci": {
+          "devServerTarget": "my-dir-my-app:serve-static",
+        },
+        "production": {
+          "devServerTarget": "my-dir-my-app:serve:production",
+        },
+      },
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/my-dir/my-app-e2e/cypress.config.ts",
+        "devServerTarget": "my-dir-my-app:serve:development",
+        "testingType": "e2e",
+      },
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "apps/my-dir/my-app-e2e/**/*.{js,ts}",
+        ],
+      },
+      "outputs": [
+        "{options.outputFile}",
+      ],
+    },
+  },
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: e2e tsconfig.json 1`] = `
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "../../../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../../tsconfig.base.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "cypress.config.ts",
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: tsconfig.app.json 1`] = `
+{
+  "compilerOptions": {
+    "outDir": "../../../dist/out-tsc",
+    "types": [],
+  },
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "files": [
+    "src/main.ts",
+  ],
+  "include": [
+    "src/**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when directory is provided: tsconfig.json 1`] = `
+{
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
+    "target": "es2022",
+    "useDefineForClassFields": false,
+  },
+  "extends": "../../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json",
+    },
+    {
+      "path": "./tsconfig.spec.json",
+    },
+    {
+      "path": "./tsconfig.editor.json",
+    },
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided 1`] = `
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "my-app",
+  "prefix": "proj",
+  "projectType": "application",
+  "root": "apps/my-app",
+  "sourceRoot": "apps/my-app/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "configurations": {
+        "development": {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
+        "production": {
+          "budgets": [
+            {
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
+              "type": "initial",
+            },
+            {
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
+              "type": "anyComponentStyle",
+            },
+          ],
+          "outputHashing": "all",
+        },
+      },
+      "defaultConfiguration": "production",
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": {
+        "assets": [
+          "apps/my-app/src/favicon.ico",
+          "apps/my-app/src/assets",
+        ],
+        "index": "apps/my-app/src/index.html",
+        "main": "apps/my-app/src/main.ts",
+        "outputPath": "dist/apps/my-app",
+        "polyfills": [
+          "zone.js",
+        ],
+        "scripts": [],
+        "styles": [
+          "apps/my-app/src/styles.css",
+        ],
+        "tsConfig": "apps/my-app/tsconfig.app.json",
+      },
+      "outputs": [
+        "{options.outputPath}",
+      ],
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "my-app:build",
+      },
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "apps/my-app/**/*.ts",
+          "apps/my-app/**/*.html",
+        ],
+      },
+      "outputs": [
+        "{options.outputFile}",
+      ],
+    },
+    "serve": {
+      "configurations": {
+        "development": {
+          "browserTarget": "my-app:build:development",
+        },
+        "production": {
+          "browserTarget": "my-app:build:production",
+        },
+      },
+      "defaultConfiguration": "development",
+      "executor": "@angular-devkit/build-angular:dev-server",
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "my-app:build",
+      },
+    },
+    "test": {
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true,
+        },
+      },
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/my-app/jest.config.ts",
+        "passWithNoTests": true,
+      },
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+      ],
+    },
+  },
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided 2`] = `
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "my-app",
+  ],
+  "name": "my-app-e2e",
+  "projectType": "application",
+  "root": "apps/my-app-e2e",
+  "sourceRoot": "apps/my-app-e2e/src",
+  "tags": [],
+  "targets": {
+    "e2e": {
+      "configurations": {
+        "ci": {
+          "devServerTarget": "my-app:serve-static",
+        },
+        "production": {
+          "devServerTarget": "my-app:serve:production",
+        },
+      },
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "apps/my-app-e2e/cypress.config.ts",
+        "devServerTarget": "my-app:serve:development",
+        "testingType": "e2e",
+      },
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "apps/my-app-e2e/**/*.{js,ts}",
+        ],
+      },
+      "outputs": [
+        "{options.outputFile}",
+      ],
+    },
+  },
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: e2e tsconfig.json 1`] = `
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "../../dist/out-tsc",
+    "sourceMap": false,
+    "strict": true,
+    "types": [
+      "cypress",
+      "node",
+    ],
+  },
+  "extends": "../../tsconfig.base.json",
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.js",
+    "cypress.config.ts",
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: tsconfig.app.json 1`] = `
+{
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": [],
+  },
+  "exclude": [
+    "jest.config.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+  ],
+  "extends": "./tsconfig.json",
+  "files": [
+    "src/main.ts",
+  ],
+  "include": [
+    "src/**/*.d.ts",
+  ],
+}
+`;
+
+exports[`app --project-name-and-root-format=derived should generate correctly when no directory is provided: tsconfig.json 1`] = `
+{
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true,
+  },
+  "compilerOptions": {
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "strict": true,
+    "target": "es2022",
+    "useDefineForClassFields": false,
+  },
+  "extends": "../../tsconfig.base.json",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json",
+    },
+    {
+      "path": "./tsconfig.spec.json",
+    },
+    {
+      "path": "./tsconfig.editor.json",
+    },
+  ],
+}
+`;
+
 exports[`app --standalone should generate a standalone app correctly with routing 1`] = `
 "import { bootstrapApplication } from '@angular/platform-browser';
 import { appConfig } from './app/app.config';
@@ -372,7 +852,7 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
     "target": "es2022",
     "useDefineForClassFields": false,
   },
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [
@@ -398,7 +878,7 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../dist/out-tsc",
     "sourceMap": false,
     "strict": true,
     "types": [
@@ -406,7 +886,7 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
       "node",
     ],
   },
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "include": [
     "src/**/*.ts",
     "src/**/*.js",
@@ -419,170 +899,12 @@ exports[`app at the root should accept numbers in the path 1`] = `"src/9-website
 
 exports[`app nested should create project configs 1`] = `
 {
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "name": "my-dir-my-app",
-  "prefix": "proj",
-  "projectType": "application",
-  "root": "apps/my-dir/my-app",
-  "sourceRoot": "apps/my-dir/my-app/src",
-  "tags": [],
-  "targets": {
-    "build": {
-      "configurations": {
-        "development": {
-          "buildOptimizer": false,
-          "extractLicenses": false,
-          "namedChunks": true,
-          "optimization": false,
-          "sourceMap": true,
-          "vendorChunk": true,
-        },
-        "production": {
-          "budgets": [
-            {
-              "maximumError": "1mb",
-              "maximumWarning": "500kb",
-              "type": "initial",
-            },
-            {
-              "maximumError": "4kb",
-              "maximumWarning": "2kb",
-              "type": "anyComponentStyle",
-            },
-          ],
-          "outputHashing": "all",
-        },
-      },
-      "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
-      "options": {
-        "assets": [
-          "apps/my-dir/my-app/src/favicon.ico",
-          "apps/my-dir/my-app/src/assets",
-        ],
-        "index": "apps/my-dir/my-app/src/index.html",
-        "main": "apps/my-dir/my-app/src/main.ts",
-        "outputPath": "dist/apps/my-dir/my-app",
-        "polyfills": [
-          "zone.js",
-        ],
-        "scripts": [],
-        "styles": [
-          "apps/my-dir/my-app/src/styles.css",
-        ],
-        "tsConfig": "apps/my-dir/my-app/tsconfig.app.json",
-      },
-      "outputs": [
-        "{options.outputPath}",
-      ],
-    },
-    "extract-i18n": {
-      "executor": "@angular-devkit/build-angular:extract-i18n",
-      "options": {
-        "browserTarget": "my-dir-my-app:build",
-      },
-    },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "apps/my-dir/my-app/**/*.ts",
-          "apps/my-dir/my-app/**/*.html",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
-    },
-    "serve": {
-      "configurations": {
-        "development": {
-          "browserTarget": "my-dir-my-app:build:development",
-        },
-        "production": {
-          "browserTarget": "my-dir-my-app:build:production",
-        },
-      },
-      "defaultConfiguration": "development",
-      "executor": "@angular-devkit/build-angular:dev-server",
-    },
-    "serve-static": {
-      "executor": "@nx/web:file-server",
-      "options": {
-        "buildTarget": "my-dir-my-app:build",
-      },
-    },
-    "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
-        "passWithNoTests": true,
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
-    },
-  },
-}
-`;
-
-exports[`app nested should create project configs 2`] = `
-{
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "implicitDependencies": [
-    "my-dir-my-app",
-  ],
-  "name": "my-dir-my-app-e2e",
-  "projectType": "application",
-  "root": "apps/my-dir/my-app-e2e",
-  "sourceRoot": "apps/my-dir/my-app-e2e/src",
-  "tags": [],
-  "targets": {
-    "e2e": {
-      "configurations": {
-        "ci": {
-          "devServerTarget": "my-dir-my-app:serve-static",
-        },
-        "production": {
-          "devServerTarget": "my-dir-my-app:serve:production",
-        },
-      },
-      "executor": "@nx/cypress:cypress",
-      "options": {
-        "cypressConfig": "apps/my-dir/my-app-e2e/cypress.config.ts",
-        "devServerTarget": "my-dir-my-app:serve:development",
-        "testingType": "e2e",
-      },
-    },
-    "lint": {
-      "executor": "@nx/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "apps/my-dir/my-app-e2e/**/*.{js,ts}",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
-    },
-  },
-}
-`;
-
-exports[`app not nested should create project configs 1`] = `
-{
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "my-app",
   "prefix": "proj",
   "projectType": "application",
-  "root": "apps/my-app",
-  "sourceRoot": "apps/my-app/src",
+  "root": "my-dir/my-app",
+  "sourceRoot": "my-dir/my-app/src",
   "tags": [],
   "targets": {
     "build": {
@@ -615,20 +937,20 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@angular-devkit/build-angular:browser",
       "options": {
         "assets": [
-          "apps/my-app/src/favicon.ico",
-          "apps/my-app/src/assets",
+          "my-dir/my-app/src/favicon.ico",
+          "my-dir/my-app/src/assets",
         ],
-        "index": "apps/my-app/src/index.html",
-        "main": "apps/my-app/src/main.ts",
-        "outputPath": "dist/apps/my-app",
+        "index": "my-dir/my-app/src/index.html",
+        "main": "my-dir/my-app/src/main.ts",
+        "outputPath": "dist/my-dir/my-app",
         "polyfills": [
           "zone.js",
         ],
         "scripts": [],
         "styles": [
-          "apps/my-app/src/styles.css",
+          "my-dir/my-app/src/styles.css",
         ],
-        "tsConfig": "apps/my-app/tsconfig.app.json",
+        "tsConfig": "my-dir/my-app/tsconfig.app.json",
       },
       "outputs": [
         "{options.outputPath}",
@@ -644,8 +966,8 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "apps/my-app/**/*.ts",
-          "apps/my-app/**/*.html",
+          "my-dir/my-app/**/*.ts",
+          "my-dir/my-app/**/*.html",
         ],
       },
       "outputs": [
@@ -679,7 +1001,7 @@ exports[`app not nested should create project configs 1`] = `
       },
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "apps/my-app/jest.config.ts",
+        "jestConfig": "my-dir/my-app/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": [
@@ -690,7 +1012,7 @@ exports[`app not nested should create project configs 1`] = `
 }
 `;
 
-exports[`app not nested should create project configs 2`] = `
+exports[`app nested should create project configs 2`] = `
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "implicitDependencies": [
@@ -698,8 +1020,8 @@ exports[`app not nested should create project configs 2`] = `
   ],
   "name": "my-app-e2e",
   "projectType": "application",
-  "root": "apps/my-app-e2e",
-  "sourceRoot": "apps/my-app-e2e/src",
+  "root": "my-dir/my-app-e2e",
+  "sourceRoot": "my-dir/my-app-e2e/src",
   "tags": [],
   "targets": {
     "e2e": {
@@ -713,7 +1035,7 @@ exports[`app not nested should create project configs 2`] = `
       },
       "executor": "@nx/cypress:cypress",
       "options": {
-        "cypressConfig": "apps/my-app-e2e/cypress.config.ts",
+        "cypressConfig": "my-dir/my-app-e2e/cypress.config.ts",
         "devServerTarget": "my-app:serve:development",
         "testingType": "e2e",
       },
@@ -722,7 +1044,165 @@ exports[`app not nested should create project configs 2`] = `
       "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "apps/my-app-e2e/**/*.{js,ts}",
+          "my-dir/my-app-e2e/**/*.{js,ts}",
+        ],
+      },
+      "outputs": [
+        "{options.outputFile}",
+      ],
+    },
+  },
+}
+`;
+
+exports[`app not nested should create project configs 1`] = `
+{
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "name": "my-app",
+  "prefix": "proj",
+  "projectType": "application",
+  "root": "my-app",
+  "sourceRoot": "my-app/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "configurations": {
+        "development": {
+          "buildOptimizer": false,
+          "extractLicenses": false,
+          "namedChunks": true,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true,
+        },
+        "production": {
+          "budgets": [
+            {
+              "maximumError": "1mb",
+              "maximumWarning": "500kb",
+              "type": "initial",
+            },
+            {
+              "maximumError": "4kb",
+              "maximumWarning": "2kb",
+              "type": "anyComponentStyle",
+            },
+          ],
+          "outputHashing": "all",
+        },
+      },
+      "defaultConfiguration": "production",
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": {
+        "assets": [
+          "my-app/src/favicon.ico",
+          "my-app/src/assets",
+        ],
+        "index": "my-app/src/index.html",
+        "main": "my-app/src/main.ts",
+        "outputPath": "dist/my-app",
+        "polyfills": [
+          "zone.js",
+        ],
+        "scripts": [],
+        "styles": [
+          "my-app/src/styles.css",
+        ],
+        "tsConfig": "my-app/tsconfig.app.json",
+      },
+      "outputs": [
+        "{options.outputPath}",
+      ],
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "my-app:build",
+      },
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "my-app/**/*.ts",
+          "my-app/**/*.html",
+        ],
+      },
+      "outputs": [
+        "{options.outputFile}",
+      ],
+    },
+    "serve": {
+      "configurations": {
+        "development": {
+          "browserTarget": "my-app:build:development",
+        },
+        "production": {
+          "browserTarget": "my-app:build:production",
+        },
+      },
+      "defaultConfiguration": "development",
+      "executor": "@angular-devkit/build-angular:dev-server",
+    },
+    "serve-static": {
+      "executor": "@nx/web:file-server",
+      "options": {
+        "buildTarget": "my-app:build",
+      },
+    },
+    "test": {
+      "configurations": {
+        "ci": {
+          "ci": true,
+          "codeCoverage": true,
+        },
+      },
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "my-app/jest.config.ts",
+        "passWithNoTests": true,
+      },
+      "outputs": [
+        "{workspaceRoot}/coverage/{projectRoot}",
+      ],
+    },
+  },
+}
+`;
+
+exports[`app not nested should create project configs 2`] = `
+{
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "my-app",
+  ],
+  "name": "my-app-e2e",
+  "projectType": "application",
+  "root": "my-app-e2e",
+  "sourceRoot": "my-app-e2e/src",
+  "tags": [],
+  "targets": {
+    "e2e": {
+      "configurations": {
+        "ci": {
+          "devServerTarget": "my-app:serve-static",
+        },
+        "production": {
+          "devServerTarget": "my-app:serve:production",
+        },
+      },
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "my-app-e2e/cypress.config.ts",
+        "devServerTarget": "my-app:serve:development",
+        "testingType": "e2e",
+      },
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": [
+          "my-app-e2e/**/*.{js,ts}",
         ],
       },
       "outputs": [
@@ -742,7 +1222,7 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../dist/out-tsc",
     "sourceMap": false,
     "strict": true,
     "types": [
@@ -750,7 +1230,7 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
       "node",
     ],
   },
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "include": [
     "src/**/*.ts",
     "src/**/*.js",
@@ -762,7 +1242,7 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
 exports[`app not nested should generate files: tsconfig.app.json 1`] = `
 {
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../dist/out-tsc",
     "types": [],
   },
   "exclude": [
@@ -798,7 +1278,7 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
     "target": "es2022",
     "useDefineForClassFields": false,
   },
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [

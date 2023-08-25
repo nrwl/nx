@@ -12,6 +12,7 @@ describe(`Migration to remove bundleDependencies`, () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
       name: 'test',
+      projectNameAndRootFormat: 'derived',
     });
 
     const project = readProjectConfiguration(tree, 'test');

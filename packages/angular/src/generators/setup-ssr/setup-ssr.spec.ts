@@ -27,13 +27,13 @@ describe('setupSSR', () => {
     expect(
       readProjectConfiguration(tree, 'app1').targets.server
     ).toMatchSnapshot();
-    expect(tree.read('apps/app1/server.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('apps/app1/src/main.server.ts', 'utf-8'))
+    expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('app1/src/main.server.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "export { AppServerModule } from './app/app.server.module';
       "
     `);
-    expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
       import { AppModule } from './app/app.module';
 
@@ -42,7 +42,7 @@ describe('setupSSR', () => {
         .catch((err) => console.error(err));
       "
     `);
-    expect(tree.read('apps/app1/tsconfig.server.json', 'utf-8'))
+    expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
       .toMatchInlineSnapshot(`
       "/* To learn more about this file see: https://angular.io/config/tsconfig. */
       {
@@ -56,7 +56,7 @@ describe('setupSSR', () => {
       }
       "
     `);
-    expect(tree.read('apps/app1/src/app/app.server.module.ts', 'utf-8'))
+    expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { ServerModule } from '@angular/platform-server';
@@ -71,7 +71,7 @@ describe('setupSSR', () => {
       export class AppServerModule {}
       "
     `);
-    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+    expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
@@ -128,13 +128,13 @@ describe('setupSSR', () => {
       name: 'app1',
     });
 
-    tree.write('apps/app1/src/environments/environment.ts', '');
-    tree.write('apps/app1/src/environments/environment.prod.ts', '');
+    tree.write('app1/src/environments/environment.ts', '');
+    tree.write('app1/src/environments/environment.prod.ts', '');
     const project = readProjectConfiguration(tree, 'app1');
     project.targets.build.configurations.production.fileReplacements = [
       {
-        replace: 'apps/app1/src/environments/environment.ts',
-        with: 'apps/app1/src/environments/environment.prod.ts',
+        replace: 'app1/src/environments/environment.ts',
+        with: 'app1/src/environments/environment.prod.ts',
       },
     ];
     updateProjectConfiguration(tree, 'app1', project);
@@ -164,8 +164,8 @@ describe('setupSSR', () => {
     expect(
       readProjectConfiguration(tree, 'app1').targets.server
     ).toMatchSnapshot();
-    expect(tree.read('apps/app1/server.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('apps/app1/src/main.server.ts', 'utf-8'))
+    expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('app1/src/main.server.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { bootstrapApplication } from '@angular/platform-browser';
       import { AppComponent } from './app/app.component';
@@ -176,7 +176,7 @@ describe('setupSSR', () => {
       export default bootstrap;
       "
     `);
-    expect(tree.read('apps/app1/tsconfig.server.json', 'utf-8'))
+    expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
       .toMatchInlineSnapshot(`
       "/* To learn more about this file see: https://angular.io/config/tsconfig. */
       {
@@ -190,7 +190,7 @@ describe('setupSSR', () => {
       }
       "
     `);
-    expect(tree.read('apps/app1/src/app/app.config.server.ts', 'utf-8'))
+    expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
       import { provideServerRendering } from '@angular/platform-server';
@@ -249,7 +249,7 @@ describe('setupSSR', () => {
     await setupSsr(tree, { project: 'app1', hydration: true });
 
     // ASSERT
-    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+    expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import {
@@ -283,7 +283,7 @@ describe('setupSSR', () => {
     await setupSsr(tree, { project: 'app1', hydration: true });
 
     // ASSERT
-    expect(tree.read('apps/app1/src/app/app.config.ts', 'utf-8'))
+    expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ApplicationConfig } from '@angular/core';
       import { provideClientHydration } from '@angular/platform-browser';
@@ -294,7 +294,7 @@ describe('setupSSR', () => {
       "
     `);
 
-    expect(tree.read('apps/app1/src/app/app.config.server.ts', 'utf-8'))
+    expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
       import { provideServerRendering } from '@angular/platform-server';
@@ -356,7 +356,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1' });
 
       // ASSERT
-      expect(tree.read('apps/app1/src/main.server.ts', 'utf-8'))
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "/***************************************************************************************************
          * Initialize the server environment - for example, adding DOM built-in types to the global scope.
@@ -389,7 +389,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1' });
 
       // ASSERT
-      expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
               "import { NgModule } from '@angular/core';
               import { BrowserModule } from '@angular/platform-browser';
@@ -422,8 +422,7 @@ describe('setupSSR', () => {
       await setupSsr(tree, { project: 'app1' });
 
       // ASSERT
-      expect(tree.read('apps/app1/src/main.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
+      expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
               "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
               import { AppModule } from './app/app.module';
 
