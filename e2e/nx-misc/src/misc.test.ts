@@ -23,12 +23,11 @@ import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Nx Commands', () => {
   let proj: string;
   beforeAll(() => (proj = newProject()));
-  afterEach(() => resetWorkspaceContext());
+
   afterAll(() => cleanupProject());
 
   describe('show', () => {
@@ -154,7 +153,7 @@ describe('Nx Commands', () => {
       runCLI(`generate @nx/js:lib ${mylib}`);
       await setMaxWorkers();
     });
-    afterEach(() => resetWorkspaceContext());
+
     beforeEach(() => {
       updateFile(
         `apps/${myapp}/src/main.ts`,
@@ -309,7 +308,6 @@ describe('Nx Commands', () => {
 
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
 describe('migrate', () => {
-  afterEach(() => resetWorkspaceContext());
   beforeEach(() => {
     newProject();
 

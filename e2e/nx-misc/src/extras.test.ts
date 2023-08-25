@@ -10,7 +10,6 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nx/e2e/utils';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Extra Nx Misc Tests', () => {
   beforeAll(() => newProject());
@@ -105,7 +104,6 @@ describe('Extra Nx Misc Tests', () => {
     beforeAll(() => {
       runCLI(`generate @nx/js:lib ${mylib}`);
     });
-    afterEach(() => resetWorkspaceContext());
 
     it('should not override environment variables already set when setting a custom env file path', async () => {
       updateFile(

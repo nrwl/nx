@@ -1,5 +1,4 @@
 import type { ConfigurationParserResult, WorkspaceContext } from '../native';
-import { logger } from './logger';
 import { performance } from 'perf_hooks';
 
 let workspaceContext: WorkspaceContext | undefined;

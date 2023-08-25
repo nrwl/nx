@@ -17,7 +17,6 @@ import {
 } from '@nx/e2e/utils';
 import { readFileSync } from 'fs-extra';
 import { join } from 'path';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('React Applications', () => {
   let proj: string;
@@ -26,7 +25,7 @@ describe('React Applications', () => {
     proj = newProject();
     ensureCypressInstallation();
   });
-  afterEach(() => resetWorkspaceContext());
+
   afterAll(() => cleanupProject());
 
   it('should be able to generate a react app + lib (with CSR and SSR)', async () => {

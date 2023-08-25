@@ -14,7 +14,6 @@ import {
 import * as http from 'http';
 import { checkApp } from './utils';
 import { removeSync, mkdirSync } from 'fs-extra';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Next.js Applications', () => {
   let proj: string;
@@ -26,7 +25,7 @@ describe('Next.js Applications', () => {
   beforeEach(() => {
     originalEnv = process.env.NODE_ENV;
   });
-  afterEach(() => resetWorkspaceContext());
+
   afterEach(() => {
     process.env.NODE_ENV = originalEnv;
   });

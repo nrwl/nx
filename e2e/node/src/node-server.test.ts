@@ -13,14 +13,13 @@ import {
   updateFile,
   setMaxWorkers,
 } from '@nx/e2e/utils';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
   beforeEach(() => {
     proj = newProject();
   });
-  afterEach(() => resetWorkspaceContext());
+
   afterEach(() => cleanupProject());
 
   function addLibImport(appName: string, libName: string, importPath?: string) {

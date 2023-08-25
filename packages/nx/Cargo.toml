@@ -15,7 +15,7 @@ ignore-files = "1.3.0"
 itertools = "0.10.5"
 once_cell = "1.18.0"
 os_type = "2.6.0"
-parking_lot = { version = "0.12.1", features = ["send_guard"]}
+parking_lot = { version = "0.12.1", features = ["send_guard"] }
 napi = { version = '2.12.6', default-features = false, features = ['anyhow', 'napi4', 'tokio_rt'] }
 napi-derive = '2.9.3'
 regex = "1.9.1"

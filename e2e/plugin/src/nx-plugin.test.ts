@@ -18,7 +18,6 @@ import {
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Nx Plugin', () => {
   let npmScope: string;
@@ -26,7 +25,7 @@ describe('Nx Plugin', () => {
   beforeAll(() => {
     npmScope = newProject();
   });
-  afterEach(() => resetWorkspaceContext());
+
   afterAll(() => cleanupProject());
 
   it('should be able to generate a Nx Plugin ', async () => {

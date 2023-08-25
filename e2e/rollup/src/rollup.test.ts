@@ -10,11 +10,9 @@ import {
   updateFile,
   updateProjectConfig,
 } from '@nx/e2e/utils';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Rollup Plugin', () => {
   beforeAll(() => newProject());
-  afterEach(() => resetWorkspaceContext());
   afterAll(() => cleanupProject());
 
   it('should be able to setup project to build node programs with rollup and different compilers', async () => {
