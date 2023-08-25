@@ -37,6 +37,7 @@ export const backwardCompatibleVersions: Record<
     jestPresetAngularVersion: '~12.2.3',
     typesNodeVersion: '16.11.7',
     jasmineMarblesVersion: '^0.9.2',
+    jsoncEslintParserVersion: '^2.1.0',
   },
   angularV15: {
     angularVersion: '~15.2.0',
@@ -64,5 +65,6 @@ export const backwardCompatibleVersions: Record<
     jestPresetAngularVersion: '~13.0.0',
     typesNodeVersion: '16.11.7',
     jasmineMarblesVersion: '^0.9.2',
+    jsoncEslintParserVersion: '^2.1.0',
   },
 };

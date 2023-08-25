@@ -48,6 +48,11 @@ export async function addLintingGenerator(
 
     replaceOverridesInLintConfig(tree, options.projectRoot, [
       {
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {},
+      },
+      {
         files: ['*.ts'],
         ...(hasParserOptions
           ? {

@@ -254,6 +254,13 @@ exports[`convert-tslint-to-eslint should not override .eslint config if migratio
   ],
   "overrides": [
     {
+      "files": [
+        "*.json",
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {},
+    },
+    {
       "extends": [
         "plugin:@nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
@@ -561,6 +568,7 @@ exports[`convert-tslint-to-eslint should work for Angular applications 1`] = `
     "eslint": "~8.46.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
+    "jsonc-eslint-parser": "^2.1.0",
   },
   "name": "test-name",
 }
@@ -844,6 +852,13 @@ exports[`convert-tslint-to-eslint should work for Angular applications 4`] = `
   ],
   "overrides": [
     {
+      "files": [
+        "*.json",
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {},
+    },
+    {
       "extends": [
         "plugin:@nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
@@ -913,6 +928,7 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 1`] = `
     "eslint": "~8.46.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
+    "jsonc-eslint-parser": "^2.1.0",
   },
   "name": "test-name",
 }
@@ -1195,6 +1211,13 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 4`] = `
     "!**/*",
   ],
   "overrides": [
+    {
+      "files": [
+        "*.json",
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {},
+    },
     {
       "extends": [
         "plugin:@nx/angular",
