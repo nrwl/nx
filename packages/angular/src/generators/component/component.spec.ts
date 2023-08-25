@@ -161,6 +161,51 @@ describe('component Generator', () => {
     );
   });
 
+  it('should not create a style file when --style=none', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    addProjectConfiguration(tree, 'lib1', {
+      projectType: 'library',
+      sourceRoot: 'libs/lib1/src',
+      root: 'libs/lib1',
+    });
+    tree.write(
+      'libs/lib1/src/lib/lib.module.ts',
+      `
+    import { NgModule } from '@angular/core';
+    
+    @NgModule({
+      declarations: [],
+      exports: []
+    })
+    export class LibModule {}`
+    );
+    tree.write('libs/lib1/src/index.ts', '');
+
+    // ACT
+    await componentGenerator(tree, {
+      name: 'example',
+      project: 'lib1',
+      style: 'none',
+    });
+
+    // ASSERT
+    expect(
+      tree.exists('libs/lib1/src/lib/example/example.component.none')
+    ).toBeFalsy();
+    expect(tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { Component } from '@angular/core';
+
+      @Component({
+        selector: 'proj-example',
+        templateUrl: './example.component.html',
+      })
+      export class ExampleComponent {}
+      "
+    `);
+  });
+
   it('should create the component correctly and export it in the entry point when "export=true"', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
