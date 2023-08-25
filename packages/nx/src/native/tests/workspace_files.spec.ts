@@ -57,7 +57,6 @@ describe('workspace files', () => {
     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
 
     const context = new WorkspaceContext(fs.tempDir);
-    await wait();
     let { projectFileMap, projectConfigurations, globalFiles } =
       context.getWorkspaceFiles(
         globs,
@@ -167,7 +166,7 @@ describe('workspace files', () => {
   it('should assign files to the root project if it exists', async () => {
     const fs = new TempFs('workspace-files');
     const nxJson: NxJsonConfiguration = {};
-    fs.createFiles({
+    await fs.createFiles({
       './nx.json': JSON.stringify(nxJson),
       './package.json': JSON.stringify({
         name: 'repo-name',
@@ -182,7 +181,6 @@ describe('workspace files', () => {
     });
 
     const context = new WorkspaceContext(fs.tempDir);
-    await wait();
 
     const globs = ['project.json', '**/project.json', '**/package.json'];
     const { globalFiles, projectFileMap } = context.getWorkspaceFiles(
@@ -240,7 +238,6 @@ describe('workspace files', () => {
     });
 
     const context = new WorkspaceContext(fs.tempDir);
-    await wait();
     let globs = ['project.json', '**/project.json', '**/package.json'];
 
     let nodes = context.getProjectConfigurations(globs, (filenames) => {
@@ -353,8 +350,3 @@ describe('workspace files', () => {
   //   });
   // });
 });
-
-// use this wait to trigger a new microtask to give the system a chance to create the background thread
-function wait() {
-  return new Promise((res) => setTimeout(res, 150));
-}

@@ -26,8 +26,9 @@ where
         if metadata.level() == &Level::TRACE {
             write!(
                 &mut writer,
-                "{}: ",
-                format!("{}", metadata.level()).bold().red()
+                "{} {}: ",
+                format!("{}", metadata.level()).bold().red(),
+                metadata.target()
             )?;
         }
 

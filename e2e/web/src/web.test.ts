@@ -20,9 +20,11 @@ import {
 } from '@nx/e2e/utils';
 import { join } from 'path';
 import { copyFileSync } from 'fs';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Web Components Applications', () => {
   beforeEach(() => newProject());
+  afterEach(() => resetWorkspaceContext());
   afterEach(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {
