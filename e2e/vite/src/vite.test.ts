@@ -11,6 +11,7 @@ import {
   promisifiedTreeKill,
   readFile,
   readJson,
+  removeFile,
   rmDist,
   runCLI,
   runCLIAsync,
@@ -267,9 +268,8 @@ describe('Vite Plugin', () => {
       const buildableJsLibFn = names(`${lib}-js`).propertyName;
 
       updateFile(`apps/${app}/src/app/app.tsx`, () => {
-        return `// eslint-disable-next-line @typescript-eslint/no-unused-vars
+        return `
 import styles from './app.module.css';
-
 import NxWelcome from './nx-welcome';
 import { ${buildableLibCmp} } from '@acme/buildable';
 import { ${buildableJsLibFn} } from '@acme/js-lib';
@@ -277,12 +277,12 @@ import { ${nonBuildableLibCmp} } from '@acme/non-buildable';
 
 export function App() {
   return (
-    <div>
-      <${buildableLibCmp} />
-      <${nonBuildableLibCmp} />
-      <p>{${buildableJsLibFn}()}</p>
-      <NxWelcome title="${app}" />
-    </div>
+     <div>
+       <${buildableLibCmp} />
+       <${nonBuildableLibCmp} />
+       <p>{${buildableJsLibFn}()}</p>
+       <NxWelcome title="${app}" />
+      </div>
   );
 }
 export default App;
@@ -306,6 +306,24 @@ export default App;
       expect(results).toContain('Successfully ran target build for project');
       // this should be less modules than building from source
       expect(results).toContain('38 modules transformed');
+    });
+
+    it('should build app from libs without package.json in lib', () => {
+      removeFile(`libs/${lib}-buildable/package.json`);
+
+      const buildFromSourceResults = runCLI(
+        `build ${app} --buildLibsFromSource=true`
+      );
+      expect(buildFromSourceResults).toContain(
+        'Successfully ran target build for project'
+      );
+
+      const noBuildFromSourceResults = runCLI(
+        `build ${app} --buildLibsFromSource=false`
+      );
+      expect(noBuildFromSourceResults).toContain(
+        'Successfully ran target build for project'
+      );
     });
   });
 
