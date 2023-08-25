@@ -133,6 +133,7 @@ export default createESLintRule<Options, MessageIds>({
       buildTarget, // TODO: What if child library has a build target different from the parent?
       {
         includeTransitiveDependencies,
+        productionOnly: true,
       }
     );
     const expectedDependencyNames = Object.keys(npmDependencies);

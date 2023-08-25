@@ -397,4 +397,80 @@ describe('findNpmDependencies', () => {
       '@acme/lib3': '*',
     });
   });
+
+  it('should supports production-only dependencies', () => {
+    vol.fromJSON(
+      {
+        './libs/lib1/package.json': JSON.stringify({
+          name: '@acme/lib1',
+          version: '0.0.1',
+        }),
+        './nx.json': JSON.stringify(nxJson),
+      },
+      '/root'
+    );
+    const lib1 = {
+      name: 'lib1',
+      type: 'lib' as const,
+      data: {
+        root: 'libs/lib1',
+        targets: { build: {} },
+      },
+    };
+    const projectGraph = {
+      nodes: {
+        lib1: lib1,
+      },
+      externalNodes: {
+        'npm:dev-only': {
+          name: 'npm:dev-only' as const,
+          type: 'npm' as const,
+          data: {
+            packageName: 'dev-only',
+            version: '1.0.0',
+          },
+        },
+      },
+      dependencies: {},
+    };
+    const projectFileMap = {
+      lib1: [
+        { file: 'libs/lib1/index.ts', hash: '123', deps: [] },
+        { file: 'libs/lib1/package.json', hash: '124', deps: ['npm:dev-only'] },
+        {
+          file: 'libs/lib1/esbuild.config.js',
+          hash: '125',
+          deps: ['npm:dev-only'],
+        },
+        {
+          file: 'libs/lib1/webpack.config.js',
+          hash: '125',
+          deps: ['npm:dev-only'],
+        },
+        {
+          file: 'libs/lib1/rollup.config.js',
+          hash: '125',
+          deps: ['npm:dev-only'],
+        },
+        {
+          file: 'libs/lib1/vite.config.ts',
+          hash: '125',
+          deps: ['npm:dev-only'],
+        },
+      ],
+    };
+
+    expect(
+      findNpmDependencies(
+        '/root',
+        lib1,
+        projectGraph,
+        projectFileMap,
+        'build',
+        {
+          productionOnly: true,
+        }
+      )
+    ).toEqual({});
+  });
 });

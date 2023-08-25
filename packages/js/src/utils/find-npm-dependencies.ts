@@ -27,6 +27,7 @@ export function findNpmDependencies(
   buildTarget: string,
   options: {
     includeTransitiveDependencies?: boolean;
+    productionOnly?: boolean;
   } = {}
 ): Record<string, string> {
   let seen: null | Set<string> = null;
@@ -48,6 +49,7 @@ export function findNpmDependencies(
       projectGraph,
       projectFileMap,
       buildTarget,
+      options?.productionOnly,
       collectedDeps
     );
 
@@ -82,6 +84,7 @@ function collectDependenciesFromFileMap(
   projectGraph: ProjectGraph,
   projectFileMap: ProjectFileMap,
   buildTarget: string,
+  productionOnly: boolean,
   npmDeps: Record<string, string>
 ): void {
   const rawFiles = projectFileMap[sourceProject.name];
@@ -101,12 +104,20 @@ function collectDependenciesFromFileMap(
     inputs
   );
 
+  const excludedFilesRegex = productionOnly
+    ? // For prod-only deps, exclude known build config files as these are not used in prod runtime. e.g. vite.config.ts.
+      new RegExp(
+        joinPathFragments(
+          sourceProject.data.root,
+          // If users customized their names such that they don't match this pattern
+          // then they need to manually add "nx-ignore-next-line" to their build config files.
+          '(package.json|(esbuild|rollup|vite|webpack).config.[jt]s)'
+        )
+      )
+    : // Otherwise, just exclude package.json since we only care about what's in source files.
+      new RegExp(joinPathFragments(sourceProject.data.root, 'package.json'));
   for (const fileData of files) {
-    if (
-      !fileData.deps ||
-      fileData.file ===
-        joinPathFragments(sourceProject.data.root, 'package.json')
-    ) {
+    if (!fileData.deps || excludedFilesRegex.test(fileData.file)) {
       continue;
     }
 
