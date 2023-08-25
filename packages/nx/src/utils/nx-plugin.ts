@@ -41,6 +41,8 @@ import {
   NxAngularJsonPlugin,
   shouldMergeAngularProjects,
 } from '../adapter/angular-json';
+import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
+import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
 
 /**
  * Context for {@link CreateNodesFunction}
@@ -225,6 +227,10 @@ export function loadNxPluginsSync(
   jsPlugin.name = 'nx-js-graph-plugin';
   result.push(jsPlugin as NxPlugin);
 
+  if (shouldMergeAngularProjects(root, false)) {
+    result.push(NxAngularJsonPlugin);
+  }
+
   plugins ??= [];
   for (const plugin of plugins) {
     try {
@@ -238,6 +244,12 @@ export function loadNxPluginsSync(
       throw e;
     }
   }
+
+  // We push the nx core node plugins onto the end, s.t. it overwrites any other plugins
+  result.push(
+    getNxPackageJsonWorkspacesPlugin(root),
+    CreateProjectJsonProjectsPlugin
+  );
 
   return result.map(ensurePluginIsV2);
 }
@@ -264,6 +276,12 @@ export async function loadNxPlugins(
   for (const plugin of plugins) {
     result.push(await loadNxPluginAsync(plugin, paths, root));
   }
+
+  // We push the nx core node plugins onto the end, s.t. it overwrites any other plugins
+  result.push(
+    getNxPackageJsonWorkspacesPlugin(root),
+    CreateProjectJsonProjectsPlugin
+  );
 
   return result.map(ensurePluginIsV2);
 }

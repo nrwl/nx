@@ -16,14 +16,17 @@ import {
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
 import type { NxWorkspaceFiles } from '../../native';
-import { getGlobPatternsFromPackageManagerWorkspaces } from '../../../plugins/package-json-workspaces';
+import {
+  getGlobPatternsFromPackageManagerWorkspaces,
+  getNxPackageJsonWorkspacesPlugin,
+} from '../../../plugins/package-json-workspaces';
 import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './project-configuration-utils';
 import {
   loadNxPlugins,
   loadNxPluginsSync,
-  NxPlugin,
   NxPluginV2,
 } from '../../utils/nx-plugin';
+import { CreateProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -229,12 +232,10 @@ export function retrieveProjectConfigurationsWithoutPluginInference(
     root,
     projectGlobPatterns,
     (configs: string[]) => {
-      const { projects } = createProjectConfigurations(
-        root,
-        nxJson,
-        configs,
-        []
-      );
+      const { projects } = createProjectConfigurations(root, nxJson, configs, [
+        getNxPackageJsonWorkspacesPlugin(root),
+        CreateProjectJsonProjectsPlugin,
+      ]);
       return {
         projectNodes: projects,
         externalNodes: {},
