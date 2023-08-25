@@ -5146,6 +5146,16 @@
             "tags": []
           },
           {
+            "id": "add-dotnet",
+            "name": "Add a .NET Project",
+            "description": "Add a .NET project to your repo",
+            "file": "shared/recipes/add-stack/add-dotnet",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-dotnet",
+            "tags": []
+          },
+          {
             "id": "add-nuxt",
             "name": "Add a Nuxt Project",
             "description": "Add a nuxt project to your repo",
@@ -5363,6 +5373,16 @@
         "tags": []
       },
       {
+        "id": "add-dotnet",
+        "name": "Add a .NET Project",
+        "description": "Add a .NET project to your repo",
+        "file": "shared/recipes/add-stack/add-dotnet",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-dotnet",
+        "tags": []
+      },
+      {
         "id": "add-nuxt",
         "name": "Add a Nuxt Project",
         "description": "Add a nuxt project to your repo",
@@ -5525,6 +5545,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-rust",
+    "tags": []
+  },
+  "/showcase/example-repos/add-dotnet": {
+    "id": "add-dotnet",
+    "name": "Add a .NET Project",
+    "description": "Add a .NET project to your repo",
+    "file": "shared/recipes/add-stack/add-dotnet",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-dotnet",
     "tags": []
   },
   "/showcase/example-repos/add-nuxt": {

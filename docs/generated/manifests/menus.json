@@ -4128,6 +4128,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Add a .NET Project",
+                "path": "/showcase/example-repos/add-dotnet",
+                "id": "add-dotnet",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Add a Nuxt Project",
                 "path": "/showcase/example-repos/add-nuxt",
                 "id": "add-nuxt",
@@ -4301,6 +4309,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Add a .NET Project",
+            "path": "/showcase/example-repos/add-dotnet",
+            "id": "add-dotnet",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Add a Nuxt Project",
             "path": "/showcase/example-repos/add-nuxt",
             "id": "add-nuxt",
@@ -4427,6 +4443,14 @@
         "name": "Add a Rust Project",
         "path": "/showcase/example-repos/add-rust",
         "id": "add-rust",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a .NET Project",
+        "path": "/showcase/example-repos/add-dotnet",
+        "id": "add-dotnet",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
