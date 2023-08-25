@@ -207,6 +207,7 @@
       - [Add a Solid Project](/showcase/example-repos/add-solid)
       - [Add a Qwik Project](/showcase/example-repos/add-qwik)
       - [Add a Rust Project](/showcase/example-repos/add-rust)
+      - [Add a .NET Project](/showcase/example-repos/add-dotnet)
       - [Add a Nuxt Project](/showcase/example-repos/add-nuxt)
       - [Add an Astro Project](/showcase/example-repos/add-astro)
       - [Add a Vue Project](/showcase/example-repos/add-vue)

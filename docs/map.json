@@ -1230,6 +1230,12 @@
                   "file": "shared/recipes/add-stack/add-rust"
                 },
                 {
+                  "name": "Add a .NET Project",
+                  "id": "add-dotnet",
+                  "description": "Add a .NET project to your repo",
+                  "file": "shared/recipes/add-stack/add-dotnet"
+                },
+                {
                   "name": "Add a Nuxt Project",
                   "id": "add-nuxt",
                   "description": "Add a nuxt project to your repo",
