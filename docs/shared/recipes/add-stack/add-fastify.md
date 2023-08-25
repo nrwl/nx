@@ -86,8 +86,8 @@ Now when you serve your API, you'll see the content from the library being displ
 ## More Documentation
 
 - [@nx/node](/packages/node)
-- [Using Mongo with Fastify](https://nx.dev/showcase/example-repos/mongo-fastify)
-- [Using Redis with Fastify](https://nx.dev/showcase/example-repos/redis-fastify)
-- [Using Postgres with Fastify](https://nx.dev/showcase/example-repos/postgres-fastify)
-- [Using PlanetScale with Serverless Fastify](https://nx.dev/showcase/example-repos/serverless-fastify-planetscale)
+- [Using Mongo with Fastify](/showcase/example-repos/mongo-fastify)
+- [Using Redis with Fastify](/showcase/example-repos/redis-fastify)
+- [Using Postgres with Fastify](/showcase/example-repos/postgres-fastify)
+- [Using PlanetScale with Serverless Fastify](/showcase/example-repos/serverless-fastify-planetscale)
 - [Fastify](https://fastify.dev/)
