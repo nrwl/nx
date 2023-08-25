@@ -10,13 +10,9 @@ import { checkApp } from './utils';
 describe('Next.js Experimental Features', () => {
   let proj: string;
 
-  beforeEach(() => {
-    proj = newProject();
-  });
+  beforeAll(() => (proj = newProject()));
 
-  afterEach(() => {
-    cleanupProject();
-  });
+  afterAll(() => cleanupProject());
 
   it('should be able to define server actions in workspace libs', async () => {
     const appName = uniq('app');

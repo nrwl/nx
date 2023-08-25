@@ -1,0 +1,10 @@
+{
+  "name": "e2e-next-core",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/next-core/src",
+  "projectType": "application",
+  "targets": {
+    "e2e": {}
+  },
+  "implicitDependencies": ["next"]
+}

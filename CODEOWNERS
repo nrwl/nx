@@ -36,7 +36,8 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 /e2e/react-core/** @nrwl/nx-react-reviewers
 /e2e/react-extensions/** @nrwl/nx-react-reviewers
 /packages/next/** @nrwl/nx-react-reviewers
-/e2e/next/** @nrwl/nx-react-reviewers
+/e2e/next-core/** @nrwl/nx-react-reviewers
+/e2e/next-extensions/** @nrwl/nx-react-reviewers
 /packages/react/plugins/component-testing/** @nrwl/nx-react-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/react/src/generators/cypress-component-configuration/** @nrwl/nx-react-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/react/src/generators/component-test/** @nrwl/nx-react-reviewers @nrwl/nx-testing-tools-reviewers

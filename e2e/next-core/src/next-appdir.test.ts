@@ -11,13 +11,9 @@ import { checkApp } from './utils';
 describe('Next.js App Router', () => {
   let proj: string;
 
-  beforeEach(() => {
-    proj = newProject();
-  });
+  beforeAll(() => (proj = newProject()));
 
-  afterEach(() => {
-    cleanupProject();
-  });
+  afterAll(() => cleanupProject());
 
   it('should be able to generate and build app with default App Router', async () => {
     const appName = uniq('app');
