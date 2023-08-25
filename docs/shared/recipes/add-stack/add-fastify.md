@@ -1,0 +1,93 @@
+# Add a New Fastify Project
+
+**Supported Features**
+
+Because we are using an Nx plugin for Fastify, all the features of Nx are available.
+
+{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/core-features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/core-features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
+{% pill url="/core-features/plugin-features/use-task-executors" %}✅ Use Task Executors{% /pill %}
+{% pill url="/core-features/plugin-features/use-code-generators" %}✅ Use Code Generators{% /pill %}
+{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Framework Dependencies{% /pill %}
+
+## Install the Node Plugin
+
+{% tabs %}
+{%tab label="npm"%}
+
+```shell
+npm i --save-dev @nx/node
+```
+
+{% /tab %}
+{%tab label="yarn"%}
+
+```shell
+yarn add --dev @nx/node
+```
+
+{% /tab %}
+{% /tabs %}
+
+## Create an Application
+
+Use the `app` generator to create a new Fastify app.
+
+```shell
+nx g @nx/node:app fastify-api
+```
+
+Serve the API by running
+
+```shell
+nx serve fastify-api
+```
+
+This starts the application on localhost:3000/api by default.
+
+## Create a Library
+
+To create a new library, run:
+
+```shell
+nx g @nx/node:lib my-lib
+```
+
+Once the library is created, update the following files.
+
+```typescript {% fileName="libs/my-lib/src/lib/my-lib.ts" %}
+export function someFunction(): string {
+  return 'some function';
+}
+```
+
+```typescript {% fileName="apps/fastify-app/src/app/routes/root.ts" %}
+import { someFunction } from '@my-org/my-lib';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+
+export default async function (fastify: FastifyInstance) {
+  fastify.get(
+    '/',
+    async function (request: FastifyRequest, reply: FastifyReply) {
+      return { message: 'Hello API ' + someFunction };
+    }
+  );
+}
+```
+
+Now when you serve your API, you'll see the content from the library being displayed.
+
+## More Documentation
+
+- [@nx/node](/packages/node)
+- [Using Mongo with Fastify](https://nx.dev/showcase/example-repos/mongo-fastify)
+- [Using Redis with Fastify](https://nx.dev/showcase/example-repos/redis-fastify)
+- [Using Postgres with Fastify](https://nx.dev/showcase/example-repos/postgres-fastify)
+- [Using PlanetScale with Serverless Fastify](https://nx.dev/showcase/example-repos/serverless-fastify-planetscale)
+- [Fastify](https://fastify.dev/)
