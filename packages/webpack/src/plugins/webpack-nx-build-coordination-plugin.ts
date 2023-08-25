@@ -1,10 +1,8 @@
-import { watch } from 'chokidar';
-import { execSync } from 'child_process';
-import { workspaceLayout } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
-import ignore from 'ignore';
-import { readFileSync } from 'fs';
+import { exec } from 'child_process';
 import type { Compiler } from 'webpack';
+import { daemonClient } from 'nx/src/daemon/client/client';
+import { BatchFunctionRunner } from 'nx/src/command-line/watch';
+import { output } from 'nx/src/utils/output';
 
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
@@ -31,9 +29,23 @@ export class WebpackNxBuildCoordinationPlugin {
     });
   }
 
-  startWatchingBuildableLibs() {
-    createFileWatcher(process.cwd(), () => {
-      this.buildChangedProjects();
+  async startWatchingBuildableLibs() {
+    const unregisterFileWatcher = await createFileWatcher(
+      () => this.buildChangedProjects(),
+      () => {
+        output.error({
+          title: 'Watch connection closed',
+          bodyLines: [
+            'The daemon has closed the connection to this watch process.',
+            'Please restart your watch command.',
+          ],
+        });
+        process.exit(1);
+      }
+    );
+
+    process.on('exit', () => {
+      unregisterFileWatcher();
     });
   }
 
@@ -42,46 +54,46 @@ export class WebpackNxBuildCoordinationPlugin {
       await sleep(50);
     }
     this.currentlyRunning = 'nx-build';
-    try {
-      execSync(this.buildCmd, { stdio: [0, 1, 2] });
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-    this.currentlyRunning = 'none';
+    return new Promise<void>((res) => {
+      try {
+        const cp = exec(this.buildCmd);
+
+        cp.stdout.pipe(process.stdout);
+        cp.stderr.pipe(process.stderr);
+        cp.on('exit', () => {
+          res();
+        });
+        cp.on('error', () => {
+          res();
+        });
+        // eslint-disable-next-line no-empty
+      } catch (e) {
+        res();
+      } finally {
+        this.currentlyRunning = 'none';
+      }
+    });
   }
 }
 
 function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
 }
-
-function getIgnoredGlobs(root: string) {
-  const ig = ignore();
-  try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
-  return ig;
-}
-
-function createFileWatcher(root: string, changeHandler: () => void) {
-  const ignoredGlobs = getIgnoredGlobs(root);
-  const layout = workspaceLayout();
-
-  const watcher = watch(
-    [
-      joinPathFragments(layout.appsDir, '**'),
-      joinPathFragments(layout.libsDir, '**'),
-    ],
+async function createFileWatcher(
+  changeHandler: () => Promise<void>,
+  onClose: () => void
+) {
+  const runner = new BatchFunctionRunner(changeHandler);
+  return daemonClient.registerFileWatcher(
     {
-      cwd: root,
-      ignoreInitial: true,
+      watchProjects: 'all',
+    },
+    (err, { changedProjects, changedFiles }) => {
+      if (err === 'closed') {
+        onClose();
+      }
+      // Queue a build
+      runner.enqueue(changedProjects, changedFiles);
     }
   );
-  watcher.on('all', (_event: string, path: string) => {
-    if (ignoredGlobs.ignores(path)) return;
-    changeHandler();
-  });
-  return { close: () => watcher.close() };
 }

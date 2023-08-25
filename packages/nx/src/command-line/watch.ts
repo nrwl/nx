@@ -17,13 +17,13 @@ export interface WatchArguments {
 const DEFAULT_PROJECT_NAME_ENV = 'NX_PROJECT_NAME';
 const DEFAULT_FILE_CHANGES_ENV = 'NX_FILE_CHANGES';
 
-class BatchCommandRunner {
-  running = false;
+export class BatchFunctionRunner {
+  private running = false;
 
-  pendingProjects = new Set<string>();
-  pendingFiles = new Set<string>();
+  private pendingProjects = new Set<string>();
+  private pendingFiles = new Set<string>();
 
-  private get _verbose() {
+  protected get _verbose() {
     return process.env.NX_VERBOSE_LOGGING === 'true';
   }
 
@@ -32,9 +32,10 @@ class BatchCommandRunner {
   }
 
   constructor(
-    private command: string,
-    private projectNameEnv: string = DEFAULT_PROJECT_NAME_ENV,
-    private fileChangesEnv: string = DEFAULT_FILE_CHANGES_ENV
+    private callback: (
+      projects: Set<string>,
+      files: Set<string>
+    ) => Promise<unknown>
   ) {}
 
   enqueue(projectNames: string[], fileChanges: ChangedFile[]) {
@@ -48,60 +49,77 @@ class BatchCommandRunner {
     return this.process();
   }
 
-  async process() {
+  private async process() {
     if (!this.running && this.hasPending) {
       this.running = true;
 
-      // process all pending commands together
-      const envs = this.createCommandEnvironments();
+      // Clone the pending projects and files before clearing
+      const projects = new Set(this.pendingProjects);
+      const files = new Set(this.pendingFiles);
 
-      this._verbose &&
-        output.logSingleLine(
-          'about to run commands with these environments: ' +
-            JSON.stringify(envs)
-        );
+      // Clear the pending projects and files
+      this.pendingProjects.clear();
+      this.pendingFiles.clear();
 
-      return this.run(envs).then(() => {
+      return this.callback(projects, files).then(() => {
         this.running = false;
-        this._verbose &&
-          output.logSingleLine('running complete, processing the next batch');
         this.process();
       });
     } else {
       this._verbose &&
         this.running &&
-        output.logSingleLine('waiting for commands to finish executing');
+        output.logSingleLine('waiting for function to finish executing');
 
       this._verbose &&
         !this.hasPending &&
-        output.logSingleLine('no more commands to process');
+        output.logSingleLine('no more function to process');
     }
   }
+}
 
-  createCommandEnvironments(): Record<string, string>[] {
+class BatchCommandRunner extends BatchFunctionRunner {
+  constructor(
+    private command: string,
+    private projectNameEnv: string = DEFAULT_PROJECT_NAME_ENV,
+    private fileChangesEnv: string = DEFAULT_FILE_CHANGES_ENV
+  ) {
+    super((projects, files) => {
+      // process all pending commands together
+      const envs = this.createCommandEnvironments(projects, files);
+
+      return this.run(envs);
+    });
+  }
+
+  private createCommandEnvironments(
+    projects: Set<string>,
+    files: Set<string>
+  ): Record<string, string>[] {
     const commandsToRun = [];
 
-    if (this.pendingProjects.size > 0) {
-      this.pendingProjects.forEach((projectName) => {
+    if (projects.size > 0) {
+      projects.forEach((projectName) => {
         commandsToRun.push({
           [this.projectNameEnv]: projectName,
-          [this.fileChangesEnv]: Array.from(this.pendingFiles).join(' '),
+          [this.fileChangesEnv]: Array.from(files).join(' '),
         });
       });
     } else {
       commandsToRun.push({
         [this.projectNameEnv]: '',
-        [this.fileChangesEnv]: Array.from(this.pendingFiles).join(' '),
+        [this.fileChangesEnv]: Array.from(files).join(' '),
       });
     }
-
-    this.pendingProjects.clear();
-    this.pendingFiles.clear();
 
     return commandsToRun;
   }
 
   async run(envs: Record<string, string>[]) {
+    this._verbose &&
+      output.logSingleLine(
+        'about to run commands with these environments: ' + JSON.stringify(envs)
+      );
+
     return Promise.all(
       envs.map((env) => {
         return new Promise<void>((resolve, reject) => {
@@ -123,7 +141,11 @@ class BatchCommandRunner {
           });
         });
       })
-    );
+    ).then((r) => {
+      this._verbose &&
+        output.logSingleLine('running complete, processing the next batch');
+      return r;
+    });
   }
 }
 
