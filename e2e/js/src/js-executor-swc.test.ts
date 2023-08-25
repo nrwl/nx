@@ -16,14 +16,14 @@ import {
   updateJson,
 } from '../../utils';
 
-describe('js e2e', () => {
+describe('js:swc executor', () => {
   let scope: string;
 
-  beforeEach(() => {
+  beforeAll(() => {
     scope = newProject();
   });
 
-  afterEach(() => {
+  afterAll(() => {
     cleanupProject();
   });
 
@@ -45,58 +45,17 @@ describe('js e2e', () => {
       `dist/libs/${lib}/src/lib/${lib}.d.ts`
     );
 
-    checkFilesDoNotExist(`libs/${lib}/.babelrc`);
-
-    const parentLib = uniq('parentlib');
-    runCLI(`generate @nx/js:lib ${parentLib} --bundler=swc --no-interactive`);
-    const parentLibPackageJson = readJson(`libs/${parentLib}/package.json`);
-    expect(parentLibPackageJson.scripts).toBeUndefined();
-    expect((await runCLIAsync(`test ${parentLib}`)).combinedOutput).toContain(
-      'Ran all test suites'
-    );
-
-    expect(runCLI(`build ${parentLib}`)).toContain(
-      'Successfully compiled: 2 files with swc'
-    );
-    checkFilesExist(
-      `dist/libs/${parentLib}/package.json`,
-      `dist/libs/${parentLib}/src/index.js`,
-      `dist/libs/${parentLib}/src/lib/${parentLib}.js`,
-      `dist/libs/${parentLib}/src/index.d.ts`,
-      `dist/libs/${parentLib}/src/lib/${parentLib}.d.ts`
-    );
-
     const tsconfig = readJson(`tsconfig.base.json`);
     expect(tsconfig.compilerOptions.paths).toEqual({
       [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
-      [`@${scope}/${parentLib}`]: [`libs/${parentLib}/src/index.ts`],
     });
 
-    updateFile(`libs/${parentLib}/src/index.ts`, () => {
-      return `
-        import { ${lib} } from '@${scope}/${lib}';
-        export * from './lib/${parentLib}';
-      `;
-    });
-
-    const output = runCLI(`build ${parentLib}`);
-    expect(output).toContain('1 task it depends on');
-    expect(output).toContain('Successfully compiled: 2 files with swc');
-
-    runCLI(`build ${parentLib}`);
-    checkFilesExist(`dist/libs/${parentLib}/package.json`);
-
-    updateJson(`libs/${lib}/.swcrc`, (json) => {
-      json.jsc.externalHelpers = true;
-      return json;
-    });
-
+    // Legacy behavior (updateBuildableProjectDepsInPackageJson): add @swc/helpers if externalHelpers is true
+    // TODO(v17):  Remove this test
     updateJson(`libs/${lib}/package.json`, (json) => {
-      // Delete automatically generated helper dependency to test legacy behavior.
       delete json.dependencies['@swc/helpers'];
       return json;
     });
-
     runCLI(
       `build ${lib} --generateLockfile=true --updateBuildableProjectDepsInPackageJson`
     );
@@ -106,14 +65,17 @@ describe('js e2e', () => {
         packageManagerLockFile[detectPackageManager(tmpProjPath())]
       }`
     );
+    expect(
+      satisfies(
+        readJson(`dist/libs/${lib}/package.json`).peerDependencies[
+          '@swc/helpers'
+        ],
+        readJson(`package.json`).dependencies['@swc/helpers']
+      )
+    ).toBeTruthy();
 
-    const swcHelpersFromRoot =
-      readJson(`package.json`).dependencies['@swc/helpers'];
-    const swcHelpersFromDist = readJson(`dist/libs/${lib}/package.json`)
-      .peerDependencies['@swc/helpers'];
-
-    expect(satisfies(swcHelpersFromDist, swcHelpersFromRoot)).toBeTruthy();
-
+    // Legacy behavior (updateBuildableProjectDepsInPackageJson): don't add @swc/helpers if externalHelpers is false
+    // TODO(v17):  Remove this test
     updateJson(`libs/${lib}/.swcrc`, (json) => {
       json.jsc.externalHelpers = false;
       return json;

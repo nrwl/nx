@@ -12,11 +12,11 @@ import { execSync } from 'child_process';
 describe('inlining', () => {
   let scope: string;
 
-  beforeEach(() => {
+  beforeAll(() => {
     scope = newProject();
   });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it.each(['tsc', 'swc'])(
     'should inline libraries with --bundler=%s',
