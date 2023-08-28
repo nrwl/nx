@@ -72,7 +72,7 @@ export function Button({
   ...props
 }: ButtonProps & JSX.IntrinsicElements['button']): JSX.Element {
   return (
-    <button {...props} className={getLayoutClassName({ className })}>
+    <button {...props} className={cx('inline-flex', className)}>
       <ButtonInner variant={variant} size={size}>
         {children}
       </ButtonInner>
@@ -104,7 +104,7 @@ export const ButtonLink = forwardRef(function (
       ref={ref}
       href={href}
       title={title}
-      className={getLayoutClassName({ className })}
+      className={cx('inline-flex', className)}
       {...props}
     >
       <ButtonInner variant={variant} size={size}>
