@@ -16,7 +16,6 @@ describe('js:node executor', () => {
   });
   afterAll(() => cleanupProject());
 
-
   it('should log out the error', async () => {
     const esbuildLib = uniq('esbuildlib');
 

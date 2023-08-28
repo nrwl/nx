@@ -12,6 +12,7 @@ use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors}
 use crate::native::workspace::types::{ConfigurationParserResult, FileLocation};
 
 #[napi(object)]
+#[derive(Default)]
 pub struct NxWorkspaceFiles {
     pub project_file_map: HashMap<String, Vec<FileData>>,
     pub global_files: Vec<FileData>,
@@ -22,14 +23,18 @@ pub struct NxWorkspaceFiles {
 pub(super) fn get_files<ConfigurationParser>(
     globs: Vec<String>,
     parse_configurations: ConfigurationParser,
-    file_data: &[(PathBuf, String)],
+    file_data: Option<&[(PathBuf, String)]>,
 ) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
 where
     ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
 {
+    let Some(file_data) = file_data else {
+        return Ok(Default::default())
+    };
+
     trace!("{globs:?}");
     let parsed_graph_nodes =
-        config_files::get_project_configurations(globs, file_data, parse_configurations)
+        config_files::get_project_configurations(globs, Some(file_data), parse_configurations)
             .map_err(|e| InternalWorkspaceErrors::ParseError(e.to_string()))?;
 
     let root_map = create_root_map(&parsed_graph_nodes.project_nodes);

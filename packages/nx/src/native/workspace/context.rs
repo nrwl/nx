@@ -1,11 +1,13 @@
 use crate::native::logger::enable_logger;
+
 use parking_lot::lock_api::MutexGuard;
 use parking_lot::{Condvar, Mutex, RawMutex};
 use rayon::prelude::*;
+use std::ops::Deref;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::thread;
-use tracing::trace;
+use tracing::{trace, warn};
 use xxhash_rust::xxh3;
 
 use crate::native::walker::nx_walker;
@@ -22,20 +24,21 @@ pub struct WorkspaceContext {
 }
 
 type Files = Vec<(PathBuf, String)>;
-struct BackgroundThread(Arc<(Mutex<Files>, Condvar)>);
+struct BackgroundThread(Option<Arc<(Mutex<Files>, Condvar)>>);
 
 impl BackgroundThread {
-    fn gather_files(workspace_root: &str) -> anyhow::Result<Self> {
-        let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
-
-        let files_lock_clone = Arc::clone(&files_lock);
+    fn gather_files(workspace_root: &str) -> Self {
         let workspace_root: PathBuf = workspace_root.into();
         if !workspace_root.exists() {
-            return Err(anyhow::anyhow!(
-                "Workspace root does not exist: {}",
+            warn!(
+                "workspace root does not exist: {}",
                 workspace_root.display()
-            ));
+            );
+            return BackgroundThread(None);
         }
+
+        let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
+        let files_lock_clone = Arc::clone(&files_lock);
 
         thread::spawn(move || {
             trace!("locking files");
@@ -57,35 +60,40 @@ impl BackgroundThread {
             cvar.notify_all();
         });
 
-        Ok(BackgroundThread(files_lock))
+        BackgroundThread(Some(files_lock))
     }
 
-    pub fn get_files(&self) -> MutexGuard<'_, RawMutex, Files> {
-        let (lock, cvar) = &*self.0;
-        let mut files = lock.lock();
+    pub fn get_files(&self) -> Option<MutexGuard<'_, RawMutex, Files>> {
+        let Some(files_sync) = &self.0 else {
+            trace!("there were no files because the workspace root did not exist");
+            return None
+        };
+
+        let (files_lock, cvar) = &files_sync.deref();
+        let mut files = files_lock.lock();
         let files_len = files.len();
         if files_len == 0 {
             trace!("waiting for files");
             cvar.wait(&mut files);
         }
-        let files_len = files.len();
-        trace!(?files_len, "getting files");
-        files
+
+        trace!("files are available");
+        Some(files)
     }
 }
 
 #[napi]
 impl WorkspaceContext {
     #[napi(constructor)]
-    pub fn new(workspace_root: String) -> anyhow::Result<Self> {
+    pub fn new(workspace_root: String) -> Self {
         enable_logger();
 
         trace!(?workspace_root);
 
-        Ok(WorkspaceContext {
-            background_thread: BackgroundThread::gather_files(&workspace_root)?,
+        WorkspaceContext {
+            background_thread: BackgroundThread::gather_files(&workspace_root),
             workspace_root,
-        })
+        }
     }
 
     #[napi]
@@ -97,8 +105,14 @@ impl WorkspaceContext {
     where
         ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
     {
-        let file_data = self.background_thread.get_files();
-        workspace_files::get_files(globs, parse_configurations, &file_data)
+        workspace_files::get_files(
+            globs,
+            parse_configurations,
+            self.background_thread
+                .get_files()
+                .as_deref()
+                .map(|files| files.as_slice()),
+        )
     }
 
     #[napi]
@@ -106,8 +120,13 @@ impl WorkspaceContext {
         &self,
         globs: Vec<String>,
     ) -> napi::Result<Vec<String>, WorkspaceErrors> {
-        let file_data = self.background_thread.get_files();
-        config_files::get_project_configuration_files(globs, &file_data)
+        config_files::get_project_configuration_files(
+            globs,
+            self.background_thread
+                .get_files()
+                .as_deref()
+                .map(|files| files.as_slice()),
+        )
     }
 
     #[napi]
@@ -119,7 +138,13 @@ impl WorkspaceContext {
     where
         ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
     {
-        let file_data = self.background_thread.get_files();
-        config_files::get_project_configurations(globs, &file_data, parse_configurations)
+        config_files::get_project_configurations(
+            globs,
+            self.background_thread
+                .get_files()
+                .as_deref()
+                .map(|files| files.as_slice()),
+            parse_configurations,
+        )
     }
 }

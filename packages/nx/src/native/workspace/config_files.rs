@@ -9,8 +9,12 @@ use std::path::PathBuf;
 /// Get workspace config files based on provided globs
 pub(super) fn get_project_configuration_files(
     globs: Vec<String>,
-    files: &[(PathBuf, String)],
+    files: Option<&[(PathBuf, String)]>,
 ) -> napi::Result<Vec<String>, WorkspaceErrors> {
+    let Some(files) = files else {
+        return Ok(Default::default())
+    };
+
     let globs =
         build_glob_set(&globs).map_err(|err| InternalWorkspaceErrors::Generic(err.to_string()))?;
     Ok(files
@@ -23,14 +27,14 @@ pub(super) fn get_project_configuration_files(
 /// Get workspace config files based on provided globs
 pub(super) fn get_project_configurations<ConfigurationParser>(
     globs: Vec<String>,
-    file_data: &[(PathBuf, String)],
+    files: Option<&[(PathBuf, String)]>,
     parse_configurations: ConfigurationParser,
 ) -> napi::Result<ConfigurationParserResult>
 where
     ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
 {
     let config_paths =
-        get_project_configuration_files(globs, file_data).map_err(anyhow::Error::from)?;
+        get_project_configuration_files(globs, files).map_err(anyhow::Error::from)?;
 
     parse_configurations(config_paths)
 }
