@@ -22,6 +22,7 @@ export type Options = [
     checkVersionMismatches?: boolean;
     checkMissingPackageJson?: boolean;
     ignoredDependencies?: string[];
+    ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;
   }
 ];
@@ -49,6 +50,7 @@ export default createESLintRule<Options, MessageIds>({
         properties: {
           buildTargets: [{ type: 'string' }],
           ignoredDependencies: [{ type: 'string' }],
+          ignoredFiles: [{ type: 'string' }],
           checkMissingDependencies: { type: 'boolean' },
           checkObsoleteDependencies: { type: 'boolean' },
           checkVersionMismatches: { type: 'boolean' },
@@ -71,6 +73,7 @@ export default createESLintRule<Options, MessageIds>({
       checkObsoleteDependencies: true,
       checkVersionMismatches: true,
       ignoredDependencies: [],
+      ignoredFiles: [],
       includeTransitiveDependencies: false,
     },
   ],
@@ -80,6 +83,7 @@ export default createESLintRule<Options, MessageIds>({
       {
         buildTargets,
         ignoredDependencies,
+        ignoredFiles,
         checkMissingDependencies,
         checkObsoleteDependencies,
         checkVersionMismatches,
@@ -133,6 +137,7 @@ export default createESLintRule<Options, MessageIds>({
       buildTarget, // TODO: What if child library has a build target different from the parent?
       {
         includeTransitiveDependencies,
+        ignoredFiles,
       }
     );
     const expectedDependencyNames = Object.keys(npmDependencies);

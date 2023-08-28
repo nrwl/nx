@@ -1137,6 +1137,20 @@ describe('lib', () => {
         executor: '@nx/vite:test',
       });
       expect(tree.exists('libs/my-lib/vite.config.ts')).toBeTruthy();
+      expect(
+        readJson(tree, 'libs/my-lib/.eslintrc.json').overrides
+      ).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: ['{projectRoot}/vite.config.{js,ts,mjs,mts}'],
+            },
+          ],
+        },
+      });
     });
 
     it.each`
@@ -1157,6 +1171,66 @@ describe('lib', () => {
         expect(project.targets.test?.executor).toEqual(executor);
       }
     );
+  });
+
+  describe('--bundler=esbuild', () => {
+    it('should add build with esbuild', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        bundler: 'esbuild',
+        unitTestRunner: 'none',
+      });
+
+      const project = readProjectConfiguration(tree, 'my-lib');
+      expect(project.targets.build).toMatchObject({
+        executor: '@nx/esbuild:esbuild',
+      });
+      expect(
+        readJson(tree, 'libs/my-lib/.eslintrc.json').overrides
+      ).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: ['{projectRoot}/esbuild.config.{js,ts,mjs,mts}'],
+            },
+          ],
+        },
+      });
+    });
+  });
+
+  describe('--bundler=rollup', () => {
+    it('should add build with rollup', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'myLib',
+        bundler: 'rollup',
+        unitTestRunner: 'none',
+      });
+
+      const project = readProjectConfiguration(tree, 'my-lib');
+      expect(project.targets.build).toMatchObject({
+        executor: '@nx/rollup:rollup',
+      });
+      expect(
+        readJson(tree, 'libs/my-lib/.eslintrc.json').overrides
+      ).toContainEqual({
+        files: ['*.json'],
+        parser: 'jsonc-eslint-parser',
+        rules: {
+          '@nx/dependency-checks': [
+            'error',
+            {
+              ignoredFiles: ['{projectRoot}/rollup.config.{js,ts,mjs,mts}'],
+            },
+          ],
+        },
+      });
+    });
   });
 
   describe('--minimal', () => {
