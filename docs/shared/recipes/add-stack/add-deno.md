@@ -97,6 +97,8 @@ Now when you serve your app, you'll see the content from the library being displ
 ## More Documentation
 
 - [@nx/deno](https://github.com/nrwl/nx-labs/tree/main/packages/deno)
-- [Serverless deployment with Deno Deploy](/recipes/deno/deno-deploy)
-- [Add and Deploy Netlify Edge Functions with Deno](/recipes/deno/deno-netlify-functions)
 - [Deno](https://deno.com)
+
+{% cards cols="2" %}
+{% card title="Converting an Express API To Deno"  type="video" url="https://youtu.be/Um8xXR54upQ" /%}
+{% /cards %}
