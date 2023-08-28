@@ -13,9 +13,8 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 import { join } from 'path';
-import { ensureDirSync } from 'fs-extra';
 
-describe('bundling libs', () => {
+describe('packaging libs', () => {
   let scope: string;
 
   beforeEach(() => {
@@ -24,7 +23,7 @@ describe('bundling libs', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should support esbuild, rollup, vite bundlers for building libs', () => {
+  it('should bundle libs using esbuild, vite, rollup and be used in CJS/ESM projects', () => {
     const esbuildLib = uniq('esbuildlib');
     const viteLib = uniq('vitelib');
     const rollupLib = uniq('rolluplib');
@@ -123,7 +122,7 @@ describe('bundling libs', () => {
     expect(output).toContain(rollupLib);
   }, 500_000);
 
-  it('should support tsc and swc for building libs', async () => {
+  it('should build with tsc, swc and be used in CJS/ESM projects', async () => {
     const tscLib = uniq('tsclib');
     const swcLib = uniq('swclib');
     const tscEsmLib = uniq('tscesmlib');

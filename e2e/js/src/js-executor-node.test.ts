@@ -8,14 +8,14 @@ import {
   updateProjectConfig,
 } from '@nx/e2e/utils';
 
-describe('js:node error handling', () => {
+describe('js:node executor', () => {
   let scope: string;
 
-  beforeEach(() => {
+  beforeAll(() => {
     scope = newProject();
   });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should log out the error', async () => {
     const esbuildLib = uniq('esbuildlib');

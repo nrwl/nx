@@ -9,17 +9,12 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 
-describe('Next.js Applications', () => {
+describe('Next.js Storybook', () => {
   let proj: string;
 
-  beforeEach(() => {
-    proj = newProject({
-      name: 'proj',
-      packageManager: 'npm',
-    });
-  });
+  beforeAll(() => (proj = newProject({ name: 'proj', packageManager: 'npm' })));
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should run a Next.js based Storybook setup', async () => {
     const appName = uniq('app');

@@ -1,7 +1,7 @@
 {
-  "name": "e2e-next",
+  "name": "e2e-next-extensions",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "e2e/next",
+  "sourceRoot": "e2e/next-extensions/src",
   "projectType": "application",
   "targets": {
     "e2e": {}
