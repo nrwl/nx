@@ -39,7 +39,7 @@ function CodeWrapper(options: {
         command={options.children}
         path=""
         content={null}
-        isMessageBelow={false}
+        isMessageBelow={options.isMessageBelow}
       />
     ) : options.command ? (
       <TerminalOutput

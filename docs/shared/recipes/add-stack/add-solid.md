@@ -2,7 +2,7 @@
 
 The code for this example is available on GitHub:
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/solidjs" %}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/solidjs" /%}
 
 **Supported Features**
 
