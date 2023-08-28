@@ -70,14 +70,20 @@
         "description": "The build target to add.",
         "type": "string",
         "default": "build"
+      },
+      "format": {
+        "description": "The format to build the library (esm or cjs).",
+        "type": "array",
+        "items": { "type": "string", "enum": ["esm", "cjs"] },
+        "default": ["esm"]
       }
     },
     "required": [],
     "presets": []
   },
   "description": "Add rollup configuration to a project.",
-  "hidden": true,
   "implementation": "/packages/rollup/src/generators/configuration/configuration.ts",
+  "hidden": false,
   "path": "/packages/rollup/src/generators/configuration/schema.json",
   "type": "generator"
 }

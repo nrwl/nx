@@ -47,7 +47,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=swc`
     );
     rmDist();
-    runCLI(`build ${myPkg}`);
+    runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
     output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
@@ -61,7 +61,7 @@ describe('Rollup Plugin', () => {
       `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
     rmDist();
-    runCLI(`build ${myPkg}`);
+    runCLI(`build ${myPkg} --format=cjs,esm --generateExportsField`);
     output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
   }, 500000);

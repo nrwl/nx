@@ -51,14 +51,19 @@ function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
       version: '0.0.1',
     });
   }
-  const tsConfig = getTsConfigFile(tree, options);
+
+  const prevBuildOptions = project.targets?.[options.buildTarget]?.options;
+
+  const tsConfig = prevBuildOptions?.tsConfig ?? getTsConfigFile(tree, options);
 
   const buildOptions: EsBuildExecutorOptions = {
-    main: getMainFile(tree, options),
-    outputPath: joinPathFragments(
-      'dist',
-      project.root === '.' ? options.project : project.root
-    ),
+    main: prevBuildOptions?.main ?? getMainFile(tree, options),
+    outputPath:
+      prevBuildOptions?.outputPath ??
+      joinPathFragments(
+        'dist',
+        project.root === '.' ? options.project : project.root
+      ),
     outputFileName: 'main.js',
     tsConfig,
     assets: [],

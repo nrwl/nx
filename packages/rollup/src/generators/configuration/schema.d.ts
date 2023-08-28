@@ -10,4 +10,5 @@ export interface RollupProjectSchema {
   external?: string[];
   rollupConfig?: string;
   buildTarget?: string;
+  format?: ('cjs' | 'esm')[];
 }

@@ -630,7 +630,7 @@
       {
         "description": "Add esbuild configuration to a project.",
         "file": "generated/packages/esbuild/generators/configuration.json",
-        "hidden": true,
+        "hidden": false,
         "name": "configuration",
         "originalFilePath": "/packages/esbuild/src/generators/configuration/schema.json",
         "path": "esbuild/generators/configuration",
@@ -2351,7 +2351,7 @@
       {
         "description": "Add rollup configuration to a project.",
         "file": "generated/packages/rollup/generators/configuration.json",
-        "hidden": true,
+        "hidden": false,
         "name": "configuration",
         "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
         "path": "rollup/generators/configuration",

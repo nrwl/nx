@@ -12,8 +12,7 @@
       "aliases": ["rollup-project"],
       "factory": "./src/generators/configuration/configuration#compat",
       "schema": "./src/generators/configuration/schema.json",
-      "description": "Add rollup configuration to a project.",
-      "hidden": true
+      "description": "Add rollup configuration to a project."
     }
   },
   "generators": {
@@ -28,8 +27,7 @@
       "aliases": ["rollup-project"],
       "factory": "./src/generators/configuration/configuration",
       "schema": "./src/generators/configuration/schema.json",
-      "description": "Add rollup configuration to a project.",
-      "hidden": true
+      "description": "Add rollup configuration to a project."
     }
   }
 }
