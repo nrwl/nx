@@ -25,11 +25,18 @@ type Files = Vec<(PathBuf, String)>;
 struct BackgroundThread(Arc<(Mutex<Files>, Condvar)>);
 
 impl BackgroundThread {
-    fn gather_files(workspace_root: &str) -> Self {
+    fn gather_files(workspace_root: &str) -> anyhow::Result<Self> {
         let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
 
         let files_lock_clone = Arc::clone(&files_lock);
-        let workspace_root = workspace_root.to_string();
+        let workspace_root: PathBuf = workspace_root.into();
+        if !workspace_root.exists() {
+            return Err(anyhow::anyhow!(
+                "Workspace root does not exist: {}",
+                workspace_root.display()
+            ));
+        }
+
         thread::spawn(move || {
             trace!("locking files");
             let (lock, cvar) = &*files_lock_clone;
@@ -50,7 +57,7 @@ impl BackgroundThread {
             cvar.notify_all();
         });
 
-        BackgroundThread(files_lock)
+        Ok(BackgroundThread(files_lock))
     }
 
     pub fn get_files(&self) -> MutexGuard<'_, RawMutex, Files> {
@@ -70,15 +77,15 @@ impl BackgroundThread {
 #[napi]
 impl WorkspaceContext {
     #[napi(constructor)]
-    pub fn new(workspace_root: String) -> Self {
+    pub fn new(workspace_root: String) -> anyhow::Result<Self> {
         enable_logger();
 
         trace!(?workspace_root);
 
-        WorkspaceContext {
-            background_thread: BackgroundThread::gather_files(&workspace_root),
+        Ok(WorkspaceContext {
+            background_thread: BackgroundThread::gather_files(&workspace_root)?,
             workspace_root,
-        }
+        })
     }
 
     #[napi]
