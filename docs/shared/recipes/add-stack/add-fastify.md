@@ -1,5 +1,10 @@
 # Add a New Fastify Project
 
+{% youtube
+src="https://www.youtube.com/embed/LHLW0b4fr2w"
+title="Easy, Modular Node Applications!"
+width="100%" /%}
+
 **Supported Features**
 
 Because we are using an Nx plugin for Fastify, all the features of Nx are available.
@@ -15,6 +20,18 @@ Because we are using an Nx plugin for Fastify, all the features of Nx are availa
 {% pill url="/core-features/plugin-features/use-task-executors" %}✅ Use Task Executors{% /pill %}
 {% pill url="/core-features/plugin-features/use-code-generators" %}✅ Use Code Generators{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Framework Dependencies{% /pill %}
+
+## Create a New Workspace with a Fastify App
+
+If you're starting from scratch, you can use a preset to get you started quickly.
+
+```shell
+npx create-nx-workspace@latest --preset=node-monorepo --framework=fastify --appName=fastify-api
+```
+
+Then you can skip to the [Create a Library](#create-a-library) section.
+
+If you are adding Fastify to an existing repo, continue to the next section.
 
 ## Install the Node Plugin
 
