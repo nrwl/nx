@@ -1223,6 +1223,12 @@
                   "file": "shared/recipes/add-stack/add-svelte"
                 },
                 {
+                  "name": "Add a Fastify Project",
+                  "id": "add-fastify",
+                  "description": "Add a Fastify project to your repo",
+                  "file": "shared/recipes/add-stack/add-fastify"
+                },
+                {
                   "name": "Powering Up React Development With Nx",
                   "id": "react-nx",
                   "file": "shared/examples/react-nx"

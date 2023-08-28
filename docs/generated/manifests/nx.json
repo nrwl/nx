@@ -5186,6 +5186,16 @@
             "tags": []
           },
           {
+            "id": "add-fastify",
+            "name": "Add a Fastify Project",
+            "description": "Add a Fastify project to your repo",
+            "file": "shared/recipes/add-stack/add-fastify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-fastify",
+            "tags": []
+          },
+          {
             "id": "react-nx",
             "name": "Powering Up React Development With Nx",
             "description": "",
@@ -5403,6 +5413,16 @@
         "tags": []
       },
       {
+        "id": "add-fastify",
+        "name": "Add a Fastify Project",
+        "description": "Add a Fastify project to your repo",
+        "file": "shared/recipes/add-stack/add-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-fastify",
+        "tags": []
+      },
+      {
         "id": "react-nx",
         "name": "Powering Up React Development With Nx",
         "description": "",
@@ -5565,6 +5585,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-svelte",
+    "tags": []
+  },
+  "/showcase/example-repos/add-fastify": {
+    "id": "add-fastify",
+    "name": "Add a Fastify Project",
+    "description": "Add a Fastify project to your repo",
+    "file": "shared/recipes/add-stack/add-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-fastify",
     "tags": []
   },
   "/showcase/example-repos/react-nx": {
