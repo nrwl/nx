@@ -809,14 +809,14 @@
       "file": "shared/recipes/deployment/deno-deploy",
       "id": "deno-deploy",
       "name": "Serverless deployment with Deno Deploy",
-      "path": "/recipes/other/deno-deploy"
+      "path": "/recipes/deno/deno-deploy"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/deno-netlify-edge-functions",
       "id": "deno-netlify-functions",
       "name": "Add and Deploy Netlify Edge Functions with Deno",
-      "path": "/recipes/other/deno-netlify-functions"
+      "path": "/recipes/deno/deno-netlify-functions"
     }
   ],
   "node": [
@@ -956,6 +956,29 @@
       "path": "/recipes/storybook/angular-configuring-styles"
     }
   ],
+  "deno": [
+    {
+      "description": "",
+      "file": "shared/recipes/add-stack/add-deno",
+      "id": "add-deno",
+      "name": "Add a Deno Project",
+      "path": "/recipes/deno/add-deno"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-deploy",
+      "id": "deno-deploy",
+      "name": "Serverless deployment with Deno Deploy",
+      "path": "/recipes/deno/deno-deploy"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+      "id": "deno-netlify-functions",
+      "name": "Add and Deploy Netlify Edge Functions with Deno",
+      "path": "/recipes/deno/deno-netlify-functions"
+    }
+  ],
   "docker": [
     {
       "description": "",
@@ -1024,22 +1047,6 @@
       "id": "flat-config",
       "name": "Switching to ESLint's flat config format",
       "path": "/recipes/tips-n-tricks/flat-config"
-    }
-  ],
-  "deno": [
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/deno-deploy",
-      "id": "deno-deploy",
-      "name": "Serverless deployment with Deno Deploy",
-      "path": "/recipes/other/deno-deploy"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-      "id": "deno-netlify-functions",
-      "name": "Add and Deploy Netlify Edge Functions with Deno",
-      "path": "/recipes/other/deno-netlify-functions"
     }
   ],
   "database": [

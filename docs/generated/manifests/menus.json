@@ -2015,6 +2015,39 @@
             "disableCollapsible": false
           },
           {
+            "name": "Deno",
+            "path": "/recipes/deno",
+            "id": "deno",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Add a Deno Project",
+                "path": "/recipes/deno/add-deno",
+                "id": "add-deno",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Serverless deployment with Deno Deploy",
+                "path": "/recipes/deno/deno-deploy",
+                "id": "deno-deploy",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add and Deploy Netlify Edge Functions with Deno",
+                "path": "/recipes/deno/deno-netlify-functions",
+                "id": "deno-netlify-functions",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Next",
             "path": "/recipes/next",
             "id": "next",
@@ -2460,22 +2493,6 @@
             "id": "other",
             "isExternal": false,
             "children": [
-              {
-                "name": "Serverless deployment with Deno Deploy",
-                "path": "/recipes/other/deno-deploy",
-                "id": "deno-deploy",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add and Deploy Netlify Edge Functions with Deno",
-                "path": "/recipes/other/deno-netlify-functions",
-                "id": "deno-netlify-functions",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "Rescope Packages from @nrwl to @nx",
                 "path": "/recipes/other/rescope",
@@ -3214,6 +3231,63 @@
         "name": "Cypress v11 Migration Guide",
         "path": "/recipes/cypress/cypress-v11-migration",
         "id": "cypress-v11-migration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deno",
+        "path": "/recipes/deno",
+        "id": "deno",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Add a Deno Project",
+            "path": "/recipes/deno/add-deno",
+            "id": "add-deno",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Serverless deployment with Deno Deploy",
+            "path": "/recipes/deno/deno-deploy",
+            "id": "deno-deploy",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add and Deploy Netlify Edge Functions with Deno",
+            "path": "/recipes/deno/deno-netlify-functions",
+            "id": "deno-netlify-functions",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Deno Project",
+        "path": "/recipes/deno/add-deno",
+        "id": "add-deno",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Serverless deployment with Deno Deploy",
+        "path": "/recipes/deno/deno-deploy",
+        "id": "deno-deploy",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add and Deploy Netlify Edge Functions with Deno",
+        "path": "/recipes/deno/deno-netlify-functions",
+        "id": "deno-netlify-functions",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4033,22 +4107,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Serverless deployment with Deno Deploy",
-            "path": "/recipes/other/deno-deploy",
-            "id": "deno-deploy",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "path": "/recipes/other/deno-netlify-functions",
-            "id": "deno-netlify-functions",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Rescope Packages from @nrwl to @nx",
             "path": "/recipes/other/rescope",
             "id": "rescope",
@@ -4057,22 +4115,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Serverless deployment with Deno Deploy",
-        "path": "/recipes/other/deno-deploy",
-        "id": "deno-deploy",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "path": "/recipes/other/deno-netlify-functions",
-        "id": "deno-netlify-functions",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
