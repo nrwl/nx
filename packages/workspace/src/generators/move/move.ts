@@ -9,6 +9,7 @@ import { checkDestination } from './lib/check-destination';
 import { createProjectConfigurationInNewDestination } from './lib/create-project-configuration-in-new-destination';
 import { moveProjectFiles } from './lib/move-project-files';
 import { normalizeSchema } from './lib/normalize-schema';
+import { runAngularPlugin } from './lib/run-angular-plugin';
 import { updateBuildTargets } from './lib/update-build-targets';
 import { updateCypressConfig } from './lib/update-cypress-config';
 import { updateDefaultProject } from './lib/update-default-project';
@@ -54,6 +55,8 @@ export async function moveGenerator(tree: Tree, rawSchema: Schema) {
   updateBuildTargets(tree, schema);
   updateDefaultProject(tree, schema);
   updateImplicitDependencies(tree, schema);
+
+  await runAngularPlugin(tree, schema);
 
   if (!schema.skipFormat) {
     await formatFiles(tree);

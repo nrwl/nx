@@ -1,20 +1,38 @@
 import * as devkit from '@nx/devkit';
-import { readJson, Tree } from '@nx/devkit';
+import { ProjectGraph, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/linter';
 import { UnitTestRunner } from '../../utils/test-runners';
-import librarySecondaryEntryPointGenerator from '../library-secondary-entry-point/library-secondary-entry-point';
+import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { generateTestLibrary } from '../utils/testing';
 import { angularMoveGenerator } from './move';
 
 describe('@nx/angular:move', () => {
   let tree: Tree;
+  let projectGraph: ProjectGraph;
+
+  function addProjectToGraph(project: string): void {
+    projectGraph = {
+      dependencies: {
+        [project]: [
+          { source: project, target: 'npm:@angular/core', type: 'static' },
+        ],
+      },
+      nodes: {
+        [project]: {
+          name: project,
+          type: 'lib',
+          data: { root: project, targets: {} },
+        },
+      },
+    };
+  }
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestLibrary(tree, {
-      name: 'mylib',
+      name: 'my-lib',
       buildable: false,
       linter: Linter.EsLint,
       publishable: false,
@@ -23,12 +41,16 @@ describe('@nx/angular:move', () => {
       unitTestRunner: UnitTestRunner.Jest,
     });
 
-    jest.clearAllMocks();
+    jest
+      .spyOn(devkit, 'createProjectGraphAsync')
+      .mockImplementation(() => Promise.resolve(projectGraph));
   });
 
   it('should move a project', async () => {
+    addProjectToGraph('my-lib');
+
     await angularMoveGenerator(tree, {
-      projectName: 'mylib',
+      projectName: 'my-lib',
       destination: 'mynewlib',
       updateImportPath: true,
     });
@@ -40,6 +62,7 @@ describe('@nx/angular:move', () => {
 
   it('should update ng-package.json dest property', async () => {
     await generateTestLibrary(tree, { name: 'mylib2', buildable: true });
+    addProjectToGraph('mylib2');
 
     await angularMoveGenerator(tree, {
       projectName: 'mylib2',
@@ -57,6 +80,7 @@ describe('@nx/angular:move', () => {
       library: 'mylib2',
       name: 'testing',
     });
+    addProjectToGraph('mylib2');
 
     await angularMoveGenerator(tree, {
       projectName: 'mylib2',
@@ -73,28 +97,245 @@ describe('@nx/angular:move', () => {
     `);
   });
 
-  it('should format files', async () => {
-    jest.spyOn(devkit, 'formatFiles');
+  it('should handle nesting resulting in the same project name', async () => {
+    addProjectToGraph('my-lib');
 
     await angularMoveGenerator(tree, {
-      projectName: 'mylib',
-      destination: 'mynewlib',
+      projectName: 'my-lib',
+      destination: 'my/lib',
       updateImportPath: true,
     });
 
-    expect(devkit.formatFiles).toHaveBeenCalled();
+    expect(tree.exists('libs/my/lib/src/lib/my-lib.module.ts')).toBe(true);
+    const moduleFile = tree.read(
+      'libs/my/lib/src/lib/my-lib.module.ts',
+      'utf-8'
+    );
+    expect(moduleFile).toContain(`export class MyLibModule {}`);
   });
 
-  it('should not format files when --skipFormat=true', async () => {
-    jest.spyOn(devkit, 'formatFiles');
+  describe('move to subfolder', () => {
+    beforeEach(async () => {
+      await generateTestLibrary(tree, {
+        name: 'my-lib2',
+        buildable: false,
+        linter: Linter.EsLint,
+        publishable: false,
+        simpleName: true,
+        skipFormat: false,
+        unitTestRunner: UnitTestRunner.Jest,
+      });
+      tree.write(
+        'my-lib/src/lib/my-lib.module.ts',
+        `import { NgModule } from '@angular/core';
+    import { CommonModule } from '@angular/common';
 
-    await angularMoveGenerator(tree, {
-      projectName: 'mylib',
-      destination: 'mynewlib',
-      updateImportPath: true,
-      skipFormat: true,
+    @NgModule({
+      imports: [CommonModule]
+    })
+    export class MyLibModule {}`
+      );
+
+      tree.write(
+        'my-lib/src/lib/my-lib.module.spec.ts',
+        `import { async, TestBed } from '@angular/core/testing';
+    import { MyLibModule } from './my-lib.module';
+
+    describe('MyLibModule', () => {
+      beforeEach(async(() => {
+        TestBed.configureTestingModule({
+          imports: [MyLibModule]
+        }).compileComponents();
+      }));
+
+      it('should create', () => {
+        expect(MyLibModule).toBeDefined();
+      });
+    });`
+      );
+      tree.write(
+        'my-lib2/src/lib/my-lib2.module.ts',
+        `import { MyLibModule } from '@proj/my-lib';
+
+      export class MyLib2Module extends MyLibModule {}
+      `
+      );
     });
 
-    expect(devkit.formatFiles).not.toHaveBeenCalled();
+    it('should rename the module files and update the module name', async () => {
+      addProjectToGraph('my-lib');
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'shared/my-lib',
+        updateImportPath: true,
+      });
+
+      expect(
+        tree.exists('libs/shared/my-lib/src/lib/shared-my-lib.module.ts')
+      ).toBe(true);
+      expect(
+        tree.exists('libs/shared/my-lib/src/lib/shared-my-lib.module.spec.ts')
+      ).toBe(true);
+
+      const moduleFile = tree.read(
+        'libs/shared/my-lib/src/lib/shared-my-lib.module.ts',
+        'utf-8'
+      );
+      expect(moduleFile).toContain(`export class SharedMyLibModule {}`);
+
+      const moduleSpecFile = tree.read(
+        'libs/shared/my-lib/src/lib/shared-my-lib.module.spec.ts',
+        'utf-8'
+      );
+      expect(moduleSpecFile).toContain(
+        `import { SharedMyLibModule } from './shared-my-lib.module';`
+      );
+      expect(moduleSpecFile).toContain(`describe('SharedMyLibModule', () => {`);
+      expect(moduleSpecFile).toContain(`imports: [SharedMyLibModule]`);
+      expect(moduleSpecFile).toContain(
+        `expect(SharedMyLibModule).toBeDefined();`
+      );
+    });
+
+    it('should update any references to the module', async () => {
+      addProjectToGraph('my-lib');
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'shared/my-lib',
+        updateImportPath: true,
+      });
+
+      const importerFile = tree.read(
+        'my-lib2/src/lib/my-lib2.module.ts',
+        'utf-8'
+      );
+      expect(importerFile).toContain(
+        `import { SharedMyLibModule } from '@proj/shared/my-lib';`
+      );
+      expect(importerFile).toContain(
+        `export class MyLib2Module extends SharedMyLibModule {}`
+      );
+    });
+
+    it('should update the index.ts file which exports the module', async () => {
+      addProjectToGraph('my-lib');
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'shared/my-lib',
+        updateImportPath: true,
+      });
+
+      const indexFile = tree.read('libs/shared/my-lib/src/index.ts', 'utf-8');
+      expect(indexFile).toContain(
+        `export * from './lib/shared-my-lib.module';`
+      );
+    });
+  });
+
+  describe('rename', () => {
+    beforeEach(async () => {
+      await generateTestLibrary(tree, {
+        name: 'my-importer',
+        buildable: false,
+        linter: Linter.EsLint,
+        publishable: false,
+        simpleName: true,
+        skipFormat: false,
+        unitTestRunner: UnitTestRunner.Jest,
+      });
+
+      tree.write(
+        'my-importer/src/lib/my-importing-file.ts',
+        `import { MyLibModule } from '@proj/my-lib';
+          export class MyExtendedLibModule extends MyLibModule {}
+          `
+      );
+    });
+
+    it('should rename the module file and update the module name', async () => {
+      addProjectToGraph('my-lib');
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'my-destination',
+        updateImportPath: true,
+      });
+
+      expect(
+        tree.exists('libs/my-destination/src/lib/my-destination.module.ts')
+      ).toBe(true);
+
+      const moduleFile = tree.read(
+        'libs/my-destination/src/lib/my-destination.module.ts',
+        'utf-8'
+      );
+      expect(moduleFile).toContain(`export class MyDestinationModule {}`);
+    });
+
+    it('should update any references to the module', async () => {
+      addProjectToGraph('my-lib');
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'my-destination',
+        updateImportPath: true,
+      });
+
+      const importerFile = tree.read(
+        'my-importer/src/lib/my-importing-file.ts',
+        'utf-8'
+      );
+      expect(importerFile).toContain(
+        `import { MyDestinationModule } from '@proj/my-destination';`
+      );
+      expect(importerFile).toContain(
+        `export class MyExtendedLibModule extends MyDestinationModule {}`
+      );
+    });
+
+    it('should update the index.ts file which exports the module', async () => {
+      addProjectToGraph('my-lib');
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'my-destination',
+        updateImportPath: true,
+      });
+
+      const indexFile = tree.read('libs/my-destination/src/index.ts', 'utf-8');
+      expect(indexFile).toContain(
+        `export * from './lib/my-destination.module';`
+      );
+    });
+
+    it('should not rename unrelated symbols with similar name in different projects', async () => {
+      // create different project whose main module name starts with the same
+      // name of the project we're moving
+      await generateTestLibrary(tree, {
+        name: 'my-lib-demo',
+        buildable: false,
+        linter: Linter.EsLint,
+        publishable: false,
+        simpleName: true,
+        skipFormat: false,
+        unitTestRunner: UnitTestRunner.Jest,
+      });
+      addProjectToGraph('my-lib');
+
+      await angularMoveGenerator(tree, {
+        projectName: 'my-lib',
+        destination: 'my-destination',
+        updateImportPath: true,
+      });
+
+      const moduleFile = tree.read(
+        'my-lib-demo/src/lib/my-lib-demo.module.ts',
+        'utf-8'
+      );
+      expect(moduleFile).toContain(`export class MyLibDemoModule {}`);
+    });
   });
 });

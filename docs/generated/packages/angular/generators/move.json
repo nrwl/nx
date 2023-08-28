@@ -50,6 +50,7 @@
   },
   "aliases": ["mv"],
   "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
+  "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v18.",
   "implementation": "/packages/angular/src/generators/move/move#angularMoveGenerator.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/move/schema.json",
