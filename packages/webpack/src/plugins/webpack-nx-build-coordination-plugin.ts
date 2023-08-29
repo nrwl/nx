@@ -6,6 +6,7 @@ import { output } from 'nx/src/utils/output';
 
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
+  private buildCmdProcess: ReturnType<typeof exec> | null = null;
 
   constructor(private readonly buildCmd: string, skipInitialBuild?: boolean) {
     if (!skipInitialBuild) {
@@ -30,19 +31,7 @@ export class WebpackNxBuildCoordinationPlugin {
   }
 
   async startWatchingBuildableLibs() {
-    const unregisterFileWatcher = await createFileWatcher(
-      () => this.buildChangedProjects(),
-      () => {
-        output.error({
-          title: 'Watch connection closed',
-          bodyLines: [
-            'The daemon has closed the connection to this watch process.',
-            'Please restart your watch command.',
-          ],
-        });
-        process.exit(1);
-      }
-    );
+    const unregisterFileWatcher = await this.createFileWatcher();
 
     process.on('exit', () => {
       unregisterFileWatcher();
@@ -54,46 +43,54 @@ export class WebpackNxBuildCoordinationPlugin {
       await sleep(50);
     }
     this.currentlyRunning = 'nx-build';
-    return new Promise<void>((res) => {
-      try {
-        const cp = exec(this.buildCmd);
+    try {
+      return await new Promise<void>((res) => {
+        this.buildCmdProcess = exec(this.buildCmd);
 
-        cp.stdout.pipe(process.stdout);
-        cp.stderr.pipe(process.stderr);
-        cp.on('exit', () => {
+        this.buildCmdProcess.stdout.pipe(process.stdout);
+        this.buildCmdProcess.stderr.pipe(process.stderr);
+        this.buildCmdProcess.on('exit', () => {
           res();
         });
-        cp.on('error', () => {
+        this.buildCmdProcess.on('error', () => {
           res();
         });
-        // eslint-disable-next-line no-empty
-      } catch (e) {
-        res();
-      } finally {
-        this.currentlyRunning = 'none';
+      });
+    } finally {
+      this.currentlyRunning = 'none';
+      this.buildCmdProcess = null;
+    }
+  }
+
+  private createFileWatcher() {
+    const runner = new BatchFunctionRunner(() => this.buildChangedProjects());
+    return daemonClient.registerFileWatcher(
+      {
+        watchProjects: 'all',
+      },
+      (err, { changedProjects, changedFiles }) => {
+        if (err === 'closed') {
+          output.error({
+            title: 'Watch connection closed',
+            bodyLines: [
+              'The daemon has closed the connection to this watch process.',
+              'Please restart your watch command.',
+            ],
+          });
+          process.exit(1);
+        }
+
+        if (this.buildCmdProcess) {
+          this.buildCmdProcess.kill(2);
+          this.buildCmdProcess = null;
+        }
+        // Queue a build
+        runner.enqueue(changedProjects, changedFiles);
       }
-    });
+    );
   }
 }
 
 function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
-}
-async function createFileWatcher(
-  changeHandler: () => Promise<void>,
-  onClose: () => void
-) {
-  const runner = new BatchFunctionRunner(changeHandler);
-  return daemonClient.registerFileWatcher(
-    {
-      watchProjects: 'all',
-    },
-    (err, { changedProjects, changedFiles }) => {
-      if (err === 'closed') {
-        onClose();
-      }
-      // Queue a build
-      runner.enqueue(changedProjects, changedFiles);
-    }
-  );
 }
