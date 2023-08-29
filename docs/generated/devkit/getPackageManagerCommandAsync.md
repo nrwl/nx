@@ -1,6 +1,6 @@
-# Function: getPackageManagerCommand
+# Function: getPackageManagerCommandAsync
 
-▸ **getPackageManagerCommand**(`packageManager?`, `root?`): `PackageManagerCommands`
+▸ **getPackageManagerCommandAsync**(`packageManager?`, `root?`): `Promise`<`PackageManagerCommands`\>
 
 Returns commands for the package manager used in the workspace.
 By default, the package manager is derived based on the lock file,
@@ -21,4 +21,4 @@ execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
 
 #### Returns
 
-`PackageManagerCommands`
+`Promise`<`PackageManagerCommands`\>

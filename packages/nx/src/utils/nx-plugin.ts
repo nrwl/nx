@@ -43,6 +43,7 @@ import {
 } from '../adapter/angular-json';
 import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
 import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
+import { PackageManagerCommands } from './package-manager';
 
 /**
  * Context for {@link CreateNodesFunction}
@@ -129,6 +130,12 @@ export type NxPluginV2 = {
    * Provides a function to analyze files to create dependencies for the {@link ProjectGraph}
    */
   createDependencies?: CreateDependencies;
+
+  /**
+   * This is used to provide a custom packageManager for nx.
+   * @returns PackageManager
+   */
+  providesPackageManagers?: () => Record<string, PackageManagerCommands>;
 };
 
 export * from './nx-plugin.deprecated';

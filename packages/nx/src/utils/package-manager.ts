@@ -9,10 +9,26 @@ import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 import { workspaceRoot } from './workspace-root';
 import { readNxJson } from '../config/configuration';
+import { loadNxPlugins } from './nx-plugin';
+import { getNxRequirePaths } from './installation-directory';
 
 const execAsync = promisify(exec);
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+export const internalPackageManager: CorePackageManager[] = [
+  'yarn',
+  'pnpm',
+  'npm',
+];
+
+export type CorePackageManager = 'yarn' | 'pnpm' | 'npm';
+
+export type PackageManager = CorePackageManager | string;
+
+function isCorePackageManager(
+  manager: PackageManager
+): manager is CorePackageManager {
+  return internalPackageManager.includes(manager as CorePackageManager);
+}
 
 export interface PackageManagerCommands {
   preInstall?: string;
@@ -26,11 +42,67 @@ export interface PackageManagerCommands {
   run: (script: string, args: string) => string;
 }
 
-/**
- * Detects which package manager is used in the workspace based on the lock file.
- */
+export const CorePackageManagerCommands: (root: string) => {
+  [pm in PackageManager]: () => PackageManagerCommands;
+} = (root: string = workspaceRoot) => ({
+  yarn: () => {
+    const yarnVersion = getPackageManagerVersion('yarn', root);
+    const useBerry = gte(yarnVersion, '2.0.0');
+
+    return {
+      preInstall: `yarn set version ${yarnVersion}`,
+      install: 'yarn',
+      ciInstall: useBerry
+        ? 'yarn install --immutable'
+        : 'yarn install --frozen-lockfile',
+      add: useBerry ? 'yarn add' : 'yarn add -W',
+      addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
+      rm: 'yarn remove',
+      exec: 'yarn',
+      run: (script: string, args: string) => `yarn ${script} ${args}`,
+      list: useBerry ? 'yarn info --name-only' : 'yarn list',
+    };
+  },
+  pnpm: () => {
+    const pnpmVersion = getPackageManagerVersion('pnpm', root);
+    const useExec = gte(pnpmVersion, '6.13.0');
+    const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
+    const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
+
+    return {
+      install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
+      ciInstall: 'pnpm install --frozen-lockfile',
+      add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
+      addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
+      rm: 'pnpm rm',
+      exec: useExec ? 'pnpm exec' : 'pnpx',
+      run: (script: string, args: string) =>
+        includeDoubleDashBeforeArgs
+          ? `pnpm run ${script} -- ${args}`
+          : `pnpm run ${script} ${args}`,
+      list: 'pnpm ls --depth 100',
+    };
+  },
+  npm: () => {
+    // TODO: Remove this
+    process.env.npm_config_legacy_peer_deps ??= 'true';
+
+    return {
+      install: 'npm install',
+      ciInstall: 'npm ci',
+      add: 'npm install',
+      addDev: 'npm install -D',
+      rm: 'npm rm',
+      exec: 'npx',
+      run: (script: string, args: string) => `npm run ${script} -- ${args}`,
+      list: 'npm ls',
+    };
+  },
+});
+
 export function detectPackageManager(dir: string = ''): PackageManager {
   const nxJson = readNxJson();
+
   return (
     nxJson.cli?.packageManager ??
     (existsSync(join(dir, 'yarn.lock'))
@@ -59,62 +131,46 @@ export function getPackageManagerCommand(
   packageManager: PackageManager = detectPackageManager(),
   root: string = workspaceRoot
 ): PackageManagerCommands {
-  const commands: { [pm in PackageManager]: () => PackageManagerCommands } = {
-    yarn: () => {
-      const yarnVersion = getPackageManagerVersion('yarn', root);
-      const useBerry = gte(yarnVersion, '2.0.0');
+  const commands = CorePackageManagerCommands(root);
+  return commands[packageManager]();
+}
 
-      return {
-        preInstall: `yarn set version ${yarnVersion}`,
-        install: 'yarn',
-        ciInstall: useBerry
-          ? 'yarn install --immutable'
-          : 'yarn install --frozen-lockfile',
-        add: useBerry ? 'yarn add' : 'yarn add -W',
-        addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
-        rm: 'yarn remove',
-        exec: 'yarn',
-        run: (script: string, args: string) => `yarn ${script} ${args}`,
-        list: useBerry ? 'yarn info --name-only' : 'yarn list',
-      };
-    },
-    pnpm: () => {
-      const pnpmVersion = getPackageManagerVersion('pnpm', root);
-      const useExec = gte(pnpmVersion, '6.13.0');
-      const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
-      const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
+/**
+ * Returns commands for the package manager used in the workspace.
+ * By default, the package manager is derived based on the lock file,
+ * but it can also be passed in explicitly.
+ *
+ * Example:
+ *
+ * ```javascript
+ * execSync(`${getPackageManagerCommand().addDev} my-dev-package`);
+ * ```
+ *
+ * @param packageManager The package manager to use. If not provided, it will be detected based on the lock file.
+ * @param root The directory the commands will be ran inside of. Defaults to the current workspace's root.
+ */
+export async function getPackageManagerCommandAsync(
+  packageManager: PackageManager = detectPackageManager(),
+  root: string = workspaceRoot
+): Promise<PackageManagerCommands> {
+  const nxJson = readNxJson();
+  if (!isCorePackageManager(packageManager) && nxJson.plugins?.length) {
+    const packageManagerPlugin = await loadNxPlugins(
+      nxJson.plugins || [],
+      getNxRequirePaths(workspaceRoot),
+      workspaceRoot
+    ).then((plugins) =>
+      plugins.find(
+        (plugin) =>
+          plugin.providesPackageManagers &&
+          plugin.providesPackageManagers()[packageManager]
+      )
+    );
 
-      return {
-        install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
-        ciInstall: 'pnpm install --frozen-lockfile',
-        add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
-        addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
-        rm: 'pnpm rm',
-        exec: useExec ? 'pnpm exec' : 'pnpx',
-        run: (script: string, args: string) =>
-          includeDoubleDashBeforeArgs
-            ? `pnpm run ${script} -- ${args}`
-            : `pnpm run ${script} ${args}`,
-        list: 'pnpm ls --depth 100',
-      };
-    },
-    npm: () => {
-      // TODO: Remove this
-      process.env.npm_config_legacy_peer_deps ??= 'true';
+    return packageManagerPlugin.providesPackageManagers()[packageManager];
+  }
 
-      return {
-        install: 'npm install',
-        ciInstall: 'npm ci',
-        add: 'npm install',
-        addDev: 'npm install -D',
-        rm: 'npm rm',
-        exec: 'npx',
-        run: (script: string, args: string) => `npm run ${script} -- ${args}`,
-        list: 'npm ls',
-      };
-    },
-  };
-
+  const commands = CorePackageManagerCommands(root);
   return commands[packageManager]();
 }
 

@@ -55,11 +55,11 @@ Default generator collection. It is used when no collection is provided.
 
 #### Type declaration
 
-| Name                  | Type                                                      | Description                                                            |
-| :-------------------- | :-------------------------------------------------------- | :--------------------------------------------------------------------- |
-| `defaultCollection?`  | `string`                                                  | **`Deprecated`** - defaultCollection is deprecated and will be removed |
-| `defaultProjectName?` | `string`                                                  | -                                                                      |
-| `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) | -                                                                      |
+| Name                  | Type     | Description                                                            |
+| :-------------------- | :------- | :--------------------------------------------------------------------- |
+| `defaultCollection?`  | `string` | **`Deprecated`** - defaultCollection is deprecated and will be removed |
+| `defaultProjectName?` | `string` | -                                                                      |
+| `packageManager?`     | `string` | -                                                                      |
 
 #### Inherited from
 

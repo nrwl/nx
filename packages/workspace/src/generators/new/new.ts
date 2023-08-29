@@ -1,6 +1,6 @@
 import {
   addDependenciesToPackageJson,
-  getPackageManagerCommand,
+  getPackageManagerCommandAsync,
   installPackagesTask,
   joinPathFragments,
   names,
@@ -51,14 +51,19 @@ export async function newGenerator(host: Tree, opts: Schema) {
   addCloudDependencies(host, options);
 
   return async () => {
-    const pmc = getPackageManagerCommand(options.packageManager);
+    const pmc = await getPackageManagerCommandAsync(options.packageManager);
     if (pmc.preInstall) {
       execSync(pmc.preInstall, {
         cwd: joinPathFragments(host.root, options.directory),
         stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
       });
     }
-    installPackagesTask(host, false, options.directory, options.packageManager);
+    await installPackagesTask(
+      host,
+      false,
+      options.directory,
+      options.packageManager
+    );
     // TODO: move all of these into create-nx-workspace
     if (
       options.preset !== Preset.NPM &&
