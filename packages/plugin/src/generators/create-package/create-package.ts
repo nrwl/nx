@@ -15,7 +15,10 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '@nx/devkit';
-import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import {
+  addTsLibDependencies,
+  libraryGenerator as jsLibraryGenerator,
+} from '@nx/js';
 import { nxVersion } from 'nx/src/utils/versions';
 import generatorGenerator from '../generator/generator';
 import { CreatePackageSchema } from './schema';
@@ -118,6 +121,10 @@ async function createCliPackage(
       return packageJson;
     }
   );
+
+  if (options.compiler === 'tsc') {
+    addTsLibDependencies(host, options.projectRoot);
+  }
 
   // update project build target to use the bin entry
   const projectConfiguration = readProjectConfiguration(
