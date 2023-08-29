@@ -35,6 +35,7 @@ export type TargetDependencies = Record<
 export interface NrwlJsPluginConfig {
   analyzeSourceFiles?: boolean;
   analyzePackageJson?: boolean;
+  analyzeLockfile?: boolean;
 }
 
 interface NxInstallationConfiguration {
