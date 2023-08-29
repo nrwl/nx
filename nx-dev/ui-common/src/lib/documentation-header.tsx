@@ -160,7 +160,7 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-full">
+          <div className="mx-4 w-auto">
             <AlgoliaSearch />
           </div>
         </div>
@@ -168,7 +168,7 @@ export function DocumentationHeader({
         <div className="flex items-center">
           <Link
             href="/"
-            className="flex items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            className="flex flex-grow items-center px-4 text-slate-900 dark:text-white lg:px-0"
           >
             <svg
               role="img"
@@ -183,7 +183,7 @@ export function DocumentationHeader({
           </Link>
           <Link
             href="/getting-started/intro"
-            className="flex ml-2 items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            className="hidden lg:flex ml-2 items-center px-4 text-slate-900 dark:text-white lg:px-0"
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs

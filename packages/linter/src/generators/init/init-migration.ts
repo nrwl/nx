@@ -54,11 +54,12 @@ export function migrateConfigToMonorepoStyle(
   projects.forEach((project) => {
     const lintTarget = findLintTarget(project);
     if (lintTarget) {
-      const projectEslintPath = joinPathFragments(
-        project.root,
-        lintTarget.options.eslintConfig || findEslintFile(tree, project.root)
-      );
-      migrateEslintFile(projectEslintPath, tree);
+      const eslintFile =
+        lintTarget.options.eslintConfig || findEslintFile(tree, project.root);
+      if (eslintFile) {
+        const projectEslintPath = joinPathFragments(project.root, eslintFile);
+        migrateEslintFile(projectEslintPath, tree);
+      }
     }
   });
 }
@@ -66,12 +67,11 @@ export function migrateConfigToMonorepoStyle(
 export function findLintTarget(
   project: ProjectConfiguration
 ): TargetConfiguration {
-  return Object.entries(project.targets ?? {}).find(
-    ([name, target]) =>
-      name === 'lint' ||
+  return Object.values(project.targets ?? {}).find(
+    (target) =>
       target.executor === '@nx/linter:eslint' ||
       target.executor === '@nrwl/linter:eslint'
-  )?.[1];
+  );
 }
 
 function migrateEslintFile(projectEslintPath: string, tree: Tree) {

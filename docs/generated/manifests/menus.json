@@ -33,7 +33,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "5 min Tutorials",
+            "name": "Tutorials",
             "path": "/getting-started/tutorials",
             "id": "tutorials",
             "isExternal": false,
@@ -109,7 +109,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "5 min Tutorials",
+        "name": "Tutorials",
         "path": "/getting-started/tutorials",
         "id": "tutorials",
         "isExternal": false,

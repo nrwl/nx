@@ -1,5 +1,10 @@
 # What is Nx Cloud?
 
+{% youtube
+src="https://www.youtube.com/embed/NZF0ZJpgaJM?si=1KJRAWJJmfw9c0c0"
+title="What is Nx Cloud?"
+width="100%" /%}
+
 Nx partitions a command into smaller tasks and runs them in parallel, in the correct order. Nx Cloud takes it one step further and [runs any command across multiple machines](/core-features/distribute-task-execution), while giving you a consolidated view of the command as if it ran locally.
 
 Nx caches the output of any previously run command such as testing and building, so it can replay the cached results instead of rerunning it. Nx Cloud allows you to [share the computation cache](/core-features/remote-cache) across everyone in your team and CI.

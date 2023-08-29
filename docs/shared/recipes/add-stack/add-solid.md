@@ -2,11 +2,11 @@
 
 The code for this example is available on GitHub:
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/solidjs" %}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/solidjs" /%}
 
 **Supported Features**
 
-Because we are not using an Nx plugin for Solid, there are few items we'll have to configure manually. We'll have to
+Because we are not using an Nx plugin for Solid, there are a few items we'll have to configure manually. We'll have to
 configure our own build system. There are no pre-created Solid-specific code generators. And we'll have to take care of
 updating any framework dependencies as needed.
 
