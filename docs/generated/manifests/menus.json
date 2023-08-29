@@ -2259,6 +2259,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Convert from a Standalone Repository to an Integrated Repository",
+                "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+                "id": "standalone-to-integrated",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configuring ESLint with Typescript",
                 "path": "/recipes/tips-n-tricks/eslint",
                 "id": "eslint",
@@ -2342,14 +2350,6 @@
                 "name": "Workspace Watching",
                 "path": "/recipes/tips-n-tricks/workspace-watching",
                 "id": "workspace-watching",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Convert from a Standalone Repository to an Integrated Repository",
-                "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-                "id": "standalone-to-integrated",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3664,6 +3664,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Convert from a Standalone Repository to an Integrated Repository",
+            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+            "id": "standalone-to-integrated",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configuring ESLint with Typescript",
             "path": "/recipes/tips-n-tricks/eslint",
             "id": "eslint",
@@ -3752,14 +3760,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Convert from a Standalone Repository to an Integrated Repository",
-            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-            "id": "standalone-to-integrated",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Use JavaScript instead TypeScript",
             "path": "/recipes/tips-n-tricks/js-and-ts",
             "id": "js-and-ts",
@@ -3814,6 +3814,14 @@
         "name": "Add an Integrated Project in a Package-based Repo",
         "path": "/recipes/tips-n-tricks/integrated-in-package-based",
         "id": "integrated-in-package-based",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+        "id": "standalone-to-integrated",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3902,14 +3910,6 @@
         "name": "Workspace Watching",
         "path": "/recipes/tips-n-tricks/workspace-watching",
         "id": "workspace-watching",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Convert from a Standalone Repository to an Integrated Repository",
-        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-        "id": "standalone-to-integrated",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

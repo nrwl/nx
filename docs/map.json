@@ -996,6 +996,12 @@
                   "file": "shared/recipes/repo-types/integrated-in-package-based"
                 },
                 {
+                  "name": "Convert from a Standalone Repository to an Integrated Repository",
+                  "id": "standalone-to-integrated",
+                  "tags": ["repository-types"],
+                  "file": "shared/recipes/repo-types/standalone-to-integrated"
+                },
+                {
                   "name": "Configuring ESLint with Typescript",
                   "id": "eslint",
                   "file": "shared/eslint"
@@ -1057,12 +1063,6 @@
                   "id": "workspace-watching",
                   "tags": ["workspace-watching"],
                   "file": "shared/recipes/workspace-watching"
-                },
-                {
-                  "name": "Convert from a Standalone Repository to an Integrated Repository",
-                  "id": "standalone-to-integrated",
-                  "tags": ["repository-types"],
-                  "file": "shared/recipes/repo-types/standalone-to-integrated"
                 },
                 {
                   "name": "Use JavaScript instead TypeScript",
