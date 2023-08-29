@@ -50,10 +50,9 @@ If your plugin has functionality that would be useful in more than just your rep
 
 You can also hook into the way Nx works and modify it to suit your needs
 
-{% cards cols="3" %}
+{% cards cols="2" %}
 
 {% card title="Scaffold a New Workspace" description="Set up a new repo" url="/extending-nx/recipes/create-preset" /%}
-{% card title="Project Inference Plugins" description="Modify how Nx identifies projects" url="/extending-nx/recipes/project-inference-plugins" /%}
 {% card title="Project Graph Plugins" description="Modify the Nx graph" url="/extending-nx/recipes/project-graph-plugins" /%}
 
 {% /cards %}

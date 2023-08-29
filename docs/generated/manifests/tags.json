@@ -667,13 +667,6 @@
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
       "path": "/extending-nx/recipes/project-graph-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/project-inference-plugins",
-      "id": "project-inference-plugins",
-      "name": "Identify Custom Projects",
-      "path": "/extending-nx/recipes/project-inference-plugins"
     }
   ],
   "module-federation": [

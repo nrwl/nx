@@ -6177,6 +6177,16 @@
         "isExternal": false,
         "path": "/deprecated/storybook",
         "tags": []
+      },
+      {
+        "id": "v1-nx-plugin-api",
+        "name": "v1 Nx Plugin API",
+        "description": "",
+        "file": "shared/deprecated/v1-nx-plugin-api",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/v1-nx-plugin-api",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -6382,6 +6392,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/storybook/upgrade-storybook-v6-react",
+    "tags": []
+  },
+  "/deprecated/v1-nx-plugin-api": {
+    "id": "v1-nx-plugin-api",
+    "name": "v1 Nx Plugin API",
+    "description": "",
+    "file": "shared/deprecated/v1-nx-plugin-api",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/v1-nx-plugin-api",
     "tags": []
   },
   "/see-also": {

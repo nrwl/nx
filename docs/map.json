@@ -1454,6 +1454,11 @@
                   "file": "shared/deprecated/storybook/storybook-v6-react"
                 }
               ]
+            },
+            {
+              "name": "v1 Nx Plugin API",
+              "id": "v1-nx-plugin-api",
+              "file": "shared/deprecated/v1-nx-plugin-api"
             }
           ]
         },
@@ -1649,12 +1654,6 @@
               "id": "project-graph-plugins",
               "tags": ["create-your-own-plugin", "explore-graph"],
               "file": "shared/recipes/plugins/project-graph-plugins"
-            },
-            {
-              "name": "Identify Custom Projects",
-              "id": "project-inference-plugins",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/project-inference-plugins"
             }
           ]
         }
