@@ -24,9 +24,8 @@ Because we are not using an Nx plugin for Nuxt, there are few items we'll have t
 
 Using `nuxi init`, `cd` to the directory above where you want the app folder to live and run
 
-```{% command="npx nuxi@latest init <app-name>" %}
-Nuxi 3.6.5
-✨ Nuxt project is created with v3 template.
+```shell
+npx nuxi@latest init <app-name>
 ```
 
 Tell Nx how to cache the build with the `nx` key in the `package.json`.
