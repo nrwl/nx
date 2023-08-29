@@ -336,7 +336,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         [
           `${NX_PREFIX}: ${opts.collectionName}:${normalizedGeneratorName} is deprecated`,
           `${deprecated}`,
-        ].join('/n')
+        ].join('\n')
       );
     }
     if (!opts.quiet && !opts.help) {
