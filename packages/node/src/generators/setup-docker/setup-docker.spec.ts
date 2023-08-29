@@ -14,6 +14,7 @@ describe('setupDockerGenerator', () => {
         framework: 'express',
         e2eTestRunner: 'none',
         docker: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const project = readProjectConfiguration(tree, 'api');
@@ -37,6 +38,7 @@ describe('setupDockerGenerator', () => {
         framework: 'fastify',
         rootProject: true,
         docker: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const project = readProjectConfiguration(tree, 'api');
