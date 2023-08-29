@@ -32,3 +32,15 @@ Nx is built in a modular fashion to let you only use the features you need.
 - **Devkit** is a set of utilities for [building Nx plugins](/extending-nx/intro/getting-started).
 - **Nx Cloud** helps scale your project on CI by [adding remote caching](/concepts/how-caching-works) and [distributed task execution](/concepts/more-concepts/illustrated-dte). It also improves developer ergonomics by integrating with GitHub, GitLab and BitBucket and providing searchable structured logs. Learn more at [nx.app](https://nx.app).
 - **Nx Console** is an extension for **VSCode, IntelliJ and VIM**. It provides code autocompletion, interactive generators, workspace visualizations, powerful refactorings and more. You can [install it here](/core-features/integrate-with-editors).
+
+## How can I adopt Nx in my existing project?
+
+As shown in the section before, there's a core [nx package](https://www.npmjs.com/package/nx) that can be dropped into an existing project (regardless of whether it is a monorepo or single-project workspace). We made a command to help you with that:
+
+```shell
+npx nx@latest init
+```
+
+By adding the `nx` package you can use [Nx commands](/core-features/run-tasks) to run your `package.json` scripts and benefit from running tasks in parallel as well as [caching](/core-features/cache-task-results). Over time you can then also add in Nx Plugins to further enhance your experience when working with specific tech stacks.
+
+Check out our [migration guides](/recipes/adopting-nx) for all the details.
