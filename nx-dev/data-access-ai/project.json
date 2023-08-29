@@ -4,16 +4,6 @@
   "sourceRoot": "nx-dev/data-access-ai/src",
   "projectType": "library",
   "targets": {
-    "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
-      "options": {
-        "outputPath": "dist/nx-dev/data-access-ai",
-        "main": "nx-dev/data-access-ai/src/index.ts",
-        "tsConfig": "nx-dev/data-access-ai/tsconfig.lib.json",
-        "assets": ["nx-dev/data-access-ai/*.md"]
-      }
-    },
     "lint": {
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],

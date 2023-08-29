@@ -4,7 +4,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 export function ErrorMessage({ error }: { error: any }): JSX.Element {
-  if (error.data.no_results) {
+  if (error?.data?.no_results) {
     return (
       <div className="rounded-md bg-yellow-50 p-4">
         <div className="flex">

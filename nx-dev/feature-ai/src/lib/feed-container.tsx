@@ -1,10 +1,4 @@
-import {
-  ChatItem,
-  getProcessedHistory,
-  queryAi,
-  sendFeedbackAnalytics,
-  sendQueryAnalytics,
-} from '@nx/nx-dev/data-access-ai';
+import { getProcessedHistory, queryAi } from '@nx/nx-dev/data-access-ai';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { ErrorMessage } from './error-message';
@@ -12,6 +6,7 @@ import { Feed } from './feed/feed';
 import { LoadingState } from './loading-state';
 import { Prompt } from './prompt';
 import { formatMarkdownSources } from './utils';
+import { ChatItem } from '@nx/nx-dev/util-ai';
 
 interface LastQueryMetadata {
   sources: string[];
@@ -86,11 +81,6 @@ export function FeedContainer(): JSX.Element {
         query,
         ...aiResponse.usage,
       });
-      sendQueryAnalytics({
-        action: 'ai_query',
-        query,
-        ...aiResponse.usage,
-      });
     } catch (error: any) {
       setQueryError(error);
     }
@@ -105,15 +95,6 @@ export function FeedContainer(): JSX.Element {
     sendCustomEvent('ai_feedback', 'ai', statement, undefined, {
       query: question ? question.content : 'Could not retrieve the question',
       result: answer ? answer.content : 'Could not retrieve the answer',
-      sources: lastQueryMetadata
-        ? JSON.stringify(lastQueryMetadata.sources)
-        : 'Could not retrieve last answer sources',
-    });
-    sendFeedbackAnalytics({
-      action: 'evaluation',
-      result: answer ? answer.content : 'Could not retrieve the answer',
-      query: question ? question.content : 'Could not retrieve the question',
-      response: null, // TODO: Use query metadata here
       sources: lastQueryMetadata
         ? JSON.stringify(lastQueryMetadata.sources)
         : 'Could not retrieve last answer sources',
