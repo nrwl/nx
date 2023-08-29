@@ -18,7 +18,7 @@ import {
 import { NrwlJsPluginConfig, NxJsonConfiguration } from '../../config/nx-json';
 import { dirname, join } from 'path';
 import { projectGraphCacheDirectory } from '../../utils/cache-directory';
-import { readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { ensureDirSync } from 'fs-extra';
 import { performance } from 'perf_hooks';
@@ -49,8 +49,11 @@ export const processProjectGraph: ProjectGraphProcessor = async (
   const pluginConfig = jsPluginConfig(readNxJson());
 
   if (pluginConfig.analyzePackageJson) {
-    // during the create-nx-workspace lock file might not exists yet
-    if (lockFileExists()) {
+    if (
+      // during the create-nx-workspace lock file might not exists yet
+      lockFileExists() &&
+      pluginConfig.analyzeLockfile
+    ) {
       const lockHash = lockFileHash();
       let parsedLockFile: ProjectGraph;
       if (lockFileNeedsReprocessing(lockHash)) {
@@ -114,16 +117,27 @@ function jsPluginConfig(
   const nxJsonConfig: NrwlJsPluginConfig =
     nxJson?.pluginsConfig?.['@nx/js'] ?? nxJson?.pluginsConfig?.['@nrwl/js'];
 
+  // using lerna _before_ installing deps is causing an issue when parsing lockfile.
+  // See: https://github.com/lerna/lerna/issues/3807
+  // Note that previous attempt to fix this caused issues with Nx itself, thus we're checking
+  // for Lerna explicitly.
+  // See: https://github.com/nrwl/nx/pull/18784/commits/5416138e1ddc1945d5b289672dfb468e8c544e14
+  const analyzeLockfile =
+    !existsSync(join(workspaceRoot, 'lerna.json')) ||
+    existsSync(join(workspaceRoot, 'nx.json'));
+
   if (nxJsonConfig) {
     return {
       analyzePackageJson: true,
       analyzeSourceFiles: true,
+      analyzeLockfile,
       ...nxJsonConfig,
     };
   }
 
   if (!fileExists(join(workspaceRoot, 'package.json'))) {
     return {
+      analyzeLockfile: false,
       analyzePackageJson: false,
       analyzeSourceFiles: false,
     };
@@ -153,8 +167,16 @@ function jsPluginConfig(
     packageJsonDeps['@nrwl/angular'] ||
     packageJsonDeps['@nrwl/web']
   ) {
-    return { analyzePackageJson: true, analyzeSourceFiles: true };
+    return {
+      analyzePackageJson: true,
+      analyzeLockfile,
+      analyzeSourceFiles: true,
+    };
   } else {
-    return { analyzePackageJson: true, analyzeSourceFiles: false };
+    return {
+      analyzePackageJson: true,
+      analyzeLockfile,
+      analyzeSourceFiles: false,
+    };
   }
 }

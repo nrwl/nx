@@ -18,16 +18,16 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 1`] = `
 
 exports[`convert-tslint-to-eslint should work for NestJS applications 2`] = `
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
   "name": "nest-app-1",
   "projectType": "application",
-  "root": "apps/nest-app-1",
+  "root": "nest-app-1",
   "targets": {
     "lint": {
       "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "apps/nest-app-1/**/*.ts",
+          "nest-app-1/**/*.ts",
         ],
       },
       "outputs": [
@@ -246,7 +246,7 @@ exports[`convert-tslint-to-eslint should work for NestJS applications 3`] = `
 exports[`convert-tslint-to-eslint should work for NestJS applications 4`] = `
 {
   "extends": [
-    "../../.eslintrc.json",
+    "../.eslintrc.json",
   ],
   "ignorePatterns": [
     "!**/*",
