@@ -8,7 +8,7 @@ describe('hostGenerator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should generate host files and configs', async () => {
@@ -18,24 +18,26 @@ describe('hostGenerator', () => {
       linter: Linter.None,
       unitTestRunner: 'none',
       e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    expect(tree.exists('apps/test/tsconfig.json'));
-    expect(tree.exists('apps/test/webpack.config.prod.js'));
-    expect(tree.exists('apps/test/webpack.config.js'));
-    expect(tree.exists('apps/test/src/bootstrap.tsx'));
-    expect(tree.exists('apps/test/src/main.ts'));
-    expect(tree.exists('apps/test/src/remotes.d.ts'));
+    expect(tree.exists('test/tsconfig.json'));
+    expect(tree.exists('test/webpack.config.prod.js'));
+    expect(tree.exists('test/webpack.config.js'));
+    expect(tree.exists('test/src/bootstrap.tsx'));
+    expect(tree.exists('test/src/main.ts'));
+    expect(tree.exists('test/src/remotes.d.ts'));
   });
 
   it('should install @nx/web for the file-server executor', async () => {
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     await hostGenerator(tree, {
       name: 'test',
       style: 'css',
       linter: Linter.None,
       unitTestRunner: 'none',
       e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     const packageJson = readJson(tree, 'package.json');
@@ -50,18 +52,19 @@ describe('hostGenerator', () => {
       linter: Linter.None,
       unitTestRunner: 'none',
       e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    expect(tree.exists('apps/test/tsconfig.json'));
-    expect(tree.exists('apps/test/webpack.config.prod.js'));
-    expect(tree.exists('apps/test/webpack.config.server.js'));
-    expect(tree.exists('apps/test/webpack.config.js'));
-    expect(tree.exists('apps/test/src/main.server.tsx'));
-    expect(tree.exists('apps/test/src/bootstrap.tsx'));
-    expect(tree.exists('apps/test/src/main.ts'));
-    expect(tree.exists('apps/test/src/remotes.d.ts'));
+    expect(tree.exists('test/tsconfig.json'));
+    expect(tree.exists('test/webpack.config.prod.js'));
+    expect(tree.exists('test/webpack.config.server.js'));
+    expect(tree.exists('test/webpack.config.js'));
+    expect(tree.exists('test/src/main.server.tsx'));
+    expect(tree.exists('test/src/bootstrap.tsx'));
+    expect(tree.exists('test/src/main.ts'));
+    expect(tree.exists('test/src/remotes.d.ts'));
 
-    expect(readJson(tree, 'apps/test/tsconfig.server.json')).toEqual({
+    expect(readJson(tree, 'test/tsconfig.server.json')).toEqual({
       compilerOptions: {
         outDir: '../../out-tsc/server',
         target: 'es2019',
@@ -73,7 +76,7 @@ describe('hostGenerator', () => {
   });
 
   it('should generate a host and remotes in a directory correctly when using --projectNameAndRootFormat=as-provided', async () => {
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
 
     await hostGenerator(tree, {
       name: 'hostApp',

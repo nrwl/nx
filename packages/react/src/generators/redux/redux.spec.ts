@@ -9,7 +9,7 @@ describe('redux', () => {
   let appTree: Tree;
 
   beforeEach(async () => {
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    appTree = createTreeWithEmptyWorkspace();
     await libraryGenerator(appTree, {
       name: 'my-lib',
       linter: Linter.EsLint,
@@ -17,6 +17,7 @@ describe('redux', () => {
       skipTsConfig: false,
       style: 'css',
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     });
   });
 
@@ -37,11 +38,9 @@ describe('redux', () => {
       project: 'my-lib',
     });
 
+    expect(appTree.exists('/my-lib/src/lib/my-slice.slice.ts')).toBeTruthy();
     expect(
-      appTree.exists('/libs/my-lib/src/lib/my-slice.slice.ts')
-    ).toBeTruthy();
-    expect(
-      appTree.exists('/libs/my-lib/src/lib/my-slice.slice.spec.ts')
+      appTree.exists('/my-lib/src/lib/my-slice.slice.spec.ts')
     ).toBeTruthy();
   });
 
@@ -54,6 +53,7 @@ describe('redux', () => {
         style: 'css',
         unitTestRunner: 'none',
         name: 'my-app',
+        projectNameAndRootFormat: 'as-provided',
       });
       await reduxGenerator(appTree, {
         name: 'my-slice',
@@ -71,7 +71,7 @@ describe('redux', () => {
         appProject: 'my-app',
       });
 
-      const main = appTree.read('/apps/my-app/src/main.tsx', 'utf-8');
+      const main = appTree.read('/my-app/src/main.tsx', 'utf-8');
       expect(main).toContain('@reduxjs/toolkit');
       expect(main).toContain('configureStore');
       expect(main).toContain('[THIRD_SLICE_FEATURE_KEY]: thirdSliceReducer,');
