@@ -13,7 +13,7 @@
 [![Semantic Release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)]()
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![Join the chat at https://gitter.im/nrwl-nx/community](https://badges.gitter.im/nrwl-nx/community.svg)](https://gitter.im/nrwl-nx/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Join us @nrwl/community on slack](https://img.shields.io/badge/slack-%40nrwl%2Fcommunity-brightgreen)](https://go.nrwl.io/join-slack)
+[![Join the Official Nx Discord Server](https://simpleicons.org/icons/discord.svg)](http://go.nx.dev/community)
 
 </div>
 
@@ -36,7 +36,7 @@ width="100%" alt="Nx - Smart, Fast and Extensible Build System"></a></p>
 
 # Engage with the Core Team and the Community
 
-- [Nx.Dev Community Page: Community Slack Channel, Newsletter, etc.](https://nx.dev/community)
+- [Nx.Dev Community Page: Community Discord Channel, Newsletter, etc.](https://nx.dev/community)
 - [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a
   regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
 - [Follow Nx on Twitter](https://twitter.com/NxDevTools)
