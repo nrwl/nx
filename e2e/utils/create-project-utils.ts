@@ -31,6 +31,7 @@ import {
 import { output } from '@nx/devkit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 let projName: string;
 
@@ -106,6 +107,7 @@ export function newProject({
         encoding: 'utf-8',
       });
     }
+    resetWorkspaceContext();
     return projScope;
   } catch (e) {
     logError(`Failed to set up project for e2e tests.`, e.message);
