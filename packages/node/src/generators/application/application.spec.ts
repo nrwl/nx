@@ -26,6 +26,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         bundler: 'webpack',
+        projectNameAndRootFormat: 'as-provided',
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
       expect(project.root).toEqual('my-node-app');
@@ -83,6 +84,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
         tags: 'one,two',
+        projectNameAndRootFormat: 'as-provided',
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -95,6 +97,7 @@ describe('app', () => {
     it('should generate files', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
+        projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists(`my-node-app/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('my-node-app/src/main.ts')).toBeTruthy();
@@ -170,6 +173,7 @@ describe('app', () => {
 
       await applicationGenerator(tree, {
         name: 'myNodeApp',
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
@@ -181,9 +185,10 @@ describe('app', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
         name: 'myNodeApp',
-        directory: 'myDir',
+        directory: 'my-dir/my-node-app',
+        projectNameAndRootFormat: 'as-provided',
       });
-      const project = readProjectConfiguration(tree, 'my-dir-my-node-app');
+      const project = readProjectConfiguration(tree, 'my-node-app');
 
       expect(project.root).toEqual('my-dir/my-node-app');
 
@@ -196,7 +201,7 @@ describe('app', () => {
       });
 
       expect(() =>
-        readProjectConfiguration(tree, 'my-dir-my-node-app-e2e')
+        readProjectConfiguration(tree, 'my-node-app-e2e')
       ).not.toThrow();
     });
 
