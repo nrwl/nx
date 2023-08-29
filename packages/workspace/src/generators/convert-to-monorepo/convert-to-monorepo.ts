@@ -35,7 +35,9 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
     await moveGenerator(tree, {
       projectName: project.name,
       newProjectName:
-        project.projectType === 'application' ? project.name : project.root,
+        project.projectType === 'application' || project.root === '.'
+          ? project.name
+          : project.root,
       destination:
         project.projectType === 'application'
           ? joinPathFragments(appsDir, project.name)
