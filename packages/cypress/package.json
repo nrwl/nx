@@ -43,7 +43,7 @@
     "@nx/linter": "file:../linter"
   },
   "peerDependencies": {
-    "cypress": ">= 3 < 13"
+    "cypress": ">= 3 < 14"
   },
   "peerDependenciesMeta": {
     "cypress": {
