@@ -29,9 +29,16 @@ import {
 import { Schema } from './schema';
 
 export async function moveGenerator(tree: Tree, rawSchema: Schema) {
+  await moveGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...rawSchema,
+  });
+}
+
+export async function moveGeneratorInternal(tree: Tree, rawSchema: Schema) {
   let projectConfig = readProjectConfiguration(tree, rawSchema.projectName);
-  checkDestination(tree, rawSchema, projectConfig);
-  const schema = normalizeSchema(tree, rawSchema, projectConfig);
+  const schema = await normalizeSchema(tree, rawSchema, projectConfig);
+  checkDestination(tree, schema, rawSchema.destination);
 
   if (projectConfig.root === '.') {
     maybeExtractTsConfigBase(tree);

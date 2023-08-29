@@ -53,7 +53,7 @@ describe('updateImports', () => {
 
     updateImports(
       tree,
-      normalizeSchema(tree, schema, projectConfig),
+      await normalizeSchema(tree, schema, projectConfig),
       projectConfig
     );
 
@@ -263,7 +263,7 @@ export MyExtendedClass extends MyClass {};`
 
     updateImports(
       tree,
-      normalizeSchema(
+      await normalizeSchema(
         tree,
         {
           ...schema,
@@ -287,7 +287,7 @@ export MyExtendedClass extends MyClass {};`
 
     updateImports(
       tree,
-      normalizeSchema(tree, schema, projectConfig),
+      await normalizeSchema(tree, schema, projectConfig),
       projectConfig
     );
 
@@ -314,7 +314,7 @@ export MyExtendedClass extends MyClass {};`
 
     updateImports(
       tree,
-      normalizeSchema(tree, schema, projectConfig),
+      await normalizeSchema(tree, schema, projectConfig),
       projectConfig
     );
 
@@ -337,7 +337,7 @@ export MyExtendedClass extends MyClass {};`
 
     updateImports(
       tree,
-      normalizeSchema(tree, schema, projectConfig),
+      await normalizeSchema(tree, schema, projectConfig),
       projectConfig
     );
 
@@ -356,7 +356,7 @@ export MyExtendedClass extends MyClass {};`
 
     updateImports(
       tree,
-      normalizeSchema(tree, schema, projectConfig),
+      await normalizeSchema(tree, schema, projectConfig),
       projectConfig
     );
 
@@ -379,7 +379,7 @@ export MyExtendedClass extends MyClass {};`
 
     updateImports(
       tree,
-      normalizeSchema(tree, schema, projectConfig),
+      await normalizeSchema(tree, schema, projectConfig),
       projectConfig
     );
 
@@ -397,7 +397,7 @@ export MyExtendedClass extends MyClass {};`
 
     updateImports(
       tree,
-      normalizeSchema(
+      await normalizeSchema(
         tree,
         {
           ...schema,

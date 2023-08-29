@@ -19,6 +19,13 @@
       "x-dropdown": "projects",
       "x-priority": "important"
     },
+    "newProjectName": {
+      "type": "string",
+      "alias": "project",
+      "description": "The new name of the project after the move.",
+      "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
+      "x-priority": "important"
+    },
     "destination": {
       "type": "string",
       "description": "The folder to move the Angular project into.",
@@ -27,6 +34,11 @@
         "index": 0
       },
       "x-priority": "important"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the new project name and destination as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "importPath": {
       "type": "string",

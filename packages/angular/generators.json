@@ -231,7 +231,7 @@
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
-      "factory": "./src/generators/move/move#angularMoveGenerator",
+      "factory": "./src/generators/move/move#angularMoveGeneratorInternal",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",

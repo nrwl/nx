@@ -19,10 +19,6 @@ export function getDestination(
   schema: Schema,
   project: ProjectConfiguration
 ): string {
-  if (schema.destinationRelativeToRoot) {
-    return schema.destination;
-  }
-
   const projectType = project.projectType;
 
   const workspaceLayout = getWorkspaceLayout(host);

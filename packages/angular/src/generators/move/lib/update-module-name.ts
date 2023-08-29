@@ -21,7 +21,11 @@ export function updateModuleName(
   tree: Tree,
   { oldProjectName, newProjectName }: MoveImplOptions
 ): void {
-  if (oldProjectName === newProjectName) {
+  const unscopedNewProjectName = newProjectName.startsWith('@')
+    ? newProjectName.split('/')[1]
+    : newProjectName;
+
+  if (oldProjectName === unscopedNewProjectName) {
     return;
   }
 
@@ -35,14 +39,14 @@ export function updateModuleName(
 
   const moduleName = {
     from: `${names(oldProjectName).className}Module`,
-    to: `${names(newProjectName).className}Module`,
+    to: `${names(unscopedNewProjectName).className}Module`,
   };
 
   const findModuleName = new RegExp(`\\b${moduleName.from}`, 'g');
 
   const moduleFile = {
     from: `${oldProjectName}.module`,
-    to: `${newProjectName}.module`,
+    to: `${unscopedNewProjectName}.module`,
   };
 
   const findFileName = new RegExp(`\\b${moduleFile.from}`, 'g');
