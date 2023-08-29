@@ -35,7 +35,7 @@ export function Footer(): JSX.Element {
       },
       {
         name: 'Discord',
-        href: 'http://go.nx.dev/community',
+        href: 'https://go.nx.dev/community',
       },
       {
         name: 'Help Us',
@@ -89,7 +89,7 @@ export function Footer(): JSX.Element {
       {
         name: 'Discord',
         label: 'Community channel',
-        href: 'http://go.nx.dev/community',
+        href: 'https://go.nx.dev/community',
         icon: (props: any) => (
           <svg
             fill="currentColor"

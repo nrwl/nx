@@ -49,7 +49,7 @@ export function ConnectWithUs(): JSX.Element {
               </div>
               <h4 className="mb-2 text-lg font-bold">Join us on Discord</h4>
               <a
-                href="http://go.nx.dev/community"
+                href="https://go.nx.dev/community"
                 rel="noreferrer"
                 target="_blank"
                 title="Nx Official Discord Server"

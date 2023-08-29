@@ -146,7 +146,7 @@ You can check out the following examples (recipes) to see publishing strategies 
 In this guide, we have given a direction towards the most efficient way to use Storybook in a Nx workspace, in a way that takes advantage of the all that Nx has to offer.
 We have covered the different ways to set up Storybook, and publish it, too. We have also covered the different use cases that apply to each of the solutions.
 
-If you have any questions or suggestions, please feel free to reach out to us on [GitHub](https://github.com/nrwl/nx), and don't hesitate to ask your questions or share your stories in the [Official Nx Discord Server](http://go.nx.dev/community).
+If you have any questions or suggestions, please feel free to reach out to us on [GitHub](https://github.com/nrwl/nx), and don't hesitate to ask your questions or share your stories in the [Official Nx Discord Server](https://go.nx.dev/community).
 
 ### Nx & Storybook documentation
 
