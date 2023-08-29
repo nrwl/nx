@@ -16,6 +16,7 @@ import {
   getSelectedPackageManager,
   runCommand,
 } from '@nx/e2e/utils';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 let proj: string;
 
@@ -23,7 +24,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
     proj = newProject();
   });
-
+  afterEach(() => resetWorkspaceContext());
   afterEach(() => cleanupProject());
 
   it('should convert a standalone project to a monorepo', async () => {
@@ -49,7 +50,7 @@ describe('Workspace Tests', () => {
   beforeAll(() => {
     proj = newProject();
   });
-
+  afterEach(() => resetWorkspaceContext());
   afterAll(() => cleanupProject());
 
   describe('@nx/workspace:npm-package', () => {

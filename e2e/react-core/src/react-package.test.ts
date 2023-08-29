@@ -17,6 +17,7 @@ import {
   updateProjectConfig,
 } from '@nx/e2e/utils';
 import { names } from '@nx/devkit';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Build React libraries and apps', () => {
   /**
@@ -36,6 +37,7 @@ describe('Build React libraries and apps', () => {
 
   let proj: string;
 
+  afterEach(() => resetWorkspaceContext());
   beforeEach(async () => {
     app = uniq('app');
     parentLib = uniq('parentlib');

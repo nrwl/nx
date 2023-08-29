@@ -7,11 +7,14 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 import { checkApp } from './utils';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('Next.js App Router', () => {
   let proj: string;
 
   beforeAll(() => (proj = newProject()));
+
+  afterEach(() => resetWorkspaceContext());
 
   afterAll(() => cleanupProject());
 

@@ -17,12 +17,12 @@ import {
   updateProjectConfig,
   waitUntil,
 } from '@nx/e2e/utils';
+import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 
 describe('EsBuild Plugin', () => {
   let proj: string;
 
   beforeEach(() => (proj = newProject()));
-
   afterEach(() => cleanupProject());
 
   it('should setup and build projects using build', async () => {
