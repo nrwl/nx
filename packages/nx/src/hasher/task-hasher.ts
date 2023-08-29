@@ -14,7 +14,7 @@ import { hashTsConfig } from '../plugins/js/hasher/hasher';
 import { DaemonClient } from '../daemon/client/client';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { findMatchingProjects } from '../utils/find-matching-projects';
-import { FileHasher, hashArray } from './file-hasher';
+import { FileHasher, hashArray, hashObject } from './file-hasher';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import { getHashEnv } from './set-hash-env';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -539,7 +539,7 @@ class TaskHasherImpl {
         if (this.allExternalDependenciesHash) {
           return this.allExternalDependenciesHash;
         } else {
-          hash = hashArray([JSON.stringify(this.projectGraph.externalNodes)]);
+          hash = hashObject(this.projectGraph.externalNodes);
           this.allExternalDependenciesHash = {
             value: hash,
             details: {

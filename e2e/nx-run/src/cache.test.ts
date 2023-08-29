@@ -68,12 +68,7 @@ describe('cache', () => {
       'read the output from the cache'
     );
 
-    if (process.platform != 'linux') {
-      // TODO(vsavkin): This should be always be matched output once you fix output watching on linux
-      expectMatchedOutput(outputWithBuildApp2Cached, [myapp2]);
-    } else {
-      expectCached(outputWithBuildApp2Cached, [myapp2]);
-    }
+    expectCached(outputWithBuildApp2Cached, [myapp2]);
 
     // touch package.json
     // --------------------------------------------
