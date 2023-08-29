@@ -2815,6 +2815,16 @@
             "tags": ["repository-types"]
           },
           {
+            "id": "standalone-to-integrated",
+            "name": "Convert from a Standalone Repository to an Integrated Repository",
+            "description": "",
+            "file": "shared/recipes/repo-types/standalone-to-integrated",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+            "tags": ["repository-types"]
+          },
+          {
             "id": "eslint",
             "name": "Configuring ESLint with Typescript",
             "description": "",
@@ -2923,16 +2933,6 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/workspace-watching",
             "tags": ["workspace-watching"]
-          },
-          {
-            "id": "standalone-to-integrated",
-            "name": "Convert from a Standalone Repository to an Integrated Repository",
-            "description": "",
-            "file": "shared/recipes/repo-types/standalone-to-integrated",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-            "tags": ["repository-types"]
           },
           {
             "id": "js-and-ts",
@@ -4568,6 +4568,16 @@
         "tags": ["repository-types"]
       },
       {
+        "id": "standalone-to-integrated",
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "description": "",
+        "file": "shared/recipes/repo-types/standalone-to-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+        "tags": ["repository-types"]
+      },
+      {
         "id": "eslint",
         "name": "Configuring ESLint with Typescript",
         "description": "",
@@ -4678,16 +4688,6 @@
         "tags": ["workspace-watching"]
       },
       {
-        "id": "standalone-to-integrated",
-        "name": "Convert from a Standalone Repository to an Integrated Repository",
-        "description": "",
-        "file": "shared/recipes/repo-types/standalone-to-integrated",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-        "tags": ["repository-types"]
-      },
-      {
         "id": "js-and-ts",
         "name": "Use JavaScript instead TypeScript",
         "description": "",
@@ -4760,6 +4760,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/integrated-in-package-based",
+    "tags": ["repository-types"]
+  },
+  "/recipes/tips-n-tricks/standalone-to-integrated": {
+    "id": "standalone-to-integrated",
+    "name": "Convert from a Standalone Repository to an Integrated Repository",
+    "description": "",
+    "file": "shared/recipes/repo-types/standalone-to-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/standalone-to-integrated",
     "tags": ["repository-types"]
   },
   "/recipes/tips-n-tricks/eslint": {
@@ -4871,16 +4881,6 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/workspace-watching",
     "tags": ["workspace-watching"]
-  },
-  "/recipes/tips-n-tricks/standalone-to-integrated": {
-    "id": "standalone-to-integrated",
-    "name": "Convert from a Standalone Repository to an Integrated Repository",
-    "description": "",
-    "file": "shared/recipes/repo-types/standalone-to-integrated",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-    "tags": ["repository-types"]
   },
   "/recipes/tips-n-tricks/js-and-ts": {
     "id": "js-and-ts",
