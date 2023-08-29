@@ -51,7 +51,7 @@ export function mergeProjectConfigurationIntoRootMap(
     );
   }
 
-  if (project.implicitDependencies && matchingProject.tags) {
+  if (project.implicitDependencies && matchingProject.implicitDependencies) {
     updatedProjectConfiguration.implicitDependencies =
       matchingProject.implicitDependencies.concat(project.implicitDependencies);
   }
