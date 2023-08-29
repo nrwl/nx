@@ -23,13 +23,13 @@ if (swcJestConfig.swcrc === undefined) {
 
 module.exports = {
   displayName: 'my-lib',
-  preset: '../../jest.preset.js',
+  preset: '../jest.preset.js',
   transform: {
     '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   testEnvironment: 'jsdom',
-  coverageDirectory: '../../coverage/libs/my-lib',
+  coverageDirectory: '../coverage/my-lib',
 };
 "
 `;
