@@ -1,9 +1,4 @@
-import {
-  addDependenciesToPackageJson,
-  readJson,
-  NxJsonConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { addDependenciesToPackageJson, readJson, Tree } from '@nx/devkit';
 import { expressVersion } from '../../utils/versions';
 import initGenerator from './init';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -12,7 +7,7 @@ describe('init', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should add dependencies', async () => {

@@ -12,7 +12,7 @@ import { exampleRootTslintJson } from '@nx/linter';
 import { conversionGenerator } from './convert-tslint-to-eslint';
 
 const appProjectName = 'nest-app-1';
-const appProjectRoot = `apps/${appProjectName}`;
+const appProjectRoot = `${appProjectName}`;
 const appProjectTSLintJsonPath = joinPathFragments(
   appProjectRoot,
   'tslint.json'
@@ -98,7 +98,7 @@ describe('convert-tslint-to-eslint', () => {
 
   beforeEach(async () => {
     jest.spyOn(devkit, 'installPackagesTask');
-    host = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    host = createTreeWithEmptyWorkspace();
 
     writeJson(host, 'tslint.json', exampleRootTslintJson.raw);
 
@@ -114,8 +114,8 @@ describe('convert-tslint-to-eslint', () => {
         lint: {
           executor: '@angular-devkit/build-angular:tslint',
           options: {
-            exclude: ['**/node_modules/**', '!apps/nest-app-1/**/*'],
-            tsConfig: ['apps/nest-app-1/tsconfig.app.json'],
+            exclude: ['**/node_modules/**', '!nest-app-1/**/*'],
+            tsConfig: ['nest-app-1/tsconfig.app.json'],
           },
         },
       },
@@ -143,7 +143,7 @@ describe('convert-tslint-to-eslint', () => {
     /**
      * Existing tslint.json file for the app project
      */
-    writeJson(host, 'apps/nest-app-1/tslint.json', projectTslintJsonData.raw);
+    writeJson(host, 'nest-app-1/tslint.json', projectTslintJsonData.raw);
     /**
      * Existing tslint.json file for the lib project
      */

@@ -12,7 +12,7 @@ describe('init generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     jest.clearAllMocks();
   });
 

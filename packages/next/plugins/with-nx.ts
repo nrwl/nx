@@ -8,6 +8,36 @@ import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
 
+const baseNXEnvironmentVariables = [
+  'NX_BASE',
+  'NX_CACHE_DIRECTORY',
+  'NX_CACHE_PROJECT_GRAPH',
+  'NX_DAEMON',
+  'NX_DEFAULT_PROJECT',
+  'NX_HEAD',
+  'NX_PERF_LOGGING',
+  'NX_PROFILE',
+  'NX_PROJECT_GRAPH_CACHE_DIRECTORY',
+  'NX_PROJECT_GRAPH_MAX_WORKERS',
+  'NX_RUNNER',
+  'NX_SKIP_NX_CACHE',
+  'NX_TASKS_RUNNER',
+  'NX_TASKS_RUNNER_DYNAMIC_OUTPUT',
+  'NX_VERBOSE_LOGGING',
+  'NX_DRY_RUN',
+  'NX_INTERACTIVE',
+  'NX_GENERATE_QUIET',
+  'NX_PREFER_TS_NODE',
+  'NX_TASK_TARGET_PROJECT',
+  'NX_TASK_TARGET_TARGET',
+  'NX_TASK_TARGET_CONFIGURATION',
+  'NX_CLI_SET',
+  'NX_LOAD_DOT_ENV_FILES',
+  'NX_WORKSPACE_ROOT',
+  'NX_TASK_HASH',
+  'NX_NEXT_DIR',
+];
+
 export interface WithNxOptions extends NextConfig {
   nx?: {
     svgr?: boolean;
@@ -364,6 +394,12 @@ export function getNextConfig(
   };
 }
 
+function getNonBaseVariables(oldEnv) {
+  return Object.keys(oldEnv).filter(
+    (env) => !baseNXEnvironmentVariables.includes(env)
+  );
+}
+
 function getNxEnvironmentVariables() {
   return Object.keys(process.env)
     .filter((env) => /^NX_/i.test(env))
@@ -372,7 +408,10 @@ function getNxEnvironmentVariables() {
       return env;
     }, {});
 }
-
+/**
+ * TODO(v18)
+ * @deprecated Use Next.js 9.4+ built-in support for environment variables. Reference https://nextjs.org/docs/pages/api-reference/next-config-js/env
+ */
 function addNxEnvVariables(config: any) {
   const maybeDefinePlugin = config.plugins?.find((plugin) => {
     return plugin.definitions?.['process.env.NODE_ENV'];
@@ -387,6 +426,15 @@ function addNxEnvVariables(config: any) {
       .forEach(
         ([name, value]) => (maybeDefinePlugin.definitions[name] = value)
       );
+
+    const vars = getNonBaseVariables(env);
+    if (vars.length > 0) {
+      console.warn(
+        `Warning, in Nx 18 environment variables starting with NX_ will not be available in the browser, and currently will not work with @nx/next:server executor.\nPlease rename the following environment variables: ${vars.join(
+          ', '
+        )} using Next.js' built-in support for environment variables. Reference https://nextjs.org/docs/pages/api-reference/next-config-js/env`
+      );
+    }
   }
 }
 
