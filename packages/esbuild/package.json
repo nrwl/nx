@@ -38,7 +38,7 @@
     "@nx/js": "file:../js"
   },
   "peerDependencies": {
-    "esbuild": "~0.17.5"
+    "esbuild": "~0.19.2"
   },
   "peerDependenciesMeta": {
     "esbuild": {
