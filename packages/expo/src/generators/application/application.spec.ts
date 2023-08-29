@@ -12,7 +12,7 @@ describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
   });
 
@@ -25,10 +25,11 @@ describe('app', () => {
       skipFormat: false,
       js: false,
       unitTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
     const projects = getProjects(appTree);
 
-    expect(projects.get('my-app').root).toEqual('apps/my-app');
+    expect(projects.get('my-app').root).toEqual('my-app');
   });
 
   it('should update nx.json', async () => {
@@ -41,6 +42,7 @@ describe('app', () => {
       skipFormat: false,
       js: false,
       unitTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     const projectConfiguration = readProjectConfiguration(appTree, 'my-app');
@@ -58,14 +60,15 @@ describe('app', () => {
       skipFormat: false,
       js: false,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     });
-    expect(appTree.exists('apps/my-app/src/app/App.tsx')).toBeTruthy();
-    expect(appTree.exists('apps/my-app/src/app/App.spec.tsx')).toBeTruthy();
+    expect(appTree.exists('my-app/src/app/App.tsx')).toBeTruthy();
+    expect(appTree.exists('my-app/src/app/App.spec.tsx')).toBeTruthy();
 
-    const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
-    expect(tsconfig.extends).toEqual('../../tsconfig.base.json');
+    const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
+    expect(tsconfig.extends).toEqual('../tsconfig.base.json');
 
-    expect(appTree.exists('apps/my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
   });
 
   it('should generate js files', async () => {
@@ -77,14 +80,15 @@ describe('app', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     });
-    expect(appTree.exists('apps/my-app/src/app/App.js')).toBeTruthy();
-    expect(appTree.exists('apps/my-app/src/app/App.spec.js')).toBeTruthy();
+    expect(appTree.exists('my-app/src/app/App.js')).toBeTruthy();
+    expect(appTree.exists('my-app/src/app/App.spec.js')).toBeTruthy();
 
-    const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
-    expect(tsconfig.extends).toEqual('../../tsconfig.base.json');
+    const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
+    expect(tsconfig.extends).toEqual('../tsconfig.base.json');
 
-    expect(appTree.exists('apps/my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
   });
 
   describe('detox', () => {
@@ -97,18 +101,12 @@ describe('app', () => {
         js: false,
         skipFormat: false,
         unitTestRunner: 'none',
+        projectNameAndRootFormat: 'as-provided',
       });
 
-      const projects = getProjects(appTree);
-      expect(projects.get('my-dir-my-app').root).toEqual('apps/my-dir/my-app');
+      expect(appTree.exists('my-dir-e2e/.detoxrc.json')).toBeTruthy();
+      const detoxrc = appTree.read('my-dir-e2e/.detoxrc.json', 'utf-8');
 
-      expect(
-        appTree.exists('apps/my-dir/my-app-e2e/.detoxrc.json')
-      ).toBeTruthy();
-      const detoxrc = appTree.read(
-        'apps/my-dir/my-app-e2e/.detoxrc.json',
-        'utf-8'
-      );
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
         detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
@@ -116,42 +114,42 @@ describe('app', () => {
       expect(detoxrcJson.apps).toEqual({
         'android.debug': {
           binaryPath:
-            '../../../apps/my-dir/my-app/android/app/build/outputs/apk/debug/app-debug.apk',
+            '../my-dir/android/app/build/outputs/apk/debug/app-debug.apk',
           build:
-            'cd ../../../apps/my-dir/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
+            'cd ../my-dir/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
         'android.local': {
-          binaryPath: '../../../apps/my-dir/my-app/dist/MyApp.apk',
+          binaryPath: '../my-dir/dist/MyApp.apk',
           build:
-            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../../../apps/my-dir/my-app/dist/MyApp.apk',
+            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-dir/dist/MyApp.apk',
           type: 'android.apk',
         },
         'android.release': {
           binaryPath:
-            '../../../apps/my-dir/my-app/android/app/build/outputs/apk/release/app-release.apk',
+            '../my-dir/android/app/build/outputs/apk/release/app-release.apk',
           build:
-            'cd ../../../apps/my-dir/my-app/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
+            'cd ../my-dir/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
           type: 'android.apk',
         },
         'ios.debug': {
           binaryPath:
-            '../../../apps/my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
+            '../my-dir/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.local': {
-          binaryPath: '../../../apps/my-dir/my-app/dist/MyApp.app',
+          binaryPath: '../my-dir/dist/MyApp.app',
           build:
-            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../../../apps/my-dir/my-app/dist/MyApp.tar.gz',
+            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-dir/dist/MyApp.tar.gz',
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
-            '../../../apps/my-dir/my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
+            '../my-dir/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -165,13 +163,11 @@ describe('app', () => {
         js: false,
         skipFormat: false,
         unitTestRunner: 'none',
+        projectNameAndRootFormat: 'as-provided',
       });
 
-      const projects = getProjects(appTree);
-      expect(projects.get('my-app').root).toEqual('apps/my-app');
-
-      expect(appTree.exists('apps/my-app-e2e/.detoxrc.json')).toBeTruthy();
-      const detoxrc = appTree.read('apps/my-app-e2e/.detoxrc.json', 'utf-8');
+      expect(appTree.exists('my-app-e2e/.detoxrc.json')).toBeTruthy();
+      const detoxrc = appTree.read('my-app-e2e/.detoxrc.json', 'utf-8');
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
         detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
@@ -179,42 +175,42 @@ describe('app', () => {
       expect(detoxrcJson.apps).toEqual({
         'android.debug': {
           binaryPath:
-            '../../apps/my-app/android/app/build/outputs/apk/debug/app-debug.apk',
+            '../my-app/android/app/build/outputs/apk/debug/app-debug.apk',
           build:
-            'cd ../../apps/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
+            'cd ../my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
         'android.local': {
-          binaryPath: '../../apps/my-app/dist/MyApp.apk',
+          binaryPath: '../my-app/dist/MyApp.apk',
           build:
-            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../../apps/my-app/dist/MyApp.apk',
+            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-app/dist/MyApp.apk',
           type: 'android.apk',
         },
         'android.release': {
           binaryPath:
-            '../../apps/my-app/android/app/build/outputs/apk/release/app-release.apk',
+            '../my-app/android/app/build/outputs/apk/release/app-release.apk',
           build:
-            'cd ../../apps/my-app/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
+            'cd ../my-app/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
           type: 'android.apk',
         },
         'ios.debug': {
           binaryPath:
-            '../../apps/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
+            '../my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.local': {
-          binaryPath: '../../apps/my-app/dist/MyApp.app',
+          binaryPath: '../my-app/dist/MyApp.app',
           build:
-            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../../apps/my-app/dist/MyApp.tar.gz',
+            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-app/dist/MyApp.tar.gz',
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
-            '../../apps/my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
+            '../my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -232,10 +228,10 @@ describe('app', () => {
       });
 
       const projects = getProjects(appTree);
-      expect(projects.get('my-app').root).toEqual('apps/my-app');
+      expect(projects.get('my-app').root).toEqual('my-app');
 
-      expect(appTree.exists('apps/my-app-e2e/.detoxrc.json')).toBeTruthy();
-      const detoxrc = appTree.read('apps/my-app-e2e/.detoxrc.json', 'utf-8');
+      expect(appTree.exists('my-app-e2e/.detoxrc.json')).toBeTruthy();
+      const detoxrc = appTree.read('my-app-e2e/.detoxrc.json', 'utf-8');
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
         detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
@@ -243,42 +239,42 @@ describe('app', () => {
       expect(detoxrcJson.apps).toEqual({
         'android.debug': {
           binaryPath:
-            '../../apps/my-app/android/app/build/outputs/apk/debug/app-debug.apk',
+            '../my-app/android/app/build/outputs/apk/debug/app-debug.apk',
           build:
-            'cd ../../apps/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
+            'cd ../my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
         'android.local': {
-          binaryPath: '../../apps/my-app/dist/myappname.apk',
+          binaryPath: '../my-app/dist/myappname.apk',
           build:
-            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../../apps/my-app/dist/myappname.apk',
+            'npx nx run my-app:build --platform android --profile preview --wait --local --no-interactive --output=../my-app/dist/myappname.apk',
           type: 'android.apk',
         },
         'android.release': {
           binaryPath:
-            '../../apps/my-app/android/app/build/outputs/apk/release/app-release.apk',
+            '../my-app/android/app/build/outputs/apk/release/app-release.apk',
           build:
-            'cd ../../apps/my-app/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
+            'cd ../my-app/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
           type: 'android.apk',
         },
         'ios.debug': {
           binaryPath:
-            '../../apps/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
+            '../my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.local': {
-          binaryPath: '../../apps/my-app/dist/myappname.app',
+          binaryPath: '../my-app/dist/myappname.app',
           build:
-            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../../apps/my-app/dist/myappname.tar.gz',
+            'npx nx run my-app:build --platform ios --profile preview --wait --local --no-interactive --output=../my-app/dist/myappname.tar.gz',
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
-            '../../apps/my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
+            '../my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
