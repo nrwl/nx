@@ -51,7 +51,7 @@ import { AppServerModule } from './bootstrap.server';
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const browserBundles = join(process.cwd(), 'dist/apps/test/browser');
+  const browserBundles = join(process.cwd(), 'dist/test/browser');
 
   server.use(cors());
   const indexHtml = existsSync(join(browserBundles, 'index.original.html'))
@@ -223,7 +223,7 @@ import bootstrap from './bootstrap.server';
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const browserBundles = join(process.cwd(), 'dist/apps/test/browser');
+  const browserBundles = join(process.cwd(), 'dist/test/browser');
 
   server.use(cors());
   const indexHtml = existsSync(join(browserBundles, 'index.original.html'))

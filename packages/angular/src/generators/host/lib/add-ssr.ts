@@ -35,8 +35,14 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     "import('./src/main.server');"
   );
 
+  const browserBundleOutput = joinPathFragments(
+    project.targets.build.options.outputPath,
+    'browser'
+  );
+
   generateFiles(tree, join(__dirname, '../files'), project.root, {
     appName,
+    browserBundleOutput,
     standalone: options.standalone,
     tmpl: '',
   });

@@ -12,7 +12,7 @@ import<% if(standalone) { %> bootstrap <% } else { %> { AppServerModule } <% } %
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const browserBundles = join(process.cwd(), 'dist/apps/<%= appName %>/browser');
+  const browserBundles = join(process.cwd(), '<%= browserBundleOutput %>');
 
   server.use(cors());
   const indexHtml = existsSync(join(browserBundles, 'index.original.html'))
