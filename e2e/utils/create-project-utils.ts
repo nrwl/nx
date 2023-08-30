@@ -47,7 +47,7 @@ export function newProject({
 
     if (!directoryExists(tmpBackupProjPath())) {
       runCreateWorkspace(projScope, {
-        preset: 'empty',
+        preset: 'apps',
         packageManager,
       });
 

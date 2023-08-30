@@ -19,7 +19,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Empty,
+      preset: Preset.Apps,
       defaultBase: 'main',
       isCustomPreset: false,
     });
@@ -80,7 +80,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Empty,
+      preset: Preset.Apps,
       defaultBase: 'main',
       isCustomPreset: false,
     });
@@ -88,10 +88,24 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     expect(nxJson).toMatchInlineSnapshot(`
       {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
+        "namedInputs": {
+          "default": [
+            "{projectRoot}/**/*",
+            "sharedGlobals",
+          ],
+          "production": [
+            "default",
+          ],
+          "sharedGlobals": [],
+        },
         "targetDefaults": {
           "build": {
             "dependsOn": [
               "^build",
+            ],
+            "inputs": [
+              "production",
+              "^production",
             ],
           },
         },
@@ -168,7 +182,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Empty,
+      preset: Preset.Apps,
       defaultBase: 'main',
       isCustomPreset: false,
     });
@@ -184,7 +198,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Empty,
+      preset: Preset.Apps,
       defaultBase: 'main',
       isCustomPreset: false,
     });
