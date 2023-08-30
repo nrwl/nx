@@ -1,8 +1,8 @@
 import { Action } from '@ngrx/store';
 
-import * as <%= className %>Actions from './<%= fileName %>.actions';
-import { <%= className %>Entity } from './<%= fileName %>.models';
-import { <%= className %>State, initial<%= className %>State, <%= propertyName %>Reducer } from './<%= fileName %>.reducer';
+import * as <%= className %>Actions from './<%= relativeFileName %>.actions';
+import { <%= className %>Entity } from './<%= relativeFileName %>.models';
+import { <%= className %>State, initial<%= className %>State, <%= propertyName %>Reducer } from './<%= relativeFileName %>.reducer';
 
 describe('<%= className %> Reducer', () => {
   const create<%= className %>Entity = (id: string, name = ''): <%= className %>Entity => ({
