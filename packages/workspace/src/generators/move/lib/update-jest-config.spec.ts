@@ -67,6 +67,41 @@ describe('updateJestConfig', () => {
     expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
 
+  it('should update the name and dir correctly when moving to a nested dir', async () => {
+    const jestConfig = `module.exports = {
+      name: 'my-source',
+      preset: '../../jest.config.ts',
+      coverageDirectory: '../coverage/my-source',
+      snapshotSerializers: [
+        'jest-preset-angular/AngularSnapshotSerializer.js',
+        'jest-preset-angular/HTMLCommentSerializer.js'
+      ]
+    };`;
+    const jestConfigPath = 'my-source/data-access/jest.config.ts';
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+    tree.write(jestConfigPath, jestConfig);
+    const schema: NormalizedSchema = {
+      projectName: 'my-source',
+      destination: 'my-source/data-access',
+      importPath: '@proj/my-soource-data-access',
+      updateImportPath: true,
+      newProjectName: 'my-source-data-access',
+      relativeToRootDestination: 'my-source/data-access',
+    };
+
+    updateJestConfig(tree, schema, projectConfig);
+
+    const jestConfigAfter = tree.read(jestConfigPath, 'utf-8');
+    expect(jestConfigAfter).toContain(`name: 'my-source-data-access'`);
+    expect(jestConfigAfter).toContain(
+      `coverageDirectory: '../coverage/my-source/data-access'`
+    );
+  });
+
   it('should update jest configs properly even if project is in many layers of subfolders', async () => {
     const jestConfig = `module.exports = {
       name: 'some-test-dir-my-source',
