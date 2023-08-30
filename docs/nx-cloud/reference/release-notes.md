@@ -100,6 +100,40 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 ## Docker Containers
 
+### 2308.22.7
+
+In our last big release, we announced a completely new UI, rebuilt from the ground up in React. In this release, the frontend team
+has migrated completely to the [Remix](https://remix.run/) framework. This is the same technology that powers our public https://cloud.nx.app/
+product. It's faster, it handles resource caching better, and should allow the frontend team to ship features even faster.
+
+##### VCS proxy support
+
+- For the Github/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub to post comments
+- If are behind a proxy however, these requests might fail
+- If you are using our [Helm chart](https://github.com/nrwl/nx-cloud-helm/), you can now configure this option to unblock the vcs integration:
+  ```yaml
+  vcsHttpsProxy: '<your-proxy-address>'
+  ```
+
+##### Misc updates
+
+- UI enhancements of the run details screen
+- improved terminal output display on the web app
+- failed runs are now sorted at the top
+- various UI improvements to the task details screen
+- fixes for the DTE screen on the web app
+- performance improvements for big workspaces on the workspace insights screen
+- more structured NxAPI pod logs
+
+##### Bug fixes
+
+- Fixed an issue with applying licenses on orgs owned by non-installation admin accounts
+
+##### MongoDB migration
+
+In the last big release we announced [the deprecation of Mongo 4.2](https://nx.dev/nx-cloud/reference/release-notes#breaking-changes)
+While NxCloud still works with Mongo 4.2, we now strongly recommend an upgrade to Mongo 6. You will find instructions [here](https://nx.dev/nx-cloud/reference/release-notes#breaking-changes).
+
 ### 2306.01.2.patch4
 
 - Fixes an issue with new licenses expiring sooner than original end date
