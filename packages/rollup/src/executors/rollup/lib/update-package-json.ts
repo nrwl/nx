@@ -1,4 +1,4 @@
-import { basename, dirname, parse, relative } from 'path';
+import { basename, join, parse } from 'path';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
 import {
@@ -6,9 +6,10 @@ import {
   updateBuildableProjectPackageJsonDependencies,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { writeJsonFile } from 'nx/src/utils/fileutils';
+import { writeFileSync } from 'fs';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { NormalizedRollupExecutorOptions } from './normalize';
-import { normalizePath } from '@nx/devkit';
+import { stripIndents } from '@nx/devkit';
 
 // TODO(jack): Use updatePackageJson from @nx/js instead.
 export function updatePackageJson(
@@ -43,7 +44,10 @@ export function updatePackageJson(
     if (options.generateExportsField) {
       for (const [exportEntry, filePath] of Object.entries(esmExports)) {
         packageJson.exports[exportEntry] = hasCjsFormat
-          ? { import: filePath }
+          ? // If CJS format is used, make sure `import` (from Node) points to same instance of the package.
+            // Otherwise, packages that are required to be singletons (like React, RxJS, etc.) will break.
+            // Reserve `module` entry for bundlers to accommodate tree-shaking.
+            { [hasCjsFormat ? 'module' : 'import']: filePath }
           : filePath;
       }
     }
@@ -64,7 +68,35 @@ export function updatePackageJson(
     if (options.generateExportsField) {
       for (const [exportEntry, filePath] of Object.entries(cjsExports)) {
         if (hasEsmFormat) {
+          // If ESM format used, make sure `import` (from Node) points to a wrapped
+          // version of CJS file to ensure the package remains a singleton.
+          // TODO(jack): This can be made into a rollup plugin to re-use in Vite.
+          const relativeFile = parse(filePath).base;
+          const fauxEsmFilePath = filePath.replace(/\.cjs\.js$/, '.cjs.mjs');
+          packageJson.exports[exportEntry]['import'] ??= fauxEsmFilePath;
           packageJson.exports[exportEntry]['default'] ??= filePath;
+          // Re-export from relative CJS file, and Node will synthetically export it as ESM.
+          // Make sure both ESM and CJS point to same instance of the package because libs like React, RxJS, etc. requires it.
+          // Also need a special .cjs.default.js file that re-exports the `default` from CJS, or else
+          // default import in Node will not work.
+          writeFileSync(
+            join(
+              options.outputPath,
+              filePath.replace(/\.cjs\.js$/, '.cjs.default.js')
+            ),
+            `exports._default = require('./${parse(filePath).base}').default;`
+          );
+          writeFileSync(
+            join(options.outputPath, fauxEsmFilePath),
+            // Re-export from relative CJS file, and Node will synthetically export it as ESM.
+            stripIndents`
+            export * from './${relativeFile}';
+            export { _default as default } from './${relativeFile.replace(
+              /\.cjs\.js$/,
+              '.cjs.default.js'
+            )}';
+            `
+          );
         } else {
           packageJson.exports[exportEntry] = filePath;
         }

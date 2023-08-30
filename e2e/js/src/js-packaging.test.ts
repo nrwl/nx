@@ -35,10 +35,14 @@ describe('packaging libs', () => {
     runCLI(
       `generate @nx/js:lib ${rollupLib} --bundler=rollup --no-interactive`
     );
+    updateFile(`libs/${rollupLib}/src/index.ts`, (content) => {
+      // Test that default functions work in ESM (Node).
+      return `${content}\nexport default function f() { return 'rollup default' }`;
+    });
 
     runCLI(`build ${esbuildLib}`);
     runCLI(`build ${viteLib}`);
-    runCLI(`build ${rollupLib}`);
+    runCLI(`build ${rollupLib} --generateExportsField`);
 
     const pmc = getPackageManagerCommand();
     let output: string;
@@ -66,10 +70,11 @@ describe('packaging libs', () => {
       `
         const { ${esbuildLib} } = require('@proj/${esbuildLib}');
         const { ${viteLib} } = require('@proj/${viteLib}');
-        const { ${rollupLib} } = require('@proj/${rollupLib}');
+        const { default: rollupDefault, ${rollupLib} } = require('@proj/${rollupLib}');
         console.log(${esbuildLib}());
         console.log(${viteLib}());
         console.log(${rollupLib}());
+        console.log(rollupDefault());
       `
     );
     runCommand(pmc.install, {
@@ -81,6 +86,7 @@ describe('packaging libs', () => {
     expect(output).toContain(esbuildLib);
     expect(output).toContain(viteLib);
     expect(output).toContain(rollupLib);
+    expect(output).toContain('rollup default');
 
     // Make sure outputs in esm project
     createFile(
@@ -105,10 +111,11 @@ describe('packaging libs', () => {
       `
         import { ${esbuildLib} } from '@proj/${esbuildLib}';
         import { ${viteLib} } from '@proj/${viteLib}';
-        import { ${rollupLib} } from '@proj/${rollupLib}';
+        import rollupDefault, { ${rollupLib} } from '@proj/${rollupLib}';
         console.log(${esbuildLib}());
         console.log(${viteLib}());
         console.log(${rollupLib}());
+        console.log(rollupDefault());
       `
     );
     runCommand(pmc.install, {
@@ -120,6 +127,7 @@ describe('packaging libs', () => {
     expect(output).toContain(esbuildLib);
     expect(output).toContain(viteLib);
     expect(output).toContain(rollupLib);
+    expect(output).toContain('rollup default');
   }, 500_000);
 
   it('should build with tsc, swc and be used in CJS/ESM projects', async () => {
