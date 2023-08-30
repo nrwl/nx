@@ -7,6 +7,7 @@ import {
 import { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
 
 import {
+  detectPackageManager,
   ExecutorContext,
   getOutputsForTargetAndConfiguration,
   joinPathFragments,
@@ -100,10 +101,19 @@ export function updatePackageJson(
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 
   if (options.generateLockfile) {
-    const lockFile = createLockFile(packageJson);
-    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
-      encoding: 'utf-8',
-    });
+    const packageManager = detectPackageManager(context.root);
+    const lockFile = createLockFile(
+      packageJson,
+      context.projectGraph,
+      packageManager
+    );
+    writeFileSync(
+      `${options.outputPath}/${getLockFileName(packageManager)}`,
+      lockFile,
+      {
+        encoding: 'utf-8',
+      }
+    );
   }
 }
 

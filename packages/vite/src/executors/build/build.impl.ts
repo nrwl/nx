@@ -1,4 +1,5 @@
 import {
+  detectPackageManager,
   ExecutorContext,
   logger,
   stripIndents,
@@ -79,11 +80,20 @@ export async function* viteBuildExecutor(
     builtPackageJson.type = 'module';
 
     writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
+    const packageManager = detectPackageManager(context.root);
 
-    const lockFile = createLockFile(builtPackageJson);
-    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
-      encoding: 'utf-8',
-    });
+    const lockFile = createLockFile(
+      builtPackageJson,
+      context.projectGraph,
+      packageManager
+    );
+    writeFileSync(
+      `${options.outputPath}/${getLockFileName(packageManager)}`,
+      lockFile,
+      {
+        encoding: 'utf-8',
+      }
+    );
   }
   // For buildable libs, copy package.json if it exists.
   else if (
