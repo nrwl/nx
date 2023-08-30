@@ -103,14 +103,14 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 ### 2308.22.7
 
 In our last big release, we announced a completely new UI, rebuilt from the ground up in React. In this release, the frontend team
-has migrated completely to the [Remix](https://remix.run/) framework. This is the same technology that powers our public https://cloud.nx.app/
-product. It's faster, it handles resource caching better, and should allow the frontend team to ship features even faster.
+has continued that effort and wrapped the React app with the [Remix](https://remix.run/) framework. This is the same technology that powers our public https://cloud.nx.app/
+product. It's faster, it handles resource caching better, and should allow the frontend team to ship features quicker than ever before.
 
 ##### VCS proxy support
 
-- For the Github/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub to post comments
+- For the Github/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub/GitLab to post comments
 - If are behind a proxy however, these requests might fail
-- If you are using our [Helm chart](https://github.com/nrwl/nx-cloud-helm/), you can now configure this option to unblock the vcs integration:
+- If you are using our [Helm chart](https://github.com/nrwl/nx-cloud-helm/), you can now configure this option to unblock the vcs integration and allow it to work with your proxy:
   ```yaml
   vcsHttpsProxy: '<your-proxy-address>'
   ```
@@ -118,12 +118,11 @@ product. It's faster, it handles resource caching better, and should allow the f
 ##### Misc updates
 
 - UI enhancements of the run details screen
-- improved terminal output display on the web app
+- UI enhancements of the task details screen
+- fixes and better error handling for the DTE screen
 - failed runs are now sorted at the top
-- various UI improvements to the task details screen
-- fixes for the DTE screen on the web app
-- performance improvements for big workspaces on the workspace insights screen
-- more structured NxAPI pod logs
+- web app performance improvements for large workspaces 
+- more structured NxAPI pod logs (allows for better debugging)
 
 ##### Bug fixes
 
