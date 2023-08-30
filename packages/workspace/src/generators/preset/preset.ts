@@ -20,7 +20,7 @@ export async function presetGenerator(tree: Tree, options: Schema) {
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  if (options.preset === Preset.Empty || options.preset === Preset.Apps) {
+  if (options.preset === Preset.Apps) {
     return;
   } else if (options.preset === Preset.AngularMonorepo) {
     const {
