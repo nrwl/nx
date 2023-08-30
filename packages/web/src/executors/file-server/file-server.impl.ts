@@ -2,18 +2,16 @@ import { execFileSync, fork } from 'child_process';
 import * as chalk from 'chalk';
 import {
   ExecutorContext,
-  joinPathFragments,
   parseTargetString,
   readTargetOptions,
 } from '@nx/devkit';
-import ignore from 'ignore';
-import { copyFileSync, readFileSync, unlinkSync } from 'fs';
+import { copyFileSync, unlinkSync } from 'fs';
 import { Schema } from './schema';
-import { watch } from 'chokidar';
 import { platform } from 'os';
 import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import * as detectPort from 'detect-port';
+import { daemonClient } from 'nx/src/daemon/client/client';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -89,33 +87,26 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
   return outputPath;
 }
 
-function getIgnoredGlobs(root: string) {
-  const ig = ignore();
-  try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
-  return ig;
-}
-
 function createFileWatcher(
-  root: string,
-  projectRoot: string,
+  project: string | undefined,
   changeHandler: () => void
-): () => void {
-  const ignoredGlobs = getIgnoredGlobs(root);
-
-  const watcher = watch([joinPathFragments(projectRoot, '**')], {
-    cwd: root,
-    ignoreInitial: true,
-  });
-  watcher.on('all', (_event: string, path: string) => {
-    if (ignoredGlobs.ignores(path)) return;
-    changeHandler();
-  });
-  return () => watcher.close();
+) {
+  return daemonClient.registerFileWatcher(
+    {
+      watchProjects: project ? [project] : 'all',
+      includeGlobalWorkspaceFiles: true,
+      includeDependentProjects: true,
+    },
+    async (error, { changedFiles }) => {
+      if (error === 'closed') {
+        throw new Error('Watch error: Daemon closed the connection');
+      } else if (error) {
+        throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
+      } else if (changedFiles.length > 0) {
+        changeHandler();
+      }
+    }
+  );
 }
 
 export default async function* fileServerExecutor(
@@ -146,7 +137,7 @@ export default async function* fileServerExecutor(
   if (options.watch) {
     const projectRoot =
       context.projectsConfigurations.projects[context.projectName].root;
-    disposeWatch = createFileWatcher(context.root, projectRoot, run);
+    disposeWatch = await createFileWatcher(context.projectName, run);
   }
 
   // perform initial run
