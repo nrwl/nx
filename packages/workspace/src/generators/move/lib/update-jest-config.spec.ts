@@ -16,6 +16,7 @@ describe('updateJestConfig', () => {
   it('should handle jest config not existing', async () => {
     await libraryGenerator(tree, {
       name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     const schema: NormalizedSchema = {
@@ -24,7 +25,7 @@ describe('updateJestConfig', () => {
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
-      relativeToRootDestination: 'libs/my-destination',
+      relativeToRootDestination: 'my-destination',
     };
 
     expect(() => updateJestConfig(tree, schema, projectConfig)).not.toThrow();
@@ -34,16 +35,17 @@ describe('updateJestConfig', () => {
     const jestConfig = `module.exports = {
       name: 'my-source',
       preset: '../../jest.config.ts',
-      coverageDirectory: '../../coverage/libs/my-source',
+      coverageDirectory: '../coverage/my-source',
       snapshotSerializers: [
         'jest-preset-angular/AngularSnapshotSerializer.js',
         'jest-preset-angular/HTMLCommentSerializer.js'
       ]
     };`;
-    const jestConfigPath = '/libs/my-destination/jest.config.ts';
+    const jestConfigPath = 'my-destination/jest.config.ts';
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
       name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(jestConfigPath, jestConfig);
@@ -53,7 +55,7 @@ describe('updateJestConfig', () => {
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
-      relativeToRootDestination: 'libs/my-destination',
+      relativeToRootDestination: 'my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
@@ -62,7 +64,7 @@ describe('updateJestConfig', () => {
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(jestConfigAfter).toContain(`name: 'my-destination'`);
     expect(jestConfigAfter).toContain(
-      `coverageDirectory: '../../coverage/libs/my-destination'`
+      `coverageDirectory: '../coverage/my-destination'`
     );
     expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
@@ -105,17 +107,19 @@ describe('updateJestConfig', () => {
   it('should update jest configs properly even if project is in many layers of subfolders', async () => {
     const jestConfig = `module.exports = {
       name: 'some-test-dir-my-source',
-      preset: '../../jest.config.ts',
-      coverageDirectory: '../../coverage/libs/some/test/dir/my-source',
+      preset: '../jest.config.ts',
+      coverageDirectory: '../coverage/some/test/dir/my-source',
       snapshotSerializers: [
         'jest-preset-angular/AngularSnapshotSerializer.js',
         'jest-preset-angular/HTMLCommentSerializer.js'
       ]
     };`;
-    const jestConfigPath = '/libs/other/test/dir/my-destination/jest.config.ts';
+    const jestConfigPath = 'other/test/dir/my-destination/jest.config.ts';
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
-      name: 'some/test/dir/my-source',
+      name: 'some-test-dir-my-source',
+      directory: 'some/test/dir/my-source',
+      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(
       tree,
@@ -128,7 +132,7 @@ describe('updateJestConfig', () => {
       importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
-      relativeToRootDestination: 'libs/other/test/dir/my-destination',
+      relativeToRootDestination: 'other/test/dir/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
@@ -136,7 +140,7 @@ describe('updateJestConfig', () => {
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(jestConfigAfter).toContain(`name: 'other-test-dir-my-destination'`);
     expect(jestConfigAfter).toContain(
-      `coverageDirectory: '../../coverage/libs/other/test/dir/my-destination'`
+      `coverageDirectory: '../coverage/other/test/dir/my-destination'`
     );
     expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
@@ -144,12 +148,14 @@ describe('updateJestConfig', () => {
   it('updates the root config if not using `getJestProjects()`', async () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
-      name: 'some/test/dir/my-source',
+      name: 'some-test-dir-my-source',
+      directory: 'some/test/dir/my-source',
+      projectNameAndRootFormat: 'as-provided',
     });
     tree.write(
       rootJestConfigPath,
       `module.exports = {
-  projects: ['<rootDir>/libs/some/test/dir/my-source']
+  projects: ['<rootDir>/some/test/dir/my-source']
 };
 `
     );
@@ -163,31 +169,33 @@ describe('updateJestConfig', () => {
       importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
-      relativeToRootDestination: 'libs/other/test/dir/my-destination',
+      relativeToRootDestination: 'other/test/dir/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
 
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/libs/some/test/dir/my-source'
+      '<rootDir>/some/test/dir/my-source'
     );
     expect(rootJestConfigAfter).toContain(
-      '<rootDir>/libs/other/test/dir/my-destination'
+      '<rootDir>/other/test/dir/my-destination'
     );
   });
 
   it('updates the root config if `getJestProjects()` is used but old path exists', async () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
-      name: 'some/test/dir/my-source',
+      name: 'some-test-dir-my-source',
+      directory: 'some/test/dir/my-source',
+      projectNameAndRootFormat: 'as-provided',
     });
     tree.write(
       rootJestConfigPath,
       `const { getJestProjects } = require('@nx/jest');
 
 module.exports = {
-  projects: [...getJestProjects(), '<rootDir>/libs/some/test/dir/my-source']
+  projects: [...getJestProjects(), '<rootDir>/some/test/dir/my-source']
 };
 `
     );
@@ -201,17 +209,17 @@ module.exports = {
       importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
-      relativeToRootDestination: 'libs/other/test/dir/my-destination',
+      relativeToRootDestination: 'other/test/dir/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
 
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/libs/some/test/dir/my-source'
+      '<rootDir>/some/test/dir/my-source'
     );
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/libs/other/test/dir/my-destination'
+      '<rootDir>/other/test/dir/my-destination'
     );
     expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
@@ -219,14 +227,16 @@ module.exports = {
   it('updates the root config if `getJestProjects()` is used with other projects in the array', async () => {
     const rootJestConfigPath = '/jest.config.ts';
     await libraryGenerator(tree, {
-      name: 'some/test/dir/my-source',
+      name: 'some-test-dir-my-source',
+      directory: 'some/test/dir/my-source',
+      projectNameAndRootFormat: 'as-provided',
     });
     tree.write(
       rootJestConfigPath,
       `const { getJestProjects } = require('@nx/jest');
 
 module.exports = {
-  projects: [...getJestProjects(), '<rootDir>/libs/some/test/dir/my-source', '<rootDir>/libs/foo']
+  projects: [...getJestProjects(), '<rootDir>/some/test/dir/my-source', '<rootDir>/foo']
 };
 `
     );
@@ -240,19 +250,19 @@ module.exports = {
       importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
-      relativeToRootDestination: 'libs/other/test/dir/my-destination',
+      relativeToRootDestination: 'other/test/dir/my-destination',
     };
 
     updateJestConfig(tree, schema, projectConfig);
 
     const rootJestConfigAfter = tree.read(rootJestConfigPath, 'utf-8');
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/libs/some/test/dir/my-source'
+      '<rootDir>/some/test/dir/my-source'
     );
     expect(rootJestConfigAfter).not.toContain(
-      '<rootDir>/libs/other/test/dir/my-destination'
+      '<rootDir>/other/test/dir/my-destination'
     );
-    expect(rootJestConfigAfter).toContain('<rootDir>/libs/foo');
+    expect(rootJestConfigAfter).toContain('<rootDir>/foo');
     expect(rootJestConfigAfter).toContain('getJestProjects()');
   });
 });

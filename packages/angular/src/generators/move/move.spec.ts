@@ -51,13 +51,13 @@ describe('@nx/angular:move', () => {
 
     await angularMoveGenerator(tree, {
       projectName: 'my-lib',
+      newProjectName: 'mynewlib',
       destination: 'mynewlib',
       updateImportPath: true,
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    expect(tree.exists('libs/mynewlib/src/lib/mynewlib.module.ts')).toEqual(
-      true
-    );
+    expect(tree.exists('mynewlib/src/lib/mynewlib.module.ts')).toEqual(true);
   });
 
   it('should update ng-package.json dest property', async () => {
@@ -68,10 +68,11 @@ describe('@nx/angular:move', () => {
       projectName: 'mylib2',
       destination: 'mynewlib2',
       updateImportPath: true,
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    const ngPackageJson = readJson(tree, 'libs/mynewlib2/ng-package.json');
-    expect(ngPackageJson.dest).toEqual('../../dist/libs/mynewlib2');
+    const ngPackageJson = readJson(tree, 'mynewlib2/ng-package.json');
+    expect(ngPackageJson.dest).toEqual('../dist/mynewlib2');
   });
 
   it('should update secondary entry points readme file', async () => {
@@ -84,11 +85,13 @@ describe('@nx/angular:move', () => {
 
     await angularMoveGenerator(tree, {
       projectName: 'mylib2',
+      newProjectName: 'mynewlib2',
       destination: 'mynewlib2',
       updateImportPath: true,
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    const readme = tree.read('libs/mynewlib2/testing/README.md', 'utf-8');
+    const readme = tree.read('mynewlib2/testing/README.md', 'utf-8');
     expect(readme).toMatchInlineSnapshot(`
       "# @proj/mynewlib2/testing
 
@@ -104,13 +107,11 @@ describe('@nx/angular:move', () => {
       projectName: 'my-lib',
       destination: 'my/lib',
       updateImportPath: true,
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    expect(tree.exists('libs/my/lib/src/lib/my-lib.module.ts')).toBe(true);
-    const moduleFile = tree.read(
-      'libs/my/lib/src/lib/my-lib.module.ts',
-      'utf-8'
-    );
+    expect(tree.exists('my/lib/src/lib/my-lib.module.ts')).toBe(true);
+    const moduleFile = tree.read('my/lib/src/lib/my-lib.module.ts', 'utf-8');
     expect(moduleFile).toContain(`export class MyLibModule {}`);
   });
 
@@ -167,25 +168,27 @@ describe('@nx/angular:move', () => {
 
       await angularMoveGenerator(tree, {
         projectName: 'my-lib',
+        newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
+      expect(tree.exists('shared/my-lib/src/lib/shared-my-lib.module.ts')).toBe(
+        true
+      );
       expect(
-        tree.exists('libs/shared/my-lib/src/lib/shared-my-lib.module.ts')
-      ).toBe(true);
-      expect(
-        tree.exists('libs/shared/my-lib/src/lib/shared-my-lib.module.spec.ts')
+        tree.exists('shared/my-lib/src/lib/shared-my-lib.module.spec.ts')
       ).toBe(true);
 
       const moduleFile = tree.read(
-        'libs/shared/my-lib/src/lib/shared-my-lib.module.ts',
+        'shared/my-lib/src/lib/shared-my-lib.module.ts',
         'utf-8'
       );
       expect(moduleFile).toContain(`export class SharedMyLibModule {}`);
 
       const moduleSpecFile = tree.read(
-        'libs/shared/my-lib/src/lib/shared-my-lib.module.spec.ts',
+        'shared/my-lib/src/lib/shared-my-lib.module.spec.ts',
         'utf-8'
       );
       expect(moduleSpecFile).toContain(
@@ -203,8 +206,10 @@ describe('@nx/angular:move', () => {
 
       await angularMoveGenerator(tree, {
         projectName: 'my-lib',
+        newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const importerFile = tree.read(
@@ -212,7 +217,7 @@ describe('@nx/angular:move', () => {
         'utf-8'
       );
       expect(importerFile).toContain(
-        `import { SharedMyLibModule } from '@proj/shared/my-lib';`
+        `import { SharedMyLibModule } from '@proj/shared-my-lib';`
       );
       expect(importerFile).toContain(
         `export class MyLib2Module extends SharedMyLibModule {}`
@@ -224,11 +229,13 @@ describe('@nx/angular:move', () => {
 
       await angularMoveGenerator(tree, {
         projectName: 'my-lib',
+        newProjectName: 'shared-my-lib',
         destination: 'shared/my-lib',
         updateImportPath: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
-      const indexFile = tree.read('libs/shared/my-lib/src/index.ts', 'utf-8');
+      const indexFile = tree.read('shared/my-lib/src/index.ts', 'utf-8');
       expect(indexFile).toContain(
         `export * from './lib/shared-my-lib.module';`
       );
@@ -260,16 +267,18 @@ describe('@nx/angular:move', () => {
 
       await angularMoveGenerator(tree, {
         projectName: 'my-lib',
+        newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(
-        tree.exists('libs/my-destination/src/lib/my-destination.module.ts')
+        tree.exists('my-destination/src/lib/my-destination.module.ts')
       ).toBe(true);
 
       const moduleFile = tree.read(
-        'libs/my-destination/src/lib/my-destination.module.ts',
+        'my-destination/src/lib/my-destination.module.ts',
         'utf-8'
       );
       expect(moduleFile).toContain(`export class MyDestinationModule {}`);
@@ -280,8 +289,10 @@ describe('@nx/angular:move', () => {
 
       await angularMoveGenerator(tree, {
         projectName: 'my-lib',
+        newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const importerFile = tree.read(
@@ -301,11 +312,13 @@ describe('@nx/angular:move', () => {
 
       await angularMoveGenerator(tree, {
         projectName: 'my-lib',
+        newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
-      const indexFile = tree.read('libs/my-destination/src/index.ts', 'utf-8');
+      const indexFile = tree.read('my-destination/src/index.ts', 'utf-8');
       expect(indexFile).toContain(
         `export * from './lib/my-destination.module';`
       );
@@ -327,8 +340,10 @@ describe('@nx/angular:move', () => {
 
       await angularMoveGenerator(tree, {
         projectName: 'my-lib',
+        newProjectName: 'my-destination',
         destination: 'my-destination',
         updateImportPath: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const moduleFile = tree.read(
@@ -337,5 +352,23 @@ describe('@nx/angular:move', () => {
       );
       expect(moduleFile).toContain(`export class MyLibDemoModule {}`);
     });
+  });
+
+  it('should move project correctly when --project-name-and-root-format=derived', async () => {
+    await generateTestLibrary(tree, { name: 'mylib2', buildable: true });
+    addProjectToGraph('mylib2');
+
+    await angularMoveGenerator(tree, {
+      projectName: 'mylib2',
+      destination: 'mynewlib',
+      updateImportPath: true,
+      projectNameAndRootFormat: 'derived',
+    });
+
+    expect(tree.exists('libs/mynewlib/src/lib/mynewlib.module.ts')).toEqual(
+      true
+    );
+    const ngPackageJson = readJson(tree, 'libs/mynewlib/ng-package.json');
+    expect(ngPackageJson.dest).toEqual('../../dist/libs/mynewlib');
   });
 });
