@@ -9,7 +9,7 @@ describe('hook', () => {
 
   beforeEach(async () => {
     projectName = 'my-lib';
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    appTree = createTreeWithEmptyWorkspace();
     await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
@@ -26,11 +26,9 @@ describe('hook', () => {
       project: projectName,
     });
 
+    expect(appTree.exists('my-lib/src/lib/use-form/use-form.ts')).toBeTruthy();
     expect(
-      appTree.exists('libs/my-lib/src/lib/use-form/use-form.ts')
-    ).toBeTruthy();
-    expect(
-      appTree.exists('libs/my-lib/src/lib/use-form/use-form.spec.tsx')
+      appTree.exists('my-lib/src/lib/use-form/use-form.spec.tsx')
     ).toBeTruthy();
   });
 
@@ -40,11 +38,9 @@ describe('hook', () => {
       project: 'my-app',
     });
 
+    expect(appTree.exists('my-app/src/app/use-form/use-form.ts')).toBeTruthy();
     expect(
-      appTree.exists('apps/my-app/src/app/use-form/use-form.ts')
-    ).toBeTruthy();
-    expect(
-      appTree.exists('apps/my-app/src/app/use-form/use-form.spec.tsx')
+      appTree.exists('my-app/src/app/use-form/use-form.spec.tsx')
     ).toBeTruthy();
   });
 
@@ -56,10 +52,10 @@ describe('hook', () => {
     });
 
     expect(
-      appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.ts')
+      appTree.exists('my-lib/src/lib/use-hello/use-hello.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.tsx')
+      appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx')
     ).toBeFalsy();
   });
 
@@ -70,10 +66,10 @@ describe('hook', () => {
       skipTests: true,
     });
     expect(
-      appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.ts')
+      appTree.exists('my-lib/src/lib/use-hello/use-hello.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.tsx')
+      appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx')
     ).toBeFalsy();
   });
 
@@ -85,7 +81,7 @@ describe('hook', () => {
         export: true,
       });
 
-      const indexContent = appTree.read('libs/my-lib/src/index.ts', 'utf-8');
+      const indexContent = appTree.read('my-lib/src/index.ts', 'utf-8');
 
       expect(indexContent).toMatch(/lib\/use-hello/);
     });
@@ -97,7 +93,7 @@ describe('hook', () => {
         export: true,
       });
 
-      const indexContent = appTree.read('libs/my-lib/src/index.ts', 'utf-8');
+      const indexContent = appTree.read('my-lib/src/index.ts', 'utf-8');
 
       expect(indexContent).not.toMatch(/lib\/use-hello/);
     });
@@ -111,10 +107,10 @@ describe('hook', () => {
         skipTests: true,
       });
       expect(
-        appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.ts')
+        appTree.exists('my-lib/src/lib/use-hello/use-hello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/use-hello/use-hello.spec.tsx')
+        appTree.exists('my-lib/src/lib/use-hello/use-hello.spec.tsx')
       ).toBeFalsy();
     });
   });
@@ -127,10 +123,10 @@ describe('hook', () => {
         pascalCaseFiles: true,
       });
       expect(
-        appTree.exists('libs/my-lib/src/lib/use-hello/useHello.ts')
+        appTree.exists('my-lib/src/lib/use-hello/useHello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/use-hello/useHello.spec.tsx')
+        appTree.exists('my-lib/src/lib/use-hello/useHello.spec.tsx')
       ).toBeTruthy();
     });
   });
@@ -144,10 +140,10 @@ describe('hook', () => {
         pascalCaseDirectory: true,
       });
       expect(
-        appTree.exists('libs/my-lib/src/lib/useHello/useHello.ts')
+        appTree.exists('my-lib/src/lib/useHello/useHello.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists('libs/my-lib/src/lib/useHello/useHello.spec.tsx')
+        appTree.exists('my-lib/src/lib/useHello/useHello.spec.tsx')
       ).toBeTruthy();
     });
   });
@@ -161,7 +157,7 @@ describe('hook', () => {
         skipTests: true,
       });
 
-      expect(appTree.exists('/libs/my-lib/src/hooks/use-hello/use-hello.ts'));
+      expect(appTree.exists('/my-lib/src/hooks/use-hello/use-hello.ts'));
     });
 
     it('should create with nested directories', async () => {
@@ -173,9 +169,7 @@ describe('hook', () => {
       });
 
       expect(
-        appTree.exists(
-          '/libs/my-lib/src/lib/foo/use-hello-world/use-hello-world.ts'
-        )
+        appTree.exists('/my-lib/src/lib/foo/use-hello-world/use-hello-world.ts')
       );
     });
   });
@@ -189,7 +183,7 @@ describe('hook', () => {
         skipTests: true,
       });
 
-      expect(appTree.exists('/libs/my-lib/src/lib/use-hello.ts'));
+      expect(appTree.exists('/my-lib/src/lib/use-hello.ts'));
     });
 
     it('should work with custom directory path', async () => {
@@ -201,7 +195,7 @@ describe('hook', () => {
         skipTests: true,
       });
 
-      expect(appTree.exists('/libs/my-lib/src/hooks/use-hello.ts'));
+      expect(appTree.exists('/my-lib/src/hooks/use-hello.ts'));
     });
   });
 });
