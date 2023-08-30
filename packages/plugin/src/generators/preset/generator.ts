@@ -7,6 +7,7 @@ import {
   runTasksInSerial,
   GeneratorCallback,
   names,
+  joinPathFragments,
 } from '@nx/devkit';
 import { Linter } from '@nx/linter';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -37,9 +38,9 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
     // when creating a CLI package, the plugin will be in the packages folder
     directory:
       options.createPackageName && options.createPackageName !== 'false'
-        ? 'packages'
-        : undefined,
-    rootProject: options.createPackageName ? false : true,
+        ? joinPathFragments('packages', options.pluginName)
+        : '.',
+    projectNameAndRootFormat: 'as-provided',
   });
   tasks.push(pluginTask);
 

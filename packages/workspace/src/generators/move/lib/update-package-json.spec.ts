@@ -13,14 +13,13 @@ describe('updatePackageJson', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
-      destination: 'my-destination',
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
       relativeToRootDestination: 'my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'my-lib',
       projectNameAndRootFormat: 'as-provided',

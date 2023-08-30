@@ -7,7 +7,6 @@ import * as nxDevkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateBuildTargets } from './update-build-targets';
-import { array } from 'yargs';
 
 describe('updateBuildTargets', () => {
   let tree: Tree;
@@ -16,13 +15,11 @@ describe('updateBuildTargets', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination',
-      importPath: '@proj/subfolder-my-destination',
-      updateImportPath: true,
+      updateImportPath: false,
       newProjectName: 'subfolder-my-destination',
-      relativeToRootDestination: 'libs/subfolder/my-destination',
+      relativeToRootDestination: 'subfolder/my-destination',
     };
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'my-source', {
       root: 'libs/my-source',
       targets: {

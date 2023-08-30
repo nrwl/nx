@@ -1,4 +1,4 @@
-import type { Tree } from '@nx/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   convertNxGenerator,
@@ -22,7 +22,7 @@ import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
 import { Linter, lintProjectGenerator } from '@nx/linter';
-import { join } from 'path';
+import { basename, join } from 'path';
 import type { Schema } from './schema';
 
 interface NormalizedSchema extends Schema {
@@ -33,22 +33,27 @@ interface NormalizedSchema extends Schema {
 }
 
 async function normalizeOptions(
-  host: Tree,
-  options: Schema
+  tree: Tree,
+  options: Schema,
+  pluginConfiguration: ProjectConfiguration
 ): Promise<NormalizedSchema> {
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
 
   let projectRoot: string;
   if (options.projectNameAndRootFormat === 'as-provided') {
     const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
-      host,
+      tree,
       {
         name: projectName,
         projectType: 'application',
         directory:
-          options.rootProject || !options.projectDirectory
+          options.projectDirectory ??
+          (options.rootProject
             ? projectName
-            : `${options.projectDirectory}-e2e`,
+            : joinPathFragments(
+                pluginConfiguration.root,
+                `../${basename(pluginConfiguration.root)}-e2e`
+              )),
         projectNameAndRootFormat: `as-provided`,
         callingGenerator: '@nx/plugin:e2e-project',
       }
@@ -58,7 +63,7 @@ async function normalizeOptions(
     const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
       options.projectDirectory
     );
-    const { appsDir: defaultAppsDir } = getWorkspaceLayout(host);
+    const { appsDir: defaultAppsDir } = getWorkspaceLayout(tree);
     const appsDir = layoutDirectory ?? defaultAppsDir;
 
     projectRoot = options.rootProject
@@ -190,7 +195,8 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   validatePlugin(host, schema.pluginName);
-  const options = await normalizeOptions(host, schema);
+  const pluginConfiguration = readProjectConfiguration(host, schema.pluginName);
+  const options = await normalizeOptions(host, schema, pluginConfiguration);
   addFiles(host, options);
   tasks.push(
     await setupVerdaccio(host, {

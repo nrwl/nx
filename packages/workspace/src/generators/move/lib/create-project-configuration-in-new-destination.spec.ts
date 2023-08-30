@@ -13,20 +13,16 @@ describe('moveProjectConfiguration', () => {
   let projectConfig: ProjectConfiguration;
   let schema: NormalizedSchema;
 
-  const setupWorkspace = (version: 1 | 2 = 1) => {
+  beforeEach(() => {
     schema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination',
-      importPath: '@proj/subfolder-my-destination',
-      updateImportPath: true,
+      projectNameAndRootFormat: 'as-provided',
+      updateImportPath: false,
       newProjectName: 'subfolder-my-destination',
-      relativeToRootDestination: 'apps/subfolder/my-destination',
+      relativeToRootDestination: 'subfolder/my-destination',
     };
 
-    tree =
-      version === 1
-        ? createTreeWithEmptyWorkspace()
-        : createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     addProjectConfiguration(tree, 'my-source', {
       projectType: 'application',
@@ -150,11 +146,9 @@ describe('moveProjectConfiguration', () => {
     });
 
     projectConfig = readProjectConfiguration(tree, 'my-source');
-  };
+  });
 
   it('should rename the project', async () => {
-    setupWorkspace();
-
     createProjectConfigurationInNewDestination(tree, schema, projectConfig);
 
     expect(
@@ -163,8 +157,6 @@ describe('moveProjectConfiguration', () => {
   });
 
   it('should update paths in only the intended project', async () => {
-    setupWorkspace();
-
     createProjectConfigurationInNewDestination(tree, schema, projectConfig);
 
     const actualProject = readProjectConfiguration(
@@ -172,8 +164,8 @@ describe('moveProjectConfiguration', () => {
       'subfolder-my-destination'
     );
     expect(actualProject).toBeDefined();
-    expect(actualProject.root).toBe('apps/subfolder/my-destination');
-    expect(actualProject.sourceRoot).toBe('apps/subfolder/my-destination/src');
+    expect(actualProject.root).toBe('subfolder/my-destination');
+    expect(actualProject.sourceRoot).toBe('subfolder/my-destination/src');
 
     const similarProject = readProjectConfiguration(tree, 'my-source-e2e');
     expect(similarProject).toBeDefined();
@@ -181,7 +173,6 @@ describe('moveProjectConfiguration', () => {
   });
 
   it('should update tags and implicitDependencies', () => {
-    setupWorkspace();
     createProjectConfigurationInNewDestination(tree, schema, projectConfig);
 
     const actualProject = readProjectConfiguration(
@@ -193,8 +184,6 @@ describe('moveProjectConfiguration', () => {
   });
 
   it('should support moving a standalone project', () => {
-    setupWorkspace(2);
-
     const projectName = 'standalone';
     const newProjectName = 'parent-standalone';
     addProjectConfiguration(
@@ -209,10 +198,9 @@ describe('moveProjectConfiguration', () => {
     );
     const moveSchema: NormalizedSchema = {
       projectName: 'standalone',
-      destination: 'parent/standalone',
       importPath: '@proj/parent-standalone',
       newProjectName,
-      relativeToRootDestination: 'libs/parent/standalone',
+      relativeToRootDestination: 'parent/standalone',
       updateImportPath: true,
     };
 

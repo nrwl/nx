@@ -1,8 +1,8 @@
 import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { executorGenerator } from './executor';
-import { pluginGenerator } from '../plugin/plugin';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
+import pluginGenerator from '../plugin/plugin';
 
 describe('NxPlugin Executor Generator', () => {
   let tree: Tree;
@@ -10,10 +10,12 @@ describe('NxPlugin Executor Generator', () => {
 
   beforeEach(async () => {
     projectName = 'my-plugin';
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     await pluginGenerator(tree, {
       name: projectName,
+      directory: `plugins/${projectName}`,
+      projectNameAndRootFormat: 'as-provided',
     } as any);
   });
 
@@ -26,16 +28,18 @@ describe('NxPlugin Executor Generator', () => {
     });
 
     expect(
-      tree.exists('libs/my-plugin/src/executors/my-executor/schema.d.ts')
+      tree.exists('plugins/my-plugin/src/executors/my-executor/schema.d.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/executors/my-executor/schema.json')
+      tree.exists('plugins/my-plugin/src/executors/my-executor/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/executors/my-executor/executor.ts')
+      tree.exists('plugins/my-plugin/src/executors/my-executor/executor.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/executors/my-executor/executor.spec.ts')
+      tree.exists(
+        'plugins/my-plugin/src/executors/my-executor/executor.spec.ts'
+      )
     ).toBeTruthy();
   });
 
@@ -48,7 +52,7 @@ describe('NxPlugin Executor Generator', () => {
       includeHasher: false,
     });
 
-    const executorJson = readJson(tree, 'libs/my-plugin/executors.json');
+    const executorJson = readJson(tree, 'plugins/my-plugin/executors.json');
 
     expect(executorJson.executors['my-executor'].implementation).toEqual(
       './src/executors/my-executor/executor'
@@ -69,7 +73,7 @@ describe('NxPlugin Executor Generator', () => {
       includeHasher: false,
     });
 
-    const executorsJson = readJson(tree, 'libs/my-plugin/executors.json');
+    const executorsJson = readJson(tree, 'plugins/my-plugin/executors.json');
 
     expect(executorsJson.executors['my-executor'].description).toEqual(
       'my-executor executor'
@@ -85,7 +89,7 @@ describe('NxPlugin Executor Generator', () => {
       includeHasher: false,
     });
 
-    const executorsJson = readJson(tree, 'libs/my-plugin/executors.json');
+    const executorsJson = readJson(tree, 'plugins/my-plugin/executors.json');
 
     expect(executorsJson.executors['my-executor'].description).toEqual(
       'my-executor custom description'
@@ -143,11 +147,13 @@ describe('NxPlugin Executor Generator', () => {
         unitTestRunner: 'jest',
       });
       expect(
-        tree.exists('libs/my-plugin/src/executors/my-executor/hasher.spec.ts')
+        tree.exists(
+          'plugins/my-plugin/src/executors/my-executor/hasher.spec.ts'
+        )
       ).toBeTruthy();
       expect(
         tree
-          .read('libs/my-plugin/src/executors/my-executor/hasher.ts')
+          .read('plugins/my-plugin/src/executors/my-executor/hasher.ts')
           .toString()
       ).toMatchInlineSnapshot(`
         "import { CustomHasher } from '@nx/devkit';
@@ -174,7 +180,7 @@ describe('NxPlugin Executor Generator', () => {
         unitTestRunner: 'jest',
       });
 
-      const executorsJson = readJson(tree, 'libs/my-plugin/executors.json');
+      const executorsJson = readJson(tree, 'plugins/my-plugin/executors.json');
       expect(executorsJson.executors['my-executor'].hasher).toEqual(
         './src/executors/my-executor/hasher'
       );

@@ -26,7 +26,11 @@ import { major } from 'semver';
 import { join } from 'path';
 
 describe('Nx Commands', () => {
-  beforeAll(() => newProject());
+  beforeAll(() => {
+    newProject({
+      unsetProjectNameAndRootFormat: false,
+    });
+  });
 
   afterAll(() => cleanupProject());
 
@@ -40,7 +44,7 @@ describe('Nx Commands', () => {
 
       runCLI(`generate @nx/web:app ${app1} --tags e2etag`);
       runCLI(`generate @nx/web:app ${app2}`);
-      setMaxWorkers(join('apps', app1, 'project.json'));
+      setMaxWorkers(join(app1, 'project.json'));
 
       const s = runCLI('show projects').split('\n');
 
@@ -150,40 +154,40 @@ describe('Nx Commands', () => {
 
     beforeAll(async () => {
       runCLI(`generate @nx/web:app ${myapp}`);
-      setMaxWorkers(join('apps', myapp, 'project.json'));
+      setMaxWorkers(join(myapp, 'project.json'));
       runCLI(`generate @nx/js:lib ${mylib}`);
     });
 
     beforeEach(() => {
       updateFile(
-        `apps/${myapp}/src/main.ts`,
+        `${myapp}/src/main.ts`,
         `
        const x = 1111;
   `
       );
 
       updateFile(
-        `apps/${myapp}/src/app/app.element.spec.ts`,
+        `${myapp}/src/app/app.element.spec.ts`,
         `
        const y = 1111;
   `
       );
 
       updateFile(
-        `apps/${myapp}/src/app/app.element.ts`,
+        `${myapp}/src/app/app.element.ts`,
         `
        const z = 1111;
   `
       );
 
       updateFile(
-        `libs/${mylib}/index.ts`,
+        `${mylib}/index.ts`,
         `
        const x = 1111;
   `
       );
       updateFile(
-        `libs/${mylib}/src/${mylib}.spec.ts`,
+        `${mylib}/src/${mylib}.spec.ts`,
         `
        const y = 1111;
   `
@@ -200,12 +204,12 @@ describe('Nx Commands', () => {
     it('should check libs and apps specific files', async () => {
       if (isNotWindows()) {
         const stdout = runCLI(
-          `format:check --files="libs/${mylib}/index.ts,package.json" --libs-and-apps`,
+          `format:check --files="${mylib}/index.ts,package.json" --libs-and-apps`,
           { silenceError: true }
         );
-        expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+        expect(stdout).toContain(path.normalize(`${mylib}/index.ts`));
         expect(stdout).toContain(
-          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
+          path.normalize(`${mylib}/src/${mylib}.spec.ts`)
         );
         expect(stdout).not.toContain(path.normalize(`README.md`)); // It will be contained only in case of exception, that we fallback to all
       }
@@ -216,16 +220,16 @@ describe('Nx Commands', () => {
         const stdout = runCLI(`format:check --projects=${myapp}`, {
           silenceError: true,
         });
-        expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+        expect(stdout).toContain(path.normalize(`${myapp}/src/main.ts`));
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
+          path.normalize(`${myapp}/src/app/app.element.ts`)
         );
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
+          path.normalize(`${myapp}/src/app/app.element.spec.ts`)
         );
-        expect(stdout).not.toContain(path.normalize(`libs/${mylib}/index.ts`));
+        expect(stdout).not.toContain(path.normalize(`${mylib}/index.ts`));
         expect(stdout).not.toContain(
-          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
+          path.normalize(`${mylib}/src/${mylib}.spec.ts`)
         );
         expect(stdout).not.toContain(path.normalize(`README.md`));
       }
@@ -236,16 +240,16 @@ describe('Nx Commands', () => {
         const stdout = runCLI(`format:check --projects=${myapp},${mylib}`, {
           silenceError: true,
         });
-        expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+        expect(stdout).toContain(path.normalize(`${myapp}/src/main.ts`));
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
+          path.normalize(`${myapp}/src/app/app.element.spec.ts`)
         );
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
+          path.normalize(`${myapp}/src/app/app.element.ts`)
         );
-        expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+        expect(stdout).toContain(path.normalize(`${mylib}/index.ts`));
         expect(stdout).toContain(
-          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
+          path.normalize(`${mylib}/src/${mylib}.spec.ts`)
         );
         expect(stdout).not.toContain(path.normalize(`README.md`));
       }
@@ -254,16 +258,16 @@ describe('Nx Commands', () => {
     it('should check all', async () => {
       if (isNotWindows()) {
         const stdout = runCLI(`format:check --all`, { silenceError: true });
-        expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+        expect(stdout).toContain(path.normalize(`${myapp}/src/main.ts`));
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
+          path.normalize(`${myapp}/src/app/app.element.spec.ts`)
         );
         expect(stdout).toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
+          path.normalize(`${myapp}/src/app/app.element.ts`)
         );
-        expect(stdout).toContain(path.normalize(`libs/${mylib}/index.ts`));
+        expect(stdout).toContain(path.normalize(`${mylib}/index.ts`));
         expect(stdout).toContain(
-          path.normalize(`libs/${mylib}/src/${mylib}.spec.ts`)
+          path.normalize(`${mylib}/src/${mylib}.spec.ts`)
         );
         expect(stdout).toContain(path.normalize(`README.md`));
       }
@@ -286,20 +290,20 @@ describe('Nx Commands', () => {
     it('should reformat the code', async () => {
       if (isNotWindows()) {
         runCLI(
-          `format:write --files="apps/${myapp}/src/app/app.element.spec.ts,apps/${myapp}/src/app/app.element.ts"`
+          `format:write --files="${myapp}/src/app/app.element.spec.ts,${myapp}/src/app/app.element.ts"`
         );
         const stdout = runCLI('format:check --all', { silenceError: true });
-        expect(stdout).toContain(path.normalize(`apps/${myapp}/src/main.ts`));
+        expect(stdout).toContain(path.normalize(`${myapp}/src/main.ts`));
         expect(stdout).not.toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.spec.ts`)
+          path.normalize(`${myapp}/src/app/app.element.spec.ts`)
         );
         expect(stdout).not.toContain(
-          path.normalize(`apps/${myapp}/src/app/app.element.ts`)
+          path.normalize(`${myapp}/src/app/app.element.ts`)
         );
 
         runCLI('format:write --all');
         expect(runCLI('format:check --all')).not.toContain(
-          path.normalize(`apps/${myapp}/src/main.ts`)
+          path.normalize(`${myapp}/src/main.ts`)
         );
       }
     }, 300000);

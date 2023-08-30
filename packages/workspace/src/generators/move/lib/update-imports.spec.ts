@@ -17,7 +17,7 @@ describe('updateImports', () => {
   let schema: Schema;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     schema = {
       projectName: 'my-source',
@@ -100,7 +100,6 @@ describe('updateImports', () => {
       tree,
       {
         projectName: 'tab',
-        destination: 'tabs',
         importPath: '@proj/tabs',
         updateImportPath: true,
         newProjectName: 'tabs',
@@ -148,7 +147,6 @@ describe('updateImports', () => {
       tree,
       {
         projectName: 'tab',
-        destination: 'tabs',
         importPath: '@proj/tabs',
         updateImportPath: true,
         newProjectName: 'tabs',
@@ -195,7 +193,6 @@ describe('updateImports', () => {
       tree,
       {
         projectName: 'tab',
-        destination: 'tabs',
         importPath: '@proj/tabs',
         updateImportPath: true,
         newProjectName: 'tabs',
@@ -248,7 +245,6 @@ describe('updateImports', () => {
       tree,
       {
         projectName: 'tab',
-        destination: 'tabs',
         importPath: '@proj/tabs',
         updateImportPath: true,
         newProjectName: 'tabs',

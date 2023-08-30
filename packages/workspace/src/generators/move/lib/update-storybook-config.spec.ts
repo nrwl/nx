@@ -10,7 +10,7 @@ describe('updateStorybookConfig', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should handle storybook config not existing', async () => {
@@ -21,7 +21,6 @@ describe('updateStorybookConfig', () => {
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     const schema: NormalizedSchema = {
       projectName: 'my-source',
-      destination: 'my-destination',
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
@@ -48,7 +47,6 @@ describe('updateStorybookConfig', () => {
     tree.write(storybookMainPath, storybookMain);
     const schema: NormalizedSchema = {
       projectName: 'my-source',
-      destination: 'namespace/my-destination',
       importPath: '@proj/namespace-my-destination',
       updateImportPath: true,
       newProjectName: 'namespace-my-destination',
@@ -77,7 +75,6 @@ describe('updateStorybookConfig', () => {
     tree.write(storybookWebpackConfigPath, storybookWebpackConfig);
     const schema: NormalizedSchema = {
       projectName: 'my-source',
-      destination: 'namespace/my-destination',
       importPath: '@proj/namespace-my-destination',
       updateImportPath: true,
       newProjectName: 'namespace-my-destination',
@@ -119,7 +116,6 @@ describe('updateStorybookConfig', () => {
       tree.write(storybookNestedMainPath, storybookNestedMain);
       const schema: NormalizedSchema = {
         projectName: 'my-source',
-        destination: 'namespace/my-destination',
         importPath: '@proj/namespace-my-destination',
         updateImportPath: true,
         newProjectName: 'namespace-my-destination',
@@ -166,7 +162,6 @@ describe('updateStorybookConfig', () => {
       );
       const schema: NormalizedSchema = {
         projectName: 'my-source',
-        destination: 'namespace/my-destination',
         importPath: '@proj/namespace-my-destination',
         updateImportPath: true,
         newProjectName: 'namespace-my-destination',

@@ -12,7 +12,7 @@ describe('updateDefaultProject', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'my-source', {
       root: 'libs/my-source',
       targets: {},
@@ -29,11 +29,10 @@ describe('updateDefaultProject', () => {
   it('should update the default project', async () => {
     const schema: NormalizedSchema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination',
       importPath: '@proj/subfolder-my-destination',
       updateImportPath: true,
       newProjectName: 'subfolder-my-destination',
-      relativeToRootDestination: 'libs/subfolder/my-destination',
+      relativeToRootDestination: 'subfolder/my-destination',
     };
 
     updateDefaultProject(tree, schema);

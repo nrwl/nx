@@ -12,14 +12,14 @@ import { e2eProjectGenerator } from './e2e';
 describe('NxPlugin e2e-project Generator', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     // add a plugin project to the workspace for validations
     addProjectConfiguration(tree, 'my-plugin', {
-      root: 'libs/my-plugin',
+      root: 'plugins/my-plugin',
       targets: {},
     });
-    writeJson(tree, 'libs/my-plugin/package.json', {
+    writeJson(tree, 'plugins/my-plugin/package.json', {
       name: 'my-plugin',
     });
   });
@@ -28,16 +28,15 @@ describe('NxPlugin e2e-project Generator', () => {
     await expect(
       e2eProjectGenerator(tree, {
         pluginName: 'my-plugin',
-        pluginOutputPath: `dist/libs/my-plugin`,
-        npmPackageName: '@proj/my-plugin',
+        projectDirectory: 'plugins/my-plugin-e2e',
+        projectNameAndRootFormat: 'as-provided',
       })
     ).resolves.toBeDefined();
 
     await expect(
       e2eProjectGenerator(tree, {
         pluginName: 'my-nonexistentplugin',
-        pluginOutputPath: `dist/libs/my-nonexistentplugin`,
-        npmPackageName: '@proj/my-nonexistentplugin',
+        projectNameAndRootFormat: 'as-provided',
       })
     ).rejects.toThrow();
   });
@@ -45,24 +44,22 @@ describe('NxPlugin e2e-project Generator', () => {
   it('should add files related to e2e', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    expect(tree.exists('apps/my-plugin-e2e/tsconfig.json')).toBeTruthy();
+    expect(tree.exists('plugins/my-plugin-e2e/tsconfig.json')).toBeTruthy();
     expect(
-      tree.exists('apps/my-plugin-e2e/tests/my-plugin.spec.ts')
+      tree.exists('plugins/my-plugin-e2e/tests/my-plugin.spec.ts')
     ).toBeTruthy();
   });
 
   it('should extend from root tsconfig.base.json', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    const tsConfig = readJson(tree, 'apps/my-plugin-e2e/tsconfig.json');
+    const tsConfig = readJson(tree, 'plugins/my-plugin-e2e/tsconfig.json');
     expect(tsConfig.extends).toEqual('../../tsconfig.base.json');
   });
 
@@ -71,31 +68,28 @@ describe('NxPlugin e2e-project Generator', () => {
 
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    const tsConfig = readJson(tree, 'apps/my-plugin-e2e/tsconfig.json');
+    const tsConfig = readJson(tree, 'plugins/my-plugin-e2e/tsconfig.json');
     expect(tsConfig.extends).toEqual('../../tsconfig.json');
   });
 
   it('should set project root with the directory option', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/namespace/my-plugin`,
-      npmPackageName: '@proj/namespace-my-plugin',
-      projectDirectory: 'namespace/my-plugin',
+      projectDirectory: 'plugins/namespace/my-plugin-e2e',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
-    expect(project.root).toBe('apps/namespace/my-plugin-e2e');
+    expect(project.root).toBe('plugins/namespace/my-plugin-e2e');
   });
 
   it('should update the implicit dependencies', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
     });
     const projects = Object.fromEntries(getProjects(tree));
     expect(projects).toMatchObject({
@@ -108,14 +102,13 @@ describe('NxPlugin e2e-project Generator', () => {
   it('should update the workspace', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
     expect(project).toBeTruthy();
-    expect(project.root).toEqual('apps/my-plugin-e2e');
+    expect(project.root).toEqual('plugins/my-plugin-e2e');
     expect(project.targets.e2e).toBeTruthy();
     expect(project.targets.e2e).toMatchInlineSnapshot(`
       {
@@ -130,7 +123,7 @@ describe('NxPlugin e2e-project Generator', () => {
         ],
         "executor": "@nx/jest:jest",
         "options": {
-          "jestConfig": "apps/my-plugin-e2e/jest.config.ts",
+          "jestConfig": "plugins/my-plugin-e2e/jest.config.ts",
           "passWithNoTests": true,
           "runInBand": true,
         },
@@ -144,27 +137,27 @@ describe('NxPlugin e2e-project Generator', () => {
   it('should add jest support', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     const project = readProjectConfiguration(tree, 'my-plugin-e2e');
 
     expect(project.targets.e2e).toMatchObject({
       options: expect.objectContaining({
-        jestConfig: 'apps/my-plugin-e2e/jest.config.ts',
+        jestConfig: 'plugins/my-plugin-e2e/jest.config.ts',
       }),
     });
 
-    expect(tree.exists('apps/my-plugin-e2e/tsconfig.spec.json')).toBeTruthy();
-    expect(tree.exists('apps/my-plugin-e2e/jest.config.ts')).toBeTruthy();
+    expect(
+      tree.exists('plugins/my-plugin-e2e/tsconfig.spec.json')
+    ).toBeTruthy();
+    expect(tree.exists('plugins/my-plugin-e2e/jest.config.ts')).toBeTruthy();
   });
 
   it('should setup the eslint builder', async () => {
     await e2eProjectGenerator(tree, {
       pluginName: 'my-plugin',
-      pluginOutputPath: `dist/libs/my-plugin`,
-      npmPackageName: '@proj/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     const projectsConfigurations = getProjects(tree);
@@ -172,7 +165,7 @@ describe('NxPlugin e2e-project Generator', () => {
       executor: '@nx/linter:eslint',
       outputs: ['{options.outputFile}'],
       options: {
-        lintFilePatterns: ['apps/my-plugin-e2e/**/*.ts'],
+        lintFilePatterns: ['plugins/my-plugin-e2e/**/*.ts'],
       },
     });
   });

@@ -15,6 +15,8 @@ const getSchema: (
   overrides?: Partial<CreatePackageSchema>
 ) => CreatePackageSchema = (overrides = {}) => ({
   name: 'create-a-workspace',
+  directory: 'packages/create-a-workspace',
+  projectNameAndRootFormat: 'as-provided',
   project: 'my-plugin',
   compiler: 'tsc',
   skipTsConfig: false,
@@ -32,6 +34,8 @@ describe('NxPlugin Create Package Generator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await pluginGenerator(tree, {
       name: 'my-plugin',
+      directory: 'packages/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
       compiler: 'tsc',
       skipTsConfig: false,
       skipFormat: false,
@@ -44,16 +48,16 @@ describe('NxPlugin Create Package Generator', () => {
   it('should update the project.json file', async () => {
     await createPackageGenerator(tree, getSchema());
     const project = readProjectConfiguration(tree, 'create-a-workspace');
-    expect(project.root).toEqual('libs/create-a-workspace');
-    expect(project.sourceRoot).toEqual('libs/create-a-workspace/bin');
+    expect(project.root).toEqual('packages/create-a-workspace');
+    expect(project.sourceRoot).toEqual('packages/create-a-workspace/bin');
     expect(project.targets.build).toEqual({
       executor: '@nx/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: 'dist/libs/create-a-workspace',
-        tsConfig: 'libs/create-a-workspace/tsconfig.lib.json',
-        main: 'libs/create-a-workspace/bin/index.ts',
-        assets: ['libs/create-a-workspace/*.md'],
+        outputPath: 'dist/packages/create-a-workspace',
+        tsConfig: 'packages/create-a-workspace/tsconfig.lib.json',
+        main: 'packages/create-a-workspace/bin/index.ts',
+        assets: ['packages/create-a-workspace/*.md'],
         updateBuildableProjectDepsInPackageJson: false,
       },
     });
@@ -63,14 +67,11 @@ describe('NxPlugin Create Package Generator', () => {
     await createPackageGenerator(
       tree,
       getSchema({
-        directory: 'plugins',
+        directory: 'packages/create-a-workspace',
       } as Partial<CreatePackageSchema>)
     );
-    const project = readProjectConfiguration(
-      tree,
-      'plugins-create-a-workspace'
-    );
-    expect(project.root).toEqual('libs/plugins/create-a-workspace');
+    const project = readProjectConfiguration(tree, 'create-a-workspace');
+    expect(project.root).toEqual('packages/create-a-workspace');
   });
 
   it('should specify tsc as compiler', async () => {

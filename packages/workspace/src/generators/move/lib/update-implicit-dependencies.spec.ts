@@ -14,14 +14,13 @@ describe('updateImplicitDepenencies', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
-      destination: 'my-destination',
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
-      relativeToRootDestination: 'libs/my-destination',
+      relativeToRootDestination: 'my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     addProjectConfiguration(tree, 'my-lib', {
       root: 'libs/my-lib',

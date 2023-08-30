@@ -8,7 +8,7 @@ const { libraryGenerator } = require('@nx/js');
 describe('move', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update jest config when moving down directories', async () => {
@@ -178,6 +178,8 @@ describe('move', () => {
   });
 
   it('should move project correctly when --project-name-and-root-format=derived', async () => {
+    tree.write('/apps/.gitignore', '');
+    tree.write('/libs/.gitignore', '');
     await libraryGenerator(tree, {
       name: 'my-lib',
       projectNameAndRootFormat: 'derived',

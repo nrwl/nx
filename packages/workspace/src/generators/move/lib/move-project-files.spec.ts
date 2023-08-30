@@ -15,7 +15,7 @@ describe('moveProject', () => {
   let projectConfig: ProjectConfiguration;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'my-lib',
       projectNameAndRootFormat: 'as-provided',
@@ -26,9 +26,7 @@ describe('moveProject', () => {
   it('should copy all files and delete the source folder', async () => {
     const schema: NormalizedSchema = {
       projectName: 'my-lib',
-      destination: 'my-destination',
-      importPath: '@proj/my-destination',
-      updateImportPath: true,
+      updateImportPath: false,
       newProjectName: 'my-destination',
       relativeToRootDestination: 'my-destination',
     };

@@ -25,10 +25,12 @@ describe('Nx Commands', () => {
   let proj2 = uniq('proj2');
   let proj3 = uniq('proj3');
   beforeAll(() => {
-    newProject();
-    runCLI(`generate @nx/js:lib ${proj1}`);
-    runCLI(`generate @nx/js:lib ${proj2}`);
-    runCLI(`generate @nx/js:lib ${proj3}`);
+    newProject({
+      unsetProjectNameAndRootFormat: false,
+    });
+    runCLI(`generate @nx/js:lib ${proj1} --directory libs/${proj1}`);
+    runCLI(`generate @nx/js:lib ${proj2} --directory libs/${proj2}`);
+    runCLI(`generate @nx/js:lib ${proj3} --directory libs/${proj3}`);
   });
 
   afterEach(() => {

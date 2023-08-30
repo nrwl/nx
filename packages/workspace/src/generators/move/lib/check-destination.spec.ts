@@ -1,8 +1,4 @@
-import {
-  ProjectConfiguration,
-  readProjectConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { checkDestination } from './check-destination';
@@ -12,30 +8,27 @@ const { libraryGenerator } = require('@nx/js');
 
 describe('checkDestination', () => {
   let tree: Tree;
-  let projectConfig: ProjectConfiguration;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'my-lib',
       projectNameAndRootFormat: 'as-provided',
     });
-    projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 
   it('should throw an error if the path is not explicit', async () => {
     const schema: NormalizedSchema = {
       projectName: 'my-lib',
-      destination: '../apps/not-an-app',
       importPath: undefined,
       updateImportPath: true,
       relativeToRootDestination: '',
     };
 
     expect(() => {
-      checkDestination(tree, schema, schema.destination);
+      checkDestination(tree, schema, '../apps/not-an-app');
     }).toThrow(
-      `Invalid destination: [${schema.destination}] - Please specify explicit path.`
+      `Invalid destination: [../apps/not-an-app] - Please specify explicit path.`
     );
   });
 
@@ -47,30 +40,26 @@ describe('checkDestination', () => {
 
     const schema: NormalizedSchema = {
       projectName: 'my-lib',
-      destination: 'my-other-lib',
       importPath: undefined,
       updateImportPath: true,
       relativeToRootDestination: 'my-other-lib',
     };
 
     expect(() => {
-      checkDestination(tree, schema, schema.destination);
-    }).toThrow(
-      `Invalid destination: [${schema.destination}] - Path is not empty.`
-    );
+      checkDestination(tree, schema, 'my-other-lib');
+    }).toThrow(`Invalid destination: [my-other-lib] - Path is not empty.`);
   });
 
   it('should NOT throw an error if the path is available', async () => {
     const schema: NormalizedSchema = {
       projectName: 'my-lib',
-      destination: 'my-other-lib',
       importPath: undefined,
       updateImportPath: true,
       relativeToRootDestination: 'my-other-lib',
     };
 
     expect(() => {
-      checkDestination(tree, schema, schema.destination);
+      checkDestination(tree, schema, 'my-other-lib');
     }).not.toThrow();
   });
 });

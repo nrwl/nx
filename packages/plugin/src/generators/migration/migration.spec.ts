@@ -13,6 +13,8 @@ describe('NxPlugin migration generator', () => {
 
     await pluginGenerator(tree, {
       name: projectName,
+      directory: `plugins/${projectName}`,
+      projectNameAndRootFormat: 'as-provided',
     } as any);
   });
 
@@ -23,9 +25,9 @@ describe('NxPlugin migration generator', () => {
     });
 
     const project = readProjectConfiguration(tree, projectName);
-    expect(project.root).toEqual('libs/my-plugin');
+    expect(project.root).toEqual('plugins/my-plugin');
     expect(project.targets.build.options.assets).toContainEqual({
-      input: './libs/my-plugin',
+      input: './plugins/my-plugin',
       glob: 'migrations.json',
       output: '.',
     });
@@ -39,11 +41,13 @@ describe('NxPlugin migration generator', () => {
       packageVersion: '1.0.0',
     });
 
-    const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
-    const packageJson = readJson(tree, 'libs/my-plugin/package.json');
+    const migrationsJson = readJson(tree, 'plugins/my-plugin/migrations.json');
+    const packageJson = readJson(tree, 'plugins/my-plugin/package.json');
 
     expect(
-      tree.exists('libs/my-plugin/src/migrations/my-migration/my-migration.ts')
+      tree.exists(
+        'plugins/my-plugin/src/migrations/my-migration/my-migration.ts'
+      )
     ).toBeTruthy();
 
     expect(migrationsJson.generators['my-migration'].version).toEqual('1.0.0');
@@ -67,10 +71,12 @@ describe('NxPlugin migration generator', () => {
       packageVersion: '1.0.0',
     });
 
-    const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
+    const migrationsJson = readJson(tree, 'plugins/my-plugin/migrations.json');
 
     expect(
-      tree.exists('libs/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts')
+      tree.exists(
+        'plugins/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts'
+      )
     ).toBeTruthy();
 
     expect(migrationsJson.generators['update-1.0.0'].implementation).toEqual(
@@ -85,7 +91,7 @@ describe('NxPlugin migration generator', () => {
       packageVersion: '1.0.0',
     });
 
-    const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
+    const migrationsJson = readJson(tree, 'plugins/my-plugin/migrations.json');
 
     expect(migrationsJson.generators['my-migration'].description).toEqual(
       'my-migration'
@@ -100,7 +106,7 @@ describe('NxPlugin migration generator', () => {
       packageJsonUpdates: true,
     });
 
-    const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
+    const migrationsJson = readJson(tree, 'plugins/my-plugin/migrations.json');
 
     expect(migrationsJson.packageJsonUpdates).toEqual({
       ['1.0.0']: {

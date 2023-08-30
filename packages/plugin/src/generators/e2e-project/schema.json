@@ -29,7 +29,7 @@
     "pluginOutputPath": {
       "type": "string",
       "description": "the output path of the plugin after it builds.",
-      "x-priority": "important"
+      "x-deprecated": "This option is no longer used and will be removed in Nx 18."
     },
     "jestConfig": {
       "type": "string",

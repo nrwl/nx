@@ -14,14 +14,13 @@ describe('updateReadme', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
-      destination: 'shared/my-destination',
       importPath: '@proj/shared-my-destination',
       updateImportPath: true,
       newProjectName: 'shared-my-destination',
       relativeToRootDestination: 'shared/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should handle README.md not existing', async () => {

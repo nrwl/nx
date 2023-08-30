@@ -1,12 +1,12 @@
 import type { Tree } from '@nx/devkit';
-import type { Schema } from '../schema';
+import type { NormalizedSchema, Schema } from '../schema';
 
 type PluginOptions = {
   oldProjectName: string;
   newProjectName: string;
 };
 
-export async function runAngularPlugin(tree: Tree, schema: Schema) {
+export async function runAngularPlugin(tree: Tree, schema: NormalizedSchema) {
   let move: (tree: Tree, schema: PluginOptions) => Promise<void>;
   try {
     // nx-ignore-next-line

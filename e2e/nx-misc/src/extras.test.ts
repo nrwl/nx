@@ -3,7 +3,6 @@ import {
   cleanupProject,
   isNotWindows,
   newProject,
-  readJson,
   runCLI,
   setMaxWorkers,
   uniq,
@@ -13,16 +12,20 @@ import {
 import { join } from 'path';
 
 describe('Extra Nx Misc Tests', () => {
-  beforeAll(() => newProject());
+  beforeAll(() =>
+    newProject({
+      unsetProjectNameAndRootFormat: false,
+    })
+  );
   afterAll(() => cleanupProject());
 
   describe('Output Style', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
       runCLI(`generate @nx/web:app ${myapp}`);
-      setMaxWorkers(join('apps', myapp, 'project.json'));
+      setMaxWorkers(join(myapp, 'project.json'));
 
-      updateJson(join('apps', myapp, 'project.json'), (c) => {
+      updateJson(join(myapp, 'project.json'), (c) => {
         c.targets['inner'] = {
           command: 'echo inner',
         };
@@ -50,56 +53,6 @@ describe('Extra Nx Misc Tests', () => {
     });
   });
 
-  describe('Nx Plugins', () => {
-    it('should use plugins defined in nx.json', () => {
-      const nxJson = readJson('nx.json');
-      nxJson.plugins = ['./tools/plugin'];
-      updateFile('nx.json', JSON.stringify(nxJson));
-      updateFile(
-        'tools/plugin.js',
-        `
-      module.exports = {
-        processProjectGraph: (graph) => {
-          const Builder = require('@nx/devkit').ProjectGraphBuilder;
-          const builder = new Builder(graph);
-          builder.addNode({
-            name: 'plugin-node',
-            type: 'lib',
-            data: {
-              root: 'test'
-            }
-          });
-          builder.addNode({
-            name: 'plugin-node2',
-            type: 'lib',
-            data: {
-              root: 'test2'
-            }
-          });
-          builder.addImplicitDependency(
-            'plugin-node',
-            'plugin-node2'
-          );
-          return builder.getUpdatedProjectGraph();
-        }
-      };
-    `
-      );
-
-      runCLI('graph --file project-graph.json');
-      const projectGraphJson = readJson('project-graph.json');
-      expect(projectGraphJson.graph.nodes['plugin-node']).toBeDefined();
-      expect(projectGraphJson.graph.nodes['plugin-node2']).toBeDefined();
-      expect(projectGraphJson.graph.dependencies['plugin-node']).toContainEqual(
-        {
-          type: 'implicit',
-          source: 'plugin-node',
-          target: 'plugin-node2',
-        }
-      );
-    });
-  });
-
   describe('Run Commands', () => {
     const mylib = uniq('lib');
     beforeAll(() => {
@@ -113,11 +66,11 @@ describe('Extra Nx Misc Tests', () => {
       );
 
       updateFile(
-        `apps/${mylib}/.custom.env`,
+        `${mylib}/.custom.env`,
         'SHARED_VAR=shared-nested-value\nNESTED_ONLY=nested-only-value'
       );
 
-      const envFile = `apps/${mylib}/.custom.env`;
+      const envFile = `${mylib}/.custom.env`;
       runCLI(
         `generate @nx/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${mylib}`
       );
@@ -126,7 +79,7 @@ describe('Extra Nx Misc Tests', () => {
         process.platform === 'win32'
           ? `%SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%` // Windows
           : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
-      updateJson(join('libs', mylib, 'project.json'), (config) => {
+      updateJson(join(mylib, 'project.json'), (config) => {
         config.targets.echoEnvVariables.options.command += ` ${command}`;
         return config;
       });
@@ -139,7 +92,7 @@ describe('Extra Nx Misc Tests', () => {
     }, 120000);
 
     it('should pass options', async () => {
-      updateJson(join('libs', mylib, 'project.json'), (config) => {
+      updateJson(join(mylib, 'project.json'), (config) => {
         config.targets.echo = {
           command: 'echo --var1={args.var1}',
           options: {
@@ -155,7 +108,7 @@ describe('Extra Nx Misc Tests', () => {
 
     it('should interpolate provided arguments', async () => {
       const echoTarget = uniq('echo');
-      updateJson(join('libs', mylib, 'project.json'), (config) => {
+      updateJson(join(mylib, 'project.json'), (config) => {
         config.targets[echoTarget] = {
           executor: 'nx:run-commands',
           options: {
@@ -190,7 +143,7 @@ describe('Extra Nx Misc Tests', () => {
     }, 120000);
 
     it('should fail when a process exits non-zero', async () => {
-      updateJson(join('libs', mylib, 'project.json'), (config) => {
+      updateJson(join(mylib, 'project.json'), (config) => {
         config.targets.error = {
           executor: 'nx:run-commands',
           options: {
@@ -211,7 +164,7 @@ describe('Extra Nx Misc Tests', () => {
     });
 
     it('run command should not break if output property is missing in options and arguments', async () => {
-      updateJson(join('libs', mylib, 'project.json'), (config) => {
+      updateJson(join(mylib, 'project.json'), (config) => {
         config.targets.lint.outputs = ['{options.outputFile}'];
         return config;
       });
@@ -231,7 +184,7 @@ describe('Extra Nx Misc Tests', () => {
 
       const mylib = uniq('lib');
 
-      const folder = `dist/libs/${mylib}/some-folder`;
+      const folder = `dist/${mylib}/some-folder`;
 
       runCLI(`generate @nx/js:lib ${mylib}`);
 
@@ -245,7 +198,7 @@ describe('Extra Nx Misc Tests', () => {
           : `mkdir -p ${folder}`,
         `echo dummy > ${folder}/dummy.txt`,
       ];
-      updateJson(join('libs', mylib, 'project.json'), (config) => {
+      updateJson(join(mylib, 'project.json'), (config) => {
         delete config.targets.build.options.command;
         config.targets.build.options = {
           ...config.targets.build.options,
@@ -288,7 +241,7 @@ describe('Extra Nx Misc Tests', () => {
   NX_USERNAME=$FIRSTNAME $LASTNAME`
       );
       updateFile(
-        `apps/${appName}/src/app/app.tsx`,
+        `${appName}/src/app/app.tsx`,
         `
       import NxWelcome from './nx-welcome';
   
@@ -304,7 +257,7 @@ describe('Extra Nx Misc Tests', () => {
     `
       );
       updateFile(
-        `apps/${appName}/src/app/app.spec.tsx`,
+        `${appName}/src/app/app.spec.tsx`,
         `import { render } from '@testing-library/react';
   
     import App from './app';

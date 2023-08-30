@@ -97,7 +97,11 @@ describe('nx wrapper / .nx installation', () => {
       j.installation.plugins['@nx/workspace'] = getPublishedVersion();
       return j;
     });
-    expect(() => runNxWrapper(`g npm-package ${uniq('pkg')}`)).not.toThrow();
+    expect(() =>
+      runNxWrapper(
+        `g npm-package ${uniq('pkg')} --projectNameAndRootFormat as-provided`
+      )
+    ).not.toThrow();
     expect(() => checkFilesExist());
   });
 

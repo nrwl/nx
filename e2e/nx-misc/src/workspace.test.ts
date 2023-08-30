@@ -19,7 +19,9 @@ let proj: string;
 
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
-    proj = newProject();
+    proj = newProject({
+      unsetProjectNameAndRootFormat: false,
+    });
   });
 
   afterEach(() => cleanupProject());
@@ -45,7 +47,9 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
 describe('Workspace Tests', () => {
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({
+      unsetProjectNameAndRootFormat: false,
+    });
   });
 
   afterAll(() => cleanupProject());
@@ -54,11 +58,13 @@ describe('Workspace Tests', () => {
     it('should create a minimal npm package', () => {
       const npmPackage = uniq('npm-package');
 
-      runCLI(`generate @nx/workspace:npm-package ${npmPackage}`);
+      runCLI(
+        `generate @nx/workspace:npm-package ${npmPackage} --directory packages/${npmPackage}`
+      );
 
       updateFile('package.json', (content) => {
         const json = JSON.parse(content);
-        json.workspaces = ['libs/*'];
+        json.workspaces = ['packages/*'];
         return JSON.stringify(json);
       });
 
@@ -82,7 +88,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest`
       );
 
       updateFile(
@@ -100,7 +106,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(
-        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest`
       );
 
       updateFile(
@@ -114,9 +120,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [`${lib1}-data-access`];
@@ -128,7 +132,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access`
       );
 
       expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
@@ -225,7 +229,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --importPath=${importPath} --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --importPath=${importPath} --unitTestRunner=jest`
       );
 
       updateFile(
@@ -243,7 +247,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(
-        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest`
       );
 
       updateFile(
@@ -257,9 +261,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [`${lib1}-data-access`];
@@ -271,7 +273,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access`
       );
 
       expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
@@ -361,7 +363,10 @@ describe('Workspace Tests', () => {
       const lib3 = uniq('mylib');
 
       let nxJson = readJson('nx.json');
-      nxJson.workspaceLayout = { libsDir: 'packages' };
+      nxJson.workspaceLayout = {
+        ...nxJson.workspaceLayout,
+        libsDir: 'packages',
+      };
       updateFile('nx.json', JSON.stringify(nxJson));
 
       runCLI(
@@ -492,7 +497,10 @@ describe('Workspace Tests', () => {
       );
 
       nxJson = readJson('nx.json');
-      delete nxJson.workspaceLayout;
+      nxJson.workspaceLayout = {
+        ...nxJson.workspaceLayout,
+        libsDir: undefined,
+      };
       updateFile('nx.json', JSON.stringify(nxJson));
     });
 
@@ -500,9 +508,7 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('lib1');
       const lib2 = uniq('lib2');
       const lib3 = uniq('lib3');
-      runCLI(
-        `generate @nx/js:lib ${lib1} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib1} --unitTestRunner=jest`);
 
       updateFile(
         `${lib1}/src/lib/${lib1}.ts`,
@@ -516,7 +522,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(
-        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest`
       );
 
       updateFile(
@@ -530,9 +536,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [lib1];
@@ -544,7 +548,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1} ${lib1}/data-access --newProjectName=${lib1}-data-access --project-name-and-root-format=as-provided`
+        `generate @nx/workspace:move --project ${lib1} ${lib1}/data-access --newProjectName=${lib1}-data-access`
       );
 
       expect(moveOutput).toContain(`DELETE ${lib1}/project.json`);
@@ -636,7 +640,7 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest`
       );
       let rootTsConfig = readJson('tsconfig.base.json');
       expect(
@@ -661,7 +665,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(
-        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest`
       );
 
       updateFile(
@@ -675,9 +679,7 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(
-        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
-      );
+      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
       updateFile(join(lib3, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [`${lib1}-data-access`];
@@ -689,7 +691,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access`
       );
 
       expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
@@ -758,14 +760,14 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylibb');
 
       runCLI(`generate @nx/js:lib ${lib1} --unitTestRunner=jest`);
-      expect(exists(tmpProjPath(`libs/${lib1}`))).toBeTruthy();
+      expect(exists(tmpProjPath(`${lib1}`))).toBeTruthy();
 
       /**
        * Create a library which has an implicit dependency on lib1
        */
 
       runCLI(`generate @nx/js:lib ${lib2} --unitTestRunner=jest`);
-      updateFile(join('libs', lib2, 'project.json'), (content) => {
+      updateFile(join(lib2, 'project.json'), (content) => {
         const data = JSON.parse(content);
         data.implicitDependencies = [lib1];
         return JSON.stringify(data, null, 2);
@@ -796,13 +798,13 @@ describe('Workspace Tests', () => {
         `generate @nx/workspace:remove --project ${lib1} --forceRemove`
       );
 
-      expect(removeOutputForced).toContain(`DELETE libs/${lib1}`);
-      expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
+      expect(removeOutputForced).toContain(`DELETE ${lib1}`);
+      expect(exists(tmpProjPath(`${lib1}`))).toBeFalsy();
 
       expect(removeOutputForced).not.toContain(`UPDATE nx.json`);
       const projects = runCLI('show projects').split('\n');
       expect(projects).not.toContain(lib1);
-      const lib2Config = readJson(join('libs', lib2, 'project.json'));
+      const lib2Config = readJson(join(lib2, 'project.json'));
       expect(lib2Config.implicitDependencies).toEqual([]);
 
       expect(projects[`${lib1}`]).toBeUndefined();

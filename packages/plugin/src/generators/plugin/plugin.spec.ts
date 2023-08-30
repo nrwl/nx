@@ -15,6 +15,8 @@ const getSchema: (overrides?: Partial<Schema>) => Schema = (
   overrides = {}
 ) => ({
   name: 'my-plugin',
+  directory: 'plugins/my-plugin',
+  projectNameAndRootFormat: 'as-provided',
   compiler: 'tsc',
   skipTsConfig: false,
   skipFormat: false,
@@ -28,39 +30,39 @@ describe('NxPlugin Plugin Generator', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update the project configuration', async () => {
     await pluginGenerator(tree, getSchema());
     const project = readProjectConfiguration(tree, 'my-plugin');
-    expect(project.root).toEqual('libs/my-plugin');
+    expect(project.root).toEqual('plugins/my-plugin');
     expect(project.targets.build).toEqual({
       executor: '@nx/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: 'dist/libs/my-plugin',
-        tsConfig: 'libs/my-plugin/tsconfig.lib.json',
-        main: 'libs/my-plugin/src/index.ts',
+        outputPath: 'dist/plugins/my-plugin',
+        tsConfig: 'plugins/my-plugin/tsconfig.lib.json',
+        main: 'plugins/my-plugin/src/index.ts',
         assets: [
-          'libs/my-plugin/*.md',
+          'plugins/my-plugin/*.md',
           {
-            input: './libs/my-plugin/src',
+            input: './plugins/my-plugin/src',
             glob: '**/!(*.ts)',
             output: './src',
           },
           {
-            input: './libs/my-plugin/src',
+            input: './plugins/my-plugin/src',
             glob: '**/*.d.ts',
             output: './src',
           },
           {
-            input: './libs/my-plugin',
+            input: './plugins/my-plugin',
             glob: 'generators.json',
             output: '.',
           },
           {
-            input: './libs/my-plugin',
+            input: './plugins/my-plugin',
             glob: 'executors.json',
             output: '.',
           },
@@ -72,8 +74,8 @@ describe('NxPlugin Plugin Generator', () => {
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: expect.arrayContaining([
-          'libs/my-plugin/**/*.ts',
-          'libs/my-plugin/package.json',
+          'plugins/my-plugin/**/*.ts',
+          'plugins/my-plugin/package.json',
         ]),
       },
     });
@@ -81,7 +83,7 @@ describe('NxPlugin Plugin Generator', () => {
       executor: '@nx/jest:jest',
       outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
-        jestConfig: 'libs/my-plugin/jest.config.ts',
+        jestConfig: 'plugins/my-plugin/jest.config.ts',
         passWithNoTests: true,
       },
       configurations: {
@@ -93,18 +95,26 @@ describe('NxPlugin Plugin Generator', () => {
     });
   });
 
+  it('should update tsconfig paths', async () => {
+    await pluginGenerator(tree, getSchema());
+    const tsConfig = readJson(tree, 'tsconfig.base.json');
+    expect(tsConfig.compilerOptions.paths['@proj/my-plugin']).toEqual([
+      'plugins/my-plugin/src/index.ts',
+    ]);
+  });
+
   it('should place the plugin in a directory', async () => {
     await pluginGenerator(
       tree,
       getSchema({
         name: 'myPlugin',
-        directory: 'plugins',
+        directory: 'plugins/my-plugin',
       })
     );
-    const project = readProjectConfiguration(tree, 'plugins-my-plugin');
-    const projectE2e = readProjectConfiguration(tree, 'plugins-my-plugin-e2e');
-    expect(project.root).toEqual('libs/plugins/my-plugin');
-    expect(projectE2e.root).toEqual('apps/plugins/my-plugin-e2e');
+    const project = readProjectConfiguration(tree, 'my-plugin');
+    const projectE2e = readProjectConfiguration(tree, 'my-plugin-e2e');
+    expect(project.root).toEqual('plugins/my-plugin');
+    expect(projectE2e.root).toEqual('plugins/my-plugin-e2e');
   });
 
   describe('asset paths', () => {
@@ -118,24 +128,24 @@ describe('NxPlugin Plugin Generator', () => {
       const project = readProjectConfiguration(tree, 'my-plugin');
       const assets = project.targets.build.options.assets;
       expect(assets).toEqual([
-        'libs/my-plugin/*.md',
+        'plugins/my-plugin/*.md',
         {
-          input: './libs/my-plugin/src',
+          input: './plugins/my-plugin/src',
           glob: '**/!(*.ts)',
           output: './src',
         },
         {
-          input: './libs/my-plugin/src',
+          input: './plugins/my-plugin/src',
           glob: '**/*.d.ts',
           output: './src',
         },
         {
-          input: './libs/my-plugin',
+          input: './plugins/my-plugin',
           glob: 'generators.json',
           output: '.',
         },
         {
-          input: './libs/my-plugin',
+          input: './plugins/my-plugin',
           glob: 'executors.json',
           output: '.',
         },
@@ -147,7 +157,7 @@ describe('NxPlugin Plugin Generator', () => {
         tree,
         getSchema({
           name: 'myPlugin',
-          rootProject: true,
+          directory: '.',
         })
       );
       const project = readProjectConfiguration(tree, 'my-plugin');

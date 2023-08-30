@@ -10,7 +10,7 @@ describe('updateProjectRootFiles', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update the relative root in files at the root of the project', async () => {
@@ -32,7 +32,6 @@ describe('updateProjectRootFiles', () => {
     tree.write(testFilePath, testFile);
     const schema: NormalizedSchema = {
       projectName: 'my-source',
-      destination: 'subfolder/my-destination',
       importPath: '@proj/subfolder-my-destination',
       updateImportPath: true,
       newProjectName: 'subfolder-my-destination',

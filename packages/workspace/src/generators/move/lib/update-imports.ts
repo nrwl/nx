@@ -27,7 +27,6 @@ let tsModule: typeof import('typescript');
 /**
  * Updates all the imports in the workspace and modifies the tsconfig appropriately.
  *
- * @param schema The options provided to the schematic
  */
 export function updateImports(
   tree: Tree,

@@ -10,7 +10,7 @@ describe('updateJestConfig', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should handle jest config not existing', async () => {
@@ -21,7 +21,6 @@ describe('updateJestConfig', () => {
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     const schema: NormalizedSchema = {
       projectName: 'my-source',
-      destination: 'my-destination',
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
@@ -51,7 +50,6 @@ describe('updateJestConfig', () => {
     tree.write(jestConfigPath, jestConfig);
     const schema: NormalizedSchema = {
       projectName: 'my-source',
-      destination: 'my-destination',
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
@@ -88,7 +86,6 @@ describe('updateJestConfig', () => {
     tree.write(jestConfigPath, jestConfig);
     const schema: NormalizedSchema = {
       projectName: 'my-source',
-      destination: 'my-source/data-access',
       importPath: '@proj/my-soource-data-access',
       updateImportPath: true,
       newProjectName: 'my-source-data-access',
@@ -128,7 +125,6 @@ describe('updateJestConfig', () => {
     tree.write(jestConfigPath, jestConfig);
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
-      destination: 'other/test/dir/my-destination',
       importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
@@ -165,7 +161,6 @@ describe('updateJestConfig', () => {
     );
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
-      destination: 'other/test/dir/my-destination',
       importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
@@ -205,7 +200,6 @@ module.exports = {
     );
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
-      destination: 'other/test/dir/my-destination',
       importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',
@@ -246,7 +240,6 @@ module.exports = {
     );
     const schema: NormalizedSchema = {
       projectName: 'some-test-dir-my-source',
-      destination: 'other/test/dir/my-destination',
       importPath: '@proj/other-test-dir-my-destination',
       updateImportPath: true,
       newProjectName: 'other-test-dir-my-destination',

@@ -15,9 +15,11 @@ describe('NxPlugin Generator Generator', () => {
 
   beforeEach(async () => {
     projectName = 'my-plugin';
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     await pluginGenerator(tree, {
       name: projectName,
+      directory: `plugins/${projectName}`,
+      projectNameAndRootFormat: 'as-provided',
     } as any);
   });
 
@@ -29,17 +31,17 @@ describe('NxPlugin Generator Generator', () => {
     });
 
     expect(
-      tree.exists('libs/my-plugin/src/generators/my-generator/schema.d.ts')
+      tree.exists('plugins/my-plugin/src/generators/my-generator/schema.d.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/generators/my-generator/schema.json')
+      tree.exists('plugins/my-plugin/src/generators/my-generator/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/generators/my-generator/generator.ts')
+      tree.exists('plugins/my-plugin/src/generators/my-generator/generator.ts')
     ).toBeTruthy();
     expect(
       tree.exists(
-        'libs/my-plugin/src/generators/my-generator/generator.spec.ts'
+        'plugins/my-plugin/src/generators/my-generator/generator.spec.ts'
       )
     ).toBeTruthy();
   });
@@ -52,7 +54,7 @@ describe('NxPlugin Generator Generator', () => {
       unitTestRunner: 'jest',
     });
 
-    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
+    const generatorJson = readJson(tree, 'plugins/my-plugin/generators.json');
 
     expect(generatorJson.generators['my-generator'].factory).toEqual(
       './src/generators/my-generator/generator'
@@ -91,11 +93,11 @@ describe('NxPlugin Generator Generator', () => {
       unitTestRunner: 'jest',
     });
 
-    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
+    const generatorJson = readJson(tree, 'plugins/my-plugin/generators.json');
 
     expect(
       tree.exists(
-        `libs/my-plugin/src/generators/${generatorFileName}/schema.d.ts`
+        `plugins/my-plugin/src/generators/${generatorFileName}/schema.d.ts`
       )
     ).toBeTruthy();
 
@@ -137,7 +139,7 @@ describe('NxPlugin Generator Generator', () => {
       unitTestRunner: 'jest',
     });
 
-    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
+    const generatorJson = readJson(tree, 'plugins/my-plugin/generators.json');
 
     expect(generatorJson.generators['my-generator'].description).toEqual(
       'my-generator generator'
@@ -152,7 +154,7 @@ describe('NxPlugin Generator Generator', () => {
       unitTestRunner: 'jest',
     });
 
-    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
+    const generatorJson = readJson(tree, 'plugins/my-plugin/generators.json');
 
     expect(generatorJson.generators['my-generator'].description).toEqual(
       'my-generator custom description'
@@ -170,11 +172,13 @@ describe('NxPlugin Generator Generator', () => {
         });
 
         expect(
-          tree.exists('libs/my-plugin/src/generators/my-generator/generator.ts')
+          tree.exists(
+            'plugins/my-plugin/src/generators/my-generator/generator.ts'
+          )
         ).toBeTruthy();
         expect(
           tree.exists(
-            'libs/my-plugin/src/generators/my-generator/generator.spec.ts'
+            'plugins/my-plugin/src/generators/my-generator/generator.spec.ts'
           )
         ).toBeFalsy();
       });
@@ -191,7 +195,7 @@ describe('NxPlugin Generator Generator', () => {
 
       const generatorJson = readJson<GeneratorsJson>(
         tree,
-        'libs/my-plugin/generators.json'
+        'plugins/my-plugin/generators.json'
       );
 
       expect(

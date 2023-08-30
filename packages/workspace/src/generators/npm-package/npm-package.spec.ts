@@ -1,9 +1,7 @@
 import {
   readJson,
-  readNxJson,
   readProjectConfiguration,
   Tree,
-  updateNxJson,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -12,19 +10,14 @@ import { npmPackageGenerator } from './npm-package';
 describe('@nx/workspace:npm-package', () => {
   let tree: Tree;
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-    const nxJson = readNxJson(tree);
-    nxJson.workspaceLayout = {
-      appsDir: 'packages',
-      libsDir: 'packages',
-    };
-    updateNxJson(tree, nxJson);
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should generate a minimal package', async () => {
     await npmPackageGenerator(tree, {
       name: 'my-package',
+      directory: 'packages/my-package',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     const project = readProjectConfiguration(tree, 'my-package');
@@ -40,6 +33,8 @@ describe('@nx/workspace:npm-package', () => {
   it('should only generate package.json and index.js', async () => {
     await npmPackageGenerator(tree, {
       name: 'my-package',
+      directory: 'packages/my-package',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(tree.read('packages/my-package/package.json').toString())
@@ -75,6 +70,8 @@ describe('@nx/workspace:npm-package', () => {
 
       await npmPackageGenerator(tree, {
         name: 'my-package',
+        directory: 'packages/my-package',
+        projectNameAndRootFormat: 'as-provided',
       });
 
       expect(readJson(tree, 'packages/my-package/package.json')).toEqual(

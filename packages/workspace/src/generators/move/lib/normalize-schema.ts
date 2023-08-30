@@ -31,9 +31,10 @@ export async function normalizeSchema(
 
   return {
     ...schema,
-    destination: normalizePathSlashes(schema.destination),
     importPath,
+    updateImportPath: schema.updateImportPath && !!importPath,
     newProjectName,
+    destination: undefined,
     relativeToRootDestination: destination,
   };
 }
@@ -64,8 +65,10 @@ async function determineProjectNameAndRootOptions(
     options,
     projectConfiguration
   );
+  const nxJson = readNxJson(tree);
   const format =
     options.projectNameAndRootFormat ??
+    nxJson.workspaceLayout?.projectNameAndRootFormat ??
     (await determineFormat(tree, formats, options));
 
   return formats[format];

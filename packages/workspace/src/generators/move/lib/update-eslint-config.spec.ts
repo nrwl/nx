@@ -21,14 +21,13 @@ describe('updateEslint', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
-      destination: 'shared/my-destination',
       importPath: '@proj/shared-my-destination',
       updateImportPath: true,
       newProjectName: 'shared-my-destination',
       relativeToRootDestination: 'shared/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should handle .eslintrc.json not existing', async () => {
@@ -80,7 +79,6 @@ describe('updateEslint', () => {
 
     const newSchema = {
       projectName: 'api-test',
-      destination: 'test',
       importPath: '@proj/test',
       updateImportPath: true,
       newProjectName: 'test',
@@ -239,14 +237,13 @@ describe('updateEslint (flat config)', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-lib',
-      destination: 'shared/my-destination',
       importPath: '@proj/shared-my-destination',
       updateImportPath: true,
       newProjectName: 'shared-my-destination',
       relativeToRootDestination: 'shared/my-destination',
     };
 
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     tree.delete('.eslintrc.json');
     tree.write('eslint.config.js', `module.exports = [];`);
   });
@@ -301,7 +298,6 @@ describe('updateEslint (flat config)', () => {
 
     const newSchema = {
       projectName: 'api-test',
-      destination: 'test',
       importPath: '@proj/test',
       updateImportPath: true,
       newProjectName: 'test',

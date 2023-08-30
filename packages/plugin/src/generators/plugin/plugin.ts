@@ -22,6 +22,7 @@ import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-depe
 import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
 import type { Schema } from './schema';
+import { basename, join } from 'path';
 
 const nxVersion = require('../../../package.json').version;
 
@@ -126,15 +127,14 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
     tasks.push(
       await e2eProjectGenerator(host, {
         pluginName: options.name,
-        projectDirectory: options.projectDirectory,
-        pluginOutputPath: joinPathFragments(
-          'dist',
-          options.rootProject ? options.name : options.projectRoot
-        ),
-        npmPackageName: options.npmPackageName,
+        projectDirectory: options.rootProject
+          ? 'e2e'
+          : join(
+              options.projectDirectory,
+              `../${basename(options.projectDirectory)}-e2e`
+            ),
         skipFormat: true,
-        rootProject: options.rootProject,
-        projectNameAndRootFormat: options.projectNameAndRootFormat,
+        projectNameAndRootFormat: 'as-provided',
       })
     );
   }
