@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
     "declaration": true,
+    "lib": ["dom", "es2019"],
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],

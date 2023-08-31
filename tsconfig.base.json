@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es2015",
+    "target": "ES2021",
     "importHelpers": true,
     "module": "commonjs",
     "moduleResolution": "node",
@@ -9,7 +9,7 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "types": ["node", "jest"],
-    "lib": ["es2019"],
+    "lib": ["ES2021"],
     "declaration": true,
     "resolveJsonModule": true,
     "baseUrl": ".",
@@ -47,7 +47,6 @@
       "@nx/next/*": ["packages/next/*"],
       "@nx/node": ["packages/node"],
       "@nx/node/*": ["packages/node/*"],
-      "@nx/nx-dev/data-access-ai": ["nx-dev/data-access-ai/src/index.ts"],
       "@nx/nx-dev/data-access-documents": [
         "nx-dev/data-access-documents/src/index.ts"
       ],
@@ -87,6 +86,7 @@
       "@nx/nx-dev/ui-references": ["nx-dev/ui-references/src/index.ts"],
       "@nx/nx-dev/ui-sponsor-card": ["nx-dev/ui-sponsor-card/src/index.ts"],
       "@nx/nx-dev/ui-theme": ["nx-dev/ui-theme/src/index.ts"],
+      "@nx/nx-dev/util-ai": ["nx-dev/util-ai/src/index.ts"],
       "@nx/playwright": ["packages/playwright/index.ts"],
       "@nx/plugin": ["packages/plugin"],
       "@nx/plugin/*": ["packages/plugin/*"],

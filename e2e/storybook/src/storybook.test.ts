@@ -18,7 +18,7 @@ describe('Storybook generators and executors for monorepos', () => {
   beforeAll(async () => {
     proj = newProject();
     runCLI(
-      `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --no-interactive`
+      `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
     await setMaxWorkers();
     runCLI(
@@ -55,15 +55,15 @@ describe('Storybook generators and executors for monorepos', () => {
     // This test makes sure path resolution works
     it('should build a React based storybook that references another lib and uses rollup', () => {
       runCLI(
-        `generate @nx/react:lib my-lib --bundler=rollup --unitTestRunner=none --no-interactive`
+        `generate @nx/react:lib my-lib --bundler=rollup --unitTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
       );
 
       // create a component in the first lib to reference the cmp from the 2nd lib
       createFileSync(
-        tmpProjPath(`apps/${reactStorybookApp}/src/app/test-button.tsx`)
+        tmpProjPath(`${reactStorybookApp}/src/app/test-button.tsx`)
       );
       writeFileSync(
-        tmpProjPath(`apps/${reactStorybookApp}/src/app/test-button.tsx`),
+        tmpProjPath(`${reactStorybookApp}/src/app/test-button.tsx`),
         `
           import { MyLib } from '@${proj}/my-lib';
 
@@ -81,12 +81,10 @@ describe('Storybook generators and executors for monorepos', () => {
 
       // create a story in the first lib to reference the cmp from the 2nd lib
       createFileSync(
-        tmpProjPath(`apps/${reactStorybookApp}/src/app/test-button.stories.tsx`)
+        tmpProjPath(`${reactStorybookApp}/src/app/test-button.stories.tsx`)
       );
       writeFileSync(
-        tmpProjPath(
-          `apps/${reactStorybookApp}/src/app/test-button.stories.tsx`
-        ),
+        tmpProjPath(`${reactStorybookApp}/src/app/test-button.stories.tsx`),
         `
               import type { Meta } from '@storybook/react';
               import { TestButton } from './test-button';

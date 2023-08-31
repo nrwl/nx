@@ -22,11 +22,11 @@ export default config;
 
 exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files by default 1`] = `
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
   "name": "test-ui-lib",
   "projectType": "library",
-  "root": "libs/test-ui-lib",
-  "sourceRoot": "libs/test-ui-lib/src",
+  "root": "test-ui-lib",
+  "sourceRoot": "test-ui-lib/src",
   "tags": [],
   "targets": {
     "build-storybook": {
@@ -39,7 +39,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
       "options": {
         "browserTarget": "test-ui-lib:build-storybook",
         "compodoc": false,
-        "configDir": "libs/test-ui-lib/.storybook",
+        "configDir": "test-ui-lib/.storybook",
         "outputDir": "dist/storybook/test-ui-lib",
       },
       "outputs": [
@@ -50,7 +50,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
       "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "libs/test-ui-lib/**/*.ts",
+          "test-ui-lib/**/*.ts",
         ],
       },
       "outputs": [
@@ -67,7 +67,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
       "options": {
         "browserTarget": "test-ui-lib:build-storybook",
         "compodoc": false,
-        "configDir": "libs/test-ui-lib/.storybook",
+        "configDir": "test-ui-lib/.storybook",
         "port": 4400,
       },
     },
@@ -80,7 +80,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
       },
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "libs/test-ui-lib/jest.config.ts",
+        "jestConfig": "test-ui-lib/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": [
@@ -90,7 +90,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
     "test-storybook": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "test-storybook -c libs/test-ui-lib/.storybook --url=http://localhost:4400",
+        "command": "test-storybook -c test-ui-lib/.storybook --url=http://localhost:4400",
       },
     },
   },
@@ -127,9 +127,9 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
     "outDir": ""
   },
   "files": [
-    "../../node_modules/@nx/react/typings/styled-jsx.d.ts",
-    "../../node_modules/@nx/react/typings/cssmodule.d.ts",
-    "../../node_modules/@nx/react/typings/image.d.ts"
+    "../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "src/**/*.spec.ts",

@@ -180,9 +180,11 @@ describe('React Applications', () => {
 
     checkFilesExist(`dist/apps/${appName}/index.html`);
 
-    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
-    expect(e2eResults).toContain('All specs passed!');
-    expect(await killPorts()).toBeTruthy();
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
+      expect(e2eResults).toContain('All specs passed!');
+      expect(await killPorts()).toBeTruthy();
+    }
   }, 250_000);
 
   it('should generate app with routing', async () => {
