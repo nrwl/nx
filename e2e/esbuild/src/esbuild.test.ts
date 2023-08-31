@@ -2,13 +2,16 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
   newProject,
   packageInstall,
+  packageManagerLockFile,
   readFile,
   readJson,
   runCLI,
   runCommand,
   runCommandUntil,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -52,7 +55,9 @@ describe('EsBuild Plugin', () => {
     // main field should be set correctly in package.json
     checkFilesExist(
       `dist/libs/${myPkg}/package.json`,
-      `dist/libs/${myPkg}/pnpm-lock.yaml`
+      `dist/libs/${myPkg}/${
+        packageManagerLockFile[detectPackageManager(tmpProjPath())]
+      }`
     );
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
 
