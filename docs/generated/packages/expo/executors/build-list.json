@@ -1,0 +1,86 @@
+{
+  "name": "build-list",
+  "implementation": "/packages/expo/src/executors/build-list/build-list.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxExpoEasBuildList",
+    "cli": "nx",
+    "title": "Expo EAS Build List executor",
+    "description": "List all Expo Application Services (EAS) builds for your Expo project.",
+    "type": "object",
+    "properties": {
+      "platform": {
+        "enum": ["ios", "android", "all"],
+        "alias": "p",
+        "description": "The platform to build the app.",
+        "x-priority": "important"
+      },
+      "json": {
+        "type": "boolean",
+        "description": "Enable JSON output, non-JSON messages will be printed to stderr"
+      },
+      "interactive": {
+        "type": "boolean",
+        "description": "Run the command in interactive mode."
+      },
+      "status": {
+        "enum": [
+          "new",
+          "in-queue",
+          "in-progress",
+          "errored",
+          "finished",
+          "canceled"
+        ],
+        "description": "Status of EAS build"
+      },
+      "distribution": {
+        "enum": ["store", "internal", "simulator"],
+        "description": "Distribution of EAS build"
+      },
+      "channel": { "type": "string", "description": "Channel of EAS build" },
+      "appVersion": {
+        "type": "string",
+        "description": "App version of EAS build"
+      },
+      "appBuildVersion": {
+        "type": "string",
+        "description": "App build version of EAS build"
+      },
+      "sdkVersion": {
+        "type": "string",
+        "description": "SDK version of EAS build"
+      },
+      "runtimeVersion": {
+        "type": "string",
+        "description": "Runtime version of EAS build"
+      },
+      "appIdentifier": {
+        "type": "string",
+        "description": "App identifier of EAS build"
+      },
+      "buildProfile": {
+        "type": "string",
+        "description": "Build profile of EAS build"
+      },
+      "gitCommitHash": {
+        "type": "string",
+        "description": "Git commit hash of EAS build"
+      },
+      "limit": {
+        "type": "number",
+        "description": "Limit of numbers to list EAS builds"
+      }
+    },
+    "required": [],
+    "examplesFile": "The `build-list` command allows to check the details of your Expo Application Services (EAS) build status.\n\n`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"build-list\": {\n      \"executor\": \"@nx/expo:build-list\",\n      \"options\": {}\n    }\n    //...\n  }\n}\n```\n\n```shell\nnx run mobile:build-list\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Get Status of Different Platforms\" %}\nThe `platform` option allows you to check build status of different platform (e.g. android, ios, all):\n\n```json\n    \"build-list\": {\n      \"executor\": \"@nx/expo:build-list\",\n      \"options\": {\n        \"platform\": \"ios\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Get Status Interactively\" %}\n\nThe `interactive` option allows you to specify whether to use interactive mode:\n\n```json\n    \"build-list\": {\n      \"executor\": \"@nx/expo:build-list\",\n      \"options\": {\n        \"interactive\": true\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Get Status in JSON Format\" %}\n\nThe `json` option allows you to print the output in JSON format:\n\n```json\n    \"build-list\": {\n      \"executor\": \"@nx/expo:build-list\",\n      \"options\": {\n        \"interactive\": false,\n        \"json\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
+    "presets": []
+  },
+  "description": "List all EAS builds for your Expo project",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/build-list/schema.json",
+  "type": "executor"
+}

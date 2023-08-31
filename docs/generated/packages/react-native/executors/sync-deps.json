@@ -1,0 +1,34 @@
+{
+  "name": "sync-deps",
+  "implementation": "/packages/react-native/src/executors/sync-deps/sync-deps.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "cli": "nx",
+    "$id": "NxReactNativeSyncDeps",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Sync Deps for React Native",
+    "description": "Updates `package.json` with project dependencies.",
+    "type": "object",
+    "properties": {
+      "include": {
+        "type": "array",
+        "items": { "type": "string" },
+        "default": [],
+        "description": "An array of additional npm packages to include."
+      },
+      "exclude": {
+        "type": "array",
+        "items": { "type": "string" },
+        "default": [],
+        "description": "An array of npm packages to exclude."
+      }
+    },
+    "presets": []
+  },
+  "description": "Syncs dependencies to `package.json` (required for autolinking).",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/react-native/src/executors/sync-deps/schema.json",
+  "type": "executor"
+}

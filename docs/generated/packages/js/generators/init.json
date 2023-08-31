@@ -1,0 +1,42 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#initGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxTypescriptInit",
+    "cli": "nx",
+    "title": "Init nx/js",
+    "description": "Init generator placeholder for nx/js.",
+    "properties": {
+      "js": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use JavaScript instead of TypeScript"
+      },
+      "skipFormat": {
+        "type": "boolean",
+        "aliases": ["skip-format"],
+        "description": "Skip formatting files.",
+        "x-priority": "internal"
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "description": "Skip adding package.json dependencies",
+        "x-priority": "internal"
+      },
+      "tsConfigName": {
+        "type": "string",
+        "description": "Customize the generated tsconfig file name.",
+        "x-priority": "internal"
+      }
+    },
+    "presets": []
+  },
+  "aliases": ["lib"],
+  "x-type": "init",
+  "description": "Initialize a TS/JS workspace.",
+  "hidden": true,
+  "implementation": "/packages/js/src/generators/init/init#initGenerator.ts",
+  "path": "/packages/js/src/generators/init/schema.json",
+  "type": "generator"
+}

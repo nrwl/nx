@@ -1,0 +1,20 @@
+{
+  "name": "workspace-generator",
+  "factory": "./src/generators/workspace-generator/workspace-generator",
+  "schema": {
+    "cli": "nx",
+    "$id": "SchematicsNxWorkspaceSchematic",
+    "title": "Create a custom generator",
+    "description": "Create a custom generator.",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "aliases": ["workspace-schematic"],
+  "description": "Generates a workspace generator.",
+  "implementation": "/packages/workspace/src/generators/workspace-generator/workspace-generator.ts",
+  "hidden": false,
+  "path": "/packages/workspace/src/generators/workspace-generator/schema.json",
+  "type": "generator"
+}

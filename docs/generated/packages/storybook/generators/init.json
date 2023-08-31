@@ -1,0 +1,57 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init",
+  "schema": {
+    "cli": "nx",
+    "title": "Add Storybook Configuration to the workspace",
+    "description": "Add Storybook Configuration to the workspace.",
+    "$id": "init-storybook-plugin",
+    "type": "object",
+    "properties": {
+      "uiFramework": {
+        "type": "string",
+        "description": "Storybook UI Framework to use.",
+        "enum": [
+          "@storybook/angular",
+          "@storybook/html-webpack5",
+          "@storybook/nextjs",
+          "@storybook/preact-webpack5",
+          "@storybook/react-webpack5",
+          "@storybook/react-vite",
+          "@storybook/server-webpack5",
+          "@storybook/svelte-webpack5",
+          "@storybook/svelte-vite",
+          "@storybook/sveltekit",
+          "@storybook/vue-webpack5",
+          "@storybook/vue-vite",
+          "@storybook/vue3-webpack5",
+          "@storybook/vue3-vite",
+          "@storybook/web-components-webpack5",
+          "@storybook/web-components-vite",
+          "@storybook/react",
+          "@storybook/html",
+          "@storybook/web-components",
+          "@storybook/vue",
+          "@storybook/vue3",
+          "@storybook/svelte",
+          "@storybook/react-native"
+        ],
+        "x-prompt": "What UI framework plugin should storybook use?",
+        "x-priority": "important",
+        "aliases": ["storybook7UiFramework"]
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript story files rather than TypeScript story files.",
+        "default": false
+      }
+    },
+    "presets": []
+  },
+  "description": "Add Storybook configuration to the workspace.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/storybook/src/generators/init/init.ts",
+  "path": "/packages/storybook/src/generators/init/schema.json",
+  "type": "generator"
+}
