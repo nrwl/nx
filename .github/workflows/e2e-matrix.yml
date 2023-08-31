@@ -85,7 +85,8 @@ jobs:
           key: ${{ runner.os }}-cypress
 
       - name: Install Cypress
-        if: steps.cache-cypress.outputs.cache-hit != 'true'
+        # always install cypress to verify it's installed.
+        # if it's cached then cypress will not reinstall
         run: npx cypress install
 
   e2e:
