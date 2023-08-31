@@ -27,14 +27,10 @@ describe('react-native:stories for libraries', () => {
     });
 
     expect(
-      appTree.exists(
-        'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx'
-      )
+      appTree.exists('test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx')
     ).toBeTruthy();
     expect(
-      appTree.exists(
-        'libs/test-ui-lib/src/lib/another-cmp/another-cmp.stories.tsx'
-      )
+      appTree.exists('test-ui-lib/src/lib/another-cmp/another-cmp.stories.tsx')
     ).toBeTruthy();
   });
 
@@ -49,18 +45,14 @@ describe('react-native:stories for libraries', () => {
     });
     await storiesGenerator(appTree, {
       project: 'test-ui-lib',
-      ignorePaths: ['libs/test-ui-lib/src/lib/another-cmp/**'],
+      ignorePaths: ['test-ui-lib/src/lib/another-cmp/**'],
     });
 
     expect(
-      appTree.exists(
-        'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx'
-      )
+      appTree.exists('test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx')
     ).toBeTruthy();
     expect(
-      appTree.exists(
-        'libs/test-ui-lib/src/lib/another-cmp/another-cmp.stories.tsx'
-      )
+      appTree.exists('test-ui-lib/src/lib/another-cmp/another-cmp.stories.tsx')
     ).toBeFalsy();
   });
 
@@ -71,7 +63,7 @@ describe('react-native:stories for libraries', () => {
     });
     // create another component
     appTree.write(
-      'libs/test-ui-lib/src/lib/some-command-line-utils.ts',
+      'test-ui-lib/src/lib/some-command-line-utils.ts',
       `export const add = (a: number, b: number) => a + b;`
     );
 
@@ -82,15 +74,13 @@ describe('react-native:stories for libraries', () => {
     // should just create the story and not error, even though there's a js file
     // not containing any react component
     expect(
-      appTree.exists(
-        'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx'
-      )
+      appTree.exists('test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx')
     ).toBeTruthy();
   });
 });
 
 export async function createTestUILib(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
   appTree.write('.gitignore', '');
 
   await libraryGenerator(appTree, {
@@ -99,6 +89,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipTsConfig: false,
     unitTestRunner: 'none',
     name: libName,
+    projectNameAndRootFormat: 'as-provided',
   });
 
   await applicationGenerator(appTree, {
@@ -108,6 +99,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     unitTestRunner: 'none',
     name: `${libName}-e2e`,
     install: false,
+    projectNameAndRootFormat: 'as-provided',
   });
   return appTree;
 }
