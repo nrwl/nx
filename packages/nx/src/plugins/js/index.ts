@@ -23,6 +23,7 @@ import { ProjectGraphDependencyWithFile } from '../../project-graph/project-grap
 import { hashArray } from '../../hasher/file-hasher';
 import { detectPackageManager } from '../../utils/package-manager';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { nxVersion } from '../../utils/versions';
 
 export const name = 'nx-js-graph-plugin';
 
@@ -50,11 +51,13 @@ export const createNodes: CreateNodes = [
 
     const lockFilePath = join(workspaceRoot, lockFile);
     const lockFileContents = readFileSync(lockFilePath).toString();
-    const lockFileHash = hashArray([lockFileContents]);
+    const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
+      const nodes = readCachedParsedLockFile().externalNodes;
+      parsedLockFile.externalNodes = nodes;
       return {
-        externalNodes: readCachedParsedLockFile().externalNodes,
+        externalNodes: nodes,
       };
     }
 
@@ -86,7 +89,7 @@ export const createDependencies: CreateDependencies = (
   ) {
     const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
     const lockFileContents = readFileSync(lockFilePath).toString();
-    const lockFileHash = hashArray([lockFileContents]);
+    const lockFileHash = getLockFileHash(lockFileContents);
 
     if (!lockFileNeedsReprocessing(lockFileHash)) {
       lockfileDependencies = readCachedParsedLockFile().dependencies ?? [];
@@ -117,6 +120,10 @@ export const createDependencies: CreateDependencies = (
   );
   return lockfileDependencies.concat(explicitProjectDependencies);
 };
+
+function getLockFileHash(lockFileContents: string) {
+  return hashArray([nxVersion, lockFileContents]);
+}
 
 function lockFileNeedsReprocessing(lockHash: string) {
   try {
