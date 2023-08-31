@@ -10,6 +10,7 @@ import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-
 import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher } from '../config/misc-interfaces';
+import minimatch = require('minimatch');
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -348,11 +349,30 @@ export function isCacheableTask(
   }
 ): boolean {
   const cacheable = options.cacheableOperations || options.cacheableTargets;
-  return (
-    cacheable &&
-    cacheable.indexOf(task.target.target) > -1 &&
-    !longRunningTask(task)
-  );
+
+  if (!cacheable || longRunningTask(task)) {
+    return false;
+  }
+
+  return cacheable.reduce((isCacheable, pattern) => {
+    if (isCacheable) {
+      return isCacheable;
+    }
+
+    const target = task.target.target;
+
+    if (pattern.indexOf('*') === -1) {
+      return pattern === target;
+    }
+
+    const regex = minimatch.makeRe(pattern);
+
+    if (!regex) {
+      throw new Error('Invalid glob pattern ' + pattern);
+    }
+
+    return regex.test(target);
+  }, false);
 }
 
 function longRunningTask(task: Task) {

@@ -1,10 +1,12 @@
 import {
   expandDependencyConfigSyntaxSugar,
   getOutputsForTargetAndConfiguration,
+  isCacheableTask,
   transformLegacyOutputs,
   validateOutputs,
 } from './utils';
 import { ProjectGraphProjectNode } from '../config/project-graph';
+import { Task } from '../config/task-graph';
 
 describe('utils', () => {
   function getNode(build): ProjectGraphProjectNode {
@@ -465,5 +467,204 @@ describe('utils', () => {
         target: 'target:with:colons',
       });
     });
+  });
+
+  describe('isCacheableTask', () => {
+    it('returns false for long running task', () => {
+      expect(
+        isCacheableTask(
+          {
+            overrides: {
+              watch: false,
+            },
+            target: {
+              target: 'test:watch',
+            },
+          } as Task,
+          { cacheableOperations: ['test:watch', 'test', 'build'] }
+        )
+      ).toEqual(false);
+      expect(
+        isCacheableTask(
+          {
+            overrides: {
+              watch: false,
+            },
+            target: {
+              target: 'test-watch',
+            },
+          } as Task,
+          { cacheableOperations: ['test-watch', 'test', 'build'] }
+        )
+      ).toEqual(false);
+      expect(
+        isCacheableTask(
+          {
+            overrides: {
+              watch: false,
+            },
+            target: {
+              target: 'dev',
+            },
+          } as Task,
+          { cacheableOperations: ['dev', 'test', 'build'] }
+        )
+      ).toEqual(false);
+    });
+
+    it('returns true for known literal targets', () => {
+      expect(
+        isCacheableTask(
+          {
+            overrides: {
+              watch: false,
+            },
+            target: {
+              target: 'test',
+            },
+          } as Task,
+          { cacheableOperations: ['test', 'build'] }
+        )
+      ).toEqual(true);
+      expect(
+        isCacheableTask(
+          {
+            overrides: {
+              watch: false,
+            },
+            target: {
+              target: 'build',
+            },
+          } as Task,
+          { cacheableOperations: ['test', 'build'] }
+        )
+      ).toEqual(true);
+    });
+
+    it('returns false for unknown literal targets', () => {
+      expect(
+        isCacheableTask(
+          {
+            overrides: {
+              watch: false,
+            },
+            target: {
+              target: 'build',
+            },
+          } as Task,
+          { cacheableOperations: ['test'] }
+        )
+      ).toEqual(false);
+      expect(
+        isCacheableTask(
+          {
+            overrides: {
+              watch: false,
+            },
+            target: {
+              target: 'lint',
+            },
+          } as Task,
+          { cacheableOperations: ['test'] }
+        )
+      ).toEqual(false);
+    });
+  });
+
+  it('returns true for matching glob targets', () => {
+    expect(
+      isCacheableTask(
+        {
+          overrides: {
+            watch: false,
+          },
+          target: {
+            target: 'test:a',
+          },
+        } as Task,
+        { cacheableOperations: ['test:*'] }
+      )
+    ).toEqual(true);
+    expect(
+      isCacheableTask(
+        {
+          overrides: {
+            watch: false,
+          },
+          target: {
+            target: 'test:b',
+          },
+        } as Task,
+        { cacheableOperations: ['test:*'] }
+      )
+    ).toEqual(true);
+    expect(
+      isCacheableTask(
+        {
+          overrides: {
+            watch: false,
+          },
+          target: {
+            target: 'test:b:services',
+          },
+        } as Task,
+        { cacheableOperations: ['test:*:services'] }
+      )
+    ).toEqual(true);
+    expect(
+      isCacheableTask(
+        {
+          overrides: {
+            watch: false,
+          },
+          target: {
+            target: 'services:test',
+          },
+        } as Task,
+        { cacheableOperations: ['*:test'] }
+      )
+    ).toEqual(true);
+  });
+
+  it('returns false for unmatched glob targets', () => {
+    expect(
+      isCacheableTask(
+        {
+          overrides: {
+            watch: false,
+          },
+          target: {
+            target: 'lint',
+          },
+        } as Task,
+        { cacheableOperations: ['test:*'] }
+      )
+    ).toEqual(false);
+    expect(
+      isCacheableTask(
+        {
+          overrides: {
+            watch: false,
+          },
+          target: {
+            target: 'build',
+          },
+        } as Task,
+        { cacheableOperations: ['test:*'] }
+      )
+    ).toEqual(false);
+    expect(
+      isCacheableTask(
+        {
+          overrides: {
+            watch: false,
+          },
+          target: {
+            target: 'test:a:adapters',
+          },
+        } as Task,
+        { cacheableOperations: ['test:*:services'] }
+      )
+    ).toEqual(false);
   });
 });
