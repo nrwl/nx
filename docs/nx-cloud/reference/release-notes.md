@@ -106,6 +106,15 @@ In our last big release, we announced a completely new UI, rebuilt from the grou
 has continued that effort and wrapped the React app with the [Remix](https://remix.run/) framework. This is the same technology that powers our public https://cloud.nx.app/
 product. It's faster, it handles resource caching better, and should allow the frontend team to ship features quicker than ever before.
 
+##### Helm package compatibility
+
+When upgrading to this version and anything above it, you will need to use Helm version 0.11.1:
+
+| Chart Version | Compatible Images                  |
+| ------------- | ---------------------------------- |
+| <= `0.10.11`  | `2306.01.2.patch4` **and earlier** |
+| >= `0.11.0`   | `2308.22.7` **and later**          |
+
 ##### VCS proxy support
 
 - For the Github/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub/GitLab to post comments
@@ -121,17 +130,17 @@ product. It's faster, it handles resource caching better, and should allow the f
 - UI enhancements of the task details screen
 - fixes and better error handling for the DTE screen
 - failed runs are now sorted at the top
-- web app performance improvements for large workspaces 
+- web app performance improvements for large workspaces
 - more structured NxAPI pod logs (allows for better debugging)
 
 ##### Bug fixes
 
 - Fixed an issue with applying licenses on orgs owned by non-installation admin accounts
 
-##### MongoDB migration
+##### Breaking changes - MongoDB migration
 
 In the last big release we announced [the deprecation of Mongo 4.2](https://nx.dev/nx-cloud/reference/release-notes#breaking-changes)
-While NxCloud still works with Mongo 4.2, we now strongly recommend an upgrade to Mongo 6. You will find instructions [here](https://nx.dev/nx-cloud/reference/release-notes#breaking-changes).
+With this release, we have now stopped supporting Mongo 4.2 completely. Please upgrade Mongo to version 6 before installing this new image. You will find instructions [here](https://nx.dev/nx-cloud/reference/release-notes#breaking-changes).
 
 ### 2306.01.2.patch4
 
