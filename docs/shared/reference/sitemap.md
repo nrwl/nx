@@ -7,6 +7,7 @@
     - [Tutorials](/getting-started/tutorials)
       - [Package-Based Monorepo](/getting-started/tutorials/package-based-repo-tutorial)
       - [Integrated Monorepo](/getting-started/tutorials/integrated-repo-tutorial)
+      - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
       - [React Standalone](/getting-started/tutorials/react-standalone-tutorial)
       - [Angular Standalone](/getting-started/tutorials/angular-standalone-tutorial)
       - [Node Standalone](/getting-started/tutorials/node-server-tutorial)

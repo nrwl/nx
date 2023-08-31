@@ -55,6 +55,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "React Monorepo",
+                "path": "/getting-started/tutorials/react-monorepo-tutorial",
+                "id": "react-monorepo-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "React Standalone",
                 "path": "/getting-started/tutorials/react-standalone-tutorial",
                 "id": "react-standalone-tutorial",
@@ -131,6 +139,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "React Monorepo",
+            "path": "/getting-started/tutorials/react-monorepo-tutorial",
+            "id": "react-monorepo-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "React Standalone",
             "path": "/getting-started/tutorials/react-standalone-tutorial",
             "id": "react-standalone-tutorial",
@@ -169,6 +185,14 @@
         "name": "Integrated Monorepo",
         "path": "/getting-started/tutorials/integrated-repo-tutorial",
         "id": "integrated-repo-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Monorepo",
+        "path": "/getting-started/tutorials/react-monorepo-tutorial",
+        "id": "react-monorepo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
