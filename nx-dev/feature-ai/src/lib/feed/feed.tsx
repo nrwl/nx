@@ -1,4 +1,4 @@
-import { ChatItem } from '@nx/nx-dev/data-access-ai';
+import { ChatItem } from '@nx/nx-dev/util-ai';
 import { FeedAnswer } from './feed-answer';
 import { FeedQuestion } from './feed-question';
 

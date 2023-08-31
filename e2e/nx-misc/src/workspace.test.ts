@@ -759,7 +759,7 @@ describe('Workspace Tests', () => {
 
       expect(error).toBeDefined();
       expect(error.stdout.toString()).toContain(
-        `${lib1} is still depended on by the following projects`
+        `${lib1} is still a dependency of the following projects`
       );
       expect(error.stdout.toString()).toContain(lib2);
 

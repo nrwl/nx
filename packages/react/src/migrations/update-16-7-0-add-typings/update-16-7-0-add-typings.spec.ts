@@ -6,7 +6,7 @@ describe('Add typings to react projects', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should update tsconfig to include react typings', async () => {

@@ -98,7 +98,8 @@ describe('updatePackageJson', () => {
         exports: {
           './package.json': './package.json',
           '.': {
-            import: './index.esm.js',
+            module: './index.esm.js',
+            import: './index.cjs.mjs',
             default: './index.cjs.js',
           },
         },

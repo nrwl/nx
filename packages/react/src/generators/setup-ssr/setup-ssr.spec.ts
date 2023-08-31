@@ -16,6 +16,7 @@ describe('setupSsrGenerator', () => {
       linter: Linter.None,
       unitTestRunner: 'none',
       e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
   });
 

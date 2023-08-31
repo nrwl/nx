@@ -81,7 +81,7 @@ npx create-nx-workspace@latest
 {% link-card title="Vite" appearance="small" url="/packages/vite" icon="vite" /%}
 {% link-card title="Storybook" appearance="small" url="/packages/storybook" icon="storybook" /%}
 {% link-card title="Jest" appearance="small" url="/packages/jest" icon="jest" /%}
-{% link-card title="Rspack" appearance="small" url="packages/rspack" icon="rspack" /%}
+{% link-card title="Rspack" appearance="small" url="/packages/rspack" icon="rspack" /%}
 
 {% /cards %}
 

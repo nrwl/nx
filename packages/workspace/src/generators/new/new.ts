@@ -60,11 +60,7 @@ export async function newGenerator(host: Tree, opts: Schema) {
     }
     installPackagesTask(host, false, options.directory, options.packageManager);
     // TODO: move all of these into create-nx-workspace
-    if (
-      options.preset !== Preset.NPM &&
-      options.preset !== Preset.Core &&
-      !options.isCustomPreset
-    ) {
+    if (options.preset !== Preset.NPM && !options.isCustomPreset) {
       await generatePreset(host, options);
     }
   };
@@ -76,9 +72,7 @@ function validateOptions(options: Schema, host: Tree) {
   if (
     options.skipInstall &&
     options.preset !== Preset.Apps &&
-    options.preset !== Preset.Core &&
     options.preset !== Preset.TS &&
-    options.preset !== Preset.Empty &&
     options.preset !== Preset.NPM
   ) {
     throw new Error(`Cannot select a preset when skipInstall is set to true.`);

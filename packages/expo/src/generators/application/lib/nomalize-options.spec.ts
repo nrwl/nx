@@ -8,7 +8,7 @@ describe('Normalize Options', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    appTree = createTreeWithEmptyWorkspace();
   });
 
   it('should normalize options with name in kebab case', async () => {
@@ -19,17 +19,18 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      appProjectRoot: 'apps/my-app',
+      appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'derived',
+      projectNameAndRootFormat: 'as-provided',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
@@ -46,17 +47,18 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      appProjectRoot: 'apps/my-app',
+      appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'derived',
+      projectNameAndRootFormat: 'as-provided',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       skipFormat: false,
@@ -74,18 +76,19 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      appProjectRoot: 'apps/directory/my-app',
+      appProjectRoot: 'directory',
       className: 'MyApp',
       displayName: 'MyApp',
       lowerCaseName: 'myapp',
       name: 'my-app',
       directory: 'directory',
       parsedTags: [],
-      projectName: 'directory-my-app',
-      projectNameAndRootFormat: 'derived',
+      projectName: 'my-app',
+      projectNameAndRootFormat: 'as-provided',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
@@ -102,17 +105,18 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      appProjectRoot: 'apps/directory/my-app',
+      appProjectRoot: 'directory/my-app',
       className: 'DirectoryMyApp',
       displayName: 'DirectoryMyApp',
       lowerCaseName: 'directorymyapp',
       name: 'directory/my-app',
       parsedTags: [],
-      projectName: 'directory-my-app',
-      projectNameAndRootFormat: 'derived',
+      projectName: 'directory/my-app',
+      projectNameAndRootFormat: 'as-provided',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       linter: Linter.EsLint,
@@ -130,17 +134,18 @@ describe('Normalize Options', () => {
       skipFormat: false,
       js: true,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      appProjectRoot: 'apps/my-app',
+      appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'My App',
       lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
-      projectNameAndRootFormat: 'derived',
+      projectNameAndRootFormat: 'as-provided',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
       linter: Linter.EsLint,

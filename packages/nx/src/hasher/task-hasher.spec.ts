@@ -1380,7 +1380,7 @@ describe('TaskHasher', () => {
       );
 
       expect(hash.details.nodes['AllExternalDependencies']).toEqual(
-        '13019111166724682201'
+        '5189537834781127994'
       );
     });
 

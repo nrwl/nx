@@ -1,19 +1,16 @@
 import {
+  ChampionCard,
+  ChampionPerks,
   Footer,
   Header,
   SectionHeading,
-  ChampionCard,
-  Champion,
-  ChampionPerks,
 } from '@nx/nx-dev/ui-common';
 import { ConnectWithUs } from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { champions1, champions2, champions3 } from '../lib/champions';
 
-interface CommunityProps {}
-
-export default function Community(props: CommunityProps): JSX.Element {
+export default function Community(): JSX.Element {
   const router = useRouter();
 
   return (

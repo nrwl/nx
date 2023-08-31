@@ -32,10 +32,10 @@ export function ConnectWithUs(): JSX.Element {
       <div className="relative flex-none lg:w-7/12 xl:w-7/12">
         <div className="relative flex flex-col space-y-6 md:flex-row md:space-x-6 md:space-y-0">
           <div className="space-y-6 md:mt-24 md:w-1/2">
-            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-violet-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-violet-900 dark:hover:bg-slate-800">
+            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-indigo-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-indigo-900 dark:hover:bg-slate-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
-                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-violet-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-violet-900" />
-                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#4A154B] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
+                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-indigo-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-indigo-900" />
+                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#5865F2] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
                 <svg
                   fill="currentColor"
                   className="relative inline-block h-5 w-5 transform text-white transition duration-200 ease-out group-hover:scale-110"
@@ -96,10 +96,10 @@ export function ConnectWithUs(): JSX.Element {
             </div>
           </div>
           <div className="space-y-6 md:w-1/2">
-            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-blue-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-blue-900 dark:hover:bg-slate-800">
+            <div className="group relative rounded-lg border border-slate-200 bg-white/60 p-5 transition duration-200 ease-out hover:border-slate-300 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:border-slate-900 dark:hover:bg-slate-800">
               <div className="relative m-2 mb-6 inline-flex h-10 w-10 items-center justify-center">
-                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-blue-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-blue-800" />
-                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#1DA1F2] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
+                <div className="absolute inset-0 -m-2 rotate-6 transform rounded-3xl bg-slate-300 transition duration-200 ease-out group-hover:-rotate-3 group-hover:scale-105 dark:bg-slate-800" />
+                <div className="absolute inset-0 -rotate-6 transform rounded-2xl bg-[#000000] bg-opacity-75 shadow-inner transition duration-200 ease-out group-hover:rotate-2 group-hover:scale-105" />
                 <svg
                   fill="currentColor"
                   className="inline-block h-5 w-5 transform text-white transition duration-200 ease-out group-hover:scale-110"
@@ -107,22 +107,22 @@ export function ConnectWithUs(): JSX.Element {
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <title>Twitter</title>
-                  <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
+                  <title>X</title>
+                  <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
                 </svg>
               </div>
-              <h4 className="mb-2 text-lg font-bold">Follow us on Twitter</h4>
+              <h4 className="mb-2 text-lg font-bold">Follow us on X</h4>
               <a
-                href="https://twitter.com/NxDevTools?utm_source=nx.dev"
+                href="https://x.com/NxDevTools?utm_source=nx.dev"
                 rel="noreferrer"
                 target="_blank"
-                title="Nx Twitter account"
+                title="Nx X account"
                 className="focus:outline-none"
               >
                 <span className="absolute inset-0" aria-hidden="true"></span>
                 <p className="leading-relaxed">
                   Stay up to date on everything about Nx by following
-                  @NxDevTools on Twitter.
+                  @NxDevTools on X.
                 </p>
               </a>
             </div>

@@ -18,7 +18,7 @@ describe('react:stories for applications', () => {
 
     // create another component
     appTree.write(
-      'apps/test-ui-app/src/app/anothercmp/another-cmp.tsx',
+      'test-ui-app/src/app/anothercmp/another-cmp.tsx',
       `import React from 'react';
 
       import './test.scss';
@@ -47,11 +47,11 @@ describe('react:stories for applications', () => {
     });
 
     expect(
-      appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
+      appTree.read('test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
     ).toMatchSnapshot();
     expect(
       appTree.read(
-        'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx',
+        'test-ui-app/src/app/anothercmp/another-cmp.stories.tsx',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -64,11 +64,11 @@ describe('react:stories for applications', () => {
     });
 
     expect(
-      appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
+      appTree.read('test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
     ).toMatchSnapshot();
     expect(
       appTree.read(
-        'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx',
+        'test-ui-app/src/app/anothercmp/another-cmp.stories.tsx',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -77,7 +77,7 @@ describe('react:stories for applications', () => {
   it('should ignore files that do not contain components', async () => {
     // create another component
     appTree.write(
-      'apps/test-ui-app/src/app/some-utils.js',
+      'test-ui-app/src/app/some-utils.js',
       `export const add = (a: number, b: number) => a + b;`
     );
 
@@ -88,13 +88,13 @@ describe('react:stories for applications', () => {
     // should just create the story and not error, even though there's a js file
     // not containing any react component
     expect(
-      appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
+      appTree.exists('test-ui-app/src/app/nx-welcome.stories.tsx')
     ).toBeTruthy();
   });
 
   it('should not update existing stories', async () => {
     appTree.write(
-      'apps/test-ui-app/src/app/nx-welcome.stories.tsx',
+      'test-ui-app/src/app/nx-welcome.stories.tsx',
       `import { ComponentStory, ComponentMeta } from '@storybook/react'`
     );
 
@@ -103,14 +103,14 @@ describe('react:stories for applications', () => {
     });
 
     expect(
-      appTree.read('apps/test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
+      appTree.read('test-ui-app/src/app/nx-welcome.stories.tsx', 'utf-8')
     ).toMatchSnapshot();
   });
 
   describe('ignore paths', () => {
     beforeEach(() => {
       appTree.write(
-        'apps/test-ui-app/src/app/test-path/ignore-it/another-one.tsx',
+        'test-ui-app/src/app/test-path/ignore-it/another-one.tsx',
         `import React from 'react';
   
     import './test.scss';
@@ -133,7 +133,7 @@ describe('react:stories for applications', () => {
       );
 
       appTree.write(
-        'apps/test-ui-app/src/app/anothercmp/another-cmp-test.skip.tsx',
+        'test-ui-app/src/app/anothercmp/another-cmp-test.skip.tsx',
         `import React from 'react';
   
     import './test.scss';
@@ -161,23 +161,21 @@ describe('react:stories for applications', () => {
       });
 
       expect(
-        appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
+        appTree.exists('test-ui-app/src/app/nx-welcome.stories.tsx')
       ).toBeTruthy();
       expect(
+        appTree.exists('test-ui-app/src/app/anothercmp/another-cmp.stories.tsx')
+      ).toBeTruthy();
+
+      expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx'
+          'test-ui-app/src/app/test-path/ignore-it/another-one.stories.tsx'
         )
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/test-path/ignore-it/another-one.stories.tsx'
-        )
-      ).toBeTruthy();
-
-      expect(
-        appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
+          'test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
         )
       ).toBeTruthy();
     });
@@ -186,29 +184,27 @@ describe('react:stories for applications', () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
         ignorePaths: [
-          `apps/test-ui-app/src/app/anothercmp/**`,
+          `test-ui-app/src/app/anothercmp/**`,
           `**/**/src/**/test-path/ignore-it/**`,
         ],
       });
 
       expect(
-        appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
+        appTree.exists('test-ui-app/src/app/nx-welcome.stories.tsx')
       ).toBeTruthy();
       expect(
+        appTree.exists('test-ui-app/src/app/anothercmp/another-cmp.stories.tsx')
+      ).toBeFalsy();
+
+      expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx'
+          'test-ui-app/src/app/test-path/ignore-it/another-one.stories.tsx'
         )
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/test-path/ignore-it/another-one.stories.tsx'
-        )
-      ).toBeFalsy();
-
-      expect(
-        appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
+          'test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
         )
       ).toBeFalsy();
     });
@@ -217,29 +213,27 @@ describe('react:stories for applications', () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
         ignorePaths: [
-          'apps/test-ui-app/src/app/anothercmp/**/*.skip.*',
+          'test-ui-app/src/app/anothercmp/**/*.skip.*',
           '**/**/src/**/test-path/**',
         ],
       });
 
       expect(
-        appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
+        appTree.exists('test-ui-app/src/app/nx-welcome.stories.tsx')
       ).toBeTruthy();
       expect(
-        appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx'
-        )
+        appTree.exists('test-ui-app/src/app/anothercmp/another-cmp.stories.tsx')
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/test-path/ignore-it/another-one.stories.tsx'
+          'test-ui-app/src/app/test-path/ignore-it/another-one.stories.tsx'
         )
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
+          'test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
         )
       ).toBeFalsy();
     });
@@ -247,34 +241,32 @@ describe('react:stories for applications', () => {
     it('should ignore direct path to component', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
-        ignorePaths: ['apps/test-ui-app/src/app/anothercmp/**/*.skip.tsx'],
+        ignorePaths: ['test-ui-app/src/app/anothercmp/**/*.skip.tsx'],
       });
 
       expect(
-        appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
+        appTree.exists('test-ui-app/src/app/nx-welcome.stories.tsx')
       ).toBeTruthy();
       expect(
+        appTree.exists('test-ui-app/src/app/anothercmp/another-cmp.stories.tsx')
+      ).toBeTruthy();
+
+      expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx'
+          'test-ui-app/src/app/test-path/ignore-it/another-one.stories.tsx'
         )
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/test-path/ignore-it/another-one.stories.tsx'
-        )
-      ).toBeTruthy();
-
-      expect(
-        appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
+          'test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
         )
       ).toBeFalsy();
     });
 
     it('should ignore a path that has a nested component, but still generate nested component stories', async () => {
       appTree.write(
-        'apps/test-ui-app/src/app/anothercmp/comp-a/comp-a.tsx',
+        'test-ui-app/src/app/anothercmp/comp-a/comp-a.tsx',
         `import React from 'react';
   
     import './test.scss';
@@ -299,28 +291,26 @@ describe('react:stories for applications', () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
         ignorePaths: [
-          'apps/test-ui-app/src/app/anothercmp/another-cmp-test.skip.tsx',
+          'test-ui-app/src/app/anothercmp/another-cmp-test.skip.tsx',
         ],
       });
 
       expect(
-        appTree.exists('apps/test-ui-app/src/app/nx-welcome.stories.tsx')
+        appTree.exists('test-ui-app/src/app/nx-welcome.stories.tsx')
       ).toBeTruthy();
       expect(
+        appTree.exists('test-ui-app/src/app/anothercmp/another-cmp.stories.tsx')
+      ).toBeTruthy();
+
+      expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp.stories.tsx'
+          'test-ui-app/src/app/anothercmp/comp-a/comp-a.stories.tsx'
         )
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/comp-a/comp-a.stories.tsx'
-        )
-      ).toBeTruthy();
-
-      expect(
-        appTree.exists(
-          'apps/test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
+          'test-ui-app/src/app/anothercmp/another-cmp-test.skip.stories.tsx'
         )
       ).toBeFalsy();
     });
@@ -331,7 +321,7 @@ export async function createTestUIApp(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'cypress',
@@ -341,6 +331,7 @@ export async function createTestUIApp(
     unitTestRunner: 'none',
     name: libName,
     js: plainJS,
+    projectNameAndRootFormat: 'as-provided',
   });
   return appTree;
 }

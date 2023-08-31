@@ -4,10 +4,8 @@ import { Preset } from './preset';
 export function pointToTutorialAndCourse(preset: Preset) {
   const title = `First time using Nx? Check out this interactive Nx tutorial.`;
   switch (preset) {
-    case Preset.Empty:
     case Preset.NPM:
     case Preset.Apps:
-    case Preset.Core:
       output.addVerticalSeparator();
       output.note({
         title,
