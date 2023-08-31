@@ -72,7 +72,14 @@ exports[`@nx/linter:workspace-rules-project should generate the required files 4
     "module": "commonjs",
     "types": ["jest", "node"]
   },
-  "include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
+  "include": [
+    "jest.config.ts",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.ts",
+    "**/*.js",
+    "**/*.d.ts"
+  ]
 }
 "
 `;

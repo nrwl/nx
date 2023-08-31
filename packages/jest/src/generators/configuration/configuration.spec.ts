@@ -139,6 +139,8 @@ describe('jestProject', () => {
         'jest.config.ts',
         'src/**/*.test.ts',
         'src/**/*.spec.ts',
+        'src/**/*.js',
+        'src/**/*.ts',
         'src/**/*.d.ts',
       ],
     });

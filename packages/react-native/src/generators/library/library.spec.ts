@@ -258,6 +258,8 @@ describe('lib', () => {
             "src/**/*.spec.js",
             "src/**/*.test.jsx",
             "src/**/*.spec.jsx",
+            "src/**/*.ts",
+            "src/**/*.js",
             "src/**/*.d.ts"
           ]
         }
