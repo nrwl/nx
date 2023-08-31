@@ -1,31 +1,34 @@
 {
-  "name": "nx-dev-data-access-ai",
+  "name": "nx-dev-util-ai",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "nx-dev/data-access-ai/src",
+  "sourceRoot": "nx-dev/util-ai/src",
   "projectType": "library",
   "targets": {
     "build": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "dist/nx-dev/data-access-ai",
-        "main": "nx-dev/data-access-ai/src/index.ts",
-        "tsConfig": "nx-dev/data-access-ai/tsconfig.lib.json",
-        "assets": ["nx-dev/data-access-ai/*.md"]
+        "outputPath": "dist/nx-dev/util-ai",
+        "main": "nx-dev/util-ai/src/index.ts",
+        "tsConfig": "nx-dev/util-ai/tsconfig.lib.json",
+        "assets": ["nx-dev/util-ai/*.md"]
       }
     },
     "lint": {
       "executor": "@nx/linter:eslint",
       "outputs": ["{options.outputFile}"],
       "options": {
-        "lintFilePatterns": ["nx-dev/data-access-ai/**/*.ts"]
+        "lintFilePatterns": [
+          "nx-dev/util-ai/**/*.ts",
+          "nx-dev/util-ai/package.json"
+        ]
       }
     },
     "test": {
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "nx-dev/data-access-ai/jest.config.ts",
+        "jestConfig": "nx-dev/util-ai/jest.config.ts",
         "passWithNoTests": true
       },
       "configurations": {

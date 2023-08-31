@@ -7,9 +7,7 @@
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "target": "es2021",
-    "lib": ["es2021", "DOM"]
+    "noFallthroughCasesInSwitch": true
   },
   "files": [],
   "include": [],

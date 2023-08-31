@@ -1,18 +1,27 @@
-import { useEffect, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useRef } from 'react';
 import { PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { Button } from '@nx/nx-dev/ui-common';
 import Textarea from 'react-textarea-autosize';
+import { ChatRequestOptions } from 'ai';
 
 export function Prompt({
   isDisabled,
   handleSubmit,
+  handleInputChange,
+  input,
 }: {
   isDisabled: boolean;
-  handleSubmit: (query: string) => void;
+  handleSubmit: (
+    e: FormEvent<HTMLFormElement>,
+    chatRequestOptions?: ChatRequestOptions | undefined
+  ) => void;
+  handleInputChange: (
+    e: ChangeEvent<HTMLTextAreaElement> | ChangeEvent<HTMLInputElement>
+  ) => void;
+  input: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [inputValue, setInputValue] = useState<string>('');
 
   useEffect(() => {
     if (inputRef.current) {
@@ -23,13 +32,7 @@ export function Prompt({
   return (
     <form
       ref={formRef}
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (!inputValue?.trim()) return;
-        handleSubmit(inputValue);
-        setInputValue('');
-        event.currentTarget.reset();
-      }}
+      onSubmit={handleSubmit}
       className="relative flex gap-2 max-w-2xl mx-auto py-0 px-2 shadow-lg rounded-md border border-slate-300 bg-white dark:border-slate-900 dark:bg-slate-700"
     >
       <div className="overflow-y-auto w-full h-full max-h-[300px]">
@@ -45,7 +48,8 @@ export function Prompt({
             }
           }}
           ref={inputRef}
-          onChange={(event) => setInputValue(event.target.value)}
+          value={input}
+          onChange={handleInputChange}
           id="query-prompt"
           name="query"
           disabled={isDisabled}
