@@ -1,30 +1,35 @@
-// based on:
-// https://github.com/supabase-community/nextjs-openai-doc-search/blob/main/pages/api/vector-search.ts
-
 import { NextRequest } from 'next/server';
 import {
+  ChatItem,
   CustomError,
   DEFAULT_MATCH_COUNT,
   DEFAULT_MATCH_THRESHOLD,
   MIN_CONTENT_LENGTH,
   PROMPT,
   PageSection,
-  checkEnvVariables,
-  getListOfSources,
-  getMessageFromResponse,
+  appendToStream,
+  getSupabaseClient,
+  formatMarkdownSources,
+  getLastAssistantMessageContent,
+  getOpenAI,
+  getUserQuery,
   initializeChat,
-  moderateContent,
-  openAiAPICall,
-  sanitizeLinksInResponse,
-  toMarkdownList,
+  extractErrorMessage,
+  // moderateContent,
 } from '@nx/nx-dev/util-ai';
-import { SupabaseClient, createClient } from '@supabase/supabase-js';
-import { CreateCompletionResponseUsage, CreateEmbeddingResponse } from 'openai';
+import { SupabaseClient } from '@supabase/supabase-js';
+import OpenAI from 'openai';
+import { OpenAIStream, StreamingTextResponse } from 'ai';
 import GPT3Tokenizer from 'gpt3-tokenizer';
+import { Stream } from 'openai/streaming';
 
 const supabaseUrl = process.env['NX_NEXT_PUBLIC_SUPABASE_URL'];
 const supabaseServiceKey = process.env['NX_SUPABASE_SERVICE_ROLE_KEY_ACTUAL'];
 const openAiKey = process.env['NX_OPENAI_KEY'];
+const tokenCountLimit =
+  parseInt(process.env['NX_TOKEN_COUNT_LIMIT'] ?? '2500') > 0
+    ? parseInt(process.env['NX_TOKEN_COUNT_LIMIT'] ?? '2500')
+    : 2500;
 
 export const config = {
   runtime: 'edge',
@@ -32,66 +37,35 @@ export const config = {
 
 export default async function handler(request: NextRequest) {
   try {
-    checkEnvVariables(openAiKey, supabaseUrl, supabaseServiceKey);
-    const { query, aiResponse, chatFullHistory } = await request.json();
+    const openai = getOpenAI(openAiKey);
+    const supabaseClient: SupabaseClient<any, 'public', any> =
+      getSupabaseClient(supabaseUrl, supabaseServiceKey);
 
-    const supabaseClient: SupabaseClient<any, 'public', any> = createClient(
-      supabaseUrl as string,
-      supabaseServiceKey as string
-    );
+    const { messages } = (await request.json()) as { messages: ChatItem[] };
 
-    if (!query) {
-      throw new CustomError('user_error', 'Missing query in request data', {
-        missing_query: true,
-      });
-    }
-
-    // Moderate the content to comply with OpenAI T&C
+    const query: string | null = getUserQuery(messages);
     const sanitizedQuery = query.trim();
 
-    await moderateContent(sanitizedQuery, openAiKey as string);
+    // Moderate the content to comply with OpenAI T&C
+    // Removing the moderation for now
+    // to see if it's faster
+    // await moderateContent(sanitizedQuery, openai);
 
-    // Create embedding from query
-    // NOTE: Here, we may or may not want to include the previous AI response
-    /**
-     * For retrieving relevant Nx documentation sections via embeddings, it's a design decision.
-     * Including the prior response might give more contextually relevant sections,
-     * but just sending the query might suffice for many cases.
-     *
-     * We can experiment with this.
-     *
-     * How the solution looks like with previous response:
-     *
-     *     const embeddingResponse = await openAiCall(
-     *      { input: sanitizedQuery + aiResponse },
-     *      'embedding'
-     *     );
-     *
-     * This costs more tokens, so if we see costs skyrocket we remove it.
-     * As it says in the docs, it's a design decision, and it may or may not really improve results.
-     */
-    const embeddingResponseObj = await openAiAPICall(
-      { input: sanitizedQuery + aiResponse, model: 'text-embedding-ada-002' },
-      'embedding',
-      openAiKey as string
-    );
-
-    const embeddingResponse = await embeddingResponseObj.json();
-
-    if (!embeddingResponseObj.ok) {
-      throw new CustomError(
-        'application_error',
-        'Failed to create embedding for question',
-        {
-          data: embeddingResponse,
-        }
-      );
-    }
+    // We include the previous response,
+    // to make sure the embeddings (doc sections)
+    // we get back are relevant.
+    const embeddingResponse: OpenAI.Embeddings.CreateEmbeddingResponse =
+      await openai.embeddings.create({
+        model: 'text-embedding-ada-002',
+        input: sanitizedQuery + getLastAssistantMessageContent(messages),
+      });
 
     const {
       data: [{ embedding }],
-    }: CreateEmbeddingResponse = embeddingResponse;
+    } = embeddingResponse;
 
+    // Based on:
+    // https://github.com/supabase-community/nextjs-openai-doc-search/blob/main/pages/api/vector-search.ts
     const { error: matchError, data: pageSections } = await supabaseClient.rpc(
       'match_page_sections_2',
       {
@@ -110,7 +84,7 @@ export default async function handler(request: NextRequest) {
       );
     }
 
-    // Note: this is experimental. I think it should work
+    // Note: this is experimental and quite aggressive. I think it should work
     // mainly because we're testing previous response + query.
     if (!pageSections || pageSections.length === 0) {
       throw new CustomError('user_error', 'No results found.', {
@@ -128,81 +102,41 @@ export default async function handler(request: NextRequest) {
       const encoded = tokenizer.encode(content);
       tokenCount += encoded.text.length;
 
-      if (tokenCount >= 2500) {
+      if (tokenCount >= tokenCountLimit) {
         break;
       }
 
       contextText += `${content.trim()}\n---\n`;
     }
 
-    const { chatMessages: chatGptMessages, chatHistory } = initializeChat(
-      chatFullHistory,
+    const { chatMessages } = initializeChat(
+      messages,
       query,
       contextText,
-      PROMPT,
-      aiResponse
+      PROMPT
     );
 
-    const responseObj = await openAiAPICall(
-      {
+    const response: Stream<OpenAI.Chat.Completions.ChatCompletionChunk> =
+      await openai.chat.completions.create({
         model: 'gpt-3.5-turbo-16k',
-        messages: chatGptMessages,
+        messages: chatMessages,
         temperature: 0,
-        stream: false,
-      },
-      'chatCompletion',
-      openAiKey as string
-    );
+        stream: true,
+      });
 
-    const response = await responseObj.json();
+    const sourcesMarkdown = formatMarkdownSources(pageSections);
+    const stream = OpenAIStream(response);
+    const finalStream = await appendToStream(stream, sourcesMarkdown);
 
-    if (!responseObj.ok) {
-      throw new CustomError(
-        'application_error',
-        'Failed to generate completion',
-        {
-          data: response,
-        }
-      );
-    }
-    // Message asking to double-check
-    const callout: string =
-      '{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n';
-    // Append the warning message asking to double-check!
-    const message = [callout, getMessageFromResponse(response)].join('');
-
-    const responseWithoutBadLinks = await sanitizeLinksInResponse(message);
-
-    const sources = getListOfSources(pageSections);
-
-    const responseData = {
-      textResponse: responseWithoutBadLinks,
-      usage: response.usage as CreateCompletionResponseUsage,
-      sources,
-      sourcesMarkdown: toMarkdownList(sources),
-      chatHistory,
-      requestTokens: response.usage?.total_tokens,
-    };
-    return new Response(JSON.stringify(responseData), {
-      status: 200,
+    return new StreamingTextResponse(finalStream);
+  } catch (err: unknown) {
+    console.error('Error: ', err);
+    const errorResponse = extractErrorMessage(err);
+    return new Response(JSON.stringify(errorResponse), {
+      status: 500,
       headers: {
         'content-type': 'application/json',
       },
     });
-  } catch (err: unknown) {
-    console.error('Error: ', err);
-
-    return new Response(
-      JSON.stringify({
-        ...JSON.parse(JSON.stringify(err)),
-        message: err?.['message'],
-      }),
-      {
-        status: 500,
-        headers: {
-          'content-type': 'application/json',
-        },
-      }
-    );
   }
 }

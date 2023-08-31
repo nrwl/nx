@@ -2,12 +2,14 @@ import {
   HandThumbDownIcon,
   HandThumbUpIcon,
 } from '@heroicons/react/24/outline';
-import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { cx } from '@nx/nx-dev/ui-primitives';
-import Link from 'next/link';
 import { useState } from 'react';
 import { ChatGptLogo } from './chat-gpt-logo';
-import { NrwlLogo } from './nrwl-logo';
+import ReactMarkdown from 'react-markdown';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
+
+const callout: string =
+  '{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n';
 
 export function FeedAnswer({
   content,
@@ -60,7 +62,8 @@ export function FeedAnswer({
           </p>
         </div>
         <div className="mt-2 prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl">
-          {renderMarkdown(content, { filePath: '' }).node}
+          {!isFirst && renderMarkdown(callout, { filePath: '' }).node}
+          <ReactMarkdown children={content} />
         </div>
         {!isFirst && (
           <div className="group text-xs flex-1 md:flex md:justify-end gap-4 md:items-center text-slate-400 hover:text-slate-500 transition">

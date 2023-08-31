@@ -4,6 +4,13 @@ import {
 } from '@heroicons/react/24/outline';
 
 export function ErrorMessage({ error }: { error: any }): JSX.Element {
+  try {
+    if (error.message) {
+      error = JSON.parse(error.message);
+      console.error('Error: ', error);
+    }
+  } catch (e) {}
+
   if (error?.data?.no_results) {
     return (
       <div className="rounded-md bg-yellow-50 p-4">

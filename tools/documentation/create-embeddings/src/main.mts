@@ -6,8 +6,7 @@ import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
 import { readFile } from 'fs/promises';
 import 'openai';
-import { Configuration, OpenAIApi } from 'openai';
-import { inspect } from 'util';
+import OpenAI from 'openai';
 import yargs from 'yargs';
 import { createHash } from 'crypto';
 import GithubSlugger from 'github-slugger';
@@ -298,21 +297,15 @@ async function generateEmbeddings() {
         const input = content.replace(/\n/g, ' ');
 
         try {
-          const configuration = new Configuration({
+          const openai = new OpenAI({
             apiKey: process.env.NX_OPENAI_KEY,
           });
-          const openai = new OpenAIApi(configuration);
-
-          const embeddingResponse = await openai.createEmbedding({
+          const embeddingResponse = await openai.embeddings.create({
             model: 'text-embedding-ada-002',
             input,
           });
 
-          if (embeddingResponse.status !== 200) {
-            throw new Error(inspect(embeddingResponse.data, false, 2));
-          }
-
-          const [responseData] = embeddingResponse.data.data;
+          const [responseData] = embeddingResponse.data;
 
           const { error: insertPageSectionError, data: pageSection } =
             await supabaseClient
@@ -323,7 +316,7 @@ async function generateEmbeddings() {
                 heading,
                 content,
                 url_partial,
-                token_count: embeddingResponse.data.usage.total_tokens,
+                token_count: embeddingResponse.usage.total_tokens,
                 embedding: responseData.embedding,
               })
               .select()

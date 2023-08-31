@@ -1,10 +1,11 @@
-import { ChatCompletionRequestMessageRoleEnum } from 'openai';
+import OpenAI from 'openai';
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
 
-export function checkEnvVariables(
-  openAiKey?: string,
-  supabaseUrl?: string,
-  supabaseServiceKey?: string
-) {
+let openai: OpenAI;
+let supabaseClient: SupabaseClient<any, 'public', any>;
+
+export function getOpenAI(openAiKey?: string): OpenAI {
+  if (openai) return openai;
   if (!openAiKey) {
     throw new CustomError(
       'application_error',
@@ -14,7 +15,15 @@ export function checkEnvVariables(
       }
     );
   }
+  openai = new OpenAI({ apiKey: openAiKey });
+  return openai;
+}
 
+export function getSupabaseClient(
+  supabaseUrl?: string,
+  supabaseServiceKey?: string
+): SupabaseClient<any, 'public', any> {
+  if (supabaseClient) return supabaseClient;
   if (!supabaseUrl) {
     throw new CustomError(
       'application_error',
@@ -29,6 +38,11 @@ export function checkEnvVariables(
       { missing_key: true }
     );
   }
+  supabaseClient = createClient(
+    supabaseUrl as string,
+    supabaseServiceKey as string
+  );
+  return supabaseClient;
 }
 
 export class CustomError extends Error {
@@ -57,6 +71,26 @@ export interface PageSection {
 }
 
 export interface ChatItem {
-  role: ChatCompletionRequestMessageRoleEnum;
+  role: 'system' | 'user' | 'assistant' | 'function';
   content: string;
+}
+
+export interface ErrorResponse {
+  message: string;
+  data?: any;
+}
+
+export function extractErrorMessage(err: unknown): ErrorResponse {
+  if (err instanceof CustomError) {
+    return { message: err.message, data: err.data };
+  }
+
+  if (typeof err === 'object' && err !== null) {
+    const errorObj = err as { [key: string]: any };
+    const message =
+      errorObj['message'] || errorObj['error']?.message || 'Unknown error';
+    return { message, data: errorObj['data'] || null };
+  }
+
+  return { message: 'Unknown error' };
 }

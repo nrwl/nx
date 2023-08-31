@@ -1,22 +1,11 @@
-import { getProcessedHistory, queryAi } from '@nx/nx-dev/data-access-ai';
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
 import { RefObject, useEffect, useRef, useState } from 'react';
 import { ErrorMessage } from './error-message';
 import { Feed } from './feed/feed';
 import { LoadingState } from './loading-state';
 import { Prompt } from './prompt';
-import { formatMarkdownSources } from './utils';
-import { ChatItem } from '@nx/nx-dev/util-ai';
-
-interface LastQueryMetadata {
-  sources: string[];
-  textResponse: string;
-  usage: {
-    completion_tokens: number;
-    prompt_tokens: number;
-    total_tokens: number;
-  } | null;
-}
+import { ChatItem, extractLinksFromSourcesSection } from '@nx/nx-dev/util-ai';
+import { Message, useChat } from 'ai/react';
 
 const assistantWelcome: ChatItem = {
   role: 'assistant',
@@ -25,13 +14,30 @@ const assistantWelcome: ChatItem = {
 };
 
 export function FeedContainer(): JSX.Element {
-  const [chatHistory, setChatHistory] = useState<ChatItem[]>([]);
-  const [queryError, setQueryError] = useState<any | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastQueryMetadata, setLastQueryMetadata] =
-    useState<LastQueryMetadata | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [startedReply, setStartedReply] = useState(false);
+  const [sources, setSources] = useState<string[]>([]);
 
   const feedContainer: RefObject<HTMLDivElement> | undefined = useRef(null);
+  const { messages, input, handleInputChange, handleSubmit, isLoading } =
+    useChat({
+      api: '/api/query-ai-handler',
+      onError: (error) => {
+        setError(error);
+      },
+      onResponse: (_response) => {
+        setStartedReply(true);
+        sendCustomEvent('ai_query', 'ai', 'query', undefined, {
+          query: input,
+        });
+        setError(null);
+      },
+      onFinish: (response: Message) => {
+        setStartedReply(false);
+        setSources(extractLinksFromSourcesSection(response.content));
+        // Here we have the message id and the timestamp, so we can create a linked list
+      },
+    });
 
   useEffect(() => {
     if (feedContainer.current) {
@@ -39,64 +45,21 @@ export function FeedContainer(): JSX.Element {
         feedContainer.current.getElementsByClassName('feed-item');
       elements[elements.length - 1].scrollIntoView({ behavior: 'smooth' });
     }
-  }, [chatHistory, isLoading]);
-
-  const handleSubmit = async (query: string, currentHistory: ChatItem[]) => {
-    if (!query) return;
-
-    currentHistory.push({ role: 'user', content: query });
-
-    setIsLoading(true);
-    setQueryError(null);
-
-    try {
-      const lastAnswerChatItem =
-        currentHistory.filter((item) => item.role === 'assistant').pop() ||
-        null;
-      // Use previous assistant's answer if it exists
-      const aiResponse = await queryAi(
-        query,
-        lastAnswerChatItem ? lastAnswerChatItem.content : ''
-      );
-      // TODO: Save a list of metadata corresponding to each query
-      // Saving Metadata for usage like feedback and analytics
-      setLastQueryMetadata({
-        sources: aiResponse.sources
-          ? aiResponse.sources.map((source) => source.url)
-          : [],
-        textResponse: aiResponse.textResponse,
-        usage: aiResponse.usage || null,
-      });
-      let content = aiResponse.textResponse;
-      if (aiResponse.sourcesMarkdown.length !== 0)
-        content += formatMarkdownSources(aiResponse.sourcesMarkdown);
-
-      // Saving the new chat history used by AI for follow-up prompts
-      setChatHistory([
-        ...getProcessedHistory(),
-        { role: 'assistant', content },
-      ]);
-
-      sendCustomEvent('ai_query', 'ai', 'query', undefined, {
-        query,
-        ...aiResponse.usage,
-      });
-    } catch (error: any) {
-      setQueryError(error);
-    }
-
-    setIsLoading(false);
-  };
+  }, [messages, isLoading]);
 
   const handleFeedback = (statement: 'good' | 'bad', chatItemIndex: number) => {
-    const question = chatHistory[chatItemIndex - 1];
-    const answer = chatHistory[chatItemIndex];
+    // TODO(katerina): Fix this - Read on
+    // This is wrong
+    // We have to make sure to send the query for the actual message that was clicked
+    // Here we are just sending the last one
+    const question = messages[chatItemIndex - 1];
+    const answer = messages[chatItemIndex];
 
     sendCustomEvent('ai_feedback', 'ai', statement, undefined, {
       query: question ? question.content : 'Could not retrieve the question',
       result: answer ? answer.content : 'Could not retrieve the answer',
-      sources: lastQueryMetadata
-        ? JSON.stringify(lastQueryMetadata.sources)
+      sources: sources
+        ? JSON.stringify(sources)
         : 'Could not retrieve last answer sources',
     });
   };
@@ -122,20 +85,21 @@ export function FeedContainer(): JSX.Element {
                 className="relative"
               >
                 <Feed
-                  activity={
-                    !!chatHistory.length ? chatHistory : [assistantWelcome]
-                  }
+                  activity={!!messages.length ? messages : [assistantWelcome]}
                   handleFeedback={(statement, chatItemIndex) =>
                     handleFeedback(statement, chatItemIndex)
                   }
                 />
 
-                {isLoading && <LoadingState />}
-                {queryError && <ErrorMessage error={queryError} />}
+                {/* Change this message if it's loading but it's writing as well  */}
+                {isLoading && !startedReply && <LoadingState />}
+                {error && <ErrorMessage error={error} />}
 
                 <div className="sticky bottom-0 left-0 right-0 w-full pt-6 pb-4 bg-gradient-to-t from-white via-white dark:from-slate-900 dark:via-slate-900">
                   <Prompt
-                    handleSubmit={(query) => handleSubmit(query, chatHistory)}
+                    handleSubmit={handleSubmit}
+                    handleInputChange={handleInputChange}
+                    input={input}
                     isDisabled={isLoading}
                   />
                 </div>
