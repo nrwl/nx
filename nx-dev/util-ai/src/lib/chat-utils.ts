@@ -54,7 +54,7 @@ export function getMessageFromResponse(
 
 export function getListOfSources(
   pageSections: PageSection[]
-): { heading: string; url: string }[] {
+): { heading: string; url: string; longer_heading: string }[] {
   const uniqueUrlPartials = new Set<string | null>();
   const result = pageSections
     .filter((section) => {
@@ -72,6 +72,7 @@ export function getListOfSources(
       }
       return {
         heading: section.heading,
+        longer_heading: section.longer_heading,
         url: url.toString(),
       };
     });
@@ -90,11 +91,40 @@ ${sourcesMarkdown}
 }
 
 export function toMarkdownList(
-  sections: { heading: string; url: string }[]
+  sections: { heading: string; url: string; longer_heading: string }[]
 ): string {
-  return sections
+  const sectionsWithLongerHeadings: {
+    heading: string;
+    url: string;
+    longer_heading: string;
+  }[] = [];
+
+  const headings = new Set<string>();
+  const sectionsWithUniqueHeadings = sections.filter((section) => {
+    if (headings.has(section.heading)) {
+      sectionsWithLongerHeadings.push(section);
+      return false;
+    } else {
+      headings.add(section.heading);
+      return true;
+    }
+  });
+
+  const finalSections = sectionsWithUniqueHeadings
     .map((section) => `- [${section.heading}](${section.url})`)
-    .join('\n');
+    .join('\n')
+    .concat('\n')
+    .concat(
+      sectionsWithLongerHeadings
+        .map(
+          (section, index) =>
+            `- [${
+              section.longer_heading ?? section.heading + ' ' + (index + 1)
+            }](${section.url})`
+        )
+        .join('\n')
+    );
+  return finalSections;
 }
 
 export function extractLinksFromSourcesSection(markdown: string): string[] {
@@ -123,16 +153,35 @@ export function removeSourcesSection(markdown: string): string {
 
 export async function appendToStream(
   originalStream: ReadableStream<Uint8Array>,
-  appendContent: string
+  appendContent: string,
+  stopString: string = '### Sources'
 ): Promise<ReadableStream<Uint8Array>> {
-  const appendText = new TransformStream({
-    flush(ctrl) {
-      ctrl.enqueue(new TextEncoder().encode(appendContent));
-      ctrl.terminate();
+  let buffer = '';
+
+  const transformer = new TransformStream<Uint8Array, Uint8Array>({
+    async transform(chunk, controller) {
+      const decoder = new TextDecoder();
+      buffer += decoder.decode(chunk);
+
+      // Attempting to stop it from generating a list of Sources that will be wrong
+      // TODO(katerina): make sure that this works as expected
+      if (buffer.includes(stopString)) {
+        const truncated = buffer.split(stopString)[0];
+        controller.enqueue(new TextEncoder().encode(truncated));
+        controller.terminate();
+        return;
+      }
+
+      controller.enqueue(chunk);
+    },
+
+    flush(controller) {
+      controller.enqueue(new TextEncoder().encode(appendContent));
+      controller.terminate();
     },
   });
 
-  return originalStream.pipeThrough(appendText);
+  return originalStream.pipeThrough(transformer);
 }
 
 export function getLastAssistantIndex(messages: ChatItem[]): number {

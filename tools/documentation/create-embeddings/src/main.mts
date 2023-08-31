@@ -307,13 +307,19 @@ async function generateEmbeddings() {
 
           const [responseData] = embeddingResponse.data;
 
+          const longer_heading = createLongerHeading(heading, url_partial);
+
           const { error: insertPageSectionError, data: pageSection } =
             await supabaseClient
               .from('nods_page_section')
               .insert({
                 page_id: page.id,
                 slug,
-                heading,
+                heading:
+                  heading?.length && heading !== null && heading !== 'null'
+                    ? heading
+                    : longer_heading,
+                longer_heading,
                 content,
                 url_partial,
                 token_count: embeddingResponse.usage.total_tokens,
@@ -431,6 +437,29 @@ function getAllFilesWithItemList(data): WalkEntry[] {
     }
   }
   return files;
+}
+
+function createLongerHeading(
+  heading?: string | null,
+  url_partial?: string
+): string | undefined {
+  if (url_partial?.length) {
+    if (heading?.length && heading !== null && heading !== 'null') {
+      return `${heading}${` - ${
+        url_partial.split('/')?.[1]?.[0].toUpperCase() +
+        url_partial.split('/')?.[1]?.slice(1)
+      }`}`;
+    } else {
+      return url_partial
+        .split('#')[0]
+        .split('/')
+        .map((part) =>
+          part?.length ? part[0].toUpperCase() + part.slice(1) + ' - ' : ''
+        )
+        .join('')
+        .slice(0, -3);
+    }
+  }
 }
 
 async function main() {
