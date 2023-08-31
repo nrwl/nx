@@ -9,17 +9,17 @@ describe('addResolverMainFieldsToMetroConfig', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     addProjectConfiguration(tree, 'products', {
-      root: 'apps/products',
-      sourceRoot: 'apps/products/src',
+      root: 'products',
+      sourceRoot: 'products/src',
     });
   });
 
   it(`should update metro.config.js and add key projectRoot`, async () => {
     tree.write(
-      'apps/products/metro.config.js',
+      'products/metro.config.js',
       formatFile`
 const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
@@ -55,7 +55,7 @@ module.exports = (async () => {
     });
 
     expect(
-      formatFile`${tree.read('apps/products/metro.config.js', 'utf-8')}`
+      formatFile`${tree.read('products/metro.config.js', 'utf-8')}`
     ).toEqual(
       formatFile`
 const { withNxMetro } = require('@nx/react-native');
@@ -91,7 +91,7 @@ module.exports = (async () => {
 
   it(`should not udpate metro.config.js if projectRoot already exists`, async () => {
     tree.write(
-      'apps/products/metro.config.js',
+      'products/metro.config.js',
       `
 const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
@@ -126,7 +126,7 @@ module.exports = (async () => {
       name: 'products',
     });
 
-    expect(tree.read('apps/products/metro.config.js', 'utf-8')).toEqual(
+    expect(tree.read('products/metro.config.js', 'utf-8')).toEqual(
       `
 const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
