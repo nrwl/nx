@@ -44,6 +44,11 @@
                   "file": "shared/npm-tutorial/integrated"
                 },
                 {
+                  "name": "React Monorepo",
+                  "id": "react-monorepo-tutorial",
+                  "file": "shared/react-tutorial/react-monorepo"
+                },
+                {
                   "name": "React Standalone",
                   "id": "react-standalone-tutorial",
                   "file": "shared/react-standalone-tutorial/react-standalone"
