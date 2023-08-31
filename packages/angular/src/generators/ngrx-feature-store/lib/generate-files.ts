@@ -9,6 +9,9 @@ export function generateFilesFromTemplates(
   options: NormalizedNgRxFeatureStoreGeneratorOptions
 ) {
   const projectNames = names(options.name);
+  const fileName = options.subdirectory
+    ? joinPathFragments(options.subdirectory, projectNames.fileName)
+    : projectNames.fileName;
 
   generateFiles(
     tree,
@@ -17,6 +20,8 @@ export function generateFilesFromTemplates(
     {
       ...options,
       ...projectNames,
+      fileName,
+      relativeFileName: projectNames.fileName,
       importFromOperators: lt(options.rxjsVersion, '7.2.0'),
       tmpl: '',
     }
@@ -31,6 +36,8 @@ export function generateFilesFromTemplates(
       {
         ...options,
         ...projectNames,
+        fileName,
+        relativeFileName: projectNames.fileName,
         tmpl: '',
       }
     );
@@ -41,14 +48,18 @@ export function generateFilesFromTemplates(
       joinPathFragments(
         options.parentDirectory,
         options.directory,
-        `${projectNames.fileName}.facade.ts`
+        `${options.subdirectory ? `${options.subdirectory}/` : ''}${
+          projectNames.fileName
+        }.facade.ts`
       )
     );
     tree.delete(
       joinPathFragments(
         options.parentDirectory,
         options.directory,
-        `${projectNames.fileName}.facade.spec.ts`
+        `${options.subdirectory ? `${options.subdirectory}/` : ''}${
+          projectNames.fileName
+        }.facade.spec.ts`
       )
     );
   }

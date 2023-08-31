@@ -1,9 +1,9 @@
 import { Injectable, inject } from '@angular/core';
 import { select, Store, Action } from '@ngrx/store';
 
-import * as <%= className %>Actions from './<%= fileName %>.actions';
-import * as <%= className %>Feature from './<%= fileName %>.reducer';
-import * as <%= className %>Selectors from './<%= fileName %>.selectors';
+import * as <%= className %>Actions from './<%= relativeFileName %>.actions';
+import * as <%= className %>Feature from './<%= relativeFileName %>.reducer';
+import * as <%= className %>Selectors from './<%= relativeFileName %>.selectors';
 
 @Injectable()
 export class <%= className %>Facade {
