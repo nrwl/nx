@@ -37,7 +37,7 @@ Add a post endpoint to the `main.ts` file of the root project that uses the `doA
 
 ```typescript {% fileName="src/main.ts" %}
 import express from 'express';
-import { doAuth } from '@products-api/auth';
+import { doAuth } from 'auth';
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;

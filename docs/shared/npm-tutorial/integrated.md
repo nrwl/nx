@@ -32,7 +32,10 @@ myorg/
 Nx comes with generators that can help with scaffolding applications. Run this generator to make a new library named `is-even`:
 
 ```shell
-npx nx generate @nx/js:library is-even --publishable --importPath @myorg/is-even
+npx nx generate @nx/js:library is-even \
+--directory=libs/is-even \
+--publishable \
+--importPath=@myorg/is-even
 ```
 
 This command:
@@ -103,7 +106,10 @@ The local linking of packages in an integrated monorepo style is handled by Nx a
 To illustrate that, let's create another package `is-odd`. We can again run the generator for that:
 
 ```shell
-npx nx generate @nx/js:library is-odd --publishable --importPath @myorg/is-odd
+npx nx generate @nx/js:library is-odd \
+--directory=libs/is-odd \
+--publishable \
+--importPath=@myorg/is-odd
 ```
 
 Note how the `tsconfig.base.json` now has two entries:
