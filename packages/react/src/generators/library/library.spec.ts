@@ -68,7 +68,12 @@ describe('lib', () => {
       unitTestRunner: 'vitest',
     });
     const tsconfigApp = readJson(tree, 'my-lib/tsconfig.lib.json');
-    expect(tsconfigApp.compilerOptions.types).toEqual(['node', 'vite/client']);
+    expect(tsconfigApp.compilerOptions.types).toEqual([
+      'node',
+      '@nx/react/typings/cssmodule.d.ts',
+      '@nx/react/typings/image.d.ts',
+      'vite/client',
+    ]);
     const tsconfigSpec = readJson(tree, 'my-lib/tsconfig.spec.json');
     expect(tsconfigSpec.compilerOptions.types).toEqual([
       'vitest/globals',
