@@ -9,6 +9,7 @@ import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 import { workspaceRoot } from './workspace-root';
 import { readNxJson } from '../config/configuration';
+import { homedir } from 'os';
 
 const execAsync = promisify(exec);
 
@@ -136,12 +137,18 @@ export function getPackageManagerVersion(
 /**
  * Checks for a project level npmrc file by crawling up the file tree until
  * hitting a package.json file, as this is how npm finds them as well.
+ *
+ * The exception to the above is the home directory, which is checked as well.
  */
 export function findFileInPackageJsonDirectory(
   file: string,
   directory: string = process.cwd()
 ): string | null {
-  while (!existsSync(join(directory, 'package.json'))) {
+  const homeDir = homedir();
+  while (
+    !existsSync(join(directory, 'package.json')) &&
+    directory !== homeDir
+  ) {
     directory = dirname(directory);
   }
   const path = join(directory, file);

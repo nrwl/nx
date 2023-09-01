@@ -42,6 +42,9 @@ export function installPackagesTask(
       cwd: join(tree.root, cwd),
       stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
     };
+    // ensure local registry from process is not interfering with the install
+    // when we start the process from temp folder the local registry would override the custom registry
+    delete process.env.npm_config_registry;
     execSync(pmc.install, execSyncOptions);
   }
 }
