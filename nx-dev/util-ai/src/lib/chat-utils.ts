@@ -127,25 +127,6 @@ export function toMarkdownList(
   return finalSections;
 }
 
-export function extractLinksFromSourcesSection(markdown: string): string[] {
-  const sectionRegex = /### Sources\n\n([\s\S]*?)(?:\n##|$)/;
-  const sectionMatch = sectionRegex.exec(markdown);
-
-  if (!sectionMatch) return [];
-
-  const sourcesSection = sectionMatch[1];
-
-  const linkRegex = /\]\((.*?)\)/g;
-  const links: string[] = [];
-  let match;
-
-  while ((match = linkRegex.exec(sourcesSection)) !== null) {
-    links.push(match[1]);
-  }
-
-  return links;
-}
-
 export function removeSourcesSection(markdown: string): string {
   const sectionRegex = /### Sources\n\n([\s\S]*?)(?:\n###|$)/;
   return markdown.replace(sectionRegex, '').trim();
