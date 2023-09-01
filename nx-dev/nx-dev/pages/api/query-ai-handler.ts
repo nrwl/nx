@@ -24,7 +24,7 @@ import GPT3Tokenizer from 'gpt3-tokenizer';
 import { Stream } from 'openai/streaming';
 
 const supabaseUrl = process.env['NX_NEXT_PUBLIC_SUPABASE_URL'];
-const supabaseServiceKey = process.env['NX_SUPABASE_SERVICE_ROLE_KEY_ACTUAL'];
+const supabaseServiceKey = process.env['NX_SUPABASE_SERVICE_ROLE_KEY'];
 const openAiKey = process.env['NX_OPENAI_KEY'];
 const tokenCountLimit =
   parseInt(process.env['NX_TOKEN_COUNT_LIMIT'] ?? '2500') > 0
