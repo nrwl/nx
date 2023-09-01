@@ -65,6 +65,7 @@ export interface PageSection {
   page_id: number;
   content: string;
   heading: string;
+  longer_heading: string;
   similarity: number;
   slug: string;
   url_partial: string | null;
