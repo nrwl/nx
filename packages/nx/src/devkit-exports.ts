@@ -92,6 +92,7 @@ export type { PackageManager } from './utils/package-manager';
  */
 export {
   getPackageManagerCommand,
+  getPackageManagerCommandAsync,
   detectPackageManager,
   getPackageManagerVersion,
 } from './utils/package-manager';

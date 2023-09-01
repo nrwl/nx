@@ -4,8 +4,11 @@ import { requireNx } from '../../nx';
 
 import type { Tree } from 'nx/src/generators/tree';
 import type { PackageManager } from 'nx/src/utils/package-manager';
-const { detectPackageManager, getPackageManagerCommand, joinPathFragments } =
-  requireNx();
+const {
+  detectPackageManager,
+  getPackageManagerCommandAsync,
+  joinPathFragments,
+} = requireNx();
 
 /**
  * Runs `npm install` or `yarn install`. It will skip running the install if
@@ -14,12 +17,12 @@ const { detectPackageManager, getPackageManagerCommand, joinPathFragments } =
  * @param tree - the file system tree
  * @param alwaysRun - always run the command even if `package.json` hasn't changed.
  */
-export function installPackagesTask(
+export async function installPackagesTask(
   tree: Tree,
   alwaysRun: boolean = false,
   cwd: string = '',
   packageManager: PackageManager = detectPackageManager(cwd)
-): void {
+): Promise<void> {
   if (
     !tree
       .listChanges()
@@ -37,7 +40,7 @@ export function installPackagesTask(
   // Don't install again if install was already executed with package.json
   if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
     global['__packageJsonInstallCache__'] = packageJsonValue;
-    const pmc = getPackageManagerCommand(packageManager);
+    const pmc = await getPackageManagerCommandAsync(packageManager);
     const execSyncOptions: ExecSyncOptions = {
       cwd: join(tree.root, cwd),
       stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',

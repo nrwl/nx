@@ -122,6 +122,7 @@ It only uses language primitives and immutable objects
 - [getNpmPackageSharedConfig](../../devkit/documents/getNpmPackageSharedConfig)
 - [getOutputsForTargetAndConfiguration](../../devkit/documents/getOutputsForTargetAndConfiguration)
 - [getPackageManagerCommand](../../devkit/documents/getPackageManagerCommand)
+- [getPackageManagerCommandAsync](../../devkit/documents/getPackageManagerCommandAsync)
 - [getPackageManagerVersion](../../devkit/documents/getPackageManagerVersion)
 - [getProjects](../../devkit/documents/getProjects)
 - [getWorkspaceLayout](../../devkit/documents/getWorkspaceLayout)

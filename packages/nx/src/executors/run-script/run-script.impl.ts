@@ -1,5 +1,5 @@
 import { execSync } from 'child_process';
-import { getPackageManagerCommand } from '../../utils/package-manager';
+import { getPackageManagerCommandAsync } from '../../utils/package-manager';
 import type { ExecutorContext } from '../../config/misc-interfaces';
 import * as path from 'path';
 import { env as appendLocalEnv } from 'npm-run-path';
@@ -13,7 +13,7 @@ export default async function (
   options: RunScriptOptions,
   context: ExecutorContext
 ) {
-  const pm = getPackageManagerCommand();
+  const pm = await getPackageManagerCommandAsync();
   try {
     execSync(pm.run(options.script, options.__unparsed__.join(' ')), {
       stdio: ['inherit', 'inherit', 'inherit'],
