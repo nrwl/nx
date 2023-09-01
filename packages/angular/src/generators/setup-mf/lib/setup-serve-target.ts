@@ -24,7 +24,7 @@ export function setupServeTarget(host: Tree, options: Schema) {
   if (options.mfType === 'remote') {
     appConfig.targets['serve-static'] = {
       executor: '@nx/web:file-server',
-      defaultConfiguration: 'development',
+      defaultConfiguration: 'production',
       options: {
         buildTarget: `${options.appName}:build`,
         port: options.port,
