@@ -11,8 +11,7 @@ The following is an expanded example showing all options. Your `nx.json` will li
     "defaultBase": "main"
   },
   "workspaceLayout": {
-    "appsDir": "demos",
-    "libsDir": "packages"
+    "projectNameAndRootFormat": "as-provided"
   },
   "generators": {
     "@nx/js:library": {
@@ -64,11 +63,29 @@ Tells Nx which branch and HEAD to use when calculating affected projects.
 
 ### Workspace Layout
 
-You can add a `workspaceLayout` property to modify where libraries and apps are located.
+You can add a `workspaceLayout` property to modify where libraries and apps are located. As of Nx 16.8.0, there is a property called `projectNameAndRootFormat` that determines how this configuration block is interpreted. The default setting is `"projectNameAndRootFormat": "as-provided"`.
 
 ```json
 {
   "workspaceLayout": {
+    "projectNameAndRootFormat": "as-provided"
+  }
+}
+```
+
+This setting makes app or lib generators behave in the following way:
+
+- `nx g app my-app` creates a new application named `my-app` in the `/my-app` folder
+- `nx g lib my-lib` creates a new library named `my-lib` in the `/my-lib` folder
+- `nx g app my-app --directory=apps/nested/my-app` creates a new application named `my-app` in the `/apps/nested/my-app` folder
+- `nx g lib my-lib --directory=libs/shared/ui/my-lib` creates a new library named `my-lib` in the `/libs/shared/ui/my-lib` folder
+
+The other style is `"projectNameAndRootFormat": "derived"`, which behaves the way Nx did before version 16.8.0.
+
+```json
+{
+  "workspaceLayout": {
+    "projectNameAndRootFormat": "derived",
     "appsDir": "demos",
     "libsDir": "packages"
   }
@@ -77,6 +94,15 @@ You can add a `workspaceLayout` property to modify where libraries and apps are 
 
 These settings would store apps in `/demos/` and libraries in `/packages/`. The paths specified are relative to the
 workspace root.
+
+This makes app or lib generators behave in the following way:
+
+- `nx g app my-app` creates a new application named `my-app` in the `/demos/my-app` folder
+- `nx g lib my-lib` creates a new library named `my-lib` in the `/packages/my-lib` folder
+- `nx g app my-app --directory=nested` creates a new application named `nested-my-app` in the `/demos/nested/my-app` folder
+- `nx g lib my-lib --directory=shared/ui` creates a new library named `shared-ui-my-lib` in the `/packages/shared/ui/my-lib` folder
+
+If you accidentally generate a project in the wrong folder, use the [move generator](/packages/workspace/generators/move) to move it to the correct location.
 
 ### inputs & namedInputs
 

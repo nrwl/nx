@@ -53,8 +53,12 @@ Codebases with existing unit and e2e tests should continue to use whatever runne
 
 With the Angular capability added, generate your application:
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 ```shell
-nx generate @nx/angular:application --name=realworld --unitTestRunner=karma --e2eTestRunner=protractor
+nx generate @nx/angular:application --name=realworld --directory=apps/realword --unitTestRunner=karma --e2eTestRunner=protractor
 ```
 
 Accept the default options for each prompt:

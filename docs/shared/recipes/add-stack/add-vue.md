@@ -231,7 +231,11 @@ nx serve acme
 
 Instead of having our Counter directly defined in the app we can instead create a library that exports the Counter component.
 
-Create a new library `nx generate @nx/js:library --name=Counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter`
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
+Create a new library `nx generate @nx/js:library --name=Counter --directory=libs/counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter`
 
 Create your Counter component at `counter/src/lib/Counter.vue` and copy the contents of your `src/App.vue` into it.
 

@@ -91,10 +91,14 @@ Let's assume in this case that all our libraries are using Angular.
 
 Let's generate three Angular libraries, one for each scope, and let's call them `storybook-host-client`, `storybook-host-admin`, and `storybook-host-shared`. We can do this by running the following commands:
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The commands below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 ```shell
-nx g @nx/angular:lib storybook-host-client
-nx g @nx/angular:lib storybook-host-admin
-nx g @nx/angular:lib storybook-host-shared
+nx g @nx/angular:lib storybook-host-client --directory=libs/storybook-host-client
+nx g @nx/angular:lib storybook-host-admin --directory=libs/storybook-host-admin
+nx g @nx/angular:lib storybook-host-shared --directory=libs/storybook-host-shared
 ```
 
 ### Generate the Storybook configuration for the libraries

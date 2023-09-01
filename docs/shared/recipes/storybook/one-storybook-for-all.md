@@ -20,8 +20,12 @@ Let’s see how we can implement this solution:
 
 According to the framework you are using, use the corresponding generator to generate a new library. Let’s suppose that you are using React and all your stories are using `@storybook/react`:
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 ```shell
-nx g @nx/react:library storybook-host
+nx g @nx/react:library storybook-host --directory=libs/storybook-host
 ```
 
 Now, you have a new library, which will act as a shell/host for all your stories.
