@@ -1,10 +1,4 @@
-import {
-  installPackagesTask,
-  names,
-  readNxJson,
-  Tree,
-  updateNxJson,
-} from '@nx/devkit';
+import { installPackagesTask, names, Tree } from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
 import { join } from 'path';

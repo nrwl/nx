@@ -63,7 +63,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/angular:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nx/angular:lib ${libName} --directory packages/${libName} --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -78,7 +80,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() =>
-      runCLI(`generate @nx/js:library ${libName} --no-interactive`)
+      runCLI(
+        `generate @nx/js:library ${libName} --directory packages/${libName} --no-interactive`
+      )
     ).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -115,7 +119,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/react:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nx/react:lib ${libName} --directory packages/${libName} --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -141,7 +147,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/next:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nx/next:lib ${libName} --directory packages/${libName} --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -170,7 +178,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/react-native:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nx/react-native:lib ${libName} --directory packages/${libName} --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -196,7 +206,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/node:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nx/node:lib ${libName} --directory packages/${libName} --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);
@@ -222,7 +234,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const libName = uniq('lib');
 
     expect(() => {
-      runCLI(`generate @nx/nest:lib ${libName} --no-interactive`);
+      runCLI(
+        `generate @nx/nest:lib ${libName} --directory packages/${libName} --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
     const tsconfig = readJson(`tsconfig.base.json`);

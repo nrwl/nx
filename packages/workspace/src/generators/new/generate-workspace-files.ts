@@ -45,7 +45,6 @@ export async function generateWorkspaceFiles(
   }
   setPresetProperty(tree, options);
   addNpmScripts(tree, options);
-  createAppsAndLibsFolders(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
   await formatFiles(tree);
@@ -57,7 +56,6 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       delete json.implicitDependencies;
       delete json.targetDefaults;
-      delete json.workspaceLayout;
     }
     return json;
   });
