@@ -76,7 +76,7 @@ export function getLockFileNodes(
         bodyLines: errorBodyLines(e),
       });
     }
-    return;
+    throw e;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
@@ -107,7 +107,7 @@ export function getLockFileDependencies(
         bodyLines: errorBodyLines(e),
       });
     }
-    return;
+    throw e;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
