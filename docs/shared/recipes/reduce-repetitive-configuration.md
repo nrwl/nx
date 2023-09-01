@@ -260,6 +260,9 @@ Now the `project.json` files can be reduced to this:
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "libs/lib3/src",
   "projectType": "library",
+  "targets": {
+    "test": {}
+  },
   "tags": []
 }
 ```
