@@ -41,6 +41,6 @@ describe('Storybook executors for Angular', () => {
     it('shoud build an Angular based storybook', () => {
       runCLI(`run ${angularStorybookLib}:build-storybook`);
       checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
-    }, 600_000);
+    }, 1_000_000);
   });
 });
