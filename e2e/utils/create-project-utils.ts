@@ -28,7 +28,7 @@ import {
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { output } from '@nx/devkit';
+import { NxJsonConfiguration, output } from '@nx/devkit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -41,6 +41,7 @@ let projName: string;
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
+  unsetProjectNameAndRootFormat = true,
 } = {}): string {
   try {
     const projScope = 'proj';
@@ -50,6 +51,13 @@ export function newProject({
         preset: 'apps',
         packageManager,
       });
+
+      if (unsetProjectNameAndRootFormat) {
+        updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+          delete nxJson.workspaceLayout;
+          return nxJson;
+        });
+      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {

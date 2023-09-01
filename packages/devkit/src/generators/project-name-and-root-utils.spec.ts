@@ -348,9 +348,20 @@ describe('determineProjectNameAndRootOptions', () => {
 
       expect(promptSpy).toHaveBeenCalledTimes(2);
 
-      expect(readNxJson(tree).generators['@nx/some-plugin:app']).toEqual({
+      expect(readNxJson(tree).workspaceLayout).toEqual({
         projectNameAndRootFormat: 'as-provided',
       });
+
+      promptSpy.mockReset();
+
+      await determineProjectNameAndRootOptions(tree, {
+        name: 'libName',
+        projectType: 'library',
+        directory: 'shared',
+        callingGenerator: '@nx/some-plugin:app',
+      });
+
+      expect(promptSpy).not.toHaveBeenCalled();
 
       // restore original interactive mode
       restoreOriginalInteractiveMode();
