@@ -51,6 +51,7 @@ export interface CypressExecutorOptions extends Json {
   tag?: string;
   port?: number | 'cypress-auto';
   quiet?: boolean;
+  runnerUi?: boolean;
 }
 
 interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
@@ -258,6 +259,7 @@ async function runCypress(
   options.tag = opts.tag;
   options.exit = opts.exit;
   options.headed = opts.headed;
+  options.runnerUi = opts.runnerUi;
 
   if (opts.headless) {
     options.headless = opts.headless;

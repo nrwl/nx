@@ -61,7 +61,6 @@ export function nxComponentTestingPreset(
   devServer: ViteDevServer | WebpackDevServer;
   videosFolder: string;
   screenshotsFolder: string;
-  video: boolean;
   chromeWebSecurity: boolean;
 } {
   const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
