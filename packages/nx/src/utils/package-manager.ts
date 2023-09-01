@@ -144,11 +144,7 @@ export function findFileInPackageJsonDirectory(
   file: string,
   directory: string = process.cwd()
 ): string | null {
-  const homeDir = homedir();
-  while (
-    !existsSync(join(directory, 'package.json')) &&
-    directory !== homeDir
-  ) {
+  while (!existsSync(join(directory, 'package.json'))) {
     directory = dirname(directory);
   }
   const path = join(directory, file);
@@ -208,6 +204,12 @@ export function copyPackageManagerConfigurationFiles(
   root: string,
   destination: string
 ) {
+  const homeDir = homedir();
+  // copy .npmrc file from user's home directory
+  if (existsSync(join(homeDir, '.npmrc'))) {
+    copyFileSync(join(homeDir, '.npmrc'), join(root, '.npmrc'));
+  }
+
   for (const packageManagerConfigFile of ['.npmrc', '.yarnrc', '.yarnrc.yml']) {
     // f is an absolute path, including the {workspaceRoot}.
     const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);

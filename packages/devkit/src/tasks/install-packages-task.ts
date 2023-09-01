@@ -44,7 +44,11 @@ export function installPackagesTask(
     };
     // ensure local registry from process is not interfering with the install
     // when we start the process from temp folder the local registry would override the custom registry
-    delete process.env.npm_config_registry;
+    if (
+      process.env.npm_config_registry?.startsWith('https://registry.npmjs.org')
+    ) {
+      delete process.env.npm_config_registry;
+    }
     execSync(pmc.install, execSyncOptions);
   }
 }
