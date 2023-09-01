@@ -98,6 +98,9 @@ function createNxJson(
         },
       },
     },
+    workspaceLayout: {
+      projectNameAndRootFormat: 'as-provided',
+    },
   };
 
   nxJson.targetDefaults = {

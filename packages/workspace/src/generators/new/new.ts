@@ -41,27 +41,28 @@ export interface NormalizedSchema extends Schema {
   isCustomPreset: boolean;
 }
 
-export async function newGenerator(host: Tree, opts: Schema) {
+export async function newGenerator(tree: Tree, opts: Schema) {
   const options = normalizeOptions(opts);
-  validateOptions(options, host);
+  validateOptions(options, tree);
 
-  await generateWorkspaceFiles(host, { ...options, nxCloud: undefined } as any);
+  await generateWorkspaceFiles(tree, { ...options, nxCloud: undefined } as any);
 
-  addPresetDependencies(host, options);
-  addCloudDependencies(host, options);
+  addPresetDependencies(tree, options);
+
+  addCloudDependencies(tree, options);
 
   return async () => {
     const pmc = getPackageManagerCommand(options.packageManager);
     if (pmc.preInstall) {
       execSync(pmc.preInstall, {
-        cwd: joinPathFragments(host.root, options.directory),
+        cwd: joinPathFragments(tree.root, options.directory),
         stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
       });
     }
-    installPackagesTask(host, false, options.directory, options.packageManager);
+    installPackagesTask(tree, false, options.directory, options.packageManager);
     // TODO: move all of these into create-nx-workspace
     if (options.preset !== Preset.NPM && !options.isCustomPreset) {
-      await generatePreset(host, options);
+      await generatePreset(tree, options);
     }
   };
 }

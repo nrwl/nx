@@ -75,7 +75,9 @@ export async function determineProjectNameAndRootOptions(
   const formats = getProjectNameAndRootFormats(tree, options);
   const format =
     options.projectNameAndRootFormat ??
-    (await determineFormat(tree, formats, options.callingGenerator));
+    (getDefaultProjectNameAndRootFormat(tree) === 'as-provided'
+      ? 'as-provided'
+      : await determineFormat(tree, formats, options.callingGenerator));
 
   return {
     ...formats[format],
@@ -167,11 +169,7 @@ async function determineFormat(
       initial: true,
     });
     if (saveDefault) {
-      const nxJson = readNxJson(tree);
-      nxJson.generators ??= {};
-      nxJson.generators[callingGenerator] ??= {};
-      nxJson.generators[callingGenerator].projectNameAndRootFormat = result;
-      updateNxJson(tree, nxJson);
+      setProjectNameAndRootFormatDefault(tree);
     } else {
       logger.warn(deprecationWarning);
     }
@@ -181,6 +179,18 @@ async function determineFormat(
   }
 
   return result;
+}
+
+function setProjectNameAndRootFormatDefault(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.workspaceLayout ??= {};
+  nxJson.workspaceLayout.projectNameAndRootFormat = 'as-provided';
+  updateNxJson(tree, nxJson);
+}
+
+function getDefaultProjectNameAndRootFormat(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  return nxJson.workspaceLayout?.projectNameAndRootFormat ?? 'derived';
 }
 
 function getProjectNameAndRootFormats(

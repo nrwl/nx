@@ -56,6 +56,11 @@
         "appsDir": {
           "type": "string",
           "description": "Default folder name for apps."
+        },
+        "projectNameAndRootFormat": {
+          "type": "string",
+          "description": "Default method of handling arguments for generating projects",
+          "enum": ["as-provided", "derived"]
         }
       },
       "additionalProperties": false

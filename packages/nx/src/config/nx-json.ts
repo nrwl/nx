@@ -86,8 +86,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Where new apps + libs should be placed
    */
   workspaceLayout?: {
-    libsDir: string;
-    appsDir: string;
+    libsDir?: string;
+    appsDir?: string;
+    projectNameAndRootFormat?: 'as-provided' | 'derived';
   };
   /**
    * Available Task Runners
