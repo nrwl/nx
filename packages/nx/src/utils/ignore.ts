@@ -6,7 +6,6 @@ import { workspaceRoot } from './workspace-root';
 
 /**
  * An array of glob patterns that should always be ignored.
- * Uses path/posix, since fast-glob requires unix paths.
  */
 export const ALWAYS_IGNORE = getAlwaysIgnore();
 

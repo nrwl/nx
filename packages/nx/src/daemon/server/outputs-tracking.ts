@@ -1,9 +1,9 @@
 import { lstat } from 'fs-extra';
 import { dirname, join } from 'path';
-import * as fastGlob from 'fast-glob';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs';
 import type { Event } from '@parcel/watcher';
+import { getFilesForOutputs } from '../../native';
 
 let disabled = false;
 
@@ -59,30 +59,10 @@ export async function outputsHashesMatch(_outputs: string[], hash: string) {
 }
 
 async function normalizeOutputs(outputs: string[]) {
-  return (
-    await Promise.all(outputs.map((o) => normalizeOutput(o, true)))
-  ).flat();
-}
-
-async function normalizeOutput(
-  output: string,
-  expand: boolean
-): Promise<string[]> {
-  try {
-    await lstat(join(workspaceRoot, output));
-    return [output];
-  } catch (e) {
-    if (expand) {
-      const expanded = collapseExpandedOutputs(
-        await fastGlob(output, { cwd: workspaceRoot, dot: true })
-      );
-      return (
-        await Promise.all(expanded.map((e) => normalizeOutput(e, false)))
-      ).flat();
-    } else {
-      return [];
-    }
-  }
+  let expandedOutputs = collapseExpandedOutputs(
+    getFilesForOutputs(workspaceRoot, outputs)
+  );
+  return expandedOutputs;
 }
 
 export function processFileChangesInOutputs(
