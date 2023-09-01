@@ -38,7 +38,7 @@ export const createNodes: CreateNodes = [
   combineGlobPatterns(LOCKFILES),
   (lockFile, context) => {
     const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
-    if (!pluginConfig.analyzePackageJson) {
+    if (!pluginConfig.analyzeLockfile) {
       return {};
     }
 
@@ -83,7 +83,7 @@ export const createDependencies: CreateDependencies = (
   let lockfileDependencies: ProjectGraphDependencyWithFile[] = [];
   // lockfile may not exist yet
   if (
-    pluginConfig.analyzePackageJson &&
+    pluginConfig.analyzeLockfile &&
     lockFileExists(packageManager) &&
     parsedLockFile
   ) {
