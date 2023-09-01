@@ -171,6 +171,83 @@ describe('init', () => {
           'jest'
         );
       });
+
+      it('should set projectNameAndRootFormat default when the option is set to "as-provided"', async () => {
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.Jest,
+          linter: Linter.EsLint,
+          skipFormat: false,
+          projectNameAndRootFormat: 'as-provided',
+        });
+
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        expect(
+          generators['@nx/angular:application'].projectNameAndRootFormat
+        ).toEqual('as-provided');
+        expect(
+          generators['@nx/angular:library'].projectNameAndRootFormat
+        ).toEqual('as-provided');
+        expect(generators['@nx/angular:host'].projectNameAndRootFormat).toEqual(
+          'as-provided'
+        );
+        expect(
+          generators['@nx/angular:remote'].projectNameAndRootFormat
+        ).toEqual('as-provided');
+      });
+
+      it('should not set projectNameAndRootFormat default when the option is set to "derived"', async () => {
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.Jest,
+          linter: Linter.EsLint,
+          skipFormat: false,
+          projectNameAndRootFormat: 'derived',
+        });
+
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        expect(
+          generators['@nx/angular:application'].projectNameAndRootFormat
+        ).toBeUndefined();
+        expect(
+          generators['@nx/angular:library'].projectNameAndRootFormat
+        ).toBeUndefined();
+        expect(
+          generators['@nx/angular:host']?.projectNameAndRootFormat
+        ).toBeUndefined();
+        expect(
+          generators['@nx/angular:remote']?.projectNameAndRootFormat
+        ).toBeUndefined();
+      });
+
+      it('should not set projectNameAndRootFormat=as-provided default when not running for the first time', async () => {
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            ...json.dependencies,
+            '@angular/core': '~16.2.0',
+          },
+        }));
+
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.Jest,
+          linter: Linter.EsLint,
+          skipFormat: false,
+          projectNameAndRootFormat: 'as-provided',
+        });
+
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+        expect(
+          generators['@nx/angular:application'].projectNameAndRootFormat
+        ).toBeUndefined();
+        expect(
+          generators['@nx/angular:library'].projectNameAndRootFormat
+        ).toBeUndefined();
+        expect(
+          generators['@nx/angular:host']?.projectNameAndRootFormat
+        ).toBeUndefined();
+        expect(
+          generators['@nx/angular:remote']?.projectNameAndRootFormat
+        ).toBeUndefined();
+      });
     });
   });
 

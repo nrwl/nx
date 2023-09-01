@@ -29,11 +29,13 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return angularApplicationGenerator(tree, {
       name: options.name,
+      directory: `apps/${options.name}`,
       style: options.style,
       linter: options.linter,
       standalone: options.standaloneApi,
       routing: options.routing,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      projectNameAndRootFormat: 'as-provided',
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -48,6 +50,7 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       standalone: options.standaloneApi,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      projectNameAndRootFormat: 'as-provided',
     });
   } else if (options.preset === Preset.ReactMonorepo) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -55,10 +58,12 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return reactApplicationGenerator(tree, {
       name: options.name,
+      directory: `apps/${options.name}`,
       style: options.style,
       linter: options.linter,
       bundler: options.bundler ?? 'webpack',
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      projectNameAndRootFormat: 'as-provided',
     });
   } else if (options.preset === Preset.ReactStandalone) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -72,6 +77,7 @@ async function createPreset(tree: Tree, options: Schema) {
       bundler: options.bundler ?? 'vite',
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       unitTestRunner: options.bundler === 'vite' ? 'vitest' : 'jest',
+      projectNameAndRootFormat: 'as-provided',
     });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
@@ -79,10 +85,12 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return nextApplicationGenerator(tree, {
       name: options.name,
+      directory: `apps/${options.name}`,
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      projectNameAndRootFormat: 'as-provided',
     });
   } else if (options.preset === Preset.NextJsStandalone) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
@@ -94,6 +102,7 @@ async function createPreset(tree: Tree, options: Schema) {
       appDir: options.nextAppDir,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       rootProject: true,
+      projectNameAndRootFormat: 'as-provided',
     });
   } else if (options.preset === Preset.WebComponents) {
     const { applicationGenerator: webApplicationGenerator } = require('@nx' +

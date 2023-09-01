@@ -3,6 +3,7 @@ import {
   convertNxGenerator,
   ensurePackage,
   GeneratorCallback,
+  readJson,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
@@ -23,12 +24,12 @@ import {
 } from '../../utils/versions';
 import { InitSchema } from './schema';
 
-function setDefault(host: Tree) {
+function setDefault(host: Tree, schema: InitSchema) {
   const workspace = readNxJson(host);
 
-  workspace.generators = workspace.generators || {};
+  workspace.generators ??= {};
   const reactGenerators = workspace.generators['@nx/react'] || {};
-  const generators = {
+  const generators: typeof reactGenerators = {
     ...workspace.generators,
     '@nx/react': {
       ...reactGenerators,
@@ -38,6 +39,21 @@ function setDefault(host: Tree) {
       },
     },
   };
+
+  if (schema.projectNameAndRootFormat === 'as-provided') {
+    const { dependencies, devDependencies } = readJson(host, 'package.json');
+    const isFirstRun = !dependencies?.['react'] && !devDependencies['react'];
+    if (isFirstRun) {
+      generators['@nx/react'].application.projectNameAndRootFormat =
+        'as-provided';
+      generators['@nx/react'].library ??= {};
+      generators['@nx/react'].library.projectNameAndRootFormat = 'as-provided';
+      generators['@nx/react'].host ??= {};
+      generators['@nx/react'].host.projectNameAndRootFormat = 'as-provided';
+      generators['@nx/react'].remote ??= {};
+      generators['@nx/react'].remote.projectNameAndRootFormat = 'as-provided';
+    }
+  }
 
   updateNxJson(host, { ...workspace, generators });
 }
@@ -74,14 +90,16 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
 
   tasks.push(jsInitTask);
 
-  setDefault(host);
+  setDefault(host, schema);
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
     ensurePackage('@nx/cypress', nxVersion);
     const { cypressInitGenerator } = await import(
       '@nx/cypress/src/generators/init/init'
     );
-    const cypressTask = await cypressInitGenerator(host, {});
+    const cypressTask = await cypressInitGenerator(host, {
+      projectNameAndRootFormat: schema.projectNameAndRootFormat,
+    });
     tasks.push(cypressTask);
   }
 

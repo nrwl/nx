@@ -32,6 +32,7 @@ export async function normalizeOptions(
     names: projectNames,
     projectRoot,
     importPath,
+    projectNameAndRootFormat,
   } = await determineProjectNameAndRootOptions(host, {
     name: options.name,
     projectType: 'library',
@@ -40,6 +41,7 @@ export async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     callingGenerator: '@nx/angular:library',
   });
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const fileName = options.simpleName
     ? projectNames.projectSimpleName

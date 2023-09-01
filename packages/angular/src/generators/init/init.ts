@@ -4,6 +4,7 @@ import {
   formatFiles,
   GeneratorCallback,
   logger,
+  readJson,
   readNxJson,
   runTasksInSerial,
   Tree,
@@ -95,13 +96,14 @@ function normalizeOptions(options: Schema): Required<Schema> {
     style: options.style ?? 'css',
     unitTestRunner: options.unitTestRunner ?? UnitTestRunner.Jest,
     rootProject: options.rootProject,
+    projectNameAndRootFormat: options.projectNameAndRootFormat ?? 'derived',
   };
 }
 
 function setDefaults(host: Tree, options: Schema) {
   const nxJson = readNxJson(host);
 
-  nxJson.generators = nxJson.generators || {};
+  nxJson.generators ??= {};
   nxJson.generators['@nx/angular:application'] = {
     style: options.style,
     linter: options.linter,
@@ -118,6 +120,24 @@ function setDefaults(host: Tree, options: Schema) {
     style: options.style,
     ...(nxJson.generators['@nx/angular:component'] || {}),
   };
+
+  if (options.projectNameAndRootFormat === 'as-provided') {
+    const { dependencies, devDependencies } = readJson(host, 'package.json');
+    const isFirstRun =
+      !dependencies?.['@angular/core'] && !devDependencies['@angular/core'];
+    if (isFirstRun) {
+      nxJson.generators['@nx/angular:application'].projectNameAndRootFormat =
+        'as-provided';
+      nxJson.generators['@nx/angular:library'].projectNameAndRootFormat =
+        'as-provided';
+      nxJson.generators['@nx/angular:host'] = {
+        projectNameAndRootFormat: 'as-provided',
+      };
+      nxJson.generators['@nx/angular:remote'] = {
+        projectNameAndRootFormat: 'as-provided',
+      };
+    }
+  }
 
   updateNxJson(host, nxJson);
 }
@@ -203,6 +223,7 @@ async function addE2ETestRunner(
       >('@nx/cypress', nxVersion);
       return cypressInitGenerator(tree, {
         skipPackageJson: options.skipPackageJson,
+        projectNameAndRootFormat: options.projectNameAndRootFormat,
       });
     case E2eTestRunner.Playwright:
       const { initGenerator: playwrightInitGenerator } = ensurePackage<

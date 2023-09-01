@@ -15,6 +15,7 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { initGenerator } from '@nx/js';
+import { installedCypressVersion } from '../../utils/cypress-version';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -36,6 +37,26 @@ function setupE2ETargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
+function setupGeneratorDefaults(tree: Tree, options: Schema) {
+  if (options.projectNameAndRootFormat !== 'as-provided') {
+    return;
+  }
+
+  const cypressVersion = installedCypressVersion();
+  // if Cypress is already configured don't set the default
+  if (cypressVersion) {
+    return;
+  }
+
+  const nxJson = readNxJson(tree);
+
+  nxJson.generators['@nx/cypress:cypress-project'] ??= {};
+  nxJson.generators['@nx/cypress:cypress-project'].projectNameAndRootFormat =
+    'as-provided';
+
+  updateNxJson(tree, nxJson);
+}
+
 function updateDependencies(tree: Tree) {
   removeDependenciesFromPackageJson(tree, ['@nx/cypress'], []);
 
@@ -52,6 +73,7 @@ function updateDependencies(tree: Tree) {
 
 export async function cypressInitGenerator(tree: Tree, options: Schema) {
   setupE2ETargetDefaults(tree);
+  setupGeneratorDefaults(tree, options);
 
   const tasks: GeneratorCallback[] = [];
 

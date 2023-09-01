@@ -3,8 +3,11 @@ import {
   convertNxGenerator,
   ensurePackage,
   GeneratorCallback,
+  readJson,
+  readNxJson,
   runTasksInSerial,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
 
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
@@ -36,7 +39,32 @@ function updateDependencies(host: Tree) {
   );
 }
 
+function setGeneratorDefaults(tree: Tree, schema: InitSchema) {
+  if (schema.projectNameAndRootFormat !== 'as-provided') {
+    return;
+  }
+
+  const { dependencies, devDependencies } = readJson(tree, 'package.json');
+  if (dependencies?.['next'] || devDependencies['next']) {
+    return;
+  }
+
+  const nxJson = readNxJson(tree);
+
+  nxJson.generators ??= {};
+  nxJson.generators['@nx/next:application'] ??= {};
+  nxJson.generators['@nx/next:application'].projectNameAndRootFormat =
+    'as-provided';
+  nxJson.generators['@nx/next:library'] ??= {};
+  nxJson.generators['@nx/next:library'].projectNameAndRootFormat =
+    'as-provided';
+
+  updateNxJson(tree, nxJson);
+}
+
 export async function nextInitGenerator(host: Tree, schema: InitSchema) {
+  setGeneratorDefaults(host, schema);
+
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(
@@ -58,7 +86,9 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
     const { cypressInitGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
-    const cypressTask = await cypressInitGenerator(host, {});
+    const cypressTask = await cypressInitGenerator(host, {
+      projectNameAndRootFormat: schema.projectNameAndRootFormat,
+    });
     tasks.push(cypressTask);
   } else if (schema.e2eTestRunner === 'playwright') {
     const { initGenerator } = ensurePackage<typeof import('@nx/playwright')>(

@@ -241,9 +241,8 @@ async function normalizeOptions(
     isRootProject = true;
   }
 
-  let { projectName, projectRoot } = await determineProjectNameAndRootOptions(
-    host,
-    {
+  let { projectName, projectRoot, projectNameAndRootFormat } =
+    await determineProjectNameAndRootOptions(host, {
       name: options.name,
       projectType: 'application',
       directory: isRootProject ? options.name : options.directory,
@@ -251,8 +250,8 @@ async function normalizeOptions(
         ? 'as-provided'
         : options.projectNameAndRootFormat,
       callingGenerator: '@nx/cypress:cypress-project',
-    }
-  );
+    });
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   options.linter = options.linter || Linter.EsLint;
   options.bundler = options.bundler || 'webpack';
