@@ -54,6 +54,10 @@ pnpm add --dev @nx/vite @nx/js vue vue-tsc vitest vite-tsconfig-paths vite-plugi
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/vite` and `@nx/js` versions that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ## Create the application
 
 ```shell

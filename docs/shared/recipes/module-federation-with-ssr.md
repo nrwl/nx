@@ -42,6 +42,10 @@ Run the following command with the options listed to create an empty workspace.
 
 {% /tabs %}
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/angular` or `@nx/react` versions that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ### Generating a host and multiple remotes with SSR
 
 We will generate the apps required for a storefront application.  

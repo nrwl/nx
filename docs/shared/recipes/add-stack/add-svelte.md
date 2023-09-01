@@ -55,6 +55,10 @@ pnpm add --save-dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vi
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/vite` and `@nx/js` versions that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ## Create the application
 
 Before we start to create our application, let's remove the React application that was created for us.

@@ -14,6 +14,10 @@ npm i --save-dev @nx/linter
 yarn add --dev @nx/linter
 ```
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/linter` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ## Lint
 
 You can lint an application or a library with the following command:

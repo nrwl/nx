@@ -29,6 +29,10 @@ yarn add --dev @nx/next
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ### Creating Applications
 
 You can add a new application with the following:

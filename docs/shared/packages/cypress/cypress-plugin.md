@@ -23,6 +23,10 @@ yarn add --dev @nx/cypress
 npm install --save-dev @nx/cypress
 ```
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/cypress` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ## E2E Testing
 
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.

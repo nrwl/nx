@@ -48,6 +48,10 @@ pnpm add -D @nx/rspack@latest
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the \`@nx/angular\` version that matches the version of \`nx\` in your repository.  If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ### Generate a new React project using Rspack
 
 The easiest way to generate a new application that uses Rspack is by using the \`@nx/rspack:app\` generator.

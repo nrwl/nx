@@ -26,6 +26,10 @@ yarn add --dev @nx/eslint-plugin
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/eslint-plugin` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ## Included plugins
 
 The plugin contains the following rule configurations divided into sub-plugins.

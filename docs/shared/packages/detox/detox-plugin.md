@@ -56,6 +56,10 @@ yarn add --dev @nx/detox
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/detox` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 Next, generate an E2E project based on an existing project.
 
 ```sh

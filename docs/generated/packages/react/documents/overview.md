@@ -20,6 +20,10 @@ npm install -D @nx/react
 yarn add -D @nx/react
 ```
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/react` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ### Creating Applications and Libraries
 
 You can add a new application with the following:

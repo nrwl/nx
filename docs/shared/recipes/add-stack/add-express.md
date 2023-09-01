@@ -35,6 +35,10 @@ yarn add --dev @nx/express
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/express` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors.
+{% /callout %}
+
 ## Create an Application
 
 Use the `app` generator to create a new Express app.
