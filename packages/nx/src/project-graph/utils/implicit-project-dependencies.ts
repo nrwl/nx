@@ -1,12 +1,12 @@
-import { ProjectGraphProcessorContext } from '../../config/project-graph';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 
-export function buildImplicitProjectDependencies(
-  ctx: ProjectGraphProcessorContext,
+export function applyImplicitDependencies(
+  projectsConfigurations: ProjectsConfigurations,
   builder: ProjectGraphBuilder
 ) {
-  Object.keys(ctx.projectsConfigurations.projects).forEach((source) => {
-    const p = ctx.projectsConfigurations.projects[source];
+  Object.keys(projectsConfigurations.projects).forEach((source) => {
+    const p = projectsConfigurations.projects[source];
     if (p.implicitDependencies && p.implicitDependencies.length > 0) {
       p.implicitDependencies.forEach((target) => {
         if (target.startsWith('!')) {

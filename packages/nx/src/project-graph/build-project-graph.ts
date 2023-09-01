@@ -10,7 +10,7 @@ import {
   shouldRecomputeWholeGraph,
   writeCache,
 } from './nx-deps-cache';
-import { buildImplicitProjectDependencies } from './build-dependencies';
+import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
 import { isNxPluginV1, isNxPluginV2, loadNxPlugins } from '../utils/nx-plugin';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
@@ -167,7 +167,7 @@ async function buildProjectGraphUsingContext(
     }
   }
 
-  buildImplicitProjectDependencies(ctx, updatedBuilder);
+  applyImplicitDependencies(ctx.projectsConfigurations, updatedBuilder);
 
   const finalGraph = updatedBuilder.getUpdatedProjectGraph();
 
