@@ -284,7 +284,7 @@
     "unzipper": "^0.10.11",
     "url-loader": "^4.1.1",
     "use-sync-external-store": "^1.2.0",
-    "verdaccio": "^5.0.4",
+    "verdaccio": "5.26.2",
     "vite": "^4.3.4",
     "webpack": "5.88.0",
     "webpack-dev-server": "^4.9.3",
