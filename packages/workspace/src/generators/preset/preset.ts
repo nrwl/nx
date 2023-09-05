@@ -169,7 +169,7 @@ async function createPreset(tree: Tree, options: Schema) {
     const { libraryGenerator } = require('@nx' + '/js');
     return libraryGenerator(tree, {
       name: options.name,
-      directory: join('packages', options.name),
+      directory: '.',
       projectNameAndRootFormat: 'as-provided',
       bundler: 'tsc',
       unitTestRunner: 'vitest',
