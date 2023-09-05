@@ -53,10 +53,15 @@ export function newProject({
       });
 
       if (unsetProjectNameAndRootFormat) {
+        console.warn(
+          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
+        );
         updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
           delete nxJson.workspaceLayout;
           return nxJson;
         });
+        createFile('apps/.gitkeep');
+        createFile('libs/.gitkeep');
       }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`

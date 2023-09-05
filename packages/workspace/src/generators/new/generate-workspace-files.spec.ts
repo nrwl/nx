@@ -226,9 +226,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       packageManager: 'npm',
       isCustomPreset: false,
     });
-    expect(tree.exists('/proj/packages/.gitkeep')).toBe(true);
-    expect(tree.exists('/proj/apps/.gitkeep')).toBe(false);
-    expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
     expect(nx).toMatchInlineSnapshot(`
       {
@@ -246,6 +243,9 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             },
             "runner": "nx/tasks-runners/default",
           },
+        },
+        "workspaceLayout": {
+          "projectNameAndRootFormat": "as-provided",
         },
       }
     `);
