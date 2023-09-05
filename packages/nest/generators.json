@@ -10,12 +10,6 @@
       "x-type": "application",
       "description": "Create a NestJS application."
     },
-    "convert-tslint-to-eslint": {
-      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
-      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
-      "description": "Convert a project from TSLint to ESLint.",
-      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint."
-    },
     "init": {
       "factory": "./src/generators/init/init#initSchematic",
       "schema": "./src/generators/init/schema.json",
@@ -113,12 +107,6 @@
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a NestJS application."
-    },
-    "convert-tslint-to-eslint": {
-      "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
-      "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
-      "description": "Convert a project from TSLint to ESLint.",
-      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint."
     },
     "init": {
       "factory": "./src/generators/init/init",

@@ -6032,14 +6032,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "convert-tslint-to-eslint",
-                "path": "/nx-api/angular/generators/convert-tslint-to-eslint",
-                "name": "convert-tslint-to-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "directive",
                 "path": "/nx-api/angular/generators/directive",
                 "name": "directive",
@@ -7097,14 +7089,6 @@
                 "id": "application",
                 "path": "/nx-api/nest/generators/application",
                 "name": "application",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "convert-tslint-to-eslint",
-                "path": "/nx-api/nest/generators/convert-tslint-to-eslint",
-                "name": "convert-tslint-to-eslint",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

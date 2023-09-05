@@ -361,27 +361,16 @@ export function configureTsSolutionConfig(
 }
 
 /**
- * When adding storybook we need to inform TSLint or ESLint
+ * When adding storybook we need to inform ESLint
  * of the additional tsconfig.json file which will be the only tsconfig
  * which includes *.stories files.
  *
- * For TSLint this is done via the builder config, for ESLint this is
- * done within the eslint config file.
+ * This is done within the eslint config file.
  */
 export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
   const { name: projectName } = schema;
 
-  const { targets, root } = readProjectConfiguration(tree, projectName);
-  const tslintTargets = Object.values(targets ?? {}).filter(
-    (target) => target.executor === '@angular-devkit/build-angular:tslint'
-  );
-
-  tslintTargets.forEach((target) => {
-    target.options.tsConfig = dedupe([
-      ...target.options.tsConfig,
-      joinPathFragments(root, './.storybook/tsconfig.json'),
-    ]);
-  });
+  const { root } = readProjectConfiguration(tree, projectName);
 
   const eslintFile = findEslintFile(tree, root);
   if (!eslintFile) {

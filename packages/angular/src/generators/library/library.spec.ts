@@ -1125,7 +1125,6 @@ describe('lib', () => {
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
 
         // ASSERT
-        expect(tree.exists('my-lib/tslint.json')).toBe(false);
         expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
           .toMatchInlineSnapshot(`
           {
