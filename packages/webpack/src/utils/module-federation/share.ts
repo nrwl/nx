@@ -11,10 +11,7 @@ import {
   collectPackageSecondaryEntryPoints,
   collectWorkspaceLibrarySecondaryEntryPoints,
 } from './secondary-entry-points';
-import type { ProjectGraph } from 'nx/src/config/project-graph';
-import { requireNx } from '../../../nx';
-
-const { workspaceRoot, logger } = requireNx();
+import { type ProjectGraph, workspaceRoot, logger } from '@nx/devkit';
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to

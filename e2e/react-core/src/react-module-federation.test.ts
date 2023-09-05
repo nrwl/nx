@@ -51,8 +51,7 @@ describe('React Module Federation', () => {
     updateFile(
       `apps/${shell}/webpack.config.js`,
       stripIndents`
-        import { ModuleFederationConfig } from '@nx/devkit';
-        import { composePlugins, withNx } from '@nx/webpack';
+        import { composePlugins, withNx, ModuleFederationConfig } from '@nx/webpack';
         import { withReact } from '@nx/react';
         import { withModuleFederation } from '@nx/react/module-federation');
         

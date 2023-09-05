@@ -109,28 +109,3 @@ export { convertNxExecutor } from './src/utils/convert-nx-executor';
  * @category Utils
  */
 export { moveFilesToNewDirectory } from './src/utils/move-dir';
-
-/**
- * @category Utils
- * @deprecated Accessing the Module Federation Utils from the Public API of @nx/devkit is deprecated and they will be removed from the Public API in v17.
- */
-export {
-  AdditionalSharedConfig,
-  ModuleFederationConfig,
-  SharedLibraryConfig,
-  SharedWorkspaceLibraryConfig,
-  WorkspaceLibrary,
-  SharedFunction,
-  WorkspaceLibrarySecondaryEntryPoint,
-  Remotes,
-  ModuleFederationLibrary,
-  applySharedFunction,
-  applyAdditionalShared,
-  getNpmPackageSharedConfig,
-  shareWorkspaceLibraries,
-  sharePackages,
-  mapRemotes,
-  mapRemotesForSSR,
-  getDependentPackagesForProject,
-  readRootPackageJson,
-} from './src/utils/module-federation/public-api';

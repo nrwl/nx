@@ -1,4 +1,4 @@
-import type { ProjectGraph } from 'nx/src/config/project-graph';
+import type { ProjectGraph } from '@nx/devkit';
 import type { WorkspaceLibrary } from './models';
 import { readTsPathMappings } from './typescript';
 
