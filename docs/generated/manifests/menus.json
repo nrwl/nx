@@ -794,7 +794,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Task Pipeline Configuration",
+            "name": "What is a Task Pipeline",
             "path": "/concepts/task-pipeline-configuration",
             "id": "task-pipeline-configuration",
             "isExternal": false,
@@ -802,7 +802,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Affected",
+            "name": "How Affected Works",
             "path": "/concepts/affected",
             "id": "affected",
             "isExternal": false,
@@ -848,14 +848,6 @@
             "id": "more-concepts",
             "isExternal": false,
             "children": [
-              {
-                "name": "Customizing Inputs",
-                "path": "/concepts/more-concepts/customizing-inputs",
-                "id": "customizing-inputs",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "Incremental Builds",
                 "path": "/concepts/more-concepts/incremental-builds",
@@ -1055,7 +1047,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Task Pipeline Configuration",
+        "name": "What is a Task Pipeline",
         "path": "/concepts/task-pipeline-configuration",
         "id": "task-pipeline-configuration",
         "isExternal": false,
@@ -1063,7 +1055,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Affected",
+        "name": "How Affected Works",
         "path": "/concepts/affected",
         "id": "affected",
         "isExternal": false,
@@ -1133,14 +1125,6 @@
         "id": "more-concepts",
         "isExternal": false,
         "children": [
-          {
-            "name": "Customizing Inputs",
-            "path": "/concepts/more-concepts/customizing-inputs",
-            "id": "customizing-inputs",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
           {
             "name": "Incremental Builds",
             "path": "/concepts/more-concepts/incremental-builds",
@@ -1294,14 +1278,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Customizing Inputs",
-        "path": "/concepts/more-concepts/customizing-inputs",
-        "id": "customizing-inputs",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -1462,6 +1438,31 @@
         "id": "recipes",
         "isExternal": false,
         "children": [
+          {
+            "name": "Tasks & Caching",
+            "path": "/recipes/running-tasks",
+            "id": "running-tasks",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Fine-tuning Caching with Inputs",
+                "path": "/recipes/running-tasks/customizing-inputs",
+                "id": "customizing-inputs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Defining a Task Pipeline",
+                "path": "/recipes/running-tasks/defining-task-pipeline",
+                "id": "defining-task-pipeline",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
           {
             "name": "Adopting Nx",
             "path": "/recipes/adopting-nx",
@@ -2417,6 +2418,47 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Tasks & Caching",
+        "path": "/recipes/running-tasks",
+        "id": "running-tasks",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Fine-tuning Caching with Inputs",
+            "path": "/recipes/running-tasks/customizing-inputs",
+            "id": "customizing-inputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Defining a Task Pipeline",
+            "path": "/recipes/running-tasks/defining-task-pipeline",
+            "id": "defining-task-pipeline",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Fine-tuning Caching with Inputs",
+        "path": "/recipes/running-tasks/customizing-inputs",
+        "id": "customizing-inputs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Defining a Task Pipeline",
+        "path": "/recipes/running-tasks/defining-task-pipeline",
+        "id": "defining-task-pipeline",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {

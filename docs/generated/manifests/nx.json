@@ -689,7 +689,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/core-features/run-tasks",
-        "tags": ["run-tasks"]
+        "tags": ["run-tasks", "cache-task-results"]
       },
       {
         "id": "cache-task-results",
@@ -805,7 +805,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/core-features/run-tasks",
-    "tags": ["run-tasks"]
+    "tags": ["run-tasks", "cache-task-results"]
   },
   "/core-features/cache-task-results": {
     "id": "cache-task-results",
@@ -986,17 +986,17 @@
       },
       {
         "id": "task-pipeline-configuration",
-        "name": "Task Pipeline Configuration",
+        "name": "What is a Task Pipeline",
         "description": "",
         "file": "shared/concepts/task-pipeline-configuration",
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/task-pipeline-configuration",
-        "tags": ["run-tasks", "cache-task-results", "use-task-executors"]
+        "tags": ["run-tasks", "use-task-executors"]
       },
       {
         "id": "affected",
-        "name": "Affected",
+        "name": "How Affected Works",
         "description": "",
         "file": "shared/using-nx/affected",
         "itemList": [],
@@ -1056,16 +1056,6 @@
         "description": "Get deeper into how Nx works and its different aspects.",
         "file": "",
         "itemList": [
-          {
-            "id": "customizing-inputs",
-            "name": "Customizing Inputs",
-            "description": "",
-            "file": "shared/concepts/customizing-inputs",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/customizing-inputs",
-            "tags": ["cache-task-results"]
-          },
           {
             "id": "incremental-builds",
             "name": "Incremental Builds",
@@ -1318,17 +1308,17 @@
   },
   "/concepts/task-pipeline-configuration": {
     "id": "task-pipeline-configuration",
-    "name": "Task Pipeline Configuration",
+    "name": "What is a Task Pipeline",
     "description": "",
     "file": "shared/concepts/task-pipeline-configuration",
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/task-pipeline-configuration",
-    "tags": ["run-tasks", "cache-task-results", "use-task-executors"]
+    "tags": ["run-tasks", "use-task-executors"]
   },
   "/concepts/affected": {
     "id": "affected",
-    "name": "Affected",
+    "name": "How Affected Works",
     "description": "",
     "file": "shared/using-nx/affected",
     "itemList": [],
@@ -1413,16 +1403,6 @@
     "description": "Get deeper into how Nx works and its different aspects.",
     "file": "",
     "itemList": [
-      {
-        "id": "customizing-inputs",
-        "name": "Customizing Inputs",
-        "description": "",
-        "file": "shared/concepts/customizing-inputs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/customizing-inputs",
-        "tags": ["cache-task-results"]
-      },
       {
         "id": "incremental-builds",
         "name": "Incremental Builds",
@@ -1617,16 +1597,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts",
     "tags": []
-  },
-  "/concepts/more-concepts/customizing-inputs": {
-    "id": "customizing-inputs",
-    "name": "Customizing Inputs",
-    "description": "",
-    "file": "shared/concepts/customizing-inputs",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/customizing-inputs",
-    "tags": ["cache-task-results"]
   },
   "/concepts/more-concepts/incremental-builds": {
     "id": "incremental-builds",
@@ -1824,6 +1794,37 @@
     "description": "In depth recipes for common tasks",
     "file": "",
     "itemList": [
+      {
+        "id": "running-tasks",
+        "name": "Tasks & Caching",
+        "description": "A series of recipes that show how to run tasks efficiently with Nx",
+        "file": "",
+        "itemList": [
+          {
+            "id": "customizing-inputs",
+            "name": "Fine-tuning Caching with Inputs",
+            "description": "",
+            "file": "shared/recipes/running-tasks/customizing-inputs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/customizing-inputs",
+            "tags": ["run-tasks", "cache-task-results"]
+          },
+          {
+            "id": "defining-task-pipeline",
+            "name": "Defining a Task Pipeline",
+            "description": "",
+            "file": "shared/recipes/running-tasks/defining-task-pipeline",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/defining-task-pipeline",
+            "tags": ["run-tasks"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/running-tasks",
+        "tags": []
+      },
       {
         "id": "adopting-nx",
         "name": "Adopting Nx",
@@ -3016,6 +3017,57 @@
     "isExternal": false,
     "path": "/recipes",
     "tags": []
+  },
+  "/recipes/running-tasks": {
+    "id": "running-tasks",
+    "name": "Tasks & Caching",
+    "description": "A series of recipes that show how to run tasks efficiently with Nx",
+    "file": "",
+    "itemList": [
+      {
+        "id": "customizing-inputs",
+        "name": "Fine-tuning Caching with Inputs",
+        "description": "",
+        "file": "shared/recipes/running-tasks/customizing-inputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/customizing-inputs",
+        "tags": ["run-tasks", "cache-task-results"]
+      },
+      {
+        "id": "defining-task-pipeline",
+        "name": "Defining a Task Pipeline",
+        "description": "",
+        "file": "shared/recipes/running-tasks/defining-task-pipeline",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/defining-task-pipeline",
+        "tags": ["run-tasks"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/running-tasks",
+    "tags": []
+  },
+  "/recipes/running-tasks/customizing-inputs": {
+    "id": "customizing-inputs",
+    "name": "Fine-tuning Caching with Inputs",
+    "description": "",
+    "file": "shared/recipes/running-tasks/customizing-inputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/customizing-inputs",
+    "tags": ["run-tasks", "cache-task-results"]
+  },
+  "/recipes/running-tasks/defining-task-pipeline": {
+    "id": "defining-task-pipeline",
+    "name": "Defining a Task Pipeline",
+    "description": "",
+    "file": "shared/recipes/running-tasks/defining-task-pipeline",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/defining-task-pipeline",
+    "tags": ["run-tasks"]
   },
   "/recipes/adopting-nx": {
     "id": "adopting-nx",

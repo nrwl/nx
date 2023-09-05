@@ -889,6 +889,8 @@ const latestRecipesRefactoring = {
 
 const coreFeatureRefactoring = {
   '/core-features/share-your-cache': '/core-features/remote-cache',
+  '/concepts/more-concepts/customizing-inputs':
+    '/recipes/running-tasks/customizing-inputs',
 };
 
 /*
