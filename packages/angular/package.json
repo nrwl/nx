@@ -26,6 +26,7 @@
     "./src/utils": "./src/utils/public-api.js",
     "./plugins/component-testing": "./plugins/component-testing.js",
     "./src/generators/utils": "./src/generators/utils/index.js",
+    "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
     "./src/builders/*/schema.json": "./src/builders/*/schema.json",
     "./src/builders/*.impl": "./src/builders/*.impl.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",

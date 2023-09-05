@@ -74,7 +74,8 @@
       "factory": "./src/generators/move/compat",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
-      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
+      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v18."
     },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf.compat",
@@ -230,10 +231,11 @@
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
-      "factory": "./src/generators/move/move#angularMoveGenerator",
+      "factory": "./src/generators/move/move#angularMoveGeneratorInternal",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
-      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
+      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v18."
     },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",

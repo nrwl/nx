@@ -45,8 +45,8 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
               libsDir,
               project.root === '.' ? project.name : project.root
             ),
-      destinationRelativeToRoot: true,
       updateImportPath: project.projectType === 'library',
+      projectNameAndRootFormat: 'as-provided',
     });
   }
 }
