@@ -171,6 +171,7 @@
       - [Convert from a Standalone Repository to an Integrated Repository](/recipes/tips-n-tricks/standalone-to-integrated)
       - [Configuring ESLint with Typescript](/recipes/tips-n-tricks/eslint)
       - [Enable Typescript Batch Mode](/recipes/tips-n-tricks/enable-tsc-batch-mode)
+      - [Keep Nx Versions in Sync](/recipes/tips-n-tricks/keep-nx-versions-in-sync)
       - [Define Environment Variables](/recipes/tips-n-tricks/define-environment-variables)
       - [Configuring Browser Support](/recipes/tips-n-tricks/browser-support)
       - [Include Assets in Build](/recipes/tips-n-tricks/include-assets-in-build)

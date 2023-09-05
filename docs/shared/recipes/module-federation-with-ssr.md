@@ -22,6 +22,10 @@ Run the following command with the options listed to create an empty workspace.
 
 ### Install your framework plugin
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/angular` or `@nx/react` versions that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 {% tabs %}
 
 {% tab label="Angular" %}
@@ -41,10 +45,6 @@ Run the following command with the options listed to create an empty workspace.
 {% /tab %}
 
 {% /tabs %}
-
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/angular` or `@nx/react` versions that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. Run `nx report` to see a list of installed plugins. Use [`nx migrate`](/core-features/automate-updating-dependencies) to update plugin versions.
-{% /callout %}
 
 ### Generating a host and multiple remotes with SSR
 

@@ -18,6 +18,10 @@ Add Jest to a project using the `configuration` generator from `@nx/jest`.
 
 First, install `@nx/jest`, if not already installed using your preferred package manager.
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/jest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 ```shell
 npm install --save-dev @nx/jest
 ```
@@ -25,10 +29,6 @@ npm install --save-dev @nx/jest
 ```shell
 yarn add --dev @nx/jest
 ```
-
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/jest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. Run `nx report` to see a list of installed plugins. Use [`nx migrate`](/core-features/automate-updating-dependencies) to update plugin versions.
-{% /callout %}
 
 Once installed, run the `configuration` generator
 

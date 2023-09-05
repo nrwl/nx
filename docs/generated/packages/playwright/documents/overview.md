@@ -34,10 +34,6 @@ pnpm i -D @nx/playwright
 {% /tab %}
 {% /tabs %}
 
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. Run `nx report` to see a list of installed plugins. Use [`nx migrate`](/core-features/automate-updating-dependencies) to update plugin versions.
-{% /callout %}
-
 ## E2E Testing
 
 By default, when creating a new frontend application, Nx will prompt for which e2e test runner to use. Select `playwright` or pass in the arg `--e2eTestRunner=playwright`

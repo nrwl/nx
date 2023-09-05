@@ -17,6 +17,10 @@ more [here](/recipes/angular/migration/angular).
 
 ## Setting up the Angular plugin
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/angular` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 Adding the Angular plugin to an existing Nx workspace can be done with the following:
 
 ```shell
@@ -26,10 +30,6 @@ yarn add -D @nx/angular
 ```shell
 npm install -D @nx/angular
 ```
-
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/angular` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. Run `nx report` to see a list of installed plugins. Use [`nx migrate`](/core-features/automate-updating-dependencies) to update plugin versions.
-{% /callout %}
 
 ## Using the Angular Plugin
 

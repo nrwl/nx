@@ -30,6 +30,10 @@ There are a number of ways to use Rspack in your existing workspace.
 
 First, make sure \`@nx/rspack\` is installed.
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the \`@nx/angular\` version that matches the version of \`nx\` in your repository.  If the version numbers get out of sync, you can encounter some difficult to debug errors.  You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 {% tabs %}
 {% tab label="npm" %}
 \`\`\`bash
@@ -47,10 +51,6 @@ pnpm add -D @nx/rspack@latest
 \`\`\`
 {% /tab %}
 {% /tabs %}
-
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the \`@nx/angular\` version that matches the version of \`nx\` in your repository.  If the version numbers get out of sync, you can encounter some difficult to debug errors.  Run \`nx report\` to see a list of installed plugins.  Use [\`nx migrate\`](/core-features/automate-updating-dependencies) to update plugin versions.
-{% /callout %}
 
 ### Generate a new React project using Rspack
 

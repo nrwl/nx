@@ -10,7 +10,7 @@ The Next.js plugin contains executors and generators for managing Next.js applic
 
 To create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest --preset=next`.
 
-To add Next.js to an existing Nx workspace, install the `@nx/next` package. Make sure to install the version that matches your `@nx/workspace` version.
+To add Next.js to an existing Nx workspace, install the `@nx/next` package. Make sure to install the version that matches your `nx` version.
 
 {% tabs %}
 {% tab label="npm" %}
@@ -28,10 +28,6 @@ yarn add --dev @nx/next
 
 {% /tab %}
 {% /tabs %}
-
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. Run `nx report` to see a list of installed plugins. Use [`nx migrate`](/core-features/automate-updating-dependencies) to update plugin versions.
-{% /callout %}
 
 ### Creating Applications
 

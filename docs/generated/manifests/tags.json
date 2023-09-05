@@ -243,6 +243,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+      "id": "keep-nx-versions-in-sync",
+      "name": "Keep Nx Versions in Sync",
+      "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/advanced-update",
       "id": "advanced-update",
       "name": "Altering Migration Process",

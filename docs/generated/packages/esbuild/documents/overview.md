@@ -11,6 +11,10 @@ Why should you use this plugin?
 
 To create a new workspace, run `npx create-nx-workspace@latest --preset=npm`.
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/esbuild` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 To add the esbuild plugin to an existing workspace, run the following:
 
 {% tabs %}
@@ -29,10 +33,6 @@ yarn add -D @nx/esbuild
 
 {% /tab %}
 {% /tabs %}
-
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/esbuild` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. Run `nx report` to see a list of installed plugins. Use [`nx migrate`](/core-features/automate-updating-dependencies) to update plugin versions.
-{% /callout %}
 
 ### Creating a new JS library
 
