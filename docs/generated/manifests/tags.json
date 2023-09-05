@@ -11,15 +11,29 @@
       "description": "",
       "file": "shared/concepts/task-pipeline-configuration",
       "id": "task-pipeline-configuration",
-      "name": "Task Pipeline Configuration",
+      "name": "What is a Task Pipeline",
       "path": "/concepts/task-pipeline-configuration"
     },
     {
       "description": "",
       "file": "shared/using-nx/affected",
       "id": "affected",
-      "name": "Affected",
+      "name": "How Affected Works",
       "path": "/concepts/affected"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/customizing-inputs",
+      "id": "customizing-inputs",
+      "name": "Fine-tuning Caching with Inputs",
+      "path": "/recipes/running-tasks/customizing-inputs"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/defining-task-pipeline",
+      "id": "defining-task-pipeline",
+      "name": "Defining a Task Pipeline",
+      "path": "/recipes/running-tasks/defining-task-pipeline"
     },
     {
       "description": "",
@@ -52,6 +66,13 @@
   ],
   "cache-task-results": [
     {
+      "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
+      "file": "shared/core-features/run-tasks",
+      "id": "run-tasks",
+      "name": "Run Tasks",
+      "path": "/core-features/run-tasks"
+    },
+    {
       "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
       "file": "shared/core-features/cache-task-results",
       "id": "cache-task-results",
@@ -67,17 +88,10 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/task-pipeline-configuration",
-      "id": "task-pipeline-configuration",
-      "name": "Task Pipeline Configuration",
-      "path": "/concepts/task-pipeline-configuration"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/customizing-inputs",
+      "file": "shared/recipes/running-tasks/customizing-inputs",
       "id": "customizing-inputs",
-      "name": "Customizing Inputs",
-      "path": "/concepts/more-concepts/customizing-inputs"
+      "name": "Fine-tuning Caching with Inputs",
+      "path": "/recipes/running-tasks/customizing-inputs"
     },
     {
       "description": "",
@@ -433,7 +447,7 @@
       "description": "",
       "file": "shared/concepts/task-pipeline-configuration",
       "id": "task-pipeline-configuration",
-      "name": "Task Pipeline Configuration",
+      "name": "What is a Task Pipeline",
       "path": "/concepts/task-pipeline-configuration"
     },
     {
