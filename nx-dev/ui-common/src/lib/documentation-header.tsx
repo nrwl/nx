@@ -184,7 +184,7 @@ export function DocumentationHeader({
           </Link>
           <Link
             href="/getting-started/intro"
-            className="hidden lg:flex ml-2 items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            className="ml-2 hidden items-center px-4 text-slate-900 dark:text-white lg:flex lg:px-0"
           >
             <span className="text-xl font-bold uppercase tracking-wide">
               Docs

@@ -38,9 +38,9 @@ export function Cards({
     >
       {children}
       {moreLink && (
-        <div className="flex justify-end mt-2 col-span-full">
+        <div className="col-span-full mt-2 flex justify-end">
           <a
-            className="transition-all duration-200 ease-in-out flex items-center no-underline text-sm px-4 py-0 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-semibold group"
+            className="group flex items-center whitespace-nowrap border-transparent px-4 py-0 text-sm font-semibold no-underline transition-all duration-200 ease-in-out hover:text-slate-900 dark:hover:text-sky-400"
             href={moreLink}
           >
             Browse more
@@ -80,7 +80,7 @@ export function LinkCard({
       {icon && (
         <div
           className={cx(
-            'flex items-center justify-center w-24 h-24 rounded-lg mb-2',
+            'mb-2 flex h-24 w-24 items-center justify-center rounded-lg',
             {
               'h-12 w-12': appearance === 'small',
             }
@@ -91,13 +91,13 @@ export function LinkCard({
       )}
       <div className={cx('pt-4', { 'pt-2': appearance === 'small' })}>
         {appearance === 'small' && type ? null : (
-          <div className="text-xs font-medium text-slate-600 dark:text-slate-300 uppercase mb-1">
+          <div className="mb-1 text-xs font-medium uppercase text-slate-600 dark:text-slate-300">
             {type}
           </div>
         )}
         <h3
           className={cx(
-            'text-lg font-semibold text-slate-900 dark:text-white m-0',
+            'm-0 text-lg font-semibold text-slate-900 dark:text-white',
             { 'text-sm font-normal': appearance === 'small' }
           )}
         >

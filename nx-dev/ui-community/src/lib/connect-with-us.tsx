@@ -20,7 +20,7 @@ export function ConnectWithUs(): JSX.Element {
             Looking for community plugins? Find them listed in the{' '}
             <a
               href="/extending-nx/registry"
-              className="underline font-semibold"
+              className="font-semibold underline"
             >
               plugin registry
             </a>

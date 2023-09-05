@@ -84,7 +84,7 @@ export function FeedContainer(): JSX.Element {
                 {isLoading && !startedReply && <LoadingState />}
                 {error && <ErrorMessage error={error} />}
 
-                <div className="sticky bottom-0 left-0 right-0 w-full pt-6 pb-4 bg-gradient-to-t from-white via-white dark:from-slate-900 dark:via-slate-900">
+                <div className="sticky bottom-0 left-0 right-0 w-full bg-gradient-to-t from-white via-white pt-6 pb-4 dark:from-slate-900 dark:via-slate-900">
                   <Prompt
                     handleSubmit={handleSubmit}
                     handleInputChange={handleInputChange}
