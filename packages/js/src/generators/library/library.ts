@@ -267,18 +267,21 @@ export async function addLint(
     // nx-ignore-next-line
   } = require('@nx/linter/src/generators/utils/eslint-file');
 
+  // if config is not supported, we don't need to do anything
+  if (!isEslintConfigSupported(tree)) {
+    return task;
+  }
+
   // Also update the root ESLint config. The lintProjectGenerator will not generate it for root projects.
   // But we need to set the package.json checks.
   if (options.rootProject) {
-    if (isEslintConfigSupported(tree)) {
-      addOverrideToLintConfig(tree, '', {
-        files: ['*.json'],
-        parser: 'jsonc-eslint-parser',
-        rules: {
-          '@nx/dependency-checks': 'error',
-        },
-      });
-    }
+    addOverrideToLintConfig(tree, '', {
+      files: ['*.json'],
+      parser: 'jsonc-eslint-parser',
+      rules: {
+        '@nx/dependency-checks': 'error',
+      },
+    });
   }
 
   // If project lints package.json with @nx/dependency-checks, then add ignore files for

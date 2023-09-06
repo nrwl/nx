@@ -233,6 +233,9 @@ export function lintConfigHasOverride(
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   checkBaseConfig = false
 ): boolean {
+  if (!isEslintConfigSupported(tree, root)) {
+    return false;
+  }
   const isBase =
     checkBaseConfig && findEslintFile(tree, root).includes('.base');
   if (useFlatConfig(tree)) {
@@ -248,9 +251,7 @@ export function lintConfigHasOverride(
       isBase ? baseEsLintConfigFile : '.eslintrc.json'
     );
 
-    return tree.exists(fileName)
-      ? readJson(tree, fileName).overrides?.some(lookup) || false
-      : false;
+    return readJson(tree, fileName).overrides?.some(lookup) || false;
   }
 }
 
