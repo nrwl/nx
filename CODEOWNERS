@@ -160,7 +160,7 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin @mandarini
-/community @nrwl/nx-devkit-reviewers
+/community @nrwl/nx-docs-reviewers
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
 /CODEOWNERS @FrozenPandaz @AgentEnder
