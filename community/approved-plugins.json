@@ -331,7 +331,7 @@
   },
   {
     "name": "@koliveira15/nx-sonarqube",
-    "description": "Nx plugin that analyses projects using SonarQube / SonarCloud.",
+    "description": "Nx plugin that scans projects using SonarQube / SonarCloud.",
     "url": "https://github.com/koliveira15/nx-sonarqube"
   },
   {
