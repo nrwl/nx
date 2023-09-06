@@ -43,7 +43,6 @@ It only uses language primitives and immutable objects
 - [ProjectFileMap](../../devkit/documents/ProjectFileMap)
 - [ProjectGraph](../../devkit/documents/ProjectGraph)
 - [ProjectGraphDependency](../../devkit/documents/ProjectGraphDependency)
-- [ProjectGraphDependencyWithFile](../../devkit/documents/ProjectGraphDependencyWithFile)
 - [ProjectGraphExternalNode](../../devkit/documents/ProjectGraphExternalNode)
 - [ProjectGraphProcessorContext](../../devkit/documents/ProjectGraphProcessorContext)
 - [ProjectGraphProjectNode](../../devkit/documents/ProjectGraphProjectNode)
@@ -62,6 +61,10 @@ It only uses language primitives and immutable objects
 
 ### Type Aliases
 
+- [CandidateDependency](../../devkit/documents/CandidateDependency)
+- [CandidateDynamicDependency](../../devkit/documents/CandidateDynamicDependency)
+- [CandidateImplicitDependency](../../devkit/documents/CandidateImplicitDependency)
+- [CandidateStaticDependency](../../devkit/documents/CandidateStaticDependency)
 - [CreateDependencies](../../devkit/documents/CreateDependencies)
 - [CreateNodes](../../devkit/documents/CreateNodes)
 - [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)

@@ -3,7 +3,7 @@ import {
   NormalizedPackageJson,
 } from './utils/package-json';
 import {
-  ProjectGraphDependencyWithFile,
+  CandidateDependency,
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
 import { gt, Range, satisfies } from 'semver';
@@ -14,6 +14,7 @@ import {
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 import { sortObjectByKeys } from '../../../utils/object-sort';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 /**
  * Yarn
@@ -79,7 +80,7 @@ export function getYarnLockfileNodes(
 export function getYarnLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  projectGraph: ProjectGraph
+  ctx: CreateDependenciesContext
 ) {
   const { __metadata, ...dependencies } = parseLockFile(
     lockFileContent,
@@ -91,7 +92,7 @@ export function getYarnLockfileDependencies(
   // yarn classic splits keys when parsing so we need to stich them back together
   const groupedDependencies = groupDependencies(dependencies, isBerry);
 
-  return getDependencies(groupedDependencies, keyMap, projectGraph);
+  return getDependencies(groupedDependencies, keyMap, ctx);
 }
 
 function getPackageNameKeyPairs(keys: string): Map<string, Set<string>> {
@@ -289,9 +290,9 @@ function getHoistedVersion(packageName: string): string {
 function getDependencies(
   dependencies: Record<string, YarnDependency>,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  projectGraph: ProjectGraph
+  ctx: CreateDependenciesContext
 ) {
-  const projectGraphDependencies: ProjectGraphDependencyWithFile[] = [];
+  const projectGraphDependencies: CandidateDependency[] = [];
   Object.keys(dependencies).forEach((keys) => {
     const snapshot = dependencies[keys];
     keys.split(', ').forEach((key) => {
@@ -305,12 +306,12 @@ function getDependencies(
                   keyMap.get(`${name}@npm:${versionRange}`) ||
                   keyMap.get(`${name}@${versionRange}`);
                 if (target) {
-                  const dep = {
+                  const dep: CandidateDependency = {
                     source: node.name,
                     target: target.name,
-                    dependencyType: DependencyType.static,
+                    type: DependencyType.static,
                   };
-                  validateDependency(projectGraph, dep);
+                  validateDependency(dep, ctx);
                   projectGraphDependencies.push(dep);
                 }
               });

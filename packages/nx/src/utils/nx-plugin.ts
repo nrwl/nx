@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
 import {
+  FileData,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -35,7 +36,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import type * as ts from 'typescript';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 import { NxPluginV1 } from './nx-plugin.deprecated';
-import { ProjectGraphDependencyWithFile } from '../project-graph/project-graph-builder';
+import { CandidateDependency } from '../project-graph/project-graph-builder';
 import { combineGlobPatterns } from './globs';
 import {
   NxAngularJsonPlugin,
@@ -77,14 +78,14 @@ export type CreateNodes = readonly [
  */
 export interface CreateDependenciesContext {
   /**
-   * The current project graph,
+   * The external nodes that have been added to the graph.
    */
-  readonly graph: ProjectGraph;
+  readonly externalNodes: ProjectGraph['externalNodes'];
 
   /**
-   * The configuration of each project in the workspace
+   * The configuration of each project in the workspace.
    */
-  readonly projectsConfigurations: ProjectsConfigurations;
+  readonly projects: Record<string, ProjectConfiguration>;
 
   /**
    * The `nx.json` configuration from the workspace
@@ -100,6 +101,8 @@ export interface CreateDependenciesContext {
    * Files changes since last invocation
    */
   readonly filesToProcess: ProjectFileMap;
+
+  readonly workspaceRoot: string;
 }
 
 /**
@@ -108,9 +111,7 @@ export interface CreateDependenciesContext {
  */
 export type CreateDependencies = (
   context: CreateDependenciesContext
-) =>
-  | ProjectGraphDependencyWithFile[]
-  | Promise<ProjectGraphDependencyWithFile[]>;
+) => CandidateDependency[] | Promise<CandidateDependency[]>;
 
 /**
  * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}
