@@ -57,6 +57,6 @@ export function readTargetOptions<T = any>(
     targetConfiguration,
     schema,
     defaultProject,
-    relative(context.cwd, context.root)
+    relative(context.root, context.cwd)
   ) as T;
 }
