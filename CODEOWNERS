@@ -54,6 +54,10 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 /packages/react-native/** @nrwl/nx-react-reviewers
 /e2e/react-native/** @nrwl/nx-react-reviewers
 
+# Vue
+/packages/vue/** @nrwl/nx-vue-reviewers
+/e2e/vue/** @nrwl/nx-vue-reviewers
+
 ## Node
 /docs/generated/packages/node/** @nrwl/nx-node-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/nest/** @nrwl/nx-node-reviewers @nrwl/nx-docs-reviewers
