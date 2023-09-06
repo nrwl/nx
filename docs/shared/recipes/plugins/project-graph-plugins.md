@@ -53,9 +53,9 @@ Note: This is a shallow merge, so if you have a target with the same name in bot
 
 #### Example
 
-A simplified version of the project.json plugin is shown below, which adds a new project to the project graph for each `project.json` file it finds. This should be exported from the entry point of your plugin, which is listed in `nx.json`
+A simplified version of Nx's built-in `project.json` plugin is shown below, which adds a new project to the project graph for each `project.json` file it finds. This should be exported from the entry point of your plugin, which is listed in `nx.json`
 
-```typescript
+```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = [
   'project.json',
   (projectConfigurationFile: string, context: CreateNodesContext) => {
@@ -156,9 +156,9 @@ A typical example would be lazy-loaded routes. Having separation between these t
 Even though the plugin is written in JavaScript, resolving dependencies of different languages will probably be more easily written in their native language. Therefore, a common approach is to spawn a new process and communicate via IPC or `stdout`.
 {% /callout %}
 
-A small plugin that recognizes dependencies to projects in the current workspace which a referenced in other project's package.json files may look like so:
+A small plugin that recognizes dependencies to projects in the current workspace which a referenced in another project's `package.json` file may look like so:
 
-```typescript
+```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = (ctx) => {
   const packageJsonProjectMap = new Map();
   const nxProjects = Object.values(ctx.projectsConfigurations);
@@ -198,7 +198,7 @@ Breaking down this example, we can see that it follows this flow:
 1. Initializes an array to hold dependencies it locates
 2. Builds a map of all projects in the workspace, mapping the name inside their package.json to their Nx project name.
 3. Looks at the package.json files within the workspace and:
-4. Checks if the dep is another project
+4. Checks if the dependency is another project
 5. Builds a dependency from this information
 6. Validates the dependency
 7. Pushes it into the located dependency array
