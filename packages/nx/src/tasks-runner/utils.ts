@@ -142,8 +142,8 @@ export function getOutputsForTargetAndConfiguration(
   node: ProjectGraphProjectNode
 ): string[] {
   const { target, configuration } = task.target;
-
-  const targetConfiguration = node.data.targets[target];
+  // @ts-ignore
+  const targetConfiguration = node.data.targets ? node.data.targets[target] : {};
 
   const options = {
     ...targetConfiguration.options,
