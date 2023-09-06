@@ -191,6 +191,12 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
             process.env.NODE_ENV === 'production'
           ? (process.env.NODE_ENV as 'development' | 'production')
           : ('none' as const),
+      // When target is Node, the Webpack mode will be set to 'none' which disables in memory caching and causes a full rebuild on every change.
+      // So to mitigate this we enable in memory caching when target is Node and in watch mode.
+      cache:
+        options.target === ('node' as const) && options.watch
+          ? { type: 'memory' as const }
+          : undefined,
       devtool:
         options.sourceMap === 'hidden'
           ? 'hidden-source-map'
