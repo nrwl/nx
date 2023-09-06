@@ -692,8 +692,11 @@ const pluginUrls = {
     '/extending-nx/recipes/migration-generators',
   '/recipes/advanced-plugins/project-graph-plugins':
     '/extending-nx/recipes/project-graph-plugins',
+  // Removed inference doc when updating for v2 API
+  '/extending-nx/recipes/project-inference-plugins':
+    '/extending-nx/recipes/project-graph-plugins',
   '/recipes/advanced-plugins/project-inference-plugins':
-    '/extending-nx/recipes/project-inference-plugins',
+    '/extending-nx/recipes/project-graph-plugins',
   '/recipes/advanced-plugins/share-your-plugin':
     '/extending-nx/tutorials/maintain-published-plugin',
   '/recipes/executors/compose-executors':
