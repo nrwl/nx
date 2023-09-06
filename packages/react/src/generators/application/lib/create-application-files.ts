@@ -79,39 +79,34 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
             : undefined,
         ].filter(Boolean),
       });
-    } else if (
-      options.style === 'styled-components' ||
-      options.style === '@emotion/styled' ||
-      options.style === 'styled-jsx'
-    ) {
-      writeJson(
-        host,
-        `${options.appProjectRoot}/.swcrc`,
-
-        {
-          jsc: {
-            experimental: {
-              plugins: [
-                options.style === 'styled-components'
-                  ? [
-                      '@swc/plugin-styled-components',
-                      {
-                        displayName: true,
-                        ssr: true,
-                      },
-                    ]
-                  : undefined,
-                options.style === 'styled-jsx'
-                  ? ['@swc/plugin-styled-jsx', {}]
-                  : undefined,
-                options.style === '@emotion/styled'
-                  ? ['@swc/plugin-emotion', {}]
-                  : undefined,
-              ].filter(Boolean),
-            },
-          },
-        }
-      );
+    } else if (options.compiler === 'swc') {
+      const swcrc: any = {
+        jsc: {
+          target: 'es2016',
+        },
+      };
+      if (options.style === 'styled-components') {
+        swcrc.jsc.experimental = {
+          plugins: [
+            [
+              '@swc/plugin-styled-components',
+              {
+                displayName: true,
+                ssr: true,
+              },
+            ],
+          ],
+        };
+      } else if (options.style === '@emotion/styled') {
+        swcrc.jsc.experimental = {
+          plugins: [['@swc/plugin-emotion', {}]],
+        };
+      } else if (options.style === 'styled-jsx') {
+        swcrc.jsc.experimental = {
+          plugins: [['@swc/plugin-styled-jsx', {}]],
+        };
+      }
+      writeJson(host, `${options.appProjectRoot}/.swcrc`, swcrc);
     }
   } else if (options.bundler === 'rspack') {
     generateFiles(

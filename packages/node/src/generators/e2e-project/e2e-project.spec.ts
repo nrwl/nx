@@ -14,6 +14,7 @@ describe('e2eProjectGenerator', () => {
       name: 'api',
       framework: 'express',
       e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
@@ -29,6 +30,7 @@ describe('e2eProjectGenerator', () => {
       framework: 'express',
       e2eTestRunner: 'none',
       rootProject: true,
+      projectNameAndRootFormat: 'as-provided',
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
@@ -44,6 +46,7 @@ describe('e2eProjectGenerator', () => {
       name: 'api',
       framework: 'none',
       e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
     await e2eProjectGenerator(tree, {
       projectType: 'cli',

@@ -23,6 +23,7 @@ import {
   configureTsSolutionConfig,
   createProjectStorybookDir,
   createStorybookTsconfigFile,
+  editTsconfigBaseJson,
   getE2EProjectName,
   getViteConfigFilePath,
   projectIsRootProjectInStandaloneWorkspace,
@@ -37,12 +38,10 @@ import {
 import {
   coreJsVersion,
   nxVersion,
-  storybookJestVersion,
-  storybookTestingLibraryVersion,
-  storybookTestRunnerVersion,
   storybookVersion,
   tsNodeVersion,
 } from '../../utils/versions';
+import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -130,6 +129,7 @@ export async function configurationGenerator(
     );
   }
   configureTsProjectConfig(tree, schema);
+  editTsconfigBaseJson(tree);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
 
@@ -151,7 +151,7 @@ export async function configurationGenerator(
     addStaticTarget(tree, schema);
   }
 
-  // TODO(katerina): remove Cypress for Nx 18
+  // TODO(v18): remove Cypress
   if (schema.configureCypress) {
     const e2eProject = await getE2EProjectName(tree, schema.name);
     if (!e2eProject) {
@@ -174,18 +174,17 @@ export async function configurationGenerator(
     }
   }
 
-  const devDeps = {};
+  let devDeps = {};
 
   if (schema.tsConfiguration) {
-    devDeps['@storybook/core-common'] = storybookVersion;
     devDeps['ts-node'] = tsNodeVersion;
   }
 
   if (schema.interactionTests) {
-    devDeps['@storybook/test-runner'] = storybookTestRunnerVersion;
-    devDeps['@storybook/addon-interactions'] = storybookVersion;
-    devDeps['@storybook/testing-library'] = storybookTestingLibraryVersion;
-    devDeps['@storybook/jest'] = storybookJestVersion;
+    devDeps = {
+      ...devDeps,
+      ...interactionTestsDependencies(),
+    };
   }
 
   if (schema.configureStaticServe) {
@@ -197,6 +196,17 @@ export async function configurationGenerator(
     schema.uiFramework === '@storybook/react-webpack5'
   ) {
     devDeps['core-js'] = coreJsVersion;
+  }
+
+  if (
+    schema.uiFramework.endsWith('-vite') &&
+    (!viteBuildTarget || !viteConfigFilePath)
+  ) {
+    // This means that the user has selected a Vite framework
+    // but the project does not have Vite configuration.
+    // We need to install the @nx/vite plugin in order to be able to use
+    // the nxViteTsPaths plugin to register the tsconfig paths in Vite.
+    devDeps['@nx/vite'] = nxVersion;
   }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));

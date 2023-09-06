@@ -8,7 +8,7 @@ NX Invalid Cache Directory for Task "myapp:build"
 The local cache artifact in "node_modules/.cache/nx/786524780459028195" was not been generated on this machine.
 As a result, the cache's content integrity cannot be confirmed, which may make cache restoration potentially unsafe.
 If your machine ID has changed since the artifact was cached, run "nx reset" to fix this issue.
-Read about the error and how to address it here: https://nx.dev/recipes/other/unknown-local-cache
+Read about the error and how to address it here: https://nx.dev/recipes/troubleshooting/unknown-local-cache
 ```
 
 ## Nx Tracks Cache Source
@@ -32,7 +32,7 @@ default, Nx will refuse to use such artifacts and will throw the "Invalid Cache 
 
 Upgrading your computer's hardware may alter its Machine ID, yielding the error above. To fix it execute `nx reset` to
 remove all the cache directories created under the previous Machine ID. After doing so, you should no longer see the
-error. After doing so, you should no longer see the error.
+error.
 
 ## You Share Cache with Another Machine Using a Network Drive
 

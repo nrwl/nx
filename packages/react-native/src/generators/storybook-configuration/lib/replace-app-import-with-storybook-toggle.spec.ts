@@ -9,17 +9,17 @@ describe('replaceAppImportWithStorybookToggle', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     addProjectConfiguration(tree, 'products', {
-      root: 'apps/products',
-      sourceRoot: 'apps/products/src',
+      root: 'products',
+      sourceRoot: 'products/src',
     });
   });
 
   it('should update the main file with import from storybook', async () => {
     tree.write(
-      '/apps/products/src/main.tsx',
+      'products/src/main.tsx',
       formatFile`import { AppRegistry } from 'react-native';
       import App from './app/App';
       
@@ -31,7 +31,7 @@ describe('replaceAppImportWithStorybookToggle', () => {
       js: false,
     });
 
-    const mainFile = tree.read('apps/products/src/main.tsx', 'utf-8');
+    const mainFile = tree.read('products/src/main.tsx', 'utf-8');
     expect(formatFile`${mainFile}`).toEqual(
       formatFile`import { AppRegistry } from 'react-native';
       import App from './storybook/toggle-storybook';
@@ -42,7 +42,7 @@ describe('replaceAppImportWithStorybookToggle', () => {
 
   it('should not update the main file if import is already updated', async () => {
     tree.write(
-      '/apps/products/src/main.tsx',
+      'products/src/main.tsx',
       formatFile`import { AppRegistry } from 'react-native';
       import App from './app/App';
       
@@ -54,7 +54,7 @@ describe('replaceAppImportWithStorybookToggle', () => {
       js: false,
     });
 
-    const mainFile = tree.read('apps/products/src/main.tsx', 'utf-8');
+    const mainFile = tree.read('products/src/main.tsx', 'utf-8');
     expect(formatFile`${mainFile}`).toEqual(
       formatFile`import { AppRegistry } from 'react-native';
       import App from './storybook/toggle-storybook';

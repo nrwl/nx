@@ -1,7 +1,7 @@
 {
   "name": "playwright",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "packages/playwright/src",
+  "sourceRoot": "packages/playwright",
   "projectType": "library",
   "targets": {
     "build": {
@@ -15,30 +15,38 @@
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
-        "outputPath": "build/packages/playwright",
-        "main": "packages/playwright/src/index.ts",
-        "tsConfig": "packages/playwright/tsconfig.lib.json",
         "assets": [
-          "packages/playwright/*.md",
           {
-            "input": "./packages/playwright/src",
-            "glob": "**/!(*.ts)",
-            "output": "./src"
+            "input": "packages/playwright",
+            "glob": "**/files/**",
+            "output": "/"
           },
           {
-            "input": "./packages/playwright/src",
+            "input": "packages/playwright",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/playwright",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/playwright",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/playwright",
             "glob": "**/*.d.ts",
-            "output": "./src"
+            "output": "/"
           },
           {
-            "input": "./packages/playwright",
-            "glob": "generators.json",
-            "output": "."
-          },
-          {
-            "input": "./packages/playwright",
-            "glob": "executors.json",
-            "output": "."
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
           }
         ]
       }

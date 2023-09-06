@@ -8,10 +8,11 @@ describe('Add Linting', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       name: 'my-lib',
       linter: Linter.None,
+      projectNameAndRootFormat: 'as-provided',
     });
   });
 
@@ -19,8 +20,8 @@ describe('Add Linting', () => {
     addLinting(tree, {
       projectName: 'my-lib',
       linter: Linter.EsLint,
-      tsConfigPaths: ['libs/my-lib/tsconfig.lib.json'],
-      projectRoot: 'libs/my-lib',
+      tsConfigPaths: ['my-lib/tsconfig.lib.json'],
+      projectRoot: 'my-lib',
     });
     const project = readProjectConfiguration(tree, 'my-lib');
 
@@ -32,8 +33,8 @@ describe('Add Linting', () => {
     addLinting(tree, {
       projectName: 'my-lib',
       linter: Linter.None,
-      tsConfigPaths: ['libs/my-lib/tsconfig.lib.json'],
-      projectRoot: 'libs/my-lib',
+      tsConfigPaths: ['my-lib/tsconfig.lib.json'],
+      projectRoot: 'my-lib',
     });
     const project = readProjectConfiguration(tree, 'my-lib');
 

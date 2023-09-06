@@ -17,6 +17,7 @@ describe('@nx/storybook:cypress-project', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
+      projectNameAndRootFormat: 'as-provided',
     });
   });
   afterEach(() => jest.clearAllMocks());

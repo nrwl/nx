@@ -47,6 +47,27 @@ describe('Detox', () => {
     expect(lintResults.combinedOutput).toContain('All files pass linting');
   });
 
+  it('should support generating projects with the new name and root format', async () => {
+    const appName = uniq('app1');
+
+    runCLI(
+      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(
+      `${appName}-e2e/.detoxrc.json`,
+      `${appName}-e2e/tsconfig.json`,
+      `${appName}-e2e/tsconfig.e2e.json`,
+      `${appName}-e2e/test-setup.ts`,
+      `${appName}-e2e/src/app.spec.ts`
+    );
+
+    const lintResults = await runCLIAsync(`lint ${appName}-e2e`);
+    expect(lintResults.combinedOutput).toContain('All files pass linting');
+  });
+
   // TODO: @xiongemi please fix or remove this test
   xdescribe('React Native Detox MACOS-Tests', () => {
     if (isOSX()) {

@@ -139,7 +139,8 @@ Matching just a single source tag is sometimes not enough for solving complex re
       "allow": [],
       // update depConstraints based on your tags
       "depConstraints": [
-        { // this constraint applies to all "admin" projects
+        {
+          // this constraint applies to all "admin" projects
           "sourceTag": "scope:admin",
           "onlyDependOnLibsWithTags": ["scope:shared", "scope:admin"]
         },
@@ -147,7 +148,9 @@ Matching just a single source tag is sometimes not enough for solving complex re
           "sourceTag": "type:ui",
           "onlyDependOnLibsWithTags": ["type:ui", "type:util"]
         },
-        { // we don't want our admin ui components to depend on anything except utilities, and we also want to ban router imports
+        {
+          // we don't want our admin ui components to depend on anything except utilities,
+          // and we also want to ban router imports
           "allSourceTags": ["scope:admin", "type:ui"],
           "onlyDependOnLibsWithTags": ["type:util"],
           "bannedExternalImports": ["*router*"]
@@ -158,8 +161,8 @@ Matching just a single source tag is sometimes not enough for solving complex re
 
   // ... more ESLint config here
 }
+```
 
 ## Further reading
 
 - [Article: Taming Code Organization with Module Boundaries in Nx](https://blog.nrwl.io/mastering-the-project-boundaries-in-nx-f095852f5bf4)
-```

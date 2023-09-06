@@ -1,22 +1,15 @@
 import { output } from '../utils/output';
-import { Workspaces } from '../config/workspaces';
-import { mergeNpmScriptsWithTargets } from '../utils/project-graph-utils';
-import { existsSync } from 'fs';
-import { join, relative } from 'path';
-import {
-  loadNxPlugins,
-  mergePluginTargetsWithNxTargets,
-} from '../utils/nx-plugin';
+import { relative } from 'path';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
-import { splitByColons, splitTarget } from '../utils/split-target';
+import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
+import { CustomHasher } from '../config/misc-interfaces';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -163,7 +156,8 @@ export function getOutputsForTargetAndConfiguration(
       validateOutputs(targetConfiguration.outputs);
     } catch (error) {
       if (error instanceof InvalidOutputsError) {
-        // TODO(v16): start warning for invalid outputs
+        // TODO(@FrozenPandaz): In v17, throw this error and do not transform.
+        console.warn(error.message);
         targetConfiguration.outputs = transformLegacyOutputs(
           node.data.root,
           error
@@ -182,7 +176,10 @@ export function getOutputsForTargetAndConfiguration(
           options,
         });
       })
-      .filter((output) => !!output && !output.match(/{.*}/));
+      .filter(
+        (output) =>
+          !!output && !output.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+      );
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
@@ -244,9 +241,7 @@ export async function getExecutorNameForTask(
 
 export async function getExecutorForTask(
   task: Task,
-  workspace: Workspaces,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
+  projectGraph: ProjectGraph
 ) {
   const executor = await getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
@@ -256,13 +251,9 @@ export async function getExecutorForTask(
 
 export async function getCustomHasher(
   task: Task,
-  workspace: Workspaces,
-  nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
-) {
-  const factory = (
-    await getExecutorForTask(task, workspace, projectGraph, nxJson)
-  ).hasherFactory;
+): Promise<CustomHasher> | null {
+  const factory = (await getExecutorForTask(task, projectGraph)).hasherFactory;
   return factory ? factory() : null;
 }
 

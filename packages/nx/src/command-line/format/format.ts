@@ -6,12 +6,14 @@ import {
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
+import { getIgnoreObject } from '../../utils/ignore';
 import { fileExists, readJsonFile, writeJsonFile } from '../../utils/fileutils';
 import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import * as yargs from 'yargs';
 
 import * as prettier from 'prettier';
 import { sortObjectByKeys } from '../../utils/object-sort';
+import { readModulePackageJson } from '../../utils/package-json';
 import {
   getRootTsConfigFileName,
   getRootTsConfigPath,
@@ -23,7 +25,7 @@ import { ProjectGraph } from '../../config/project-graph';
 import { chunkify } from '../../utils/chunkify';
 import { allFileData } from '../../utils/all-file-data';
 
-const PRETTIER_PATH = require.resolve('prettier/bin-prettier');
+const PRETTIER_PATH = getPrettierPath();
 
 export async function format(
   command: 'check' | 'write',
@@ -92,9 +94,16 @@ async function getPatterns(
       (f) => fileExists(f) && supportedExtensions.includes(path.extname(f))
     );
 
+    // exclude patterns in .nxignore or .gitignore
+    const nonIgnoredPatterns = getIgnoreObject().filter(patterns);
+
     return args.libsAndApps
-      ? await getPatternsFromApps(patterns, await allFileData(), graph)
-      : patterns;
+      ? await getPatternsFromApps(
+          nonIgnoredPatterns,
+          await allFileData(),
+          graph
+        )
+      : nonIgnoredPatterns;
   } catch {
     return allFilesPattern;
   }
@@ -201,4 +210,9 @@ function sortTsConfig() {
   } catch (e) {
     // catch noop
   }
+}
+
+function getPrettierPath() {
+  const { bin } = readModulePackageJson('prettier').packageJson;
+  return require.resolve(path.join('prettier', bin as string));
 }

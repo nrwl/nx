@@ -5,12 +5,19 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/linter';
-import { globalJavaScriptOverrides } from '@nx/linter/src/generators/init/global-eslint-config';
 import { installedCypressVersion } from './cypress-version';
 import { eslintPluginCypressVersion } from './versions';
+import {
+  addExtendsToLintConfig,
+  addOverrideToLintConfig,
+  addPluginsToLintConfig,
+  findEslintFile,
+  isEslintConfigSupported,
+  replaceOverridesInLintConfig,
+} from '@nx/linter/src/generators/utils/eslint-file';
+import { javaScriptOverride } from '@nx/linter/src/generators/init/global-eslint-config';
 
 export interface CyLinterOptions {
   project: string;
@@ -42,7 +49,8 @@ export async function addLinterToCyProject(
   const tasks: GeneratorCallback[] = [];
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  if (!tree.exists(joinPathFragments(projectConfig.root, '.eslintrc.json'))) {
+  const eslintFile = findEslintFile(tree, projectConfig.root);
+  if (!eslintFile) {
     tasks.push(
       await lintProjectGenerator(tree, {
         project: options.project,
@@ -73,19 +81,33 @@ export async function addLinterToCyProject(
       : () => {}
   );
 
-  updateJson(
-    tree,
-    joinPathFragments(projectConfig.root, '.eslintrc.json'),
-    (json) => {
-      if (options.rootProject) {
-        json.plugins = ['@nx'];
-        json.extends = ['plugin:cypress/recommended'];
-      } else {
-        json.extends = ['plugin:cypress/recommended', ...json.extends];
-      }
-      json.overrides ??= [];
-      const globals = options.rootProject ? [globalJavaScriptOverrides] : [];
-      const override = {
+  if (isEslintConfigSupported(tree)) {
+    const overrides = [];
+    if (options.rootProject) {
+      addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+      overrides.push(javaScriptOverride);
+    }
+    addExtendsToLintConfig(
+      tree,
+      projectConfig.root,
+      'plugin:cypress/recommended'
+    );
+    const cyVersion = installedCypressVersion();
+    /**
+     * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
+     * That however leads to issues with the CommonJS Cypress plugin file.
+     */
+    const cy6Override = {
+      files: [`${options.cypressDir}/plugins/index.js`],
+      rules: {
+        '@typescript-eslint/no-var-requires': 'off',
+        'no-undef': 'off',
+      },
+    };
+    const addCy6Override = cyVersion && cyVersion < 7;
+
+    if (options.overwriteExisting) {
+      overrides.push({
         files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
         parserOptions: !options.setParserOptionsProject
           ? undefined
@@ -93,40 +115,32 @@ export async function addLinterToCyProject(
               project: `${projectConfig.root}/tsconfig.*?.json`,
             },
         rules: {},
-      };
-      const cyFiles = [
-        {
-          ...override,
-          files: [
-            '*.cy.{ts,js,tsx,jsx}',
-            `${options.cypressDir}/**/*.{ts,js,tsx,jsx}`,
-          ],
-        },
-      ];
-      if (options.overwriteExisting) {
-        json.overrides = [...globals, override];
-      } else {
-        json.overrides.push(...globals);
-        json.overrides.push(...cyFiles);
+      });
+      if (addCy6Override) {
+        overrides.push(cy6Override);
       }
-
-      const cyVersion = installedCypressVersion();
-      if (cyVersion && cyVersion < 7) {
-        /**
-         * We need this override because we enabled allowJS in the tsconfig to allow for JS based Cypress tests.
-         * That however leads to issues with the CommonJS Cypress plugin file.
-         */
-        json.overrides.push({
-          files: [`${options.cypressDir}/plugins/index.js`],
-          rules: {
-            '@typescript-eslint/no-var-requires': 'off',
-            'no-undef': 'off',
-          },
-        });
+      replaceOverridesInLintConfig(tree, projectConfig.root, overrides);
+    } else {
+      overrides.unshift({
+        files: [
+          '*.cy.{ts,js,tsx,jsx}',
+          `${options.cypressDir}/**/*.{ts,js,tsx,jsx}`,
+        ],
+        parserOptions: !options.setParserOptionsProject
+          ? undefined
+          : {
+              project: `${projectConfig.root}/tsconfig.*?.json`,
+            },
+        rules: {},
+      });
+      if (addCy6Override) {
+        overrides.push(cy6Override);
       }
-      return json;
+      overrides.forEach((override) =>
+        addOverrideToLintConfig(tree, projectConfig.root, override)
+      );
     }
-  );
+  }
 
   return runTasksInSerial(...tasks);
 }

@@ -1,5 +1,6 @@
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter } from '@nx/linter';
-import { SupportedStyles } from '../../../typings/style';
+import type { SupportedStyles } from '../../../typings/style';
 
 export interface Schema {
   appProject?: string;
@@ -8,6 +9,7 @@ export interface Schema {
   compiler?: 'babel' | 'swc';
   component?: boolean;
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   globalCss?: boolean;
   importPath?: string;
   inSourceTests?: boolean;
@@ -35,10 +37,8 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   projectRoot: string;
   routePath: string;
-  projectDirectory: string;
   parsedTags: string[];
   appMain?: string;
   appSourceRoot?: string;
-  libsDir?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
 }

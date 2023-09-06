@@ -2,7 +2,6 @@ import { Schema } from '../schema';
 import {
   getProjects,
   readNxJson,
-  removeProjectConfiguration,
   Tree,
   updateNxJson,
   updateProjectConfiguration,

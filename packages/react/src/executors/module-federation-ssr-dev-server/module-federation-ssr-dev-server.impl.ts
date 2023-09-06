@@ -1,5 +1,6 @@
 import {
   ExecutorContext,
+  getPackageManagerCommand,
   logger,
   runExecutor,
   workspaceRoot,
@@ -98,8 +99,9 @@ export default async function* moduleFederationSsrDevServer(
               remoteProject.targets.server.options.outputPath,
               'main.js'
             );
+            const pm = getPackageManagerCommand();
             execSync(
-              `npx nx run ${appName}:server${
+              `${pm.exec} nx run ${appName}:server${
                 context.configurationName ? `:${context.configurationName}` : ''
               }`,
               { stdio: 'inherit' }

@@ -5,7 +5,7 @@ There are often tasks in a codebase that apply to the whole codebase rather than
 {% youtube
 src="https://www.youtube.com/embed/PRURABLaS8s"
 title="Run root-level NPM scripts with Nx"
-width="100%" /%}
+/%}
 
 ## Example
 
@@ -98,7 +98,7 @@ Documentation site generated in /docs
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-Read more about [cacheableOperations](/core-features/cache-task-results) and fine-tuning caching with [task inputs](/more-concepts/customizing-inputs).
+Read more about [cacheableOperations](/core-features/cache-task-results) and fine-tuning caching with [task inputs](/concepts/more-concepts/customizing-inputs).
 
 ## Keep using NPM to run scripts rather than Nx
 

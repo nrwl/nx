@@ -7,7 +7,10 @@ describe('renameWebpackServer', () => {
   it('should rename webpack-server to webpack-dev-server correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestRemoteApplication(tree, { name: 'remote' });
+    await generateTestRemoteApplication(tree, {
+      name: 'remote',
+      projectNameAndRootFormat: 'derived',
+    });
 
     updateJson(tree, 'apps/remote/project.json', (json) => {
       json.targets.serve.executor = '@nrwl/angular:webpack-server';

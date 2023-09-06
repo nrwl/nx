@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library",
+  "factory": "./src/generators/library/library#libraryGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestLibraryGenerator",
@@ -19,12 +19,18 @@
         "description": "Library name.",
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?"
+        "x-prompt": "What name would you like to use for the library?",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
       },
       "directory": {
         "description": "A directory where the library is placed.",
         "type": "string",
         "alias": "dir"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -143,7 +149,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a new NestJS library.",
-  "implementation": "/packages/nest/src/generators/library/library.ts",
+  "implementation": "/packages/nest/src/generators/library/library#libraryGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/nest/src/generators/library/schema.json",
   "type": "generator"

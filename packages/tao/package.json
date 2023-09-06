@@ -31,7 +31,8 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "nx": "file:../nx"
+    "nx": "file:../nx",
+    "tslib": "^2.3.0"
   },
   "publishConfig": {
     "access": "public"

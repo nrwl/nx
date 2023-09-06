@@ -47,11 +47,7 @@ export type {
  */
 export { Workspaces } from 'nx/src/config/workspaces';
 
-// TODO (v16): Change this to export from 'nx/src/config/configuration'
-export {
-  readAllWorkspaceConfiguration,
-  workspaceLayout,
-} from 'nx/src/project-graph/file-utils';
+export { workspaceLayout } from 'nx/src/config/configuration';
 
 export type {
   NxPlugin,

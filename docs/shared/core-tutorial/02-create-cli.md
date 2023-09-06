@@ -101,7 +101,7 @@ func main() {
 
 `packages/cli/src/cow.txt`:
 
-```shell
+```plaintext
  _____
 < moo >
  -----

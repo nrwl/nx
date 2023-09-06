@@ -17,11 +17,14 @@ describe('updatePackageJson', () => {
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
-      relativeToRootDestination: 'libs/my-destination',
+      relativeToRootDestination: 'my-destination',
     };
 
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      projectNameAndRootFormat: 'as-provided',
+    });
   });
 
   it('should handle package.json not existing', async () => {
@@ -34,11 +37,11 @@ describe('updatePackageJson', () => {
     const packageJson = {
       name: '@proj/my-lib',
     };
-    writeJson(tree, '/libs/my-destination/package.json', packageJson);
+    writeJson(tree, 'my-destination/package.json', packageJson);
 
     updatePackageJson(tree, schema);
 
-    expect(readJson(tree, '/libs/my-destination/package.json')).toEqual({
+    expect(readJson(tree, 'my-destination/package.json')).toEqual({
       ...packageJson,
       name: '@proj/my-destination',
     });

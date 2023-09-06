@@ -31,6 +31,7 @@ describe('create-nx-workspace', () => {
       packageManager,
       standaloneApi: false,
       routing: false,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('package.json');
@@ -50,6 +51,7 @@ describe('create-nx-workspace', () => {
       packageManager,
       standaloneApi: true,
       routing: true,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('package.json');
@@ -68,6 +70,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       packageManager,
       bundler: 'vite',
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('package.json');
@@ -77,7 +80,7 @@ describe('create-nx-workspace', () => {
     expectCodeIsFormatted();
   });
 
-  it('should create a workspace with a single react app with webpack at the root', () => {
+  it('should create a workspace with a single react app with webpack and playwright at the root', () => {
     const wsName = uniq('react');
 
     runCreateWorkspace(wsName, {
@@ -86,6 +89,7 @@ describe('create-nx-workspace', () => {
       style: 'css',
       packageManager,
       bundler: 'webpack',
+      e2eTestRunner: 'playwright',
     });
 
     checkFilesExist('package.json');
@@ -102,12 +106,7 @@ describe('create-nx-workspace', () => {
       packageManager,
     });
 
-    checkFilesExist(
-      'package.json',
-      packageManagerLockFile[packageManager],
-      'apps/.gitkeep',
-      'libs/.gitkeep'
-    );
+    checkFilesExist('package.json', packageManagerLockFile[packageManager]);
 
     expectNoAngularDevkit();
   });
@@ -144,6 +143,7 @@ describe('create-nx-workspace', () => {
       packageManager,
       standaloneApi: false,
       routing: true,
+      e2eTestRunner: 'none',
     });
     expectCodeIsFormatted();
   });
@@ -162,6 +162,7 @@ describe('create-nx-workspace', () => {
         packageManager,
         standaloneApi: false,
         routing: false,
+        e2eTestRunner: 'none',
       })
     ).toThrow();
   });
@@ -176,6 +177,7 @@ describe('create-nx-workspace', () => {
       appName,
       packageManager,
       bundler: 'webpack',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
@@ -195,6 +197,7 @@ describe('create-nx-workspace', () => {
       appName,
       packageManager,
       bundler: 'vite',
+      e2eTestRunner: 'none',
     });
 
     expectNoAngularDevkit();
@@ -213,6 +216,7 @@ describe('create-nx-workspace', () => {
       appName,
       nextAppDir: false,
       packageManager,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist(`apps/${appName}/pages/index.tsx`);
@@ -230,6 +234,7 @@ describe('create-nx-workspace', () => {
       nextAppDir: true,
       appName,
       packageManager,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('app/page.tsx');
@@ -247,6 +252,7 @@ describe('create-nx-workspace', () => {
       nextAppDir: false,
       appName,
       packageManager,
+      e2eTestRunner: 'none',
     });
 
     checkFilesExist('pages/index.tsx');
@@ -439,11 +445,13 @@ describe('create-nx-workspace parent folder', () => {
 describe('create-nx-workspace yarn berry', () => {
   const tmpDir = `${e2eCwd}/${uniq('yarn-berry')}`;
   let wsName: string;
+  let yarnVersion: string;
 
   beforeAll(() => {
     mkdirSync(tmpDir, { recursive: true });
-    runCommand('corepack prepare yarn@stable --activate', { cwd: tmpDir });
-    runCommand('yarn set version stable', { cwd: tmpDir });
+    runCommand('corepack prepare yarn@3.6.1 --activate', { cwd: tmpDir });
+    runCommand('yarn set version 3.6.1', { cwd: tmpDir });
+    yarnVersion = runCommand('yarn --version', { cwd: tmpDir }).trim();
     // previous command creates a package.json file which we don't want
     rmSync(`${tmpDir}/package.json`);
     process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
@@ -466,7 +474,7 @@ describe('create-nx-workspace yarn berry', () => {
     ).toMatchInlineSnapshot(`
       "nodeLinker: node-modules
 
-      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      yarnPath: .yarn/releases/yarn-${yarnVersion}.cjs
       "
     `);
   });
@@ -486,7 +494,7 @@ describe('create-nx-workspace yarn berry', () => {
     ).toMatchInlineSnapshot(`
       "nodeLinker: node-modules
 
-      yarnPath: .yarn/releases/yarn-3.6.1.cjs
+      yarnPath: .yarn/releases/yarn-${yarnVersion}.cjs
       "
     `);
   });

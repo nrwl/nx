@@ -4,6 +4,7 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  joinPathFragments,
   normalizePath,
   readProjectConfiguration,
   runTasksInSerial,
@@ -74,7 +75,14 @@ function updatePluginConfig(host: Tree, options: NormalizedSchema) {
 }
 
 export async function pluginGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
+  return await pluginGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
+  const options = await normalizeOptions(host, schema);
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(
@@ -119,10 +127,14 @@ export async function pluginGenerator(host: Tree, schema: Schema) {
       await e2eProjectGenerator(host, {
         pluginName: options.name,
         projectDirectory: options.projectDirectory,
-        pluginOutputPath: `dist/${options.libsDir}/${options.projectDirectory}`,
+        pluginOutputPath: joinPathFragments(
+          'dist',
+          options.rootProject ? options.name : options.projectRoot
+        ),
         npmPackageName: options.npmPackageName,
         skipFormat: true,
         rootProject: options.rootProject,
+        projectNameAndRootFormat: options.projectNameAndRootFormat,
       })
     );
   }

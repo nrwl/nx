@@ -3,8 +3,8 @@ import { createEffect, Actions, ofType } from '@ngrx/effects';<% if (!importFrom
 import { switchMap, catchError, of } from 'rxjs';<% } else { %>
 import { of } from 'rxjs';
 import { switchMap, catchError } from 'rxjs/operators';<% } %>
-import * as <%= className %>Actions from './<%= fileName %>.actions';
-import * as <%= className %>Feature from './<%= fileName %>.reducer';
+import * as <%= className %>Actions from './<%= relativeFileName %>.actions';
+import * as <%= className %>Feature from './<%= relativeFileName %>.reducer';
 
 @Injectable()
 export class <%= className %>Effects {

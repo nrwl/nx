@@ -1,13 +1,7 @@
-import { assertValidStyle } from '@nx/react/src/utils/assertion';
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nx/devkit';
+import { joinPathFragments, names, Tree } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter } from '@nx/linter';
-
+import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
@@ -22,31 +16,29 @@ export interface NormalizedSchema extends Schema {
   js?: boolean;
 }
 
-export function normalizeOptions(
+export async function normalizeOptions(
   host: Tree,
   options: Schema
-): NormalizedSchema {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const name = names(options.name).fileName;
+): Promise<NormalizedSchema> {
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    projectNameAndRootFormat,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    rootProject: options.rootProject,
+    callingGenerator: '@nx/next:application',
+  });
+  options.rootProject = appProjectRoot === '.';
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  const appDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-
-  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
-
-  const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
+  const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
 
-  const appProjectRoot = options.rootProject
-    ? '.'
-    : joinPathFragments(appsDir, appDirectory);
-
-  const e2eProjectRoot = options.rootProject
-    ? '.'
-    : joinPathFragments(appsDir, `${appDirectory}-e2e`);
+  const name = names(options.name).fileName;
 
   const outputPath = joinPathFragments(
     'dist',

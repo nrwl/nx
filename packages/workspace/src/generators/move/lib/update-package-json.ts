@@ -12,6 +12,10 @@ interface PartialPackageJson {
  * @param schema The options provided to the schematic
  */
 export function updatePackageJson(tree: Tree, schema: NormalizedSchema) {
+  if (!schema.importPath) {
+    return;
+  }
+
   const packageJsonPath = path.join(
     schema.relativeToRootDestination,
     'package.json'

@@ -60,6 +60,11 @@ export class TargetProjectLocator {
       }
     }
 
+    if (builtInModuleSet.has(normalizedImportExpr)) {
+      this.npmResolutionCache.set(normalizedImportExpr, null);
+      return null;
+    }
+
     // try to find npm package before using expensive typescript resolution
     const npmProject = this.findNpmPackage(normalizedImportExpr);
     if (npmProject) {
@@ -77,11 +82,6 @@ export class TargetProjectLocator {
       if (resolvedProject) {
         return resolvedProject;
       }
-    }
-
-    if (builtInModuleSet.has(normalizedImportExpr)) {
-      this.npmResolutionCache.set(normalizedImportExpr, null);
-      return null;
     }
 
     try {

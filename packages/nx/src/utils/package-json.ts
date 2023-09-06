@@ -57,7 +57,7 @@ export interface PackageJson {
   peerDependenciesMeta?: Record<string, { optional: boolean }>;
   resolutions?: Record<string, string>;
   overrides?: PackageOverride;
-  bin?: Record<string, string>;
+  bin?: Record<string, string> | string;
   workspaces?:
     | string[]
     | {
@@ -132,6 +132,16 @@ export function buildTargetFromScript(
       script,
     },
   };
+}
+
+export function readTargetsFromPackageJson({ scripts, nx }: PackageJson) {
+  const res: Record<string, TargetConfiguration> = {};
+  Object.keys(scripts || {}).forEach((script) => {
+    if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
+      res[script] = buildTargetFromScript(script, nx);
+    }
+  });
+  return res;
 }
 
 /**

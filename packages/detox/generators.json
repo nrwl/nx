@@ -25,7 +25,7 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#detoxApplicationGenerator",
+      "factory": "./src/generators/application/application#detoxApplicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",

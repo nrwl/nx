@@ -65,9 +65,7 @@ export function getPackageManagerCommand(
       const useBerry = gte(yarnVersion, '2.0.0');
 
       return {
-        preInstall: useBerry
-          ? 'yarn set version stable'
-          : 'yarn set version classic',
+        preInstall: `yarn set version ${yarnVersion}`,
         install: 'yarn',
         ciInstall: useBerry
           ? 'yarn install --immutable'
@@ -75,7 +73,7 @@ export function getPackageManagerCommand(
         add: useBerry ? 'yarn add' : 'yarn add -W',
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
         rm: 'yarn remove',
-        exec: useBerry ? 'yarn exec' : 'yarn',
+        exec: 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
       };

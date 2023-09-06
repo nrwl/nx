@@ -16,14 +16,6 @@ import * as yargsParser from 'yargs-parser';
 import { spawn, SpawnOptions } from 'child_process';
 
 export function addPresetDependencies(host: Tree, options: NormalizedSchema) {
-  if (
-    options.preset === Preset.Apps ||
-    options.preset === Preset.Core ||
-    options.preset === Preset.Empty ||
-    options.preset === Preset.NPM
-  ) {
-    return;
-  }
   const { dependencies, dev } = getPresetDependencies(options);
   return addDependenciesToPackageJson(
     host,
@@ -98,6 +90,8 @@ function getPresetDependencies({
   e2eTestRunner,
 }: NormalizedSchema) {
   switch (preset) {
+    case Preset.Apps:
+    case Preset.NPM:
     case Preset.TS:
     case Preset.TsStandalone:
       return { dependencies: {}, dev: { '@nx/js': nxVersion } };

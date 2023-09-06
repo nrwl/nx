@@ -1,7 +1,6 @@
 import { NormalizedSchema } from '../schema';
 import { generateFiles, names } from '@nx/devkit';
 import { join } from 'path';
-import { normalizeProjectName } from '../../application/lib/normalize-options';
 
 export function addModuleFederationFiles(
   host,
@@ -13,9 +12,8 @@ export function addModuleFederationFiles(
     ...options,
     tmpl: '',
     remotes: defaultRemoteManifest.map(({ name, port }) => {
-      const remote = normalizeProjectName({ ...options, name });
       return {
-        ...names(remote),
+        ...names(name),
         port,
       };
     }),

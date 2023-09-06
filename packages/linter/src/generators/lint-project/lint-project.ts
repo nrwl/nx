@@ -1,25 +1,43 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import type {
+  NxJsonConfiguration,
+  ProjectConfiguration,
+  Tree,
+} from '@nx/devkit';
 import {
   formatFiles,
   offsetFromRoot,
+  readJson,
   readProjectConfiguration,
+  updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 
-import { Linter } from '../utils/linter';
-import { findEslintFile } from '../utils/eslint-file';
+import { Linter as LinterEnum } from '../utils/linter';
+import {
+  baseEsLintConfigFile,
+  baseEsLintFlatConfigFile,
+  findEslintFile,
+} from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
+import type { Linter } from 'eslint';
 import {
   findLintTarget,
   migrateConfigToMonorepoStyle,
 } from '../init/init-migration';
 import { getProjects } from 'nx/src/generators/utils/project-configuration';
+import { useFlatConfig } from '../../utils/flat-config';
+import {
+  createNodeList,
+  generateFlatOverride,
+  generateSpreadElement,
+  stringifyNodeList,
+} from '../utils/flat-config/ast-utils';
 
 interface LintProjectOptions {
   project: string;
-  linter?: Linter;
+  linter?: LinterEnum;
   eslintFilePatterns?: string[];
   tsConfigPaths?: string[];
   skipFormat: boolean;
@@ -27,57 +45,6 @@ interface LintProjectOptions {
   skipPackageJson?: boolean;
   unitTestRunner?: string;
   rootProject?: boolean;
-}
-
-function createEsLintConfiguration(
-  tree: Tree,
-  projectConfig: ProjectConfiguration,
-  setParserOptionsProject: boolean
-) {
-  const eslintConfig = findEslintFile(tree);
-  writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
-    extends: eslintConfig
-      ? [`${offsetFromRoot(projectConfig.root)}${eslintConfig}`]
-      : undefined,
-    // Include project files to be linted since the global one excludes all files.
-    ignorePatterns: ['!**/*'],
-    overrides: [
-      {
-        files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-        /**
-         * NOTE: We no longer set parserOptions.project by default when creating new projects.
-         *
-         * We have observed that users rarely add rules requiring type-checking to their Nx workspaces, and therefore
-         * do not actually need the capabilites which parserOptions.project provides. When specifying parserOptions.project,
-         * typescript-eslint needs to create full TypeScript Programs for you. When omitting it, it can perform a simple
-         * parse (and AST tranformation) of the source files it encounters during a lint run, which is much faster and much
-         * less memory intensive.
-         *
-         * In the rare case that users attempt to add rules requiring type-checking to their setup later on (and haven't set
-         * parserOptions.project), the executor will attempt to look for the particular error typescript-eslint gives you
-         * and provide feedback to the user.
-         */
-        parserOptions: !setParserOptionsProject
-          ? undefined
-          : {
-              project: [`${projectConfig.root}/tsconfig.*?.json`],
-            },
-        /**
-         * Having an empty rules object present makes it more obvious to the user where they would
-         * extend things from if they needed to
-         */
-        rules: {},
-      },
-      {
-        files: ['*.ts', '*.tsx'],
-        rules: {},
-      },
-      {
-        files: ['*.js', '*.jsx'],
-        rules: {},
-      },
-    ],
-  });
 }
 
 export function mapLintPattern(
@@ -101,11 +68,16 @@ export async function lintProjectGenerator(
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
+  const lintFilePatterns = options.eslintFilePatterns ?? [];
+  if (isBuildableLibraryProject(projectConfig)) {
+    lintFilePatterns.push(`${projectConfig.root}/package.json`);
+  }
+
   projectConfig.targets['lint'] = {
     executor: '@nx/linter:eslint',
     outputs: ['{options.outputFile}'],
     options: {
-      lintFilePatterns: options.eslintFilePatterns,
+      lintFilePatterns: lintFilePatterns,
     },
   };
 
@@ -142,6 +114,19 @@ export async function lintProjectGenerator(
     );
   }
 
+  // Buildable libs need source analysis enabled for linting `package.json`.
+  if (
+    isBuildableLibraryProject(projectConfig) &&
+    !isJsAnalyzeSourceFilesEnabled(tree)
+  ) {
+    updateJson(tree, 'nx.json', (json) => {
+      json.pluginsConfig ??= {};
+      json.pluginsConfig['@nx/js'] ??= {};
+      json.pluginsConfig['@nx/js'].analyzeSourceFiles = true;
+      return json;
+    });
+  }
+
   updateProjectConfiguration(tree, options.project, projectConfig);
 
   if (!options.skipFormat) {
@@ -151,19 +136,127 @@ export async function lintProjectGenerator(
   return installTask;
 }
 
+function createEsLintConfiguration(
+  tree: Tree,
+  projectConfig: ProjectConfiguration,
+  setParserOptionsProject: boolean
+) {
+  const eslintConfig = findEslintFile(tree);
+  const pathToRootConfig = eslintConfig
+    ? `${offsetFromRoot(projectConfig.root)}${eslintConfig}`
+    : undefined;
+  const addDependencyChecks = isBuildableLibraryProject(projectConfig);
+
+  const overrides: Linter.ConfigOverride<Linter.RulesRecord>[] = [
+    {
+      files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
+      /**
+       * NOTE: We no longer set parserOptions.project by default when creating new projects.
+       *
+       * We have observed that users rarely add rules requiring type-checking to their Nx workspaces, and therefore
+       * do not actually need the capabilites which parserOptions.project provides. When specifying parserOptions.project,
+       * typescript-eslint needs to create full TypeScript Programs for you. When omitting it, it can perform a simple
+       * parse (and AST tranformation) of the source files it encounters during a lint run, which is much faster and much
+       * less memory intensive.
+       *
+       * In the rare case that users attempt to add rules requiring type-checking to their setup later on (and haven't set
+       * parserOptions.project), the executor will attempt to look for the particular error typescript-eslint gives you
+       * and provide feedback to the user.
+       */
+      parserOptions: !setParserOptionsProject
+        ? undefined
+        : {
+            project: [`${projectConfig.root}/tsconfig.*?.json`],
+          },
+      /**
+       * Having an empty rules object present makes it more obvious to the user where they would
+       * extend things from if they needed to
+       */
+      rules: {},
+    },
+    {
+      files: ['*.ts', '*.tsx'],
+      rules: {},
+    },
+    {
+      files: ['*.js', '*.jsx'],
+      rules: {},
+    },
+  ];
+
+  if (isBuildableLibraryProject(projectConfig)) {
+    overrides.push({
+      files: ['*.json'],
+      parser: 'jsonc-eslint-parser',
+      rules: {
+        '@nx/dependency-checks': 'error',
+      },
+    });
+  }
+
+  if (useFlatConfig(tree)) {
+    const isCompatNeeded = addDependencyChecks;
+    const nodes = [];
+    const importMap = new Map();
+    if (eslintConfig) {
+      importMap.set(pathToRootConfig, 'baseConfig');
+      nodes.push(generateSpreadElement('baseConfig'));
+    }
+    overrides.forEach((override) => {
+      nodes.push(generateFlatOverride(override, projectConfig.root));
+    });
+    const nodeList = createNodeList(importMap, nodes, isCompatNeeded);
+    const content = stringifyNodeList(
+      nodeList,
+      projectConfig.root,
+      'eslint.config.js'
+    );
+    tree.write(join(projectConfig.root, 'eslint.config.js'), content);
+  } else {
+    writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
+      extends: eslintConfig ? [pathToRootConfig] : undefined,
+      // Include project files to be linted since the global one excludes all files.
+      ignorePatterns: ['!**/*'],
+      overrides,
+    });
+  }
+}
+
+function isJsAnalyzeSourceFilesEnabled(tree: Tree): boolean {
+  const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+  const jsPluginConfig = nxJson.pluginsConfig?.['@nx/js'] as {
+    analyzeSourceFiles?: boolean;
+  };
+
+  return (
+    jsPluginConfig?.analyzeSourceFiles ??
+    nxJson.extends !== 'nx/presets/npm.json'
+  );
+}
+
+function isBuildableLibraryProject(
+  projectConfig: ProjectConfiguration
+): boolean {
+  return (
+    projectConfig.projectType === 'library' &&
+    projectConfig.targets?.build &&
+    !!projectConfig.targets.build
+  );
+}
+
 /**
  * Detect based on the state of lint target configuration of the root project
  * if we should migrate eslint configs to monorepo style
- *
- * @param tree
- * @returns
  */
 function isMigrationToMonorepoNeeded(
   projects: Record<string, ProjectConfiguration>,
   tree: Tree
 ): boolean {
   // the base config is already created, migration has been done
-  if (tree.exists('.eslintrc.base.json')) {
+  if (
+    tree.exists(baseEsLintConfigFile) ||
+    tree.exists(baseEsLintFlatConfigFile)
+  ) {
     return false;
   }
 

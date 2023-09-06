@@ -31,8 +31,7 @@ When running this generator, you will be prompted to provide the following:
   - `@storybook/vue3-vite`
   - `@storybook/web-components-webpack5`
   - `@storybook/web-components-vite`
-- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance.
-- Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).
+- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/angular/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, all the necessary dependencies will be installed. Also, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/angular/writing-tests/test-runner). You can read more about this in the [Nx Storybook interaction tests documentation page](/packages/storybook/documents/interaction-tests).
 
 You must provide a `name` and a `uiFramework` for the generator to work.
 
@@ -48,10 +47,10 @@ If you are using Angular, React, React Native or Next.js in your project, it's b
 
 ## Examples
 
-### Generate Storybook configuration using TypeScript
+### Generate Storybook configuration using JavaScript
 
 ```bash
-nx g @nx/storybook:configuration ui --uiFramework=@storybook/web-components-vite --tsConfiguration=true
+nx g @nx/storybook:configuration ui --uiFramework=@storybook/web-components-vite --tsConfiguration=false
 ```
 
-This will generate a Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory).
+By default, our generator generates TypeScript Storybook configuration files. You can choose to use JavaScript for the Storybook configuration files of your project (the files inside the `.storybook` directory, eg. `.storybook/main.js`).

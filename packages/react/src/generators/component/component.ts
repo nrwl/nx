@@ -23,6 +23,7 @@ import { getComponentTests } from './get-component-tests';
 import { NormalizedSchema } from './noramlized-schema';
 import { Schema } from './schema';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { join } from 'path';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
@@ -58,7 +59,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
   );
 
   const componentTests = getComponentTests(options);
-  generateFiles(host, joinPathFragments(__dirname, './files'), componentDir, {
+  generateFiles(host, join(__dirname, './files'), componentDir, {
     ...options,
     componentTests,
     inSourceVitestTests: getInSourceVitestTestsTemplate(componentTests),

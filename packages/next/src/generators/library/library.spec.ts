@@ -22,24 +22,18 @@ describe('next library', () => {
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
+      projectNameAndRootFormat: 'as-provided',
     };
-    const appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,
       name: 'myLib',
     });
-    const tsconfigFiles = readJson(
-      appTree,
-      'libs/my-lib/tsconfig.lib.json'
-    ).files;
+    const tsconfigTypes = readJson(appTree, 'my-lib/tsconfig.lib.json')
+      .compilerOptions.types;
 
-    expect(tsconfigFiles).toContain(
-      '../../node_modules/@nx/next/typings/image.d.ts'
-    );
-    expect(tsconfigFiles).not.toContain(
-      '../../node_modules/@nx/react/typings/image.d.ts'
-    );
+    expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
   });
 
   it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
@@ -51,9 +45,10 @@ describe('next library', () => {
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
+      projectNameAndRootFormat: 'as-provided',
     };
 
-    const appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
       ...baseOptions,
@@ -66,12 +61,10 @@ describe('next library', () => {
     });
 
     expect(
-      readJson(appTree, 'libs/my-lib/tsconfig.json').compilerOptions
-        .jsxImportSource
+      readJson(appTree, 'my-lib/tsconfig.json').compilerOptions.jsxImportSource
     ).not.toBeDefined();
     expect(
-      readJson(appTree, 'libs/my-lib2/tsconfig.json').compilerOptions
-        .jsxImportSource
+      readJson(appTree, 'my-lib2/tsconfig.json').compilerOptions.jsxImportSource
     ).toEqual('@emotion/react');
   });
 
@@ -86,6 +79,7 @@ describe('next library', () => {
       unitTestRunner: 'jest',
       style: 'css',
       component: true,
+      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(appTree.read('my-lib/src/index.ts', 'utf-8')).toContain(

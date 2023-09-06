@@ -1,8 +1,8 @@
 # Project Configuration
 
 Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
-[use task executors](/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
-files to get each project's configuration.
+[use task executors](/core-features/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
+files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on Github.
 
 The following configuration creates `build` and `test` targets for Nx.
 
@@ -47,12 +47,12 @@ The following configuration creates `build` and `test` targets for Nx.
 
 You can invoke `nx build mylib` or `nx test mylib` without any extra configuration.
 
-You can add Nx-specific configuration as follows:
+Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
 
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc {% fileName="package.json" %}
+```jsonc {% fileName="package.json" lineGroups={ Orchestration:[14,17,19,22,25],Execution:[4,5,6],Caching:[9,10,11,12,15,16,20,21] } %}
 {
   "name": "mylib",
   "scripts": {
@@ -85,33 +85,33 @@ You can add Nx-specific configuration as follows:
 {% /tab %}
 {% tab label="project.json" %}
 
-```json {% fileName="project.json" %}
+```json {% fileName="project.json" lineGroups={ "Orchestration": [5,6,12,15,19,22], "Execution": [12,16,17,19,22,23], "Caching": [7,8,9,10,13,14,20,21] } %}
 {
   "root": "libs/mylib/",
   "sourceRoot": "libs/mylib/src",
   "projectType": "library",
+  "tags": ["scope:myteam"],
+  "implicitDependencies": ["anotherlib"],
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
     "production": ["!{projectRoot}/**/*.spec.tsx"]
   },
   "targets": {
     "test": {
-      "executor": "@nx/jest:jest",
       "inputs": ["default", "^production"],
       "outputs": [],
       "dependsOn": ["build"],
+      "executor": "@nx/jest:jest",
       "options": {}
     },
     "build": {
-      "executor": "@nx/js:tsc",
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/libs/mylib"],
       "dependsOn": ["^build"],
+      "executor": "@nx/js:tsc",
       "options": {}
     }
-  },
-  "tags": ["scope:myteam"],
-  "implicitDependencies": ["anotherlib"]
+  }
 }
 ```
 
@@ -123,7 +123,7 @@ You can add Nx-specific configuration as follows:
 The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
 hit or not. There are three types of inputs:
 
-_Filesets_
+#### Filesets
 
 Examples:
 
@@ -142,7 +142,7 @@ The `inputs` and `namedInputs` are parsed with the following rules:
 
 {% /callout %}
 
-_Runtime Inputs_
+#### Runtime Inputs
 
 Examples:
 
@@ -150,7 +150,7 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
-_Env Variables_
+#### Env Variables
 
 Examples:
 
@@ -158,7 +158,7 @@ Examples:
 
 Note the result value is hashed, so it is never displayed.
 
-_External Dependencies_
+#### External Dependencies
 
 For official plugins, Nx intelligently finds a set of external dependencies which it hashes for the target. `nx:run-commands` is an exception to this.
 Because you may specify any command to be run, it is not possible to determine which, if any, external dependencies are used by the target.
@@ -204,7 +204,7 @@ If a target uses a command from an npm package, that package should be listed.
 }
 ```
 
-_Dependent tasks output_
+#### Dependent tasks output
 
 This input allows us to depend on the output, rather than the input of the dependent tasks. We can specify the glob pattern to match only the subset of the output files.
 The `transitive` parameter defines whether the check and the pattern should be recursively applied to the dependent tasks of the child tasks.
@@ -227,7 +227,7 @@ Examples:
 }
 ```
 
-_Named Inputs_
+#### Named Inputs
 
 Examples:
 
@@ -263,10 +263,10 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 
 {% cards %}
 {% card title="nx.json reference" type="documentation" description="inputs and namedInputs are also described in the nx.json reference" url="/reference/nx-json#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/concepts/more-concepts/customizing-inputs" /%}
 {% /cards %}
 
-### outputs
+### Outputs
 
 Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. `"outputs": ["{workspaceRoot}/dist/libs/mylib"]` tells Nx where the `build` target is going to create file artifacts.
 
@@ -313,16 +313,31 @@ Sometimes, multiple targets might write to the same directory. When possible it 
 }
 ```
 
-But if the above is not possible, globs (parsed with the [minimatch](https://github.com/isaacs/minimatch) library) can be specified as outputs to only cache a set of files rather than the whole directory.
+But if the above is not possible, globs (parsed by the [GlobSet](https://docs.rs/globset/0.4.5/globset/#syntax) Rust library) can be specified as outputs to only cache a set of files rather than the whole directory.
 
 ```json
 {
   "targets": {
     "build-js": {
-      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.js"]
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.{js,map}"]
     },
     "build-css": {
       "outputs": ["{workspaceRoot}/dist/libs/mylib/**/*.css"]
+    }
+  }
+}
+```
+
+More advanced patterns can be used to exclude files and folders in a single line
+
+```json
+{
+  "targets": {
+    "build-js": {
+      "outputs": ["{workspaceRoot}/dist/libs/!(cache|.next)/**/*.{js,map}"]
+    },
+    "build-css": {
+      "outputs": ["{workspaceRoot}/dist/libs/mylib/**/!(secondary).css"]
     }
   }
 }
@@ -621,7 +636,7 @@ You can annotate your projects with `tags` as follows:
 {% /tab %}
 {% /tabs %}
 
-You can [configure lint rules using these tags](/core-features/enforce-project-boundaries) to, for instance, ensure that libraries
+You can [configure lint rules using these tags](/core-features/enforce-module-boundaries) to, for instance, ensure that libraries
 belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies

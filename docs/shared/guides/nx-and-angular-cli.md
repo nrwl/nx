@@ -24,7 +24,7 @@ If you haven't used Nx before and used the Angular CLI, you probably ran `ng upd
 - Fix migrations that "almost work".
 - Commit a partially migrated state.
 - Change versions of packages to match org requirements.
-- [Opt out of Angular updates when updating Nx versions](/recipes/managing-repository/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/packages/angular/documents/angular-nx-version-matrix)
+- [Opt out of Angular updates when updating Nx versions](/recipes/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/packages/angular/documents/angular-nx-version-matrix)
 
 `nx migrate` does this by splitting the process into two steps. `nx migrate latest` creates a `migrations.json` file with a list of all the migrations that are needed by Nx, Angular and other packages. You then have a chance to modify that file before running `nx migrate --run-migrations` to actually execute those migrations.
 

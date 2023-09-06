@@ -20,7 +20,6 @@ import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
 import { cleanUpFiles } from './clean-up-files';
 import { readNameFromPackageJson } from './read-name-from-package-json';
 import { renameJsToJsx } from './rename-js-to-jsx';
-import { setupE2eProject } from './setup-e2e-project';
 import { setupTsConfig } from './tsconfig-setup';
 import { writeCracoConfig } from './write-craco-config';
 import { writeViteConfig } from './write-vite-config';
@@ -144,7 +143,7 @@ async function reorgnizeWorkspaceStructure(options: NormalizedOptions) {
     ? `npx nx build ${options.reactAppName}`
     : 'npm run build';
   printFinalMessage({
-    learnMoreLink: 'https://nx.dev/recipes/adopting-nx/migration-cra',
+    learnMoreLink: 'https://nx.dev/recipes/react/migration-cra',
     bodyLines: [
       `- Execute "${buildCommand}" twice to see the computation caching in action.`,
     ],
@@ -185,7 +184,7 @@ function createTempWorkspace(options: NormalizedOptions) {
       options.isVite ? 'vite' : 'webpack'
     } --packageManager=${options.packageManager} ${
       options.nxCloud ? '--nxCloud' : '--nxCloud=false'
-    }`,
+    } ${options.addE2e ? '--e2eTestRunner=cypress' : '--e2eTestRunner=none'}`,
     { stdio: [0, 1, 2] }
   );
 
@@ -348,14 +347,6 @@ function cleanUpUnusedFilesAndAddConfigFiles(options: NormalizedOptions) {
   output.log({ title: "📃 Extend the app's tsconfig.json from the base" });
 
   setupTsConfig(options.reactAppName, options.isStandalone);
-
-  if (options.addE2e && !options.isStandalone) {
-    output.log({ title: '📃 Setup e2e tests' });
-    setupE2eProject(options.reactAppName);
-  } else {
-    removeSync(join('apps', `${options.reactAppName}-e2e`));
-    execSync(`${options.pmc.rm} cypress @nx/cypress eslint-plugin-cypress`);
-  }
 
   if (options.isStandalone) {
     removeSync('apps');

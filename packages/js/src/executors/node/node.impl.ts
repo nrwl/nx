@@ -17,10 +17,10 @@ import * as path from 'path';
 import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
-import { calculateProjectDependencies } from '../../utils/buildable-libs-utils';
+import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
 import { killTree } from './lib/kill-tree';
 import { fileExists } from 'nx/src/utils/fileutils';
-import { getMainFileDirRelativeToProjectRoot } from '../../utils/get-main-file-dir';
+import { getRelativeDirectoryToProjectRoot } from '../../utils/get-main-file-dir';
 
 interface ActiveTask {
   id: string;
@@ -314,7 +314,8 @@ function calculateResolveMappings(
   options: NodeExecutorOptions
 ) {
   const parsed = parseTargetString(options.buildTarget, context.projectGraph);
-  const { dependencies } = calculateProjectDependencies(
+  const { dependencies } = calculateProjectBuildableDependencies(
+    context.taskGraph,
     context.projectGraph,
     context.root,
     parsed.project,
@@ -378,10 +379,7 @@ function getFileToRun(
       buildTargetExecutor === '@nx/js:swc'
     ) {
       outputFileName = path.join(
-        getMainFileDirRelativeToProjectRoot(
-          buildOptions.main,
-          project.data.root
-        ),
+        getRelativeDirectoryToProjectRoot(buildOptions.main, project.data.root),
         fileName
       );
     } else {
@@ -393,22 +391,18 @@ function getFileToRun(
 }
 
 function fileToRunCorrectPath(fileToRun: string): string {
-  if (!fileExists(fileToRun)) {
-    const cjsFile = fileToRun.replace(/\.js$/, '.cjs');
-    if (fileExists(cjsFile)) {
-      fileToRun = cjsFile;
-    } else {
-      const mjsFile = fileToRun.replace(/\.js$/, '.mjs');
-      if (fileExists(mjsFile)) {
-        fileToRun = mjsFile;
-      } else {
-        throw new Error(
-          `Could not find ${fileToRun}. Make sure your build succeeded.`
-        );
-      }
-    }
+  if (fileExists(fileToRun)) return fileToRun;
+
+  const extensionsToTry = ['.cjs', '.mjs', 'cjs.js', '.esm.js'];
+
+  for (const ext of extensionsToTry) {
+    const file = fileToRun.replace(/\.js$/, ext);
+    if (fileExists(file)) return file;
   }
-  return fileToRun;
+
+  throw new Error(
+    `Could not find ${fileToRun}. Make sure your build succeeded.`
+  );
 }
 
 export default nodeExecutor;

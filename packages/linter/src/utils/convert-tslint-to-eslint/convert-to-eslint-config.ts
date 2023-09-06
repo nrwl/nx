@@ -49,6 +49,9 @@ function getConvertToEslintConfig() {
   return tslintToEslint;
 }
 
+/**
+ * @deprecated This will be removed in v17
+ */
 export async function convertToESLintConfig(
   pathToTslintJson: string,
   tslintJson: Record<string, unknown>,
@@ -103,8 +106,9 @@ export async function convertToESLintConfig(
      */
     writeJsonFile(pathToTslintJson, updatedTSLintJson);
   }
+  const pm = getPackageManagerCommand();
   const reportedConfiguration = await findReportedConfiguration(
-    'npx tslint --print-config',
+    `${pm.exec} tslint --print-config`,
     pathToTslintJson
   );
 
@@ -121,8 +125,7 @@ export async function convertToESLintConfig(
      * This error could occur if, for example, the user does not have a TSLint plugin installed correctly that they
      * reference in their config.
      */
-    const printConfigFailureMessageStart =
-      'Command failed: npx tslint --print-config "tslint.json"';
+    const printConfigFailureMessageStart = `Command failed: ${pm.exec} tslint --print-config "tslint.json"`;
     if (
       reportedConfiguration.message.startsWith(printConfigFailureMessageStart)
     ) {
@@ -196,6 +199,9 @@ function likelyContainsTSLintComment(fileContent: string): boolean {
   return fileContent.includes('tslint:');
 }
 
+/**
+ * @deprecated This will be removed in v17
+ */
 export function convertTSLintDisableCommentsForProject(
   tree: Tree,
   projectName: string

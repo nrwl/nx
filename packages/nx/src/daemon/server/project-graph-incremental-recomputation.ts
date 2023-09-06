@@ -3,6 +3,7 @@ import {
   FileData,
   ProjectFileMap,
   ProjectGraph,
+  ProjectGraphExternalNode,
 } from '../../config/project-graph';
 import { buildProjectGraphUsingProjectFileMap } from '../../project-graph/build-project-graph';
 import { updateProjectFileMap } from '../../project-graph/file-map-utils';
@@ -14,7 +15,6 @@ import {
 import { fileExists } from '../../utils/fileutils';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
-import { Workspaces } from '../../config/workspaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { execSync } from 'child_process';
 import { fileHasher, hashArray } from '../../hasher/file-hasher';
@@ -22,7 +22,11 @@ import {
   retrieveWorkspaceFiles,
   retrieveProjectConfigurations,
 } from '../../project-graph/utils/retrieve-workspace-files';
-import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../../config/workspace-json-project-json';
+import { readNxJson } from '../../config/nx-json';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -42,6 +46,7 @@ const collectedDeletedFiles = new Set<string>();
 let storedWorkspaceConfigHash: string | undefined;
 let waitPeriod = 100;
 let scheduledTimeoutId;
+let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 
 export async function getCachedSerializedProjectGraphPromise() {
   try {
@@ -170,16 +175,14 @@ async function processCollectedUpdatedAndDeletedFiles() {
     );
     fileHasher.incrementalUpdate(updatedFiles, deletedFiles);
 
-    let nxJson = new Workspaces(workspaceRoot).readNxJson();
+    const nxJson = readNxJson(workspaceRoot);
 
-    const projectConfigurations = await retrieveProjectConfigurations(
+    const { projectNodes } = await retrieveProjectConfigurations(
       workspaceRoot,
       nxJson
     );
 
-    const workspaceConfigHash = computeWorkspaceConfigHash(
-      projectConfigurations
-    );
+    const workspaceConfigHash = computeWorkspaceConfigHash(projectNodes);
     serverLogger.requestLog(
       `Updated file-hasher based on watched changes, recomputing project graph...`
     );
@@ -190,14 +193,12 @@ async function processCollectedUpdatedAndDeletedFiles() {
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
       storedWorkspaceConfigHash = workspaceConfigHash;
 
-      projectFileMapWithFiles = await retrieveWorkspaceFiles(
-        workspaceRoot,
-        nxJson
-      );
+      ({ externalNodes: knownExternalNodes, ...projectFileMapWithFiles } =
+        await retrieveWorkspaceFiles(workspaceRoot, nxJson));
     } else {
       if (projectFileMapWithFiles) {
         projectFileMapWithFiles = updateProjectFileMap(
-          projectConfigurations,
+          projectNodes,
           projectFileMapWithFiles.projectFileMap,
           projectFileMapWithFiles.allWorkspaceFiles,
           updatedFiles,
@@ -265,16 +266,18 @@ async function createAndSerializeProjectGraph(): Promise<{
 }> {
   try {
     performance.mark('create-project-graph-start');
-    const projectsConfigurations = new Workspaces(
-      workspaceRoot
-    ).readProjectsConfigurations();
+    const projectConfigurations = await retrieveProjectConfigurations(
+      workspaceRoot,
+      readNxJson(workspaceRoot)
+    );
     const projectFileMap = copyFileMap(projectFileMapWithFiles.projectFileMap);
     const allWorkspaceFiles = copyFileData(
       projectFileMapWithFiles.allWorkspaceFiles
     );
     const { projectGraph, projectFileMapCache } =
       await buildProjectGraphUsingProjectFileMap(
-        projectsConfigurations,
+        projectConfigurations.projectNodes,
+        knownExternalNodes,
         projectFileMap,
         allWorkspaceFiles,
         currentProjectFileMapCache || readProjectFileMapCache(),

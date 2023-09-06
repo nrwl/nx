@@ -4,8 +4,8 @@
 /e2e/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /scripts/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
 /tools/**/* @FrozenPandaz @vsavkin @AgentEnder @jaysoo @JamesHenry
-package.json @nrwl/nx-pipelines-reviewers
-pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
+package.json @nrwl/nx-core-reviewers
+pnpm-lock.yaml @nrwl/nx-core-reviewers
 
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
@@ -36,7 +36,8 @@ pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
 /e2e/react-core/** @nrwl/nx-react-reviewers
 /e2e/react-extensions/** @nrwl/nx-react-reviewers
 /packages/next/** @nrwl/nx-react-reviewers
-/e2e/next/** @nrwl/nx-react-reviewers
+/e2e/next-core/** @nrwl/nx-react-reviewers
+/e2e/next-extensions/** @nrwl/nx-react-reviewers
 /packages/react/plugins/component-testing/** @nrwl/nx-react-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/react/src/generators/cypress-component-configuration/** @nrwl/nx-react-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/react/src/generators/component-test/** @nrwl/nx-react-reviewers @nrwl/nx-testing-tools-reviewers
@@ -52,6 +53,10 @@ pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
 /e2e/expo/** @nrwl/nx-react-reviewers
 /packages/react-native/** @nrwl/nx-react-reviewers
 /e2e/react-native/** @nrwl/nx-react-reviewers
+
+# Vue
+/packages/vue/** @nrwl/nx-vue-reviewers
+/e2e/vue/** @nrwl/nx-vue-reviewers
 
 ## Node
 /docs/generated/packages/node/** @nrwl/nx-node-reviewers @nrwl/nx-docs-reviewers
@@ -155,13 +160,12 @@ pnpm-lock.yaml @nrwl/nx-pipelines-reviewers
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin @mandarini
-/community @nrwl/nx-devkit-reviewers
+/community @nrwl/nx-docs-reviewers
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
 /CODEOWNERS @FrozenPandaz @AgentEnder
 
 # Scripts
-/scripts/depcheck @FrozenPandaz @vsavkin @jaysoo
 /scripts/documentation @nrwl/nx-docs-reviewers
 /scripts/angular-support-upgrades @nrwl/nx-angular-reviewers
 

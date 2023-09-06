@@ -17,11 +17,8 @@ where
 {
     let base_dir: PathBuf = directory.as_ref().into();
 
-    let ignore_glob_set = build_glob_set(vec![
-        String::from("**/node_modules"),
-        String::from("**/.git"),
-    ])
-    .expect("These static ignores always build");
+    let ignore_glob_set =
+        build_glob_set(&["**/node_modules", "**/.git"]).expect("These static ignores always build");
 
     // Use WalkDir instead of ignore::WalkBuilder because it's faster
     WalkDir::new(&base_dir)
@@ -47,11 +44,8 @@ where
     let directory = directory.as_ref();
     let nx_ignore = directory.join(".nxignore");
 
-    let ignore_glob_set = build_glob_set(vec![
-        String::from("**/node_modules"),
-        String::from("**/.git"),
-    ])
-    .expect("These static ignores always build");
+    let ignore_glob_set =
+        build_glob_set(&["**/node_modules", "**/.git"]).expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(directory);
     walker.hidden(false);

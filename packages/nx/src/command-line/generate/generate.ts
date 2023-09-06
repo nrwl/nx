@@ -1,9 +1,9 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
+import { relative } from 'path';
 
 import { readNxJson } from '../../config/configuration';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { Workspaces } from '../../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../../generators/tree';
 import {
   createProjectGraphAsync,
@@ -20,6 +20,7 @@ import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { NxJsonConfiguration } from '../../config/nx-json';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import type { Arguments } from 'yargs';
 import { output } from '../../utils/output';
@@ -50,11 +51,13 @@ export function printChanges(fileChanges: FileChange[]) {
 
 async function promptForCollection(
   generatorName: string,
-  ws: Workspaces,
   interactive: boolean,
   projectsConfiguration: ProjectsConfigurations
 ): Promise<string> {
-  const localPlugins = await getLocalWorkspacePlugins(projectsConfiguration);
+  const localPlugins = await getLocalWorkspacePlugins(
+    projectsConfiguration,
+    readNxJson()
+  );
 
   const installedCollections = Array.from(
     new Set(findInstalledPlugins().map((x) => x.name))
@@ -201,7 +204,6 @@ function parseGeneratorString(value: string): {
 
 async function convertToGenerateOptions(
   generatorOptions: { [p: string]: any },
-  ws: Workspaces,
   defaultCollectionName: string,
   mode: 'generate' | 'new',
   projectsConfiguration?: ProjectsConfigurations
@@ -220,7 +222,6 @@ async function convertToGenerateOptions(
     } else if (!defaultCollectionName) {
       const generatorString = await promptForCollection(
         generatorDescriptor,
-        ws,
         interactive,
         projectsConfiguration
       );
@@ -301,7 +302,6 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   }
   const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
-  const ws = new Workspaces(workspaceRoot);
   const nxJsonConfiguration = readNxJson();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projectsConfigurations =
@@ -310,7 +310,6 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   return handleErrors(verbose, async () => {
     const opts = await convertToGenerateOptions(
       args,
-      ws,
       readDefaultCollection(nxJsonConfiguration),
       'generate',
       projectsConfigurations
@@ -337,7 +336,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         [
           `${NX_PREFIX}: ${opts.collectionName}:${normalizedGeneratorName} is deprecated`,
           `${deprecated}`,
-        ].join('/n')
+        ].join('\n')
       );
     }
     if (!opts.quiet && !opts.help) {
@@ -359,12 +358,13 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       nxJsonConfiguration,
       schema,
       opts.interactive,
-      ws.calculateDefaultProjectName(
+      calculateDefaultProjectName(
         cwd,
+        workspaceRoot,
         projectsConfigurations,
         nxJsonConfiguration
       ),
-      ws.relativeCwd(cwd),
+      relative(workspaceRoot, cwd),
       verbose
     );
 

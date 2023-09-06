@@ -38,14 +38,14 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#expoApplicationGenerator",
+      "factory": "./src/generators/application/application#expoApplicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create an application"
     },
     "library": {
-      "factory": "./src/generators/library/library#expoLibraryGenerator",
+      "factory": "./src/generators/library/library#expoLibraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",

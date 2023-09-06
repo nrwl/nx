@@ -222,8 +222,9 @@ export function onlyLoadChildren(
 }
 
 export function getSourceFilePath(sourceFileName: string, projectPath: string) {
-  const relativePath = sourceFileName.slice(projectPath.length + 1);
-  return normalizePath(relativePath);
+  const normalizedProjectPath = normalizePath(projectPath);
+  const normalizedSourceFileName = normalizePath(sourceFileName);
+  return normalizedSourceFileName.slice(normalizedProjectPath.length + 1);
 }
 
 /**

@@ -12,7 +12,7 @@ make hello
 
 With this `Makefile` in the root of the project:
 
-```shell
+```make
 hello:
   echo "Hello, world!"
 ```

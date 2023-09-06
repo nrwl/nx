@@ -1,24 +1,29 @@
 import { basename, join, relative } from 'path';
+
+import {
+  buildProjectConfigurationFromPackageJson,
+  getGlobPatternsFromPackageManagerWorkspaces,
+} from '../../../plugins/package-json-workspaces';
+import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
+import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import {
-  buildProjectsConfigurationsFromProjectPaths,
-  deduplicateProjectFiles,
-  getGlobPatternsFromPlugins,
-  globForProjectFiles,
-  renamePropertyWithStableKeys,
-} from '../../config/workspaces';
+  mergeProjectConfigurationIntoRootMap,
+  readProjectConfigurationsFromRootMap,
+} from '../../project-graph/utils/project-configuration-utils';
+import { retrieveProjectConfigurationPathsWithoutPluginInference } from '../../project-graph/utils/retrieve-workspace-files';
+import { output } from '../../utils/output';
+import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
+import { readJson, writeJson } from './json';
+import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
 
-import { readJson, writeJson } from './json';
-import { PackageJson } from '../../utils/package-json';
-import { readNxJson } from './nx-json';
-import { output } from '../../utils/output';
-import { getNxRequirePaths } from '../../utils/installation-directory';
+import minimatch = require('minimatch');
 
 export { readNxJson, updateNxJson } from './nx-json';
 export {
@@ -89,7 +94,7 @@ export function updateProjectConfiguration(
 
   if (!tree.exists(projectConfigFile)) {
     throw new Error(
-      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It doesn't exist or uses package.json configuration.`
+      `Cannot update Project ${projectName} at ${projectConfiguration.root}. It either doesn't exist yet, or may not use project.json for configuration. Use \`addProjectConfiguration()\` instead if you want to create a new project.`
     );
   }
   writeJson(tree, projectConfigFile, {
@@ -181,24 +186,55 @@ export function getRelativeProjectJsonSchemaPath(
 function readAndCombineAllProjectConfigurations(tree: Tree): {
   [name: string]: ProjectConfiguration;
 } {
-  const nxJson = readNxJson(tree);
+  /**
+   * We can't update projects that come from plugins anyways, so we are going
+   * to ignore them for now. Plugins should add their own add/create/update methods
+   * if they would like to use devkit to update inferred projects.
+   */
+  const patterns = [
+    '**/project.json',
+    'project.json',
+    ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
+      readJson(tree, p)
+    ),
+  ];
 
-  const globbedFiles = globForProjectFiles(
-    tree.root,
-    getGlobPatternsFromPlugins(nxJson, getNxRequirePaths(tree.root), tree.root),
-    nxJson
-  ).map(normalizePath);
-  const createdFiles = findCreatedProjectFiles(tree);
-  const deletedFiles = findDeletedProjectFiles(tree);
+  const globbedFiles = retrieveProjectConfigurationPathsWithoutPluginInference(
+    tree.root
+  );
+  const createdFiles = findCreatedProjectFiles(tree, patterns);
+  const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  return buildProjectsConfigurationsFromProjectPaths(
-    nxJson,
-    projectFiles,
-    (file) => readJson(tree, file)
-  );
+  const rootMap: Map<string, ProjectConfiguration> = new Map();
+  for (const projectFile of projectFiles) {
+    if (basename(projectFile) === 'project.json') {
+      const json = readJson(tree, projectFile);
+      const config = buildProjectFromProjectJson(json, projectFile);
+      mergeProjectConfigurationIntoRootMap(rootMap, config, projectFile);
+    } else {
+      const packageJson = readJson<PackageJson>(tree, projectFile);
+      const config = buildProjectConfigurationFromPackageJson(
+        packageJson,
+        projectFile,
+        readNxJson(tree)
+      );
+      mergeProjectConfigurationIntoRootMap(
+        rootMap,
+        // Inferred targets, tags, etc don't show up when running generators
+        // This is to help avoid running into issues when trying to update the workspace
+        {
+          name: config.name,
+          root: config.root,
+        },
+        projectFile
+      );
+    }
+  }
+
+  return readProjectConfigurationsFromRootMap(rootMap);
 }
 
 /**
@@ -210,14 +246,17 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
  * We exclude the root `package.json` from this list unless
  * considered a project during workspace generation
  */
-function findCreatedProjectFiles(tree: Tree) {
+function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
   const createdProjectFiles = [];
 
   for (const change of tree.listChanges()) {
     if (change.type === 'CREATE') {
       const fileName = basename(change.path);
-      // all created project json files are created projects
-      if (fileName === 'project.json') {
+      if (
+        globPatterns.some((pattern) =>
+          minimatch(change.path, pattern, { dot: true })
+        )
+      ) {
         createdProjectFiles.push(change.path);
       } else if (fileName === 'package.json') {
         try {
@@ -229,7 +268,7 @@ function findCreatedProjectFiles(tree: Tree) {
       }
     }
   }
-  return deduplicateProjectFiles(createdProjectFiles).map(normalizePath);
+  return createdProjectFiles.map(normalizePath);
 }
 
 /**
@@ -238,14 +277,13 @@ function findCreatedProjectFiles(tree: Tree) {
  * there is no project.json file, as `glob`
  * cannot find them.
  */
-function findDeletedProjectFiles(tree: Tree) {
+function findDeletedProjectFiles(tree: Tree, globPatterns: string[]) {
   return tree
     .listChanges()
     .filter((f) => {
-      const fileName = basename(f.path);
       return (
         f.type === 'DELETE' &&
-        (fileName === 'project.json' || fileName === 'package.json')
+        globPatterns.some((pattern) => minimatch(f.path, pattern))
       );
     })
     .map((r) => r.path);

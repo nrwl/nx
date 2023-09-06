@@ -1,26 +1,30 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`react:storybook-configuration should configure everything at once 1`] = `
+exports[`react:storybook-configuration should configure everything and install correct dependencies 1`] = `
 "import type { StorybookConfig } from '@storybook/react-vite';
+
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
   stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
   addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
-    options: {
-      builder: {
-        viteConfigPath: '',
-      },
-    },
+    options: {},
   },
+
+  viteFinal: async (config) =>
+    mergeConfig(config, {
+      plugins: [nxViteTsPaths()],
+    }),
 };
 
 export default config;
 
 // To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
@@ -43,6 +47,7 @@ export const Primary = {
 };
 
 export const Heading: Story = {
+  args: {},
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.getByText(/Welcome to MyComponent!/gi)).toBeTruthy();

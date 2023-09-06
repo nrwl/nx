@@ -413,7 +413,7 @@ export const myLibRoutes: Route[] = [
 `;
 
 exports[`lib --standalone should generate a library with a standalone component in a directory 1`] = `
-"export * from './lib/my-dir-my-lib/my-dir-my-lib.component';
+"export * from './lib/my-lib/my-lib.component';
 "
 `;
 
@@ -422,30 +422,30 @@ exports[`lib --standalone should generate a library with a standalone component 
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'proj-my-dir-my-lib',
+  selector: 'proj-my-lib',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './my-dir-my-lib.component.html',
-  styleUrls: ['./my-dir-my-lib.component.css'],
+  templateUrl: './my-lib.component.html',
+  styleUrls: ['./my-lib.component.css'],
 })
-export class MyDirMyLibComponent {}
+export class MyLibComponent {}
 "
 `;
 
 exports[`lib --standalone should generate a library with a standalone component in a directory 3`] = `
 "import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MyDirMyLibComponent } from './my-dir-my-lib.component';
+import { MyLibComponent } from './my-lib.component';
 
-describe('MyDirMyLibComponent', () => {
-  let component: MyDirMyLibComponent;
-  let fixture: ComponentFixture<MyDirMyLibComponent>;
+describe('MyLibComponent', () => {
+  let component: MyLibComponent;
+  let fixture: ComponentFixture<MyLibComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [MyDirMyLibComponent],
+      imports: [MyLibComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(MyDirMyLibComponent);
+    fixture = TestBed.createComponent(MyLibComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
@@ -506,12 +506,12 @@ exports[`lib router lazy should add RouterModule.forChild 1`] = `
 "import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { myDirMyLibRoutes } from './lib.routes';
+import { myLibRoutes } from './lib.routes';
 
 @NgModule({
-  imports: [CommonModule, RouterModule.forChild(myDirMyLibRoutes)],
+  imports: [CommonModule, RouterModule.forChild(myLibRoutes)],
 })
-export class MyDirMyLibModule {}
+export class MyLibModule {}
 "
 `;
 
@@ -538,9 +538,8 @@ import { AppComponent } from './app.component';
     BrowserModule,
     RouterModule.forRoot([
       {
-        path: 'my-dir-my-lib',
-        loadChildren: () =>
-          import('@proj/my-dir/my-lib').then((m) => m.MyDirMyLibModule),
+        path: 'my-lib',
+        loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
       },
     ]),
   ],
@@ -561,19 +560,16 @@ import { AppComponent } from './app.component';
     BrowserModule,
     RouterModule.forRoot([
       {
-        path: 'my-dir-my-lib',
-        loadChildren: () =>
-          import('@proj/my-dir/my-lib').then((m) => m.MyDirMyLibModule),
+        path: 'my-lib',
+        loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
       },
       {
         path: 'my-lib2',
-        loadChildren: () =>
-          import('@proj/my-dir/my-lib2').then((m) => m.MyLib2Module),
+        loadChildren: () => import('@proj/my-lib2').then((m) => m.MyLib2Module),
       },
       {
         path: 'my-lib3',
-        loadChildren: () =>
-          import('@proj/my-dir/my-lib3').then((m) => m.MyLib3Module),
+        loadChildren: () => import('@proj/my-lib3').then((m) => m.MyLib3Module),
       },
     ]),
   ],
@@ -592,9 +588,8 @@ import { AppComponent } from './app.component';
 
 const routes = [
   {
-    path: 'my-dir-my-lib',
-    loadChildren: () =>
-      import('@proj/my-dir/my-lib').then((m) => m.MyDirMyLibModule),
+    path: 'my-lib',
+    loadChildren: () => import('@proj/my-lib').then((m) => m.MyLibModule),
   },
 ];
 

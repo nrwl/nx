@@ -61,7 +61,7 @@ export async function componentGenerator(tree: Tree, rawOptions: Schema) {
     tree.delete(pathToTemplateFile);
   }
 
-  if (options.inlineStyle) {
+  if (options.style === 'none' || options.inlineStyle) {
     const pathToStyleFile = joinPathFragments(
       options.directory,
       `${componentNames.fileName}.${typeNames.fileName}.${options.style}`

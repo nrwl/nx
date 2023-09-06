@@ -17,4 +17,4 @@ The following video tutorial walks you through such a scenario.
 {% youtube
 src="https://www.youtube.com/embed/M5NwkRNrpK0"
 title="Nx Tutorial: Migrate Multiple Angular CLI apps into a Single Nx Monorepo"
-width="100%" /%}
+/%}

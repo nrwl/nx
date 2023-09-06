@@ -168,7 +168,7 @@ function _addSymbolToDecoratorMetadata(
   decoratorName: DecoratorName
 ): ts.SourceFile {
   const nodes = getDecoratorMetadata(source, decoratorName, '@angular/core');
-  let node: any = nodes[0]; // tslint:disable-line:no-any
+  let node: any = nodes[0];
 
   // Find the decorator declaration.
   if (!node) {
@@ -326,7 +326,7 @@ export function removeFromNgModule(
   property: string
 ): ts.SourceFile {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
-  let node: any = nodes[0]; // tslint:disable-line:no-any
+  let node: any = nodes[0];
 
   // Find the decorator declaration.
   if (!node) {
@@ -598,7 +598,7 @@ function getMatchingProperty(
   module: string
 ): ts.ObjectLiteralElement {
   const nodes = getDecoratorMetadata(source, identifier, module);
-  let node: any = nodes[0]; // tslint:disable-line:no-any
+  let node: any = nodes[0];
 
   if (!node) return null;
 

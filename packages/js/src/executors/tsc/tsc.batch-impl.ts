@@ -5,6 +5,10 @@ import { getLastValueFromAsyncIterableIterator } from 'nx/src/utils/async-iterat
 import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import type { ExecutorOptions } from '../../utils/schema';
 import {
+  createEntryPoints,
+  determineModuleFormatFromTsConfig,
+} from './tsc.impl';
+import {
   TypescripCompilationLogger,
   TypescriptCompilationResult,
   TypescriptInMemoryTsConfig,
@@ -81,7 +85,14 @@ export async function* tscBatchExecutor(
       const taskInfo = tsConfigTaskInfoMap[tsConfig];
       taskInfo.assetsHandler.processAllAssetsOnceSync();
       updatePackageJson(
-        taskInfo.options,
+        {
+          ...taskInfo.options,
+          additionalEntryPoints: createEntryPoints(taskInfo.options, context),
+          format: [determineModuleFormatFromTsConfig(tsConfig)],
+          // As long as d.ts files match their .js counterparts, we don't need to emit them.
+          // TSC can match them correctly based on file names.
+          skipTypings: true,
+        },
         taskInfo.context,
         taskInfo.projectGraphNode,
         taskInfo.buildableProjectNodeDependencies
@@ -114,7 +125,14 @@ export async function* tscBatchExecutor(
         (changedTaskInfos: TaskInfo[]) => {
           for (const t of changedTaskInfos) {
             updatePackageJson(
-              t.options,
+              {
+                ...t.options,
+                additionalEntryPoints: createEntryPoints(t.options, context),
+                format: [determineModuleFormatFromTsConfig(t.options.tsConfig)],
+                // As long as d.ts files match their .js counterparts, we don't need to emit them.
+                // TSC can match them correctly based on file names.
+                skipTypings: true,
+              },
               t.context,
               t.projectGraphNode,
               t.buildableProjectNodeDependencies

@@ -10,7 +10,7 @@ This tutorial sets up a repo with a single application at the root level that br
 {% youtube
 src="https://www.youtube.com/embed/LYPVrWQNnEc"
 title="Tutorial: Standalone Angular Application"
-width="100%" /%}
+/%}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/angular-standalone" /%}
 

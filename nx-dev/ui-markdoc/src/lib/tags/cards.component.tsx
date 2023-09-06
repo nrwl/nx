@@ -4,26 +4,107 @@ import {
   DocumentIcon,
   PlayCircleIcon,
 } from '@heroicons/react/24/outline';
+import { frameworkIcons } from '../icons';
+
+import { cx } from '@nx/nx-dev/ui-primitives';
 import { ReactNode } from 'react';
 
 export function Cards({
   cols = 2,
+  smCols = 3,
+  mdCols = 4,
+  lgCols = 4,
   children,
+  moreLink,
 }: {
   cols: number;
+  smCols: number;
+  mdCols: number;
+  lgCols: number;
   children: ReactNode;
+  moreLink?: string;
 }): JSX.Element {
-  const gridColums: { [key: number]: string } = {
-    1: 'lg:grid-cols-1',
-    2: 'lg:grid-cols-2',
-    3: 'lg:grid-cols-3',
-    4: 'lg:grid-cols-4',
+  const calcCols = (cols: number, size: '' | 'lg' | 'md' | 'sm') => {
+    if (size === '') return `grid-cols-${cols}`;
+    return `${size}:grid-cols-${cols}`;
   };
-
+  // <div className="mt-8 grid grid-cols-2 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4">
   return (
-    <div className={`mt-8 grid grid-cols-1 gap-4 ${gridColums[cols]}`}>
+    <div
+      className={`mt-8 grid gap-4 ${calcCols(cols, '')} ${calcCols(
+        smCols,
+        'sm'
+      )} ${calcCols(mdCols, 'md')} ${calcCols(lgCols, 'lg')}`}
+    >
       {children}
+      {moreLink && (
+        <div className="flex justify-end mt-2 col-span-full">
+          <a
+            className="transition-all duration-200 ease-in-out flex items-center no-underline text-sm px-4 py-0 border-transparent hover:text-slate-900 dark:hover:text-sky-400 whitespace-nowrap font-semibold group"
+            href={moreLink}
+          >
+            Browse more
+            <span
+              className="pl-1 transition-all duration-200 ease-in-out group-hover:translate-x-1"
+              aria-hidden="true"
+            >
+              →
+            </span>
+          </a>
+        </div>
+      )}
     </div>
+  );
+}
+
+export function LinkCard({
+  title,
+  type,
+  icon,
+  url,
+  appearance = 'default',
+}: {
+  title: string;
+  type: string;
+  icon: string; // `icon` is the link to the SVG file
+  url: string;
+  appearance?: 'default' | 'small';
+}): JSX.Element {
+  return (
+    <a
+      key={title}
+      href={url}
+      className="no-prose relative col-span-1 flex flex-col items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-center font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-100 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      style={{ textDecorationLine: 'none' }}
+    >
+      {icon && (
+        <div
+          className={cx(
+            'flex items-center justify-center w-24 h-24 rounded-lg mb-2',
+            {
+              'h-12 w-12': appearance === 'small',
+            }
+          )}
+        >
+          {icon && frameworkIcons[icon]?.image}
+        </div>
+      )}
+      <div className={cx('pt-4', { 'pt-2': appearance === 'small' })}>
+        {appearance === 'small' && type ? null : (
+          <div className="text-xs font-medium text-slate-600 dark:text-slate-300 uppercase mb-1">
+            {type}
+          </div>
+        )}
+        <h3
+          className={cx(
+            'text-lg font-semibold text-slate-900 dark:text-white m-0',
+            { 'text-sm font-normal': appearance === 'small' }
+          )}
+        >
+          {title}
+        </h3>
+      </div>
+    </a>
   );
 }
 
@@ -77,25 +158,5 @@ export function Card({
         </span>
       </div>
     </div>
-  );
-}
-
-export function TitleCard({
-  title,
-  url,
-}: {
-  title: string;
-  url: string;
-}): JSX.Element {
-  return (
-    <a
-      key={title}
-      href={url}
-      className="relative col-span-1 flex items-center rounded-md border border-slate-200 bg-slate-50/40 p-4 text-left text-lg font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800 lg:justify-center lg:text-center"
-      style={{ textDecorationLine: 'none' }}
-    >
-      <span className="absolute inset-0" />
-      {title}
-    </a>
   );
 }

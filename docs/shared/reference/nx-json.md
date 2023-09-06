@@ -1,10 +1,10 @@
 # nx.json
 
-The `nx.json` file configures the Nx CLI and project defaults.
+The `nx.json` file configures the Nx CLI and project defaults. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/nx-schema.json) is available on Github.
 
-The following is an expanded version showing all options. Your `nx.json` will likely be much shorter.
+The following is an expanded example showing all options. Your `nx.json` will likely be much shorter. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
 
-```json {% fileName="nx.json" %}
+```json {% fileName="nx.json" lineGroups={ Caching:[15,16,17,18,19,20,21,22,23,24,25,26,29], Orchestration:[3,4,5,28,30], Execution:[28,31,32,33,34] } %}
 {
   "extends": "nx/presets/npm.json",
   "affected": {
@@ -13,24 +13,6 @@ The following is an expanded version showing all options. Your `nx.json` will li
   "workspaceLayout": {
     "appsDir": "demos",
     "libsDir": "packages"
-  },
-  "implicitDependencies": {
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": "*"
-    },
-    "tsconfig.base.json": "*",
-    "nx.json": "*"
-  },
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*"],
-    "production": ["!{projectRoot}/**/*.spec.tsx"]
-  },
-  "targetDefaults": {
-    "build": {
-      "inputs": ["production", "^production"],
-      "dependsOn": ["^build"]
-    }
   },
   "generators": {
     "@nx/js:library": {
@@ -42,6 +24,20 @@ The following is an expanded version showing all options. Your `nx.json` will li
       "runner": "nx/tasks-runners/default",
       "options": {
         "cacheableOperations": ["build", "lint", "test", "e2e"]
+      }
+    }
+  },
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"],
+    "production": ["!{projectRoot}/**/*.spec.tsx"]
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": ["production", "^production"],
+      "dependsOn": ["^build"],
+      "executor": "@nrwl/js:tsc",
+      "options": {
+        "main": "{projectRoot}/src/index.ts"
       }
     }
   }
@@ -116,7 +112,7 @@ In this case Nx will use the right `production` input for each project.
 
 {% cards %}
 {% card title="Project Configuration reference" type="documentation" description="inputs and namedInputs are also described in the project configuration reference" url="/reference/project-configuration#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/more-concepts/customizing-inputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/concepts/more-concepts/customizing-inputs" /%}
 {% /cards %}
 
 ### Target Defaults
@@ -213,7 +209,7 @@ pass `--buildable=true` when creating new libraries.
 > A task is an invocation of a target.
 
 Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on. The tasks runner
-named "default" is used by default. Specify a different one like this `nx run-many -t build --all --runner=another`.
+named "default" is used by default. Specify a different one like this `nx run-many -t build --runner=another`.
 
 Tasks runners can accept different options. The following are the options supported
 by `"nx/tasks-runners/default"` and `"nx-cloud"`.

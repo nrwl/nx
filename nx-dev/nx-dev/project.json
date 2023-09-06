@@ -22,9 +22,8 @@
     },
     "sitemap": {
       "executor": "nx:run-commands",
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
       "options": {
-        "outputPath": "dist/nx-dev/nx-dev/public",
         "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
       }
     },
@@ -102,6 +101,18 @@
           {
             "command": "nx run nx-dev:generate-og-images",
             "description": "OG images generation"
+          },
+          {
+            "command": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts",
+            "description": "Pre-generate official package metadata"
+          },
+          {
+            "command": "nx copy-docs nx-dev",
+            "description": "Copy generated docs to build output"
+          },
+          {
+            "command": "npx ts-node scripts/documentation/plugin-quality-indicators.ts",
+            "description": "Fetch plugin data"
           },
           {
             "command": "nx run nx-dev:build",

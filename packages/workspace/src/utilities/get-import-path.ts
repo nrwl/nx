@@ -9,7 +9,7 @@ export function getImportPath(tree: Tree, projectDirectory: string): string {
     : projectDirectory;
 }
 
-function getNpmScope(tree: Tree) {
+export function getNpmScope(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   // TODO(v17): Remove reading this from nx.json

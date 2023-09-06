@@ -7,6 +7,7 @@
     "cli": "nx",
     "title": "Convert an Angular project from TSLint to ESLint",
     "description": "Convert an Angular project from TSLint to ESLint. NOTE: Does not work in `--dry-run mode`.",
+    "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint.",
     "examples": [
       {
         "command": "nx g convert-tslint-to-eslint myapp",
@@ -54,6 +55,7 @@
     "presets": []
   },
   "description": "Converts a project from TSLint to ESLint.",
+  "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint.",
   "implementation": "/packages/angular/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator.ts",
   "aliases": [],
   "hidden": false,

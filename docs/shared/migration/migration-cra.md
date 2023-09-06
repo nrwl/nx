@@ -2,6 +2,11 @@
 
 Create-React-App (CRA) is one of the most widely used tool for creating, building and testing a React app. This guide will show you how to move an app generated with CRA into an Nx workspace. Once the migration process is complete, you'll be able to take advantage of all of Nx's features without needing to completely recreate your build process.
 
+{% youtube
+src="https://www.youtube.com/embed/zvYb7XCLQzU"
+title="From CRA to Vite in 10 seconds"
+width="100%" /%}
+
 ## Automated migration
 
 The easiest way to setup Nx in your CRA project is to use the automated migration tool.

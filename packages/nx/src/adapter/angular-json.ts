@@ -1,12 +1,20 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
 import { readJsonFile } from '../utils/fileutils';
-import {
-  ProjectConfiguration,
-  ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
-import { renamePropertyWithStableKeys } from '../config/workspaces';
-import { workspaceRoot } from '../utils/workspace-root';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { NxPluginV2 } from '../devkit-exports';
+
+export const NX_ANGULAR_JSON_PLUGIN_NAME = 'nx-angular-json-plugin';
+
+export const NxAngularJsonPlugin: NxPluginV2 = {
+  name: NX_ANGULAR_JSON_PLUGIN_NAME,
+  createNodes: [
+    'angular.json',
+    (f, ctx) => ({
+      projects: readAngularJson(ctx.workspaceRoot),
+    }),
+  ],
+};
 
 export function shouldMergeAngularProjects(
   root: string,
@@ -45,25 +53,6 @@ function readAngularJson(angularCliWorkspaceRoot: string) {
   return toNewFormat(
     readJsonFile(path.join(angularCliWorkspaceRoot, 'angular.json'))
   ).projects;
-}
-
-export function mergeAngularJsonAndProjects(
-  projects: {
-    [name: string]: ProjectConfiguration;
-  },
-  angularCliWorkspaceRoot: string
-): { [name: string]: ProjectConfiguration } {
-  const res = readAngularJson(angularCliWorkspaceRoot);
-  const folders = new Set();
-  for (let k of Object.keys(res)) {
-    folders.add(res[k].root);
-  }
-  for (let k of Object.keys(projects)) {
-    if (!folders.has(projects[k].root)) {
-      res[k] = projects[k];
-    }
-  }
-  return res;
 }
 
 export function toNewFormat(w: any): ProjectsConfigurations {
@@ -117,4 +106,24 @@ export function toOldFormat(w: any) {
     w.version = 1;
   }
   return w;
+}
+
+// we have to do it this way to preserve the order of properties
+// not to screw up the formatting
+export function renamePropertyWithStableKeys(
+  obj: any,
+  from: string,
+  to: string
+) {
+  const copy = { ...obj };
+  Object.keys(obj).forEach((k) => {
+    delete obj[k];
+  });
+  Object.keys(copy).forEach((k) => {
+    if (k === from) {
+      obj[to] = copy[k];
+    } else {
+      obj[k] = copy[k];
+    }
+  });
 }

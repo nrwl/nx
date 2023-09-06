@@ -6,7 +6,7 @@ description: This guide explains how migrate from older versions of Storybook wh
 # Nx React Storybook Addon
 
 {% callout type="info" title="Configure webpack for Storybook" %}
-If you are looking for how you can configure webpack for Storybook, please check out our guide: [How to configure Webpack and Vite for Storybook](/packages/storybook/documents/custom-builder-configs).
+If you are looking for how you can configure webpack for Storybook, please check out our guide: [How to configure Webpack and Vite for Storybook](/recipes/storybook/custom-builder-configs).
 {% /callout %}
 
 Nx 12.7 comes with a dedicated Storybook addon for React which dramatically simplifies the Storybook setup and makes sure that Storybook uses the same webpack configuration as your React applications running within an Nx workspace.
@@ -14,7 +14,7 @@ Nx 12.7 comes with a dedicated Storybook addon for React which dramatically simp
 {% youtube
 src="https://www.youtube.com/embed/oUE74McS_NY"
 title="New in Nx 12.7: React Storybook Preset"
-width="100%" /%}
+/%}
 
 Here are the main differences to the previous versions of Nx:
 

@@ -16,6 +16,7 @@ import {
   typesCorsVersion,
   typesExpressVersion,
 } from '../../../utils/versions';
+import { join } from 'path';
 
 export async function addSsr(tree: Tree, options: Schema, appName: string) {
   let project = readProjectConfiguration(tree, appName);
@@ -34,8 +35,14 @@ export async function addSsr(tree: Tree, options: Schema, appName: string) {
     "import('./src/main.server');"
   );
 
-  generateFiles(tree, joinPathFragments(__dirname, '../files'), project.root, {
+  const browserBundleOutput = joinPathFragments(
+    project.targets.build.options.outputPath,
+    'browser'
+  );
+
+  generateFiles(tree, join(__dirname, '../files'), project.root, {
     appName,
+    browserBundleOutput,
     standalone: options.standalone,
     tmpl: '',
   });

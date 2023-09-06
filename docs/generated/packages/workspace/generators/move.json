@@ -1,6 +1,6 @@
 {
   "name": "move",
-  "factory": "./src/generators/move/move#moveGenerator",
+  "factory": "./src/generators/move/move#moveGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxWorkspaceMove",
@@ -21,10 +21,22 @@
         "description": "The name of the project to move.",
         "x-dropdown": "projects"
       },
+      "newProjectName": {
+        "type": "string",
+        "alias": "project",
+        "description": "The new name of the project after the move.",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
+        "x-priority": "important"
+      },
       "destination": {
         "type": "string",
         "description": "The folder to move the project into.",
         "$default": { "$source": "argv", "index": 0 }
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the new project name and destination as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "importPath": {
         "type": "string",
@@ -48,7 +60,7 @@
   },
   "aliases": ["mv"],
   "description": "Move an application or library to another folder.",
-  "implementation": "/packages/workspace/src/generators/move/move#moveGenerator.ts",
+  "implementation": "/packages/workspace/src/generators/move/move#moveGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/workspace/src/generators/move/schema.json",
   "type": "generator"

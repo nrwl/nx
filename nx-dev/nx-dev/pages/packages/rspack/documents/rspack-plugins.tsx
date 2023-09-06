@@ -11,16 +11,19 @@ import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
 import { content } from '../../../../lib/rspack/content/rspack-plugin';
 import { pkg } from '../../../../lib/rspack/pkg';
+import { fetchGithubStarCount } from '../../../../lib/githubStars.api';
 
 export default function RspackPlugins({
   document,
   menu,
   relatedDocuments,
+  widgetData,
 }: {
   document: ProcessedDocument;
   menu: MenuItem[];
   pkg: ProcessedPackageMetadata;
   relatedDocuments: RelatedDocument[];
+  widgetData: { githubStarsCount: number };
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -77,6 +80,7 @@ export default function RspackPlugins({
           <DocViewer
             document={vm.document}
             relatedDocuments={vm.relatedDocuments}
+            widgetData={widgetData}
           />
         </div>
       </main>
@@ -99,6 +103,9 @@ export async function getStaticProps() {
     props: {
       pkg,
       document,
+      widgetData: {
+        githubStarsCount: await fetchGithubStarCount(),
+      },
       relatedDocuments: [],
       menu: menusApi.getMenu('packages', ''),
     },

@@ -77,7 +77,7 @@ module.exports = function (path, options) {
       return options.defaultResolver(path, options);
     }
 
-    return enhancedResolver(options.basedir, path);
+    return enhancedResolver(path_1.resolve(options.basedir), path);
   } catch (e) {
     // Fallback to using typescript
     compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);

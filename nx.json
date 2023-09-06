@@ -6,9 +6,8 @@
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
-      "nativeWatcher": true,
       "options": {
-        "accessToken": "NDg1NTA3MTAtOGFmZC00YmIwLTk2Y2MtOTkzNzc4ZTczYTlkfHJlYWQtb25seQ==",
+        "accessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
         "cacheableOperations": [
           "build",
           "lint-base",
@@ -26,7 +25,8 @@
         ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
-        "url": "https://staging.nx.app"
+        "url": "https://staging.nx.app",
+        "useLightClient": true
       }
     }
   },
@@ -58,8 +58,14 @@
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": ["build-base"],
-      "inputs": ["production", "^production"]
+      "dependsOn": ["build-base", "build-native"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*.node"
+        }
+      ]
     },
     "build-native": {
       "inputs": ["native"]

@@ -1,4 +1,5 @@
-import { Linter } from '@nx/linter';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import type { Linter } from '@nx/linter';
 
 export interface Schema {
   name: string;
@@ -6,6 +7,7 @@ export interface Schema {
   style?: string;
   skipFormat: boolean; // default is false
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   tags?: string;
   unitTestRunner: 'jest' | 'none'; // default is jest
   pascalCaseFiles?: boolean;

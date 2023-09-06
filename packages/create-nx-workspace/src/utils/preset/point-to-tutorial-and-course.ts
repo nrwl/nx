@@ -4,14 +4,14 @@ import { Preset } from './preset';
 export function pointToTutorialAndCourse(preset: Preset) {
   const title = `First time using Nx? Check out this interactive Nx tutorial.`;
   switch (preset) {
-    case Preset.Empty:
     case Preset.NPM:
     case Preset.Apps:
-    case Preset.Core:
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/tutorials/package-based-repo-tutorial`],
+        bodyLines: [
+          `https://nx.dev/getting-started/tutorials/package-based-repo-tutorial`,
+        ],
       });
       break;
 
@@ -19,14 +19,18 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/tutorials/integrated-repo-tutorial`],
+        bodyLines: [
+          `https://nx.dev/getting-started/tutorials/integrated-repo-tutorial`,
+        ],
       });
       break;
     case Preset.ReactStandalone:
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/tutorials/react-standalone-tutorial`],
+        bodyLines: [
+          `https://nx.dev/getting-started/tutorials/react-standalone-tutorial`,
+        ],
       });
       break;
     case Preset.ReactMonorepo:
@@ -42,7 +46,9 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/tutorials/angular-standalone-tutorial`],
+        bodyLines: [
+          `https://nx.dev/getting-started/tutorials/angular-standalone-tutorial`,
+        ],
       });
       break;
     case Preset.AngularMonorepo:
@@ -57,7 +63,9 @@ export function pointToTutorialAndCourse(preset: Preset) {
       output.addVerticalSeparator();
       output.note({
         title,
-        bodyLines: [`https://nx.dev/tutorials/node-server-tutorial`],
+        bodyLines: [
+          `https://nx.dev/getting-started/tutorials/node-server-tutorial`,
+        ],
       });
       break;
   }
