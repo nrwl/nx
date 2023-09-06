@@ -2,6 +2,7 @@ import {
   baseEsLintConfigFile,
   eslintConfigFileWhitelist,
   findEslintFile,
+  lintConfigHasOverride,
 } from './eslint-file';
 
 import { Tree } from '@nx/devkit';
@@ -35,5 +36,41 @@ describe('@nx/linter:eslint-file', () => {
         expect(findEslintFile(tree)).toBe(baseEsLintConfigFile);
       }
     );
+  });
+
+  describe('lintConfigHasOverride', () => {
+    it('should return true when override exists in eslintrc format', () => {
+      tree.write(
+        '.eslintrc.json',
+        '{"overrides": [{ "files": ["*.ts"], "rules": {} }]}'
+      );
+      expect(
+        lintConfigHasOverride(
+          tree,
+          '.',
+          (o) => {
+            return o.files?.includes('*.ts');
+          },
+          false
+        )
+      ).toBe(true);
+    });
+
+    it('should return false when eslintrc is not in JSON format', () => {
+      tree.write(
+        '.eslintrc.js',
+        'module.exports = {overrides: [{ files: ["*.ts"], rules: {} }]};'
+      );
+      expect(
+        lintConfigHasOverride(
+          tree,
+          '.',
+          (o) => {
+            return o.files?.includes('*.ts');
+          },
+          false
+        )
+      ).toBe(false);
+    });
   });
 });
