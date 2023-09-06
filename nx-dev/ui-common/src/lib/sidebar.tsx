@@ -155,7 +155,7 @@ function CollapsibleIcon({
     <svg
       xmlns="http://www.w3.org/2000/svg"
       className={cx(
-        'h-3.5 w-3.5 text-slate-600 transition-all dark:text-slate-400',
+        'w-3.5 text-slate-600 transition-all dark:text-slate-400',
         !isCollapsed && 'rotate-90 transform'
       )}
       fill="none"
