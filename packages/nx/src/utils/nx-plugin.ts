@@ -172,8 +172,16 @@ function getPluginPathAndName(
   }
   const packageJsonPath = path.join(pluginPath, 'package.json');
 
+  const extension = path.extname(pluginPath);
+
+  // Register the ts-transpiler if we are pointing to a
+  // plain ts file that's not part of a plugin project
+  if (extension === '.ts' && !tsNodeAndPathsRegistered) {
+    registerPluginTSTranspiler();
+  }
+
   const { name } =
-    !['.ts', '.js'].some((x) => x === path.extname(pluginPath)) && // Not trying to point to a ts or js file
+    !['.ts', '.js'].some((x) => x === extension) && // Not trying to point to a ts or js file
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: moduleName };
