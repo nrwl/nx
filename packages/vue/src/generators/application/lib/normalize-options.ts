@@ -1,6 +1,5 @@
 import { Tree, extractLayoutDirectory, names } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from '@nx/js';
 
@@ -12,15 +11,11 @@ export function normalizeDirectory(options: Schema) {
     : names(options.name).fileName;
 }
 
-export function normalizeProjectName(options: Schema) {
-  return normalizeDirectory(options).replace(new RegExp('/', 'g'), '-');
-}
-
-export async function normalizeOptions<T extends Schema = Schema>(
+export async function normalizeOptions(
   host: Tree,
   options: Schema,
-  callingGenerator = '@nx/react:application'
-): Promise<NormalizedSchema<T>> {
+  callingGenerator = '@nx/vue:application'
+): Promise<NormalizedSchema> {
   const {
     projectName: appProjectName,
     projectRoot: appProjectRoot,
@@ -43,18 +38,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const fileName = options.pascalCaseFiles ? 'App' : 'app';
-
-  const styledModule = /^(css|scss|less|styl|none)$/.test(options.style)
-    ? null
-    : options.style;
-
-  assertValidStyle(options.style);
-
-  if (options.bundler === 'vite') {
-    options.unitTestRunner = 'vitest';
-  }
-
   const normalized = {
     ...options,
     name: names(options.name).fileName,
@@ -63,23 +46,12 @@ export async function normalizeOptions<T extends Schema = Schema>(
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
-    fileName,
-    styledModule,
-    hasStyles: options.style !== 'none',
   } as NormalizedSchema;
 
   normalized.routing = normalized.routing ?? false;
-  normalized.strict = normalized.strict ?? true;
-  normalized.classComponent = normalized.classComponent ?? false;
-  normalized.compiler = normalized.compiler ?? 'babel';
-  normalized.bundler = normalized.bundler ?? 'webpack';
-  normalized.unitTestRunner =
-    normalized.unitTestRunner ??
-    (normalized.bundler === 'vite' ? 'vitest' : 'jest');
+  normalized.unitTestRunner ??= 'vitest';
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'cypress';
-  normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
   normalized.devServerPort ??= findFreePort(host);
-  normalized.minimal = normalized.minimal ?? false;
 
   return normalized;
 }
