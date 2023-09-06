@@ -148,11 +148,8 @@ export default createESLintRule<Options, MessageIds>({
       'package.json'
     );
 
-    globalThis.projPackageJsonDeps ??= getProductionDependencies(
-      getPackageJson(projPackageJsonPath)
-    );
     const projPackageJsonDeps: Record<string, string> =
-      globalThis.projPackageJsonDeps;
+      getProductionDependencies(projPackageJsonPath);
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
     function validateMissingDependencies(node: AST.JSONProperty) {
