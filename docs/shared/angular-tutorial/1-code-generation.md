@@ -56,8 +56,8 @@ Once the command completes, notice two projects were added to the workspace:
 
 Run this command to create your `admin` app:
 
-```{% command="npx nx g @nx/angular:app admin" path="~/myorg" %}
-npx nx g @nx/angular:app admin
+```{% command="npx nx g @nx/angular:app admin --directory=apps/admin" path="~/myorg" %}
+npx nx g @nx/angular:app admin --directory=apps/admin
 
 >  NX  Generating @nx/angular:application
 
@@ -101,7 +101,7 @@ CREATE apps/admin-e2e/.eslintrc.json
 
 To create the `common-ui` and `products` libraries, use the `@nx/angular:lib` and `@nx/js:lib` generators respectively:
 
-```{% command="npx nx g @nx/angular:lib common-ui" path="~/myorg" %}
+```{% command="npx nx g @nx/angular:lib common-ui --directory=libs/common-ui" path="~/myorg" %}
 
 >  NX  Generating @nx/angular:library
 
@@ -121,7 +121,7 @@ CREATE libs/common-ui/src/test-setup.ts
 CREATE libs/common-ui/.eslintrc.json
 ```
 
-```{% command="npx nx g @nx/js:lib products" path="~/myorg" %}
+```{% command="npx nx g @nx/js:lib products --directory=libs/products" path="~/myorg" %}
 
 >  NX  Generating @nx/js:library
 
