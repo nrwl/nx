@@ -41,6 +41,7 @@ export function toNodeApplicationGeneratorOptions(
     name: options.name,
     directory: options.directory,
     frontendProject: options.frontendProject,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
     linter: options.linter,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,

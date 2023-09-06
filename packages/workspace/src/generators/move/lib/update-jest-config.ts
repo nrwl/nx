@@ -22,16 +22,38 @@ export function updateJestConfig(
   if (tree.exists(jestConfigPath)) {
     const oldContent = tree.read(jestConfigPath, 'utf-8');
 
-    // ensure both single and double quotes are replaced
-    const findName = new RegExp(
-      `'${schema.projectName}'|"${schema.projectName}"|\`${schema.projectName}\``,
-      'g'
-    );
-    const findDir = new RegExp(project.root, 'g');
+    let newContent = oldContent;
+    if (schema.projectName !== schema.newProjectName) {
+      // ensure both single and double quotes are replaced
+      const findName = new RegExp(
+        `'${schema.projectName}'|"${schema.projectName}"|\`${schema.projectName}\``,
+        'g'
+      );
+      newContent = oldContent.replace(findName, `'${schema.newProjectName}'`);
+    }
 
-    const newContent = oldContent
-      .replace(findName, `'${schema.newProjectName}'`)
-      .replace(findDir, schema.relativeToRootDestination);
+    let dirRegex = new RegExp(`\\/${project.root}\\/`, 'g');
+    if (dirRegex.test(newContent)) {
+      newContent = newContent.replace(
+        dirRegex,
+        `/${schema.relativeToRootDestination}/`
+      );
+    }
+    dirRegex = new RegExp(`\\/${project.root}['"\`]`, 'g');
+    if (dirRegex.test(newContent)) {
+      newContent = newContent.replace(
+        dirRegex,
+        `/${schema.relativeToRootDestination}'`
+      );
+    }
+    dirRegex = new RegExp(`['"\`]${project.root}\\/`, 'g');
+    if (dirRegex.test(newContent)) {
+      newContent = newContent.replace(
+        dirRegex,
+        `'${schema.relativeToRootDestination}/`
+      );
+    }
+
     tree.write(jestConfigPath, newContent);
   }
 

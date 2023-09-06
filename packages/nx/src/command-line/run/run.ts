@@ -150,7 +150,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     targetConfig,
     schema,
     project,
-    relative(cwd, root),
+    relative(root, cwd),
     isVerbose
   );
 

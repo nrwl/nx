@@ -56,7 +56,7 @@ Once the command completes, notice two projects were added to the workspace:
 
 Run this command to create your `admin` app:
 
-```{% command="npx nx g @nx/react:app admin" path="~/myorg" %}
+```{% command="npx nx g @nx/react:app admin --directory=apps/admin" path="~/myorg" %}
 
 >  NX  Generating @nx/react:application
 
@@ -97,7 +97,7 @@ CREATE apps/admin/tsconfig.spec.json
 
 To create the `common-ui` and `products` libraries, use the `@nx/react:lib` and `@nx/js:lib` generators respectively:
 
-```{% command="npx nx g @nx/react:lib common-ui" path="~/myorg" %}
+```{% command="npx nx g @nx/react:lib common-ui --directory=libs/common-ui" path="~/myorg" %}
 
 > NX Generating @nx/react:library
 
@@ -116,7 +116,7 @@ CREATE libs/common-ui/src/lib/common-ui.spec.tsx
 CREATE libs/common-ui/src/lib/common-ui.tsx
 ```
 
-```{% command="npx nx g @nx/js:lib products" path="~/myorg" %}
+```{% command="npx nx g @nx/js:lib products --directory=libs/products" path="~/myorg" %}
 
 >  NX  Generating @nx/js:library
 

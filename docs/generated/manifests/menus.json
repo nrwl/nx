@@ -4953,6 +4953,14 @@
               }
             ],
             "disableCollapsible": false
+          },
+          {
+            "name": "v1 Nx Plugin API",
+            "path": "/deprecated/v1-nx-plugin-api",
+            "id": "v1-nx-plugin-api",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5114,6 +5122,14 @@
         "name": "React: Upgrading to Storybook 6",
         "path": "/deprecated/storybook/upgrade-storybook-v6-react",
         "id": "upgrade-storybook-v6-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "v1 Nx Plugin API",
+        "path": "/deprecated/v1-nx-plugin-api",
+        "id": "v1-nx-plugin-api",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5443,14 +5459,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Identify Custom Projects",
-            "path": "/extending-nx/recipes/project-inference-plugins",
-            "id": "project-inference-plugins",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5539,14 +5547,6 @@
         "name": "Modify the Project Graph",
         "path": "/extending-nx/recipes/project-graph-plugins",
         "id": "project-graph-plugins",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Identify Custom Projects",
-        "path": "/extending-nx/recipes/project-inference-plugins",
-        "id": "project-inference-plugins",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

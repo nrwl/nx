@@ -7,7 +7,6 @@ import vitePreprocessor from '../src/plugins/preprocessor-vite';
 interface BaseCypressPreset {
   videosFolder: string;
   screenshotsFolder: string;
-  video: boolean;
   chromeWebSecurity: boolean;
 }
 
@@ -47,7 +46,6 @@ export function nxBaseCypressPreset(
   return {
     videosFolder,
     screenshotsFolder,
-    video: true,
     chromeWebSecurity: false,
   };
 }

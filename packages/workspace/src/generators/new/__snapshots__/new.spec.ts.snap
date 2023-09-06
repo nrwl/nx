@@ -53,5 +53,8 @@ exports[`new should generate an empty nx.json 1`] = `
       "runner": "nx/tasks-runners/default",
     },
   },
+  "workspaceLayout": {
+    "projectNameAndRootFormat": "as-provided",
+  },
 }
 `;

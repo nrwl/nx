@@ -106,12 +106,7 @@ describe('create-nx-workspace', () => {
       packageManager,
     });
 
-    checkFilesExist(
-      'package.json',
-      packageManagerLockFile[packageManager],
-      'apps/.gitkeep',
-      'libs/.gitkeep'
-    );
+    checkFilesExist('package.json', packageManagerLockFile[packageManager]);
 
     expectNoAngularDevkit();
   });

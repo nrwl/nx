@@ -364,7 +364,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         projectsConfigurations,
         nxJsonConfiguration
       ),
-      relative(cwd, workspaceRoot),
+      relative(workspaceRoot, cwd),
       verbose
     );
 

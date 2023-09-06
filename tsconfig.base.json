@@ -101,6 +101,8 @@
       "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],
       "@nx/vite": ["packages/vite"],
       "@nx/vite/*": ["packages/vite/*"],
+      "@nx/vue": ["packages/vue/index.ts"],
+      "@nx/vue/*": ["packages/vue/*"],
       "@nx/web": ["packages/web"],
       "@nx/web/*": ["packages/web/*"],
       "@nx/webpack": ["packages/webpack"],

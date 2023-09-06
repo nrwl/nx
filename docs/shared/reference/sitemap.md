@@ -246,6 +246,7 @@
       - [Angular: Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-angular)
       - [React: Storybook Migration to webpackFinal and the Nx Addon](/deprecated/storybook/migrate-webpack-final-react)
       - [React: Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-react)
+    - [v1 Nx Plugin API](/deprecated/v1-nx-plugin-api)
   - [See Also](/see-also)
     - [Site Map](/see-also/sitemap)
 
@@ -269,7 +270,6 @@
     - [Create a Preset](/extending-nx/recipes/create-preset)
     - [Create an Install Package](/extending-nx/recipes/create-install-package)
     - [Modify the Project Graph](/extending-nx/recipes/project-graph-plugins)
-    - [Identify Custom Projects](/extending-nx/recipes/project-inference-plugins)
 
 - Cloud
 

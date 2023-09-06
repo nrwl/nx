@@ -403,9 +403,9 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
 
 ```
-nx g @nx/angular:library products --directory=modules --standalone --simpleName
-nx g @nx/angular:library orders --directory=modules --standalone --simpleName
-nx g @nx/angular:library ui --directory=modules/shared --standalone --simpleName
+nx g @nx/angular:library products --directory=modules/products --standalone
+nx g @nx/angular:library orders --directory=modules/orders --standalone
+nx g @nx/angular:library shared-ui --directory=modules/shared/ui --standalone
 ```
 
 Note how we use the `--directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like, even keep all of them at the root-level.
@@ -464,8 +464,7 @@ Running the above commands should lead to the following directory structure:
 
 Each of these libraries
 
-- has its own `project.json` file with corresponding targets you can run (e.g. running tests for just orders: `nx test modules-orders`)
-- has a name based on the `--directory` flag, e.g. `modules-orders`; you can find the name in the corresponding `project.json` file
+- has its own `project.json` file with corresponding targets you can run (e.g. running tests for just orders: `nx test orders`)
 - has a dedicated `index.ts` file which is the "public API" of the library
 - is mapped in the `tsconfig.base.json` at the root of the workspace
 
@@ -480,9 +479,9 @@ All libraries that we generate automatically have aliases created in the root-le
   "compilerOptions": {
     ...
     "paths": {
-      "@myngapp/modules/products": ["modules/products/src/index.ts"],
-      "@myngapp/modules/orders": ["modules/orders/src/index.ts"],
-      "@myngapp/modules/shared/ui": ["modules/shared/ui/src/index.ts"]
+      "products": ["modules/products/src/index.ts"],
+      "orders": ["modules/orders/src/index.ts"],
+      "shared-ui": ["modules/shared/ui/src/index.ts"]
     },
     ...
   },
@@ -505,7 +504,7 @@ import { CommonModule } from '@angular/common';
 export class ProductsComponent {}
 ```
 
-Make sure the `ProductsComponent` is exported via the `index.ts` file of our `products` library (which it should already be). The `modules/products/src/index.ts` file is the public API for the `modules-products` library with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+Make sure the `ProductsComponent` is exported via the `index.ts` file of our `products` library (which it should already be). The `modules/products/src/index.ts` file is the public API for the `products` library with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts {% fileName="modules/products/src/index.ts" %}
 export * from './lib/products/products.component';
@@ -527,8 +526,7 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'products',
-    loadComponent: () =>
-      import('@myngapp/modules/products').then((m) => m.ProductsComponent),
+    loadComponent: () => import('products').then((m) => m.ProductsComponent),
   },
 ];
 ```
@@ -557,13 +555,11 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'products',
-    loadComponent: () =>
-      import('@myngapp/modules/products').then((m) => m.ProductsComponent),
+    loadComponent: () => import('products').then((m) => m.ProductsComponent),
   },
   {
     path: 'orders',
-    loadComponent: () =>
-      import('@myngapp/modules/orders').then((m) => m.OrdersComponent),
+    loadComponent: () => import('orders').then((m) => m.OrdersComponent),
   },
 ];
 ```
@@ -609,14 +605,14 @@ You should be able to see something similar to the following in your browser (hi
       }
     },
     {
-      "name": "modules-shared-ui",
+      "name": "shared-ui",
       "type": "lib",
       "data": {
         "tags": []
       }
     },
     {
-      "name": "modules-orders",
+      "name": "orders",
       "type": "lib",
       "data": {
         "tags": []
@@ -624,7 +620,7 @@ You should be able to see something similar to the following in your browser (hi
     },
 
     {
-      "name": "modules-products",
+      "name": "products",
       "type": "lib",
       "data": {
         "tags": []
@@ -633,13 +629,13 @@ You should be able to see something similar to the following in your browser (hi
   ],
   "dependencies": {
     "myngapp": [
-      { "source": "myngapp", "target": "modules-orders", "type": "dynamic" },
-      { "source": "myngapp", "target": "modules-products", "type": "dynamic" }
+      { "source": "myngapp", "target": "orders", "type": "dynamic" },
+      { "source": "myngapp", "target": "products", "type": "dynamic" }
     ],
     "e2e": [{ "source": "e2e", "target": "myngapp", "type": "implicit" }],
-    "modules-shared-ui": [],
-    "modules-orders": [],
-    "modules-products": []
+    "shared-ui": [],
+    "orders": [],
+    "products": []
   },
   "workspaceLayout": { "appsDir": "", "libsDir": "" },
   "affectedProjectIds": [],
@@ -650,9 +646,9 @@ You should be able to see something similar to the following in your browser (hi
 
 {% /graph %}
 
-Notice how `modules-shared-ui` is not yet connected to anything because we didn't import it in any of our projects. Also the arrows to `modules-orders` and `modules-products` are dashed because we're using lazy imports.
+Notice how `shared-ui` is not yet connected to anything because we didn't import it in any of our projects. Also the arrows to `orders` and `products` are dashed because we're using lazy imports.
 
-Exercise for you: change the codebase so that `modules-shared-ui` is used by `modules-orders` and `modules-products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
+Exercise for you: change the codebase so that `shared-ui` is used by `orders` and `products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
 
 ## Imposing Constraints with Module Boundary Rules
 
@@ -660,16 +656,16 @@ Exercise for you: change the codebase so that `modules-shared-ui` is used by `mo
 
 Once you modularize your codebase you want to make sure that the modules are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
-- we might want to allow `modules-orders` to import from `modules-shared-ui` but not the other way around
-- we might want to allow `modules-orders` to import from `modules-products` but not the other way around
-- we might want to allow all libraries to import the `modules-shared-ui` components, but not the other way around
+- we might want to allow `orders` to import from `shared-ui` but not the other way around
+- we might want to allow `orders` to import from `products` but not the other way around
+- we might want to allow all libraries to import the `shared-ui` components, but not the other way around
 
 When building these kinds of constraints you usually have two dimensions:
 
 - **type of project:** what is the type of your library. Example: "feature" library, "utility" library, "data-access" library, "ui" library (see [library types](/concepts/more-concepts/library-types))
 - **scope (domain) of the project:** what domain area is covered by the project. Example: "orders", "products", "shared" ... this really depends on the type of product you're developing
 
-Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `project.json` of your `modules-orders` library and assign the tags `type:feature` and `scope:orders` to it.
+Nx comes with a generic mechanism that allows you to assign "tags" to projects. "tags" are arbitrary strings you can assign to a project that can be used later when defining boundaries between projects. For example, go to the `project.json` of your `orders` library and assign the tags `type:feature` and `scope:orders` to it.
 
 ```json {% fileName="modules/orders/project.json" %}
 {
@@ -679,7 +675,7 @@ Nx comes with a generic mechanism that allows you to assign "tags" to projects. 
 }
 ```
 
-Then go to the `project.json` of your `modules-products` library and assign the tags `type:feature` and `scope:products` to it.
+Then go to the `project.json` of your `products` library and assign the tags `type:feature` and `scope:products` to it.
 
 ```json {% fileName="modules/products/project.json" %}
 {
@@ -689,7 +685,7 @@ Then go to the `project.json` of your `modules-products` library and assign the 
 }
 ```
 
-Finally, go to the `project.json` of the `modules-shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
+Finally, go to the `project.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
 
 ```json {% fileName="modules/shared/ui/project.json" %}
 {
@@ -761,14 +757,14 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `modules/products/src/lib/products/products.component.ts` file and import the `OrderComponent` from the `modules-orders` project:
+To test it, go to your `modules/products/src/lib/products/products.component.ts` file and import the `OrderComponent` from the `orders` project:
 
 ```tsx {% fileName="modules/products/src/lib/products/products.component.ts" %}
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // 👇 this import is not allowed
-import { OrdersComponent } from '@myngapp/modules/orders';
+import { OrdersComponent } from 'orders';
 
 @Component({
   selector: 'myngapp-products',
@@ -783,8 +779,8 @@ export class ProductsComponent {}
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
-    ✖  nx run modules-products:lint
-       Linting "modules-products"...
+    ✖  nx run products:lint
+       Linting "products"...
 
        /Users/juri/nrwl/content/myngapp/modules/products/src/lib/products/products.component.ts
          3:1  error  A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
@@ -793,10 +789,10 @@ If you lint your workspace you'll get an error now:
 
        Lint errors found in the listed files.
 
-    ✔  nx run modules-orders:lint (1s)
+    ✔  nx run orders:lint (1s)
     ✔  nx run myngapp:lint (1s)
     ✔  nx run e2e:lint (682ms)
-    ✔  nx run modules-shared-ui:lint (797ms)
+    ✔  nx run shared-ui:lint (797ms)
 
  —————————————————————————————————————————————————————————————————————
 
@@ -805,7 +801,7 @@ If you lint your workspace you'll get an error now:
     ✔    4/5 succeeded [0 read from cache]
 
     ✖    1/5 targets failed, including the following:
-         - nx run modules-products:lint
+         - nx run products:lint
 
 ```
 

@@ -191,7 +191,8 @@ Where new apps + libs should be placed
 
 #### Type declaration
 
-| Name      | Type     |
-| :-------- | :------- |
-| `appsDir` | `string` |
-| `libsDir` | `string` |
+| Name                        | Type                           |
+| :-------------------------- | :----------------------------- |
+| `appsDir?`                  | `string`                       |
+| `libsDir?`                  | `string`                       |
+| `projectNameAndRootFormat?` | `"as-provided"` \| `"derived"` |

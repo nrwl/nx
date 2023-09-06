@@ -16,19 +16,20 @@ describe('updateEslint', () => {
   beforeEach(async () => {
     schema = {
       projectName: 'my-app',
-      appProjectRoot: 'apps/my-app',
+      appProjectRoot: 'my-app',
       linter: Linter.EsLint,
       unitTestRunner: 'jest',
       e2eProjectName: 'my-app-e2e',
-      e2eProjectRoot: 'apps/my-app-e2e',
-      outputPath: 'dist/apps/my-app',
+      e2eProjectRoot: 'my-app-e2e',
+      outputPath: 'dist/my-app',
       name: 'my-app',
       parsedTags: [],
       fileName: 'index',
       e2eTestRunner: 'cypress',
       styledModule: null,
+      projectNameAndRootFormat: 'as-provided',
     };
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     const project: ProjectConfiguration = {
       root: schema.appProjectRoot,
       sourceRoot: schema.appProjectRoot,
@@ -54,7 +55,7 @@ describe('updateEslint', () => {
           "plugin:@nx/react-typescript",
           "next",
           "next/core-web-vitals",
-          "../../.eslintrc.json",
+          "../.eslintrc.json",
         ],
         "ignorePatterns": [
           "!**/*",
@@ -79,7 +80,7 @@ describe('updateEslint', () => {
             "rules": {
               "@next/next/no-html-link-for-pages": [
                 "error",
-                "apps/my-app/pages",
+                "my-app/pages",
               ],
             },
           },
@@ -122,7 +123,7 @@ describe('updateEslint', () => {
       .toMatchInlineSnapshot(`
       "const FlatCompat = require("@eslint/eslintrc");
       const js = require("@eslint/js");
-      const baseConfig = require("../../eslint.config.js");
+      const baseConfig = require("../eslint.config.js");
       const compat = new FlatCompat({
             baseDirectory: __dirname,
             recommendedConfig: js.configs.recommended,
@@ -131,35 +132,35 @@ describe('updateEslint', () => {
 
       module.exports = [
       {
-          files: ["apps/my-app/**/*.*"],
+          files: ["my-app/**/*.*"],
           rules: { "@next/next/no-html-link-for-pages": "off" }
       },
           ...baseConfig,
           {
         "files": [
-          "apps/my-app/**/*.ts",
-          "apps/my-app/**/*.tsx",
-          "apps/my-app/**/*.js",
-          "apps/my-app/**/*.jsx"
+          "my-app/**/*.ts",
+          "my-app/**/*.tsx",
+          "my-app/**/*.js",
+          "my-app/**/*.jsx"
         ],
         "rules": {
           "@next/next/no-html-link-for-pages": [
             "error",
-            "apps/my-app/pages"
+            "my-app/pages"
           ]
         }
           },
           {
               files: [
-                  "apps/my-app/**/*.ts",
-                  "apps/my-app/**/*.tsx"
+                  "my-app/**/*.ts",
+                  "my-app/**/*.tsx"
               ],
               rules: {}
           },
           {
               files: [
-                  "apps/my-app/**/*.js",
-                  "apps/my-app/**/*.jsx"
+                  "my-app/**/*.js",
+                  "my-app/**/*.jsx"
               ],
               rules: {}
           },
@@ -167,13 +168,13 @@ describe('updateEslint', () => {
       ...compat.config({ env: { jest: true } }).map(config => ({
           ...config,
           files: [
-              "apps/my-app/**/*.spec.ts",
-              "apps/my-app/**/*.spec.tsx",
-              "apps/my-app/**/*.spec.js",
-              "apps/my-app/**/*.spec.jsx"
+              "my-app/**/*.spec.ts",
+              "my-app/**/*.spec.tsx",
+              "my-app/**/*.spec.js",
+              "my-app/**/*.spec.jsx"
           ]
       })),
-      { ignores: ["apps/my-app/.next/**/*"] }
+      { ignores: ["my-app/.next/**/*"] }
       ];
       "
     `);

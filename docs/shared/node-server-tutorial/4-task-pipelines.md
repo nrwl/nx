@@ -178,7 +178,7 @@ Then make a change to an endpoint of your `products-api` project:
 
 ```ts {% fileName="src/main.ts" %}
 import express from 'express';
-import { doAuth } from '@products-api/auth';
+import { doAuth } from 'auth';
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;

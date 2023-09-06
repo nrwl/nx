@@ -216,16 +216,6 @@
         "isExternal": false,
         "path": "/extending-nx/recipes/project-graph-plugins",
         "tags": ["create-your-own-plugin", "explore-graph"]
-      },
-      {
-        "id": "project-inference-plugins",
-        "name": "Identify Custom Projects",
-        "description": "",
-        "file": "shared/recipes/plugins/project-inference-plugins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/extending-nx/recipes/project-inference-plugins",
-        "tags": ["create-your-own-plugin"]
       }
     ],
     "isExternal": false,
@@ -341,15 +331,5 @@
     "isExternal": false,
     "path": "/extending-nx/recipes/project-graph-plugins",
     "tags": ["create-your-own-plugin", "explore-graph"]
-  },
-  "/extending-nx/recipes/project-inference-plugins": {
-    "id": "project-inference-plugins",
-    "name": "Identify Custom Projects",
-    "description": "",
-    "file": "shared/recipes/plugins/project-inference-plugins",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/extending-nx/recipes/project-inference-plugins",
-    "tags": ["create-your-own-plugin"]
   }
 }

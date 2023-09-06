@@ -54,6 +54,10 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 /packages/react-native/** @nrwl/nx-react-reviewers
 /e2e/react-native/** @nrwl/nx-react-reviewers
 
+# Vue
+/packages/vue/** @nrwl/nx-vue-reviewers
+/e2e/vue/** @nrwl/nx-vue-reviewers
+
 ## Node
 /docs/generated/packages/node/** @nrwl/nx-node-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/nest/** @nrwl/nx-node-reviewers @nrwl/nx-docs-reviewers
@@ -156,7 +160,7 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
 /e2e/utils/** @meeroslav @nrwl/nx-testing-tools-reviewers @vsavkin @mandarini
-/community @nrwl/nx-devkit-reviewers
+/community @nrwl/nx-docs-reviewers
 /CONTRIBUTING.md @FrozenPandaz @isaacplmann
 /CODE_OF_CONDUCT.md @FrozenPandaz @isaacplmann
 /CODEOWNERS @FrozenPandaz @AgentEnder

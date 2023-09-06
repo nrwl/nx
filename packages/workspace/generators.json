@@ -47,7 +47,7 @@
       "hidden": true
     },
     "move": {
-      "factory": "./src/generators/move/move#moveGenerator",
+      "factory": "./src/generators/move/move#moveGeneratorInternal",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an application or library to another folder."

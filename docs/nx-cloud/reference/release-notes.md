@@ -100,6 +100,48 @@ Cleanup: Handle issues with the network and the api in a consistent fashion.
 
 ## Docker Containers
 
+### 2308.22.7
+
+In our last big release, we announced a completely new UI, rebuilt from the ground up in React. In this release, the frontend team
+has continued that effort and wrapped the React app with the [Remix](https://remix.run/) framework. This is the same technology that powers our public https://cloud.nx.app/
+product. It's faster, it handles resource caching better, and should allow the frontend team to ship features quicker than ever before.
+
+##### Helm package compatibility
+
+When upgrading to this version and anything above it, you will need to use Helm version 0.11.1:
+
+| Chart Version | Compatible Images                  |
+| ------------- | ---------------------------------- |
+| <= `0.10.11`  | `2306.01.2.patch4` **and earlier** |
+| >= `0.11.0`   | `2308.22.7` **and later**          |
+
+##### VCS proxy support
+
+- For the Github/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub/GitLab to post comments
+- If are behind a proxy however, these requests might fail
+- If you are using our [Helm chart](https://github.com/nrwl/nx-cloud-helm/), you can now configure this option to unblock the vcs integration and allow it to work with your proxy:
+  ```yaml
+  vcsHttpsProxy: '<your-proxy-address>'
+  ```
+
+##### Misc updates
+
+- UI enhancements of the run details screen
+- UI enhancements of the task details screen
+- fixes and better error handling for the DTE screen
+- failed runs are now sorted at the top
+- web app performance improvements for large workspaces
+- more structured NxAPI pod logs (allows for better debugging)
+
+##### Bug fixes
+
+- Fixed an issue with applying licenses on orgs owned by non-installation admin accounts
+
+##### Breaking changes - MongoDB migration
+
+In the last big release we announced [the deprecation of Mongo 4.2](https://nx.dev/nx-cloud/reference/release-notes#breaking-changes)
+With this release, we have now stopped supporting Mongo 4.2 completely. Please upgrade Mongo to version 6 before installing this new image. You will find instructions [here](https://nx.dev/nx-cloud/reference/release-notes#breaking-changes).
+
 ### 2306.01.2.patch4
 
 - Fixes an issue with new licenses expiring sooner than original end date

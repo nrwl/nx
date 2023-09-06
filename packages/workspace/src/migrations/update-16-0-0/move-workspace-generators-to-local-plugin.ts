@@ -60,7 +60,7 @@ async function moveWorkspaceGeneratorsToLocalPlugin(tree: Tree) {
     );
     project = readProjectConfiguration(tree, PROJECT_NAME);
   }
-  await updateExistingPlugin(tree, project);
+  updateExistingPlugin(tree, project);
   return tasks;
 }
 
@@ -187,7 +187,7 @@ async function createNewPlugin(tree: Tree) {
     e2eTestRunner: 'none',
     publishable: false,
   });
-  getCreateGeneratorsJson()(
+  await getCreateGeneratorsJson()(
     tree,
     readProjectConfiguration(tree, PROJECT_NAME).root,
     PROJECT_NAME
@@ -207,8 +207,8 @@ function moveGeneratedPlugin(
       projectName: PROJECT_NAME,
       newProjectName: PROJECT_NAME,
       updateImportPath: true,
-      destinationRelativeToRoot: true,
       importPath: importPath,
+      projectNameAndRootFormat: 'as-provided',
     });
   }
 }
