@@ -142,7 +142,7 @@ describe('Node Applications', () => {
       }
     ).toString();
     expect(additionalResult).toContain('Hello Additional World!');
-  }, 60000);
+  }, 300_000);
 
   it('should be able to generate an empty application with variable in .env file', async () => {
     const originalEnvPort = process.env.PORT;

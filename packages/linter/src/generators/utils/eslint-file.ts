@@ -247,7 +247,10 @@ export function lintConfigHasOverride(
       root,
       isBase ? baseEsLintConfigFile : '.eslintrc.json'
     );
-    return readJson(tree, fileName).overrides?.some(lookup) || false;
+
+    return tree.exists(fileName)
+      ? readJson(tree, fileName).overrides?.some(lookup) || false
+      : false;
   }
 }
 
