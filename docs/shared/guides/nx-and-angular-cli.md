@@ -24,7 +24,7 @@ If you haven't used Nx before and used the Angular CLI, you probably ran `ng upd
 - Fix migrations that "almost work".
 - Commit a partially migrated state.
 - Change versions of packages to match org requirements.
-- [Opt out of Angular updates when updating Nx versions](/recipes/other/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/packages/angular/documents/angular-nx-version-matrix)
+- [Opt out of Angular updates when updating Nx versions](/recipes/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/packages/angular/documents/angular-nx-version-matrix)
 
 `nx migrate` does this by splitting the process into two steps. `nx migrate latest` creates a `migrations.json` file with a list of all the migrations that are needed by Nx, Angular and other packages. You then have a chance to modify that file before running `nx migrate --run-migrations` to actually execute those migrations.
 
@@ -46,7 +46,7 @@ Replace `[package]` with the name of the package you're trying to add.
 
 Nx can improve your developer experience without rearranging folders in your workspace and without the need to have multiple apps in the same repo. The changes outlined in the previous sections are the only modifications to your existing workflow that are needed, then Nx opens the door to many more DX improvements.
 
-Without any additional changes, Nx provides task caching, automated architecture diagrams and IDE integrations. Then, with some minor configuration, you can add task pipelines, distributed caching and CI improvements. To take full advantage of these features, you can begin to separate your large application into self-contained libraries. For an introduction to this process, complete the [Angular Standalone Tutorial](/tutorials/angular-standalone-tutorial).
+Without any additional changes, Nx provides task caching, automated architecture diagrams and IDE integrations. Then, with some minor configuration, you can add task pipelines, distributed caching and CI improvements. To take full advantage of these features, you can begin to separate your large application into self-contained libraries. For an introduction to this process, complete the [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial).
 
 ## More Info
 

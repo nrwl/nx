@@ -41,6 +41,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib',
         bundler: 'none',
+        projectNameAndRootFormat: 'as-provided',
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
@@ -52,30 +53,25 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
       jest.resetModules();
       jest.doMock('@storybook/core-server/package.json', () => ({
-        version: '7.0.2',
+        version: storybookVersion,
       }));
     });
 
-    it('should generate TypeScript Configuration files', async () => {
+    it('should generate TypeScript Configuration files by default', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         standaloneConfig: false,
-        tsConfiguration: true,
         uiFramework: '@storybook/angular',
       });
       const project = readProjectConfiguration(tree, 'test-ui-lib');
       expect(project).toMatchSnapshot();
 
       expect(tree.read('.storybook/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
       expect(
-        tree.exists('libs/test-ui-lib/tsconfig.storybook.json')
-      ).toBeFalsy();
-      expect(
-        tree.read('libs/test-ui-lib/.storybook/main.ts', 'utf-8')
+        tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(
-        tree.exists('libs/test-ui-lib/.storybook/preview.ts')
-      ).toBeTruthy();
+      expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
     });
 
     it('should update `tsconfig.lib.json` file', async () => {
@@ -86,7 +82,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
-        'libs/test-ui-lib/tsconfig.lib.json'
+        'test-ui-lib/tsconfig.lib.json'
       ) as Required<TsConfig>;
 
       expect(tsconfigJson.exclude).toContain('**/*.stories.ts');
@@ -99,12 +95,11 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         standaloneConfig: false,
-
         uiFramework: '@storybook/react-webpack5',
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
-        'libs/test-ui-lib/tsconfig.json'
+        'test-ui-lib/tsconfig.json'
       );
 
       expect(tsconfigJson.references).toMatchInlineSnapshot(`
@@ -126,9 +121,10 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
+        projectNameAndRootFormat: 'as-provided',
       });
 
-      updateJson(tree, 'libs/test-ui-lib2/.eslintrc.json', (json) => {
+      updateJson(tree, 'test-ui-lib2/.eslintrc.json', (json) => {
         json.parserOptions = {
           project: [],
         };
@@ -141,11 +137,11 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         uiFramework: '@storybook/react-webpack5',
       });
 
-      expect(readJson(tree, 'libs/test-ui-lib2/.eslintrc.json').parserOptions)
+      expect(readJson(tree, 'test-ui-lib2/.eslintrc.json').parserOptions)
         .toMatchInlineSnapshot(`
         {
           "project": [
-            "libs/test-ui-lib2/tsconfig.storybook.json",
+            "test-ui-lib2/tsconfig.storybook.json",
           ],
         }
       `);
@@ -155,6 +151,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await libraryGenerator(tree, {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       await configurationGenerator(tree, {
@@ -164,32 +161,33 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
 
       expect(
-        tree.read('libs/test-ui-lib2/tsconfig.storybook.json', 'utf-8')
+        tree.read('test-ui-lib2/tsconfig.storybook.json', 'utf-8')
       ).toMatchSnapshot();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['core-js']
+      ).toBeTruthy();
     });
 
-    it('should generate TS config for project if tsConfiguration true', async () => {
+    it('should generate TS config for project by default', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
         standaloneConfig: false,
-        tsConfiguration: true,
         uiFramework: '@storybook/angular',
       });
 
       expect(
-        tree.read('libs/test-ui-lib/.storybook/main.ts', 'utf-8')
+        tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
       ).toMatchSnapshot();
-      expect(
-        tree.exists('libs/test-ui-lib/.storybook/preview.ts')
-      ).toBeTruthy();
-      expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeFalsy();
-      expect(tree.exists('libs/test-ui-lib/.storybook/preview.js')).toBeFalsy();
+      expect(tree.exists('test-ui-lib/.storybook/preview.ts')).toBeTruthy();
+      expect(tree.exists('test-ui-lib/.storybook/main.js')).toBeFalsy();
+      expect(tree.exists('test-ui-lib/.storybook/preview.js')).toBeFalsy();
     });
 
     it('should add test-storybook target', async () => {
       await configurationGenerator(tree, {
         name: 'test-ui-lib',
-        configureTestRunner: true,
+        interactionTests: true,
         uiFramework: '@storybook/react-webpack5',
       });
 
@@ -197,12 +195,32 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         readJson(tree, 'package.json').devDependencies['@storybook/test-runner']
       ).toBeTruthy();
 
+      expect(
+        readJson(tree, 'package.json').devDependencies['core-js']
+      ).toBeTruthy();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies[
+          '@storybook/testing-library'
+        ]
+      ).toBeTruthy();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies['@storybook/jest']
+      ).toBeTruthy();
+
+      expect(
+        readJson(tree, 'package.json').devDependencies[
+          '@storybook/addon-interactions'
+        ]
+      ).toBeTruthy();
+
       const project = readProjectConfiguration(tree, 'test-ui-lib');
       expect(project.targets['test-storybook']).toEqual({
         executor: 'nx:run-commands',
         options: {
           command:
-            'test-storybook -c libs/test-ui-lib/.storybook --url=http://localhost:4400',
+            'test-storybook -c test-ui-lib/.storybook --url=http://localhost:4400',
         },
       });
     });
@@ -254,7 +272,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       });
       await configurationGenerator(tree, {
         name: 'main-vite-ts',
-        tsConfiguration: true,
         uiFramework: '@storybook/react-vite',
       });
       await configurationGenerator(tree, {

@@ -1,0 +1,48 @@
+diff --git a/dist/cli.js b/dist/cli.js
+index 8cd49ff1e99dca8241a75bc412c669a85475fce2..8f081b7ee0769a493b11f22c5d5d0752e8285629 100755
+--- a/dist/cli.js
++++ b/dist/cli.js
+@@ -7933,7 +7933,10 @@ var require_src10 = __commonJS({
+                 logPacked(pkg.packed);
+                 return pkg;
+               }).catch((err) => {
+-                if (err.code === "EPUBLISHCONFLICT") {
++                if (
++                  err.code === "EPUBLISHCONFLICT" ||
++                  (err.code === "E403" &&
++                    err.body?.error?.includes("You cannot publish over the previously published versions"))) {
+                   tracker.warn("publish", `Package is already published: ${pkg.name}@${pkg.version}`);
+                   tracker.completeWork(1);
+                   return pkg;
+diff --git a/dist/commands/publish/index.js b/dist/commands/publish/index.js
+index 34fe8f496af5e7adaf58a7f9c4c3a11d812608c3..bbab4d70c044729b174208b2f1250f54ab69e56d 100644
+--- a/dist/commands/publish/index.js
++++ b/dist/commands/publish/index.js
+@@ -6094,7 +6094,10 @@ var require_src2 = __commonJS({
+                 logPacked(pkg.packed);
+                 return pkg;
+               }).catch((err) => {
+-                if (err.code === "EPUBLISHCONFLICT") {
++                if (
++                  err.code === "EPUBLISHCONFLICT" ||
++                  (err.code === "E403" &&
++                    err.body?.error?.includes("You cannot publish over the previously published versions"))) {
+                   tracker.warn("publish", `Package is already published: ${pkg.name}@${pkg.version}`);
+                   tracker.completeWork(1);
+                   return pkg;
+diff --git a/dist/index.js b/dist/index.js
+index a1f83a569598efc7f129d8de7d004f45177514f4..86364db7a267c0fa3eaafc9b1bc51838a41f4f4f 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -7932,7 +7932,10 @@ var require_src10 = __commonJS({
+                 logPacked(pkg2.packed);
+                 return pkg2;
+               }).catch((err) => {
+-                if (err.code === "EPUBLISHCONFLICT") {
++                if (
++                  err.code === "EPUBLISHCONFLICT" ||
++                  (err.code === "E403" &&
++                    err.body?.error?.includes("You cannot publish over the previously published versions"))) {
+                   tracker.warn("publish", `Package is already published: ${pkg2.name}@${pkg2.version}`);
+                   tracker.completeWork(1);
+                   return pkg2;

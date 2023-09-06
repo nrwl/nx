@@ -16,7 +16,10 @@ describe('moveProject', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await libraryGenerator(tree, { name: 'my-lib' });
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      projectNameAndRootFormat: 'as-provided',
+    });
     projectConfig = readProjectConfiguration(tree, 'my-lib');
   });
 
@@ -27,14 +30,13 @@ describe('moveProject', () => {
       importPath: '@proj/my-destination',
       updateImportPath: true,
       newProjectName: 'my-destination',
-      relativeToRootDestination: 'libs/my-destination',
+      relativeToRootDestination: 'my-destination',
     };
 
     moveProjectFiles(tree, schema, projectConfig);
 
-    const destinationChildren = tree.children('libs/my-destination');
+    const destinationChildren = tree.children('my-destination');
     expect(destinationChildren.length).toBeGreaterThan(0);
-    expect(tree.exists('libs/my-lib')).toBeFalsy();
-    expect(tree.children('libs')).not.toContain('my-lib');
+    expect(tree.exists('my-lib')).toBeFalsy();
   });
 });

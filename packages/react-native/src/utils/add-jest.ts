@@ -1,5 +1,5 @@
-import { Tree } from '@nx/devkit';
-import { jestProjectGenerator } from '@nx/jest';
+import { Tree, offsetFromRoot } from '@nx/devkit';
+import { configurationGenerator } from '@nx/jest';
 
 export async function addJest(
   host: Tree,
@@ -13,7 +13,7 @@ export async function addJest(
     return () => {};
   }
 
-  const jestTask = await jestProjectGenerator(host, {
+  const jestTask = await configurationGenerator(host, {
     js,
     project: projectName,
     supportTsx: true,
@@ -34,7 +34,10 @@ export async function addJest(
   setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
   moduleNameMapper: {
     '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock'
-  }
+  },
+  coverageDirectory: '${offsetFromRoot(
+    appProjectRoot
+  )}coverage/${appProjectRoot}'
 };`;
   host.write(configPath, content);
 

@@ -16,7 +16,7 @@ Knowing the syntax doesn't always explain how you would use the feature, so here
 
 If you don't specify any `inputs`, Nx uses as inputs every file in the task's project and every file in that project's dependencies. It's the same as writing this:
 
-```jsonc
+```jsonc {% fileName="nx.json" %}
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*"]

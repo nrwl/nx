@@ -13,7 +13,8 @@
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionSchematic",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
-      "description": "Convert a project from TSLint to ESLint."
+      "description": "Convert a project from TSLint to ESLint.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint."
     },
     "init": {
       "factory": "./src/generators/init/init#initSchematic",
@@ -107,7 +108,7 @@
   },
   "generators": {
     "application": {
-      "factory": "./src/generators/application/application",
+      "factory": "./src/generators/application/application#applicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
@@ -116,7 +117,8 @@
     "convert-tslint-to-eslint": {
       "factory": "./src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint#conversionGenerator",
       "schema": "./src/generators/convert-tslint-to-eslint/schema.json",
-      "description": "Convert a project from TSLint to ESLint."
+      "description": "Convert a project from TSLint to ESLint.",
+      "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint."
     },
     "init": {
       "factory": "./src/generators/init/init",
@@ -126,7 +128,7 @@
       "hidden": true
     },
     "library": {
-      "factory": "./src/generators/library/library",
+      "factory": "./src/generators/library/library#libraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",

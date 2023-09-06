@@ -14,7 +14,6 @@
         "main": "packages-legacy/jest/index.ts",
         "tsConfig": "packages-legacy/jest/tsconfig.json",
         "outputPath": "build/packages/jest-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/jest",

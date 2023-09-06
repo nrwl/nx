@@ -2,9 +2,11 @@ import {
   convertNxGenerator,
   formatFiles,
   GeneratorCallback,
+  joinPathFragments,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 
 import {
@@ -172,6 +174,22 @@ export async function viteConfigurationGenerator(
     if (!projectAlreadyHasViteTargets.preview) {
       addPreviewTarget(tree, schema, serveTargetName);
     }
+  }
+
+  if (projectType === 'library') {
+    // update tsconfig.lib.json to include vite/client
+    updateJson(tree, joinPathFragments(root, 'tsconfig.lib.json'), (json) => {
+      if (!json.compilerOptions.types.includes('vite/client')) {
+        return {
+          ...json,
+          compilerOptions: {
+            ...json.compilerOptions,
+            types: [...json.compilerOptions.types, 'vite/client'],
+          },
+        };
+      }
+      return json;
+    });
   }
 
   createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);

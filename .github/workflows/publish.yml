@@ -4,6 +4,7 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   NPM_CONFIG_PROVENANCE: true
 on:
+  workflow_dispatch:
   release:
     types: [published]
 jobs:
@@ -200,7 +201,7 @@ jobs:
            path: packages/**/*.node
            if-no-files-found: error
   publish:
-    if: ${{ github.repository_owner == 'nrwl' }}
+    if: ${{ github.event_name == 'release' && github.repository_owner == 'nrwl' }}
     name: Publish
     runs-on: ubuntu-latest
     permissions:

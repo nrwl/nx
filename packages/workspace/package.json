@@ -61,24 +61,13 @@
     }
   },
   "dependencies": {
-    "@parcel/watcher": "2.0.4",
+    "@nx/devkit": "file:../devkit",
     "chalk": "^4.1.0",
-    "chokidar": "^3.5.1",
-    "cli-cursor": "3.1.0",
-    "cli-spinners": "2.6.1",
-    "dotenv": "~10.0.0",
-    "figures": "3.2.0",
-    "flat": "^5.0.2",
+    "enquirer": "~2.3.6",
     "ignore": "^5.0.4",
-    "minimatch": "3.0.5",
-    "npm-run-path": "^4.0.1",
-    "open": "^8.4.0",
     "rxjs": "^7.8.0",
-    "tmp": "~0.2.1",
     "tslib": "^2.3.0",
-    "yargs": "^17.6.2",
-    "yargs-parser": "21.1.1",
-    "@nx/devkit": "file:../devkit"
+    "yargs-parser": "21.1.1"
   },
   "publishConfig": {
     "access": "public"

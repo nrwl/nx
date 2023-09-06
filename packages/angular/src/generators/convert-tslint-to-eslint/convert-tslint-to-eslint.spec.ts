@@ -14,7 +14,17 @@ import { conversionGenerator } from './convert-tslint-to-eslint';
 /**
  * Don't run actual child_process implementation of installPackagesTask()
  */
-jest.mock('child_process');
+jest.mock('child_process', () => {
+  return {
+    ...jest.requireActual<any>('child_process'),
+    execSync: jest.fn((command: string) => {
+      if (command.includes('pnpm --version')) {
+        return '8.2.0';
+      }
+      return;
+    }),
+  };
+});
 
 const appProjectName = 'angular-app-1';
 const appProjectRoot = `apps/${appProjectName}`;

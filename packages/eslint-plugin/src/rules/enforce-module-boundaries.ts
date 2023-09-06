@@ -128,8 +128,8 @@ export default createESLintRule<Options, MessageIds>({
         'Buildable libraries cannot import or export from non-buildable libraries',
       noImportsOfLazyLoadedLibraries: `Static imports of lazy-loaded libraries are forbidden.\n\nLibrary "{{targetProjectName}}" is lazy-loaded in these files:\n{{filePaths}}`,
       projectWithoutTagsCannotHaveDependencies: `A project without tags matching at least one constraint cannot depend on any libraries`,
-      bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package`,
-      nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import the "{{package}}" package. Nested import found at {{childProjectName}}`,
+      bannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}"`,
+      nestedBannedExternalImportsViolation: `A project tagged with "{{sourceTag}}" is not allowed to import "{{imp}}". Nested import found at {{childProjectName}}`,
       noTransitiveDependencies: `Transitive dependencies are not allowed. Only packages defined in the "package.json" can be imported`,
       onlyTagsConstraintViolation: `A project tagged with "{{sourceTag}}" can only depend on libs tagged with {{tags}}`,
       emptyOnlyTagsConstraintViolation:
@@ -332,7 +332,7 @@ export default createESLintRule<Options, MessageIds>({
             fix(fixer) {
               // imp has form of @myorg/someproject/some/path
               const indexTsPaths = getBarrelEntryPointByImportScope(imp);
-              if (indexTsPaths && indexTsPaths.length > 0) {
+              if (indexTsPaths.length > 0) {
                 const specifiers = (node as any).specifiers;
                 if (!specifiers || specifiers.length === 0) {
                   return;
@@ -359,13 +359,22 @@ export default createESLintRule<Options, MessageIds>({
                         dirname(importPath)
                       );
 
+                      // the string we receive from elsewhere might not have a leading './' here despite still being a relative path
+                      // we'd like to ensure it's a normalized relative form starting from ./ or ../
+                      const ensureRelativeForm = (path: string): string =>
+                        path.startsWith('./') || path.startsWith('../')
+                          ? path
+                          : `./${path}`;
+
                       // if the string is empty, it's the current file
                       const importPathResolved =
                         relativePath === ''
                           ? `./${basename(importPath)}`
-                          : joinPathFragments(
-                              relativePath,
-                              basename(importPath)
+                          : ensureRelativeForm(
+                              joinPathFragments(
+                                relativePath,
+                                basename(importPath)
+                              )
                             );
 
                       importsToRemap.push({
@@ -405,7 +414,8 @@ export default createESLintRule<Options, MessageIds>({
         const constraint = hasBannedImport(
           sourceProject,
           targetProject,
-          depConstraints
+          depConstraints,
+          imp
         );
         if (constraint) {
           context.report({
@@ -415,7 +425,7 @@ export default createESLintRule<Options, MessageIds>({
               sourceTag: isComboDepConstraint(constraint)
                 ? constraint.allSourceTags.join('" and "')
                 : constraint.sourceTag,
-              package: targetProject.data.packageName,
+              imp,
             },
           });
         }
@@ -624,19 +634,20 @@ export default createESLintRule<Options, MessageIds>({
             const matches = hasBannedDependencies(
               transitiveExternalDeps,
               projectGraph,
-              constraint
+              constraint,
+              imp
             );
             if (matches.length > 0) {
               matches.forEach(([target, violatingSource, constraint]) => {
                 context.report({
                   node,
-                  messageId: 'bannedExternalImportsViolation',
+                  messageId: 'nestedBannedExternalImportsViolation',
                   data: {
                     sourceTag: isComboDepConstraint(constraint)
                       ? constraint.allSourceTags.join('" and "')
                       : constraint.sourceTag,
                     childProjectName: violatingSource.name,
-                    package: target.data.packageName,
+                    imp,
                   },
                 });
               });

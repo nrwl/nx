@@ -26,6 +26,7 @@
     "./src/utils": "./src/utils/public-api.js",
     "./plugins/component-testing": "./plugins/component-testing.js",
     "./src/generators/utils": "./src/generators/utils/index.js",
+    "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
     "./src/builders/*/schema.json": "./src/builders/*/schema.json",
     "./src/builders/*.impl": "./src/builders/*.impl.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
@@ -48,19 +49,17 @@
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@typescript-eslint/type-utils": "^5.36.1",
     "chalk": "^4.1.0",
-    "chokidar": "^3.5.1",
-    "http-server": "^14.1.0",
+    "find-cache-dir": "^3.3.2",
     "ignore": "^5.0.4",
-    "magic-string": "~0.26.2",
+    "magic-string": "~0.30.2",
     "minimatch": "3.0.5",
     "semver": "7.5.3",
-    "ts-node": "10.9.1",
-    "tsconfig-paths": "^4.1.2",
+    "tslib": "^2.3.0",
     "webpack": "^5.80.0",
-    "webpack-merge": "5.7.3",
+    "webpack-merge": "^5.8.0",
     "enquirer": "^2.3.6",
-    "@nx/cypress": "file:../cypress",
     "@nx/devkit": "file:../devkit",
+    "@nx/cypress": "file:../cypress",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
@@ -73,10 +72,14 @@
     "@schematics/angular": ">= 14.0.0 < 17.0.0",
     "@angular-devkit/core": ">= 14.0.0 < 17.0.0",
     "@nguniversal/builders": ">= 14.0.0 < 17.0.0",
-    "rxjs": "^6.5.3 || ^7.5.0"
+    "rxjs": "^6.5.3 || ^7.5.0",
+    "esbuild": "^0.19.2"
   },
   "peerDependenciesMeta": {
     "@nguniversal/builders": {
+      "optional": true
+    },
+    "esbuild": {
       "optional": true
     }
   },

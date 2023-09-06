@@ -1,5 +1,6 @@
 import { names } from '@nx/devkit';
 import {
+  checkFilesExist,
   cleanupProject,
   killProcessAndPorts,
   newProject,
@@ -33,10 +34,18 @@ describe('Angular Module Federation', () => {
     const remotePort = 4301;
 
     // generate host app
-    runCLI(`generate @nx/angular:host ${hostApp} --style=css --no-interactive`);
+    runCLI(
+      `generate @nx/angular:host ${hostApp} --style=css --project-name-and-root-format=as-provided --no-interactive`
+    );
     // generate remote app
     runCLI(
-      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --no-interactive`
+      `generate @nx/angular:remote ${remoteApp1} --host=${hostApp} --port=${remotePort} --style=css --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/")
+    checkFilesExist(
+      `${hostApp}/src/app/app.module.ts`,
+      `${remoteApp1}/src/app/app.module.ts`
     );
 
     // check default generated host is built successfully
@@ -45,14 +54,14 @@ describe('Angular Module Federation', () => {
 
     // generate a shared lib with a seconary entry point
     runCLI(
-      `generate @nx/angular:library ${sharedLib} --buildable --no-interactive`
+      `generate @nx/angular:library ${sharedLib} --buildable --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
       `generate @nx/angular:library-secondary-entry-point --library=${sharedLib} --name=${secondaryEntry} --no-interactive`
     );
     // update host & remote files to use shared library
     updateFile(
-      `apps/${hostApp}/src/app/app.module.ts`,
+      `${hostApp}/src/app/app.module.ts`,
       `import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
       import { ${
@@ -90,7 +99,7 @@ describe('Angular Module Federation', () => {
       `
     );
     updateFile(
-      `apps/${remoteApp1}/src/app/remote-entry/entry.module.ts`,
+      `${remoteApp1}/src/app/remote-entry/entry.module.ts`,
       `import { NgModule } from '@angular/core';
     import { CommonModule } from '@angular/common';
     import { RouterModule } from '@angular/router';
@@ -137,9 +146,11 @@ describe('Angular Module Federation', () => {
 
     // generate apps
     runCLI(
-      `generate @nx/angular:application ${app1} --routing --no-interactive`
+      `generate @nx/angular:application ${app1} --routing --project-name-and-root-format=as-provided --no-interactive`
     );
-    runCLI(`generate @nx/angular:application ${app2} --no-interactive`);
+    runCLI(
+      `generate @nx/angular:application ${app2} --project-name-and-root-format=as-provided --no-interactive`
+    );
 
     // convert apps
     runCLI(
@@ -160,21 +171,22 @@ describe('Angular Module Federation', () => {
     await killProcessAndPorts(process.pid, app1Port, app2Port);
   }, 20_000_000);
 
-  // TODO(colum): enable when this issue is resolved https://github.com/module-federation/universe/issues/604
-  xit('should scaffold MF + SSR setup successfully', async () => {
+  it('should scaffold MF + SSR setup successfully', async () => {
     const host = uniq('host');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
 
     // generate remote apps
     runCLI(
-      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --no-interactive`
+      `generate @nx/angular:host ${host} --ssr --remotes=${remote1},${remote2} --project-name-and-root-format=as-provided --no-interactive`
     );
 
     // ports
     const hostPort = 4500;
-    const remote1Port = readProjectConfig(remote1).targets.serve.options.port;
-    const remote2Port = readProjectConfig(remote2).targets.serve.options.port;
+    const remote1Port = (await readProjectConfig(remote1)).targets.serve.options
+      .port;
+    const remote2Port = (await readProjectConfig(remote2)).targets.serve.options
+      .port;
 
     const process = await runCommandUntil(
       `serve-ssr ${host} --port=${hostPort}`,
@@ -192,5 +204,41 @@ describe('Angular Module Federation', () => {
 
     // port and process cleanup
     await killProcessAndPorts(process.pid, hostPort, remote1Port, remote2Port);
+  }, 20_000_000);
+
+  it('should should support generating host and remote apps with --project-name-and-root-format=derived', async () => {
+    const hostApp = uniq('host');
+    const remoteApp = uniq('remote');
+    const hostPort = 4800;
+    const remotePort = 4801;
+
+    // generate host app
+    runCLI(
+      `generate @nx/angular:host ${hostApp} --project-name-and-root-format=derived --no-interactive`
+    );
+    // generate remote app
+    runCLI(
+      `generate @nx/angular:remote ${remoteApp} --host=${hostApp} --port=${remotePort} --project-name-and-root-format=derived --no-interactive`
+    );
+
+    // check files are generated with the layout directory ("apps/")
+    checkFilesExist(
+      `apps/${hostApp}/src/app/app.module.ts`,
+      `apps/${remoteApp}/src/app/app.module.ts`
+    );
+
+    // check default generated host is built successfully
+    const buildOutput = runCLI(`build ${hostApp}`);
+    expect(buildOutput).toContain('Successfully ran target build');
+
+    const process = await runCommandUntil(
+      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
+      (output) =>
+        output.includes(`listening on localhost:${remotePort}`) &&
+        output.includes(`listening on localhost:${hostPort}`)
+    );
+
+    // port and process cleanup
+    await killProcessAndPorts(process.pid, hostPort, remotePort);
   }, 20_000_000);
 });

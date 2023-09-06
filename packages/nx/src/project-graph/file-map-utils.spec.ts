@@ -1,24 +1,26 @@
+import { ProjectType } from '../config/workspace-json-project-json';
 import { createProjectFileMap, updateProjectFileMap } from './file-map-utils';
 
 describe('fileMapUtils', () => {
   describe('createFileMap', () => {
     it('should map files to projects', () => {
       const projectsConfigurations = {
+        version: 2,
         projects: {
           demo: {
             root: 'apps/demo',
             sourceRoot: 'apps/demo/src',
-            projectType: 'application',
+            projectType: 'application' as ProjectType,
           },
           'demo-e2e': {
             root: 'apps/demo-e2e',
             sourceRoot: 'apps/demo-e2e/src',
-            projectType: 'application',
+            projectType: 'application' as ProjectType,
           },
           ui: {
             root: 'libs/ui',
             sourceRoot: 'libs/ui/src',
-            projectType: 'library',
+            projectType: 'library' as ProjectType,
           },
         },
       };
@@ -29,7 +31,7 @@ describe('fileMapUtils', () => {
         { file: 'tools/myfile.txt', hash: 'some-hash' },
       ];
 
-      const result = createProjectFileMap(projectsConfigurations as any, files);
+      const result = createProjectFileMap(projectsConfigurations, files);
 
       expect(result).toEqual({
         projectFileMap: {
@@ -52,22 +54,20 @@ describe('fileMapUtils', () => {
   describe('updateFileMap', () => {
     it('should map files to projects', () => {
       const projectsConfigurations = {
-        projects: {
-          demo: {
-            root: 'apps/demo',
-            sourceRoot: 'apps/demo/src',
-            projectType: 'application',
-          },
-          'demo-e2e': {
-            root: 'apps/demo-e2e',
-            sourceRoot: 'apps/demo-e2e/src',
-            projectType: 'application',
-          },
-          ui: {
-            root: 'libs/ui',
-            sourceRoot: 'libs/ui/src',
-            projectType: 'library',
-          },
+        demo: {
+          root: 'apps/demo',
+          sourceRoot: 'apps/demo/src',
+          projectType: 'application' as ProjectType,
+        },
+        'demo-e2e': {
+          root: 'apps/demo-e2e',
+          sourceRoot: 'apps/demo-e2e/src',
+          projectType: 'application' as ProjectType,
+        },
+        ui: {
+          root: 'libs/ui',
+          sourceRoot: 'libs/ui/src',
+          projectType: 'library' as ProjectType,
         },
       };
       const files = [
@@ -87,7 +87,7 @@ describe('fileMapUtils', () => {
         ],
       };
       const result = updateProjectFileMap(
-        projectsConfigurations as any,
+        projectsConfigurations,
         projectFileMap,
         files,
         new Map([

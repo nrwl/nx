@@ -6,9 +6,8 @@
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx-cloud",
-      "nativeWatcher": true,
       "options": {
-        "accessToken": "NDg1NTA3MTAtOGFmZC00YmIwLTk2Y2MtOTkzNzc4ZTczYTlkfHJlYWQtb25seQ==",
+        "accessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
         "cacheableOperations": [
           "build",
           "lint-base",
@@ -26,7 +25,8 @@
         ],
         "cacheDirectory": "/tmp/nx-cache",
         "parallel": 1,
-        "url": "https://staging.nx.app"
+        "url": "https://staging.nx.app",
+        "useLightClient": true
       }
     }
   },
@@ -43,7 +43,9 @@
       "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/.eslintrc.json",
       "!{projectRoot}/.storybook/**/*",
-      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)"
+      "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
+      "!{projectRoot}/tsconfig.storybook.json",
+      "!{projectRoot}/src/test-setup.[jt]s"
     ],
     "sharedGlobals": ["{workspaceRoot}/babel.config.json"],
     "native": [
@@ -56,8 +58,14 @@
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": ["build-base"],
-      "inputs": ["production", "^production"]
+      "dependsOn": ["build-base", "build-native"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*.node"
+        }
+      ]
     },
     "build-native": {
       "inputs": ["native"]
@@ -166,7 +174,13 @@
       "inputs": ["default", "^production"]
     },
     "build-storybook": {
-      "inputs": ["default", "^production", "{workspaceRoot}/.storybook/**/*"]
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/.storybook/**/*",
+        "{projectRoot}/.storybook/**/*",
+        "{projectRoot}/tsconfig.storybook.json"
+      ]
     }
   },
   "plugins": ["@monodon/rust"]

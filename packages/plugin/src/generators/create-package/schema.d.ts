@@ -1,3 +1,4 @@
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
 import type { Linter } from '@nx/linter';
 
 export interface CreatePackageSchema {
@@ -6,6 +7,7 @@ export interface CreatePackageSchema {
 
   // options to create cli package, passed to js library generator
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   skipFormat: boolean;
   tags?: string;
   unitTestRunner: 'jest' | 'none';

@@ -9,8 +9,10 @@ import {
   DepConstraint,
   findConstraintsFor,
   findTransitiveExternalDependencies,
+  getSourceFilePath,
   hasBannedDependencies,
   hasBannedImport,
+  hasNoneOfTheseTags,
   isAngularSecondaryEntrypoint,
   isTerminalRun,
 } from './runtime-lint-utils';
@@ -80,6 +82,28 @@ describe('findConstraintsFor', () => {
       })
     ).toEqual([{ sourceTag: '/a|b/', onlyDependOnLibsWithTags: ['c'] }]);
   });
+
+  it('should find constraints matching glob', () => {
+    const constriants: DepConstraint[] = [
+      { sourceTag: 'a:*', onlyDependOnLibsWithTags: ['b:*'] },
+      { sourceTag: 'b:*', onlyDependOnLibsWithTags: ['c:*'] },
+      { sourceTag: 'c:*', onlyDependOnLibsWithTags: ['a:*'] },
+    ];
+    expect(
+      findConstraintsFor(constriants, {
+        type: 'lib',
+        name: 'someLib',
+        data: { root: '.', tags: ['a:a'] },
+      })
+    ).toEqual([{ sourceTag: 'a:*', onlyDependOnLibsWithTags: ['b:*'] }]);
+    expect(
+      findConstraintsFor(constriants, {
+        type: 'lib',
+        name: 'someLib',
+        data: { root: '.', tags: ['a:abc'] },
+      })
+    ).toEqual([{ sourceTag: 'a:*', onlyDependOnLibsWithTags: ['b:*'] }]);
+  });
 });
 
 describe('hasBannedImport', () => {
@@ -115,7 +139,9 @@ describe('hasBannedImport', () => {
       },
     ];
 
-    expect(hasBannedImport(source, target, constraints)).toBe(constraints[1]);
+    expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
+      constraints[1]
+    );
   });
 
   it('should return just first DepConstraint banning given target', () => {
@@ -133,7 +159,9 @@ describe('hasBannedImport', () => {
       },
     ];
 
-    expect(hasBannedImport(source, target, constraints)).toBe(constraints[1]);
+    expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
+      constraints[1]
+    );
   });
 
   it('should return null if tag does not match', () => {
@@ -151,7 +179,9 @@ describe('hasBannedImport', () => {
       },
     ];
 
-    expect(hasBannedImport(source, target, constraints)).toBe(undefined);
+    expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
+      undefined
+    );
   });
 
   it('should return null if packages does not match', () => {
@@ -165,7 +195,9 @@ describe('hasBannedImport', () => {
       },
     ];
 
-    expect(hasBannedImport(source, target, constraints)).toBe(undefined);
+    expect(hasBannedImport(source, target, constraints, 'react-native')).toBe(
+      undefined
+    );
   });
 });
 
@@ -275,12 +307,17 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     );
   });
 
-  it('should return target and constraint pair if any dependents have banned import', () => {
+  it("should return empty array if any dependents don't have banned import", () => {
     expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, {
-        sourceTag: 'a',
-        bannedExternalImports: ['angular'],
-      })
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        {
+          sourceTag: 'a',
+          bannedExternalImports: ['angular'],
+        },
+        'react-native'
+      )
     ).toStrictEqual([]);
   });
 
@@ -291,7 +328,12 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        constraint,
+        'react-native'
+      )
     ).toStrictEqual([[bannedTarget, d, constraint]]);
   });
 
@@ -302,7 +344,12 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        constraint,
+        'react'
+      )
     ).toStrictEqual([
       [nonBannedTarget, target, constraint],
       [nonBannedTarget, c, constraint],
@@ -316,8 +363,20 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
     };
 
     expect(
-      hasBannedDependencies(externalDependencies.slice(1), graph, constraint)
-        .length
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        constraint,
+        'react-native'
+      ).length
+    ).toBe(0);
+    expect(
+      hasBannedDependencies(
+        externalDependencies.slice(1),
+        graph,
+        constraint,
+        'react'
+      ).length
     ).toBe(0);
   });
 });
@@ -473,4 +532,46 @@ describe('isAngularSecondaryEntrypoint', () => {
       )
     ).toBe(false);
   });
+});
+
+describe('hasNoneOfTheseTags', () => {
+  const source: ProjectGraphProjectNode = {
+    type: 'lib',
+    name: 'aLib',
+    data: {
+      tags: ['abc'],
+    } as any,
+  };
+
+  it.each([
+    [true, ['a']],
+    [true, ['b']],
+    [true, ['c']],
+    [true, ['az*']],
+    [true, ['/[A-Z]+/']],
+    [false, ['ab*']],
+    [false, ['*']],
+    [false, ['/[a-z]*/']],
+  ])(
+    'should return %s when project has tags ["abc"] and requested tags are %s',
+    (expected, tags) => {
+      expect(hasNoneOfTheseTags(source, tags)).toBe(expected);
+    }
+  );
+});
+
+describe('getSourceFilePath', () => {
+  it.each([
+    ['/root/libs/dev-kit/package.json', '/root'],
+    ['/root/libs/dev-kit/package.json', 'C:\\root'],
+    ['C:\\root\\libs\\dev-kit\\package.json', '/root'],
+    ['C:\\root\\libs\\dev-kit\\package.json', 'C:\\root'],
+  ])(
+    'should return "libs/dev-kit/package.json" when sourceFileName is "%s" and projectPath is "%s"',
+    (sourceFileName, projectPath) => {
+      expect(getSourceFilePath(sourceFileName, projectPath)).toBe(
+        'libs/dev-kit/package.json'
+      );
+    }
+  );
 });

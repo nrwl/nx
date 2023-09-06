@@ -1,11 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TS config for project if tsConfiguration true 1`] = `
+exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TS config for project by default 1`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
   stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/angular',
     options: {},
@@ -16,17 +16,17 @@ export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
-exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 1`] = `
+exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files by default 1`] = `
 {
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
   "name": "test-ui-lib",
   "projectType": "library",
-  "root": "libs/test-ui-lib",
-  "sourceRoot": "libs/test-ui-lib/src",
+  "root": "test-ui-lib",
+  "sourceRoot": "test-ui-lib/src",
   "tags": [],
   "targets": {
     "build-storybook": {
@@ -39,7 +39,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
       "options": {
         "browserTarget": "test-ui-lib:build-storybook",
         "compodoc": false,
-        "configDir": "libs/test-ui-lib/.storybook",
+        "configDir": "test-ui-lib/.storybook",
         "outputDir": "dist/storybook/test-ui-lib",
       },
       "outputs": [
@@ -50,7 +50,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
       "executor": "@nx/linter:eslint",
       "options": {
         "lintFilePatterns": [
-          "libs/test-ui-lib/**/*.ts",
+          "test-ui-lib/**/*.ts",
         ],
       },
       "outputs": [
@@ -67,7 +67,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
       "options": {
         "browserTarget": "test-ui-lib:build-storybook",
         "compodoc": false,
-        "configDir": "libs/test-ui-lib/.storybook",
+        "configDir": "test-ui-lib/.storybook",
         "port": 4400,
       },
     },
@@ -80,25 +80,31 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
       },
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "libs/test-ui-lib/jest.config.ts",
+        "jestConfig": "test-ui-lib/jest.config.ts",
         "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
       ],
     },
+    "test-storybook": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "test-storybook -c test-ui-lib/.storybook --url=http://localhost:4400",
+      },
+    },
   },
 }
 `;
 
-exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 2`] = `null`;
+exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files by default 2`] = `null`;
 
-exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files 3`] = `
+exports[`@nx/storybook:configuration for Storybook v7 basic functionalities should generate TypeScript Configuration files by default 3`] = `
 "import type { StorybookConfig } from '@storybook/angular';
 
 const config: StorybookConfig = {
   stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/angular',
     options: {},
@@ -109,7 +115,7 @@ export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
@@ -121,9 +127,9 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
     "outDir": ""
   },
   "files": [
-    "../../node_modules/@nx/react/typings/styled-jsx.d.ts",
-    "../../node_modules/@nx/react/typings/cssmodule.d.ts",
-    "../../node_modules/@nx/react/typings/image.d.ts"
+    "../node_modules/@nx/react/typings/styled-jsx.d.ts",
+    "../node_modules/@nx/react/typings/cssmodule.d.ts",
+    "../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
     "src/**/*.spec.ts",
@@ -151,7 +157,7 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite/.storybook/" 1`] = `
 "const config = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -166,7 +172,7 @@ export default config;
 
 // To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
@@ -177,7 +183,7 @@ exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configu
 
 const config: StorybookConfig = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -192,16 +198,22 @@ export default config;
 
 // To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-vite-ts/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+    '@nx/react/plugins/storybook',
+  ],
   framework: {
     name: '@storybook/react-webpack5',
     options: {},
@@ -212,16 +224,18 @@ export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/main-webpack/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/nextjs';
+
+const config: StorybookConfig = {
   stories: ['../components/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/nextjs',
     options: {},
@@ -232,16 +246,22 @@ export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/nextapp/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/react-swc/.storybook/" 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+    '@nx/react/plugins/storybook',
+  ],
   framework: {
     name: '@storybook/react-webpack5',
     options: {},
@@ -252,7 +272,7 @@ export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
@@ -261,7 +281,7 @@ exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configu
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 1`] = `
 "const config = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -276,16 +296,22 @@ export default config;
 
 // To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reapp/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+    '@nx/react/plugins/storybook',
+  ],
   framework: {
     name: '@storybook/react-webpack5',
     options: {},
@@ -296,16 +322,18 @@ export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/reappw/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/web-components-vite';
+
+const config: StorybookConfig = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/web-components-vite',
     options: {
@@ -320,16 +348,18 @@ export default config;
 
 // To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/wv1/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/ww1/.storybook/" 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/web-components-webpack5';
+
+const config: StorybookConfig = {
   stories: ['../src/app/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/web-components-webpack5',
     options: {},
@@ -340,16 +370,22 @@ export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "apps/ww1/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
   stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: [
+    '@storybook/addon-essentials',
+    '@storybook/addon-interactions',
+    '@nx/react/plugins/storybook',
+  ],
   framework: {
     name: '@storybook/react-webpack5',
     options: {},
@@ -360,16 +396,18 @@ export default config;
 
 // To customize your webpack configuration you can use the webpackFinal field.
 // Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-rollup/.storybook/" 2`] = `null`;
 
 exports[`@nx/storybook:configuration for Storybook v7 generate Storybook configuration for all types of projects should contain the correct configuration in "libs/react-vite/.storybook/" 1`] = `
-"const config = {
+"import type { StorybookConfig } from '@storybook/react-vite';
+
+const config: StorybookConfig = {
   stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
   framework: {
     name: '@storybook/react-vite',
     options: {
@@ -384,7 +422,7 @@ export default config;
 
 // To customize your Vite configuration you can use the viteFinal field.
 // Check https://storybook.js.org/docs/react/builders/vite#configuration
-// and https://nx.dev/packages/storybook/documents/custom-builder-configs
+// and https://nx.dev/recipes/storybook/custom-builder-configs
 "
 `;
 
@@ -483,6 +521,12 @@ Map {
         "outputs": [
           "coverage/apps/main-vite",
         ],
+      },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/main-vite/.storybook --url=http://localhost:4400",
+        },
       },
     },
   },
@@ -614,6 +658,12 @@ Map {
         "outputs": [
           "coverage/apps/main-vite-ts",
         ],
+      },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/main-vite-ts/.storybook --url=http://localhost:4400",
+        },
       },
     },
   },
@@ -774,6 +824,12 @@ Map {
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/main-webpack/.storybook --url=http://localhost:4400",
+        },
+      },
     },
   },
   "main-webpack-e2e" => {
@@ -929,6 +985,12 @@ Map {
         "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
+      },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/nextapp/.storybook --url=http://localhost:4400",
+        },
       },
     },
   },
@@ -1330,6 +1392,12 @@ Map {
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/react-swc/.storybook --url=http://localhost:4400",
+        },
+      },
     },
   },
   "react-swc-e2e" => {
@@ -1498,6 +1566,12 @@ Map {
           "coverage/apps/reapp",
         ],
       },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/reapp/.storybook --url=http://localhost:4400",
+        },
+      },
     },
   },
   "reapp-e2e" => {
@@ -1656,6 +1730,12 @@ Map {
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/reappw/.storybook --url=http://localhost:4400",
+        },
+      },
     },
   },
   "reappw-e2e" => {
@@ -1786,6 +1866,12 @@ Map {
         "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
+      },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/wv1/.storybook --url=http://localhost:4400",
+        },
       },
     },
   },
@@ -1932,6 +2018,12 @@ Map {
         "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
+      },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c apps/ww1/.storybook --url=http://localhost:4400",
+        },
       },
     },
   },
@@ -2197,6 +2289,12 @@ Map {
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c libs/react-rollup/.storybook --url=http://localhost:4400",
+        },
+      },
     },
   },
   "react-rollup-2" => {
@@ -2327,6 +2425,12 @@ Map {
         "outputs": [
           "coverage/libs/react-vite",
         ],
+      },
+      "test-storybook": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "test-storybook -c libs/react-vite/.storybook --url=http://localhost:4400",
+        },
       },
     },
   },

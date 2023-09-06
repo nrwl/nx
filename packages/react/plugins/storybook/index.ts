@@ -135,7 +135,7 @@ const fixBabelConfigurationIfNeeded = (
   let babelRuleItem;
   for (const rule of webpackConfig.module.rules) {
     if (typeof rule === 'string') continue;
-    if (!Array.isArray(rule.use)) continue;
+    if (!rule || !Array.isArray(rule.use)) continue;
     for (const item of rule.use) {
       if (typeof item !== 'string' && item['loader'].includes('babel-loader')) {
         babelRuleItem = item;
@@ -229,8 +229,8 @@ export const webpack = async (
       new DefinePlugin(
         getClientEnvironment(storybookWebpackConfig.mode).stringified
       ),
-      ...(storybookWebpackConfig.plugins ?? []),
-      ...(finalConfig.plugins ?? [])
+      ...((storybookWebpackConfig.plugins as WebpackPluginInstance[]) ?? []),
+      ...((finalConfig.plugins as WebpackPluginInstance[]) ?? [])
     ) as WebpackPluginInstance[],
   };
 };

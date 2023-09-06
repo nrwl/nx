@@ -26,4 +26,10 @@ For example, the url `https://bitbucket.org/nrwl/large-monorepo/src/main/` has a
 
 To use an app password for authentication, one must be generated with proper permissions. The minimum required permissions are write access to PRs.
 
+![Create App Password](/nx-cloud/set-up/minimal-bitbucket-cloud-app-password.webp)
+
 Once the app password is created, verify the username is correct, paste the value, and then click "Connect". This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved, and setup is complete.
+
+{% callout type="note" title="Use the correct username" %}
+Make sure that you are using your Bitbucket username, found on the [account settings](https://bitbucket.org/account/settings/) screen, and not your email address.
+{% /callout %}

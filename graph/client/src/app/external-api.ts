@@ -1,6 +1,7 @@
 import { getRouter } from './get-router';
 import { getProjectGraphService } from './machines/get-services';
 import { ProjectGraphMachineEvents } from './feature-projects/machines/interfaces';
+import { getGraphService } from './machines/graph.service';
 
 export class ExternalApi {
   _projectGraphService = getProjectGraphService();
@@ -13,6 +14,7 @@ export class ExternalApi {
   });
 
   router = getRouter();
+  graphService = getGraphService();
 
   projectGraphService = {
     send: (event: ProjectGraphMachineEvents) => {
@@ -20,8 +22,31 @@ export class ExternalApi {
     },
   };
 
+  private fileClickCallbackListeners: ((url: string) => void)[] = [];
+  private openProjectConfigCallbackListeners: ((
+    projectName: string
+  ) => void)[] = [];
+  private runTaskCallbackListeners: ((taskId: string) => void)[] = [];
+
   get depGraphService() {
     return this.projectGraphService;
+  }
+
+  constructor() {
+    this.graphService.listen((event) => {
+      if (event.type === 'FileLinkClick') {
+        const url = `${event.sourceRoot}/${event.file}`;
+        this.fileClickCallbackListeners.forEach((cb) => cb(url));
+      }
+      if (event.type === 'ProjectOpenConfigClick') {
+        this.openProjectConfigCallbackListeners.forEach((cb) =>
+          cb(event.projectName)
+        );
+      }
+      if (event.type === 'RunTaskClick') {
+        this.runTaskCallbackListeners.forEach((cb) => cb(event.taskId));
+      }
+    });
   }
 
   focusProject(projectName: string) {
@@ -40,6 +65,16 @@ export class ExternalApi {
   disableExperimentalFeatures() {
     localStorage.setItem('showExperimentalFeatures', 'false');
     window.appConfig.showExperimentalFeatures = false;
+  }
+
+  registerFileClickCallback(callback: (url: string) => void) {
+    this.fileClickCallbackListeners.push(callback);
+  }
+  registerOpenProjectConfigCallback(callback: (projectName: string) => void) {
+    this.openProjectConfigCallbackListeners.push(callback);
+  }
+  registerRunTaskCallback(callback: (taskId: string) => void) {
+    this.runTaskCallbackListeners.push(callback);
   }
 
   private handleLegacyProjectGraphEvent(event: ProjectGraphMachineEvents) {

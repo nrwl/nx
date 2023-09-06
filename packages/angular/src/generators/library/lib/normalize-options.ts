@@ -1,22 +1,16 @@
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nx/devkit';
-
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
+import { names, Tree } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
-
 import { Linter } from '@nx/linter';
-
-import { Schema } from '../schema';
-import { NormalizedSchema } from './normalized-schema';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { normalizeNewProjectPrefix } from '../../utils/project';
+import { Schema } from '../schema';
+import { NormalizedSchema } from './normalized-schema';
 
-export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
+export async function normalizeOptions(
+  host: Tree,
+  schema: Schema
+): Promise<NormalizedSchema> {
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,
@@ -33,36 +27,32 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
     ...schema,
   };
 
-  const name = names(options.name).fileName;
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const fullProjectDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`.replace(/\/+/g, '/')
-    : name;
+  const {
+    projectName,
+    names: projectNames,
+    projectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/angular:library',
+  });
 
-  const { libsDir: defaultLibsDirectory, standaloneAsDefault } =
-    getWorkspaceLayout(host);
-  const npmScope = getNpmScope(host);
-  const libsDir = layoutDirectory ?? defaultLibsDirectory;
-
-  const projectName = fullProjectDirectory
-    .replace(new RegExp('/', 'g'), '-')
-    .replace(/-\d+/g, '');
-  const fileName = options.simpleName ? name : projectName;
-  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
+  const fileName = options.simpleName
+    ? projectNames.projectSimpleName
+    : projectNames.projectFileName;
 
   const moduleName = `${names(fileName).className}Module`;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
+
+  const npmScope = getNpmScope(host);
   const prefix = normalizeNewProjectPrefix(options.prefix, npmScope, 'lib');
-
-  options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
-
-  const importPath =
-    options.importPath || getImportPath(host, fullProjectDirectory);
 
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
@@ -74,13 +64,14 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
     projectRoot,
     entryFile: 'index',
     moduleName,
-    projectDirectory: fullProjectDirectory,
     modulePath,
     parsedTags,
     fileName,
     importPath,
     ngCliSchematicLibRoot,
-    standaloneComponentName: `${names(name).className}Component`,
+    standaloneComponentName: `${
+      names(projectNames.projectSimpleName).className
+    }Component`,
   };
 
   const {

@@ -5,6 +5,9 @@ import type { Linter } from 'eslint';
 import type { AngularProjectConfiguration } from '../../utils/types';
 import { addLintingGenerator } from '../add-linting/add-linting';
 
+/**
+ * @deprecated This generator will be removed in v17
+ */
 export async function conversionGenerator(
   host: Tree,
   options: ConvertTSLintToESLintSchema

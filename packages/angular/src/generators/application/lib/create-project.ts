@@ -6,6 +6,10 @@ import type { NormalizedSchema } from './normalized-schema';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
   const installedAngularInfo = getInstalledAngularVersionInfo(tree);
+  const buildExecutor =
+    options.bundler === 'webpack'
+      ? '@angular-devkit/build-angular:browser'
+      : '@angular-devkit/build-angular:browser-esbuild';
   const project: AngularProjectConfiguration = {
     name: options.name,
     projectType: 'application',
@@ -15,7 +19,7 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
     targets: {
       build: {
-        executor: '@angular-devkit/build-angular:browser',
+        executor: buildExecutor,
         outputs: ['{options.outputPath}'],
         options: {
           outputPath: `dist/${
@@ -37,18 +41,21 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
         },
         configurations: {
           production: {
-            budgets: [
-              {
-                type: 'initial',
-                maximumWarning: '500kb',
-                maximumError: '1mb',
-              },
-              {
-                type: 'anyComponentStyle',
-                maximumWarning: '2kb',
-                maximumError: '4kb',
-              },
-            ],
+            budgets:
+              options.bundler === 'webpack'
+                ? [
+                    {
+                      type: 'initial',
+                      maximumWarning: '500kb',
+                      maximumError: '1mb',
+                    },
+                    {
+                      type: 'anyComponentStyle',
+                      maximumWarning: '2kb',
+                      maximumError: '4kb',
+                    },
+                  ]
+                : undefined,
             fileReplacements:
               installedAngularInfo.major === 14
                 ? [
@@ -63,10 +70,10 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
           development: {
             buildOptimizer: false,
             optimization: false,
-            vendorChunk: true,
+            vendorChunk: options.bundler === 'webpack' ? true : undefined,
             extractLicenses: false,
             sourceMap: true,
-            namedChunks: true,
+            namedChunks: options.bundler === 'webpack' ? true : undefined,
           },
         },
         defaultConfiguration: 'production',

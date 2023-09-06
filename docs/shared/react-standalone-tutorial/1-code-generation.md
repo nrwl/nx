@@ -11,9 +11,9 @@ This tutorial sets up a repo with a single application at the root level that br
 {% youtube
 src="https://www.youtube.com/embed/dqCZteGFP4k"
 title="Tutorial: React Standalone Application"
-width="100%" /%}
+/%}
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/standalone-react-app" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone" /%}
 
 # React Standalone Tutorial - Part 1: Code Generation
 

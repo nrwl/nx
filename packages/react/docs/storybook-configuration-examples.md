@@ -4,17 +4,17 @@ This generator will set up Storybook for your **React** project. You can also us
 nx g @nx/react:storybook-configuration project-name
 ```
 
-You can read more about how this generator works, in the [Storybook for React overview page](/packages/storybook/documents/overview-react#generate-storybook-configuration-for-an-react-project).
+You can read more about how this generator works, in the [Storybook for React overview page](/recipes/storybook/overview-react#generate-storybook-configuration-for-an-react-project).
 
 When running this generator, you will be prompted to provide the following:
 
 - The `name` of the project you want to generate the configuration for.
-- Whether you want to `configureCypress`. If you choose `yes`, a Cypress e2e app will be created (or configured) to run against the project's Storybook instance. You can read more about this in the [Storybook for React - Cypress section](/packages/storybook/documents/overview-react#cypress-tests-for-stories).
+- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/react/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. Also, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner). You can read more about this in the [Nx Storybook interaction tests documentation page](/packages/storybook/documents/interaction-tests)..
 - Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.
-- Whether you want to `generateCypressSpecs`. If you choose `yes`, a test file is going to be generated in the project's Cypress e2e app for each of your components.
-- Whether you want to `configureTestRunner`. If you choose `yes`, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/react/writing-tests/test-runner).
 
 You must provide a `name` for the generator to work.
+
+By default, this generator will also set up [Storybook interaction tests](https://storybook.js.org/docs/react/writing-tests/interaction-testing). If you don't want to set up Storybook interaction tests, you can pass the `--interactionTests=false` option, but it's not recommended.
 
 There are a number of other options available. Let's take a look at some examples.
 
@@ -24,14 +24,6 @@ There are a number of other options available. Let's take a look at some example
 
 ```bash
 nx g @nx/react:storybook-configuration ui
-```
-
-This will generate Storybook configuration for the `ui` project.
-
-### Generate Storybook configuration using TypeScript
-
-```bash
-nx g @nx/react:storybook-configuration ui --tsConfiguration=true
 ```
 
 This will generate Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory, eg. `.storybook/main.ts`).
@@ -53,3 +45,11 @@ nx g @nx/react:storybook-configuration ui --generateStories=true --js=true
 ```
 
 This will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.
+
+### Generate Storybook configuration using JavaScript
+
+```bash
+nx g @nx/react:storybook-configuration ui --tsConfiguration=false
+```
+
+By default, our generator generates TypeScript Storybook configuration files. You can choose to use JavaScript for the Storybook configuration files of your project (the files inside the `.storybook` directory, eg. `.storybook/main.js`).

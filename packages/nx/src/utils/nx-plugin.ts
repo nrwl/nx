@@ -1,8 +1,11 @@
-import { sync } from 'fast-glob';
 import { existsSync } from 'fs';
 import * as path from 'path';
-import { ProjectGraphProcessor } from '../config/project-graph';
-import { Workspaces } from '../config/workspaces';
+import {
+  ProjectFileMap,
+  ProjectGraph,
+  ProjectGraphExternalNode,
+} from '../config/project-graph';
+import { toProjectName } from '../config/workspaces';
 
 import { workspaceRoot } from './workspace-root';
 import { readJsonFile } from '../utils/fileutils';
@@ -17,7 +20,6 @@ import {
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
-  TargetConfiguration,
 } from '../config/workspace-json-project-json';
 import { logger } from './logger';
 import {
@@ -25,30 +27,116 @@ import {
   findProjectForPath,
 } from '../project-graph/utils/find-project-for-path';
 import { normalizePath } from './path';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import { getNxRequirePaths } from './installation-directory';
 import { readTsConfig } from '../plugins/js/utils/typescript';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 import type * as ts from 'typescript';
+import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
+import { NxPluginV1 } from './nx-plugin.deprecated';
+import { ProjectGraphDependencyWithFile } from '../project-graph/project-graph-builder';
+import { combineGlobPatterns } from './globs';
+import {
+  NxAngularJsonPlugin,
+  shouldMergeAngularProjects,
+} from '../adapter/angular-json';
+import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
+import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
 
-export type ProjectTargetConfigurator = (
-  file: string
-) => Record<string, TargetConfiguration>;
+/**
+ * Context for {@link CreateNodesFunction}
+ */
+export interface CreateNodesContext {
+  readonly nxJsonConfiguration: NxJsonConfiguration;
+  readonly workspaceRoot: string;
+}
+
+/**
+ * A function which parses a configuration file into a set of nodes.
+ * Used for creating nodes for the {@link ProjectGraph}
+ */
+export type CreateNodesFunction = (
+  projectConfigurationFile: string,
+  context: CreateNodesContext
+) => {
+  projects?: Record<string, ProjectConfiguration>;
+  externalNodes?: Record<string, ProjectGraphExternalNode>;
+};
+
+/**
+ * A pair of file patterns and {@link CreateNodesFunction}
+ */
+export type CreateNodes = readonly [
+  projectFilePattern: string,
+  createNodesFunction: CreateNodesFunction
+];
+
+/**
+ * Context for {@link CreateDependencies}
+ */
+export interface CreateDependenciesContext {
+  /**
+   * The current project graph,
+   */
+  readonly graph: ProjectGraph;
+
+  /**
+   * The configuration of each project in the workspace
+   */
+  readonly projectsConfigurations: ProjectsConfigurations;
+
+  /**
+   * The `nx.json` configuration from the workspace
+   */
+  readonly nxJsonConfiguration: NxJsonConfiguration;
+
+  /**
+   * All files in the workspace
+   */
+  readonly fileMap: ProjectFileMap;
+
+  /**
+   * Files changes since last invocation
+   */
+  readonly filesToProcess: ProjectFileMap;
+}
+
+/**
+ * A function which parses files in the workspace to create dependencies in the {@link ProjectGraph}
+ * Use {@link validateDependency} to validate dependencies
+ */
+export type CreateDependencies = (
+  context: CreateDependenciesContext
+) =>
+  | ProjectGraphDependencyWithFile[]
+  | Promise<ProjectGraphDependencyWithFile[]>;
+
+/**
+ * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}
+ */
+export type NxPluginV2 = {
+  name: string;
+
+  /**
+   * Provides a file pattern and function that retrieves configuration info from
+   * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
+   */
+  createNodes?: CreateNodes;
+
+  // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
+  /**
+   * Provides a function to analyze files to create dependencies for the {@link ProjectGraph}
+   */
+  createDependencies?: CreateDependencies;
+};
+
+export * from './nx-plugin.deprecated';
 
 /**
  * A plugin for Nx
  */
-export interface NxPlugin {
-  name: string;
-  processProjectGraph?: ProjectGraphProcessor;
-  registerProjectTargets?: ProjectTargetConfigurator;
-
-  /**
-   * A glob pattern to search for non-standard project files.
-   * @example: ["*.csproj", "pom.xml"]
-   */
-  projectFilePatterns?: string[];
-}
+export type NxPlugin = NxPluginV1 | NxPluginV2;
 
 // Short lived cache (cleared between cmd runs)
 // holding resolved nx plugin objects.
@@ -84,8 +172,16 @@ function getPluginPathAndName(
   }
   const packageJsonPath = path.join(pluginPath, 'package.json');
 
+  const extension = path.extname(pluginPath);
+
+  // Register the ts-transpiler if we are pointing to a
+  // plain ts file that's not part of a plugin project
+  if (extension === '.ts' && !tsNodeAndPathsRegistered) {
+    registerPluginTSTranspiler();
+  }
+
   const { name } =
-    !['.ts', '.js'].some((x) => x === path.extname(pluginPath)) && // Not trying to point to a ts or js file
+    !['.ts', '.js'].some((x) => x === extension) && // Not trying to point to a ts or js file
     existsSync(packageJsonPath) // plugin has a package.json
       ? readJsonFile(packageJsonPath) // read name from package.json
       : { name: moduleName };
@@ -104,7 +200,7 @@ export async function loadNxPluginAsync(
 
   let { pluginPath, name } = getPluginPathAndName(moduleName, paths, root);
   const plugin = (await import(pluginPath)) as NxPlugin;
-  plugin.name = name;
+  plugin.name ??= name;
   nxPluginCache.set(moduleName, plugin);
   return plugin;
 }
@@ -117,7 +213,7 @@ function loadNxPluginSync(moduleName: string, paths: string[], root: string) {
 
   let { pluginPath, name } = getPluginPathAndName(moduleName, paths, root);
   const plugin = require(pluginPath) as NxPlugin;
-  plugin.name = name;
+  plugin.name ??= name;
   nxPluginCache.set(moduleName, plugin);
   return plugin;
 }
@@ -126,18 +222,18 @@ function loadNxPluginSync(moduleName: string, paths: string[], root: string) {
  * @deprecated Use loadNxPlugins instead.
  */
 export function loadNxPluginsSync(
-  plugins?: string[],
+  plugins: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
-): NxPlugin[] {
-  const result: NxPlugin[] = [];
-
+): (NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>)[] {
   // TODO: This should be specified in nx.json
   // Temporarily load js as if it were a plugin which is built into nx
   // In the future, this will be optional and need to be specified in nx.json
-  const jsPlugin: any = require('../plugins/js');
-  jsPlugin.name = 'nx-js-graph-plugin';
-  result.push(jsPlugin as NxPlugin);
+  const result: NxPlugin[] = [...getDefaultPluginsSync(root)];
+
+  if (shouldMergeAngularProjects(root, false)) {
+    result.push(NxAngularJsonPlugin);
+  }
 
   plugins ??= [];
   for (const plugin of plugins) {
@@ -153,53 +249,74 @@ export function loadNxPluginsSync(
     }
   }
 
-  return result;
+  // We push the nx core node plugins onto the end, s.t. it overwrites any other plugins
+  result.push(
+    getNxPackageJsonWorkspacesPlugin(root),
+    CreateProjectJsonProjectsPlugin
+  );
+
+  return result.map(ensurePluginIsV2);
 }
 
 export async function loadNxPlugins(
-  plugins?: string[],
+  plugins: string[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
-): Promise<NxPlugin[]> {
-  const result: NxPlugin[] = [];
+): Promise<(NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>)[]> {
+  const result: NxPlugin[] = [...(await getDefaultPlugins(root))];
 
-  // TODO: This should be specified in nx.json
+  // TODO: These should be specified in nx.json
   // Temporarily load js as if it were a plugin which is built into nx
   // In the future, this will be optional and need to be specified in nx.json
-  const jsPlugin: any = await import('../plugins/js');
-  jsPlugin.name = 'nx-js-graph-plugin';
-  result.push(jsPlugin as NxPlugin);
+  result.push();
 
   plugins ??= [];
   for (const plugin of plugins) {
     result.push(await loadNxPluginAsync(plugin, paths, root));
   }
 
-  return result;
+  // We push the nx core node plugins onto the end, s.t. it overwrites any other plugins
+  result.push(
+    getNxPackageJsonWorkspacesPlugin(root),
+    CreateProjectJsonProjectsPlugin
+  );
+
+  return result.map(ensurePluginIsV2);
 }
 
-export function mergePluginTargetsWithNxTargets(
-  projectRoot: string,
-  targets: Record<string, TargetConfiguration>,
-  plugins: NxPlugin[]
-): Record<string, TargetConfiguration> {
-  let newTargets: Record<string, TargetConfiguration> = {};
-  for (const plugin of plugins) {
-    if (!plugin.projectFilePatterns?.length || !plugin.registerProjectTargets) {
-      continue;
-    }
-
-    const projectFiles = sync(`+(${plugin.projectFilePatterns.join('|')})`, {
-      cwd: path.join(workspaceRoot, projectRoot),
-    });
-    for (const projectFile of projectFiles) {
-      newTargets = {
-        ...newTargets,
-        ...plugin.registerProjectTargets(path.join(projectRoot, projectFile)),
-      };
-    }
+function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
+  if (isNxPluginV2(plugin)) {
+    return plugin;
   }
-  return { ...newTargets, ...targets };
+  if (isNxPluginV1(plugin) && plugin.projectFilePatterns) {
+    return {
+      ...plugin,
+      createNodes: [
+        `*/**/${combineGlobPatterns(plugin.projectFilePatterns)}`,
+        (configFilePath) => {
+          const name = toProjectName(configFilePath);
+          return {
+            projects: {
+              [name]: {
+                name,
+                root: dirname(configFilePath),
+                targets: plugin.registerProjectTargets?.(configFilePath),
+              },
+            },
+          };
+        },
+      ],
+    };
+  }
+  return plugin;
+}
+
+export function isNxPluginV2(plugin: NxPlugin): plugin is NxPluginV2 {
+  return 'createNodes' in plugin || 'createDependencies' in plugin;
+}
+
+export function isNxPluginV1(plugin: NxPlugin): plugin is NxPluginV1 {
+  return 'processProjectGraph' in plugin || 'projectFilePatterns' in plugin;
 }
 
 export function readPluginPackageJson(
@@ -287,10 +404,8 @@ export function registerPluginTSTranspiler() {
 }
 
 function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
-  const workspace = new Workspaces(root).readProjectsConfigurations({
-    _ignorePluginInference: true,
-  });
-  const plugin = findNxProjectForImportPath(importPath, workspace, root);
+  const projects = retrieveProjectConfigurationsWithoutPluginInference(root);
+  const plugin = findNxProjectForImportPath(importPath, projects, root);
   if (!plugin) {
     return null;
   }
@@ -299,13 +414,13 @@ function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
     registerPluginTSTranspiler();
   }
 
-  const projectConfig = workspace.projects[plugin];
+  const projectConfig: ProjectConfiguration = projects[plugin];
   return { path: path.join(root, projectConfig.root), projectConfig };
 }
 
 function findNxProjectForImportPath(
   importPath: string,
-  projects: ProjectsConfigurations,
+  projects: Record<string, ProjectConfiguration>,
   root = workspaceRoot
 ): string | null {
   const tsConfigPaths: Record<string, string[]> = readTsConfigPaths(root);
@@ -314,7 +429,7 @@ function findNxProjectForImportPath(
   );
   if (possiblePaths?.length) {
     const projectRootMappings =
-      createProjectRootMappingsFromProjectConfigurations(projects.projects);
+      createProjectRootMappingsFromProjectConfigurations(projects);
     for (const tsConfigPath of possiblePaths) {
       const nxProject = findProjectForPath(tsConfigPath, projectRootMappings);
       if (nxProject) {
@@ -366,4 +481,24 @@ function readPluginMainFromProjectConfiguration(
     plugin.targets?.build?.options ||
     {};
   return main;
+}
+
+async function getDefaultPlugins(root: string) {
+  const plugins: NxPlugin[] = [await import('../plugins/js')];
+
+  if (shouldMergeAngularProjects(root, false)) {
+    plugins.push(
+      await import('../adapter/angular-json').then((m) => m.NxAngularJsonPlugin)
+    );
+  }
+  return plugins;
+}
+
+function getDefaultPluginsSync(root: string) {
+  const plugins: NxPlugin[] = [require('../plugins/js')];
+
+  if (shouldMergeAngularProjects(root, false)) {
+    plugins.push(require('../adapter/angular-json').NxAngularJsonPlugin);
+  }
+  return plugins;
 }

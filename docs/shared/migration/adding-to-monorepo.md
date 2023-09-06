@@ -4,15 +4,20 @@
 Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particular? In case you missed it, Lerna v6 is powering Nx underneath. As a result, Lerna gets all the modern features such as caching and task pipelines. Read more on [https://lerna.js.org/upgrade](https://lerna.js.org/upgrade).
 {% /callout %}
 
-Nx has first class support for [package-based monorepos](/tutorials/package-based-repo-tutorial). As a result, if you have an existing NPM/Yarn or PNPM based monorepo setup, you can easily add Nx to get
+Nx has first-class support for [package-based monorepos](/getting-started/tutorials/package-based-repo-tutorial). As a result, if you have an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 
 - fast [task scheduling](/core-features/run-tasks)
 - support for [task pipelines](/concepts/task-pipeline-configuration)
 - [caching](/core-features/cache-task-results)
-- optionally [remote caching with Nx Cloud](/core-features/share-your-cache)
+- optionally [remote caching with Nx Cloud](/core-features/remote-cache)
 - optionally [distributed task execution with Nx Cloud](/core-features/distribute-task-execution)
 
-This is a low-impact operation because all that needs to be done is to install the `nx` package at the root-level and add an `nx.json` for configuring caching and task pipelines.
+This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and add an `nx.json` for configuring caching and task pipelines.
+
+{% youtube
+src="https://www.youtube.com/embed/ngdoUQBvAjo"
+title="Add Nx to a PNPM workspaces monorepo"
+width="100%" /%}
 
 ## Installing Nx
 
@@ -90,7 +95,7 @@ This allows for incrementally adopting Nx in your existing workspace.
 
 {% card title="Nx Ignore" description="Learn about how to ignore certain projects using .nxignore" type="documentation" url="/reference/nxignore" /%}
 
-{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="/more-concepts/turbo-and-nx" /%}
+{% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="/concepts/more-concepts/turbo-and-nx" /%}
 
 {% card title="Nx and Lerna" description="Read about how Nx and Lerna can be used together" url="/recipes/adopting-nx/lerna-and-nx" /%}
 

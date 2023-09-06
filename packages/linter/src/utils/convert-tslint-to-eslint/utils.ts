@@ -60,6 +60,9 @@ function warnInCaseOfUnconvertedRules(
   }
 }
 
+/**
+ * @deprecated This will be removed in v17
+ */
 export async function convertTSLintConfig(
   rawTSLintJson: any,
   tslintJsonPath: string,

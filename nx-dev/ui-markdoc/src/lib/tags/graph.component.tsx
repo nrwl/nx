@@ -6,7 +6,7 @@ export function Loading() {
   return (
     <div className="flex h-[450px] w-full items-center justify-center">
       <div
-        className="spinner-border inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-100 border-r-slate-400 dark:border-slate-700 dark:border-r-slate-500"
+        className="spinner-border inline-block h-8 w-8 animate-spin rounded-full border-4 border-slate-200 border-r-slate-400 dark:border-slate-700 dark:border-r-slate-500"
         role="status"
       >
         <span className="sr-only">Loading...</span>

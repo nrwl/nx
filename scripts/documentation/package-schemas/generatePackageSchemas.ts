@@ -10,7 +10,7 @@ import {
 } from '@nx/nx-dev/data-access-packages';
 import { NxSchema, PackageMetadata } from '@nx/nx-dev/models-package';
 import { generateJsonFile, generateMarkdownFile } from '../utils';
-import { getPackageMetadataList } from './package-metadata';
+import { findPackageMetadataList } from './package-metadata';
 import { schemaResolver } from './schema.resolver';
 
 function processSchemaData(data: NxSchema, path: string): NxSchema {
@@ -37,7 +37,7 @@ export function generatePackageSchemas(): Promise<void[]> {
   console.log(`${chalk.blue('i')} Generating Package Schemas`);
   const absoluteRoot = resolve(join(__dirname, '../../../'));
 
-  const packages = getPackageMetadataList(absoluteRoot, 'packages', 'docs').map(
+  const packages = findPackageMetadataList(absoluteRoot, 'packages').map(
     (packageMetadata) => {
       const getCurrentSchemaPath = pathResolver(absoluteRoot);
       if (!!packageMetadata.executors.length) {
@@ -116,7 +116,7 @@ export function generatePackageSchemas(): Promise<void[]> {
 
   const outputPath: string = join(absoluteRoot, 'docs', 'generated');
   const outputPackagesPath: string = join(outputPath, 'packages');
-  const fileGenerationPromises = [];
+  const fileGenerationPromises: Promise<void>[] = [];
 
   // Generates all documents and schemas into their own directories per packages.
   packages.forEach((p) => {

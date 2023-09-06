@@ -12,6 +12,9 @@ import {
 import { addLinterToCyProject } from '../../utils/add-linter';
 import type { Linter as ESLinter } from 'eslint';
 
+/**
+ * @deprecated This generator will be removed in v17
+ */
 export async function conversionGenerator(
   host: Tree,
   options: ConvertTSLintToESLintSchema

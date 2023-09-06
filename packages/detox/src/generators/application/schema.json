@@ -19,7 +19,8 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the E2E project?"
+      "x-prompt": "What name would you like to use for the E2E project?",
+      "pattern": "^[a-zA-Z][^:]*$"
     },
     "appName": {
       "type": "string",
@@ -38,6 +39,11 @@
     "e2eDirectory": {
       "type": "string",
       "description": "A directory where the project is placed relative to apps directory."
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

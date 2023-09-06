@@ -18,12 +18,17 @@
       "x-dropdown": "projects",
       "x-priority": "important"
     },
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "alias": ["configureTestRunner"],
+      "x-priority": "important",
+      "default": true
+    },
     "configureCypress": {
       "type": "boolean",
-      "description": "Specifies whether to configure Cypress or not.",
-      "x-prompt": "Configure a Cypress e2e app to run against the storybook instance?",
-      "default": true,
-      "x-priority": "important"
+      "description": "Specifies whether to configure Cypress or not."
     },
     "generateStories": {
       "type": "boolean",
@@ -34,10 +39,7 @@
     },
     "generateCypressSpecs": {
       "type": "boolean",
-      "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
-      "x-prompt": "Automatically generate test files in the generated Cypress e2e app?",
-      "default": true,
-      "x-priority": "important"
+      "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app."
     },
     "configureStaticServe": {
       "type": "boolean",
@@ -59,7 +61,7 @@
     "tsConfiguration": {
       "type": "boolean",
       "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
-      "default": false,
+      "default": true,
       "x-priority": "important"
     },
     "skipFormat": {
@@ -82,10 +84,6 @@
         "**/**/src/**/*.other.*",
         "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
       ]
-    },
-    "configureTestRunner": {
-      "type": "boolean",
-      "description": "Add a Storybook Test-Runner target."
     }
   },
   "additionalProperties": false,

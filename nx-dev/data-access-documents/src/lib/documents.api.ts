@@ -67,10 +67,27 @@ export class DocumentsApi {
     const document: DocumentMetadata | null =
       this.manifest[this.getManifestKey(path.join('/'))] || null;
 
-    if (!document)
+    if (!document) {
+      if (
+        path[0] === 'packages' &&
+        path[1] === 'devkit' &&
+        path[2] === 'documents'
+      ) {
+        const file = `generated/devkit/${path.slice(3).join('/')}`;
+        return {
+          content: readFileSync(this.getFilePath(file), 'utf8'),
+          description: '',
+          filePath: this.getFilePath(file),
+          id: path.at(-1) || '',
+          name: path.at(-1) || '',
+          relatedDocuments: {},
+          tags: [],
+        };
+      }
       throw new Error(
         `Document not found in manifest with: "${path.join('/')}"`
       );
+    }
     if (this.isDocumentIndex(document)) return this.getDocumentIndex(path);
     return {
       content: readFileSync(this.getFilePath(document.file), 'utf8'),

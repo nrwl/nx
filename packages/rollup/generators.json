@@ -8,11 +8,11 @@
       "description": "Initialize the `@nrwl/rollup` plugin.",
       "hidden": true
     },
-    "rollup-project": {
-      "factory": "./src/generators/rollup-project/rollup-project#rollupProjectSchematic",
-      "schema": "./src/generators/rollup-project/schema.json",
-      "description": "Add rollup configuration to a project.",
-      "hidden": true
+    "configuration": {
+      "aliases": ["rollup-project"],
+      "factory": "./src/generators/configuration/configuration#compat",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add rollup configuration to a project."
     }
   },
   "generators": {
@@ -23,11 +23,11 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
-    "rollup-project": {
-      "factory": "./src/generators/rollup-project/rollup-project#rollupProjectGenerator",
-      "schema": "./src/generators/rollup-project/schema.json",
-      "description": "Add rollup configuration to a project.",
-      "hidden": true
+    "configuration": {
+      "aliases": ["rollup-project"],
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add rollup configuration to a project."
     }
   }
 }

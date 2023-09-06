@@ -1,6 +1,10 @@
 use ignore::WalkBuilder;
 use ignore_files::IgnoreFile;
-use std::path::PathBuf;
+use once_cell::sync::Lazy;
+use os_type::{OSInformation, OSType};
+use std::{fs, path::PathBuf};
+use tracing::trace;
+use watchexec_events::{Event, Tag};
 
 pub(super) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
     let root = root.as_ref();
@@ -45,3 +49,34 @@ pub(super) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
 //         .map(|result| result.path().into())
 //         .collect()
 // }
+
+static OS_PLATFORM: Lazy<OSInformation> = Lazy::new(os_type::current_platform);
+
+pub(super) fn transform_event(watch_event: &Event) -> Option<Event> {
+    if OS_PLATFORM.os_type == OSType::Debian || OS_PLATFORM.os_type == OSType::Arch {
+        let tags = watch_event
+            .tags
+            .clone()
+            .into_iter()
+            .map(|tag| match tag {
+                Tag::Path { path, file_type } => {
+                    trace!("canonicalizing {:?}", path);
+                    let real_path = fs::canonicalize(&path).unwrap_or(path);
+                    trace!("real path {:?}", real_path);
+                    Tag::Path {
+                        path: real_path,
+                        file_type,
+                    }
+                }
+                _ => tag,
+            })
+            .collect();
+
+        Some(Event {
+            tags,
+            metadata: watch_event.metadata.clone(),
+        })
+    } else {
+        None
+    }
+}

@@ -27,9 +27,16 @@ import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
+  return await libraryGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
-  const options = normalizeOptions(host, schema);
+  const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
@@ -84,12 +91,12 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
 
   // Set up test target
   if (options.unitTestRunner === 'jest') {
-    const { jestProjectGenerator } = ensurePackage<typeof import('@nx/jest')>(
+    const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
       '@nx/jest',
       nxVersion
     );
 
-    const jestTask = await jestProjectGenerator(host, {
+    const jestTask = await configurationGenerator(host, {
       ...options,
       project: options.name,
       setupFile: 'none',

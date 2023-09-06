@@ -5,5 +5,6 @@ export enum UnitTestRunner {
 
 export enum E2eTestRunner {
   Cypress = 'cypress',
+  Playwright = 'playwright',
   None = 'none',
 }

@@ -7,7 +7,10 @@ import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
 } from './utils/find-project-for-path';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { readProjectsConfigurationFromProjectGraph } from './project-graph';
 import { fileHasher } from '../hasher/file-hasher';
@@ -52,16 +55,14 @@ export function createProjectFileMap(
 }
 
 export function updateProjectFileMap(
-  projectsConfigurations: ProjectsConfigurations,
+  projectsConfigurations: Record<string, ProjectConfiguration>,
   projectFileMap: ProjectFileMap,
   allWorkspaceFiles: FileData[],
   updatedFiles: Map<string, string>,
   deletedFiles: string[]
 ): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
   const projectRootMappings =
-    createProjectRootMappingsFromProjectConfigurations(
-      projectsConfigurations.projects
-    );
+    createProjectRootMappingsFromProjectConfigurations(projectsConfigurations);
 
   for (const f of updatedFiles.keys()) {
     const matchingProjectFiles =

@@ -89,6 +89,18 @@
       "version": "16.1.0-beta.0",
       "description": "Upgrade @storybook/react-native to 6.5",
       "implementation": "./src/migrations/update-16-1-0/upgrade-storybook-6-5"
+    },
+    "update-16-6-0-add-dependsOn": {
+      "cli": "nx",
+      "version": "16.6.0-beta.0",
+      "description": "Add dependsOn like ensure-symlink or sync-deps to targets",
+      "implementation": "./src/migrations/update-16-6-0/add-depends-on"
+    },
+    "update-16-6-0-update-metro-config": {
+      "cli": "nx",
+      "version": "16.6.0-beta.0",
+      "description": "Update metro.config.js to use the new metro config format",
+      "implementation": "./src/migrations/update-16-6-0/update-metro-config"
     }
   },
   "packageJsonUpdates": {
@@ -1345,6 +1357,72 @@
         },
         "react-native-safe-area-context": {
           "version": "4.5.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.6.0": {
+      "version": "16.6.0-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.72.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-native": {
+          "version": "0.72.2",
+          "alwaysAddToPackageJson": false
+        },
+        "metro": {
+          "version": "0.76.7",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-resolver": {
+          "version": "0.76.7",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-config": {
+          "version": "0.76.7",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-preset": {
+          "version": "0.76.7",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-babel-register": {
+          "version": "0.76.7",
+          "alwaysAddToPackageJson": false
+        },
+        "metro-react-native-babel-transformer": {
+          "version": "0.76.7",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native/metro-config": {
+          "version": "^0.72.9",
+          "alwaysAddToPackageJson": false,
+          "addToPackageJson": "devDependencies"
+        },
+        "@react-native-community/cli": {
+          "version": "11.3.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "11.3.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-ios": {
+          "version": "11.3.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "7.22.6",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-async-storage/async-storage": {
+          "version": "1.19.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-safe-area-context": {
+          "version": "4.7.1",
           "alwaysAddToPackageJson": false
         }
       }

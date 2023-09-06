@@ -43,11 +43,19 @@ export function createPackageJson(
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
+  const rootPackageJson = readJsonFile(
+    `${options.root || workspaceRoot}/package.json`
+  );
+
   const npmDeps = findProjectsNpmDependencies(
     projectNode,
     graph,
     options.target,
-    { helperDependencies: options.helperDependencies },
+    rootPackageJson,
+    {
+      helperDependencies: options.helperDependencies,
+      isProduction: options.isProduction,
+    },
     fileMap
   );
 
@@ -92,9 +100,6 @@ export function createPackageJson(
     );
   };
 
-  const rootPackageJson = readJsonFile(
-    `${options.root || workspaceRoot}/package.json`
-  );
   Object.entries(npmDeps.dependencies).forEach(([packageName, version]) => {
     if (
       rootPackageJson.devDependencies?.[packageName] &&
@@ -179,8 +184,11 @@ export function findProjectsNpmDependencies(
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
   target: string,
+  rootPackageJson: PackageJson,
   options: {
     helperDependencies?: string[];
+    ignoredDependencies?: string[];
+    isProduction?: boolean;
   },
   fileMap?: ProjectFileMap
 ): NpmDeps {
@@ -207,12 +215,22 @@ export function findProjectsNpmDependencies(
     recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
   });
 
+  // if it's production, we want to ignore all found devDependencies
+  const ignoredDependencies =
+    options.isProduction && rootPackageJson.devDependencies
+      ? [
+          ...(options.ignoredDependencies || []),
+          ...Object.keys(rootPackageJson.devDependencies),
+        ]
+      : options.ignoredDependencies || [];
+
   findAllNpmDeps(
     fileMap,
     projectNode,
     graph,
     npmDeps,
     seen,
+    ignoredDependencies,
     dependencyInputs,
     selfInputs
   );
@@ -226,6 +244,7 @@ function findAllNpmDeps(
   graph: ProjectGraph,
   npmDeps: NpmDeps,
   seen: Set<string>,
+  ignoredDependencies: string[],
   dependencyPatterns: string[],
   rootPatterns?: string[]
 ): void {
@@ -260,6 +279,14 @@ function findAllNpmDeps(
     } else {
       if (node) {
         seen.add(dep);
+        // do not add ignored dependencies to the list or non-npm dependencies
+        if (
+          ignoredDependencies.includes(node.data.packageName) ||
+          node.type !== 'npm'
+        ) {
+          continue;
+        }
+
         npmDeps.dependencies[node.data.packageName] = node.data.version;
         recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
       } else if (graph.nodes[dep]) {
@@ -269,6 +296,7 @@ function findAllNpmDeps(
           graph,
           npmDeps,
           seen,
+          ignoredDependencies,
           dependencyPatterns
         );
       }

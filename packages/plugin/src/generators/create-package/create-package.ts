@@ -27,9 +27,19 @@ export async function createPackageGenerator(
   host: Tree,
   schema: CreatePackageSchema
 ) {
+  return await createPackageGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function createPackageGeneratorInternal(
+  host: Tree,
+  schema: CreatePackageSchema
+) {
   const tasks: GeneratorCallback[] = [];
 
-  const options = normalizeSchema(host, schema);
+  const options = await normalizeSchema(host, schema);
   const pluginPackageName = await addPresetGenerator(host, options);
 
   const installTask = addDependenciesToPackageJson(

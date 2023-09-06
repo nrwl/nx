@@ -1,13 +1,9 @@
-import {
-  extendReactEslintJson,
-  extraEslintDependencies,
-} from '../../utils/lint';
+import { extraEslintDependencies } from '../../utils/lint';
 import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
 import { addProject, maybeJs } from './lib/add-project';
-import { addCypress } from './lib/add-cypress';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
@@ -23,7 +19,6 @@ import {
   runTasksInSerial,
   stripIndents,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 
 import reactInitGenerator from '../init/init';
@@ -33,13 +28,17 @@ import {
   babelLoaderVersion,
   nxRspackVersion,
   nxVersion,
-  swcLoaderVersion,
 } from '../../utils/versions';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import * as chalk from 'chalk';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
+import { addE2e } from './lib/add-e2e';
+import {
+  addExtendsToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -64,14 +63,12 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
     });
     tasks.push(lintTask);
 
-    updateJson(
-      host,
-      joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      extendReactEslintJson
-    );
+    if (isEslintConfigSupported(host)) {
+      addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+    }
 
     if (!options.skipPackageJson) {
-      const installTask = await addDependenciesToPackageJson(
+      const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
         extraEslintDependencies.devDependencies
@@ -87,9 +84,19 @@ export async function applicationGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  return await applicationGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(
+  host: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   const tasks = [];
 
-  const options = normalizeOptions(host, schema);
+  const options = await normalizeOptions(host, schema);
   showPossibleWarnings(host, options);
 
   const initTask = await reactInitGenerator(host, {
@@ -190,8 +197,8 @@ export async function applicationGenerator(
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
 
-  const cypressTask = await addCypress(host, options);
-  tasks.push(cypressTask);
+  const e2eTask = await addE2e(host, options);
+  tasks.push(e2eTask);
 
   if (options.unitTestRunner === 'jest') {
     const jestTask = await addJest(host, options);

@@ -1,9 +1,11 @@
-import { Linter } from '@nx/linter';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { Linter } from '@nx/linter';
 
 export interface Schema {
   pluginName: string;
   npmPackageName: string;
   projectDirectory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   pluginOutputPath?: string;
   jestConfig?: string;
   linter?: Linter;

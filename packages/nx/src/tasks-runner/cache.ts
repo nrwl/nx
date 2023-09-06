@@ -1,21 +1,12 @@
 import { workspaceRoot } from '../utils/workspace-root';
-import {
-  copy,
-  lstat,
-  mkdir,
-  mkdirSync,
-  pathExists,
-  readFile,
-  remove,
-  writeFile,
-} from 'fs-extra';
-import { dirname, join, resolve } from 'path';
+import { mkdir, mkdirSync, pathExists, readFile, writeFile } from 'fs-extra';
+import { join } from 'path';
+import { performance } from 'perf_hooks';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { execFile, spawn } from 'child_process';
+import { spawn } from 'child_process';
 import { cacheDir } from '../utils/cache-directory';
-import { platform } from 'os';
 import { Task } from '../config/task-graph';
-import * as fastGlob from 'fast-glob';
+import { machineId } from 'node-machine-id';
 
 export type CachedResult = {
   terminalOutput: string;
@@ -29,7 +20,8 @@ export class Cache {
   root = workspaceRoot;
   cachePath = this.createCacheDir();
   terminalOutputsDir = this.createTerminalOutputsDir();
-  useFsExtraToCopyAndRemove = platform() === 'win32';
+
+  private _currentMachineId: string = null;
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -53,6 +45,20 @@ export class Cache {
         console.log(e.message);
       }
     }
+  }
+
+  async currentMachineId() {
+    if (!this._currentMachineId) {
+      try {
+        this._currentMachineId = await machineId();
+      } catch (e) {
+        if (process.env.NX_VERBOSE_LOGGING == 'true') {
+          console.log(`Unable to get machineId. Error: ${e.message}`);
+        }
+        this._currentMachineId = '';
+      }
+    }
+    return this._currentMachineId;
   }
 
   async get(task: Task): Promise<CachedResult | null> {
@@ -83,7 +89,7 @@ export class Cache {
       const tdCommit = join(this.cachePath, `${task.hash}.commit`);
 
       // might be left overs from partially-completed cache invocations
-      await remove(tdCommit);
+      await this.remove(tdCommit);
       await this.remove(td);
 
       await mkdir(td);
@@ -99,11 +105,7 @@ export class Cache {
         expandedOutputs.map(async (f) => {
           const src = join(this.root, f);
           if (await pathExists(src)) {
-            const isFile = (await lstat(src)).isFile();
-
             const cached = join(td, 'outputs', f);
-            const directory = isFile ? dirname(cached) : cached;
-            await mkdir(directory, { recursive: true });
             await this.copy(src, cached);
           }
         })
@@ -113,6 +115,7 @@ export class Cache {
       // so if the process gets terminated while we are copying stuff into cache,
       // the cache entry won't be used.
       await writeFile(join(td, 'code'), code.toString());
+      await writeFile(join(td, 'source'), await this.currentMachineId());
       await writeFile(tdCommit, 'true');
 
       if (this.options.remoteCache) {
@@ -140,12 +143,8 @@ export class Cache {
         expandedOutputs.map(async (f) => {
           const cached = join(cachedResult.outputsPath, f);
           if (await pathExists(cached)) {
-            const isFile = (await lstat(cached)).isFile();
             const src = join(this.root, f);
             await this.remove(src);
-            // Ensure parent directory is created if src is a file
-            const directory = isFile ? resolve(src, '..') : src;
-            await mkdir(directory, { recursive: true });
             await this.copy(cached, src);
           }
         })
@@ -168,54 +167,49 @@ export class Cache {
     return this._expandOutputs(outputs, cachedResult.outputsPath);
   }
 
-  private async _expandOutputs(outputs: string[], cwd: string) {
-    return (
-      await Promise.all(
-        outputs.map(async (entry) => {
-          if (await pathExists(join(cwd, entry))) {
-            return entry;
-          }
-          return fastGlob(entry, { cwd, dot: true });
-        })
-      )
-    ).flat();
+  private async _expandOutputs(
+    outputs: string[],
+    cwd: string
+  ): Promise<string[]> {
+    const { expandOutputs } = require('../native');
+    performance.mark('expandOutputs:start');
+    const results = expandOutputs(cwd, outputs);
+    performance.mark('expandOutputs:end');
+    performance.measure(
+      'expandOutputs',
+      'expandOutputs:start',
+      'expandOutputs:end'
+    );
+
+    return results;
   }
 
   private async copy(src: string, destination: string): Promise<void> {
+    const { copy } = require('../native');
     // 'cp -a /path/dir/ dest/' operates differently to 'cp -a /path/dir dest/'
     // --> which means actual build works but subsequent populate from cache (using cp -a) does not
     // --> the fix is to remove trailing slashes to ensure consistent & expected behaviour
     src = src.replace(/[\/\\]$/, '');
 
-    if (this.useFsExtraToCopyAndRemove) {
-      return copy(src, destination);
-    }
     return new Promise((res, rej) => {
-      execFile('cp', ['-a', src, dirname(destination)], (error) => {
-        if (!error) {
-          res();
-        } else {
-          this.useFsExtraToCopyAndRemove = true;
-          copy(src, destination).then(res, rej);
-        }
-      });
+      try {
+        copy(src, destination);
+        res();
+      } catch (e) {
+        rej(e);
+      }
     });
   }
 
   private async remove(path: string): Promise<void> {
-    if (this.useFsExtraToCopyAndRemove) {
-      return remove(path);
-    }
-
-    return new Promise<void>((res, rej) => {
-      execFile('rm', ['-rf', path], (error) => {
-        if (!error) {
-          res();
-        } else {
-          this.useFsExtraToCopyAndRemove = true;
-          remove(path).then(res, rej);
-        }
-      });
+    const { remove } = require('../native');
+    return new Promise((res, rej) => {
+      try {
+        remove(path);
+        res();
+      } catch (e) {
+        rej(e);
+      }
     });
   }
 
@@ -232,6 +226,32 @@ export class Cache {
       try {
         code = Number(await readFile(join(td, 'code'), 'utf-8'));
       } catch {}
+
+      let sourceMachineId = null;
+      try {
+        sourceMachineId = await readFile(join(td, 'source'), 'utf-8');
+      } catch {}
+
+      if (
+        sourceMachineId &&
+        sourceMachineId != (await this.currentMachineId())
+      ) {
+        if (
+          process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != '0' &&
+          process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != 'false'
+        ) {
+          const error = [
+            `Invalid Cache Directory for Task "${task.id}"`,
+            `The local cache artifact in "${td}" was not been generated on this machine.`,
+            `As a result, the cache's content integrity cannot be confirmed, which may make cache restoration potentially unsafe.`,
+            `If your machine ID has changed since the artifact was cached, run "nx reset" to fix this issue.`,
+            `Read about the error and how to address it here: https://nx.dev/recipes/troubleshooting/unknown-local-cache`,
+            ``,
+          ].join('\n');
+          throw new Error(error);
+        }
+      }
+
       return {
         terminalOutput,
         outputsPath: join(td, 'outputs'),

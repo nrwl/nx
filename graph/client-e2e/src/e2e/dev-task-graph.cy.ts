@@ -53,7 +53,9 @@ describe('dev mode - task graph', () => {
     });
 
     it('should hide when a project is selected', () => {
-      cy.contains('cart').scrollIntoView().should('be.visible');
+      cy.contains('cart').as('cart');
+      cy.get('@cart').scrollIntoView();
+      cy.get('@cart').should('be.visible');
       cy.get('[data-project="cart"]').should('be.visible');
       cy.get('[data-project="cart"]').click({ force: true });
       getSelectTasksMessage().should('not.exist');

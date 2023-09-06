@@ -1,7 +1,6 @@
-import 'dotenv/config';
 import * as chalk from 'chalk';
 import type { ExecutorContext } from '@nx/devkit';
-import { cacheDir, joinPathFragments, logger } from '@nx/devkit';
+import { cacheDir, joinPathFragments, logger, stripIndents } from '@nx/devkit';
 import {
   copyAssets,
   copyPackageJson,
@@ -74,10 +73,18 @@ export async function* esbuildExecutor(
 
   let packageJsonResult;
   if (options.generatePackageJson) {
+    if (context.projectGraph.nodes[context.projectName].type !== 'app') {
+      logger.warn(
+        stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+      );
+    }
+
     const cpjOptions: CopyPackageJsonOptions = {
       ...options,
       // TODO(jack): make types generate with esbuild
       skipTypings: true,
+      generateLockfile: true,
       outputFileExtensionForCjs: getOutExtension('cjs', options),
       excludeLibsInPackageJson: !options.thirdParty,
       updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
@@ -141,6 +148,7 @@ export async function* esbuildExecutor(
                       },
                     }
                   : null,
+                ...(esbuildOptions?.plugins || []),
               ].filter(Boolean),
             });
 

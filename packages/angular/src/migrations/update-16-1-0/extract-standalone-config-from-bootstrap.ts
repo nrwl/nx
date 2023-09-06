@@ -1,8 +1,9 @@
 import type { ProjectConfiguration, Tree } from '@nx/devkit';
-import { formatFiles, getProjects, joinPathFragments } from '@nx/devkit';
+import { formatFiles, joinPathFragments } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { dirname, relative, resolve } from 'path';
 import type { Identifier, Node, SourceFile, StringLiteral } from 'typescript';
+import { getProjectsFilteredByDependencies } from '../utils/projects';
 
 let tsModule: typeof import('typescript');
 let tsquery: typeof import('@phenomnomnominal/tsquery').tsquery;
@@ -163,14 +164,16 @@ export default async function extractStandaloneConfig(tree: Tree) {
     tsquery = require('@phenomnomnominal/tsquery').tsquery;
   }
 
-  const projects = getProjects(tree);
+  const projects = await getProjectsFilteredByDependencies(tree, [
+    'npm:@angular/core',
+  ]);
 
   const BOOTSTRAP_APPLICATION_CALL_SELECTOR =
     'CallExpression:has(Identifier[name=bootstrapApplication])';
   const BOOTSTRAP_APPLICATION_CALL_CONFIG_SELECTOR =
     'CallExpression:has(Identifier[name=bootstrapApplication]) > ObjectLiteralExpression';
 
-  for (const [, project] of projects.entries()) {
+  for (const { project } of projects) {
     if (project.projectType !== 'application') {
       continue;
     }

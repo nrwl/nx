@@ -4,6 +4,8 @@ import {
   WorkspaceTypeAndRoot,
 } from '../src/utils/find-workspace-root';
 import * as chalk from 'chalk';
+import { config as loadDotEnvFile } from 'dotenv';
+import { expand } from 'dotenv-expand';
 import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
 import {
@@ -15,23 +17,28 @@ import { stripIndents } from '../src/utils/strip-indents';
 import { readModulePackageJson } from '../src/utils/package-json';
 import { execSync } from 'child_process';
 import { join } from 'path';
+import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
+import { performance } from 'perf_hooks';
 
 function main() {
   if (
     process.argv[2] !== 'report' &&
     process.argv[2] !== '--version' &&
-    process.argv[2] !== '--help' &&
-    !_supportedPlatform()
+    process.argv[2] !== '--help'
   ) {
-    output.error({
-      title: 'Platform not supported',
-      bodyLines: [
-        `This platform (${process.platform}-${process.arch}) is currently not supported by Nx.`,
-        'For a list of supported platforms, please see https://nx.dev/recipes/ci/troubleshoot-nx-install-issues#supported-native-module-platform',
-      ],
-    });
-    process.exit(1);
+    assertSupportedPlatform();
   }
+
+  require('nx/src/utils/perf-logging');
+
+  performance.mark('loading dotenv files:start');
+  loadDotEnvFiles();
+  performance.mark('loading dotenv files:end');
+  performance.measure(
+    'loading dotenv files',
+    'loading dotenv files:start',
+    'loading dotenv files:end'
+  );
 
   const workspace = findWorkspaceRoot(process.cwd());
   // new is a special case because there is no local workspace to load
@@ -92,6 +99,21 @@ function main() {
         require(localNx);
       }
     }
+  }
+}
+
+/**
+ * This loads dotenv files from:
+ * - .env
+ * - .local.env
+ * - .env.local
+ */
+function loadDotEnvFiles() {
+  for (const file of ['.local.env', '.env.local', '.env']) {
+    const myEnv = loadDotEnvFile({
+      path: file,
+    });
+    expand(myEnv);
   }
 }
 
@@ -253,15 +275,6 @@ function _getLatestVersionOfNx(): string {
     } catch {
       return null;
     }
-  }
-}
-
-function _supportedPlatform(): boolean {
-  try {
-    require('../src/native');
-    return true;
-  } catch {
-    return false;
   }
 }
 

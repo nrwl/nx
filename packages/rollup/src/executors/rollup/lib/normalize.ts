@@ -1,6 +1,7 @@
 import { basename, dirname, join, relative, resolve } from 'path';
+import { sync as globSync } from 'fast-glob';
 import { statSync } from 'fs';
-import { normalizePath } from '@nx/devkit';
+import { ExecutorContext, normalizePath } from '@nx/devkit';
 
 import type { AssetGlobPattern, RollupExecutorOptions } from '../schema';
 
@@ -13,9 +14,10 @@ export interface NormalizedRollupExecutorOptions extends RollupExecutorOptions {
 
 export function normalizeRollupExecutorOptions(
   options: RollupExecutorOptions,
-  root: string,
+  context: ExecutorContext,
   sourceRoot: string
 ): NormalizedRollupExecutorOptions {
+  const { root } = context;
   const main = `${root}/${options.main}`;
   const entryRoot = dirname(main);
   const project = options.project
@@ -45,6 +47,7 @@ export function normalizeRollupExecutorOptions(
     projectRoot,
     outputPath,
     skipTypeCheck: options.skipTypeCheck || false,
+    additionalEntryPoints: createEntryPoints(options, context),
   };
 }
 
@@ -103,5 +106,15 @@ export function normalizeAssets(
         output: asset.output.replace(/^\//, ''),
       };
     }
+  });
+}
+
+function createEntryPoints(
+  options: { additionalEntryPoints?: string[] },
+  context: ExecutorContext
+): string[] {
+  if (!options.additionalEntryPoints?.length) return [];
+  return globSync(options.additionalEntryPoints, {
+    cwd: context.root,
   });
 }

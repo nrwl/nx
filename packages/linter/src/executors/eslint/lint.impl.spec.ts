@@ -25,6 +25,9 @@ class MockESLint {
   loadFormatter = mockLoadFormatter;
   isPathIgnored = mockIsPathIgnored;
   lintFiles = mockLintFiles;
+  calculateConfigForFile(file: string) {
+    return { file: file };
+  }
 }
 
 const mockResolveAndInstantiateESLint = jest.fn().mockReturnValue(
@@ -40,6 +43,7 @@ jest.mock('./utility/eslint-utils', () => {
   };
 });
 import lintExecutor from './lint.impl';
+import { resolve } from 'path';
 
 let mockChdir = jest.fn().mockImplementation(() => {});
 
@@ -65,6 +69,7 @@ function createValidRunBuilderOptions(
     rulesdir: [],
     resolvePluginsRelativeTo: null,
     reportUnusedDisableDirectives: null,
+    printConfig: null,
     ...additionalOptions,
   };
 }
@@ -146,7 +151,7 @@ describe('Linter Builder', () => {
       mockContext
     );
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
-      '/root/.eslintrc.json',
+      resolve('/root', '.eslintrc.json'),
       {
         lintFilePatterns: [],
         eslintConfig: './.eslintrc.json',
@@ -618,5 +623,60 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
       mockContext
     );
     expect(fs.writeFileSync).not.toHaveBeenCalled();
+  });
+
+  it('should print the ESLint configuration for a specified file if printConfiguration is specified', async () => {
+    setupMocks();
+    jest.spyOn(console, 'log');
+    const result = await lintExecutor(
+      createValidRunBuilderOptions({
+        lintFilePatterns: [],
+        eslintConfig: './.eslintrc.json',
+        fix: true,
+        cache: true,
+        cacheLocation: 'cacheLocation1',
+        format: 'stylish',
+        force: false,
+        silent: false,
+        ignorePath: null,
+        maxWarnings: null,
+        outputFile: null,
+        quiet: false,
+        reportUnusedDisableDirectives: null,
+        printConfig: 'test-source.ts',
+      }),
+      mockContext
+    );
+    expect(console.log).toHaveBeenCalledWith('{\n "file": "test-source.ts"\n}');
+    expect(result).toEqual({ success: true });
+  });
+
+  it('should pass path to eslint.config.js to resolveAndInstantiateESLint if it is unspecified and we are using flag configuration', async () => {
+    setupMocks();
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    await lintExecutor(createValidRunBuilderOptions(), mockContext);
+    expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
+      'apps/proj/eslint.config.js',
+      {
+        lintFilePatterns: [],
+        eslintConfig: null,
+        fix: true,
+        cache: true,
+        cacheLocation: 'cacheLocation1/proj',
+        cacheStrategy: 'content',
+        format: 'stylish',
+        force: false,
+        silent: false,
+        ignorePath: null,
+        maxWarnings: -1,
+        outputFile: null,
+        quiet: false,
+        noEslintrc: false,
+        rulesdir: [],
+        resolvePluginsRelativeTo: null,
+        reportUnusedDisableDirectives: null,
+      },
+      true
+    );
   });
 });

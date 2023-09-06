@@ -6,7 +6,7 @@ import { ensureTypescript } from './ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
-export function readTsConfig(tsConfigPath: string) {
+export function readTsConfig(tsConfigPath: string): ts.ParsedCommandLine {
   if (!tsModule) {
     tsModule = require('typescript');
   }

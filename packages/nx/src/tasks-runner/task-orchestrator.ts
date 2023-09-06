@@ -1,9 +1,7 @@
 import { defaultMaxListeners } from 'events';
 import { performance } from 'perf_hooks';
-import { Workspaces } from '../config/workspaces';
 import { TaskHasher } from '../hasher/task-hasher';
 import { ForkedProcessTaskRunner } from './forked-process-task-runner';
-import { workspaceRoot } from '../utils/workspace-root';
 import { Cache } from './cache';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskStatus } from './tasks-runner';
@@ -23,16 +21,12 @@ import { DaemonClient } from '../daemon/client/client';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
-  private workspace = new Workspaces(workspaceRoot);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
-  private readonly nxJson = this.workspace.readNxJson();
 
   private tasksSchedule = new TasksSchedule(
     this.hasher,
-    this.nxJson,
     this.projectGraph,
     this.taskGraph,
-    this.workspace,
     this.options
   );
 
@@ -349,6 +343,7 @@ export class TaskOrchestrator {
 
     if (doNotSkipCache) {
       // cache the results
+      performance.mark('cache-results-start');
       await Promise.all(
         results
           .filter(
@@ -374,6 +369,12 @@ export class TaskOrchestrator {
           .map(async ({ task, code, terminalOutput, outputs }) =>
             this.cache.put(task, terminalOutput, outputs, code)
           )
+      );
+      performance.mark('cache-results-end');
+      performance.measure(
+        'cache-results',
+        'cache-results-start',
+        'cache-results-end'
       );
     }
     this.options.lifeCycle.endTasks(
@@ -449,12 +450,7 @@ export class TaskOrchestrator {
 
   private async pipeOutputCapture(task: Task) {
     try {
-      const { schema } = await getExecutorForTask(
-        task,
-        this.workspace,
-        this.projectGraph,
-        this.nxJson
-      );
+      const { schema } = await getExecutorForTask(task, this.projectGraph);
 
       return (
         schema.outputCapture === 'pipe' ||

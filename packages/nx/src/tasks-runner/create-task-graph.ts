@@ -388,10 +388,10 @@ export function createTaskGraph(
 }
 
 export function mapTargetDefaultsToDependencies(
-  defaults: TargetDefaults
+  defaults: TargetDefaults | undefined
 ): TargetDependencies {
   const res = {};
-  Object.keys(defaults).forEach((k) => {
+  Object.keys(defaults ?? {}).forEach((k) => {
     res[k] = defaults[k].dependsOn;
   });
 

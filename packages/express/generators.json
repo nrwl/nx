@@ -12,7 +12,7 @@
     },
 
     "application": {
-      "factory": "./src/generators/application/application#applicationGenerator",
+      "factory": "./src/generators/application/application#applicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",

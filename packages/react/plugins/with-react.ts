@@ -13,6 +13,7 @@ function addHotReload(config: Configuration) {
     // add `react-refresh/babel` to babel loader plugin
     const babelLoader = config.module.rules.find(
       (rule) =>
+        rule &&
         typeof rule !== 'string' &&
         rule.loader?.toString().includes('babel-loader')
     );

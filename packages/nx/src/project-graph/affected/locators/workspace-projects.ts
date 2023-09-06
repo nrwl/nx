@@ -49,7 +49,7 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 
   for (const [pattern, projects] of Object.entries(implicits)) {
     const implicitDependencyWasChanged = fileChanges.some((f) =>
-      minimatch(f.file, pattern)
+      minimatch(f.file, pattern, { dot: true })
     );
     if (!implicitDependencyWasChanged) {
       continue;

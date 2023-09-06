@@ -13,7 +13,7 @@ import {
   satisfies,
   valid,
 } from 'semver';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { promisify } from 'util';
 import {
   MigrationsJson,
@@ -1280,7 +1280,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           ? [
               `- You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:`,
               `  nx migrate ${opts.targetVersion} --from ${opts.targetPackage}@${minVersionWithSkippedUpdates} --exclude-applied-migrations`,
-              `- To learn more go to https://nx.dev/recipes/other/advanced-update`,
+              `- To learn more go to https://nx.dev/recipes/tips-n-tricks/advanced-update`,
             ]
           : [
               `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,

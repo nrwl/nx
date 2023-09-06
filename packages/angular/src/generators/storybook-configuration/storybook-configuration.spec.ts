@@ -44,49 +44,22 @@ describe('StorybookConfiguration generator', () => {
     jest.resetModules();
   });
 
-  it('should throw when generateCypressSpecs is true and generateStories is false', async () => {
-    await expect(
-      storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-        name: libName,
-        generateCypressSpecs: true,
-        generateStories: false,
-      })
-    ).rejects.toThrow(
-      'Cannot set generateCypressSpecs to true when generateStories is set to false.'
-    );
-  });
-
   it('should only configure storybook', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
-      configureCypress: false,
-      generateCypressSpecs: false,
       generateStories: false,
     });
 
-    expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
-    expect(
-      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
-    ).toBeTruthy();
-    expect(tree.exists('apps/test-ui-lib-e2e/cypress.config.ts')).toBeFalsy();
+    expect(tree.exists('test-ui-lib/.storybook/main.ts')).toBeTruthy();
+    expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
       tree.exists(
-        'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
+        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
       )
     ).toBeFalsy();
     expect(
       tree.exists(
-        'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
-      )
-    ).toBeFalsy();
-    expect(
-      tree.exists(
-        'apps/test-ui-lib-e2e/src/integration/test-button/test-button.component.spec.ts'
-      )
-    ).toBeFalsy();
-    expect(
-      tree.exists(
-        'apps/test-ui-lib-e2e/src/integration/test-other/test-other.component.spec.ts'
+        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
       )
     ).toBeFalsy();
   });
@@ -94,50 +67,45 @@ describe('StorybookConfiguration generator', () => {
   it('should configure storybook to use webpack 5', async () => {
     await storybookConfigurationGenerator(tree, {
       name: libName,
-      configureCypress: false,
-      generateCypressSpecs: false,
       generateStories: false,
       linter: Linter.None,
     });
 
     expect(
-      tree.read('libs/test-ui-lib/.storybook/main.js', 'utf-8')
+      tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
-  it('should configure everything at once', async () => {
+  it('should configure storybook with interaction tests and install dependencies', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
-      configureCypress: true,
-      generateCypressSpecs: true,
       generateStories: true,
     });
 
-    expect(tree.exists('libs/test-ui-lib/.storybook/main.js')).toBeTruthy();
+    expect(tree.exists('test-ui-lib/.storybook/main.ts')).toBeTruthy();
+    expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
-      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
-    ).toBeTruthy();
-    expect(tree.exists('apps/test-ui-lib-e2e/cypress.config.ts')).toBeTruthy();
-    expect(
-      tree.exists(
-        'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
+      tree.read(
+        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts',
+        'utf-8'
       )
-    ).toBeTruthy();
+    ).toMatchSnapshot();
     expect(
-      tree.exists(
-        'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
+      tree.read(
+        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts',
+        'utf-8'
       )
-    ).toBeTruthy();
+    ).toMatchSnapshot();
+
+    const packageJson = JSON.parse(tree.read('package.json', 'utf-8'));
+    expect(packageJson.devDependencies['@storybook/angular']).toBeDefined();
     expect(
-      tree.exists(
-        'apps/test-ui-lib-e2e/src/e2e/test-button/test-button.component.cy.ts'
-      )
-    ).toBeTruthy();
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
     expect(
-      tree.exists(
-        'apps/test-ui-lib-e2e/src/e2e/test-other/test-other.component.cy.ts'
-      )
-    ).toBeTruthy();
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeDefined();
   });
 
   it('should generate the right files', async () => {
@@ -148,7 +116,7 @@ describe('StorybookConfiguration generator', () => {
       standalone: true,
     });
     // add secondary entrypoint
-    writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+    writeJson(tree, `${libName}/package.json`, { name: libName });
     await librarySecondaryEntryPointGenerator(tree, {
       library: libName,
       name: 'secondary-entry-point',
@@ -157,22 +125,20 @@ describe('StorybookConfiguration generator', () => {
     await componentGenerator(tree, {
       name: 'secondary-button',
       project: libName,
-      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      path: `${libName}/secondary-entry-point/src/lib`,
       export: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
       project: libName,
-      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      path: `${libName}/secondary-entry-point/src/lib`,
       standalone: true,
       export: true,
     });
 
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
-      configureCypress: true,
-      generateCypressSpecs: true,
       generateStories: true,
     });
 
@@ -187,7 +153,7 @@ describe('StorybookConfiguration generator', () => {
       standalone: true,
     });
     // add secondary entrypoint
-    writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+    writeJson(tree, `${libName}/package.json`, { name: libName });
     await librarySecondaryEntryPointGenerator(tree, {
       library: libName,
       name: 'secondary-entry-point',
@@ -196,24 +162,21 @@ describe('StorybookConfiguration generator', () => {
     await componentGenerator(tree, {
       name: 'secondary-button',
       project: libName,
-      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      path: `${libName}/secondary-entry-point/src/lib`,
       export: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
       project: libName,
-      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      path: `${libName}/secondary-entry-point/src/lib`,
       standalone: true,
       export: true,
     });
 
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
       name: libName,
-      configureCypress: true,
-      generateCypressSpecs: true,
       generateStories: true,
-      cypressDirectory: 'one/two',
     });
 
     expect(listFiles(tree)).toMatchSnapshot();

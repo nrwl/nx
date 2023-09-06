@@ -12,7 +12,7 @@ You can find more information on the difference between the two in [our introduc
 {% youtube
 src="https://www.youtube.com/embed/-Oe8j-NZcBc"
 title="Tutorial: Node Server"
-width="100%" /%}
+/%}
 
 # Node Server Tutorial - Part 1: Code Generation
 

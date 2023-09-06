@@ -12,6 +12,7 @@ describe('Migration to delete Browserslist configurations', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
       name: 'test',
+      projectNameAndRootFormat: 'derived',
     });
   });
 

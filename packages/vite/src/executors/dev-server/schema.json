@@ -48,8 +48,15 @@
       ]
     },
     "https": {
-      "type": "boolean",
-      "description": "Serve using HTTPS."
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "description": "Serve using HTTPS. https://vitejs.dev/config/server-options.html#server-https"
     },
     "hmr": {
       "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",

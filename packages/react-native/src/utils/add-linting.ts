@@ -2,16 +2,15 @@ import { Linter, lintProjectGenerator } from '@nx/linter';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
-  joinPathFragments,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
+import { extraEslintDependencies } from '@nx/react/src/utils/lint';
 import {
-  extendReactEslintJson,
-  extraEslintDependencies,
-} from '@nx/react/src/utils/lint';
-import type { Linter as ESLintLinter } from 'eslint';
+  addExtendsToLintConfig,
+  addIgnoresToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 interface NormalizedSchema {
   linter?: Linter;
@@ -39,22 +38,14 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
   tasks.push(lintTask);
 
-  updateJson(
-    host,
-    joinPathFragments(options.projectRoot, '.eslintrc.json'),
-    (json: ESLintLinter.Config) => {
-      json = extendReactEslintJson(json);
-
-      json.ignorePatterns = [
-        ...json.ignorePatterns,
-        'public',
-        '.cache',
-        'node_modules',
-      ];
-
-      return json;
-    }
-  );
+  if (isEslintConfigSupported(host)) {
+    addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    addIgnoresToLintConfig(host, options.projectRoot, [
+      'public',
+      '.cache',
+      'node_modules',
+    ]);
+  }
 
   if (!options.skipPackageJson) {
     const installTask = await addDependenciesToPackageJson(

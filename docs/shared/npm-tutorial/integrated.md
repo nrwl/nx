@@ -3,7 +3,7 @@
 {% youtube
 src="https://www.youtube.com/embed/weZ7NAzB7PM"
 title="Tutorial: Getting Started with Integrated Repos"
-width="100%" /%}
+/%}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/integrated" /%}
 
@@ -32,7 +32,10 @@ myorg/
 Nx comes with generators that can help with scaffolding applications. Run this generator to make a new library named `is-even`:
 
 ```shell
-npx nx generate @nx/js:library is-even --publishable --importPath @myorg/is-even
+npx nx generate @nx/js:library is-even \
+--directory=libs/is-even \
+--publishable \
+--importPath=@myorg/is-even
 ```
 
 This command:
@@ -103,7 +106,10 @@ The local linking of packages in an integrated monorepo style is handled by Nx a
 To illustrate that, let's create another package `is-odd`. We can again run the generator for that:
 
 ```shell
-npx nx generate @nx/js:library is-odd --publishable --importPath @myorg/is-odd
+npx nx generate @nx/js:library is-odd \
+--directory=libs/is-odd \
+--publishable \
+--importPath=@myorg/is-odd
 ```
 
 Note how the `tsconfig.base.json` now has two entries:
@@ -233,6 +239,6 @@ npx nx affected -t build
 
 {% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/react-tutorial/1-code-generation" /%}
 
-{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/tutorials/node-server-tutorial" /%}
+{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/getting-started/tutorials/node-server-tutorial" /%}
 
 {% /cards %}

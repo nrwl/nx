@@ -14,7 +14,6 @@
         "main": "packages-legacy/workspace/index.ts",
         "tsConfig": "packages-legacy/workspace/tsconfig.json",
         "outputPath": "build/packages/workspace-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/workspace",

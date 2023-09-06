@@ -16,16 +16,17 @@ describe('updateProjectRootFiles', () => {
   it('should update the relative root in files at the root of the project', async () => {
     const testFile = `module.exports = {
       name: 'my-source',
-      preset: '../../jest.config.js',
-      coverageDirectory: '../../coverage/libs/my-source',
+      preset: '../jest.config.js',
+      coverageDirectory: '../coverage/my-source',
       snapshotSerializers: [
         'jest-preset-angular/AngularSnapshotSerializer.js',
         'jest-preset-angular/HTMLCommentSerializer.js'
       ]
     };`;
-    const testFilePath = '/libs/subfolder/my-destination/jest.config.js';
+    const testFilePath = 'subfolder/my-destination/jest.config.js';
     await libraryGenerator(tree, {
       name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
     });
     const projectConfig = readProjectConfiguration(tree, 'my-source');
     tree.write(testFilePath, testFile);
@@ -35,15 +36,15 @@ describe('updateProjectRootFiles', () => {
       importPath: '@proj/subfolder-my-destination',
       updateImportPath: true,
       newProjectName: 'subfolder-my-destination',
-      relativeToRootDestination: 'libs/subfolder/my-destination',
+      relativeToRootDestination: 'subfolder/my-destination',
     };
 
     updateProjectRootFiles(tree, schema, projectConfig);
 
     const testFileAfter = tree.read(testFilePath, 'utf-8');
-    expect(testFileAfter).toContain(`preset: '../../../jest.config.js'`);
+    expect(testFileAfter).toContain(`preset: '../../jest.config.js'`);
     expect(testFileAfter).toContain(
-      `coverageDirectory: '../../../coverage/libs/my-source'`
+      `coverageDirectory: '../../coverage/my-source'`
     );
   });
 });

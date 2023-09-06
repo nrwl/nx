@@ -15,10 +15,7 @@ export function addProject(tree: Tree, options: NormalizedOptions): void {
     executor: '@nx/js:tsc',
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath:
-        options.libsDir && options.libsDir !== '.'
-          ? `dist/${options.libsDir}/${options.projectDirectory}`
-          : `dist/${options.projectDirectory}`,
+      outputPath: `dist/${options.projectRoot}`,
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       packageJson: `${options.projectRoot}/package.json`,
       main: `${options.projectRoot}/src/index.ts`,
