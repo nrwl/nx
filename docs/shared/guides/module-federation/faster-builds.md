@@ -70,7 +70,7 @@ Now, let's continue by creating an empty Nx workspace.
 
 ```shell
 # Replace acme with desired scope
-npx create-nx-workspace acme --preset=empty
+npx create-nx-workspace acme --preset=apps
 cd acme
 ```
 
