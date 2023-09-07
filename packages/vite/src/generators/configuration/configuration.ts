@@ -179,6 +179,12 @@ export async function viteConfigurationGenerator(
   if (projectType === 'library') {
     // update tsconfig.lib.json to include vite/client
     updateJson(tree, joinPathFragments(root, 'tsconfig.lib.json'), (json) => {
+      if (!json.compilerOptions) {
+        json.compilerOptions = {};
+      }
+      if (!json.compilerOptions.types) {
+        json.compilerOptions.types = [];
+      }
       if (!json.compilerOptions.types.includes('vite/client')) {
         return {
           ...json,
