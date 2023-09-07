@@ -45,7 +45,6 @@ export async function generateWorkspaceFiles(
   }
   setPresetProperty(tree, options);
   addNpmScripts(tree, options);
-  createAppsAndLibsFolders(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
   await formatFiles(tree);
@@ -53,22 +52,17 @@ export async function generateWorkspaceFiles(
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (options.preset === Preset.Core || options.preset === Preset.NPM) {
+    if (options.preset === Preset.NPM) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       delete json.implicitDependencies;
       delete json.targetDefaults;
-      delete json.workspaceLayout;
     }
     return json;
   });
 }
 
 function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
-  if (
-    options.preset === Preset.Core ||
-    options.preset === Preset.TS ||
-    options.preset === Preset.NPM
-  ) {
+  if (options.preset === Preset.TS || options.preset === Preset.NPM) {
     tree.write(join(options.directory, 'packages/.gitkeep'), '');
   } else if (
     options.preset === Preset.AngularStandalone ||
@@ -102,6 +96,9 @@ function createNxJson(
         },
       },
     },
+    workspaceLayout: {
+      projectNameAndRootFormat: 'as-provided',
+    },
   };
 
   nxJson.targetDefaults = {
@@ -113,11 +110,7 @@ function createNxJson(
   if (defaultBase === 'main') {
     delete nxJson.affected;
   }
-  if (
-    preset !== Preset.Core &&
-    preset !== Preset.NPM &&
-    preset !== Preset.Empty
-  ) {
+  if (preset !== Preset.NPM) {
     nxJson.namedInputs = {
       default: ['{projectRoot}/**/*', 'sharedGlobals'],
       production: ['default'],
@@ -138,7 +131,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NextJsStandalone ||
     options.preset === Preset.TsStandalone
       ? './files-root-app'
-      : options.preset === Preset.NPM || options.preset === Preset.Core
+      : options.preset === Preset.NPM
       ? './files-package-based-repo'
       : './files-integrated-repo';
   generateFiles(tree, join(__dirname, filesDirName), options.directory, {
@@ -233,7 +226,7 @@ function normalizeOptions(options: NormalizedSchema) {
 }
 
 function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
-  if (options.preset === Preset.NPM || options.preset === Preset.Core) {
+  if (options.preset === Preset.NPM) {
     if (options.packageManager === 'pnpm') {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),

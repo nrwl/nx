@@ -3,8 +3,10 @@
  */
 
 import type { Observable } from 'rxjs';
-import { Workspaces } from '../../config/workspaces';
+import { readNxJson } from '../../config/nx-json';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
+import { retrieveProjectConfigurations } from '../../project-graph/utils/retrieve-workspace-files';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -13,11 +15,17 @@ import { Executor, ExecutorContext } from '../../config/misc-interfaces';
  */
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
-    const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const projectsConfigurations = workspaces.readProjectsConfigurations();
-
     const promise = async () => {
-      const nxJsonConfiguration = workspaces.readNxJson();
+      const nxJsonConfiguration = readNxJson(builderContext.workspaceRoot);
+      const projectsConfigurations: ProjectsConfigurations = {
+        version: 2,
+        projects: (
+          await retrieveProjectConfigurations(
+            builderContext.workspaceRoot,
+            nxJsonConfiguration
+          )
+        ).projectNodes,
+      };
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,
         projectName: builderContext.target.project,

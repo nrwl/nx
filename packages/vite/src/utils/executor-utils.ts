@@ -4,7 +4,7 @@ import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { ExecutorContext } from '@nx/devkit';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
 
@@ -35,11 +35,14 @@ export function createBuildableTsConfig(
   options.buildLibsFromSource ??= true;
 
   if (!options.buildLibsFromSource) {
-    const { dependencies } = calculateProjectDependencies(
+    const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
       context.projectGraph,
       context.root,
       context.projectName,
-      context.targetName,
+      // When using incremental building and the serve target is called
+      // we need to get the deps for the 'build' target instead.
+      context.targetName === 'serve' ? 'build' : context.targetName,
       context.configurationName
     );
     // this tsconfig is used via the vite ts paths plugin

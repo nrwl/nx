@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import {
   ExecutorContext,
   parseTargetString,
@@ -82,7 +81,7 @@ export default async function* serveExecutor(
       process.on('SIGTERM', () => killServer());
       process.on('SIGHUP', () => killServer());
 
-      await waitForPortOpen(port);
+      await waitForPortOpen(port, { host: options.hostname });
 
       next({
         success: true,

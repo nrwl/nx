@@ -558,9 +558,10 @@ exports[`convert-tslint-to-eslint should work for Angular applications 1`] = `
     "@nx/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "@typescript-eslint/parser": "^5.60.1",
-    "eslint": "~8.15.0",
+    "eslint": "~8.46.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
+    "jsonc-eslint-parser": "^2.1.0",
   },
   "name": "test-name",
 }
@@ -910,9 +911,10 @@ exports[`convert-tslint-to-eslint should work for Angular libraries 1`] = `
     "@nx/linter": "0.0.1",
     "@typescript-eslint/eslint-plugin": "^5.60.1",
     "@typescript-eslint/parser": "^5.60.1",
-    "eslint": "~8.15.0",
+    "eslint": "~8.46.0",
     "eslint-config-prettier": "8.1.0",
     "eslint-plugin-import": "latest",
+    "jsonc-eslint-parser": "^2.1.0",
   },
   "name": "test-name",
 }

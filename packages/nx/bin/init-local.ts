@@ -19,8 +19,6 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
 
   try {
     performance.mark('init-local');
-    require('nx/src/utils/perf-logging');
-
     monkeyPatchRequire();
 
     if (workspace.type !== 'nx' && shouldDelegateToAngularCLI()) {

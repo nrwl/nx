@@ -6,6 +6,7 @@ import { fileExists } from './fileutils';
  */
 export let workspaceRoot = workspaceRootInner(process.cwd(), process.cwd());
 
+// Required for integration tests in projects which depend on Nx at runtime, such as lerna and angular-eslint
 export function setWorkspaceRoot(root: string): void {
   workspaceRoot = root;
 }

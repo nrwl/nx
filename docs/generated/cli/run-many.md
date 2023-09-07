@@ -68,7 +68,7 @@ Test all projects with a `type:feature` or `type:ui` tag:
 Run lint, test, and build targets for all projects. Requires Nx v15.4+:
 
 ```shell
- nx run-many --targets=lint,test,build --all
+ nx run-many --targets=lint,test,build
 ```
 
 ## Options
@@ -79,7 +79,7 @@ Type: `boolean`
 
 Default: `true`
 
-[deprecated] Run the target on all projects in the workspace
+[deprecated] `run-many` runs all targets on all projects in the workspace if no projects are provided. This option is no longer required.
 
 ### configuration
 

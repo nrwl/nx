@@ -3,6 +3,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -58,6 +59,19 @@ describe('jestProject', () => {
     expect(tree.exists('libs/lib1/jest.config.ts')).toBeTruthy();
     expect(tree.exists('libs/lib1/tsconfig.spec.json')).toBeTruthy();
     expect(tree.read('libs/lib1/jest.config.ts', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should add target if there are no targets', async () => {
+    const pc = readProjectConfiguration(tree, 'lib1');
+    delete pc.targets;
+    updateProjectConfiguration(tree, 'lib1', pc);
+    expect(async () => {
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'lib1',
+        setupFile: 'angular',
+      });
+    }).not.toThrow();
   });
 
   it('should alter project configuration', async () => {

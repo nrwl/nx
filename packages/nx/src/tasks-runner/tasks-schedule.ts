@@ -1,5 +1,3 @@
-import { Workspaces } from '../config/workspaces';
-
 import {
   calculateReverseDeps,
   getExecutorForTask,
@@ -10,7 +8,6 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskHasher } from '../hasher/task-hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { hashTask } from '../hasher/hash-task';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
@@ -31,10 +28,8 @@ export class TasksSchedule {
 
   constructor(
     private readonly hasher: TaskHasher,
-    private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
-    private readonly workspaces: Workspaces,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
 
@@ -92,13 +87,7 @@ export class TasksSchedule {
     const task = this.taskGraph.tasks[taskId];
 
     if (!task.hash) {
-      await hashTask(
-        this.workspaces,
-        this.hasher,
-        this.projectGraph,
-        this.taskGraph,
-        task
-      );
+      await hashTask(this.hasher, this.projectGraph, this.taskGraph, task);
     }
 
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
@@ -170,9 +159,7 @@ export class TasksSchedule {
 
     const { batchImplementationFactory } = await getExecutorForTask(
       task,
-      this.workspaces,
-      this.projectGraph,
-      this.nxJson
+      this.projectGraph
     );
     const executorName = await getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {

@@ -1,17 +1,10 @@
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nx/devkit';
+import { Tree, extractLayoutDirectory, getWorkspaceLayout } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Schema } from '../schema';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 export interface NormalizedSchema extends Schema {
   name: string;
   fileName: string;
-  libsDir: string;
   projectRoot: string;
   projectDirectory: string;
   parsedTags: string[];
@@ -19,44 +12,50 @@ export interface NormalizedSchema extends Schema {
   bundler: 'swc' | 'tsc';
   publishable: boolean;
 }
-export function normalizeOptions(
+export async function normalizeOptions(
   host: Tree,
   options: Schema
-): NormalizedSchema {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const { libsDir: defaultLibsDir } = getWorkspaceLayout(host);
-  const libsDir = layoutDirectory ?? defaultLibsDir;
-  const name = names(options.name).fileName;
-  const fullProjectDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`
-    : options.rootProject
-    ? '.'
-    : name;
+): Promise<NormalizedSchema> {
+  const {
+    projectName,
+    projectRoot,
+    importPath: npmPackageName,
+    projectNameAndRootFormat,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    rootProject: options.rootProject,
+    callingGenerator: '@nx/plugin:plugin',
+  });
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.rootProject = projectRoot === '.';
 
-  const projectName = options.rootProject
-    ? name
-    : fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
-  const projectRoot = options.rootProject
-    ? fullProjectDirectory
-    : joinPathFragments(libsDir, fullProjectDirectory);
+  let projectDirectory = projectRoot;
+  if (options.projectNameAndRootFormat === 'derived') {
+    let { layoutDirectory } = extractLayoutDirectory(options.directory);
+    if (!layoutDirectory) {
+      const { libsDir } = getWorkspaceLayout(host);
+      layoutDirectory = libsDir;
+    }
+    if (projectRoot.startsWith(`${layoutDirectory}/`)) {
+      projectDirectory = projectRoot.replace(`${layoutDirectory}/`, '');
+    }
+  }
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  const npmPackageName = options.importPath || getImportPath(host, name);
-
   return {
     ...options,
     bundler: options.compiler ?? 'tsc',
-    fileName,
-    libsDir,
+    fileName: projectName,
     name: projectName,
     projectRoot,
-    projectDirectory: fullProjectDirectory,
+    projectDirectory,
     parsedTags,
     npmPackageName,
     publishable: options.publishable ?? false,

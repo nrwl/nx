@@ -13,7 +13,7 @@ describe('react:stories for libraries', () => {
 
     // create another component
     appTree.write(
-      'libs/test-ui-lib/src/lib/anothercmp/another-cmp.tsx',
+      'test-ui-lib/src/lib/anothercmp/another-cmp.tsx',
       `import React from 'react';
 
       import './test.scss';
@@ -42,14 +42,23 @@ describe('react:stories for libraries', () => {
     });
 
     expect(
-      appTree.read('libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx', 'utf-8')
+      appTree.read('test-ui-lib/src/lib/test-ui-lib.stories.tsx', 'utf-8')
     ).toMatchSnapshot();
     expect(
       appTree.read(
-        'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx',
+        'test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx',
         'utf-8'
       )
     ).toMatchSnapshot();
+
+    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeDefined();
+    expect(packageJson.devDependencies['@storybook/test-runner']).toBeDefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeDefined();
   });
 
   it('should create the stories without interaction tests', async () => {
@@ -58,20 +67,30 @@ describe('react:stories for libraries', () => {
       interactionTests: false,
     });
     expect(
-      appTree.read('libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx', 'utf-8')
+      appTree.read('test-ui-lib/src/lib/test-ui-lib.stories.tsx', 'utf-8')
     ).toMatchSnapshot();
     expect(
       appTree.read(
-        'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx',
+        'test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx',
         'utf-8'
       )
     ).toMatchSnapshot();
+    const packageJson = JSON.parse(appTree.read('package.json', 'utf-8'));
+    expect(
+      packageJson.devDependencies['@storybook/addon-interactions']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@storybook/test-runner']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['@storybook/testing-library']
+    ).toBeUndefined();
   });
 
   describe('ignore paths', () => {
     beforeEach(() => {
       appTree.write(
-        'libs/test-ui-lib/src/lib/test-path/ignore-it/another-one.tsx',
+        'test-ui-lib/src/lib/test-path/ignore-it/another-one.tsx',
         `import React from 'react';
   
     export interface IgnoreProps {
@@ -92,7 +111,7 @@ describe('react:stories for libraries', () => {
       );
 
       appTree.write(
-        'libs/test-ui-lib/src/lib/anothercmp/another-cmp.skip.tsx',
+        'test-ui-lib/src/lib/anothercmp/another-cmp.skip.tsx',
         `import React from 'react';
     
     export interface OtherTestProps {
@@ -118,20 +137,18 @@ describe('react:stories for libraries', () => {
       });
 
       expect(
+        appTree.exists('test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx')
+      ).toBeTruthy();
+
+      expect(
         appTree.exists(
-          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx'
+          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
         )
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'libs/test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
-        )
-      ).toBeTruthy();
-
-      expect(
-        appTree.exists(
-          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
+          'test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
         )
       ).toBeTruthy();
     });
@@ -140,26 +157,24 @@ describe('react:stories for libraries', () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-lib',
         ignorePaths: [
-          'libs/test-ui-lib/src/lib/anothercmp/**',
+          'test-ui-lib/src/lib/anothercmp/**',
           '**/**/src/**/test-path/ignore-it/**',
         ],
       });
 
       expect(
+        appTree.exists('test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx')
+      ).toBeFalsy();
+
+      expect(
         appTree.exists(
-          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx'
+          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
         )
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'libs/test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
-        )
-      ).toBeFalsy();
-
-      expect(
-        appTree.exists(
-          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
+          'test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
         )
       ).toBeFalsy();
     });
@@ -168,26 +183,24 @@ describe('react:stories for libraries', () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-lib',
         ignorePaths: [
-          'libs/test-ui-lib/src/lib/anothercmp/**/*.skip.*',
+          'test-ui-lib/src/lib/anothercmp/**/*.skip.*',
           '**/test-ui-lib/src/**/test-path/**',
         ],
       });
 
       expect(
-        appTree.exists(
-          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx'
-        )
+        appTree.exists('test-ui-lib/src/lib/anothercmp/another-cmp.stories.tsx')
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'libs/test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
+          'test-ui-lib/src/lib/test-path/ignore-it/another-one.stories.tsx'
         )
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'libs/test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
+          'test-ui-lib/src/lib/anothercmp/another-cmp.skip.stories.tsx'
         )
       ).toBeFalsy();
     });
@@ -196,7 +209,7 @@ describe('react:stories for libraries', () => {
   it('should ignore files that do not contain components', async () => {
     // create another component
     appTree.write(
-      'libs/test-ui-lib/src/lib/some-utils.js',
+      'test-ui-lib/src/lib/some-utils.js',
       `export const add = (a: number, b: number) => a + b;`
     );
 
@@ -207,7 +220,7 @@ describe('react:stories for libraries', () => {
     // should just create the story and not error, even though there's a js file
     // not containing any react component
     expect(
-      appTree.exists('libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx')
+      appTree.exists('test-ui-lib/src/lib/test-ui-lib.stories.tsx')
     ).toBeTruthy();
   });
 });
@@ -216,7 +229,7 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
 
   await libraryGenerator(appTree, {
     linter: Linter.EsLint,
@@ -226,6 +239,7 @@ export async function createTestUILib(
     style: 'css',
     unitTestRunner: 'none',
     name: libName,
+    projectNameAndRootFormat: 'as-provided',
   });
 
   // create some Nx app that we'll use to generate the cypress
@@ -239,6 +253,7 @@ export async function createTestUILib(
     unitTestRunner: 'none',
     name: `${libName}-e2e`,
     js: plainJS,
+    projectNameAndRootFormat: 'as-provided',
   });
   return appTree;
 }

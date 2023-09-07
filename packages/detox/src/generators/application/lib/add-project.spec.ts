@@ -31,7 +31,6 @@ describe('Add Project', () => {
       addProject(tree, {
         e2eName: 'my-app-e2e',
         e2eProjectName: 'my-app-e2e',
-        e2eProjectDirectory: 'apps',
         e2eProjectRoot: 'apps/my-app-e2e',
         appProject: 'my-app',
         appFileName: 'my-app',
@@ -81,7 +80,6 @@ describe('Add Project', () => {
       addProject(tree, {
         e2eName: 'my-dir-my-app-e2e',
         e2eProjectName: 'my-dir-my-app-e2e',
-        e2eProjectDirectory: 'apps',
         e2eProjectRoot: 'apps/my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
         appFileName: 'my-app',

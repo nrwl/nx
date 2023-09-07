@@ -37,10 +37,11 @@ export interface RollupExecutorOptions {
    */
   buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   deleteOutputPath?: boolean;
-  format?: string[];
+  format?: ('cjs' | 'esm')[];
   compiler?: 'babel' | 'tsc' | 'swc';
   javascriptEnabled?: boolean;
   generateExportsField?: boolean;
+  additionalEntryPoints?: string[];
   skipTypeCheck?: boolean;
   babelUpwardRootMode?: boolean;
   skipTypeField?: boolean;

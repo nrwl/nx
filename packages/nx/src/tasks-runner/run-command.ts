@@ -24,10 +24,10 @@ import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
-import { Workspaces } from '../config/workspaces';
 import {
   DaemonBasedTaskHasher,
   InProcessTaskHasher,
+  TaskHasher,
 } from '../hasher/task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
@@ -231,16 +231,15 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher;
+  let hasher: TaskHasher;
   if (daemonClient.enabled()) {
-    hasher = new DaemonBasedTaskHasher(daemonClient, taskGraph, runnerOptions);
+    hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
   } else {
     const { projectFileMap, allWorkspaceFiles } = getProjectFileMap();
     hasher = new InProcessTaskHasher(
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
-      taskGraph,
       nxJson,
       runnerOptions,
       fileHasher
@@ -252,7 +251,6 @@ export async function invokeTasksRunner({
   // a distributed fashion
   performance.mark('hashing:start');
   await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-    new Workspaces(workspaceRoot),
     hasher,
     projectGraph,
     taskGraph,
@@ -274,7 +272,33 @@ export async function invokeTasksRunner({
       nxJson,
       nxArgs,
       taskGraph,
-      hasher,
+      hasher: {
+        hashTask(task: Task, taskGraph_?: TaskGraph) {
+          if (!taskGraph_) {
+            output.warn({
+              title: `TaskGraph is now required as an argument to hashTasks`,
+              bodyLines: [
+                `The TaskGraph object can be retrieved from the context`,
+              ],
+            });
+            taskGraph_ = taskGraph;
+          }
+          return hasher.hashTask(task, taskGraph_);
+        },
+        hashTasks(task: Task[], taskGraph_?: TaskGraph) {
+          if (!taskGraph_) {
+            output.warn({
+              title: `TaskGraph is now required as an argument to hashTasks`,
+              bodyLines: [
+                `The TaskGraph object can be retrieved from the context`,
+              ],
+            });
+            taskGraph_ = taskGraph;
+          }
+
+          return hasher.hashTasks(task, taskGraph_);
+        },
+      },
       daemon: daemonClient,
     }
   );

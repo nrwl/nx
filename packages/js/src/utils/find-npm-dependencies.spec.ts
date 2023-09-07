@@ -397,4 +397,57 @@ describe('findNpmDependencies', () => {
       '@acme/lib3': '*',
     });
   });
+
+  it('should support ignoring extra file patterns in addition to task input', () => {
+    vol.fromJSON(
+      {
+        './nx.json': JSON.stringify(nxJson),
+      },
+      '/root'
+    );
+    const lib = {
+      name: 'my-lib',
+      type: 'lib' as const,
+      data: {
+        root: 'libs/my-lib',
+        targets: { build: {} },
+      },
+    };
+    const projectGraph = {
+      nodes: {
+        'my-lib': lib,
+      },
+      externalNodes: {
+        'npm:foo': {
+          name: 'npm:foo' as const,
+          type: 'npm' as const,
+          data: {
+            packageName: 'foo',
+            version: '1.0.0',
+          },
+        },
+      },
+      dependencies: {},
+    };
+    const projectFileMap = {
+      'my-lib': [
+        {
+          file: 'libs/my-lib/vite.config.ts',
+          hash: '123',
+          deps: ['npm:foo'],
+        },
+      ],
+    };
+
+    const results = findNpmDependencies(
+      '/root',
+      lib,
+      projectGraph,
+      projectFileMap,
+      'build',
+      { ignoredFiles: ['{projectRoot}/vite.config.ts'] }
+    );
+
+    expect(results).toEqual({});
+  });
 });

@@ -1,12 +1,14 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
-import ThemePanel from './theme-panel';
+import type { Meta, StoryObj } from '@storybook/react';
+import { ThemePanel } from './theme-panel';
 
-export default {
+const meta: Meta<typeof ThemePanel> = {
   component: ThemePanel,
   title: 'Project Graph/ThemePanel',
-} as ComponentMeta<typeof ThemePanel>;
+};
 
-const Template: ComponentStory<typeof ThemePanel> = () => <ThemePanel />;
+export default meta;
+type Story = StoryObj<typeof ThemePanel>;
 
-export const Primary = Template.bind({});
-Primary.args = {};
+export const Primary: Story = {
+  args: {},
+};

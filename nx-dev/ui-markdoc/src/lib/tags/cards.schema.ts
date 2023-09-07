@@ -5,7 +5,49 @@ export const cards: Schema = {
   attributes: {
     cols: {
       type: 'Number',
-      description: 'The number of colums per row',
+      required: true,
+    },
+    smCols: {
+      type: 'Number',
+      required: true,
+    },
+    mdCols: {
+      type: 'Number',
+      required: true,
+    },
+    lgCols: {
+      type: 'Number',
+      required: true,
+    },
+    moreLink: {
+      type: 'String',
+      required: false,
+    },
+  },
+};
+
+export const linkCard: Schema = {
+  render: 'LinkCard',
+  attributes: {
+    title: {
+      type: 'String',
+      required: true,
+    },
+    type: {
+      type: 'String',
+      required: true,
+    },
+    icon: {
+      type: 'String',
+      required: false,
+    },
+    url: {
+      type: 'String',
+      default: '',
+    },
+    appearance: {
+      type: 'String',
+      default: 'default',
     },
   },
 };
@@ -28,19 +70,6 @@ export const card: Schema = {
     url: {
       type: 'String',
       default: '',
-    },
-  },
-};
-export const titleCard: Schema = {
-  render: 'TitleCard',
-  attributes: {
-    title: {
-      type: 'String',
-      required: true,
-    },
-    url: {
-      type: 'String',
-      required: true,
     },
   },
 };

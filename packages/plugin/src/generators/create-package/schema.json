@@ -4,6 +4,7 @@
   "$id": "NxPluginCreatePackage",
   "title": "Create a framework package",
   "description": "Create a framework package that uses Nx CLI.",
+  "examplesFile": "../../../docs/generators/create-package-examples.md",
   "type": "object",
   "properties": {
     "name": {
@@ -35,6 +36,11 @@
     "directory": {
       "type": "string",
       "description": "A directory where the app is placed."
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

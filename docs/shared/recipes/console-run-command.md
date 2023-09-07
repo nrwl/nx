@@ -6,4 +6,4 @@ You can also use `Nx: Run Target` to select a target first and then a matching p
 {% youtube
 src="https://www.youtube.com/embed/CsUkSyQcxwQ"
 title="Nx Console Run from Command Palette"
-width="100%" /%}
+/%}

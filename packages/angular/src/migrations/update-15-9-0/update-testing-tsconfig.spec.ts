@@ -74,6 +74,7 @@ async function setup(tree: Tree, name: string) {
   await generateTestApplication(tree, {
     name,
     skipPackageJson: true,
+    projectNameAndRootFormat: 'derived',
   });
 
   const projectConfig = readProjectConfiguration(tree, name);

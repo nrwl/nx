@@ -2,14 +2,16 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
+  detectPackageManager,
   newProject,
   packageInstall,
+  packageManagerLockFile,
   readFile,
   readJson,
-  rmDist,
   runCLI,
   runCommand,
   runCommandUntil,
+  tmpProjPath,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -27,7 +29,7 @@ describe('EsBuild Plugin', () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
-    updateProjectConfig(myPkg, (json) => {
+    await updateProjectConfig(myPkg, (json) => {
       json.targets.build.options.assets = [`libs/${myPkg}/assets/*`];
       return json;
     });
@@ -51,7 +53,12 @@ describe('EsBuild Plugin', () => {
 
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/Hello/);
     // main field should be set correctly in package.json
-    checkFilesExist(`dist/libs/${myPkg}/package.json`);
+    checkFilesExist(
+      `dist/libs/${myPkg}/package.json`,
+      `dist/libs/${myPkg}/${
+        packageManagerLockFile[detectPackageManager(tmpProjPath())]
+      }`
+    );
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
 
     expect(runCommand(`node dist/libs/${myPkg}/index.cjs`)).toMatch(/Hello/);
@@ -176,12 +183,12 @@ describe('EsBuild Plugin', () => {
     expect(runCommand(`node dist/libs/${myPkg}`)).toMatch(/Hello/);
   }, 300_000);
 
-  it('should support additional entry points', () => {
+  it('should support additional entry points', async () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('main');\n`);
     updateFile(`libs/${myPkg}/src/extra.ts`, `console.log('extra');\n`);
-    updateProjectConfig(myPkg, (json) => {
+    await updateProjectConfig(myPkg, (json) => {
       json.targets.build.options.additionalEntryPoints = [
         `libs/${myPkg}/src/extra.ts`,
       ];
@@ -209,7 +216,7 @@ describe('EsBuild Plugin', () => {
       `libs/${myPkg}/esbuild.config.js`,
       `console.log('custom config loaded');\nmodule.exports = {};\n`
     );
-    updateProjectConfig(myPkg, (json) => {
+    await updateProjectConfig(myPkg, (json) => {
       delete json.targets.build.options.esbuildOptions;
       json.targets.build.options.esbuildConfig = `libs/${myPkg}/esbuild.config.js`;
       return json;

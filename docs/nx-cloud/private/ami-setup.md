@@ -39,7 +39,7 @@ Once you have your NxCloud URL proceed to the below steps!
 # This is all you need to get the baseline of your nx-cloud instance configured!
 
 # Set the external URL your instance is running on. This is the URL from the previous step
-nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca'
+nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at the end
 
 secret:
   # set your initial admin password for logging into the app
@@ -49,7 +49,7 @@ secret:
 2. Apply the configuration:
 
 ```bash
-scp -r ./myconfiguration.yaml nx-cloud@<your-instance-ip>:~/config/user/update.yaml
+scp -i ./<path-to-your-ssh-pem-file>.pem -r ./myconfiguration.yaml nx-cloud@<your-instance-ip>:~/config/user/update.yaml
 ```
 
 That's it! After a few minutes, you should be able to log-in with:
@@ -98,7 +98,7 @@ You can optionally enable authentication using your preferred SSO provider:
 # global.imageTag: ''
 
 # Set the external URL your instance is running on
-nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca'
+nxCloudAppURL: 'https://nx-cloud.on.my-domain.ca' # make sure no backslash is at the end
 
 # Uncomment (along with github secrets below) to enable working with GitHub pull requests or github auth
 #github:
@@ -160,7 +160,8 @@ We send out emails with every new NxCloud release to all our Enterprise customer
 To upgrade to a newer version, add the below line to your `myconfiguration.yml` file:
 
 ```yaml
-global.imageTag: '2306.01.2' # set the version of nx-cloud you'd like
+global:
+  imageTag: '2306.01.2' # set the version of nx-cloud you'd like
 ```
 
 And apply the changes:

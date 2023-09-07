@@ -2,7 +2,6 @@
 
 import { joinPathFragments, logger } from '@nx/devkit';
 import { findNodes } from '@nx/js';
-import 'dotenv/config';
 import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { gte } from 'semver';

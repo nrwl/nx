@@ -11,7 +11,7 @@ describe('scam-to-standalone', () => {
     await scamGenerator(tree, { name: 'bar', project: 'foo' });
 
     tree.write(
-      'apps/foo/src/app/mymodule.module.ts',
+      'foo/src/app/mymodule.module.ts',
       `import { BarComponentModule } from './bar/bar.component';
       
       @NgModule({
@@ -25,7 +25,7 @@ describe('scam-to-standalone', () => {
       project: 'foo',
     });
 
-    expect(tree.read('apps/foo/src/app/bar/bar.component.ts', 'utf-8'))
+    expect(tree.read('foo/src/app/bar/bar.component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { Component, NgModule } from '@angular/core';
       import { CommonModule } from '@angular/common';
@@ -41,7 +41,7 @@ describe('scam-to-standalone', () => {
       "
     `);
 
-    expect(tree.read('apps/foo/src/app/mymodule.module.ts', 'utf-8'))
+    expect(tree.read('foo/src/app/mymodule.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { BarComponent } from './bar/bar.component';
 
@@ -52,7 +52,7 @@ describe('scam-to-standalone', () => {
       "
     `);
 
-    expect(tree.read('apps/foo/src/app/bar/bar.component.spec.ts', 'utf-8'))
+    expect(tree.read('foo/src/app/bar/bar.component.spec.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ComponentFixture, TestBed } from '@angular/core/testing';
       import { BarComponent } from './bar.component';

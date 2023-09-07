@@ -15,7 +15,17 @@ export async function applicationGenerator(
   tree: Tree,
   rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
-  const options = normalizeOptions(tree, rawOptions);
+  return await applicationGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function applicationGeneratorInternal(
+  tree: Tree,
+  rawOptions: ApplicationGeneratorOptions
+): Promise<GeneratorCallback> {
+  const options = await normalizeOptions(tree, rawOptions);
   const initTask = await initGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
     unitTestRunner: options.unitTestRunner,

@@ -19,7 +19,8 @@ export interface Schema extends JsonObject {
   cacheStrategy: 'content' | 'metadata' | null;
   rulesdir: string[];
   resolvePluginsRelativeTo: string | null;
-  reportUnusedDisableDirectives: Linter.RuleLevel | null;
+  reportUnusedDisableDirectives: Linter.StringSeverity | null;
+  printConfig?: string | null;
 }
 
 type Formatter =

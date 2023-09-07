@@ -9,6 +9,7 @@ import {
   DepConstraint,
   findConstraintsFor,
   findTransitiveExternalDependencies,
+  getSourceFilePath,
   hasBannedDependencies,
   hasBannedImport,
   hasNoneOfTheseTags,
@@ -555,6 +556,22 @@ describe('hasNoneOfTheseTags', () => {
     'should return %s when project has tags ["abc"] and requested tags are %s',
     (expected, tags) => {
       expect(hasNoneOfTheseTags(source, tags)).toBe(expected);
+    }
+  );
+});
+
+describe('getSourceFilePath', () => {
+  it.each([
+    ['/root/libs/dev-kit/package.json', '/root'],
+    ['/root/libs/dev-kit/package.json', 'C:\\root'],
+    ['C:\\root\\libs\\dev-kit\\package.json', '/root'],
+    ['C:\\root\\libs\\dev-kit\\package.json', 'C:\\root'],
+  ])(
+    'should return "libs/dev-kit/package.json" when sourceFileName is "%s" and projectPath is "%s"',
+    (sourceFileName, projectPath) => {
+      expect(getSourceFilePath(sourceFileName, projectPath)).toBe(
+        'libs/dev-kit/package.json'
+      );
     }
   );
 });

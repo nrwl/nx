@@ -4,7 +4,7 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { names } from '@nx/devkit';
-import { join } from 'path';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { DetoxBuildOptions } from '../build/schema';
@@ -59,10 +59,10 @@ function runCliTest(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/detox/local-cli/cli.js'),
+      require.resolve('detox/local-cli/cli.js'),
       ['test', ...createDetoxTestOptions(options)],
       {
-        cwd: join(workspaceRoot, projectRoot),
+        cwd: pathResolve(workspaceRoot, projectRoot),
         env: process.env,
       }
     );

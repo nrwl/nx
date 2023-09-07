@@ -5,7 +5,6 @@ use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
 use crate::native::watch::types::{EventType, WatchEvent, WatchEventInternal};
-use itertools::Itertools;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{
     ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,

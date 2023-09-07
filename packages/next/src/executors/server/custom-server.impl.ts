@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { ExecutorContext, parseTargetString, runExecutor } from '@nx/devkit';
 import { join } from 'path';
 

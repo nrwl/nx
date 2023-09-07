@@ -23,6 +23,7 @@ import {
   typescriptVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
+import { join } from 'path';
 
 async function getInstalledTypescriptVersion(
   tree: Tree
@@ -65,7 +66,7 @@ export async function initGenerator(
   const tasks: GeneratorCallback[] = [];
   // add tsconfig.base.json
   if (!getRootTsConfigFileName(tree)) {
-    generateFiles(tree, joinPathFragments(__dirname, './files'), '.', {
+    generateFiles(tree, join(__dirname, './files'), '.', {
       fileName: schema.tsConfigName ?? 'tsconfig.base.json',
     });
   }

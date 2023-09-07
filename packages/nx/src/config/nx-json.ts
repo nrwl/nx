@@ -1,3 +1,8 @@
+import { dirname, join } from 'path';
+import { existsSync } from 'fs';
+
+import { readJsonFile } from '../utils/fileutils';
+import { workspaceRoot } from '../utils/workspace-root';
 import { PackageManager } from '../utils/package-manager';
 import {
   InputDefinition,
@@ -30,6 +35,7 @@ export type TargetDependencies = Record<
 export interface NrwlJsPluginConfig {
   analyzeSourceFiles?: boolean;
   analyzePackageJson?: boolean;
+  analyzeLockfile?: boolean;
 }
 
 interface NxInstallationConfiguration {
@@ -80,8 +86,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Where new apps + libs should be placed
    */
   workspaceLayout?: {
-    libsDir: string;
-    appsDir: string;
+    libsDir?: string;
+    appsDir?: string;
+    projectNameAndRootFormat?: 'as-provided' | 'derived';
   };
   /**
    * Available Task Runners
@@ -151,4 +158,34 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * useful for workspaces that don't have a root package.json + node_modules.
    */
   installation?: NxInstallationConfiguration;
+}
+
+export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
+  const nxJson = join(root, 'nx.json');
+  if (existsSync(nxJson)) {
+    const nxJsonConfiguration = readJsonFile<NxJsonConfiguration>(nxJson);
+    if (nxJsonConfiguration.extends) {
+      const extendedNxJsonPath = require.resolve(nxJsonConfiguration.extends, {
+        paths: [dirname(nxJson)],
+      });
+      const baseNxJson = readJsonFile<NxJsonConfiguration>(extendedNxJsonPath);
+      return {
+        ...baseNxJson,
+        ...nxJsonConfiguration,
+      };
+    } else {
+      return nxJsonConfiguration;
+    }
+  } else {
+    try {
+      return readJsonFile(join(__dirname, '..', '..', 'presets', 'core.json'));
+    } catch (e) {
+      return {};
+    }
+  }
+}
+
+export function hasNxJson(root: string): boolean {
+  const nxJson = join(root, 'nx.json');
+  return existsSync(nxJson);
 }

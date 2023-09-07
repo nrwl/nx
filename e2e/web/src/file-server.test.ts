@@ -5,6 +5,7 @@ import {
   promisifiedTreeKill,
   runCLI,
   runCommandUntil,
+  setMaxWorkers,
   uniq,
   updateProjectConfig,
 } from '@nx/e2e/utils';
@@ -20,7 +21,8 @@ describe('file-server', () => {
     const port = 4301;
 
     runCLI(`generate @nx/web:app ${appName} --no-interactive`);
-    updateProjectConfig(appName, (config) => {
+    await setMaxWorkers();
+    await updateProjectConfig(appName, (config) => {
       config.targets['serve'].executor = '@nx/web:file-server';
       return config;
     });
@@ -56,6 +58,7 @@ describe('file-server', () => {
     runCLI(
       `generate @nx/web:static-config --buildTarget=${reactAppName}:build --targetName=custom-serve-static --no-interactive`
     );
+    await setMaxWorkers();
 
     const port = 6200;
 

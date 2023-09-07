@@ -7,6 +7,7 @@ import {
 import { lt } from 'semver';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
+import { join } from 'path';
 
 export function generateSSRFiles(tree: Tree, schema: Schema) {
   const projectConfig = readProjectConfiguration(tree, schema.project);
@@ -16,7 +17,7 @@ export function generateSSRFiles(tree: Tree, schema: Schema) {
 
   const pathToFiles = joinPathFragments(__dirname, '..', 'files');
 
-  generateFiles(tree, joinPathFragments(pathToFiles, 'base'), projectRoot, {
+  generateFiles(tree, join(pathToFiles, 'base'), projectRoot, {
     ...schema,
     tpl: '',
   });

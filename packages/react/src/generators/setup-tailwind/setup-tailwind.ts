@@ -18,6 +18,7 @@ import {
 import type { SetupTailwindOptions } from './schema';
 import { addTailwindStyleImports } from './lib/add-tailwind-style-imports';
 import { updateProject } from './lib/update-project';
+import { join } from 'path';
 
 export async function setupTailwindGenerator(
   tree: Tree,
@@ -36,7 +37,7 @@ export async function setupTailwindGenerator(
     return;
   }
 
-  generateFiles(tree, joinPathFragments(__dirname, './files'), project.root, {
+  generateFiles(tree, join(__dirname, './files'), project.root, {
     tmpl: '',
   });
 

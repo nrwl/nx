@@ -14,6 +14,6 @@ export interface Schema {
   nextAppDir?: boolean;
   routing?: boolean;
   standaloneApi?: boolean;
-  e2eTestRunner?: 'cypress' | 'jest' | 'detox' | 'none';
+  e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
   js?: boolean;
 }

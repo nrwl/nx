@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { readNxJson } from 'nx/src/config/configuration';
 import {
   getTargetInputs,
   filterUsingGlobPatterns,
@@ -27,6 +27,7 @@ export function findNpmDependencies(
   buildTarget: string,
   options: {
     includeTransitiveDependencies?: boolean;
+    ignoredFiles?: string[];
   } = {}
 ): Record<string, string> {
   let seen: null | Set<string> = null;
@@ -41,6 +42,7 @@ export function findNpmDependencies(
     collectedDeps: Record<string, string>
   ): void {
     if (seen?.has(currentProject.name)) return;
+    seen?.add(currentProject.name);
 
     collectDependenciesFromFileMap(
       workspaceRoot,
@@ -48,6 +50,7 @@ export function findNpmDependencies(
       projectGraph,
       projectFileMap,
       buildTarget,
+      options.ignoredFiles,
       collectedDeps
     );
 
@@ -82,19 +85,22 @@ function collectDependenciesFromFileMap(
   projectGraph: ProjectGraph,
   projectFileMap: ProjectFileMap,
   buildTarget: string,
+  ignoredFiles: string[],
   npmDeps: Record<string, string>
 ): void {
   const rawFiles = projectFileMap[sourceProject.name];
   if (!rawFiles) return;
 
-  // Cannot read inputs if the target does not exist on the project.
-  if (!sourceProject.data.targets[buildTarget]) return;
-
-  const inputs = getTargetInputs(
-    readNxJson(),
-    sourceProject,
-    buildTarget
-  ).selfInputs;
+  // If build target does not exist in project, use all files as input.
+  // This is needed for transitive dependencies for apps -- where libs may not be buildable.
+  const inputs = sourceProject.data.targets[buildTarget]
+    ? getTargetInputs(readNxJson(), sourceProject, buildTarget).selfInputs
+    : ['{projectRoot}/**/*'];
+  if (ignoredFiles) {
+    for (const pattern of ignoredFiles) {
+      inputs.push(`!${pattern}`);
+    }
+  }
   const files = filterUsingGlobPatterns(
     sourceProject.data.root,
     projectFileMap[sourceProject.name] || [],
@@ -128,7 +134,12 @@ function collectDependenciesFromFileMap(
         npmDeps[cached.name] = cached.version;
       } else {
         const packageJson = readPackageJson(workspaceDep, workspaceRoot);
-        if (packageJson) {
+        if (
+          // Check that this is a buildable project, otherwise it cannot be a dependency in package.json.
+          workspaceDep.data.targets[buildTarget] &&
+          // Make sure package.json exists and has a valid name.
+          packageJson?.name
+        ) {
           // This is a workspace lib so we can't reliably read in a specific version since it depends on how the workspace is set up.
           // ASSUMPTION: Most users will use '*' for workspace lib versions. Otherwise, they can manually update it.
           npmDeps[packageJson.name] = '*';

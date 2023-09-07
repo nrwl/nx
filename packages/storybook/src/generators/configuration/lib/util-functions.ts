@@ -28,6 +28,8 @@ import {
 import { StorybookConfigureSchema } from '../schema';
 import { UiFramework7 } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
+import { findEslintFile } from '@nx/linter/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/linter/src/utils/flat-config';
 
 const DEFAULT_PORT = 4400;
 
@@ -172,7 +174,7 @@ export function createStorybookTsconfigFile(
   if (tree.exists(oldStorybookTsConfigPath)) {
     logger.warn(`.storybook/tsconfig.json already exists for this project`);
     logger.warn(
-      `It will be renamed and moved to tsconfig.storybook.json. 
+      `It will be renamed and moved to tsconfig.storybook.json.
       Please make sure all settings look correct after this change.
       Also, please make sure to use "nx migrate" to move from one version of Nx to another.
       `
@@ -257,6 +259,23 @@ export function createStorybookTsconfigFile(
   };
 
   writeJson(tree, storybookTsConfigPath, storybookTsConfig);
+}
+
+export function editTsconfigBaseJson(tree: Tree) {
+  let tsconfigBasePath = 'tsconfig.base.json';
+
+  // standalone workspace maybe
+  if (!tree.exists(tsconfigBasePath)) tsconfigBasePath = 'tsconfig.json';
+
+  if (!tree.exists(tsconfigBasePath)) return;
+
+  const tsconfigBaseContent = readJson<TsConfig>(tree, tsconfigBasePath);
+
+  if (!tsconfigBaseContent.compilerOptions)
+    tsconfigBaseContent.compilerOptions = {};
+  tsconfigBaseContent.compilerOptions.skipLibCheck = true;
+
+  writeJson(tree, tsconfigBasePath, tsconfigBaseContent);
 }
 
 export function configureTsProjectConfig(
@@ -347,13 +366,13 @@ export function configureTsSolutionConfig(
  * which includes *.stories files.
  *
  * For TSLint this is done via the builder config, for ESLint this is
- * done within the .eslintrc.json file.
+ * done within the eslint config file.
  */
 export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
   const { name: projectName } = schema;
 
   const { targets, root } = readProjectConfiguration(tree, projectName);
-  const tslintTargets = Object.values(targets).filter(
+  const tslintTargets = Object.values(targets ?? {}).filter(
     (target) => target.executor === '@angular-devkit/build-angular:tslint'
   );
 
@@ -364,18 +383,46 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
     ]);
   });
 
-  if (tree.exists(join(root, '.eslintrc.json'))) {
-    updateJson(tree, join(root, '.eslintrc.json'), (json) => {
+  const eslintFile = findEslintFile(tree, root);
+  if (!eslintFile) {
+    return;
+  }
+
+  const parserConfigPath = join(
+    root,
+    schema.uiFramework === '@storybook/angular'
+      ? '.storybook/tsconfig.json'
+      : 'tsconfig.storybook.json'
+  );
+
+  if (useFlatConfig(tree)) {
+    let config = tree.read(eslintFile, 'utf-8');
+    const projectRegex = RegExp(/project:\s?\[?['"](.*)['"]\]?/g);
+    let match;
+    while ((match = projectRegex.exec(config)) !== null) {
+      const matchSet = new Set(
+        match[1].split(',').map((p) => p.trim().replace(/['"]/g, ''))
+      );
+      matchSet.add(parserConfigPath);
+      const insert = `project: [${Array.from(matchSet)
+        .map((p) => `'${p}'`)
+        .join(', ')}]`;
+      config =
+        config.slice(0, match.index) +
+        insert +
+        config.slice(match.index + match[0].length);
+    }
+    tree.write(eslintFile, config);
+  } else {
+    updateJson(tree, join(root, eslintFile), (json) => {
       if (typeof json.parserOptions?.project === 'string') {
         json.parserOptions.project = [json.parserOptions.project];
       }
 
-      if (Array.isArray(json.parserOptions?.project)) {
+      if (json.parserOptions?.project) {
         json.parserOptions.project = dedupe([
           ...json.parserOptions.project,
-          schema.uiFramework === '@storybook/angular'
-            ? join(root, '.storybook/tsconfig.json')
-            : join(root, 'tsconfig.storybook.json'),
+          parserConfigPath,
         ]);
       }
 
@@ -384,12 +431,10 @@ export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
         if (typeof o.parserOptions?.project === 'string') {
           o.parserOptions.project = [o.parserOptions.project];
         }
-        if (Array.isArray(o.parserOptions?.project)) {
+        if (o.parserOptions?.project) {
           o.parserOptions.project = dedupe([
             ...o.parserOptions.project,
-            schema.uiFramework === '@storybook/angular'
-              ? join(root, '.storybook/tsconfig.json')
-              : join(root, 'tsconfig.storybook.json'),
+            parserConfigPath,
           ]);
         }
       }
@@ -611,15 +656,15 @@ export function rootFileIsTs(
 ): boolean {
   if (tree.exists(`.storybook/${rootFileName}.ts`) && !tsConfiguration) {
     logger.info(
-      `The root Storybook configuration is in TypeScript, 
-      so Nx will generate TypeScript Storybook configuration files 
+      `The root Storybook configuration is in TypeScript,
+      so Nx will generate TypeScript Storybook configuration files
       in this project's .storybook folder as well.`
     );
     return true;
   } else if (tree.exists(`.storybook/${rootFileName}.js`) && tsConfiguration) {
     logger.info(
-      `The root Storybook configuration is in JavaScript, 
-        so Nx will generate JavaScript Storybook configuration files 
+      `The root Storybook configuration is in JavaScript,
+        so Nx will generate JavaScript Storybook configuration files
         in this project's .storybook folder as well.`
     );
     return false;
@@ -733,17 +778,13 @@ export function renameAndMoveOldTsConfig(
     });
   }
 
-  const projectEsLintFile = joinPathFragments(projectRoot, '.eslintrc.json');
-
-  if (tree.exists(projectEsLintFile)) {
-    updateJson(tree, projectEsLintFile, (json) => {
-      const jsonString = JSON.stringify(json);
-      const newJsonString = jsonString.replace(
-        /\.storybook\/tsconfig\.json/g,
-        'tsconfig.storybook.json'
-      );
-      json = JSON.parse(newJsonString);
-      return json;
-    });
+  const eslintFile = findEslintFile(tree, projectRoot);
+  if (eslintFile) {
+    const fileName = joinPathFragments(projectRoot, eslintFile);
+    const config = tree.read(fileName, 'utf-8');
+    tree.write(
+      fileName,
+      config.replace(/\.storybook\/tsconfig\.json/g, 'tsconfig.storybook.json')
+    );
   }
 }

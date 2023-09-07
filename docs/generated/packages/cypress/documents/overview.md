@@ -9,9 +9,9 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 
 ## Setting Up Cypress
 
-> Info about [Cypress Component Testing can be found here](/packages/cypress/documents/cypress-component-testing)
+> Info about [Cypress Component Testing can be found here](/recipes/cypress/cypress-component-testing)
 >
-> Info about [using Cypress and Storybook can be found here](/packages/storybook/documents/overview-react#cypress-tests-for-storiesbook)
+> Info about [using Cypress and Storybook can be found here](/recipes/storybook/overview-react#cypress-tests-for-storiesbook)
 
 If the `@nx/cypress` package is not installed, install the version that matches your `nx` package version.
 
@@ -36,13 +36,13 @@ nx g @nx/web:app frontend
 To generate an E2E project based on an existing project, run the following generator
 
 ```shell
-nx g @nx/cypress:cypress-project your-app-name-e2e --project=your-app-name
+nx g @nx/cypress:configuration your-app-name-e2e --project=your-app-name
 ```
 
 Optionally, you can use the `--baseUrl` option if you don't want cypress plugin to serve `your-app-name`.
 
 ```shell
-nx g @nx/cypress:cypress-project your-app-name-e2e --baseUrl=http://localhost:4200
+nx g @nx/cypress:configuration your-app-name-e2e --baseUrl=http://localhost:4200
 ```
 
 Replace `your-app-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`.
@@ -51,7 +51,7 @@ Replace `your-app-name` with the app's name as defined in your `tsconfig.base.js
 
 Run `nx e2e frontend-e2e` to execute e2e tests with Cypress.
 
-You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/recipes/executors/use-executor-configurations#use-executor-configurations)
+You can run your e2e test against a production build by using the `production` [configuration](https://nx.dev/plugin-features/use-task-executors#use-executor-configurations)
 
 ```shell
 nx e2e frontend-e2e --configuration=production

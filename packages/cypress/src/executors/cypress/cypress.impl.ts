@@ -10,7 +10,6 @@ import {
   output,
 } from '@nx/devkit';
 import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
-import 'dotenv/config';
 import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';
 import { getTempTailwindPath } from '../../utils/ct-helpers';
@@ -52,6 +51,7 @@ export interface CypressExecutorOptions extends Json {
   tag?: string;
   port?: number | 'cypress-auto';
   quiet?: boolean;
+  runnerUi?: boolean;
 }
 
 interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
@@ -259,6 +259,7 @@ async function runCypress(
   options.tag = opts.tag;
   options.exit = opts.exit;
   options.headed = opts.headed;
+  options.runnerUi = opts.runnerUi;
 
   if (opts.headless) {
     options.headless = opts.headless;

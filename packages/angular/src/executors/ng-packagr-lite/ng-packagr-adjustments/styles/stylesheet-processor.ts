@@ -20,7 +20,7 @@ import * as log from 'ng-packagr/lib/utils/log';
 import { dirname, extname, join } from 'path';
 import * as postcssPresetEnv from 'postcss-preset-env';
 import * as postcssUrl from 'postcss-url';
-import { pathToFileURL } from 'url';
+import { pathToFileURL } from 'node:url';
 import { getInstalledAngularVersionInfo } from '../../../utilities/angular-version-utils';
 import {
   getTailwindPostCssPlugins,

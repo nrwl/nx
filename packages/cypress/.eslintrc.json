@@ -24,6 +24,26 @@
       "rules": {
         "@nx/nx-plugin-checks": "error"
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              // Type imports only
+              "eslint",
+              "rollup",
+              "vite"
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["!**/*"]

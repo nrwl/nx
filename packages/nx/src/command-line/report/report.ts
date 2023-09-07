@@ -20,6 +20,7 @@ import {
 import { gt, valid } from 'semver';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getNxRequirePaths } from '../../utils/installation-directory';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 
 const nxPackageJson = readJsonFile<typeof import('../../../package.json')>(
   join(__dirname, '../../../package.json')
@@ -148,7 +149,7 @@ export async function getReportData(): Promise<ReportData> {
   const pm = detectPackageManager();
   const pmVersion = getPackageManagerVersion(pm);
 
-  const localPlugins = await findLocalPlugins();
+  const localPlugins = await findLocalPlugins(readNxJson());
   const communityPlugins = findInstalledCommunityPlugins();
 
   let projectGraphError: Error | null = null;
@@ -185,11 +186,12 @@ export async function getReportData(): Promise<ReportData> {
   };
 }
 
-async function findLocalPlugins() {
+async function findLocalPlugins(nxJson: NxJsonConfiguration) {
   try {
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
     const localPlugins = await getLocalWorkspacePlugins(
-      readProjectsConfigurationFromProjectGraph(projectGraph)
+      readProjectsConfigurationFromProjectGraph(projectGraph),
+      nxJson
     );
     return Array.from(localPlugins.keys());
   } catch {

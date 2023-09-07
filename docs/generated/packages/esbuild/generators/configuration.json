@@ -68,8 +68,8 @@
     "presets": []
   },
   "description": "Add esbuild configuration to a project.",
-  "hidden": true,
   "implementation": "/packages/esbuild/src/generators/configuration/configuration.ts",
+  "hidden": false,
   "path": "/packages/esbuild/src/generators/configuration/schema.json",
   "type": "generator"
 }

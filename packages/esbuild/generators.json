@@ -12,8 +12,7 @@
       "aliases": ["esbuild-project"],
       "factory": "./src/generators/configuration/configuration#compat",
       "schema": "./src/generators/configuration/schema.json",
-      "description": "Add esbuild configuration to a project.",
-      "hidden": true
+      "description": "Add esbuild configuration to a project."
     }
   },
   "generators": {
@@ -28,8 +27,7 @@
       "aliases": ["esbuild-project"],
       "factory": "./src/generators/configuration/configuration",
       "schema": "./src/generators/configuration/schema.json",
-      "description": "Add esbuild configuration to a project.",
-      "hidden": true
+      "description": "Add esbuild configuration to a project."
     }
   }
 }

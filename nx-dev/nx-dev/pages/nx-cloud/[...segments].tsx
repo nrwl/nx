@@ -13,15 +13,18 @@ import { nxCloudApi } from '../../lib/cloud.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { tagsApi } from '../../lib/tags.api';
+import { fetchGithubStarCount } from '../../lib/githubStars.api';
 
 export default function Pages({
   document,
   menu,
   relatedDocuments,
+  widgetData,
 }: {
   document: ProcessedDocument;
   menu: MenuItem[];
   relatedDocuments: RelatedDocument[];
+  widgetData: { githubStarsCount: number };
 }) {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -75,6 +78,7 @@ export default function Pages({
           <DocViewer
             document={vm.document}
             relatedDocuments={vm.relatedDocuments}
+            widgetData={widgetData}
           />
         </div>
       </main>
@@ -99,6 +103,9 @@ export const getStaticProps: GetStaticProps = async ({
     return {
       props: {
         document,
+        widgetData: {
+          githubStarsCount: await fetchGithubStarCount(),
+        },
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item

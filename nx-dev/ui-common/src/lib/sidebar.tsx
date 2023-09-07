@@ -155,7 +155,7 @@ function CollapsibleIcon({
     <svg
       xmlns="http://www.w3.org/2000/svg"
       className={cx(
-        'h-3.5 w-3.5 text-slate-600 transition-all dark:text-slate-400',
+        'w-3.5 text-slate-600 transition-all dark:text-slate-400',
         !isCollapsed && 'rotate-90 transform'
       )}
       fill="none"
@@ -179,9 +179,8 @@ export function SidebarMobile({
   const router = useRouter();
   const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
   const isPackages: boolean = router.asPath.startsWith('/packages');
-  const isPlugins: boolean = router.asPath.startsWith('/plugins');
-  const isRecipes: boolean = router.asPath.startsWith('/recipes');
-  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isRecipes;
+  const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
+  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins;
 
   const sections = [
     { name: 'Home', href: '/', current: false },
@@ -197,14 +196,9 @@ export function SidebarMobile({
       current: isPackages,
     },
     {
-      name: 'Plugins',
-      href: '/plugins/intro/getting-started',
+      name: 'Extending Nx',
+      href: '/extending-nx/intro/getting-started',
       current: isPlugins,
-    },
-    {
-      name: 'Recipes',
-      href: '/recipes',
-      current: isRecipes,
     },
   ];
   return (

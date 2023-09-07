@@ -1,29 +1,12 @@
 import type { Scanner } from 'typescript';
 
 let SyntaxKind: typeof import('typescript').SyntaxKind;
-function shouldRescanSlashToken(
-  lastNonTriviaToken: import('typescript').SyntaxKind
-) {
-  switch (lastNonTriviaToken) {
-    case SyntaxKind.Identifier:
-    case SyntaxKind.StringLiteral:
-    case SyntaxKind.NumericLiteral:
-    case SyntaxKind.BigIntLiteral:
-    case SyntaxKind.RegularExpressionLiteral:
-    case SyntaxKind.ThisKeyword:
-    case SyntaxKind.PlusPlusToken:
-    case SyntaxKind.MinusMinusToken:
-    case SyntaxKind.CloseParenToken:
-    case SyntaxKind.CloseBracketToken:
-    case SyntaxKind.CloseBraceToken:
-    case SyntaxKind.TrueKeyword:
-    case SyntaxKind.FalseKeyword:
-      return false;
-    default:
-      return true;
-  }
-}
 
+/**
+ * @deprecated This is deprecated and will be removed in Nx 18.
+ * This was not intended to be exposed.
+ * Please talk to us if you need this.
+ */
 export function stripSourceCode(scanner: Scanner, contents: string): string {
   if (!SyntaxKind) {
     SyntaxKind = require('typescript').SyntaxKind;
@@ -169,4 +152,27 @@ export function stripSourceCode(scanner: Scanner, contents: string): string {
   }
 
   return statements.join('\n');
+}
+
+function shouldRescanSlashToken(
+  lastNonTriviaToken: import('typescript').SyntaxKind
+) {
+  switch (lastNonTriviaToken) {
+    case SyntaxKind.Identifier:
+    case SyntaxKind.StringLiteral:
+    case SyntaxKind.NumericLiteral:
+    case SyntaxKind.BigIntLiteral:
+    case SyntaxKind.RegularExpressionLiteral:
+    case SyntaxKind.ThisKeyword:
+    case SyntaxKind.PlusPlusToken:
+    case SyntaxKind.MinusMinusToken:
+    case SyntaxKind.CloseParenToken:
+    case SyntaxKind.CloseBracketToken:
+    case SyntaxKind.CloseBraceToken:
+    case SyntaxKind.TrueKeyword:
+    case SyntaxKind.FalseKeyword:
+      return false;
+    default:
+      return true;
+  }
 }

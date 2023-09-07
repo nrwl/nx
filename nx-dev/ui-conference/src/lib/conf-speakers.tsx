@@ -36,7 +36,7 @@ export function ConfSpeakers(): JSX.Element {
       twitter: 'jcammisuli',
     },
     {
-      description: `Max Kless is a senior software engineer at Nx, focussed on improving Nx Console and breaking Jon's code.`,
+      description: `Max Kless is a senior software engineer at Nx, focussed on building Nx Console and breaking Jon's code.`,
       imageUrl: '/images/conf/max-kless.webp',
       name: 'Max Kless',
       twitter: 'MaxKless',
@@ -46,6 +46,12 @@ export function ConfSpeakers(): JSX.Element {
       imageUrl: '/images/conf/juri-strumpflohner.webp',
       name: 'Juri Strumpflohner',
       twitter: 'juristr',
+    },
+    {
+      description: `Simon Critchley is a Senior Software Architect at Nx and has been working on developing Nx Cloud Workflows since he joined in February 2023. In previous roles he's architected large scale web services handling billions of HTTP requests per day.`,
+      imageUrl: '/images/conf/simon-critchley.webp',
+      name: 'Simon Critchley',
+      // twitter: 'MrJamesHenry',
     },
     {
       description:

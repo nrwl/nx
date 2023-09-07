@@ -1,6 +1,6 @@
 {
   "name": "remote",
-  "factory": "./src/generators/remote/remote",
+  "factory": "./src/generators/remote/remote#remoteInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxMFRemote",
@@ -19,7 +19,7 @@
         "type": "string",
         "description": "The name to give to the remote Angular app.",
         "$default": { "$source": "argv", "index": 0 },
-        "pattern": "^[a-zA-Z].*$"
+        "pattern": "^[a-zA-Z][^:]*$"
       },
       "host": {
         "type": "string",
@@ -34,6 +34,11 @@
       "directory": {
         "description": "The directory of the new application.",
         "type": "string"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -103,8 +108,9 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["cypress", "none"],
+        "enum": ["cypress", "playwright", "none"],
         "description": "Test runner to use for end to end (E2E) tests.",
+        "x-prompt": "Which E2E test runner would you like to use?",
         "default": "cypress"
       },
       "tags": {
@@ -165,7 +171,7 @@
   },
   "x-type": "application",
   "description": "Generate a Remote Angular Module Federation Application.",
-  "implementation": "/packages/angular/src/generators/remote/remote.ts",
+  "implementation": "/packages/angular/src/generators/remote/remote#remoteInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/angular/src/generators/remote/schema.json",

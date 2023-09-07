@@ -4,7 +4,17 @@ In many ways, a standalone repository is an integrated repository, but with one 
 
 You can always add another app to a standalone repository the same way you would in an integrated repo. But at some point, you may want to move the primary app out of the root of your repo because the repo is no longer primarily focused on that one app. There are other apps that are equally important and you want the folder structure to align with the new reality.
 
-## Strategy
+## Run the Generator
+
+The `convert-to-monorepo` generator will attempt to convert a standalone repo to an integrated monorepo.
+
+```shell
+nx g convert-to-monorepo
+```
+
+If you need to do the conversion manually, you can follow the steps below.
+
+## Manual Conversion Strategy
 
 For this recipe, we'll assume that the root-level app is named `my-app`. The high-level process we'll go through to move the app involves four stages:
 

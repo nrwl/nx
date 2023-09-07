@@ -21,6 +21,7 @@ import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
 import type { WorkspaceRootFileTypesInfo } from './types';
+import { join } from 'path';
 
 export function validateWorkspace(tree: Tree): void {
   const errors: string[] = [];
@@ -76,7 +77,9 @@ export function createNxJson(
               '!{projectRoot}/karma.conf.js',
             ]
           : []),
-        targets.lint ? '!{projectRoot}/.eslintrc.json' : undefined,
+        ...(targets.lint
+          ? ['!{projectRoot}/.eslintrc.json', '!{projectRoot}/eslint.config.js']
+          : []),
       ].filter(Boolean),
     },
     targetDefaults: {
@@ -91,7 +94,11 @@ export function createNxJson(
         : undefined,
       lint: targets.lint
         ? {
-            inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
+            inputs: [
+              'default',
+              '{workspaceRoot}/.eslintrc.json',
+              '{workspaceRoot}/eslint.config.js',
+            ],
           }
         : undefined,
       e2e: targets.e2e
@@ -268,7 +275,7 @@ export async function createWorkspaceFiles(tree: Tree): Promise<void> {
 
   await jsInitGenerator(tree, { skipFormat: true });
 
-  generateFiles(tree, joinPathFragments(__dirname, '../files/root'), '.', {
+  generateFiles(tree, join(__dirname, '../files/root'), '.', {
     tmpl: '',
     dot: '.',
     rootTsConfigPath: getRootTsConfigPathInTree(tree),

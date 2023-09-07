@@ -7,19 +7,23 @@ import { setupTailwindGenerator } from '@nx/react';
 import { Linter } from '@nx/linter';
 
 describe('cypress-component-configuration generator', () => {
-  let tree: any;
+  let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should setup nextjs app', async () => {
-    await applicationGenerator(tree, { name: 'demo', style: 'css' });
+    await applicationGenerator(tree, {
+      name: 'demo',
+      style: 'css',
+      projectNameAndRootFormat: 'as-provided',
+    });
     await cypressComponentConfiguration(tree, {
       generateTests: true,
       project: 'demo',
     });
-    expect(readJson(tree, 'apps/demo/tsconfig.json').exclude).toEqual(
+    expect(readJson(tree, 'demo/tsconfig.json').exclude).toEqual(
       expect.arrayContaining([
         'cypress/**/*',
         'cypress.config.ts',
@@ -29,9 +33,20 @@ describe('cypress-component-configuration generator', () => {
         '**/*.cy.jsx',
       ])
     );
-    expect(readJson(tree, 'apps/demo/cypress/tsconfig.json')).toMatchSnapshot();
-    expect(tree.read('apps/demo/cypress.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+    expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot(`
+    {
+      "compilerOptions": {
+        "allowJs": true,
+        "module": "commonjs",
+        "outDir": "../dist/out-tsc",
+        "sourceMap": false,
+        "types": [
+          "cypress",
+          "node",
+        ],
+      }
+    }`);
+    expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
       import { defineConfig } from 'cypress';
 
@@ -40,7 +55,7 @@ describe('cypress-component-configuration generator', () => {
       });
       "
     `);
-    expect(tree.read('apps/demo/cypress/support/component.ts', 'utf-8'))
+    expect(tree.read('demo/cypress/support/component.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { mount } from 'cypress/react18';
       import './styles.ct.css';
@@ -76,13 +91,13 @@ describe('cypress-component-configuration generator', () => {
       Cypress.Commands.add('mount', mount);
       "
     `);
-    expect(tree.exists('apps/demo/pages/index.cy.ts')).toBeFalsy();
+    expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
     expect(
       readProjectConfiguration(tree, 'demo').targets['component-test']
     ).toEqual({
       executor: '@nx/cypress:cypress',
       options: {
-        cypressConfig: 'apps/demo/cypress.config.ts',
+        cypressConfig: 'demo/cypress.config.ts',
         skipServe: true,
         testingType: 'component',
       },
@@ -90,14 +105,18 @@ describe('cypress-component-configuration generator', () => {
   });
 
   it('should add styles setup in app', async () => {
-    await applicationGenerator(tree, { name: 'demo', style: 'css' });
+    await applicationGenerator(tree, {
+      name: 'demo',
+      style: 'css',
+      projectNameAndRootFormat: 'as-provided',
+    });
     await setupTailwindGenerator(tree, { project: 'demo' });
     await cypressComponentConfiguration(tree, {
       generateTests: false,
       project: 'demo',
     });
 
-    expect(tree.read('apps/demo/cypress/support/styles.ct.css', 'utf-8'))
+    expect(tree.read('demo/cypress/support/styles.ct.css', 'utf-8'))
       .toMatchInlineSnapshot(`
       "/* This is where you can load global styles to apply to all components. */
       @tailwind base;
@@ -105,9 +124,9 @@ describe('cypress-component-configuration generator', () => {
       @tailwind utilities;
       "
     `);
-    expect(
-      tree.read('apps/demo/cypress/support/component.ts', 'utf-8')
-    ).toContain(`import './styles.ct.css';`);
+    expect(tree.read('demo/cypress/support/component.ts', 'utf-8')).toContain(
+      `import './styles.ct.css';`
+    );
   });
 
   it('should setup nextjs lib', async () => {
@@ -117,21 +136,33 @@ describe('cypress-component-configuration generator', () => {
       style: 'css',
       unitTestRunner: 'jest',
       component: true,
+      projectNameAndRootFormat: 'as-provided',
     });
     await cypressComponentConfiguration(tree, {
       generateTests: true,
       project: 'demo',
     });
-    expect(readJson(tree, 'libs/demo/tsconfig.json').references).toEqual(
+    expect(readJson(tree, 'demo/tsconfig.json').references).toEqual(
       expect.arrayContaining([
         {
           path: './cypress/tsconfig.json',
         },
       ])
     );
-    expect(readJson(tree, 'libs/demo/cypress/tsconfig.json')).toMatchSnapshot();
-    expect(tree.read('libs/demo/cypress.config.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
+    expect(readJson(tree, 'demo/cypress/tsconfig.json')).toMatchSnapshot(`
+    {
+      "compilerOptions": {
+        "allowJs": true,
+        "module": "commonjs",
+        "outDir": "../dist/out-tsc",
+        "sourceMap": false,
+        "types": [
+          "cypress",
+          "node",
+        ],
+      }
+    }`);
+    expect(tree.read('demo/cypress.config.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/next/plugins/component-testing';
       import { defineConfig } from 'cypress';
 
@@ -140,13 +171,13 @@ describe('cypress-component-configuration generator', () => {
       });
       "
     `);
-    expect(tree.exists('libs/demo/pages/index.cy.ts')).toBeFalsy();
+    expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
     expect(
       readProjectConfiguration(tree, 'demo').targets['component-test']
     ).toEqual({
       executor: '@nx/cypress:cypress',
       options: {
-        cypressConfig: 'libs/demo/cypress.config.ts',
+        cypressConfig: 'demo/cypress.config.ts',
         skipServe: true,
         testingType: 'component',
       },

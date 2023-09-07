@@ -37,18 +37,25 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
+// TODO(v18): Remove this export
 /**
  * @category Workspace
  */
 export { Workspaces } from './config/workspaces';
 
-// TODO (v16): Change this to export from './config/configuration'
-export {
-  readAllWorkspaceConfiguration,
-  workspaceLayout,
-} from './project-graph/file-utils';
+export { workspaceLayout } from './config/configuration';
 
-export type { NxPlugin, ProjectTargetConfigurator } from './utils/nx-plugin';
+export type {
+  NxPlugin,
+  NxPluginV1,
+  NxPluginV2,
+  ProjectTargetConfigurator,
+  CreateNodes,
+  CreateNodesFunction,
+  CreateNodesContext,
+  CreateDependencies,
+  CreateDependenciesContext,
+} from './utils/nx-plugin';
 
 /**
  * @category Workspace
@@ -147,7 +154,11 @@ export { DependencyType } from './config/project-graph';
 /**
  * @category Project Graph
  */
-export { ProjectGraphBuilder } from './project-graph/project-graph-builder';
+export {
+  ProjectGraphBuilder,
+  ProjectGraphDependencyWithFile,
+  validateDependency,
+} from './project-graph/project-graph-builder';
 
 /**
  * @category Utils
@@ -195,6 +206,7 @@ export { reverse } from './project-graph/operators';
 export {
   createProjectGraphAsync,
   readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
 } from './project-graph/project-graph';
 
 /**

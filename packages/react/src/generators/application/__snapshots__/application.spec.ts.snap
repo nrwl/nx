@@ -68,7 +68,7 @@ import NxWelcome from './nx-welcome';
 export function App() {
   return (
     <div>
-      <NxWelcome title="my-dir-my-app" />
+      <NxWelcome title="my-app" />
     </div>
   );
 }

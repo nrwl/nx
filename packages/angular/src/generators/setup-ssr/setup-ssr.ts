@@ -4,8 +4,12 @@ import {
   formatFiles,
   installPackagesTask,
 } from '@nx/devkit';
-import { versions } from '../utils/version-utils';
 import {
+  getInstalledPackageVersionInfo,
+  versions,
+} from '../utils/version-utils';
+import {
+  addHydration,
   generateSSRFiles,
   normalizeOptions,
   updateAppModule,
@@ -25,16 +29,26 @@ export async function setupSsr(tree: Tree, schema: Schema) {
     updateAppModule(tree, options);
   }
 
+  if (options.hydration) {
+    addHydration(tree, options);
+  }
+
   const pkgVersions = versions(tree);
 
   addDependenciesToPackageJson(
     tree,
     {
-      '@nguniversal/express-engine': pkgVersions.ngUniversalVersion,
-      '@angular/platform-server': pkgVersions.angularVersion,
+      '@nguniversal/express-engine':
+        getInstalledPackageVersionInfo(tree, '@nguniversal/express-engine')
+          ?.version ?? pkgVersions.ngUniversalVersion,
+      '@angular/platform-server':
+        getInstalledPackageVersionInfo(tree, '@angular/platform-server')
+          ?.version ?? pkgVersions.angularVersion,
     },
     {
-      '@nguniversal/builders': pkgVersions.ngUniversalVersion,
+      '@nguniversal/builders':
+        getInstalledPackageVersionInfo(tree, '@nguniversal/builders')
+          ?.version ?? pkgVersions.ngUniversalVersion,
     }
   );
 

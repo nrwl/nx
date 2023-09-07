@@ -10,11 +10,14 @@ function getSwcCmd(
   { swcrcPath, srcPath, destPath }: SwcCliOptions,
   watch = false
 ) {
-  let swcCmd = `npx swc ${
+  const swcCLI = require.resolve('@swc/cli/bin/swc.js');
+  let swcCmd = `node ${swcCLI} ${
     // TODO(jack): clean this up when we remove inline module support
     // Handle root project
     srcPath === '.' ? 'src' : srcPath
-  } -d ${destPath} --config-file=${swcrcPath}`;
+  } -d ${
+    srcPath === '.' ? `${destPath}/src` : destPath
+  } --config-file=${swcrcPath}`;
   return watch ? swcCmd.concat(' --watch') : swcCmd;
 }
 
@@ -42,8 +45,6 @@ export async function compileSwc(
   normalizedOptions: NormalizedSwcExecutorOptions,
   postCompilationCallback: () => Promise<void>
 ) {
-  const isRootProject =
-    context.projectGraph.nodes[context.projectName].data.root === '.';
   logger.log(`Compiling with SWC for ${context.projectName}...`);
 
   if (normalizedOptions.clean) {
@@ -51,8 +52,9 @@ export async function compileSwc(
   }
 
   const swcCmdLog = execSync(getSwcCmd(normalizedOptions.swcCliOptions), {
+    encoding: 'utf8',
     cwd: normalizedOptions.swcCliOptions.swcCwd,
-  }).toString();
+  });
   logger.log(swcCmdLog.replace(/\n/, ''));
   const isCompileSuccess = swcCmdLog.includes('Successfully compiled');
 

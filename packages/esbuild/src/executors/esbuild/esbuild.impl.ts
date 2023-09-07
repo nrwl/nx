@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import * as chalk from 'chalk';
 import type { ExecutorContext } from '@nx/devkit';
 import { cacheDir, joinPathFragments, logger, stripIndents } from '@nx/devkit';
@@ -85,6 +84,7 @@ export async function* esbuildExecutor(
       ...options,
       // TODO(jack): make types generate with esbuild
       skipTypings: true,
+      generateLockfile: true,
       outputFileExtensionForCjs: getOutExtension('cjs', options),
       excludeLibsInPackageJson: !options.thirdParty,
       updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
@@ -148,6 +148,7 @@ export async function* esbuildExecutor(
                       },
                     }
                   : null,
+                ...(esbuildOptions?.plugins || []),
               ].filter(Boolean),
             });
 

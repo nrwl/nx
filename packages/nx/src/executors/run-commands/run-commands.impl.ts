@@ -205,7 +205,7 @@ function createProcess(
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
-      env: processEnv(color),
+      env: processEnv(color, cwd),
       cwd,
     });
     /**
@@ -277,10 +277,10 @@ function calculateCwd(
   return path.join(context.root, cwd);
 }
 
-function processEnv(color: boolean) {
+function processEnv(color: boolean, cwd: string) {
   const env = {
     ...process.env,
-    ...appendLocalEnv(),
+    ...appendLocalEnv({ cwd: cwd ?? process.cwd() }),
   };
 
   if (color) {

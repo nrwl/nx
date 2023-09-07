@@ -88,7 +88,7 @@ With this configuration, the build script will only consider the non-test files 
 The test script will consider all the source files for the project under test and only non-test files of its
 dependencies. The test script will also consider the jest config file at the root of the workspace.
 
-For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/more-concepts/customizing-inputs)
+For more information about modifying `inputs` and `namedInputs` for your own repo, read [Customizing Inputs](/concepts/more-concepts/customizing-inputs)
 
 ### Filesets
 

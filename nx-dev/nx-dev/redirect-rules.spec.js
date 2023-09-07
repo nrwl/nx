@@ -100,5 +100,21 @@ describe('Redirect rules configuration', () => {
         ).toEqual(`${newNodePathPrefix}${des}`);
       });
     });
+
+    test('old tutorial links', () => {
+      const oldTutorialUrls = [
+        '/tutorials/package-based-repo-tutorial',
+        '/tutorials/integrated-repo-tutorial',
+        '/tutorials/react-standalone-tutorial',
+        '/tutorials/angular-standalone-tutorial',
+        '/tutorials/node-server-tutorial',
+      ];
+
+      for (const url of oldTutorialUrls) {
+        expect(redirectRules.nested5minuteTutorialUrls[url]).toEqual(
+          '/getting-started' + url
+        );
+      }
+    });
   });
 });

@@ -11,18 +11,36 @@
       "type": "string",
       "description": "The name of the main entry-point file.",
       "x-completion-type": "file",
-      "x-completion-glob": "main@(.js|.ts|.tsx)"
+      "x-completion-glob": "main@(.js|.ts|.tsx)",
+      "x-priority": "important"
+    },
+    "generateExportsField": {
+      "type": "boolean",
+      "alias": "exports",
+      "description": "Update the output package.json file's 'exports' field. This field is used by Node and bundles.",
+      "x-priority": "important",
+      "default": false
+    },
+    "additionalEntryPoints": {
+      "type": "array",
+      "description": "Additional entry-points to add to exports field in the package.json file.",
+      "items": {
+        "type": "string"
+      },
+      "x-priority": "important"
     },
     "outputPath": {
       "type": "string",
       "description": "The output path of the generated files.",
-      "x-completion-type": "directory"
+      "x-completion-type": "directory",
+      "x-priority": "important"
     },
     "tsConfig": {
       "type": "string",
       "description": "The path to the Typescript configuration file.",
       "x-completion-type": "file",
-      "x-completion-glob": "tsconfig.*.json"
+      "x-completion-glob": "tsconfig.*.json",
+      "x-priority": "important"
     },
     "swcrc": {
       "type": "string",

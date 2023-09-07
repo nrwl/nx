@@ -9,7 +9,7 @@ import {
   createProjectRootMappings,
   ProjectRootMappings,
 } from 'nx/src/project-graph/utils/find-project-for-path';
-import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { readNxJson } from 'nx/src/config/configuration';
 import { TargetProjectLocator } from '@nx/js/src/internal';
 import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
@@ -19,13 +19,13 @@ export function ensureGlobalProjectGraph(ruleName: string) {
    * Enforce every IDE change to get a fresh nxdeps.json
    */
   if (
-    !(global as any).projectGraph ||
-    !(global as any).projectRootMappings ||
-    !(global as any).projectFileMap ||
+    !globalThis.projectGraph ||
+    !globalThis.projectRootMappings ||
+    !globalThis.projectFileMap ||
     !isTerminalRun()
   ) {
     const nxJson = readNxJson();
-    (global as any).workspaceLayout = nxJson.workspaceLayout;
+    globalThis.workspaceLayout = nxJson.workspaceLayout;
 
     /**
      * Because there are a number of ways in which the rule can be invoked (executor vs ESLint CLI vs IDE Plugin),
@@ -33,12 +33,12 @@ export function ensureGlobalProjectGraph(ruleName: string) {
      */
     try {
       const projectGraph = readCachedProjectGraph();
-      (global as any).projectGraph = projectGraph;
-      (global as any).projectRootMappings = createProjectRootMappings(
+      globalThis.projectGraph = projectGraph;
+      globalThis.projectRootMappings = createProjectRootMappings(
         projectGraph.nodes
       );
-      (global as any).projectFileMap = readProjectFileMapCache().projectFileMap;
-      (global as any).targetProjectLocator = new TargetProjectLocator(
+      globalThis.projectFileMap = readProjectFileMapCache().projectFileMap;
+      globalThis.targetProjectLocator = new TargetProjectLocator(
         projectGraph.nodes,
         projectGraph.externalNodes
       );
@@ -61,9 +61,9 @@ export function readProjectGraph(ruleName: string): {
 } {
   ensureGlobalProjectGraph(ruleName);
   return {
-    projectGraph: (global as any).projectGraph,
-    projectFileMap: (global as any).projectFileMap,
-    projectRootMappings: (global as any).projectRootMappings,
-    targetProjectLocator: (global as any).targetProjectLocator,
+    projectGraph: globalThis.projectGraph,
+    projectFileMap: globalThis.projectFileMap,
+    projectRootMappings: globalThis.projectRootMappings,
+    targetProjectLocator: globalThis.targetProjectLocator,
   };
 }

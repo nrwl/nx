@@ -34,8 +34,7 @@ export function updateImports(
   schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
-  if (project.projectType === 'application') {
-    // These shouldn't be imported anywhere?
+  if (project.projectType !== 'library') {
     return;
   }
 
@@ -88,9 +87,10 @@ export function updateImports(
       // if the import path doesn't start with the main entry point import path,
       // it's a custom import path we don't know how to update the name, we keep
       // it as-is, but we'll update the path it points to
-      to: p.startsWith(mainEntryPointImportPath)
-        ? p.replace(mainEntryPointImportPath, schema.importPath)
-        : null,
+      to:
+        schema.importPath && p.startsWith(mainEntryPointImportPath)
+          ? p.replace(mainEntryPointImportPath, schema.importPath)
+          : null,
     })),
   ];
 

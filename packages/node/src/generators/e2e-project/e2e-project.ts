@@ -1,39 +1,51 @@
-import * as path from 'path';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
-  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
-  updateJson,
 } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { Linter, lintProjectGenerator } from '@nx/linter';
-
-import { Schema } from './schema';
-import { axiosVersion } from '../../utils/versions';
-import { join } from 'path';
 import {
-  globalJavaScriptOverrides,
-  globalTypeScriptOverrides,
+  javaScriptOverride,
+  typeScriptOverride,
 } from '@nx/linter/src/generators/init/global-eslint-config';
+import * as path from 'path';
+import { axiosVersion } from '../../utils/versions';
+import { Schema } from './schema';
+import {
+  addPluginsToLintConfig,
+  isEslintConfigSupported,
+  replaceOverridesInLintConfig,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
-export async function e2eProjectGenerator(host: Tree, _options: Schema) {
+export async function e2eProjectGenerator(host: Tree, options: Schema) {
+  return await e2eProjectGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...options,
+  });
+}
+
+export async function e2eProjectGeneratorInternal(
+  host: Tree,
+  _options: Schema
+) {
   const tasks: GeneratorCallback[] = [];
-  const options = normalizeOptions(host, _options);
+  const options = await normalizeOptions(host, _options);
   const appProject = readProjectConfiguration(host, options.project);
 
   addProjectConfiguration(host, options.e2eProjectName, {
     root: options.e2eProjectRoot,
     implicitDependencies: [options.project],
+    projectType: 'application',
     targets: {
       e2e: {
         executor: '@nx/jest:jest',
@@ -111,32 +123,13 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
     });
     tasks.push(linterTask);
 
-    updateJson(host, join(options.e2eProjectRoot, '.eslintrc.json'), (json) => {
-      if (options.rootProject) {
-        json.plugins = ['@nx'];
-        json.extends = [];
-      }
-      json.overrides = [
-        ...(options.rootProject
-          ? [globalTypeScriptOverrides, globalJavaScriptOverrides]
-          : []),
-        /**
-         * In order to ensure maximum efficiency when typescript-eslint generates TypeScript Programs
-         * behind the scenes during lint runs, we need to make sure the project is configured to use its
-         * own specific tsconfigs, and not fall back to the ones in the root of the workspace.
-         */
-        {
-          files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
-          /**
-           * Having an empty rules object present makes it more obvious to the user where they would
-           * extend things from if they needed to
-           */
-          rules: {},
-        },
-      ];
-
-      return json;
-    });
+    if (options.rootProject && isEslintConfigSupported(host)) {
+      addPluginsToLintConfig(host, options.e2eProjectRoot, '@nx');
+      replaceOverridesInLintConfig(host, options.e2eProjectRoot, [
+        typeScriptOverride,
+        javaScriptOverride,
+      ]);
+    }
   }
 
   if (!options.skipFormat) {
@@ -146,25 +139,23 @@ export async function e2eProjectGenerator(host: Tree, _options: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-function normalizeOptions(
+async function normalizeOptions(
   tree: Tree,
   options: Schema
-): Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string } {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const appsDir = layoutDirectory ?? getWorkspaceLayout(tree).appsDir;
-  const name = options.name ?? `${options.project}-e2e`;
-
-  const appDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(name).fileName}`
-    : names(name).fileName;
-
-  const e2eProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
-
-  const e2eProjectRoot = options.rootProject
-    ? 'e2e'
-    : joinPathFragments(appsDir, appDirectory);
+): Promise<
+  Omit<Schema, 'name'> & { e2eProjectRoot: string; e2eProjectName: string }
+> {
+  const { projectName: e2eProjectName, projectRoot: e2eProjectRoot } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: options.name ?? `${options.project}-e2e`,
+      projectType: 'library',
+      directory: options.rootProject ? 'e2e' : options.directory,
+      projectNameAndRootFormat: options.rootProject
+        ? 'as-provided'
+        : options.projectNameAndRootFormat,
+      // this is an internal generator, don't save defaults
+      callingGenerator: null,
+    });
 
   return {
     ...options,

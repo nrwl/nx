@@ -1,7 +1,7 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { TextFilterPanel } from './text-filter-panel';
 
-export default {
+const meta: Meta<typeof TextFilterPanel> = {
   component: TextFilterPanel,
   title: 'Project Graph/TextFilterPanel',
   argTypes: {
@@ -13,14 +13,14 @@ export default {
       action: 'updateTextFilter',
     },
   },
-} as ComponentMeta<typeof TextFilterPanel>;
+};
 
-const Template: ComponentStory<typeof TextFilterPanel> = (args) => (
-  <TextFilterPanel {...args} />
-);
+export default meta;
+type Story = StoryObj<typeof TextFilterPanel>;
 
-export const Primary = Template.bind({});
-Primary.args = {
-  includePath: false,
-  textFilter: 'some-lib',
+export const Primary: Story = {
+  args: {
+    includePath: false,
+    textFilter: 'some-lib',
+  },
 };

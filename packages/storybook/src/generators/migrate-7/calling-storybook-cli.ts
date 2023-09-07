@@ -1,8 +1,9 @@
-import { output } from '@nx/devkit';
+import { getPackageManagerCommand, output } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { Schema } from './schema';
 
 export function callUpgrade(schema: Schema): 1 | Buffer {
+  const pm = getPackageManagerCommand();
   try {
     output.log({
       title: `Calling sb upgrade`,
@@ -14,7 +15,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
     });
 
     execSync(
-      `npx storybook@latest upgrade ${
+      `${pm.exec} storybook@latest upgrade ${
         schema.autoAcceptAllPrompts ? '--yes' : ''
       }`,
       {
@@ -36,7 +37,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       bodyLines: [
         `🚨 The Storybook CLI failed to upgrade your @storybook/* packages to the latest version.`,
         `Please try running the sb upgrade command manually:`,
-        `npx storybook@latest upgrade`,
+        `${pm.exec} storybook@latest upgrade`,
       ],
       color: 'red',
     });
@@ -71,7 +72,8 @@ export function callAutomigrate(
 
   Object.entries(allStorybookProjects).forEach(
     ([projectName, storybookProjectInfo]) => {
-      const commandToRun = `npx storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
+      const pm = getPackageManagerCommand();
+      const commandToRun = `${pm.exec} storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
       try {
         output.log({
           title: `Calling sb automigrate for ${projectName}`,

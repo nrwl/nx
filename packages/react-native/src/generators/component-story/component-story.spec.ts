@@ -9,9 +9,8 @@ import componentGenerator from '../component/component';
 
 describe('react-native:component-story', () => {
   let appTree: Tree;
-  let cmpPath = 'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx';
-  let storyFilePath =
-    'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx';
+  let cmpPath = 'test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx';
+  let storyFilePath = 'test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx';
 
   describe('default setup', () => {
     beforeEach(async () => {
@@ -34,7 +33,7 @@ describe('react-native:component-story', () => {
           });
         } catch (e) {
           expect(e.message).toContain(
-            'Could not find any React Native component in file libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx'
+            'Could not find any React Native component in file test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx'
           );
         }
       });
@@ -70,11 +69,11 @@ describe('react-native:component-story', () => {
 
     describe('when using plain JS components', () => {
       let storyFilePathPlain =
-        'libs/test-ui-lib/src/lib/test-ui-libplain.stories.jsx';
+        'test-ui-lib/src/lib/test-ui-libplain.stories.jsx';
 
       beforeEach(async () => {
         appTree.write(
-          'libs/test-ui-lib/src/lib/test-ui-libplain.jsx',
+          'test-ui-lib/src/lib/test-ui-libplain.jsx',
           `import React from 'react';
   
           import './test.scss';
@@ -400,7 +399,7 @@ describe('react-native:component-story', () => {
 });
 
 export async function createTestUILib(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
   appTree.write('.gitignore', '');
 
   await libraryGenerator(appTree, {
@@ -409,6 +408,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'jest',
+    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(appTree, {

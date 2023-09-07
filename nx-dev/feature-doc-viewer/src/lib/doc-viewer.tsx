@@ -4,7 +4,7 @@ import {
   ProcessedDocument,
   RelatedDocument,
 } from '@nx/nx-dev/models-document';
-import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
+import { Breadcrumbs, Footer, GitHubStarWidget } from '@nx/nx-dev/ui-common';
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
@@ -15,14 +15,16 @@ import { collectHeadings, TableOfContents } from './table-of-contents';
 export function DocViewer({
   document,
   relatedDocuments,
+  widgetData,
 }: {
   document: ProcessedDocument;
   relatedDocuments: RelatedDocument[];
+  widgetData: { githubStarsCount: number };
 }): JSX.Element {
   const router = useRouter();
   const hideTableOfContent =
     router.asPath.includes('/getting-started/intro') ||
-    router.asPath.includes('/plugins/intro/getting-started') ||
+    router.asPath.includes('/extending-nx/intro/getting-started') ||
     router.asPath.includes('/packages/devkit') ||
     router.asPath.includes('/reference/glossary');
   const ref = useRef<HTMLDivElement | null>(null);
@@ -109,7 +111,13 @@ export function DocViewer({
                     elementRef={ref}
                     path={router.basePath}
                     headings={vm.tableOfContent}
-                  />
+                  >
+                    {widgetData.githubStarsCount > 0 && (
+                      <GitHubStarWidget
+                        starsCount={widgetData.githubStarsCount}
+                      />
+                    )}
+                  </TableOfContents>
                 </div>
               )}
             </div>

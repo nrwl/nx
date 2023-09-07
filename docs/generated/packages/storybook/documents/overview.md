@@ -185,7 +185,7 @@ To register a [Storybook addon](https://storybook.js.org/addons/) for all Storyb
 
 ### Setting up documentation
 
-To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/packages/storybook/documents/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
+To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/recipes/storybook/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
 
 You can read more about how to best set up documentation using Storybook for your project in the [official Storybook documentation](https://storybook.js.org/docs/react/writing-docs/introduction).
 
@@ -193,8 +193,12 @@ You can read more about how to best set up documentation using Storybook for you
 
 You can find dedicated information for React and Angular:
 
-- [Set up Storybook for Angular Projects](/packages/storybook/documents/overview-angular)
-- [Set up Storybook for React Projects](/packages/storybook/documents/overview-react)
+- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
+- [Set up Storybook for React Projects](/recipes/storybook/overview-react)
+
+You can find all Storybook-related Nx documentation in the [Storybook recipes section](/recipes/storybook).
+
+For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
 ### Migration Scenarios
 
@@ -204,10 +208,6 @@ Here's more information on common migration scenarios for Storybook with Nx. For
 - [Migrate to the Nx React Storybook Addon](/deprecated/storybook/migrate-webpack-final-react)
 - [Storybook 7 migration generator](/packages/storybook/generators/migrate-7)
 - [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup)
-
-You can find all Storybook-related Nx documentation [here](/packages#storybook).
-
-For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
 ## Older documentation
 

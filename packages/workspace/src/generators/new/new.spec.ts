@@ -53,7 +53,7 @@ describe('new', () => {
         name: 'my-workspace',
         directory: 'my-workspace',
         appName: 'app',
-        preset: Preset.Empty,
+        preset: Preset.Apps,
       });
 
       expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();

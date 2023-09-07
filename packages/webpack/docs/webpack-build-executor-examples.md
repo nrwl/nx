@@ -124,7 +124,7 @@ Note that this option does not work if `babelUpwardRootMode` is set to `true`.
 
 Setting `isolatedConfig` to `true` in your `project.json` file means that Nx will not apply the Nx webpack plugins automatically. In that case, the Nx plugins need to be applied in the project's `webpack.config.js` file (e.g. `withNx`, `withReact`, etc.). So don't forget to also specify the path to your webpack config file (using the `webpackConfig` option).
 
-Read more on how to configure Webpack in our [Nx Webpack config guide](/packages/webpack/documents/webpack-config-setup) an in our [Webpack Plugins guide](/packages/webpack/documents/webpack-plugins).
+Read more on how to configure Webpack in our [Nx Webpack config guide](/recipes/webpack/webpack-config-setup) an in our [Webpack Plugins guide](/recipes/webpack/webpack-plugins).
 
 Note that this is the new default setup for webpack in the latest version of Nx.
 

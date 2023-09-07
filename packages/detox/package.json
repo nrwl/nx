@@ -29,7 +29,8 @@
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
-    "@nx/react": "file:../react"
+    "@nx/react": "file:../react",
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
     "detox": "^20.9.0"

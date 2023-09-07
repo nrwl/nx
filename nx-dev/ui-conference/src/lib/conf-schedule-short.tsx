@@ -40,15 +40,16 @@ export function ConfScheduleShort(): JSX.Element {
       type: 'event',
       time: '9:10am',
       title: 'Keynote',
-      description: 'tbd',
-      speakers: ['Victor Savkin', 'Juri Strumpflohner'],
+      description: '',
+      speakers: ['Juri Strumpflohner', 'Victor Savkin'],
       videoUrl: '',
     },
     {
       type: 'event',
       time: '10:05am',
-      title: 'Announcement - tbd',
-      description: 'tbd',
+      title:
+        'Nx Cloud Workflows: Next-Gen CI with First-Class Monorepo Support',
+      description: `We're excited to provide an exclusive preview of Nx Cloud Workflows. In our first foray into delivering CI as part of Nx Cloud, we'll demonstrate how Workflows can simplify distributed executions as part of a typical CI pipeline, before talking about our long-term vision for the product.`,
       speakers: ['Simon Critchley'],
       videoUrl: '',
     },
@@ -86,7 +87,7 @@ export function ConfScheduleShort(): JSX.Element {
       title: 'Package-based to Integrated: One Small Step or One Giant Leap?',
       description: `When you have a package-based repo, it can feel like the features of an integrated repo are all the way on the moon.  But, in the same way that Neil Armstrong had a whole team of people enabling him to take his one small step, you can take advantage of the hard work of the Nx team to incrementally move your package-based repo toward an integrated repo.
 
-      Starting from a package-based repo, we'll enforce project boundaries, create and use code generators and, finally, use task executors and automate updating dependencies.  Together, these improvements add up to one giant leap forward in developer experience.`,
+      Starting from a package-based repo, we'll enforce module boundaries, create and use code generators and, finally, use task executors and automate updating dependencies.  Together, these improvements add up to one giant leap forward in developer experience.`,
       speakers: ['Isaac Mann'],
       videoUrl: '',
     },
@@ -162,10 +163,9 @@ export function ConfScheduleShort(): JSX.Element {
       type: 'event',
       time: '5:05pm',
       title: 'Level Up Your Productivity with Nx Console',
-      description: `In today's fast-paced and demanding software development landscape, maximizing productivity is paramount. Are you seeking ways to enhance your coding efficiency and streamline your development workflows? Look no further than Nx Console!
-      In this talk, we will explore the powerful capabilities of Nx Console, a game-changing tool designed to supercharge your productivity and seamlessly integrate with  popular editors like Visual Studio Code and JetBrains editors (WebStorm, IntelliJ IDEA, PhpStorm).
-      During the session, we will dive into the key features of Nx Console and demonstrate how it enhances code generation and boosts your ability to navigate and understand complex codebases.
-      Whether you are a seasoned developer or just starting your coding journey, this talk will provide you with valuable insights and practical tips on how to leverage the full potential of Nx Console in your daily development workflow. Don't miss this opportunity to discover some new features, accelerate your productivity and take your coding prowess to the next level!
+      description: `Tired of typing endless CLI commands? Can't remember every generator option? Look no further than Nx Console!
+      Nx Console is a game-changing tool designed to supercharge your productivity and seamlessly integrate with popular editors like Visual Studio Code and JetBrains editors (WebStorm, IntelliJ IDEA, PhpStorm).
+      We will dive into the key features of Nx Console and demonstrate how it enhances code generation and boosts your ability to navigate and understand complex codebases. Leverage the full potential of Nx Console in your daily development workflow!
       `,
       speakers: ['Jonathan Cammisuli', 'Max Kless'],
       videoUrl: '',

@@ -1,4 +1,14 @@
-import { formatFiles, joinPathFragments, logger, Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  ensurePackage,
+  formatFiles,
+  GeneratorCallback,
+  joinPathFragments,
+  logger,
+  readProjectConfiguration,
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import componentStoryGenerator from '../component-story/component-story';
 import type { ComponentInfo } from '../utils/storybook-ast/component-info';
@@ -11,11 +21,12 @@ import { getE2EProject } from './lib/get-e2e-project';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import type { StoriesGeneratorOptions } from './schema';
 import minimatch = require('minimatch');
+import { nxVersion } from '../../utils/versions';
 
 export async function angularStoriesGenerator(
   tree: Tree,
   options: StoriesGeneratorOptions
-): Promise<void> {
+): Promise<GeneratorCallback> {
   const e2eProjectName = options.cypressProject ?? `${options.name}-e2e`;
   const e2eProject = getE2EProject(tree, e2eProjectName);
   const entryPoints = getProjectEntryPoints(tree, options.name);
@@ -59,6 +70,7 @@ export async function angularStoriesGenerator(
       componentName: info.name,
       componentPath: info.path,
       componentFileName: info.componentFileName,
+      interactionTests: options.interactionTests ?? true,
       skipFormat: true,
     });
 
@@ -75,10 +87,24 @@ export async function angularStoriesGenerator(
       });
     }
   }
+  const tasks: GeneratorCallback[] = [];
+
+  if (options.interactionTests) {
+    const { interactionTestsDependencies, addInteractionsInAddons } =
+      ensurePackage<typeof import('@nx/storybook')>('@nx/storybook', nxVersion);
+
+    const projectConfiguration = readProjectConfiguration(tree, options.name);
+    addInteractionsInAddons(tree, projectConfiguration);
+
+    tasks.push(
+      addDependenciesToPackageJson(tree, {}, interactionTestsDependencies())
+    );
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+  return runTasksInSerial(...tasks);
 }
 
 export default angularStoriesGenerator;

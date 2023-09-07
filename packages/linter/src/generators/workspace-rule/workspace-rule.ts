@@ -44,7 +44,7 @@ export async function lintWorkspaceRuleGenerator(
 
   /**
    * Import the new rule into the workspace plugin index.ts and
-   * register it ready for use in .eslintrc.json configs.
+   * register it ready for use in lint configs.
    */
   const pluginIndexPath = joinPathFragments(workspaceLintPluginDir, 'index.ts');
   const existingPluginIndexContents = tree.read(pluginIndexPath, 'utf-8');
@@ -106,7 +106,7 @@ export async function lintWorkspaceRuleGenerator(
 
   await formatFiles(tree);
 
-  logger.info(`NX Reminder: Once you have finished writing your rule logic, you need to actually enable the rule within an appropriate .eslintrc.json in your workspace, for example:
+  logger.info(`NX Reminder: Once you have finished writing your rule logic, you need to actually enable the rule within an appropriate ESLint config in your workspace, for example:
 
        "rules": {
          "@nx/workspace/${options.name}": "error"

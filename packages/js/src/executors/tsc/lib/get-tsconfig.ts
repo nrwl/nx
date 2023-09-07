@@ -1,15 +1,10 @@
 import {
-  ExecutorContext,
-  getOutputsForTargetAndConfiguration,
   parseTargetString,
   readJsonFile,
+  stripIndents,
+  type ExecutorContext,
 } from '@nx/devkit';
-import { fileExists } from 'nx/src/utils/fileutils';
 import { join } from 'path';
-import {
-  DependentBuildableProjectNode,
-  computeCompilerOptionsPaths,
-} from '../../../utils/buildable-libs-utils';
 import type { NormalizedExecutorOptions } from '../../../utils/schema';
 import { getTaskOptions } from './get-task-options';
 import type { TypescriptInMemoryTsConfig } from './typescript-compilation';
@@ -23,7 +18,7 @@ export function getProcessedTaskTsConfigs(
     {};
 
   for (const task of tasks) {
-    generateTaskTsConfigOrGetDependentBuildableProjectNode(
+    generateTaskProjectTsConfig(
       task,
       tasksOptions,
       context,
@@ -34,176 +29,101 @@ export function getProcessedTaskTsConfigs(
   return taskInMemoryTsConfigMap;
 }
 
-const taskTsConfigGenerationCache = new Map<
+const projectTsConfigCache = new Map<
   string,
-  { tsConfig: string } | DependentBuildableProjectNode
+  { tsConfigPath: string; tsConfig: TypescriptInMemoryTsConfig }
 >();
-function generateTaskTsConfigOrGetDependentBuildableProjectNode(
+function generateTaskProjectTsConfig(
   task: string,
   tasksOptions: Record<string, NormalizedExecutorOptions>,
   context: ExecutorContext,
   taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>
-): { tsConfig: string } | DependentBuildableProjectNode {
-  if (taskTsConfigGenerationCache.has(task)) {
-    return taskTsConfigGenerationCache.get(task);
+): string {
+  const { project } = parseTargetString(task, context.projectGraph);
+  if (projectTsConfigCache.has(project)) {
+    const { tsConfig, tsConfigPath } = projectTsConfigCache.get(project);
+    taskInMemoryTsConfigMap[task] = tsConfig;
+    return tsConfigPath;
   }
 
-  let tsConfig =
-    tasksOptions[task]?.tsConfig ?? getTaskOptions(task, context).tsConfig;
-  let taskWithTsConfig = task;
+  const tasksInProject = [
+    task,
+    ...getDependencyTasksInSameProject(task, context),
+  ];
+  const taskWithTscExecutor = tasksInProject.find((t) =>
+    hasTscExecutor(t, context)
+  );
 
-  if (!tsConfig) {
-    // check if other tasks in the task graph from the same project has a tsConfig
-    const otherTasksInProject = getDependencyTasksInSameProject(task, context);
-    const taskTsConfig = findTaskWithTsConfig(otherTasksInProject, context);
-
-    if (taskTsConfig) {
-      if (taskTsConfigGenerationCache.has(taskTsConfig.tsConfig)) {
-        return taskTsConfigGenerationCache.get(taskTsConfig.tsConfig);
-      }
-
-      tsConfig = taskTsConfig.tsConfig;
-      taskWithTsConfig = taskTsConfig.task;
-    }
+  if (!taskWithTscExecutor) {
+    throw new Error(
+      stripIndents`The "@nx/js:tsc" batch executor requires all dependencies to use the "@nx/js:tsc" executor.
+        None of the following tasks in the "${project}" project use the "@nx/js:tsc" executor:
+        ${tasksInProject.map((t) => `- ${t}`).join('\n')}`
+    );
   }
 
-  if (tsConfig) {
-    const { projectReferences, dependentBuildableProjectNodes } =
-      collectDependenciesFromTask(
-        task,
+  const projectReferences = [];
+  for (const task of tasksInProject) {
+    for (const depTask of getDependencyTasksInOtherProjects(
+      task,
+      project,
+      context
+    )) {
+      const tsConfigPath = generateTaskProjectTsConfig(
+        depTask,
         tasksOptions,
         context,
         taskInMemoryTsConfigMap
       );
-
-    taskInMemoryTsConfigMap[taskWithTsConfig] = getInMemoryTsConfig(
-      tsConfig,
-      tasksOptions[taskWithTsConfig] ??
-        getTaskOptions(taskWithTsConfig, context),
-      projectReferences,
-      dependentBuildableProjectNodes
-    );
-
-    const result = { tsConfig };
-    taskTsConfigGenerationCache.set(task, result);
-
-    return result;
+      projectReferences.push(tsConfigPath);
+    }
   }
 
-  // there's no tsConfig, return a buildable project node so the path mapping
-  // is remapped to the output
-  const result = taskToDependentBuildableProjectNode(task, context);
-  taskTsConfigGenerationCache.set(task, result);
+  const taskOptions =
+    tasksOptions[taskWithTscExecutor] ??
+    getTaskOptions(taskWithTscExecutor, context);
+  const tsConfigPath = taskOptions.tsConfig;
 
-  return result;
+  taskInMemoryTsConfigMap[taskWithTscExecutor] = getInMemoryTsConfig(
+    tsConfigPath,
+    taskOptions,
+    projectReferences
+  );
+
+  projectTsConfigCache.set(project, {
+    tsConfigPath: tsConfigPath,
+    tsConfig: taskInMemoryTsConfigMap[taskWithTscExecutor],
+  });
+
+  return tsConfigPath;
 }
 
-const projectDependenciesCache = new Map<
-  string,
-  {
-    projectReferences: string[];
-    dependentBuildableProjectNodes: DependentBuildableProjectNode[];
-  }
->();
-function collectDependenciesFromTask(
+function getDependencyTasksInOtherProjects(
   task: string,
-  tasksOptions: Record<string, NormalizedExecutorOptions>,
-  context: ExecutorContext,
-  taskInMemoryTsConfigMap: Record<string, TypescriptInMemoryTsConfig>
-): {
-  projectReferences: string[];
-  dependentBuildableProjectNodes: DependentBuildableProjectNode[];
-} {
+  project: string,
+  context: ExecutorContext
+): string[] {
+  return context.taskGraph.dependencies[task].filter(
+    (t) =>
+      t !== task &&
+      parseTargetString(t, context.projectGraph).project !== project
+  );
+}
+
+function getDependencyTasksInSameProject(
+  task: string,
+  context: ExecutorContext
+): string[] {
   const { project: taskProject } = parseTargetString(
     task,
     context.projectGraph
   );
 
-  if (projectDependenciesCache.has(taskProject)) {
-    return projectDependenciesCache.get(taskProject);
-  }
-
-  const dependentBuildableProjectNodes: DependentBuildableProjectNode[] = [];
-  const projectReferences = new Set<string>();
-
-  const allProjectTasks = [
-    task,
-    ...getDependencyTasksInSameProject(task, context),
-  ];
-  for (const projectTask of allProjectTasks) {
-    for (const depTask of context.taskGraph.dependencies[projectTask] ?? []) {
-      if (task === depTask) {
-        continue;
-      }
-
-      const { project: depTaskProject } = parseTargetString(
-        depTask,
-        context.projectGraph
-      );
-
-      if (depTaskProject === taskProject) {
-        // recursively collect dependencies for tasks in the same project
-        const result = collectDependenciesFromTask(
-          depTask,
-          tasksOptions,
-          context,
-          taskInMemoryTsConfigMap
-        );
-
-        result.projectReferences.forEach((pr) => {
-          projectReferences.add(pr);
-        });
-        result.dependentBuildableProjectNodes.forEach((node) => {
-          dependentBuildableProjectNodes.push(node);
-        });
-      } else {
-        // task is from a different project, get its project reference or buildable node
-        const result = generateTaskTsConfigOrGetDependentBuildableProjectNode(
-          depTask,
-          tasksOptions,
-          context,
-          taskInMemoryTsConfigMap
-        );
-        if ('tsConfig' in result) {
-          projectReferences.add(result.tsConfig);
-        } else {
-          dependentBuildableProjectNodes.push(result);
-        }
-      }
-    }
-  }
-
-  projectDependenciesCache.set(taskProject, {
-    projectReferences: Array.from(projectReferences),
-    dependentBuildableProjectNodes,
-  });
-
-  return projectDependenciesCache.get(taskProject);
-}
-
-function taskToDependentBuildableProjectNode(
-  task: string,
-  context: ExecutorContext
-): DependentBuildableProjectNode {
-  const target = context.taskGraph.tasks[task].target;
-  const projectGraphNode = context.projectGraph.nodes[target.project];
-
-  const libPackageJsonPath = join(
-    context.root,
-    projectGraphNode.data.root,
-    'package.json'
+  return Object.keys(context.taskGraph.tasks).filter(
+    (t) =>
+      t !== task &&
+      parseTargetString(t, context.projectGraph).project === taskProject
   );
-
-  return {
-    name: fileExists(libPackageJsonPath)
-      ? readJsonFile(libPackageJsonPath).name
-      : target.project,
-    outputs: getOutputsForTargetAndConfiguration(
-      { overrides: {}, target },
-      projectGraphNode
-    ),
-    node: projectGraphNode,
-  };
 }
 
 function getInMemoryTsConfig(
@@ -213,8 +133,7 @@ function getInMemoryTsConfig(
     rootDir: string;
     outputPath: string;
   },
-  projectReferences: string[],
-  dependentBuildableProjectNodes: DependentBuildableProjectNode[]
+  projectReferences: string[]
 ): TypescriptInMemoryTsConfig {
   const originalTsConfig = readJsonFile(tsConfig, {
     allowTrailingComma: true,
@@ -240,12 +159,6 @@ function getInMemoryTsConfig(
         declaration: true,
         declarationMap: true,
         tsBuildInfoFile: join(taskOptions.outputPath, 'tsconfig.tsbuildinfo'),
-        paths: dependentBuildableProjectNodes.length
-          ? computeCompilerOptionsPaths(
-              tsConfig,
-              dependentBuildableProjectNodes
-            )
-          : originalTsConfig.compilerOptions?.paths,
       },
       references: allProjectReferences.map((pr) => ({ path: pr })),
     }),
@@ -253,32 +166,11 @@ function getInMemoryTsConfig(
   };
 }
 
-function findTaskWithTsConfig(
-  tasks: string[],
-  context: ExecutorContext
-): { task: string; tsConfig: string } | null {
-  for (const task of tasks) {
-    const depTaskOptions = getTaskOptions(task, context);
-    if (depTaskOptions?.tsConfig) {
-      return { task: task, tsConfig: depTaskOptions.tsConfig };
-    }
-  }
+function hasTscExecutor(task: string, context: ExecutorContext): boolean {
+  const { project, target } = parseTargetString(task, context.projectGraph);
 
-  return null;
-}
-
-function getDependencyTasksInSameProject(
-  task: string,
-  context: ExecutorContext
-): string[] {
-  const { project: taskProject } = parseTargetString(
-    task,
-    context.projectGraph
-  );
-
-  return Object.keys(context.taskGraph.tasks).filter(
-    (t) =>
-      t !== task &&
-      parseTargetString(t, context.projectGraph).project === taskProject
+  return (
+    context.projectGraph.nodes[project].data.targets[target].executor ===
+    '@nx/js:tsc'
   );
 }
