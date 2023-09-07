@@ -45,6 +45,7 @@ export async function e2eProjectGeneratorInternal(
   addProjectConfiguration(host, options.e2eProjectName, {
     root: options.e2eProjectRoot,
     implicitDependencies: [options.project],
+    projectType: 'application',
     targets: {
       e2e: {
         executor: '@nx/jest:jest',
