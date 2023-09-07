@@ -67,6 +67,28 @@ You can add specific languages and a filename on the code snippet displayed.
 ‎```
 ````
 
+#### Line Highlighting
+
+You can define groups of lines that can be interactively highlighted to illustrate a point.
+
+````
+‎```javascript {% lineGroups={ first:[2,3],second:[4,5] } %}
+‎ const code = "goes here";
+‎ This is in the first group
+‎ This is also in the first group
+‎ This is in the second group
+‎ This is also in the second group
+‎```
+````
+
+The line groups can be highlighted using a button on the code fence itself, or by clicking on a link that you provide that changes the url fragment.
+
+For example:
+
+```
+[This will highlight the first group.](#first)
+```
+
 #### Terminal command
 
 To display a terminal command, use:
@@ -179,7 +201,7 @@ Yarn related information.
 
 ##### Youtube
 
-Embed a YouTube video directly with the following shortcode, control the title and the associated width.
+Embed a YouTube video directly with the following shortcode, control the title and the associated width. `src` can be the Youtube URL from the browser, the "share" button (short YT url) or the embed URL.
 
 ```markdown
 {% youtube

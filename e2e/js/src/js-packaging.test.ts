@@ -13,9 +13,8 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 import { join } from 'path';
-import { ensureDirSync } from 'fs-extra';
 
-describe('bundling libs', () => {
+describe('packaging libs', () => {
   let scope: string;
 
   beforeEach(() => {
@@ -24,7 +23,7 @@ describe('bundling libs', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should support esbuild, rollup, vite bundlers for building libs', () => {
+  it('should bundle libs using esbuild, vite, rollup and be used in CJS/ESM projects', () => {
     const esbuildLib = uniq('esbuildlib');
     const viteLib = uniq('vitelib');
     const rollupLib = uniq('rolluplib');
@@ -36,10 +35,14 @@ describe('bundling libs', () => {
     runCLI(
       `generate @nx/js:lib ${rollupLib} --bundler=rollup --no-interactive`
     );
+    updateFile(`libs/${rollupLib}/src/index.ts`, (content) => {
+      // Test that default functions work in ESM (Node).
+      return `${content}\nexport default function f() { return 'rollup default' }`;
+    });
 
     runCLI(`build ${esbuildLib}`);
     runCLI(`build ${viteLib}`);
-    runCLI(`build ${rollupLib}`);
+    runCLI(`build ${rollupLib} --generateExportsField`);
 
     const pmc = getPackageManagerCommand();
     let output: string;
@@ -67,10 +70,11 @@ describe('bundling libs', () => {
       `
         const { ${esbuildLib} } = require('@proj/${esbuildLib}');
         const { ${viteLib} } = require('@proj/${viteLib}');
-        const { ${rollupLib} } = require('@proj/${rollupLib}');
+        const { default: rollupDefault, ${rollupLib} } = require('@proj/${rollupLib}');
         console.log(${esbuildLib}());
         console.log(${viteLib}());
         console.log(${rollupLib}());
+        console.log(rollupDefault());
       `
     );
     runCommand(pmc.install, {
@@ -82,6 +86,7 @@ describe('bundling libs', () => {
     expect(output).toContain(esbuildLib);
     expect(output).toContain(viteLib);
     expect(output).toContain(rollupLib);
+    expect(output).toContain('rollup default');
 
     // Make sure outputs in esm project
     createFile(
@@ -106,10 +111,11 @@ describe('bundling libs', () => {
       `
         import { ${esbuildLib} } from '@proj/${esbuildLib}';
         import { ${viteLib} } from '@proj/${viteLib}';
-        import { ${rollupLib} } from '@proj/${rollupLib}';
+        import rollupDefault, { ${rollupLib} } from '@proj/${rollupLib}';
         console.log(${esbuildLib}());
         console.log(${viteLib}());
         console.log(${rollupLib}());
+        console.log(rollupDefault());
       `
     );
     runCommand(pmc.install, {
@@ -121,9 +127,10 @@ describe('bundling libs', () => {
     expect(output).toContain(esbuildLib);
     expect(output).toContain(viteLib);
     expect(output).toContain(rollupLib);
+    expect(output).toContain('rollup default');
   }, 500_000);
 
-  it('should support tsc and swc for building libs', () => {
+  it('should build with tsc, swc and be used in CJS/ESM projects', async () => {
     const tscLib = uniq('tsclib');
     const swcLib = uniq('swclib');
     const tscEsmLib = uniq('tscesmlib');
@@ -154,7 +161,7 @@ describe('bundling libs', () => {
     );
 
     // Add additional entry points for `exports` field
-    updateProjectConfig(tscLib, (json) => {
+    await updateProjectConfig(tscLib, (json) => {
       json.targets.build.options.additionalEntryPoints = [
         `libs/${tscLib}/src/foo/*.ts`,
       ];
@@ -162,7 +169,7 @@ describe('bundling libs', () => {
     });
     updateFile(`libs/${tscLib}/src/foo/bar.ts`, `export const bar = 'bar';`);
     updateFile(`libs/${tscLib}/src/foo/faz.ts`, `export const faz = 'faz';`);
-    updateProjectConfig(swcLib, (json) => {
+    await updateProjectConfig(swcLib, (json) => {
       json.targets.build.options.additionalEntryPoints = [
         `libs/${swcLib}/src/foo/*.ts`,
       ];

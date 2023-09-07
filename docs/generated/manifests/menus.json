@@ -33,7 +33,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "5 min Tutorials",
+            "name": "Tutorials",
             "path": "/getting-started/tutorials",
             "id": "tutorials",
             "isExternal": false,
@@ -109,7 +109,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "5 min Tutorials",
+        "name": "Tutorials",
         "path": "/getting-started/tutorials",
         "id": "tutorials",
         "isExternal": false,
@@ -989,6 +989,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Types of Configuration",
+            "path": "/concepts/types-of-configuration",
+            "id": "types-of-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "How Caching Works",
             "path": "/concepts/how-caching-works",
             "id": "how-caching-works",
@@ -1220,6 +1228,14 @@
         "name": "Mental Model",
         "path": "/concepts/mental-model",
         "id": "mental-model",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Types of Configuration",
+        "path": "/concepts/types-of-configuration",
+        "id": "types-of-configuration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1872,6 +1888,22 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Set Up Application Proxies",
+                "path": "/recipes/node/application-proxies",
+                "id": "application-proxies",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Wait for Tasks to Finish",
+                "path": "/recipes/node/wait-for-tasks",
+                "id": "wait-for-tasks",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1882,6 +1914,30 @@
             "id": "storybook",
             "isExternal": false,
             "children": [
+              {
+                "name": "Set up Storybook for React Projects",
+                "path": "/recipes/storybook/overview-react",
+                "id": "overview-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Set up Storybook for Angular Projects",
+                "path": "/recipes/storybook/overview-angular",
+                "id": "overview-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Configuring Storybook on Nx",
+                "path": "/recipes/storybook/configuring-storybook",
+                "id": "configuring-storybook",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
               {
                 "name": "One main Storybook instance for all projects",
                 "path": "/recipes/storybook/one-storybook-for-all",
@@ -1902,6 +1958,163 @@
                 "name": "One main Storybook instance using Storybook Composition",
                 "path": "/recipes/storybook/one-storybook-with-composition",
                 "id": "one-storybook-with-composition",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "How to configure Webpack and Vite for Storybook",
+                "path": "/recipes/storybook/custom-builder-configs",
+                "id": "custom-builder-configs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up Storybook Interaction Tests with Nx",
+                "path": "/recipes/storybook/storybook-interaction-tests",
+                "id": "storybook-interaction-tests",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Setting up Storybook Composition with Nx",
+                "path": "/recipes/storybook/storybook-composition-setup",
+                "id": "storybook-composition-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular: Set up Compodoc for Storybook on Nx",
+                "path": "/recipes/storybook/angular-storybook-compodoc",
+                "id": "angular-storybook-compodoc",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular: Configuring styles and preprocessor options",
+                "path": "/recipes/storybook/angular-configuring-styles",
+                "id": "angular-configuring-styles",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Cypress",
+            "path": "/recipes/cypress",
+            "id": "cypress",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Component Testing",
+                "path": "/recipes/cypress/cypress-component-testing",
+                "id": "cypress-component-testing",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Cypress v11 Migration Guide",
+                "path": "/recipes/cypress/cypress-v11-migration",
+                "id": "cypress-v11-migration",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Deno",
+            "path": "/recipes/deno",
+            "id": "deno",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Add a Deno Project",
+                "path": "/recipes/deno/add-deno",
+                "id": "add-deno",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Serverless deployment with Deno Deploy",
+                "path": "/recipes/deno/deno-deploy",
+                "id": "deno-deploy",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add and Deploy Netlify Edge Functions with Deno",
+                "path": "/recipes/deno/deno-netlify-functions",
+                "id": "deno-netlify-functions",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Next",
+            "path": "/recipes/next",
+            "id": "next",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "How to configure Next.js plugins",
+                "path": "/recipes/next/next-config-setup",
+                "id": "next-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Vite",
+            "path": "/recipes/vite",
+            "id": "vite",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Manually set up your project to use Vite.js",
+                "path": "/recipes/vite/set-up-vite-manually",
+                "id": "set-up-vite-manually",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Webpack",
+            "path": "/recipes/webpack",
+            "id": "webpack",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "How to configure webpack on your Nx workspace",
+                "path": "/recipes/webpack/webpack-config-setup",
+                "id": "webpack-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Webpack plugins",
+                "path": "/recipes/webpack/webpack-plugins",
+                "id": "webpack-plugins",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2046,9 +2259,25 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Convert from a Standalone Repository to an Integrated Repository",
+                "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+                "id": "standalone-to-integrated",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configuring ESLint with Typescript",
                 "path": "/recipes/tips-n-tricks/eslint",
                 "id": "eslint",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Enable Typescript Batch Mode",
+                "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+                "id": "enable-tsc-batch-mode",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2094,6 +2323,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Reduce Repetitive Configuration",
+                "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+                "id": "reduce-repetitive-configuration",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Root-Level NPM Scripts with Nx",
                 "path": "/recipes/tips-n-tricks/root-level-scripts",
                 "id": "root-level-scripts",
@@ -2113,14 +2350,6 @@
                 "name": "Workspace Watching",
                 "path": "/recipes/tips-n-tricks/workspace-watching",
                 "id": "workspace-watching",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Convert from a Standalone Repository to an Integrated Repository",
-                "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-                "id": "standalone-to-integrated",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2153,6 +2382,14 @@
                 "name": "Using Yarn PnP",
                 "path": "/recipes/tips-n-tricks/yarn-pnp",
                 "id": "yarn-pnp",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Switching to ESLint's flat config format",
+                "path": "/recipes/tips-n-tricks/flat-config",
+                "id": "flat-config",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2272,22 +2509,6 @@
             "id": "other",
             "isExternal": false,
             "children": [
-              {
-                "name": "Serverless deployment with Deno Deploy",
-                "path": "/recipes/other/deno-deploy",
-                "id": "deno-deploy",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add and Deploy Netlify Edge Functions with Deno",
-                "path": "/recipes/other/deno-netlify-functions",
-                "id": "deno-netlify-functions",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "Rescope Packages from @nrwl to @nx",
                 "path": "/recipes/other/rescope",
@@ -2776,6 +2997,22 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Set Up Application Proxies",
+            "path": "/recipes/node/application-proxies",
+            "id": "application-proxies",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Wait for Tasks to Finish",
+            "path": "/recipes/node/wait-for-tasks",
+            "id": "wait-for-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -2805,11 +3042,51 @@
         "disableCollapsible": false
       },
       {
+        "name": "Set Up Application Proxies",
+        "path": "/recipes/node/application-proxies",
+        "id": "application-proxies",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Wait for Tasks to Finish",
+        "path": "/recipes/node/wait-for-tasks",
+        "id": "wait-for-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Storybook",
         "path": "/recipes/storybook",
         "id": "storybook",
         "isExternal": false,
         "children": [
+          {
+            "name": "Set up Storybook for React Projects",
+            "path": "/recipes/storybook/overview-react",
+            "id": "overview-react",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Set up Storybook for Angular Projects",
+            "path": "/recipes/storybook/overview-angular",
+            "id": "overview-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Configuring Storybook on Nx",
+            "path": "/recipes/storybook/configuring-storybook",
+            "id": "configuring-storybook",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
           {
             "name": "One main Storybook instance for all projects",
             "path": "/recipes/storybook/one-storybook-for-all",
@@ -2833,8 +3110,72 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "How to configure Webpack and Vite for Storybook",
+            "path": "/recipes/storybook/custom-builder-configs",
+            "id": "custom-builder-configs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Setting up Storybook Interaction Tests with Nx",
+            "path": "/recipes/storybook/storybook-interaction-tests",
+            "id": "storybook-interaction-tests",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Setting up Storybook Composition with Nx",
+            "path": "/recipes/storybook/storybook-composition-setup",
+            "id": "storybook-composition-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular: Set up Compodoc for Storybook on Nx",
+            "path": "/recipes/storybook/angular-storybook-compodoc",
+            "id": "angular-storybook-compodoc",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular: Configuring styles and preprocessor options",
+            "path": "/recipes/storybook/angular-configuring-styles",
+            "id": "angular-configuring-styles",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Storybook for React Projects",
+        "path": "/recipes/storybook/overview-react",
+        "id": "overview-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Storybook for Angular Projects",
+        "path": "/recipes/storybook/overview-angular",
+        "id": "overview-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configuring Storybook on Nx",
+        "path": "/recipes/storybook/configuring-storybook",
+        "id": "configuring-storybook",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -2857,6 +3198,235 @@
         "name": "One main Storybook instance using Storybook Composition",
         "path": "/recipes/storybook/one-storybook-with-composition",
         "id": "one-storybook-with-composition",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to configure Webpack and Vite for Storybook",
+        "path": "/recipes/storybook/custom-builder-configs",
+        "id": "custom-builder-configs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Setting up Storybook Interaction Tests with Nx",
+        "path": "/recipes/storybook/storybook-interaction-tests",
+        "id": "storybook-interaction-tests",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Setting up Storybook Composition with Nx",
+        "path": "/recipes/storybook/storybook-composition-setup",
+        "id": "storybook-composition-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular: Set up Compodoc for Storybook on Nx",
+        "path": "/recipes/storybook/angular-storybook-compodoc",
+        "id": "angular-storybook-compodoc",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular: Configuring styles and preprocessor options",
+        "path": "/recipes/storybook/angular-configuring-styles",
+        "id": "angular-configuring-styles",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Cypress",
+        "path": "/recipes/cypress",
+        "id": "cypress",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Component Testing",
+            "path": "/recipes/cypress/cypress-component-testing",
+            "id": "cypress-component-testing",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Cypress v11 Migration Guide",
+            "path": "/recipes/cypress/cypress-v11-migration",
+            "id": "cypress-v11-migration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Component Testing",
+        "path": "/recipes/cypress/cypress-component-testing",
+        "id": "cypress-component-testing",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Cypress v11 Migration Guide",
+        "path": "/recipes/cypress/cypress-v11-migration",
+        "id": "cypress-v11-migration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deno",
+        "path": "/recipes/deno",
+        "id": "deno",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Add a Deno Project",
+            "path": "/recipes/deno/add-deno",
+            "id": "add-deno",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Serverless deployment with Deno Deploy",
+            "path": "/recipes/deno/deno-deploy",
+            "id": "deno-deploy",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add and Deploy Netlify Edge Functions with Deno",
+            "path": "/recipes/deno/deno-netlify-functions",
+            "id": "deno-netlify-functions",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Deno Project",
+        "path": "/recipes/deno/add-deno",
+        "id": "add-deno",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Serverless deployment with Deno Deploy",
+        "path": "/recipes/deno/deno-deploy",
+        "id": "deno-deploy",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add and Deploy Netlify Edge Functions with Deno",
+        "path": "/recipes/deno/deno-netlify-functions",
+        "id": "deno-netlify-functions",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Next",
+        "path": "/recipes/next",
+        "id": "next",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "How to configure Next.js plugins",
+            "path": "/recipes/next/next-config-setup",
+            "id": "next-config-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to configure Next.js plugins",
+        "path": "/recipes/next/next-config-setup",
+        "id": "next-config-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Vite",
+        "path": "/recipes/vite",
+        "id": "vite",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Manually set up your project to use Vite.js",
+            "path": "/recipes/vite/set-up-vite-manually",
+            "id": "set-up-vite-manually",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Manually set up your project to use Vite.js",
+        "path": "/recipes/vite/set-up-vite-manually",
+        "id": "set-up-vite-manually",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Webpack",
+        "path": "/recipes/webpack",
+        "id": "webpack",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "How to configure webpack on your Nx workspace",
+            "path": "/recipes/webpack/webpack-config-setup",
+            "id": "webpack-config-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Webpack plugins",
+            "path": "/recipes/webpack/webpack-plugins",
+            "id": "webpack-plugins",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to configure webpack on your Nx workspace",
+        "path": "/recipes/webpack/webpack-config-setup",
+        "id": "webpack-config-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Webpack plugins",
+        "path": "/recipes/webpack/webpack-plugins",
+        "id": "webpack-plugins",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3094,9 +3664,25 @@
             "disableCollapsible": false
           },
           {
+            "name": "Convert from a Standalone Repository to an Integrated Repository",
+            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+            "id": "standalone-to-integrated",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configuring ESLint with Typescript",
             "path": "/recipes/tips-n-tricks/eslint",
             "id": "eslint",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Enable Typescript Batch Mode",
+            "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+            "id": "enable-tsc-batch-mode",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3142,6 +3728,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Reduce Repetitive Configuration",
+            "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+            "id": "reduce-repetitive-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Root-Level NPM Scripts with Nx",
             "path": "/recipes/tips-n-tricks/root-level-scripts",
             "id": "root-level-scripts",
@@ -3161,14 +3755,6 @@
             "name": "Workspace Watching",
             "path": "/recipes/tips-n-tricks/workspace-watching",
             "id": "workspace-watching",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Convert from a Standalone Repository to an Integrated Repository",
-            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-            "id": "standalone-to-integrated",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3204,6 +3790,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Switching to ESLint's flat config format",
+            "path": "/recipes/tips-n-tricks/flat-config",
+            "id": "flat-config",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3225,9 +3819,25 @@
         "disableCollapsible": false
       },
       {
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+        "id": "standalone-to-integrated",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Configuring ESLint with Typescript",
         "path": "/recipes/tips-n-tricks/eslint",
         "id": "eslint",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable Typescript Batch Mode",
+        "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+        "id": "enable-tsc-batch-mode",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3273,6 +3883,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Reduce Repetitive Configuration",
+        "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+        "id": "reduce-repetitive-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Run Root-Level NPM Scripts with Nx",
         "path": "/recipes/tips-n-tricks/root-level-scripts",
         "id": "root-level-scripts",
@@ -3292,14 +3910,6 @@
         "name": "Workspace Watching",
         "path": "/recipes/tips-n-tricks/workspace-watching",
         "id": "workspace-watching",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Convert from a Standalone Repository to an Integrated Repository",
-        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-        "id": "standalone-to-integrated",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3332,6 +3942,14 @@
         "name": "Using Yarn PnP",
         "path": "/recipes/tips-n-tricks/yarn-pnp",
         "id": "yarn-pnp",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Switching to ESLint's flat config format",
+        "path": "/recipes/tips-n-tricks/flat-config",
+        "id": "flat-config",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3537,22 +4155,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Serverless deployment with Deno Deploy",
-            "path": "/recipes/other/deno-deploy",
-            "id": "deno-deploy",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "path": "/recipes/other/deno-netlify-functions",
-            "id": "deno-netlify-functions",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Rescope Packages from @nrwl to @nx",
             "path": "/recipes/other/rescope",
             "id": "rescope",
@@ -3561,22 +4163,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Serverless deployment with Deno Deploy",
-        "path": "/recipes/other/deno-deploy",
-        "id": "deno-deploy",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "path": "/recipes/other/deno-netlify-functions",
-        "id": "deno-netlify-functions",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -3599,6 +4185,14 @@
             "id": "example-repos",
             "isExternal": false,
             "children": [
+              {
+                "name": "Add an Express Project",
+                "path": "/showcase/example-repos/add-express",
+                "id": "add-express",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
               {
                 "name": "Add a Lit Project",
                 "path": "/showcase/example-repos/add-lit",
@@ -3624,6 +4218,30 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Add a Rust Project",
+                "path": "/showcase/example-repos/add-rust",
+                "id": "add-rust",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add a .NET Project",
+                "path": "/showcase/example-repos/add-dotnet",
+                "id": "add-dotnet",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add a Nuxt Project",
+                "path": "/showcase/example-repos/add-nuxt",
+                "id": "add-nuxt",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Add an Astro Project",
                 "path": "/showcase/example-repos/add-astro",
                 "id": "add-astro",
@@ -3635,6 +4253,22 @@
                 "name": "Add a Vue Project",
                 "path": "/showcase/example-repos/add-vue",
                 "id": "add-vue",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add a Svelte Project",
+                "path": "/showcase/example-repos/add-svelte",
+                "id": "add-svelte",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Add a Fastify Project",
+                "path": "/showcase/example-repos/add-fastify",
+                "id": "add-fastify",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3696,8 +4330,33 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Nx Micro-Frontend Example",
+                "path": "/showcase/example-repos/mfe",
+                "id": "mfe",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Benchmarks",
+            "path": "/showcase/benchmarks",
+            "id": "benchmarks",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Typescript Batch Mode Compilation",
+                "path": "/showcase/benchmarks/tsc-batch-mode",
+                "id": "tsc-batch-mode",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Large Repo and Caching",
-                "path": "/showcase/example-repos/caching",
+                "path": "/showcase/benchmarks/caching",
                 "id": "caching",
                 "isExternal": false,
                 "children": [],
@@ -3705,16 +4364,8 @@
               },
               {
                 "name": "Large Repo and DTE",
-                "path": "/showcase/example-repos/dte",
+                "path": "/showcase/benchmarks/dte",
                 "id": "dte",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx Micro-Frontend Example",
-                "path": "/showcase/example-repos/mfe",
-                "id": "mfe",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3731,6 +4382,14 @@
         "id": "example-repos",
         "isExternal": false,
         "children": [
+          {
+            "name": "Add an Express Project",
+            "path": "/showcase/example-repos/add-express",
+            "id": "add-express",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
           {
             "name": "Add a Lit Project",
             "path": "/showcase/example-repos/add-lit",
@@ -3756,6 +4415,30 @@
             "disableCollapsible": false
           },
           {
+            "name": "Add a Rust Project",
+            "path": "/showcase/example-repos/add-rust",
+            "id": "add-rust",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add a .NET Project",
+            "path": "/showcase/example-repos/add-dotnet",
+            "id": "add-dotnet",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add a Nuxt Project",
+            "path": "/showcase/example-repos/add-nuxt",
+            "id": "add-nuxt",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Add an Astro Project",
             "path": "/showcase/example-repos/add-astro",
             "id": "add-astro",
@@ -3767,6 +4450,22 @@
             "name": "Add a Vue Project",
             "path": "/showcase/example-repos/add-vue",
             "id": "add-vue",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add a Svelte Project",
+            "path": "/showcase/example-repos/add-svelte",
+            "id": "add-svelte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Add a Fastify Project",
+            "path": "/showcase/example-repos/add-fastify",
+            "id": "add-fastify",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3828,22 +4527,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Large Repo and Caching",
-            "path": "/showcase/example-repos/caching",
-            "id": "caching",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Large Repo and DTE",
-            "path": "/showcase/example-repos/dte",
-            "id": "dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Nx Micro-Frontend Example",
             "path": "/showcase/example-repos/mfe",
             "id": "mfe",
@@ -3852,6 +4535,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add an Express Project",
+        "path": "/showcase/example-repos/add-express",
+        "id": "add-express",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -3879,6 +4570,30 @@
         "disableCollapsible": false
       },
       {
+        "name": "Add a Rust Project",
+        "path": "/showcase/example-repos/add-rust",
+        "id": "add-rust",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a .NET Project",
+        "path": "/showcase/example-repos/add-dotnet",
+        "id": "add-dotnet",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Nuxt Project",
+        "path": "/showcase/example-repos/add-nuxt",
+        "id": "add-nuxt",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Add an Astro Project",
         "path": "/showcase/example-repos/add-astro",
         "id": "add-astro",
@@ -3890,6 +4605,22 @@
         "name": "Add a Vue Project",
         "path": "/showcase/example-repos/add-vue",
         "id": "add-vue",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Svelte Project",
+        "path": "/showcase/example-repos/add-svelte",
+        "id": "add-svelte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Add a Fastify Project",
+        "path": "/showcase/example-repos/add-fastify",
+        "id": "add-fastify",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3951,8 +4682,57 @@
         "disableCollapsible": false
       },
       {
+        "name": "Nx Micro-Frontend Example",
+        "path": "/showcase/example-repos/mfe",
+        "id": "mfe",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Benchmarks",
+        "path": "/showcase/benchmarks",
+        "id": "benchmarks",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Typescript Batch Mode Compilation",
+            "path": "/showcase/benchmarks/tsc-batch-mode",
+            "id": "tsc-batch-mode",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Large Repo and Caching",
+            "path": "/showcase/benchmarks/caching",
+            "id": "caching",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Large Repo and DTE",
+            "path": "/showcase/benchmarks/dte",
+            "id": "dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Typescript Batch Mode Compilation",
+        "path": "/showcase/benchmarks/tsc-batch-mode",
+        "id": "tsc-batch-mode",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Large Repo and Caching",
-        "path": "/showcase/example-repos/caching",
+        "path": "/showcase/benchmarks/caching",
         "id": "caching",
         "isExternal": false,
         "children": [],
@@ -3960,16 +4740,8 @@
       },
       {
         "name": "Large Repo and DTE",
-        "path": "/showcase/example-repos/dte",
+        "path": "/showcase/benchmarks/dte",
         "id": "dte",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Micro-Frontend Example",
-        "path": "/showcase/example-repos/mfe",
-        "id": "mfe",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4181,6 +4953,14 @@
               }
             ],
             "disableCollapsible": false
+          },
+          {
+            "name": "v1 Nx Plugin API",
+            "path": "/deprecated/v1-nx-plugin-api",
+            "id": "v1-nx-plugin-api",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4342,6 +5122,14 @@
         "name": "React: Upgrading to Storybook 6",
         "path": "/deprecated/storybook/upgrade-storybook-v6-react",
         "id": "upgrade-storybook-v6-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "v1 Nx Plugin API",
+        "path": "/deprecated/v1-nx-plugin-api",
+        "id": "v1-nx-plugin-api",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4671,14 +5459,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Identify Custom Projects",
-            "path": "/extending-nx/recipes/project-inference-plugins",
-            "id": "project-inference-plugins",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4767,14 +5547,6 @@
         "name": "Modify the Project Graph",
         "path": "/extending-nx/recipes/project-graph-plugins",
         "id": "project-graph-plugins",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Identify Custom Projects",
-        "path": "/extending-nx/recipes/project-inference-plugins",
-        "id": "project-inference-plugins",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5604,22 +6376,6 @@
                 "name": "Overview",
                 "path": "/packages/cypress/documents/overview",
                 "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Component Testing",
-                "path": "/packages/cypress/documents/cypress-component-testing",
-                "id": "cypress-component-testing",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "v11 Migration Guide",
-                "path": "/packages/cypress/documents/v11-migration-guide",
-                "id": "v11-migration-guide",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6602,14 +7358,6 @@
                 "name": "Overview",
                 "path": "/packages/next/documents/overview",
                 "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How to configure Next.js plugins",
-                "path": "/packages/next/documents/next-config-setup",
-                "id": "next-config-setup",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -7660,22 +8408,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Set up Storybook for React Projects",
-                "path": "/packages/storybook/documents/overview-react",
-                "id": "overview-react",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Set up Storybook for Angular Projects",
-                "path": "/packages/storybook/documents/overview-angular",
-                "id": "overview-angular",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Storybook best practices for making the most out of Nx",
                 "path": "/packages/storybook/documents/best-practices",
                 "id": "best-practices",
@@ -7687,54 +8419,6 @@
                 "name": "Storybook 7 overview",
                 "path": "/packages/storybook/documents/storybook-7-setup",
                 "id": "storybook-7-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Configuring Storybook on Nx",
-                "path": "/packages/storybook/documents/configuring-storybook",
-                "id": "configuring-storybook",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How to configure Webpack and Vite for Storybook",
-                "path": "/packages/storybook/documents/custom-builder-configs",
-                "id": "custom-builder-configs",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setting up Storybook Interaction Tests with Nx",
-                "path": "/packages/storybook/documents/storybook-interaction-tests",
-                "id": "storybook-interaction-tests",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Setting up Storybook Composition with Nx",
-                "path": "/packages/storybook/documents/storybook-composition-setup",
-                "id": "storybook-composition-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Set up Compodoc for Storybook on Nx",
-                "path": "/packages/storybook/documents/angular-storybook-compodoc",
-                "id": "angular-storybook-compodoc",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Angular: Configuring styles and preprocessor options",
-                "path": "/packages/storybook/documents/angular-configuring-styles",
-                "id": "angular-configuring-styles",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -7835,14 +8519,6 @@
                 "name": "Overview of the Nx Vite Plugin",
                 "path": "/packages/vite/documents/overview",
                 "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Manually set up your project to use Vite.js",
-                "path": "/packages/vite/documents/set-up-vite-manually",
-                "id": "set-up-vite-manually",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -8019,22 +8695,6 @@
                 "name": "Overview of the Nx Webpack Plugin",
                 "path": "/packages/webpack/documents/overview",
                 "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "How to configure webpack on your Nx workspace",
-                "path": "/packages/webpack/documents/webpack-config-setup",
-                "id": "webpack-config-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Webpack plugins",
-                "path": "/packages/webpack/documents/webpack-plugins",
-                "id": "webpack-plugins",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false

@@ -8,12 +8,21 @@ import {
 } from '../utils/get-workspace-layout';
 import { names } from '../utils/names';
 
-const { joinPathFragments, readJson, readNxJson } = requireNx();
+const {
+  joinPathFragments,
+  normalizePath,
+  logger,
+  readJson,
+  readNxJson,
+  updateNxJson,
+  stripIndents,
+} = requireNx();
 
 export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
 export type ProjectGenerationOptions = {
   name: string;
   projectType: ProjectType;
+  callingGenerator: string | null;
   directory?: string;
   importPath?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
@@ -57,13 +66,23 @@ type ProjectNameAndRootFormats = {
 export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
-): Promise<ProjectNameAndRootOptions> {
+): Promise<
+  ProjectNameAndRootOptions & {
+    projectNameAndRootFormat: ProjectNameAndRootFormat;
+  }
+> {
   validateName(options.name, options.projectNameAndRootFormat);
   const formats = getProjectNameAndRootFormats(tree, options);
   const format =
-    options.projectNameAndRootFormat ?? (await determineFormat(formats));
+    options.projectNameAndRootFormat ??
+    (getDefaultProjectNameAndRootFormat(tree) === 'as-provided'
+      ? 'as-provided'
+      : await determineFormat(tree, formats, options.callingGenerator));
 
-  return formats[format];
+  return {
+    ...formats[format],
+    projectNameAndRootFormat: format,
+  };
 }
 
 function validateName(
@@ -97,7 +116,9 @@ function validateName(
 }
 
 async function determineFormat(
-  formats: ProjectNameAndRootFormats
+  tree: Tree,
+  formats: ProjectNameAndRootFormats,
+  callingGenerator: string | null
 ): Promise<ProjectNameAndRootFormat> {
   if (!formats.derived) {
     return 'as-provided';
@@ -114,9 +135,9 @@ async function determineFormat(
   const derivedDescription = `Derived:
     Name: ${formats['derived'].projectName}
     Root: ${formats['derived'].projectRoot}`;
-  const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot} (This was derived from the folder structure. Please provide the exact name and directory in the future)`;
+  const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot}`;
 
-  return await prompt<{ format: ProjectNameAndRootFormat }>({
+  const result = await prompt<{ format: ProjectNameAndRootFormat }>({
     type: 'select',
     name: 'format',
     message:
@@ -135,6 +156,41 @@ async function determineFormat(
   }).then(({ format }) =>
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
+
+  const deprecationWarning = stripIndents`
+    In Nx 18, generating projects will no longer derive the name and root.
+    Please provide the exact project name and root in the future.`;
+
+  if (result === 'as-provided' && callingGenerator) {
+    const { saveDefault } = await prompt<{ saveDefault: boolean }>({
+      type: 'confirm',
+      message: `Would you like to configure Nx to always take project name and root as provided for ${callingGenerator}?`,
+      name: 'saveDefault',
+      initial: true,
+    });
+    if (saveDefault) {
+      setProjectNameAndRootFormatDefault(tree);
+    } else {
+      logger.warn(deprecationWarning);
+    }
+  } else {
+    const example = `Example: nx g ${callingGenerator} ${formats[result].projectName} --directory ${formats[result].projectRoot}`;
+    logger.warn(deprecationWarning + '\n' + example);
+  }
+
+  return result;
+}
+
+function setProjectNameAndRootFormatDefault(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.workspaceLayout ??= {};
+  nxJson.workspaceLayout.projectNameAndRootFormat = 'as-provided';
+  updateNxJson(tree, nxJson);
+}
+
+function getDefaultProjectNameAndRootFormat(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  return nxJson.workspaceLayout?.projectNameAndRootFormat ?? 'derived';
 }
 
 function getProjectNameAndRootFormats(
@@ -142,7 +198,9 @@ function getProjectNameAndRootFormats(
   options: ProjectGenerationOptions
 ): ProjectNameAndRootFormats {
   const name = names(options.name).fileName;
-  const directory = options.directory?.replace(/^\.?\//, '');
+  const directory = options.directory
+    ? normalizePath(options.directory.replace(/^\.?\//, ''))
+    : undefined;
 
   const asProvidedProjectName = name;
   const asProvidedProjectDirectory = directory

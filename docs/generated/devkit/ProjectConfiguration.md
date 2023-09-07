@@ -2,21 +2,19 @@
 
 Project configuration
 
-@note: when adding properties here add them to `allowedProjectExtensions` in adapter/compat.ts
-
 ## Table of contents
 
 ### Properties
 
-- [generators](../../devkit/documents/ProjectConfiguration#generators)
-- [implicitDependencies](../../devkit/documents/ProjectConfiguration#implicitdependencies)
-- [name](../../devkit/documents/ProjectConfiguration#name)
-- [namedInputs](../../devkit/documents/ProjectConfiguration#namedinputs)
-- [projectType](../../devkit/documents/ProjectConfiguration#projecttype)
-- [root](../../devkit/documents/ProjectConfiguration#root)
-- [sourceRoot](../../devkit/documents/ProjectConfiguration#sourceroot)
-- [tags](../../devkit/documents/ProjectConfiguration#tags)
-- [targets](../../devkit/documents/ProjectConfiguration#targets)
+- [generators](../../devkit/documents/ProjectConfiguration#generators): Object
+- [implicitDependencies](../../devkit/documents/ProjectConfiguration#implicitdependencies): string[]
+- [name](../../devkit/documents/ProjectConfiguration#name): string
+- [namedInputs](../../devkit/documents/ProjectConfiguration#namedinputs): Object
+- [projectType](../../devkit/documents/ProjectConfiguration#projecttype): ProjectType
+- [root](../../devkit/documents/ProjectConfiguration#root): string
+- [sourceRoot](../../devkit/documents/ProjectConfiguration#sourceroot): string
+- [tags](../../devkit/documents/ProjectConfiguration#tags): string[]
+- [targets](../../devkit/documents/ProjectConfiguration#targets): Object
 
 ## Properties
 

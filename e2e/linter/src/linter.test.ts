@@ -10,6 +10,7 @@ import {
   readJson,
   runCLI,
   runCreateWorkspace,
+  setMaxWorkers,
   uniq,
   updateFile,
   updateJson,
@@ -557,7 +558,7 @@ describe('Linter', () => {
         bundler: 'vite',
         e2eTestRunner: 'none',
       });
-      runCLI(`generate @nx/js:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib} --directory libs/${mylib}`);
 
       // migrate to flat structure
       runCLI(`generate @nx/linter:convert-to-flat-config`);
@@ -704,8 +705,8 @@ describe('Linter', () => {
       let e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have plugin extends
-      expect(appEslint.overrides[0].extends).toBeDefined();
       expect(appEslint.overrides[1].extends).toBeDefined();
+      expect(appEslint.overrides[2].extends).toBeDefined();
       expect(e2eEslint.overrides[0].extends).toBeDefined();
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
@@ -715,20 +716,21 @@ describe('Linter', () => {
       e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have no plugin extends
-      expect(appEslint.overrides[0].extends).toEqual([
+      expect(appEslint.overrides[1].extends).toEqual([
         'plugin:@nx/angular',
         'plugin:@angular-eslint/template/process-inline-templates',
       ]);
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
     });
 
-    it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
+    it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', async () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
       runCLI(
         `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`
       );
+      await setMaxWorkers();
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');

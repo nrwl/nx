@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';

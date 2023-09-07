@@ -5,8 +5,8 @@ import { provideMockStore } from '@ngrx/store/testing';
 import { hot } from 'jasmine-marbles';
 import { Observable } from 'rxjs';
 
-import * as <%= className %>Actions from './<%= fileName %>.actions';
-import { <%= className %>Effects } from './<%= fileName %>.effects';
+import * as <%= className %>Actions from './<%= relativeFileName %>.actions';
+import { <%= className %>Effects } from './<%= relativeFileName %>.effects';
 
 describe('<%= className %>Effects', () => {
   let actions: Observable<Action>;

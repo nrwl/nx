@@ -1,6 +1,11 @@
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
 import { createLockFile, createPackageJson } from '@nx/js';
-import { ExecutorContext, type ProjectGraph, serializeJson } from '@nx/devkit';
+import {
+  detectPackageManager,
+  ExecutorContext,
+  type ProjectGraph,
+  serializeJson,
+} from '@nx/devkit';
 import {
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
@@ -66,9 +71,12 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             'package.json',
             new sources.RawSource(serializeJson(packageJson))
           );
+          const packageManager = detectPackageManager(this.context.root);
           compilation.emitAsset(
-            getLockFileName(),
-            new sources.RawSource(createLockFile(packageJson))
+            getLockFileName(packageManager),
+            new sources.RawSource(
+              createLockFile(packageJson, this.projectGraph, packageManager)
+            )
           );
         }
       );

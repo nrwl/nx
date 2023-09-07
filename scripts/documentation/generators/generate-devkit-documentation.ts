@@ -7,7 +7,8 @@ export function generateDevkitDocumentation() {
   console.log(`\n${chalk.blue('i')} Generating Documentation for Devkit\n`);
 
   const execSyncOptions: ExecSyncOptions = {
-    stdio: process.env.CI === 'true' ? 'inherit' : 'ignore',
+    stdio: 'true' === 'true' ? 'inherit' : 'ignore',
+    // stdio: process.env.CI === 'true' ? 'inherit' : 'ignore',
   };
 
   execSync(

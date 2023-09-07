@@ -10,6 +10,7 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  readProjectConfiguration,
   runTasksInSerial,
   toJS,
   Tree,
@@ -236,12 +237,14 @@ export type AddLintOptions = Pick<
   | 'js'
   | 'setParserOptionsProject'
   | 'rootProject'
+  | 'bundler'
 >;
 export async function addLint(
   tree: Tree,
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+  const projectConfiguration = readProjectConfiguration(tree, options.name);
   const task = lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
@@ -256,20 +259,76 @@ export async function addLint(
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
   });
-  // Also update the root .eslintrc.json lintProjectGenerator will not generate it for root projects.
+  const {
+    addOverrideToLintConfig,
+    lintConfigHasOverride,
+    isEslintConfigSupported,
+    updateOverrideInLintConfig,
+    // nx-ignore-next-line
+  } = require('@nx/linter/src/generators/utils/eslint-file');
+
+  // Also update the root ESLint config. The lintProjectGenerator will not generate it for root projects.
   // But we need to set the package.json checks.
   if (options.rootProject) {
-    updateJson(tree, '.eslintrc.json', (json) => {
-      json.overrides ??= [];
-      json.overrides.push({
+    if (isEslintConfigSupported(tree)) {
+      addOverrideToLintConfig(tree, '', {
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',
         rules: {
           '@nx/dependency-checks': 'error',
         },
       });
-      return json;
-    });
+    }
+  }
+
+  // If project lints package.json with @nx/dependency-checks, then add ignore files for
+  // build configuration files such as vite.config.ts. These config files need to be
+  // ignored, otherwise we will errors on missing dependencies that are for dev only.
+  if (
+    lintConfigHasOverride(
+      tree,
+      projectConfiguration.root,
+      (o) =>
+        Array.isArray(o.files)
+          ? o.files.some((f) => f.match(/\.json$/))
+          : !!o.files?.match(/\.json$/),
+      true
+    )
+  ) {
+    updateOverrideInLintConfig(
+      tree,
+      projectConfiguration.root,
+      (o) => o.rules?.['@nx/dependency-checks'],
+      (o) => {
+        const value = o.rules['@nx/dependency-checks'];
+        let ruleSeverity: string;
+        let ruleOptions: any;
+        if (Array.isArray(value)) {
+          ruleSeverity = value[0];
+          ruleOptions = value[1];
+        } else {
+          ruleSeverity = value;
+          ruleOptions = {};
+        }
+        if (options.bundler === 'vite' || options.unitTestRunner === 'vitest') {
+          ruleOptions.ignoredFiles = [
+            '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+          ];
+          o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
+        } else if (options.bundler === 'rollup') {
+          ruleOptions.ignoredFiles = [
+            '{projectRoot}/rollup.config.{js,ts,mjs,mts}',
+          ];
+          o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
+        } else if (options.bundler === 'esbuild') {
+          ruleOptions.ignoredFiles = [
+            '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
+          ];
+          o.rules['@nx/dependency-checks'] = [ruleSeverity, ruleOptions];
+        }
+        return o;
+      }
+    );
   }
   return task;
 }
@@ -550,6 +609,7 @@ async function normalizeOptions(
     importPath: options.importPath,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     rootProject: options.rootProject,
+    callingGenerator: '@nx/js:library',
   });
   options.rootProject = projectRoot === '.';
   const fileName = getCaseAwareFileName({
@@ -743,4 +803,4 @@ function determineEntryFields(
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGeneratorInternal);
+export const librarySchematic = convertNxGenerator(libraryGenerator);

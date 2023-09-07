@@ -108,7 +108,7 @@ function addBaseUrlToCypressConfig(tree: Tree, projectName: string) {
   } else if (tree.exists(cypressTs)) {
     // cypress >= v10
     tree.delete(cypressTs);
-    generateFiles(tree, joinPathFragments(__dirname, 'files'), projectRoot, {
+    generateFiles(tree, join(__dirname, 'files'), projectRoot, {
       tpl: '',
     });
   }

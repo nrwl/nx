@@ -214,11 +214,11 @@ describe('Nx Affected and Graph Tests', () => {
       }
     }, 1000000);
 
-    it('should detect changes to projects based on tags changes', () => {
+    it('should detect changes to projects based on tags changes', async () => {
       // TODO: investigate why affected gives different results on windows
       if (isNotWindows()) {
         generateAll();
-        updateProjectConfig(myapp, (config) => ({
+        await updateProjectConfig(myapp, (config) => ({
           ...config,
           tags: ['tag'],
         }));
@@ -229,9 +229,9 @@ describe('Nx Affected and Graph Tests', () => {
       }
     });
 
-    it('should affect all projects by removing projects', () => {
+    it('should affect all projects by removing projects', async () => {
       generateAll();
-      const root = readResolvedConfiguration().projects[mylib].root;
+      const root = (await readResolvedConfiguration())[mylib].root;
       removeFile(root);
       const output = runCLI('print-affected --select projects');
       expect(output).toContain(myapp);
@@ -239,9 +239,9 @@ describe('Nx Affected and Graph Tests', () => {
       expect(output).not.toContain(mylib);
     });
 
-    it('should detect changes to implicitly dependant projects', () => {
+    it('should detect changes to implicitly dependant projects', async () => {
       generateAll();
-      updateProjectConfig(myapp, (config) => ({
+      await updateProjectConfig(myapp, (config) => ({
         ...config,
         implicitDependencies: ['*', `!${myapp2}`],
       }));
@@ -256,7 +256,7 @@ describe('Nx Affected and Graph Tests', () => {
       expect(output).toContain(mylib);
 
       // Clear implicit deps to not interfere with other tests.
-      updateProjectConfig(myapp, (config) => ({
+      await updateProjectConfig(myapp, (config) => ({
         ...config,
         implicitDependencies: [],
       }));

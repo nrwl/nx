@@ -54,6 +54,9 @@ export function readCachedProjectConfiguration(
   return node.data;
 }
 
+/**
+ * Get the {@link ProjectsConfigurations} from the {@link ProjectGraph}
+ */
 export function readProjectsConfigurationFromProjectGraph(
   projectGraph: ProjectGraph
 ): ProjectsConfigurations {
@@ -81,7 +84,7 @@ export async function buildProjectGraphWithoutDaemon() {
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   return (
     await buildProjectGraphUsingProjectFileMap(
-      projectConfigurations,
+      projectConfigurations.projects,
       externalNodes,
       projectFileMap,
       allWorkspaceFiles,
@@ -117,7 +120,7 @@ function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
  * * It is running in the docker container.
  * * The daemon process is disabled because of the previous error when starting the daemon.
  * * `NX_DAEMON` is set to `false`.
- * * `useDaemon` is set to false in `nx.json`
+ * * `useDaemonProcess` is set to false in the options of the tasks runner inside `nx.json`
  *
  * `NX_DAEMON` env variable takes precedence:
  * * If it is set to true, the daemon will always be used.

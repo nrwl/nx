@@ -85,8 +85,8 @@ describe('expo', () => {
   it('should prebuild', async () => {
     // run prebuild command with git check disable
     // set a mock package name for ios and android in expo's app.json
-    const workspace = readResolvedConfiguration();
-    const root = workspace.projects[appName].root;
+    const projects = await readResolvedConfiguration();
+    const root = projects[appName].root;
     const appJsonPath = join(root, `app.json`);
     const appJson = await readJson(appJsonPath);
     if (appJson.expo.ios) {
@@ -154,5 +154,43 @@ describe('expo', () => {
         `dist/out-tsc/libs/${libName}/src/index.d.ts`
       );
     }).not.toThrow();
+  });
+
+  it('should support generating projects with the new name and root format', () => {
+    const appName = uniq('app1');
+    const libName = uniq('@my-org/lib1');
+
+    runCLI(
+      `generate @nx/expo:application ${appName} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${appName}/src/app/App.tsx`);
+    // check tests pass
+    const appTestResult = runCLI(`test ${appName}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${appName}`
+    );
+
+    // assert scoped project names are not supported when --project-name-and-root-format=derived
+    expect(() =>
+      runCLI(
+        `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=derived`
+      )
+    ).toThrow();
+
+    runCLI(
+      `generate @nx/expo:library ${libName} --buildable --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${libName}/src/index.ts`);
+    // check tests pass
+    const libTestResult = runCLI(`test ${libName}`);
+    expect(libTestResult).toContain(
+      `Successfully ran target test for project ${libName}`
+    );
   });
 });

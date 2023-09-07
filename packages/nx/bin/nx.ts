@@ -5,6 +5,7 @@ import {
 } from '../src/utils/find-workspace-root';
 import * as chalk from 'chalk';
 import { config as loadDotEnvFile } from 'dotenv';
+import { expand } from 'dotenv-expand';
 import { initLocal } from './init-local';
 import { output } from '../src/utils/output';
 import {
@@ -108,10 +109,11 @@ function main() {
  * - .env.local
  */
 function loadDotEnvFiles() {
-  for (const file of ['.env', '.local.env', '.env.local']) {
-    loadDotEnvFile({
+  for (const file of ['.local.env', '.env.local', '.env']) {
+    const myEnv = loadDotEnvFile({
       path: file,
     });
+    expand(myEnv);
   }
 }
 

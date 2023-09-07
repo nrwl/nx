@@ -21,6 +21,7 @@ import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';
 import type { WorkspaceRootFileTypesInfo } from './types';
+import { join } from 'path';
 
 export function validateWorkspace(tree: Tree): void {
   const errors: string[] = [];
@@ -274,7 +275,7 @@ export async function createWorkspaceFiles(tree: Tree): Promise<void> {
 
   await jsInitGenerator(tree, { skipFormat: true });
 
-  generateFiles(tree, joinPathFragments(__dirname, '../files/root'), '.', {
+  generateFiles(tree, join(__dirname, '../files/root'), '.', {
     tmpl: '',
     dot: '.',
     rootTsConfigPath: getRootTsConfigPathInTree(tree),

@@ -6,6 +6,7 @@ import {
   readFile,
   rmDist,
   runCLI,
+  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -23,6 +24,7 @@ describe('cache', () => {
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nx/web:app ${myapp1}`);
     runCLI(`generate @nx/web:app ${myapp2}`);
+    await setMaxWorkers();
 
     // run build with caching
     // --------------------------------------------
@@ -66,12 +68,7 @@ describe('cache', () => {
       'read the output from the cache'
     );
 
-    if (process.platform != 'linux') {
-      // TODO(vsavkin): This should be always be matched output once you fix output watching on linux
-      expectMatchedOutput(outputWithBuildApp2Cached, [myapp2]);
-    } else {
-      expectCached(outputWithBuildApp2Cached, [myapp2]);
-    }
+    expectCached(outputWithBuildApp2Cached, [myapp2]);
 
     // touch package.json
     // --------------------------------------------
@@ -156,7 +153,7 @@ describe('cache', () => {
   it('should support using globs as outputs', async () => {
     const mylib = uniq('mylib');
     runCLI(`generate @nx/js:library ${mylib}`);
-    updateProjectConfig(mylib, (c) => {
+    await updateProjectConfig(mylib, (c) => {
       c.targets.build = {
         executor: 'nx:run-commands',
         outputs: ['{workspaceRoot}/dist/!(.next)/**/!(z|x).(txt|md)'],

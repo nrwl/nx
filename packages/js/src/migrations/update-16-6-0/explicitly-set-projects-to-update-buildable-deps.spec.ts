@@ -18,14 +18,14 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it.each(['@nx/js:swc', '@nrwl/js:swc', '@nx/js:tsc', '@nrwl/js:tsc'])(
     'should set updateBuildableProjectDepsInPackageJson option to "true" when not specified in target using "%s"',
     async (executor) => {
       addProject(tree, 'lib1', {
-        root: 'libs/lib1',
+        root: 'lib1',
         projectType: 'library',
         targets: { build: { executor, options: {} } },
       });
@@ -43,7 +43,7 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
     'should set updateBuildableProjectDepsInPackageJson option to "true" when target has no options object defined using "%s"',
     async (executor) => {
       addProject(tree, 'lib1', {
-        root: 'libs/lib1',
+        root: 'lib1',
         projectType: 'library',
         targets: { build: { executor } },
       });
@@ -61,7 +61,7 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
     'should not overwrite updateBuildableProjectDepsInPackageJson option when it is specified in target using "%s"',
     async (executor) => {
       addProject(tree, 'lib1', {
-        root: 'libs/lib1',
+        root: 'lib1',
         projectType: 'library',
         targets: {
           build: {
@@ -82,7 +82,7 @@ describe('explicitly-set-projects-to-update-buildable-deps migration', () => {
 
   it('should not update targets using other executors', async () => {
     const originalProjectConfig: ProjectConfiguration = {
-      root: 'libs/lib1',
+      root: 'lib1',
       projectType: 'library',
       targets: {
         build: {

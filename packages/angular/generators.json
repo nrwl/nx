@@ -74,7 +74,8 @@
       "factory": "./src/generators/move/compat",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
-      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
+      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v18."
     },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf.compat",
@@ -163,7 +164,7 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application",
+      "factory": "./src/generators/application/application#applicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
@@ -211,7 +212,7 @@
       "hidden": true
     },
     "library": {
-      "factory": "./src/generators/library/library",
+      "factory": "./src/generators/library/library#libraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",
@@ -224,16 +225,17 @@
       "description": "Creates a secondary entry point for an Angular publishable library."
     },
     "remote": {
-      "factory": "./src/generators/remote/remote",
+      "factory": "./src/generators/remote/remote#remoteInternal",
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
       "description": "Generate a Remote Angular Module Federation Application."
     },
     "move": {
-      "factory": "./src/generators/move/move#angularMoveGenerator",
+      "factory": "./src/generators/move/move#angularMoveGeneratorInternal",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
-      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration."
+      "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
+      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v18."
     },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
@@ -241,7 +243,7 @@
       "description": "Converts an old micro frontend configuration to use the new withModuleFederation helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n{% callout type=\"warning\" title=\"Overrides\" %}This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!{% /callout %}"
     },
     "host": {
-      "factory": "./src/generators/host/host",
+      "factory": "./src/generators/host/host#hostInternal",
       "schema": "./src/generators/host/schema.json",
       "x-type": "application",
       "description": "Generate a Host Angular Module Federation Application."

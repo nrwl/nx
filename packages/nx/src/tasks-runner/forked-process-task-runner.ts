@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { config as loadDotEnvFile } from 'dotenv';
+import { expand } from 'dotenv-expand';
 import { ChildProcess, fork, Serializable } from 'child_process';
 import * as chalk from 'chalk';
 import * as logTransformer from 'strong-log-transformer';
@@ -437,18 +438,25 @@ export class ForkedProcessTaskRunner {
       `.${task.target.target}.env`,
 
       // Load base DotEnv Files at workspace root
-      `.env`,
       `.local.env`,
       `.env.local`,
+      `.env`,
     ];
 
     for (const file of dotEnvFiles) {
-      loadDotEnvFile({
+      const myEnv = loadDotEnvFile({
         path: file,
         processEnv: environmentVariables,
         // Do not override existing env variables as we load
         override: false,
       });
+      environmentVariables = {
+        ...expand({
+          ...myEnv,
+          ignoreProcessEnv: true, // Do not override existing env variables as we load
+        }).parsed,
+        ...environmentVariables,
+      };
     }
 
     return environmentVariables;

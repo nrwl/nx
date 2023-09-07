@@ -31,8 +31,8 @@ function getTargets(options: NormalizedSchema) {
   targets['test-ios'] = {
     executor: '@nx/detox:test',
     ...(options.framework === 'react-native'
-      ? reactNativeTestTarget('ios.sim', options.e2eName)
-      : expoTestTarget('ios.sim', options.e2eName)),
+      ? reactNativeTestTarget('ios.sim', options.e2eProjectName)
+      : expoTestTarget('ios.sim', options.e2eProjectName)),
   };
 
   targets['build-android'] = {
@@ -45,8 +45,8 @@ function getTargets(options: NormalizedSchema) {
   targets['test-android'] = {
     executor: '@nx/detox:test',
     ...(options.framework === 'react-native'
-      ? reactNativeTestTarget('android.emu', options.e2eName)
-      : expoTestTarget('android.emu', options.e2eName)),
+      ? reactNativeTestTarget('android.emu', options.e2eProjectName)
+      : expoTestTarget('android.emu', options.e2eProjectName)),
   };
 
   return targets;

@@ -16,10 +16,12 @@ describe('Migration to update target and add useDefineForClassFields', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
       name: 'test',
+      projectNameAndRootFormat: 'derived',
     });
     await generateTestApplication(tree, {
       name: 'karma',
       unitTestRunner: UnitTestRunner.None,
+      projectNameAndRootFormat: 'derived',
     });
 
     const karmaProject = readProjectConfiguration(tree, 'karma');

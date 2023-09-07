@@ -17,7 +17,7 @@ describe('React Cypress Component Tests', () => {
   const usedInAppLibName = uniq('cy-react-lib');
   const buildableLibName = uniq('cy-react-buildable-lib');
 
-  beforeAll(() => {
+  beforeAll(async () => {
     projectName = newProject({ name: uniq('cy-react') });
     ensureCypressInstallation();
 
@@ -131,7 +131,7 @@ export default Input;
 `
     );
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       config.targets['build'].options.assets.push({
         glob: '**/*',
         input: 'libs/assets',
@@ -228,7 +228,7 @@ ${content}`;
     }
   }, 300_000);
 
-  it('should work with async webpack config', () => {
+  it('should work with async webpack config', async () => {
     // TODO: (caleb) for whatever reason the MF webpack config + CT is running, but cypress is not starting up?
     // are they overriding some option on top of each other causing cypress to not see it's running?
     createFile(
@@ -252,7 +252,7 @@ ${content}`;
         );
       `
     );
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       config.targets[
         'build'
       ].options.webpackConfig = `apps/${appName}/webpack.config.js`;

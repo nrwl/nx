@@ -32,7 +32,7 @@ describe('angularStories generator: applications', () => {
     await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.read(`apps/${appName}/src/app/app.component.stories.ts`, 'utf-8')
+      tree.read(`${appName}/src/app/app.component.stories.ts`, 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -42,9 +42,7 @@ describe('angularStories generator: applications', () => {
     await angularStoriesGenerator(tree, { name: appName });
 
     expect(
-      tree.exists(
-        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
-      )
+      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`)
     ).toBeTruthy();
   });
 
@@ -53,13 +51,11 @@ describe('angularStories generator: applications', () => {
 
     await angularStoriesGenerator(tree, {
       name: appName,
-      ignorePaths: [`apps/${appName}/src/app/my-scam/**`],
+      ignorePaths: [`${appName}/src/app/my-scam/**`],
     });
 
     expect(
-      tree.exists(
-        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
-      )
+      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`)
     ).toBeFalsy();
   });
 
@@ -68,13 +64,11 @@ describe('angularStories generator: applications', () => {
 
     await angularStoriesGenerator(tree, {
       name: appName,
-      ignorePaths: [`apps/${appName}/src/app/my-scam/my-scam.component.ts`],
+      ignorePaths: [`${appName}/src/app/my-scam/my-scam.component.ts`],
     });
 
     expect(
-      tree.exists(
-        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`
-      )
+      tree.exists(`${appName}/src/app/my-scam/my-scam.component.stories.ts`)
     ).toBeFalsy();
   });
 
@@ -87,27 +81,25 @@ describe('angularStories generator: applications', () => {
 
     await angularStoriesGenerator(tree, {
       name: appName,
-      ignorePaths: [
-        `apps/${appName}/src/app/component-a/component-a.component.ts`,
-      ],
+      ignorePaths: [`${appName}/src/app/component-a/component-a.component.ts`],
     });
 
     expect(
       tree.read(
-        `apps/${appName}/src/app/component-a/component-b/component-b.component.stories.ts`,
+        `${appName}/src/app/component-a/component-b/component-b.component.stories.ts`,
         'utf-8'
       )
     ).toMatchSnapshot();
     expect(
       tree.exists(
-        `apps/${appName}/src/app/component-a/component-a.component.stories.ts`
+        `${appName}/src/app/component-a/component-a.component.stories.ts`
       )
     ).toBeFalsy();
   });
 
   it('should ignore a path when using a routing module', async () => {
     tree.write(
-      `apps/${appName}/src/app/component/component.module.ts`,
+      `${appName}/src/app/component/component.module.ts`,
       stripIndents`
       import { NgModule } from '@angular/core';
       
@@ -116,7 +108,7 @@ describe('angularStories generator: applications', () => {
       `
     );
     tree.write(
-      `apps/${appName}/src/app/component/component-routing.module.ts`,
+      `${appName}/src/app/component/component-routing.module.ts`,
       stripIndents`
       import { NgModule } from '@angular/core';
       import { RouterModule, Routes } from '@angular/router';
@@ -138,17 +130,17 @@ describe('angularStories generator: applications', () => {
 
     await angularStoriesGenerator(tree, {
       name: appName,
-      ignorePaths: [`apps/${appName}/src/app/app.component.ts`],
+      ignorePaths: [`${appName}/src/app/app.component.ts`],
     });
 
     expect(
       tree.read(
-        `apps/${appName}/src/app/component/component.component.stories.ts`,
+        `${appName}/src/app/component/component.component.stories.ts`,
         'utf-8'
       )
     ).toMatchSnapshot();
     expect(
-      tree.exists(`apps/${appName}/src/app/app.component.stories.ts`)
+      tree.exists(`${appName}/src/app/app.component.stories.ts`)
     ).toBeFalsy();
   });
 
@@ -163,7 +155,7 @@ describe('angularStories generator: applications', () => {
 
     expect(
       tree.read(
-        `apps/${appName}/src/app/my-scam/my-scam.component.stories.ts`,
+        `${appName}/src/app/my-scam/my-scam.component.stories.ts`,
         'utf-8'
       )
     ).toMatchSnapshot();

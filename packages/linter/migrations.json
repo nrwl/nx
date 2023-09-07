@@ -65,6 +65,11 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/linter with @nx/linter",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-8-0-add-ignored-files": {
+      "version": "16.8.0",
+      "description": "update-16-8-0-add-ignored-files",
+      "implementation": "./src/migrations/update-16-8-0-add-ignored-files/update-16-8-0-add-ignored-files"
     }
   },
   "packageJsonUpdates": {

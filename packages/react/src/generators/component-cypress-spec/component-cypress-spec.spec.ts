@@ -81,8 +81,8 @@ describe('react:component-cypress-spec', () => {
     describe(`using ${
       testConfig.plainJS ? 'plain JS' : 'TypeScript'
     } setup`, () => {
-      let cmpPath = `libs/test-ui-lib/src/lib/test-ui-lib.${fileCmpExt}`;
-      let cypressStorySpecFilePath = `apps/test-ui-lib-e2e/src/integration/test-ui-lib/test-ui-lib.spec.${fileExt}`;
+      let cmpPath = `test-ui-lib/src/lib/test-ui-lib.${fileCmpExt}`;
+      let cypressStorySpecFilePath = `test-ui-lib-e2e/src/integration/test-ui-lib/test-ui-lib.spec.${fileExt}`;
 
       if (!testConfig.plainJS) {
         // hacky, but we should do this check only if we run with TypeScript,
@@ -155,17 +155,17 @@ describe('react:component-cypress-spec', () => {
       unitTestRunner: 'none',
     });
     // since other-e2e isn't a real cypress project we mock the v10 cypress config
-    appTree.write('apps/other-e2e/cypress.config.ts', `export default {}`);
+    appTree.write('other-e2e/cypress.config.ts', `export default {}`);
     await componentCypressSpecGenerator(appTree, {
       componentPath: `lib/test-ui-lib.tsx`,
       project: 'test-ui-lib',
       cypressProject: 'other-e2e',
     });
     expect(
-      appTree.exists('apps/other-e2e/src/e2e/test-ui-lib/test-ui-lib.cy.ts')
+      appTree.exists('other-e2e/src/e2e/test-ui-lib/test-ui-lib.cy.ts')
     ).toBeTruthy();
     expect(
-      appTree.exists('apps/test-ui-lib/src/e2e/test-ui-lib/test-ui-lib.cy.ts')
+      appTree.exists('test-ui-lib/src/e2e/test-ui-lib/test-ui-lib.cy.ts')
     ).toBeFalsy();
   });
 
@@ -179,8 +179,8 @@ describe('react:component-cypress-spec', () => {
       style: 'css',
       unitTestRunner: 'none',
     });
-    appTree.delete(`apps/other-e2e/cypress.config.ts`);
-    appTree.write(`apps/other-e2e/cypress.json`, '{}');
+    appTree.delete(`other-e2e/cypress.config.ts`);
+    appTree.write(`other-e2e/cypress.json`, '{}');
     await componentCypressSpecGenerator(appTree, {
       componentPath: `lib/test-ui-lib.tsx`,
       project: 'test-ui-lib',
@@ -188,12 +188,12 @@ describe('react:component-cypress-spec', () => {
     });
     expect(
       appTree.exists(
-        'apps/other-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts'
+        'other-e2e/src/integration/test-ui-lib/test-ui-lib.spec.ts'
       )
     ).toBeTruthy();
     expect(
       appTree.exists(
-        'apps/test-ui-lib/src/integration/test-ui-lib/test-ui-lib.spec.ts'
+        'test-ui-lib/src/integration/test-ui-lib/test-ui-lib.spec.ts'
       )
     ).toBeFalsy();
   });
@@ -203,7 +203,7 @@ export async function createTestUILib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
   await libraryGenerator(appTree, {
     name: libName,
     linter: Linter.EsLint,
@@ -213,6 +213,7 @@ export async function createTestUILib(
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'jest',
+    projectNameAndRootFormat: 'as-provided',
   });
 
   // create some Nx app that we'll use to generate the cypress
@@ -225,6 +226,7 @@ export async function createTestUILib(
     skipFormat: true,
     style: 'css',
     unitTestRunner: 'none',
+    projectNameAndRootFormat: 'as-provided',
   });
 
   return appTree;

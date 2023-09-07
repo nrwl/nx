@@ -83,15 +83,17 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      runCLI(`generate @nx/js:lib ${lib1}/data-access --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
 
       updateFile(
-        `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
+        `${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
         `export function fromLibOne() { console.log('This is completely pointless'); }`
       );
 
       updateFile(
-        `libs/${lib1}/data-access/src/index.ts`,
+        `${lib1}/data-access/src/index.ts`,
         `export * from './lib/${lib1}-data-access.ts'`
       );
 
@@ -99,11 +101,13 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib2}/ui --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
 
       updateFile(
-        `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
-        `import { fromLibOne } from '@${proj}/${lib1}/data-access';
+        `${lib2}/ui/src/lib/${lib2}-ui.ts`,
+        `import { fromLibOne } from '@${proj}/${lib1}-data-access';
 
         export const fromLibTwo = () => fromLibOne();`
       );
@@ -112,8 +116,10 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
-      updateProjectConfig(lib3, (config) => {
+      runCLI(
+        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
+      await updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
       });
@@ -123,13 +129,13 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
       );
 
-      expect(moveOutput).toContain(`DELETE libs/${lib1}/data-access`);
-      expect(exists(`libs/${lib1}/data-access`)).toBeFalsy();
+      expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
+      expect(exists(`${lib1}/data-access`)).toBeFalsy();
 
-      const newPath = `libs/shared/${lib1}/data-access`;
+      const newPath = `shared/${lib1}/data-access`;
       const newName = `shared-${lib1}-data-access`;
 
       const readmePath = `${newPath}/README.md`;
@@ -141,8 +147,8 @@ describe('Workspace Tests', () => {
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
       expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-      expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
-      expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
+      expect(jestConfig).toContain(`preset: '../../../jest.preset.js'`);
+      expect(jestConfig).toContain(`'../../../coverage/${newPath}'`);
 
       const tsConfigPath = `${newPath}/tsconfig.json`;
       expect(moveOutput).toContain(`CREATE ${tsConfigPath}`);
@@ -153,7 +159,7 @@ describe('Workspace Tests', () => {
       checkFilesExist(tsConfigLibPath);
       const tsConfigLib = readJson(tsConfigLibPath);
       expect(tsConfigLib.compilerOptions.outDir).toEqual(
-        '../../../../dist/out-tsc'
+        '../../../dist/out-tsc'
       );
 
       const tsConfigSpecPath = `${newPath}/tsconfig.spec.json`;
@@ -161,7 +167,7 @@ describe('Workspace Tests', () => {
       checkFilesExist(tsConfigSpecPath);
       const tsConfigSpec = readJson(tsConfigSpecPath);
       expect(tsConfigSpec.compilerOptions.outDir).toEqual(
-        '../../../../dist/out-tsc'
+        '../../../dist/out-tsc'
       );
 
       const indexPath = `${newPath}/src/index.ts`;
@@ -172,13 +178,13 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
       checkFilesExist(rootClassPath);
 
-      let workspace = await readResolvedConfiguration();
-      expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
-      const newConfig = readProjectConfig(newName);
+      let projects = await readResolvedConfiguration();
+      expect(projects[`${lib1}-data-access`]).toBeUndefined();
+      const newConfig = await readProjectConfig(newName);
       expect(newConfig).toMatchObject({
         tags: [],
       });
-      const lib3Config = readProjectConfig(lib3);
+      const lib3Config = await readProjectConfig(lib3);
       expect(lib3Config.implicitDependencies).toEqual([
         `shared-${lib1}-data-access`,
       ]);
@@ -186,31 +192,31 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain('UPDATE tsconfig.base.json');
       const rootTsConfig = readJson('tsconfig.base.json');
       expect(
-        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
+        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}-data-access`]
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared/${lib1}/data-access`
+          `@${proj}/shared-${lib1}-data-access`
         ]
-      ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
 
-      workspace = readResolvedConfiguration();
-      expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
-      const project = readProjectConfig(newName);
+      projects = await readResolvedConfiguration();
+      expect(projects[`${lib1}-data-access`]).toBeUndefined();
+      const project = await readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `libs/shared/${lib1}/data-access/**/*.ts`,
-        `libs/shared/${lib1}/data-access/package.json`,
+        `shared/${lib1}/data-access/**/*.ts`,
+        `shared/${lib1}/data-access/package.json`,
       ]);
 
       /**
        * Check that the import in lib2 has been updated
        */
-      const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
+      const lib2FilePath = `${lib2}/ui/src/lib/${lib2}-ui.ts`;
       const lib2File = readFile(lib2FilePath);
       expect(lib2File).toContain(
-        `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
+        `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
       );
     });
 
@@ -220,16 +226,16 @@ describe('Workspace Tests', () => {
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
       runCLI(
-        `generate @nx/js:lib ${lib1}/data-access --importPath=${importPath} --unitTestRunner=jest`
+        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --importPath=${importPath} --unitTestRunner=jest --project-name-and-root-format=as-provided`
       );
 
       updateFile(
-        `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
+        `${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
         `export function fromLibOne() { console.log('This is completely pointless'); }`
       );
 
       updateFile(
-        `libs/${lib1}/data-access/src/index.ts`,
+        `${lib1}/data-access/src/index.ts`,
         `export * from './lib/${lib1}-data-access.ts'`
       );
 
@@ -237,10 +243,12 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib2}/ui --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
 
       updateFile(
-        `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
+        `${lib2}/ui/src/lib/${lib2}-ui.ts`,
         `import { fromLibOne } from '${importPath}';
 
         export const fromLibTwo = () => fromLibOne();`
@@ -250,8 +258,10 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
-      updateProjectConfig(lib3, (config) => {
+      runCLI(
+        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
+      await updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
       });
@@ -261,13 +271,13 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
       );
 
-      expect(moveOutput).toContain(`DELETE libs/${lib1}/data-access`);
-      expect(exists(`libs/${lib1}/data-access`)).toBeFalsy();
+      expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
+      expect(exists(`${lib1}/data-access`)).toBeFalsy();
 
-      const newPath = `libs/shared/${lib1}/data-access`;
+      const newPath = `shared/${lib1}/data-access`;
       const newName = `shared-${lib1}-data-access`;
 
       const readmePath = `${newPath}/README.md`;
@@ -279,8 +289,8 @@ describe('Workspace Tests', () => {
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
       expect(jestConfig).toContain(`displayName: 'shared-${lib1}-data-access'`);
-      expect(jestConfig).toContain(`preset: '../../../../jest.preset.js'`);
-      expect(jestConfig).toContain(`'../../../../coverage/${newPath}'`);
+      expect(jestConfig).toContain(`preset: '../../../jest.preset.js'`);
+      expect(jestConfig).toContain(`'../../../coverage/${newPath}'`);
 
       const tsConfigPath = `${newPath}/tsconfig.json`;
       expect(moveOutput).toContain(`CREATE ${tsConfigPath}`);
@@ -291,7 +301,7 @@ describe('Workspace Tests', () => {
       checkFilesExist(tsConfigLibPath);
       const tsConfigLib = readJson(tsConfigLibPath);
       expect(tsConfigLib.compilerOptions.outDir).toEqual(
-        '../../../../dist/out-tsc'
+        '../../../dist/out-tsc'
       );
 
       const tsConfigSpecPath = `${newPath}/tsconfig.spec.json`;
@@ -299,7 +309,7 @@ describe('Workspace Tests', () => {
       checkFilesExist(tsConfigSpecPath);
       const tsConfigSpec = readJson(tsConfigSpecPath);
       expect(tsConfigSpec.compilerOptions.outDir).toEqual(
-        '../../../../dist/out-tsc'
+        '../../../dist/out-tsc'
       );
 
       const indexPath = `${newPath}/src/index.ts`;
@@ -313,39 +323,39 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain('UPDATE tsconfig.base.json');
       const rootTsConfig = readJson('tsconfig.base.json');
       expect(
-        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
+        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}-data-access`]
       ).toBeUndefined();
       expect(
         rootTsConfig.compilerOptions.paths[
-          `@${proj}/shared/${lib1}/data-access`
+          `@${proj}/shared-${lib1}-data-access`
         ]
-      ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
+      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
 
-      const workspace = await readResolvedConfiguration();
-      expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
-      const project = readProjectConfig(newName);
+      const projects = await readResolvedConfiguration();
+      expect(projects[`${lib1}-data-access`]).toBeUndefined();
+      const project = await readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.tags).toEqual([]);
-      const lib3Config = readProjectConfig(lib3);
+      const lib3Config = await readProjectConfig(lib3);
       expect(lib3Config.implicitDependencies).toEqual([newName]);
 
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `libs/shared/${lib1}/data-access/**/*.ts`,
-        `libs/shared/${lib1}/data-access/package.json`,
+        `shared/${lib1}/data-access/**/*.ts`,
+        `shared/${lib1}/data-access/package.json`,
       ]);
 
       /**
        * Check that the import in lib2 has been updated
        */
-      const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
+      const lib2FilePath = `${lib2}/ui/src/lib/${lib2}-ui.ts`;
       const lib2File = readFile(lib2FilePath);
       expect(lib2File).toContain(
-        `import { fromLibOne } from '@${proj}/shared/${lib1}/data-access';`
+        `import { fromLibOne } from '@${proj}/shared-${lib1}-data-access';`
       );
     });
 
-    it('should work for custom workspace layouts', async () => {
+    it('should work for custom workspace layouts with --project-name-and-root-format=derived', async () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
@@ -354,7 +364,9 @@ describe('Workspace Tests', () => {
       nxJson.workspaceLayout = { libsDir: 'packages' };
       updateFile('nx.json', JSON.stringify(nxJson));
 
-      runCLI(`generate @nx/js:lib ${lib1}/data-access --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib1}/data-access --unitTestRunner=jest --project-name-and-root-format=derived`
+      );
 
       updateFile(
         `packages/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
@@ -370,7 +382,9 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib2}/ui --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=derived`
+      );
 
       updateFile(
         `packages/${lib2}/ui/src/lib/${lib2}-ui.ts`,
@@ -383,8 +397,10 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
-      updateProjectConfig(lib3, (config) => {
+      runCLI(
+        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=derived`
+      );
+      await updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
       });
@@ -394,7 +410,7 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --project-name-and-root-format=derived`
       );
 
       expect(moveOutput).toContain(`DELETE packages/${lib1}/data-access`);
@@ -454,9 +470,9 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
-      const workspace = await readResolvedConfiguration();
-      expect(workspace.projects[`${lib1}-data-access`]).toBeUndefined();
-      const project = readProjectConfig(newName);
+      const projects = await readResolvedConfiguration();
+      expect(projects[`${lib1}-data-access`]).toBeUndefined();
+      const project = await readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
@@ -483,26 +499,27 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('lib1');
       const lib2 = uniq('lib2');
       const lib3 = uniq('lib3');
-      runCLI(`generate @nx/js:lib ${lib1} --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib1} --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
 
       updateFile(
-        `libs/${lib1}/src/lib/${lib1}.ts`,
+        `${lib1}/src/lib/${lib1}.ts`,
         `export function fromLibOne() { console.log('This is completely pointless'); }`
       );
 
-      updateFile(
-        `libs/${lib1}/src/index.ts`,
-        `export * from './lib/${lib1}.ts'`
-      );
+      updateFile(`${lib1}/src/index.ts`, `export * from './lib/${lib1}.ts'`);
 
       /**
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib2}/ui --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
 
       updateFile(
-        `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
+        `${lib2}/ui/src/lib/${lib2}-ui.ts`,
         `import { fromLibOne } from '@${proj}/${lib1}';
 
         export const fromLibTwo = () => fromLibOne();`
@@ -512,8 +529,10 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
-      updateProjectConfig(lib3, (config) => {
+      runCLI(
+        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
+      await updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [lib1];
         return config;
       });
@@ -523,13 +542,13 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1} ${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1} ${lib1}/data-access --newProjectName=${lib1}-data-access --project-name-and-root-format=as-provided`
       );
 
-      expect(moveOutput).toContain(`DELETE libs/${lib1}/project.json`);
-      expect(exists(`libs/${lib1}/project.json`)).toBeFalsy();
+      expect(moveOutput).toContain(`DELETE ${lib1}/project.json`);
+      expect(exists(`${lib1}/project.json`)).toBeFalsy();
 
-      const newPath = `libs/${lib1}/data-access`;
+      const newPath = `${lib1}/data-access`;
       const newName = `${lib1}-data-access`;
 
       const readmePath = `${newPath}/README.md`;
@@ -541,8 +560,8 @@ describe('Workspace Tests', () => {
       checkFilesExist(jestConfigPath);
       const jestConfig = readFile(jestConfigPath);
       expect(jestConfig).toContain(`displayName: '${lib1}-data-access'`);
-      expect(jestConfig).toContain(`preset: '../../../jest.preset.js'`);
-      expect(jestConfig).toContain(`'../../../coverage/${newPath}'`);
+      expect(jestConfig).toContain(`preset: '../../jest.preset.js'`);
+      expect(jestConfig).toContain(`'../../coverage/${newPath}'`);
 
       const tsConfigPath = `${newPath}/tsconfig.json`;
       expect(moveOutput).toContain(`CREATE ${tsConfigPath}`);
@@ -552,17 +571,13 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${tsConfigLibPath}`);
       checkFilesExist(tsConfigLibPath);
       const tsConfigLib = readJson(tsConfigLibPath);
-      expect(tsConfigLib.compilerOptions.outDir).toEqual(
-        '../../../dist/out-tsc'
-      );
+      expect(tsConfigLib.compilerOptions.outDir).toEqual('../../dist/out-tsc');
 
       const tsConfigSpecPath = `${newPath}/tsconfig.spec.json`;
       expect(moveOutput).toContain(`CREATE ${tsConfigSpecPath}`);
       checkFilesExist(tsConfigSpecPath);
       const tsConfigSpec = readJson(tsConfigSpecPath);
-      expect(tsConfigSpec.compilerOptions.outDir).toEqual(
-        '../../../dist/out-tsc'
-      );
+      expect(tsConfigSpec.compilerOptions.outDir).toEqual('../../dist/out-tsc');
 
       const indexPath = `${newPath}/src/index.ts`;
       expect(moveOutput).toContain(`CREATE ${indexPath}`);
@@ -572,13 +587,13 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
       checkFilesExist(rootClassPath);
 
-      let workspace = readResolvedConfiguration();
-      expect(workspace.projects[lib1]).toBeUndefined();
-      const newConfig = readProjectConfig(newName);
+      let projects = await readResolvedConfiguration();
+      expect(projects[lib1]).toBeUndefined();
+      const newConfig = await readProjectConfig(newName);
       expect(newConfig).toMatchObject({
         tags: [],
       });
-      const lib3Config = readProjectConfig(lib3);
+      const lib3Config = await readProjectConfig(lib3);
       expect(lib3Config.implicitDependencies).toEqual([`${lib1}-data-access`]);
 
       expect(moveOutput).toContain('UPDATE tsconfig.base.json');
@@ -587,26 +602,26 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}`]
       ).toBeUndefined();
       expect(
-        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
-      ).toEqual([`libs/${lib1}/data-access/src/index.ts`]);
+        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}-data-access`]
+      ).toEqual([`${lib1}/data-access/src/index.ts`]);
 
-      workspace = readResolvedConfiguration();
-      expect(workspace.projects[lib1]).toBeUndefined();
-      const project = readProjectConfig(newName);
+      projects = await readResolvedConfiguration();
+      expect(projects[lib1]).toBeUndefined();
+      const project = await readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `libs/${lib1}/data-access/**/*.ts`,
-        `libs/${lib1}/data-access/package.json`,
+        `${lib1}/data-access/**/*.ts`,
+        `${lib1}/data-access/package.json`,
       ]);
 
       /**
        * Check that the import in lib2 has been updated
        */
-      const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
+      const lib2FilePath = `${lib2}/ui/src/lib/${lib2}-ui.ts`;
       const lib2File = readFile(lib2FilePath);
       expect(lib2File).toContain(
-        `import { fromLibOne } from '@${proj}/${lib1}/data-access';`
+        `import { fromLibOne } from '@${proj}/${lib1}-data-access';`
       );
     });
 
@@ -618,22 +633,24 @@ describe('Workspace Tests', () => {
       const lib1 = uniq('mylib');
       const lib2 = uniq('mylib');
       const lib3 = uniq('mylib');
-      runCLI(`generate @nx/js:lib ${lib1}/data-access --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib1}-data-access --directory=${lib1}/data-access --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
       let rootTsConfig = readJson('tsconfig.base.json');
       expect(
-        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}/data-access`]
+        rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}-data-access`]
       ).toBeUndefined();
       expect(
-        rootTsConfig.compilerOptions.paths[`${lib1}/data-access`]
+        rootTsConfig.compilerOptions.paths[`${lib1}-data-access`]
       ).toBeDefined();
 
       updateFile(
-        `libs/${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
+        `${lib1}/data-access/src/lib/${lib1}-data-access.ts`,
         `export function fromLibOne() { console.log('This is completely pointless'); }`
       );
 
       updateFile(
-        `libs/${lib1}/data-access/src/index.ts`,
+        `${lib1}/data-access/src/index.ts`,
         `export * from './lib/${lib1}-data-access.ts'`
       );
 
@@ -641,11 +658,13 @@ describe('Workspace Tests', () => {
        * Create a library which imports a class from lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib2}/ui --unitTestRunner=jest`);
+      runCLI(
+        `generate @nx/js:lib ${lib2}-ui --directory=${lib2}/ui --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
 
       updateFile(
-        `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`,
-        `import { fromLibOne } from '${lib1}/data-access';
+        `${lib2}/ui/src/lib/${lib2}-ui.ts`,
+        `import { fromLibOne } from '${lib1}-data-access';
 
         export const fromLibTwo = () => fromLibOne();`
       );
@@ -654,8 +673,10 @@ describe('Workspace Tests', () => {
        * Create a library which has an implicit dependency on lib1
        */
 
-      runCLI(`generate @nx/js:lib ${lib3} --unitTestRunner=jest`);
-      updateProjectConfig(lib3, (config) => {
+      runCLI(
+        `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
+      );
+      await updateProjectConfig(lib3, (config) => {
         config.implicitDependencies = [`${lib1}-data-access`];
         return config;
       });
@@ -665,13 +686,13 @@ describe('Workspace Tests', () => {
        */
 
       const moveOutput = runCLI(
-        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access`
+        `generate @nx/workspace:move --project ${lib1}-data-access shared/${lib1}/data-access --newProjectName=shared-${lib1}-data-access --project-name-and-root-format=as-provided`
       );
 
-      expect(moveOutput).toContain(`DELETE libs/${lib1}/data-access`);
-      expect(exists(`libs/${lib1}/data-access`)).toBeFalsy();
+      expect(moveOutput).toContain(`DELETE ${lib1}/data-access`);
+      expect(exists(`${lib1}/data-access`)).toBeFalsy();
 
-      const newPath = `libs/shared/${lib1}/data-access`;
+      const newPath = `shared/${lib1}/data-access`;
       const newName = `shared-${lib1}-data-access`;
 
       const readmePath = `${newPath}/README.md`;
@@ -686,11 +707,11 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
       checkFilesExist(rootClassPath);
 
-      const newConfig = readProjectConfig(newName);
+      const newConfig = await readProjectConfig(newName);
       expect(newConfig).toMatchObject({
         tags: [],
       });
-      const lib3Config = readProjectConfig(lib3);
+      const lib3Config = await readProjectConfig(lib3);
       expect(lib3Config.implicitDependencies).toEqual([
         `shared-${lib1}-data-access`,
       ]);
@@ -698,29 +719,29 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain('UPDATE tsconfig.base.json');
       rootTsConfig = readJson('tsconfig.base.json');
       expect(
-        rootTsConfig.compilerOptions.paths[`${lib1}/data-access`]
+        rootTsConfig.compilerOptions.paths[`${lib1}-data-access`]
       ).toBeUndefined();
       expect(
-        rootTsConfig.compilerOptions.paths[`shared/${lib1}/data-access`]
-      ).toEqual([`libs/shared/${lib1}/data-access/src/index.ts`]);
+        rootTsConfig.compilerOptions.paths[`shared-${lib1}-data-access`]
+      ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
 
-      const projects = readResolvedConfiguration();
-      expect(projects.projects[`${lib1}-data-access`]).toBeUndefined();
-      const project = readProjectConfig(newName);
+      const projects = await readResolvedConfiguration();
+      expect(projects[`${lib1}-data-access`]).toBeUndefined();
+      const project = await readProjectConfig(newName);
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `libs/shared/${lib1}/data-access/**/*.ts`,
-        `libs/shared/${lib1}/data-access/package.json`,
+        `shared/${lib1}/data-access/**/*.ts`,
+        `shared/${lib1}/data-access/package.json`,
       ]);
 
       /**
        * Check that the import in lib2 has been updated
        */
-      const lib2FilePath = `libs/${lib2}/ui/src/lib/${lib2}-ui.ts`;
+      const lib2FilePath = `${lib2}/ui/src/lib/${lib2}-ui.ts`;
       const lib2File = readFile(lib2FilePath);
       expect(lib2File).toContain(
-        `import { fromLibOne } from 'shared/${lib1}/data-access';`
+        `import { fromLibOne } from 'shared-${lib1}-data-access';`
       );
     });
   });
@@ -741,7 +762,7 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(`generate @nx/js:lib ${lib2} --unitTestRunner=jest`);
-      updateProjectConfig(lib2, (config) => {
+      await updateProjectConfig(lib2, (config) => {
         config.implicitDependencies = [lib1];
         return config;
       });
@@ -759,7 +780,7 @@ describe('Workspace Tests', () => {
 
       expect(error).toBeDefined();
       expect(error.stdout.toString()).toContain(
-        `${lib1} is still depended on by the following projects`
+        `${lib1} is still a dependency of the following projects`
       );
       expect(error.stdout.toString()).toContain(lib2);
 
@@ -775,12 +796,12 @@ describe('Workspace Tests', () => {
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
       expect(removeOutputForced).not.toContain(`UPDATE nx.json`);
-      const projectsConfigurations = readResolvedConfiguration();
-      expect(projectsConfigurations.projects[`${lib1}`]).toBeUndefined();
-      const lib2Config = readProjectConfig(lib2);
+      const projects = await readResolvedConfiguration();
+      expect(projects[`${lib1}`]).toBeUndefined();
+      const lib2Config = await readProjectConfig(lib2);
       expect(lib2Config.implicitDependencies).toEqual([]);
 
-      expect(projectsConfigurations.projects[`${lib1}`]).toBeUndefined();
+      expect(projects[`${lib1}`]).toBeUndefined();
     });
   });
 });

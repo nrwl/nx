@@ -19,7 +19,9 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       ...options,
       linter: Linter.EsLint,
       name: options.e2eProjectName,
-      directory: options.directory,
+      directory: options.e2eProjectRoot,
+      // the name and root are already normalized, instruct the generator to use them as is
+      projectNameAndRootFormat: 'as-provided',
       project: options.projectName,
       skipFormat: true,
     });
@@ -29,7 +31,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
     >('@nx/playwright', nxVersion);
     addProjectConfiguration(host, options.e2eProjectName, {
       root: options.e2eProjectRoot,
-      sourceRoot: joinPathFragments(options.e2eProjectRoot, ''),
+      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
       targets: {},
       implicitDependencies: [options.projectName],
     });
@@ -43,7 +45,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       setParserOptionsProject: options.setParserOptionsProject,
       webServerAddress: 'http://127.0.0.1:4200',
       webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
-        options.name
+        options.projectName
       }`,
     });
   }

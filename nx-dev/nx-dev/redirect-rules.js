@@ -272,8 +272,7 @@ const diataxis = {
     '/concepts/more-concepts/monorepo-nx-enterprise',
   '/guides/performance-profiling': '/recipes/other/performance-profiling',
   '/guides/eslint': '/recipes/other/eslint',
-  '/guides/customize-webpack':
-    '/packages/webpack/documents/webpack-config-setup',
+  '/guides/customize-webpack': '/recipes/webpack/webpack-config-setup',
   '/guides/nx-daemon': '/concepts/more-concepts/nx-daemon',
   '/guides/js-and-ts': '/recipes/other/js-and-ts',
   '/guides/browser-support': '/recipes/other/browser-support',
@@ -300,8 +299,7 @@ const diataxis = {
   '/examples/caching': '/recipes/other/caching',
   '/examples/dte': '/recipes/other/dte',
   '/recipe/workspace-generators': '/recipes/generators/local-generators',
-  '/recipes/other/customize-webpack':
-    '/packages/webpack/documents/webpack-config-setup',
+  '/recipes/other/customize-webpack': '/recipes/webpack/webpack-config-setup',
 };
 
 /**
@@ -369,6 +367,9 @@ const recipesUrls = {
   '/recipes/other/dte': '/showcase/example-repos/dte',
   '/recipes/other/deploy-nextjs-to-vercel':
     '/recipes/deployment/deploy-nextjs-to-vercel',
+  '/recipes/other/deno-deploy': '/recipes/deno/deno-deploy',
+  '/recipes/other/deno-netlify-functions':
+    '/recipes/deno/deno-netlify-functions',
   '/recipes/other/root-level-scripts':
     '/recipes/managing-repository/root-level-scripts',
   '/recipes/other/analyze-source-files':
@@ -378,6 +379,18 @@ const recipesUrls = {
   '/recipes/other/advanced-update':
     '/recipes/managing-repository/advanced-update',
   '/recipes/other/js-and-ts': '/recipes/managing-repository/js-and-ts',
+  '/packages/cypress/documents/cypress-component-testing':
+    '/recipes/cypress/cypress-component-testing',
+  '/packages/cypress/documents/cypress-v11-migration':
+    '/recipes/cypress/cypress-v11-migration',
+  '/packages/next/documents/next-config-setup':
+    '/recipes/next/next-config-setup',
+  '/packages/vite/documents/set-up-vite-manually':
+    '/recipes/vite/set-up-vite-manually',
+  '/packages/webpack/documents/webpack-plugins':
+    '/recipes/webpack/webpack-plugins',
+  '/packages/webpack/documents/webpack-config-setup':
+    '/recipes/webpack/webpack-config-setup',
 };
 
 /**
@@ -573,19 +586,35 @@ const packagesDocuments = {
   '/cypress/v11-migration-guide':
     '/packages/cypress/documents/v11-migration-guide',
   '/storybook/overview-react': '/packages/storybook/documents/overview-react',
+  '/packages/storybook/documents/overview-react':
+    '/recipes/storybook/overview-react',
   '/storybook/overview-angular':
     '/packages/storybook/documents/overview-angular',
+  '/packages/storybook/documents/overview-angular':
+    '/recipes/storybook/overview-angular',
+  '/packages/storybook/documents/configuring-storybook':
+    '/recipes/storybook/configuring-storybook',
+  '/packages/storybook/documents/custom-builder-configs':
+    '/recipes/storybook/custom-builder-configs',
+  '/packages/storybook/documents/storybook-interaction-tests':
+    '/recipes/storybook/storybook-interaction-tests',
   '/storybook/best-practices': '/packages/storybook/documents/best-practices',
   '/storybook/storybook-composition-setup':
     '/packages/storybook/documents/storybook-composition-setup',
+  '/packages/storybook/documents/storybook-composition-setup':
+    '/recipes/storybook/storybook-composition-setup',
   '/storybook/angular-storybook-compodoc':
     '/packages/storybook/documents/angular-storybook-compodoc',
+  '/packages/storybook/documents/angular-storybook-compodoc':
+    '/recipes/storybook/angular-storybook-compodoc',
   '/storybook/angular-storybook-targets':
     '/deprecated/storybook/angular-storybook-targets',
   '/packages/storybook/documents/angular-storybook-targets':
     '/deprecated/storybook/angular-storybook-targets',
   '/storybook/angular-configuring-styles':
     '/packages/storybook/documents/angular-configuring-styles',
+  '/packages/storybook/documents/angular-configuring-styles':
+    '/recipes/storybook/angular-configuring-styles',
   '/storybook/angular-browser-target':
     '/deprecated/storybook/angular-browser-target',
   '/storybook/migrate-webpack-final-angular':
@@ -663,8 +692,11 @@ const pluginUrls = {
     '/extending-nx/recipes/migration-generators',
   '/recipes/advanced-plugins/project-graph-plugins':
     '/extending-nx/recipes/project-graph-plugins',
+  // Removed inference doc when updating for v2 API
+  '/extending-nx/recipes/project-inference-plugins':
+    '/extending-nx/recipes/project-graph-plugins',
   '/recipes/advanced-plugins/project-inference-plugins':
-    '/extending-nx/recipes/project-inference-plugins',
+    '/extending-nx/recipes/project-graph-plugins',
   '/recipes/advanced-plugins/share-your-plugin':
     '/extending-nx/tutorials/maintain-published-plugin',
   '/recipes/executors/compose-executors':

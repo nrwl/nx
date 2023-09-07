@@ -1,4 +1,4 @@
-import { ExecutorContext, joinPathFragments } from '@nx/devkit';
+import { ExecutorContext, joinPathFragments, workspaceRoot } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
@@ -46,11 +46,11 @@ export default async function run(
    * we only want to support it if the user has explicitly opted into it by converting
    * their root ESLint config to use eslint.config.js
    */
-  const useFlatConfig = existsSync(
-    joinPathFragments(systemRoot, 'eslint.config.js')
+  const hasFlatConfig = existsSync(
+    joinPathFragments(workspaceRoot, 'eslint.config.js')
   );
 
-  if (!eslintConfigPath && useFlatConfig) {
+  if (!eslintConfigPath && hasFlatConfig) {
     const projectRoot =
       context.projectsConfigurations.projects[context.projectName].root;
     eslintConfigPath = joinPathFragments(projectRoot, 'eslint.config.js');
@@ -59,7 +59,7 @@ export default async function run(
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
     eslintConfigPath,
     normalizedOptions,
-    useFlatConfig
+    hasFlatConfig
   );
 
   const version = ESLint.version?.split('.');
@@ -130,7 +130,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
       .filter((pattern) => !!pattern)
       .map((pattern) => `- '${pattern}'`);
     if (ignoredPatterns.length) {
-      const ignoreSection = useFlatConfig
+      const ignoreSection = hasFlatConfig
         ? `'ignores' configuration`
         : `'.eslintignore' file`;
       throw new Error(

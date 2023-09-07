@@ -1,12 +1,19 @@
 import type { Target } from 'nx/src/command-line/run/run';
 import type { ExecutorContext } from 'nx/src/config/misc-interfaces';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { combineOptionsForExecutor } from 'nx/src/utils/params';
 import { requireNx } from '../../nx';
 import { relative } from 'path';
 
-const { Workspaces, getExecutorInformation, calculateDefaultProjectName } =
-  requireNx();
+let {
+  Workspaces,
+  getExecutorInformation,
+  calculateDefaultProjectName,
+  combineOptionsForExecutor,
+} = requireNx();
+
+// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+combineOptionsForExecutor =
+  combineOptionsForExecutor ??
+  require('nx/src/utils/params').combineOptionsForExecutor;
 
 /**
  * Reads and combines options for a given target.
@@ -50,6 +57,6 @@ export function readTargetOptions<T = any>(
     targetConfiguration,
     schema,
     defaultProject,
-    relative(context.cwd, context.root)
+    relative(context.root, context.cwd)
   ) as T;
 }

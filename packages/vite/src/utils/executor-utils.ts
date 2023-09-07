@@ -40,7 +40,9 @@ export function createBuildableTsConfig(
       context.projectGraph,
       context.root,
       context.projectName,
-      context.targetName,
+      // When using incremental building and the serve target is called
+      // we need to get the deps for the 'build' target instead.
+      context.targetName === 'serve' ? 'build' : context.targetName,
       context.configurationName
     );
     // this tsconfig is used via the vite ts paths plugin

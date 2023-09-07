@@ -23,6 +23,29 @@ export const youtube: Schema = {
   },
 };
 
+function computeEmbedURL(youtubeURL: string) {
+  let match;
+
+  if (youtubeURL.indexOf('embed') > -1) {
+    // we already have the embed URL, so just ignore
+    return youtubeURL;
+  }
+
+  // Check for 'https://www.youtube.com/watch?v=' format
+  match = youtubeURL.match(/youtube\.com\/watch\?v=([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return 'https://www.youtube.com/embed/' + match[1];
+  }
+
+  // Check for 'https://youtu.be/' format
+  match = youtubeURL.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return 'https://www.youtube.com/embed/' + match[1];
+  }
+
+  throw new Error(`Could not properly compute the embed URL for ${youtubeURL}`);
+}
+
 export function YouTube(props: {
   title: string;
   caption: string;
@@ -34,7 +57,7 @@ export function YouTube(props: {
       {' '}
       {/* Center alignment applied to the container */}
       <iframe
-        src={props.src}
+        src={computeEmbedURL(props.src)}
         title={props.title}
         width={props.width || '100%'}
         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"

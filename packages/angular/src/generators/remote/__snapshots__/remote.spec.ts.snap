@@ -60,8 +60,8 @@ import { AppServerModule } from './bootstrap.server';
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const browserBundles = join(process.cwd(), 'dist/apps/test/browser');
-  const serverBundles = join(process.cwd(), 'dist/apps/test/server');
+  const browserBundles = join(process.cwd(), 'dist/test/browser');
+  const serverBundles = join(process.cwd(), 'dist/test/server');
 
   server.use(cors());
   const indexHtml = existsSync(join(browserBundles, 'index.original.html'))
@@ -130,7 +130,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 6`] = `
 "module.exports = {
   name: 'test',
   exposes: {
-    './Module': 'apps/test/src/app/remote-entry/entry.module.ts',
+    './Module': 'test/src/app/remote-entry/entry.module.ts',
   },
 };
 "
@@ -198,11 +198,11 @@ exports[`MF Remote App Generator --ssr should generate the correct files 11`] = 
   "executor": "@nx/angular:webpack-server",
   "options": {
     "customWebpackConfig": {
-      "path": "apps/test/webpack.server.config.js",
+      "path": "test/webpack.server.config.js",
     },
-    "main": "apps/test/server.ts",
-    "outputPath": "dist/apps/test/server",
-    "tsConfig": "apps/test/tsconfig.server.json",
+    "main": "test/server.ts",
+    "outputPath": "dist/test/server",
+    "tsConfig": "test/tsconfig.server.json",
   },
 }
 `;
@@ -225,7 +225,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files 13`] = 
   ],
   "executor": "nx:run-commands",
   "options": {
-    "command": "PORT=4201 node dist/apps/test/server/main.js",
+    "command": "PORT=4201 node dist/test/server/main.js",
   },
 }
 `;
@@ -266,7 +266,7 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
 "module.exports = {
   name: 'test',
   exposes: {
-    './Routes': 'apps/test/src/app/remote-entry/entry.routes.ts',
+    './Routes': 'test/src/app/remote-entry/entry.routes.ts',
   },
 };
 "

@@ -15,7 +15,14 @@ import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
-  const options = normalizeOptions(host, rawOptions);
+  return await libraryGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
+  const options = await normalizeOptions(host, rawOptions);
   const tasks: GeneratorCallback[] = [];
   const initTask = await nextInitGenerator(host, {
     ...options,

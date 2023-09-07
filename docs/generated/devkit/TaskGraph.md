@@ -6,9 +6,9 @@ Graph of Tasks to be executed
 
 ### Properties
 
-- [dependencies](../../devkit/documents/TaskGraph#dependencies)
-- [roots](../../devkit/documents/TaskGraph#roots)
-- [tasks](../../devkit/documents/TaskGraph#tasks)
+- [dependencies](../../devkit/documents/TaskGraph#dependencies): Record&lt;string, string[]&gt;
+- [roots](../../devkit/documents/TaskGraph#roots): string[]
+- [tasks](../../devkit/documents/TaskGraph#tasks): Record&lt;string, Task&gt;
 
 ## Properties
 

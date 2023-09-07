@@ -9,7 +9,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
     joinPathFragments(options.appProjectRoot, 'src'),
     {
       tmpl: '',
-      name: options.name,
+      name: options.appProjectName,
       root: options.appProjectRoot,
     }
   );

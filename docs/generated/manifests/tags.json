@@ -667,13 +667,6 @@
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
       "path": "/extending-nx/recipes/project-graph-plugins"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/project-inference-plugins",
-      "id": "project-inference-plugins",
-      "name": "Identify Custom Projects",
-      "path": "/extending-nx/recipes/project-inference-plugins"
     }
   ],
   "module-federation": [
@@ -809,14 +802,14 @@
       "file": "shared/recipes/deployment/deno-deploy",
       "id": "deno-deploy",
       "name": "Serverless deployment with Deno Deploy",
-      "path": "/recipes/other/deno-deploy"
+      "path": "/recipes/deno/deno-deploy"
     },
     {
       "description": "",
       "file": "shared/recipes/deployment/deno-netlify-edge-functions",
       "id": "deno-netlify-functions",
       "name": "Add and Deploy Netlify Edge Functions with Deno",
-      "path": "/recipes/other/deno-netlify-functions"
+      "path": "/recipes/deno/deno-netlify-functions"
     }
   ],
   "node": [
@@ -840,6 +833,13 @@
       "id": "node-aws-lambda",
       "name": "Deploying AWS lambda in Node.js",
       "path": "/recipes/node/node-aws-lambda"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/node/application-proxies",
+      "id": "application-proxies",
+      "name": "Set Up Application Proxies",
+      "path": "/recipes/node/application-proxies"
     },
     {
       "description": "",
@@ -879,25 +879,104 @@
   ],
   "storybook": [
     {
-      "description": "",
-      "file": "shared/recipes/one-storybook-for-all",
+      "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
+      "file": "shared/recipes/storybook/plugin-react",
+      "id": "overview-react",
+      "name": "Set up Storybook for React Projects",
+      "path": "/recipes/storybook/overview-react"
+    },
+    {
+      "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
+      "file": "shared/recipes/storybook/plugin-angular",
+      "id": "overview-angular",
+      "name": "Set up Storybook for Angular Projects",
+      "path": "/recipes/storybook/overview-angular"
+    },
+    {
+      "description": "This guide explains how Storybook is configured on your Nx workspace.",
+      "file": "shared/recipes/storybook/configuring-storybook",
+      "id": "configuring-storybook",
+      "name": "Configuring Storybook on Nx",
+      "path": "/recipes/storybook/configuring-storybook"
+    },
+    {
+      "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
+      "file": "shared/recipes/storybook/one-storybook-for-all",
       "id": "one-storybook-for-all",
       "name": "One main Storybook instance for all projects",
       "path": "/recipes/storybook/one-storybook-for-all"
     },
     {
-      "description": "",
-      "file": "shared/recipes/one-storybook-per-scope",
+      "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
+      "file": "shared/recipes/storybook/one-storybook-per-scope",
       "id": "one-storybook-per-scope",
       "name": "One Storybook instance per scope",
       "path": "/recipes/storybook/one-storybook-per-scope"
     },
     {
-      "description": "",
-      "file": "shared/recipes/one-storybook-with-composition",
+      "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
+      "file": "shared/recipes/storybook/one-storybook-with-composition",
       "id": "one-storybook-with-composition",
       "name": "One main Storybook instance using Storybook Composition",
       "path": "/recipes/storybook/one-storybook-with-composition"
+    },
+    {
+      "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+      "file": "shared/recipes/storybook/custom-builder-configs",
+      "id": "custom-builder-configs",
+      "name": "How to configure Webpack and Vite for Storybook",
+      "path": "/recipes/storybook/custom-builder-configs"
+    },
+    {
+      "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+      "file": "shared/recipes/storybook/interaction-tests",
+      "id": "storybook-interaction-tests",
+      "name": "Setting up Storybook Interaction Tests with Nx",
+      "path": "/recipes/storybook/storybook-interaction-tests"
+    },
+    {
+      "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
+      "file": "shared/recipes/storybook/storybook-composition-setup",
+      "id": "storybook-composition-setup",
+      "name": "Setting up Storybook Composition with Nx",
+      "path": "/recipes/storybook/storybook-composition-setup"
+    },
+    {
+      "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
+      "file": "shared/recipes/storybook/angular-storybook-compodoc",
+      "id": "angular-storybook-compodoc",
+      "name": "Angular: Set up Compodoc for Storybook on Nx",
+      "path": "/recipes/storybook/angular-storybook-compodoc"
+    },
+    {
+      "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
+      "file": "shared/recipes/storybook/angular-configuring-styles",
+      "id": "angular-configuring-styles",
+      "name": "Angular: Configuring styles and preprocessor options",
+      "path": "/recipes/storybook/angular-configuring-styles"
+    }
+  ],
+  "deno": [
+    {
+      "description": "",
+      "file": "shared/recipes/add-stack/add-deno",
+      "id": "add-deno",
+      "name": "Add a Deno Project",
+      "path": "/recipes/deno/add-deno"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-deploy",
+      "id": "deno-deploy",
+      "name": "Serverless deployment with Deno Deploy",
+      "path": "/recipes/deno/deno-deploy"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+      "id": "deno-netlify-functions",
+      "name": "Add and Deploy Netlify Edge Functions with Deno",
+      "path": "/recipes/deno/deno-netlify-functions"
     }
   ],
   "docker": [
@@ -952,20 +1031,22 @@
       "path": "/recipes/tips-n-tricks/yarn-pnp"
     }
   ],
-  "deno": [
+  "eslint": [
     {
       "description": "",
-      "file": "shared/recipes/deployment/deno-deploy",
-      "id": "deno-deploy",
-      "name": "Serverless deployment with Deno Deploy",
-      "path": "/recipes/other/deno-deploy"
-    },
+      "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+      "id": "flat-config",
+      "name": "Switching to ESLint's flat config format",
+      "path": "/recipes/tips-n-tricks/flat-config"
+    }
+  ],
+  "flat config": [
     {
       "description": "",
-      "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-      "id": "deno-netlify-functions",
-      "name": "Add and Deploy Netlify Edge Functions with Deno",
-      "path": "/recipes/other/deno-netlify-functions"
+      "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+      "id": "flat-config",
+      "name": "Switching to ESLint's flat config format",
+      "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
   "database": [

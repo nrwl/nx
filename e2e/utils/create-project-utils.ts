@@ -28,7 +28,7 @@ import {
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { output } from '@nx/devkit';
+import { NxJsonConfiguration, output } from '@nx/devkit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -41,15 +41,28 @@ let projName: string;
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
+  unsetProjectNameAndRootFormat = true,
 } = {}): string {
   try {
     const projScope = 'proj';
 
     if (!directoryExists(tmpBackupProjPath())) {
       runCreateWorkspace(projScope, {
-        preset: 'empty',
+        preset: 'apps',
         packageManager,
       });
+
+      if (unsetProjectNameAndRootFormat) {
+        console.warn(
+          'ATTENTION: The workspace generated for this e2e test does not use the new as-provided project name/root format. Please update this test'
+        );
+        updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+          delete nxJson.workspaceLayout;
+          return nxJson;
+        });
+        createFile('apps/.gitkeep');
+        createFile('libs/.gitkeep');
+      }
 
       // Temporary hack to prevent installing with `--frozen-lockfile`
       if (isCI && packageManager === 'pnpm') {

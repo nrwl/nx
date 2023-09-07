@@ -11,6 +11,7 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
+  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -28,9 +29,9 @@ describe('Nx Running Tests', () => {
   describe('running targets', () => {
     describe('(forwarding params)', () => {
       let proj = uniq('proj');
-      beforeAll(() => {
+      beforeAll(async () => {
         runCLI(`generate @nx/js:lib ${proj}`);
-        updateProjectConfig(proj, (c) => {
+        await updateProjectConfig(proj, (c) => {
           c.targets['echo'] = {
             command: 'echo ECHO:',
           };
@@ -57,7 +58,7 @@ describe('Nx Running Tests', () => {
     it('should execute long running tasks', async () => {
       const myapp = uniq('myapp');
       runCLI(`generate @nx/web:app ${myapp}`);
-      updateProjectConfig(myapp, (c) => {
+      await updateProjectConfig(myapp, (c) => {
         c.targets['counter'] = {
           executor: '@nx/workspace:counter',
           options: {
@@ -79,8 +80,8 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nx/node:lib ${mylib}`);
 
       // Used to restore targets to lib after test
-      const original = readProjectConfig(mylib);
-      updateProjectConfig(mylib, (j) => {
+      const original = await readProjectConfig(mylib);
+      await updateProjectConfig(mylib, (j) => {
         delete j.targets;
         return j;
       });
@@ -113,19 +114,20 @@ describe('Nx Running Tests', () => {
         `Cannot find configuration for task ${mylib}:echo:fail`
       );
 
-      updateProjectConfig(mylib, (c) => original);
+      await updateProjectConfig(mylib, (c) => original);
     }, 1000000);
 
     describe('tokens support', () => {
       let app: string;
 
-      beforeAll(() => {
+      beforeAll(async () => {
         app = uniq('myapp');
         runCLI(`generate @nx/web:app ${app}`);
+        await setMaxWorkers();
       });
 
       it('should support using {projectRoot} in options blocks in project.json', async () => {
-        updateProjectConfig(app, (c) => {
+        await updateProjectConfig(app, (c) => {
           c.targets['echo'] = {
             command: `node -e 'console.log("{projectRoot}")'`,
           };
@@ -137,7 +139,7 @@ describe('Nx Running Tests', () => {
       });
 
       it('should support using {projectName} in options blocks in project.json', async () => {
-        updateProjectConfig(app, (c) => {
+        await updateProjectConfig(app, (c) => {
           c.targets['echo'] = {
             command: `node -e 'console.log("{projectName}")'`,
           };
@@ -157,7 +159,7 @@ describe('Nx Running Tests', () => {
           };
           return json;
         });
-        updateProjectConfig(app, (c) => {
+        await updateProjectConfig(app, (c) => {
           c.targets['echo'] = {};
           return c;
         });
@@ -174,7 +176,7 @@ describe('Nx Running Tests', () => {
           };
           return json;
         });
-        updateProjectConfig(app, (c) => {
+        await updateProjectConfig(app, (c) => {
           c.targets['echo'] = {};
           return c;
         });
@@ -190,13 +192,13 @@ describe('Nx Running Tests', () => {
       const myapp2 = uniq('b');
       runCLI(`generate @nx/web:app ${myapp1}`);
       runCLI(`generate @nx/web:app ${myapp2}`);
-      updateProjectConfig(myapp1, (c) => {
+      await updateProjectConfig(myapp1, (c) => {
         c.targets['error'] = {
           command: 'echo boom1 && exit 1',
         };
         return c;
       });
-      updateProjectConfig(myapp2, (c) => {
+      await updateProjectConfig(myapp2, (c) => {
         c.targets['error'] = {
           executor: 'nx:run-commands',
           options: {
@@ -206,7 +208,7 @@ describe('Nx Running Tests', () => {
         return c;
       });
 
-      let withoutBail = runCLI(`run-many --target=error --all --parallel=1`, {
+      let withoutBail = runCLI(`run-many --target=error --parallel=1`, {
         silenceError: true,
       })
         .split('\n')
@@ -217,12 +219,9 @@ describe('Nx Running Tests', () => {
       expect(withoutBail).toContain(`- ${myapp1}:error`);
       expect(withoutBail).toContain(`- ${myapp2}:error`);
 
-      let withBail = runCLI(
-        `run-many --target=error --all --parallel=1 --nx-bail`,
-        {
-          silenceError: true,
-        }
-      )
+      let withBail = runCLI(`run-many --target=error --parallel=1 --nx-bail`, {
+        silenceError: true,
+      })
         .split('\n')
         .map((r) => r.trim())
         .filter((r) => r);
@@ -431,9 +430,9 @@ describe('Nx Running Tests', () => {
         );
       });
 
-      it('should be able to include deps using dependsOn', () => {
-        const originalWorkspace = readProjectConfig(myapp);
-        updateProjectConfig(myapp, (config) => {
+      it('should be able to include deps using dependsOn', async () => {
+        const originalWorkspace = await readProjectConfig(myapp);
+        await updateProjectConfig(myapp, (config) => {
           config.targets.prep = {
             executor: 'nx:run-commands',
             options: {
@@ -453,12 +452,12 @@ describe('Nx Running Tests', () => {
         expect(output).toContain(mylib2);
         expect(output).toContain('PREP');
 
-        updateProjectConfig(myapp, () => originalWorkspace);
+        await updateProjectConfig(myapp, () => originalWorkspace);
       }, 10000);
 
-      it('should be able to include deps using target defaults defined at the root', () => {
+      it('should be able to include deps using target defaults defined at the root', async () => {
         const nxJson = readJson('nx.json');
-        updateProjectConfig(myapp, (config) => {
+        await updateProjectConfig(myapp, (config) => {
           config.targets.prep = {
             command: 'echo PREP > one.txt',
           };

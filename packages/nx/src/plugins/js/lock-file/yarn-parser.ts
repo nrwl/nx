@@ -1,8 +1,14 @@
-import { getHoistedPackageVersion } from './utils/package-json';
-import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
-import { satisfies, Range, gt } from 'semver';
-import { NormalizedPackageJson } from './utils/package-json';
 import {
+  getHoistedPackageVersion,
+  NormalizedPackageJson,
+} from './utils/package-json';
+import {
+  ProjectGraphDependencyWithFile,
+  validateDependency,
+} from '../../../project-graph/project-graph-builder';
+import { gt, Range, satisfies } from 'semver';
+import {
+  DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
@@ -31,38 +37,79 @@ type YarnDependency = {
   linkType?: 'soft' | 'hard';
 };
 
-export function parseYarnLockfile(
-  lockFileContent: string,
-  packageJson: NormalizedPackageJson,
-  builder: ProjectGraphBuilder
-) {
-  const { parseSyml } = require('@yarnpkg/parsers');
-  const { __metadata, ...dependencies } = parseSyml(lockFileContent);
-  const isBerry = !!__metadata;
+let currentLockFileHash: string;
+let cachedParsedLockFile;
 
-  // we use key => node map to avoid duplicate work when parsing keys
-  const keyMap = new Map<string, ProjectGraphExternalNode>();
+// we use key => node map to avoid duplicate work when parsing keys
+let keyMap = new Map<string, ProjectGraphExternalNode>();
+
+function parseLockFile(lockFileContent: string, lockFileHash: string) {
+  if (currentLockFileHash === lockFileHash) {
+    return cachedParsedLockFile;
+  }
+
+  const { parseSyml } =
+    require('@yarnpkg/parsers') as typeof import('@yarnpkg/parsers');
+
+  keyMap.clear();
+  const result = parseSyml(lockFileContent);
+  cachedParsedLockFile = result;
+  currentLockFileHash = lockFileHash;
+  return result;
+}
+
+export function getYarnLockfileNodes(
+  lockFileContent: string,
+  lockFileHash: string,
+  packageJson: NormalizedPackageJson
+) {
+  const { __metadata, ...dependencies } = parseLockFile(
+    lockFileContent,
+    lockFileHash
+  );
+
+  const isBerry = !!__metadata;
 
   // yarn classic splits keys when parsing so we need to stich them back together
   const groupedDependencies = groupDependencies(dependencies, isBerry);
 
-  addNodes(groupedDependencies, packageJson, builder, keyMap, isBerry);
-  addDependencies(groupedDependencies, builder, keyMap);
+  return getNodes(groupedDependencies, packageJson, keyMap, isBerry);
 }
 
-function getPackageNames(keys: string): string[] {
-  const packageNames = new Set<string>();
+export function getYarnLockfileDependencies(
+  lockFileContent: string,
+  lockFileHash: string,
+  projectGraph: ProjectGraph
+) {
+  const { __metadata, ...dependencies } = parseLockFile(
+    lockFileContent,
+    lockFileHash
+  );
+
+  const isBerry = !!__metadata;
+
+  // yarn classic splits keys when parsing so we need to stich them back together
+  const groupedDependencies = groupDependencies(dependencies, isBerry);
+
+  return getDependencies(groupedDependencies, keyMap, projectGraph);
+}
+
+function getPackageNameKeyPairs(keys: string): Map<string, Set<string>> {
+  const result = new Map<string, Set<string>>();
   keys.split(', ').forEach((key) => {
     const packageName = key.slice(0, key.indexOf('@', 1));
-    packageNames.add(packageName);
+    if (result.has(packageName)) {
+      result.get(packageName).add(key);
+    } else {
+      result.set(packageName, new Set([key]));
+    }
   });
-  return Array.from(packageNames);
+  return result;
 }
 
-function addNodes(
+function getNodes(
   dependencies: Record<string, YarnDependency>,
   packageJson: NormalizedPackageJson,
-  builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>,
   isBerry: boolean
 ) {
@@ -79,16 +126,14 @@ function addNodes(
     if (snapshot.linkType === 'soft' || keys.includes('@patch:')) {
       return;
     }
-    const packageNames = getPackageNames(keys);
-    packageNames.forEach((packageName) => {
-      const version = findVersion(
-        packageName,
-        keys.split(', ')[0],
-        snapshot,
-        isBerry
-      );
+    const nameKeyPairs = getPackageNameKeyPairs(keys);
+    nameKeyPairs.forEach((keySet, packageName) => {
+      const keysArray = Array.from(keySet);
+      // use key relevant to the package name
+      const version = findVersion(packageName, keysArray[0], snapshot, isBerry);
 
-      keys.split(', ').forEach((key) => {
+      // use keys linked to the extracted package name
+      keysArray.forEach((key) => {
         // we don't need to keep duplicates, we can just track the keys
         const existingNode = nodes.get(packageName)?.get(version);
         if (existingNode) {
@@ -126,6 +171,7 @@ function addNodes(
     });
   });
 
+  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
   for (const [packageName, versionMap] of nodes.entries()) {
     const hoistedNode = findHoistedNode(packageName, versionMap, combinedDeps);
     if (hoistedNode) {
@@ -133,9 +179,10 @@ function addNodes(
     }
 
     versionMap.forEach((node) => {
-      builder.addExternalNode(node);
+      externalNodes[node.name] = node;
     });
   }
+  return externalNodes;
 }
 
 function findHoistedNode(
@@ -182,11 +229,12 @@ function findVersion(
   snapshot: YarnDependency,
   isBerry: boolean
 ): string {
-  const versionRange = key.slice(packageName.length + 1);
+  const versionRange = key.slice(key.indexOf('@', 1) + 1);
   // check for alias packages
   const isAlias = isBerry
     ? snapshot.resolution && !snapshot.resolution.startsWith(`${packageName}@`)
     : versionRange.startsWith('npm:');
+
   if (isAlias) {
     return versionRange;
   }
@@ -238,11 +286,12 @@ function getHoistedVersion(packageName: string): string {
   }
 }
 
-function addDependencies(
+function getDependencies(
   dependencies: Record<string, YarnDependency>,
-  builder: ProjectGraphBuilder,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  projectGraph: ProjectGraph
 ) {
+  const projectGraphDependencies: ProjectGraphDependencyWithFile[] = [];
   Object.keys(dependencies).forEach((keys) => {
     const snapshot = dependencies[keys];
     keys.split(', ').forEach((key) => {
@@ -256,7 +305,13 @@ function addDependencies(
                   keyMap.get(`${name}@npm:${versionRange}`) ||
                   keyMap.get(`${name}@${versionRange}`);
                 if (target) {
-                  builder.addStaticDependency(node.name, target.name);
+                  const dep = {
+                    source: node.name,
+                    target: target.name,
+                    dependencyType: DependencyType.static,
+                  };
+                  validateDependency(projectGraph, dep);
+                  projectGraphDependencies.push(dep);
                 }
               });
             }
@@ -265,6 +320,8 @@ function addDependencies(
       }
     });
   });
+
+  return projectGraphDependencies;
 }
 
 export function stringifyYarnLockfile(
@@ -411,8 +468,8 @@ function mapSnapshots(
   });
 
   // remove keys that match version ranges that have been pruned away
-  snapshotMap.forEach((keysSet) => {
-    for (const key of keysSet.values()) {
+  snapshotMap.forEach((snapshotValue, snapshotKey) => {
+    for (const key of snapshotValue.values()) {
       const packageName = key.slice(0, key.indexOf('@', 1));
       let normalizedKey = key;
       if (isBerry && key.includes('@patch:') && key.includes('#')) {
@@ -424,7 +481,7 @@ function mapSnapshots(
         !existingKeys.get(packageName) ||
         !existingKeys.get(packageName).has(normalizedKey)
       ) {
-        keysSet.delete(key);
+        snapshotValue.delete(key);
       }
     }
   });
@@ -526,6 +583,10 @@ function findPatchedKeys(
     const snapshot = dependencies[keyExpr];
     const keys = keyExpr.split(', ');
     if (!keys[0].startsWith(`${node.data.packageName}@patch:`)) {
+      continue;
+    }
+    // local patches are currently not supported
+    if (keys[0].includes('.yarn/patches')) {
       continue;
     }
     if (snapshot.version === node.data.version) {

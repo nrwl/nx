@@ -35,6 +35,7 @@ export type TargetDependencies = Record<
 export interface NrwlJsPluginConfig {
   analyzeSourceFiles?: boolean;
   analyzePackageJson?: boolean;
+  analyzeLockfile?: boolean;
 }
 
 interface NxInstallationConfiguration {
@@ -85,8 +86,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Where new apps + libs should be placed
    */
   workspaceLayout?: {
-    libsDir: string;
-    appsDir: string;
+    libsDir?: string;
+    appsDir?: string;
+    projectNameAndRootFormat?: 'as-provided' | 'derived';
   };
   /**
    * Available Task Runners

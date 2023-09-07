@@ -6,10 +6,10 @@ description: This document explains the role of the storybook and build-storyboo
 # Information about `storybook` and `build-storybook` targets for Angular projects with a Storybook configuration
 
 {% callout type="note" title="Note" %}
-This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/packages/storybook/documents/overview-angular).
+This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/recipes/storybook/overview-angular).
 {% /callout %}
 
-If you are on Nx version `>=14.1.8`, the [Nx Storybook plugin for _Angular_ projects](/packages/storybook/documents/overview-angular) uses the original Storybook executors for Angular (`"@storybook/angular:start-storybook"` and `"@storybook/angular:build-storybook"`) to serve and build Storybook.
+If you are on Nx version `>=14.1.8`, the [Nx Storybook plugin for _Angular_ projects](/recipes/storybook/overview-angular) uses the original Storybook executors for Angular (`"@storybook/angular:start-storybook"` and `"@storybook/angular:build-storybook"`) to serve and build Storybook.
 
 That means that you can use the official [Storybook for Angular documentation (expand the "Troubleshooting" section)](https://storybook.js.org/docs/angular/get-started/install#troubleshooting) to configure the options for serving and building Storybook.
 

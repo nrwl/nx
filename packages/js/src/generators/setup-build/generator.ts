@@ -21,11 +21,14 @@ export async function setupBuildGenerator(
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, options.project);
   const buildTarget = options.buildTarget ?? 'build';
+  const prevBuildOptions = project.targets?.[buildTarget]?.options;
 
   project.targets ??= {};
 
   let mainFile: string;
-  if (options.main) {
+  if (prevBuildOptions?.main) {
+    mainFile = prevBuildOptions.main;
+  } else if (options.main) {
     mainFile = options.main;
   } else {
     const root = project.sourceRoot ?? project.root;
@@ -48,7 +51,9 @@ export async function setupBuildGenerator(
   }
 
   let tsConfigFile: string;
-  if (options.tsConfig) {
+  if (prevBuildOptions?.tsConfig) {
+    tsConfigFile = prevBuildOptions.tsConfig;
+  } else if (options.tsConfig) {
     tsConfigFile = options.tsConfig;
   } else {
     for (const f of [
@@ -97,6 +102,7 @@ export async function setupBuildGenerator(
         buildTarget: options.buildTarget,
         project: options.project,
         skipFormat: true,
+        skipValidation: true,
       });
       tasks.push(task);
       break;
@@ -106,9 +112,12 @@ export async function setupBuildGenerator(
       const task = await configurationGenerator(tree, {
         buildTarget: options.buildTarget,
         main: mainFile,
+        tsConfig: tsConfigFile,
         project: options.project,
-        skipFormat: true,
         compiler: 'tsc',
+        format: ['cjs', 'esm'],
+        skipFormat: true,
+        skipValidation: true,
       });
       tasks.push(task);
       break;

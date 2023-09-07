@@ -47,7 +47,7 @@
       "hidden": true
     },
     "move": {
-      "factory": "./src/generators/move/move#moveGenerator",
+      "factory": "./src/generators/move/move#moveGeneratorInternal",
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Move an application or library to another folder."
@@ -88,7 +88,7 @@
       "description": "Fixes projects configuration"
     },
     "npm-package": {
-      "factory": "./src/generators/npm-package/npm-package#npmPackageGenerator",
+      "factory": "./src/generators/npm-package/npm-package#npmPackageGeneratorInternal",
       "schema": "./src/generators/npm-package/schema.json",
       "description": "Create a minimal NPM package.",
       "x-type": "library"

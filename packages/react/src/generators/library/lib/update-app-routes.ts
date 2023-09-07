@@ -17,7 +17,6 @@ import { addInitialRoutes } from '../../../utils/ast-utils';
 import { maybeJs } from './maybe-js';
 import { reactRouterDomVersion } from '../../../utils/versions';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 
 let tsModule: typeof import('typescript');
 
@@ -82,7 +81,7 @@ export function updateAppRoutes(host: Tree, options: NormalizedSchema) {
       addRoute(appComponentPath, componentSource, {
         routePath: options.routePath,
         componentName: names(options.name).className,
-        moduleName: getImportPath(host, options.projectDirectory),
+        moduleName: options.importPath,
       })
     );
     host.write(appComponentPath, changes);

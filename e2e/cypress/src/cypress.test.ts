@@ -94,16 +94,17 @@ describe('env vars', () => {
 });`
       );
 
-      // contains the correct output and works
-      const run1 = runCLI(
-        `e2e ${myapp}-e2e --no-watch --env.cliArg="i am from the cli args"`
-      );
-      expect(run1).toContain('All specs passed!');
-      await killPort(4200);
-      // tests should not fail because of a config change
-      updateFile(
-        `apps/${myapp}-e2e/cypress.config.ts`,
-        `
+      if (runE2ETests()) {
+        // contains the correct output and works
+        const run1 = runCLI(
+          `e2e ${myapp}-e2e --no-watch --env.cliArg="i am from the cli args"`
+        );
+        expect(run1).toContain('All specs passed!');
+        await killPort(4200);
+        // tests should not fail because of a config change
+        updateFile(
+          `apps/${myapp}-e2e/cypress.config.ts`,
+          `
 import { defineConfig } from 'cypress';
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
@@ -113,18 +114,18 @@ export default defineConfig({
   fixturesFolder: undefined,
   },
 });`
-      );
+        );
 
-      const run2 = runCLI(
-        `e2e ${myapp}-e2e --no-watch --env.cliArg="i am from the cli args"`
-      );
-      expect(run2).toContain('All specs passed!');
-      await killPort(4200);
+        const run2 = runCLI(
+          `e2e ${myapp}-e2e --no-watch --env.cliArg="i am from the cli args"`
+        );
+        expect(run2).toContain('All specs passed!');
+        await killPort(4200);
 
-      // make sure project.json env vars also work
-      updateFile(
-        `apps/${myapp}-e2e/src/e2e/env.cy.ts`,
-        `
+        // make sure project.json env vars also work
+        updateFile(
+          `apps/${myapp}-e2e/src/e2e/env.cy.ts`,
+          `
 describe('env vars', () => {
   it('should not have cli args', () => {
     assert.equal(Cypress.env('cliArg'), undefined);
@@ -144,42 +145,47 @@ describe('env vars', () => {
     );
   });
 });`
-      );
-      const run3 = runCLI(`e2e ${myapp}-e2e --no-watch`);
-      expect(run3).toContain('All specs passed!');
+        );
+        const run3 = runCLI(`e2e ${myapp}-e2e --no-watch`);
+        expect(run3).toContain('All specs passed!');
 
-      expect(await killPort(4200)).toBeTruthy();
+        expect(await killPort(4200)).toBeTruthy();
+      }
     },
     TEN_MINS_MS
   );
 
-  it('should run e2e in parallel', async () => {
-    // ensure ports are free before running tests
-    await killPort(4200);
-
-    const ngAppName = uniq('ng-app');
-    runCLI(
-      `generate @nx/angular:app ${ngAppName} --e2eTestRunner=cypress --linter=eslint --no-interactive`
-    );
-
-    const results = runCLI(
-      `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`
-    );
-    expect(results).toContain('Using port 4200');
-    expect(results).toContain('Using port 4201');
-    expect(results).toContain('Successfully ran target e2e for 2 projects');
-    checkFilesDoNotExist(
-      `node_modules/@nx/cypress/src/executors/cypress/4200.txt`,
-      `node_modules/@nx/cypress/src/executors/cypress/4201.txt`
-    );
-  });
-
   it(
-    'should allow CT and e2e in the same project',
+    'should run e2e in parallel',
     async () => {
-      await testCtAndE2eInProject('next');
-      await testCtAndE2eInProject('angular');
-      await testCtAndE2eInProject('react');
+      // ensure ports are free before running tests
+      await killPort(4200);
+
+      const ngAppName = uniq('ng-app');
+      runCLI(
+        `generate @nx/angular:app ${ngAppName} --e2eTestRunner=cypress --linter=eslint --no-interactive`
+      );
+
+      if (runE2ETests()) {
+        const results = runCLI(
+          `run-many --target=e2e --parallel=2 --port=cypress-auto --output-style=stream`
+        );
+        expect(results).toContain('Using port 4200');
+        expect(results).toContain('Using port 4201');
+        expect(results).toContain('Successfully ran target e2e for 2 projects');
+        checkFilesDoNotExist(
+          `node_modules/@nx/cypress/src/executors/cypress/4200.txt`,
+          `node_modules/@nx/cypress/src/executors/cypress/4201.txt`
+        );
+      }
+    },
+    TEN_MINS_MS
+  );
+
+  it.each(['react', 'next', 'angular'])(
+    `should allow CT and e2e in same project - %s`,
+    async (framework: 'react' | 'next' | 'angular') => {
+      await testCtAndE2eInProject(framework);
     },
     TEN_MINS_MS
   );

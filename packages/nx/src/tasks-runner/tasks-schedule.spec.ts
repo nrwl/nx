@@ -1,5 +1,4 @@
 import { TasksSchedule } from './tasks-schedule';
-import { Workspaces } from '../config/workspaces';
 import { removeTasksFromTaskGraph } from './utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DependencyType, ProjectGraph } from '../config/project-graph';

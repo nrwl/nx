@@ -1,12 +1,15 @@
 import { toProjectName, Workspaces } from './workspaces';
 import { TempFs } from '../utils/testing/temp-fs';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
+import { retrieveProjectConfigurations } from '../project-graph/utils/retrieve-workspace-files';
+import { readNxJson } from './configuration';
 
 const libConfig = (root, name?: string) => ({
   name: name ?? toProjectName(`${root}/some-file`),
   projectType: 'library',
   root: `libs/${root}`,
   sourceRoot: `libs/${root}/src`,
+  targets: {},
 });
 
 const packageLibConfig = (root, name?: string) => ({
@@ -14,6 +17,7 @@ const packageLibConfig = (root, name?: string) => ({
   root,
   sourceRoot: root,
   projectType: 'library',
+  targets: {},
 });
 
 describe('Workspaces', () => {
@@ -45,7 +49,7 @@ describe('Workspaces', () => {
       });
 
       const workspaces = new Workspaces(fs.tempDir);
-      const resolved = workspaces.readProjectsConfigurations();
+      const resolved = workspaces.readWorkspaceConfiguration();
       expect(resolved.projects.lib1).toEqual(standaloneConfig);
     });
 
@@ -74,7 +78,7 @@ describe('Workspaces', () => {
       });
 
       const workspaces = new Workspaces(fs.tempDir);
-      const { projects } = workspaces.readProjectsConfigurations();
+      const { projects } = workspaces.readWorkspaceConfiguration();
 
       // projects got merged for lib1
       expect(projects['lib1']).toEqual({
@@ -82,6 +86,7 @@ describe('Workspaces', () => {
         root: 'libs/lib1',
         sourceRoot: 'libs/lib1/src',
         projectType: 'library',
+        targets: {},
       });
       expect(projects.lib2).toEqual(lib2Config);
       expect(projects['domain-lib3']).toEqual(domainPackageConfig);
@@ -112,14 +117,17 @@ describe('Workspaces', () => {
         {
           NX_WORKSPACE_ROOT: fs.tempDir,
         },
-        () => {
-          const workspaces = new Workspaces(fs.tempDir);
-          const resolved = workspaces.readProjectsConfigurations();
-          expect(resolved.projects['my-package']).toEqual({
+        async () => {
+          const resolved = await retrieveProjectConfigurations(
+            fs.tempDir,
+            readNxJson(fs.tempDir)
+          );
+          expect(resolved.projectNodes['my-package']).toEqual({
             name: 'my-package',
             root: 'packages/my-package',
             sourceRoot: 'packages/my-package',
             projectType: 'library',
+            targets: {},
           });
         }
       );

@@ -6,7 +6,7 @@ exports[`TaskHasher dependentTasksOutputFiles should depend on dependent tasks o
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "12802727827024321009",
       "TsConfig": "8767608672024750088",
       "dist/libs/child/index.d.ts": "3244421341483603138",
@@ -18,7 +18,7 @@ exports[`TaskHasher dependentTasksOutputFiles should depend on dependent tasks o
     },
     "runtime": {},
   },
-  "value": "17939200785615949974",
+  "value": "15526362704205124469",
 }
 `;
 
@@ -28,7 +28,7 @@ exports[`TaskHasher dependentTasksOutputFiles should work with dependent tasks w
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "12802727827024321009",
       "TsConfig": "8767608672024750088",
       "dist/libs/child/index.d.ts": "3244421341483603138",
@@ -40,7 +40,7 @@ exports[`TaskHasher dependentTasksOutputFiles should work with dependent tasks w
     },
     "runtime": {},
   },
-  "value": "17939200785615949974",
+  "value": "15526362704205124469",
 }
 `;
 
@@ -181,7 +181,7 @@ exports[`TaskHasher should be able to handle multiple filesets per project 1`] =
     "command": "13785966310271077209",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "17211930887387929067",
       "TsConfig": "8767608672024750088",
       "child:!{projectRoot}/**/*.spec.ts": "17508782620731849000",
@@ -195,7 +195,7 @@ exports[`TaskHasher should be able to handle multiple filesets per project 1`] =
     },
     "runtime": {},
   },
-  "value": "2881231822394274502",
+  "value": "18157475608082023962",
 }
 `;
 
@@ -205,7 +205,7 @@ exports[`TaskHasher should be able to handle multiple filesets per project 2`] =
     "command": "6958627266354933907",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "17211930887387929067",
       "TsConfig": "8767608672024750088",
       "child:{projectRoot}/**/*": "2300207741412661544",
@@ -216,7 +216,7 @@ exports[`TaskHasher should be able to handle multiple filesets per project 2`] =
     },
     "runtime": {},
   },
-  "value": "3952879073081711415",
+  "value": "13395934251559762209",
 }
 `;
 
@@ -226,7 +226,7 @@ exports[`TaskHasher should be able to include only a part of the base tsconfig 1
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "18166168584521190546",
       "TsConfig": "4035819825874039301",
       "parent:{projectRoot}/**/*": "8263681721738113012",
@@ -238,7 +238,7 @@ exports[`TaskHasher should be able to include only a part of the base tsconfig 1
     },
     "runtime": {},
   },
-  "value": "9968611270204908917",
+  "value": "6617704315962978691",
 }
 `;
 
@@ -248,7 +248,7 @@ exports[`TaskHasher should create task hash 1`] = `
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "4875698716044094030",
       "TsConfig": "8767608672024750088",
       "env:NONEXISTENTENV": "3244421341483603138",
@@ -264,7 +264,7 @@ exports[`TaskHasher should create task hash 1`] = `
     },
     "runtime": {},
   },
-  "value": "11412486534571442418",
+  "value": "14343902810028001500",
 }
 `;
 
@@ -274,7 +274,7 @@ exports[`TaskHasher should hash missing dependent npm project versions 1`] = `
     "command": "14389236043839781668",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "14358315432887000841",
+      "AllExternalDependencies": "9871338282813031846",
       "ProjectConfiguration": "8128657069648957137",
       "TsConfig": "8767608672024750088",
       "app:{projectRoot}/**/*": "9104199730100321982",
@@ -285,7 +285,7 @@ exports[`TaskHasher should hash missing dependent npm project versions 1`] = `
     },
     "runtime": {},
   },
-  "value": "13210933885500739919",
+  "value": "69684997513271647",
 }
 `;
 
@@ -295,7 +295,7 @@ exports[`TaskHasher should hash multiple filesets of a project 1`] = `
     "command": "13785966310271077209",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "10499856664466672714",
       "TsConfig": "8767608672024750088",
       "parent:{projectRoot}/**/*": "7263479247245830838",
@@ -305,7 +305,7 @@ exports[`TaskHasher should hash multiple filesets of a project 1`] = `
     },
     "runtime": {},
   },
-  "value": "14016847448680534278",
+  "value": "4923065065541230169",
 }
 `;
 
@@ -315,7 +315,7 @@ exports[`TaskHasher should hash multiple filesets of a project 2`] = `
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "10499856664466672714",
       "TsConfig": "8767608672024750088",
       "parent:!{projectRoot}/**/*.spec.ts": "17962802443644575456",
@@ -325,7 +325,7 @@ exports[`TaskHasher should hash multiple filesets of a project 2`] = `
     },
     "runtime": {},
   },
-  "value": "10694393160053318712",
+  "value": "4731520952840688799",
 }
 `;
 
@@ -335,7 +335,7 @@ exports[`TaskHasher should hash non-default filesets 1`] = `
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "8196293273405506196",
       "TsConfig": "8767608672024750088",
       "child:{projectRoot}/**/*": "2300207741412661544",
@@ -346,7 +346,7 @@ exports[`TaskHasher should hash non-default filesets 1`] = `
     },
     "runtime": {},
   },
-  "value": "15803865862737990375",
+  "value": "2706545192249046366",
 }
 `;
 
@@ -356,7 +356,7 @@ exports[`TaskHasher should hash npm project versions 1`] = `
     "command": "14389236043839781668",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "14358315432887000841",
+      "AllExternalDependencies": "9871338282813031846",
       "ProjectConfiguration": "8128657069648957137",
       "TsConfig": "8767608672024750088",
       "app:{projectRoot}/**/*": "9104199730100321982",
@@ -367,7 +367,7 @@ exports[`TaskHasher should hash npm project versions 1`] = `
     },
     "runtime": {},
   },
-  "value": "13210933885500739919",
+  "value": "69684997513271647",
 }
 `;
 
@@ -377,7 +377,7 @@ exports[`TaskHasher should hash task where the project has dependencies 1`] = `
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "8876282510060012181",
       "TsConfig": "8767608672024750088",
       "child:{projectRoot}/**/*": "5484012818475684626",
@@ -388,7 +388,7 @@ exports[`TaskHasher should hash task where the project has dependencies 1`] = `
     },
     "runtime": {},
   },
-  "value": "16888277333405079717",
+  "value": "10890020828938010310",
 }
 `;
 
@@ -398,7 +398,7 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "9892649345820140726",
       "TsConfig": "8767608672024750088",
       "child:{projectRoot}/**/*": "8973015561538144423",
@@ -409,7 +409,7 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     },
     "runtime": {},
   },
-  "value": "16567132351487630958",
+  "value": "13762475745855667295",
 }
 `;
 
@@ -419,7 +419,7 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     "command": "7833005669885463868",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "18166168584521190546",
       "TsConfig": "8767608672024750088",
       "child:{projectRoot}/**/*": "8973015561538144423",
@@ -430,7 +430,7 @@ exports[`TaskHasher should hash tasks where the project graph has circular depen
     },
     "runtime": {},
   },
-  "value": "13014058586283814178",
+  "value": "11293543081462853412",
 }
 `;
 
@@ -440,7 +440,7 @@ exports[`TaskHasher should use targetDefaults from nx.json 1`] = `
     "command": "4062279404379299270",
     "implicitDeps": {},
     "nodes": {
-      "AllExternalDependencies": "1389868326933519382",
+      "AllExternalDependencies": "3244421341483603138",
       "ProjectConfiguration": "9892649345820140726",
       "TsConfig": "8767608672024750088",
       "child:!{projectRoot}/**/*.spec.ts": "17508782620731849000",
@@ -451,6 +451,6 @@ exports[`TaskHasher should use targetDefaults from nx.json 1`] = `
     },
     "runtime": {},
   },
-  "value": "2743377369761868812",
+  "value": "5596126261759417547",
 }
 `;

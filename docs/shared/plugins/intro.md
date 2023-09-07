@@ -2,12 +2,12 @@
 
 Nx plugins contain [generators](/core-features/plugin-features/use-code-generators) and [executors](/core-features/plugin-features/use-task-executors) that extend the capabilities of an Nx workspace. They can be shared as npm packages or referenced locally within the same repo.
 
-{% cards cols="2" %}
+{% cards cols="4" %}
 
-{% title-card title="Use a Plugin" url="#use-a-plugin" /%}
-{% title-card title="Create a Local Plugin" url="#create-a-local-plugin" /%}
-{% title-card title="Maintain a Published Plugin" url="#maintain-a-published-plugin" /%}
-{% title-card title="Advanced Plugins" url="#advanced-plugins" /%}
+{% link-card title="Use a Plugin" url="#use-a-plugin" /%}
+{% link-card title="Create a Plugin" url="#create-a-local-plugin" /%}
+{% link-card title="Maintain a Published Plugin" url="#maintain-a-published-plugin" /%}
+{% link-card title="Advanced Plugins" url="#advanced-plugins" /%}
 
 {% /cards %}
 
@@ -50,10 +50,9 @@ If your plugin has functionality that would be useful in more than just your rep
 
 You can also hook into the way Nx works and modify it to suit your needs
 
-{% cards cols="3" %}
+{% cards cols="2" %}
 
 {% card title="Scaffold a New Workspace" description="Set up a new repo" url="/extending-nx/recipes/create-preset" /%}
-{% card title="Project Inference Plugins" description="Modify how Nx identifies projects" url="/extending-nx/recipes/project-inference-plugins" /%}
 {% card title="Project Graph Plugins" description="Modify the Nx graph" url="/extending-nx/recipes/project-graph-plugins" /%}
 
 {% /cards %}

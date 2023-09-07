@@ -1,5 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { stripIndent } from 'nx/src/utils/logger';
 import type {
   FileChange,
   Tree,
@@ -13,7 +11,10 @@ import { join, relative } from 'path';
 import type { Mode } from 'fs';
 import { requireNx } from '../../nx';
 
-const { logger } = requireNx();
+let { logger, stripIndent } = requireNx();
+
+// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+stripIndent = stripIndent ?? require('nx/src/utils/logger').stripIndent;
 
 class RunCallbackTask {
   constructor(private callback: GeneratorCallback) {}

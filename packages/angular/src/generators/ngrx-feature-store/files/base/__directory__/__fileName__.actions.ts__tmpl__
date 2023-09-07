@@ -1,5 +1,5 @@
 import { createAction, props } from '@ngrx/store';
-import { <%= className %>Entity } from './<%= fileName %>.models';
+import { <%= className %>Entity } from './<%= relativeFileName %>.models';
 
 export const init<%= className %> = createAction(
   '[<%= className %> Page] Init'

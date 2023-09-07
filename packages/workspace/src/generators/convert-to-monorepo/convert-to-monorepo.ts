@@ -37,10 +37,16 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
       newProjectName: project.name,
       destination:
         project.projectType === 'application'
-          ? joinPathFragments(appsDir, project.name)
-          : joinPathFragments(libsDir, project.name),
-      destinationRelativeToRoot: true,
+          ? joinPathFragments(
+              appsDir,
+              project.root === '.' ? project.name : project.root
+            )
+          : joinPathFragments(
+              libsDir,
+              project.root === '.' ? project.name : project.root
+            ),
       updateImportPath: project.projectType === 'library',
+      projectNameAndRootFormat: 'as-provided',
     });
   }
 }

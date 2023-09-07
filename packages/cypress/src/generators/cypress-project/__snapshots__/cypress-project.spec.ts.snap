@@ -4,7 +4,7 @@ exports[`Cypress Project < v7 --linter eslint should add eslint-plugin-cypress 1
 {
   "extends": [
     "plugin:cypress/recommended",
-    "../../.eslintrc.json",
+    "../.eslintrc.json",
   ],
   "ignorePatterns": [
     "!**/*",
@@ -42,17 +42,17 @@ exports[`Cypress Project < v7 nested should update configuration 1`] = `
     },
     "executor": "@nx/cypress:cypress",
     "options": {
-      "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
+      "cypressConfig": "my-dir/my-app-e2e/cypress.json",
       "devServerTarget": "my-dir-my-app:serve",
       "testingType": "e2e",
-      "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.json",
+      "tsConfig": "my-dir/my-app-e2e/tsconfig.json",
     },
   },
   "lint": {
     "executor": "@nx/linter:eslint",
     "options": {
       "lintFilePatterns": [
-        "apps/my-dir/my-app-e2e/**/*.{js,ts}",
+        "my-dir/my-app-e2e/**/*.{js,ts}",
       ],
     },
     "outputs": [
@@ -71,8 +71,8 @@ exports[`Cypress Project < v7 project with directory in its name should set righ
   "supportFile": "./src/support/index.ts",
   "pluginsFile": "./src/plugins/index",
   "video": true,
-  "videosFolder": "../../../dist/cypress/apps/my-dir/my-app-e2e/videos",
-  "screenshotsFolder": "../../../dist/cypress/apps/my-dir/my-app-e2e/screenshots",
+  "videosFolder": "../../dist/cypress/my-dir/my-app-e2e/videos",
+  "screenshotsFolder": "../../dist/cypress/my-dir/my-app-e2e/screenshots",
   "chromeWebSecurity": false
 }
 "
@@ -88,17 +88,17 @@ exports[`Cypress Project < v7 project with directory in its name should update c
     },
     "executor": "@nx/cypress:cypress",
     "options": {
-      "cypressConfig": "apps/my-dir/my-app-e2e/cypress.json",
+      "cypressConfig": "my-dir/my-app-e2e/cypress.json",
       "devServerTarget": "my-dir-my-app:serve",
       "testingType": "e2e",
-      "tsConfig": "apps/my-dir/my-app-e2e/tsconfig.json",
+      "tsConfig": "my-dir/my-app-e2e/tsconfig.json",
     },
   },
   "lint": {
     "executor": "@nx/linter:eslint",
     "options": {
       "lintFilePatterns": [
-        "apps/my-dir/my-app-e2e/**/*.{js,ts}",
+        "my-dir/my-app-e2e/**/*.{js,ts}",
       ],
     },
     "outputs": [
@@ -108,22 +108,22 @@ exports[`Cypress Project < v7 project with directory in its name should update c
 }
 `;
 
-exports[`Cypress Project < v7 should update configuration (baseUrl) 1`] = `
+exports[`Cypress Project < v7 should update project configuration (baseUrl) 1`] = `
 {
   "e2e": {
     "executor": "@nx/cypress:cypress",
     "options": {
       "baseUrl": "http://localhost:3000",
-      "cypressConfig": "apps/my-app-e2e/cypress.json",
+      "cypressConfig": "my-app-e2e/cypress.json",
       "testingType": "e2e",
-      "tsConfig": "apps/my-app-e2e/tsconfig.json",
+      "tsConfig": "my-app-e2e/tsconfig.json",
     },
   },
   "lint": {
     "executor": "@nx/linter:eslint",
     "options": {
       "lintFilePatterns": [
-        "apps/my-app-e2e/**/*.{js,ts}",
+        "my-app-e2e/**/*.{js,ts}",
       ],
     },
     "outputs": [
@@ -133,7 +133,7 @@ exports[`Cypress Project < v7 should update configuration (baseUrl) 1`] = `
 }
 `;
 
-exports[`Cypress Project < v7 should update configuration 1`] = `
+exports[`Cypress Project < v7 should update project configuration 1`] = `
 {
   "e2e": {
     "configurations": {
@@ -143,17 +143,17 @@ exports[`Cypress Project < v7 should update configuration 1`] = `
     },
     "executor": "@nx/cypress:cypress",
     "options": {
-      "cypressConfig": "apps/my-app-e2e/cypress.json",
+      "cypressConfig": "my-app-e2e/cypress.json",
       "devServerTarget": "my-app:serve",
       "testingType": "e2e",
-      "tsConfig": "apps/my-app-e2e/tsconfig.json",
+      "tsConfig": "my-app-e2e/tsconfig.json",
     },
   },
   "lint": {
     "executor": "@nx/linter:eslint",
     "options": {
       "lintFilePatterns": [
-        "apps/my-app-e2e/**/*.{js,ts}",
+        "my-app-e2e/**/*.{js,ts}",
       ],
     },
     "outputs": [
@@ -163,7 +163,7 @@ exports[`Cypress Project < v7 should update configuration 1`] = `
 }
 `;
 
-exports[`Cypress Project < v7 should update configuration 2`] = `
+exports[`Cypress Project < v7 should update target configurations 1`] = `
 {
   "e2e": {
     "configurations": {
@@ -173,17 +173,17 @@ exports[`Cypress Project < v7 should update configuration 2`] = `
     },
     "executor": "@nx/cypress:cypress",
     "options": {
-      "cypressConfig": "apps/my-app-e2e/cypress.json",
+      "cypressConfig": "my-app-e2e/cypress.json",
       "devServerTarget": "my-app:serve:development",
       "testingType": "e2e",
-      "tsConfig": "apps/my-app-e2e/tsconfig.json",
+      "tsConfig": "my-app-e2e/tsconfig.json",
     },
   },
   "lint": {
     "executor": "@nx/linter:eslint",
     "options": {
       "lintFilePatterns": [
-        "apps/my-app-e2e/**/*.{js,ts}",
+        "my-app-e2e/**/*.{js,ts}",
       ],
     },
     "outputs": [
@@ -219,14 +219,14 @@ exports[`Cypress Project > v10 nested should set right path names in \`tsconfig.
 {
   "compilerOptions": {
     "allowJs": true,
-    "outDir": "../../../dist/out-tsc",
+    "outDir": "../../dist/out-tsc",
     "sourceMap": false,
     "types": [
       "cypress",
       "node",
     ],
   },
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../tsconfig.base.json",
   "include": [
     "src/**/*.ts",
     "src/**/*.js",
@@ -249,14 +249,14 @@ exports[`Cypress Project > v10 should set right path names in \`tsconfig.e2e.jso
 {
   "compilerOptions": {
     "allowJs": true,
-    "outDir": "../../dist/out-tsc",
+    "outDir": "../dist/out-tsc",
     "sourceMap": false,
     "types": [
       "cypress",
       "node",
     ],
   },
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "include": [
     "src/**/*.ts",
     "src/**/*.js",
@@ -270,7 +270,7 @@ exports[`Cypress Project > v10 should update configuration when eslint is passed
   "executor": "@nx/linter:eslint",
   "options": {
     "lintFilePatterns": [
-      "apps/my-app-e2e/**/*.{js,ts}",
+      "my-app-e2e/**/*.{js,ts}",
     ],
   },
   "outputs": [

@@ -4,7 +4,7 @@ This generator will set up Storybook for your **React** project. You can also us
 nx g @nx/react:storybook-configuration project-name
 ```
 
-You can read more about how this generator works, in the [Storybook for React overview page](/packages/storybook/documents/overview-react#generate-storybook-configuration-for-an-react-project).
+You can read more about how this generator works, in the [Storybook for React overview page](/recipes/storybook/overview-react#generate-storybook-configuration-for-an-react-project).
 
 When running this generator, you will be prompted to provide the following:
 

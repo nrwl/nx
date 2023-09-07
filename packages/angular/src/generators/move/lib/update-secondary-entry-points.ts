@@ -6,7 +6,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, dirname } from 'path';
-import type { NormalizedSchema } from '../schema';
+import type { MoveImplOptions } from './types';
 
 const libraryExecutors = [
   '@angular-devkit/build-angular:ng-packagr',
@@ -19,8 +19,12 @@ const libraryExecutors = [
 
 export function updateSecondaryEntryPoints(
   tree: Tree,
-  schema: NormalizedSchema
+  schema: MoveImplOptions
 ): void {
+  if (schema.oldProjectName === schema.newProjectName) {
+    return;
+  }
+
   const project = readProjectConfiguration(tree, schema.newProjectName);
 
   if (project.projectType !== 'library') {
@@ -47,7 +51,7 @@ export function updateSecondaryEntryPoints(
     updateReadme(
       tree,
       dirname(filePath),
-      schema.projectName,
+      schema.oldProjectName,
       schema.newProjectName
     );
   });

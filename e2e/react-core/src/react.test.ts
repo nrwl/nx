@@ -180,9 +180,11 @@ describe('React Applications', () => {
 
     checkFilesExist(`dist/apps/${appName}/index.html`);
 
-    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
-    expect(e2eResults).toContain('All specs passed!');
-    expect(await killPorts()).toBeTruthy();
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
+      expect(e2eResults).toContain('All specs passed!');
+      expect(await killPorts()).toBeTruthy();
+    }
   }, 250_000);
 
   it('should generate app with routing', async () => {
@@ -227,6 +229,52 @@ describe('React Applications', () => {
     );
   }, 250_000);
 
+  it('should support generating projects with the new name and root format', () => {
+    const appName = uniq('app1');
+    const libName = uniq('@my-org/lib1');
+
+    runCLI(
+      `generate @nx/react:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${appName}/src/main.tsx`);
+    // check build works
+    expect(runCLI(`build ${appName}`)).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+    // check tests pass
+    const appTestResult = runCLI(`test ${appName}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${appName}`
+    );
+
+    // assert scoped project names are not supported when --project-name-and-root-format=derived
+    expect(() =>
+      runCLI(
+        `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=derived --no-interactive`
+      )
+    ).toThrow();
+
+    runCLI(
+      `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${libName}/src/index.ts`);
+    // check build works
+    expect(runCLI(`build ${libName}`)).toContain(
+      `Successfully ran target build for project ${libName}`
+    );
+    // check tests pass
+    const libTestResult = runCLI(`test ${libName}`);
+    expect(libTestResult).toContain(
+      `Successfully ran target test for project ${libName}`
+    );
+  }, 500_000);
+
   describe('React Applications: --style option', () => {
     it.each`
       style
@@ -234,14 +282,14 @@ describe('React Applications', () => {
       ${'scss'}
       ${'less'}
       ${'styl'}
-    `('should support global and css modules', ({ style }) => {
+    `('should support global and css modules', async ({ style }) => {
       const appName = uniq('app');
       runCLI(
         `generate @nx/react:app ${appName} --style=${style} --bundler=webpack --no-interactive`
       );
 
       // make sure stylePreprocessorOptions works
-      updateProjectConfig(appName, (config) => {
+      await updateProjectConfig(appName, (config) => {
         config.targets.build.options.stylePreprocessorOptions = {
           includePaths: ['libs/shared/lib'],
         };

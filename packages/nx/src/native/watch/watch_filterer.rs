@@ -6,6 +6,8 @@ use watchexec_events::filekind::{CreateKind, FileEventKind, ModifyKind, RemoveKi
 use watchexec_events::{Event, FileType, Priority, Source, Tag};
 use watchexec_filterer_ignore::IgnoreFilterer;
 
+use crate::native::watch::utils::transform_event;
+
 #[derive(Debug)]
 pub struct WatchFilterer {
     pub inner: IgnoreFilterer,
@@ -13,7 +15,10 @@ pub struct WatchFilterer {
 
 /// Used to filter out events that that come from watchexec
 impl Filterer for WatchFilterer {
-    fn check_event(&self, event: &Event, priority: Priority) -> Result<bool, RuntimeError> {
+    fn check_event(&self, watch_event: &Event, priority: Priority) -> Result<bool, RuntimeError> {
+        let transformed = transform_event(watch_event);
+        let event = transformed.as_ref().unwrap_or(watch_event);
+
         if !self.inner.check_event(event, priority)? {
             return Ok(false);
         }

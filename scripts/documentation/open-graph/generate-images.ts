@@ -36,21 +36,30 @@ const targetFolder: string = resolve(
 );
 
 const data: { title: string; content: string; filename: string }[] = [];
-documents.map((category) => {
+documents.forEach((category) => {
   data.push({
     title: category.name,
     content: category.description,
     filename: [category.sidebarId, category.id].filter(Boolean).join('-'),
   });
-  category.itemList.map((item) =>
+  category.itemList.forEach((item) => {
     data.push({
       title: item.name,
-      content: category.name,
+      content: item.description || category.name,
       filename: [category.sidebarId, category.id, item.id]
         .filter(Boolean)
         .join('-'),
-    })
-  );
+    });
+    item.itemList?.forEach((subItem) => {
+      data.push({
+        title: subItem.name,
+        content: subItem.description || category.name,
+        filename: [category.sidebarId, category.id, item.id, subItem.id]
+          .filter(Boolean)
+          .join('-'),
+      });
+    });
+  });
 });
 packages.map((pkg) => {
   data.push({
@@ -81,6 +90,9 @@ packages.map((pkg) => {
   });
 });
 
+const TITLE_LINE_HEIGHT = 60;
+const SUB_LINE_HEIGHT = 38;
+
 function createOpenGraphImage(
   backgroundImagePath: string,
   targetFolder: string,
@@ -106,7 +118,10 @@ function createOpenGraphImage(
     context.textAlign = 'center';
     context.textBaseline = 'top';
     context.fillStyle = '#0F172A';
-    context.fillText(title.toUpperCase(), 600, 220);
+    const titleLines = splitLines(context, title.toUpperCase(), 1100);
+    titleLines.forEach((line, index) => {
+      context.fillText(line, 600, 220 + index * TITLE_LINE_HEIGHT);
+    });
 
     context.font = 'normal 32px system-ui';
     context.textAlign = 'center';
@@ -115,7 +130,11 @@ function createOpenGraphImage(
 
     const lines = splitLines(context, content, 1100);
     lines.forEach((line, index) => {
-      context.fillText(line, 600, 310 + index * 55);
+      context.fillText(
+        line,
+        600,
+        310 + index * SUB_LINE_HEIGHT + titleLines.length * TITLE_LINE_HEIGHT
+      );
     });
 
     console.log('Generating: ', `${filename}.jpg`);
@@ -137,7 +156,7 @@ function splitLines(
   if (words.length <= 1) {
     return words;
   }
-  const lines = [];
+  const lines: string[] = [];
   let currentLine = words[0];
 
   for (let i = 1; i < words.length; i++) {

@@ -47,7 +47,7 @@ nx g @nx/web:app frontend --e2eTestRunner=playwright
 To generate an E2E project for an existing project, run the following generator
 
 ```shell
-nx g @nx/playwright:configuration --project=your-app-name --project=your-app-name
+nx g @nx/playwright:configuration --project=your-app-name
 ```
 
 Optionally, you can use the `--webServerCommand` and `--webServerAddress` option, to auto setup the [web server option](https://playwright.dev/docs/test-webserver) in the playwright config

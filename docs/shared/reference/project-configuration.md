@@ -2,7 +2,7 @@
 
 Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
 [use task executors](/core-features/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
-files to get each project's configuration.
+files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on Github.
 
 The following configuration creates `build` and `test` targets for Nx.
 
@@ -47,12 +47,12 @@ The following configuration creates `build` and `test` targets for Nx.
 
 You can invoke `nx build mylib` or `nx test mylib` without any extra configuration.
 
-You can add Nx-specific configuration as follows:
+Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
 
 {% tabs %}
 {% tab label="package.json" %}
 
-```jsonc {% fileName="package.json" %}
+```jsonc {% fileName="package.json" lineGroups={ Orchestration:[14,17,19,22,25],Execution:[4,5,6],Caching:[9,10,11,12,15,16,20,21] } %}
 {
   "name": "mylib",
   "scripts": {
@@ -85,33 +85,33 @@ You can add Nx-specific configuration as follows:
 {% /tab %}
 {% tab label="project.json" %}
 
-```json {% fileName="project.json" %}
+```json {% fileName="project.json" lineGroups={ "Orchestration": [5,6,12,15,19,22], "Execution": [12,16,17,19,22,23], "Caching": [7,8,9,10,13,14,20,21] } %}
 {
   "root": "libs/mylib/",
   "sourceRoot": "libs/mylib/src",
   "projectType": "library",
+  "tags": ["scope:myteam"],
+  "implicitDependencies": ["anotherlib"],
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
     "production": ["!{projectRoot}/**/*.spec.tsx"]
   },
   "targets": {
     "test": {
-      "executor": "@nx/jest:jest",
       "inputs": ["default", "^production"],
       "outputs": [],
       "dependsOn": ["build"],
+      "executor": "@nx/jest:jest",
       "options": {}
     },
     "build": {
-      "executor": "@nx/js:tsc",
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/libs/mylib"],
       "dependsOn": ["^build"],
+      "executor": "@nx/js:tsc",
       "options": {}
     }
-  },
-  "tags": ["scope:myteam"],
-  "implicitDependencies": ["anotherlib"]
+  }
 }
 ```
 

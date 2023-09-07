@@ -11,19 +11,20 @@ export async function createApp(tree: Tree, appName: string): Promise<void> {
     name: appName,
     e2eTestRunner: 'none',
     install: false,
+    projectNameAndRootFormat: 'as-provided',
   });
 }
 
 export async function createLib(tree: Tree, libName: string): Promise<void> {
   const { fileName } = names(libName);
 
-  tree.write(`/libs/${fileName}/src/index.ts`, `import React from 'react';\n`);
+  tree.write(`${fileName}/src/index.ts`, `import React from 'react';\n`);
 
   addProjectConfiguration(tree, fileName, {
     tags: [],
-    root: `libs/${fileName}`,
+    root: `${fileName}`,
     projectType: 'library',
-    sourceRoot: `libs/${fileName}/src`,
+    sourceRoot: `${fileName}/src`,
     targets: {},
   });
 }

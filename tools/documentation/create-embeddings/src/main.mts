@@ -2,11 +2,11 @@
 // https://github.com/supabase-community/nextjs-openai-doc-search/blob/main/lib/generate-embeddings.ts
 
 import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
+import { config as loadDotEnvFile } from 'dotenv';
+import { expand } from 'dotenv-expand';
 import { readFile } from 'fs/promises';
 import 'openai';
-import { Configuration, OpenAIApi } from 'openai';
-import { inspect } from 'util';
+import OpenAI from 'openai';
 import yargs from 'yargs';
 import { createHash } from 'crypto';
 import GithubSlugger from 'github-slugger';
@@ -19,10 +19,12 @@ import manifestsCloud from '../../../../docs/generated/manifests/cloud.json' ass
 import manifestsExtending from '../../../../docs/generated/manifests/extending-nx.json' assert { type: 'json' };
 import manifestsNx from '../../../../docs/generated/manifests/nx.json' assert { type: 'json' };
 import manifestsPackages from '../../../../docs/generated/manifests/packages.json' assert { type: 'json' };
-import manifestsRecipes from '../../../../docs/generated/manifests/recipes.json' assert { type: 'json' };
 import manifestsTags from '../../../../docs/generated/manifests/tags.json' assert { type: 'json' };
 
-dotenv.config();
+let identityMap = {};
+
+const myEnv = loadDotEnvFile();
+expand(myEnv);
 
 type ProcessedMdx = {
   checksum: string;
@@ -184,13 +186,15 @@ async function generateEmbeddings() {
     }
   );
 
-  const allFilesPaths = [
+  // Ensures that indentityMap gets populated first
+  let allFilesPaths = [...getAllFilesWithItemList(manifestsNx)];
+
+  allFilesPaths = [
+    ...allFilesPaths,
     ...getAllFilesFromMapJson(mapJson),
     ...getAllFilesWithItemList(manifestsCloud),
     ...getAllFilesWithItemList(manifestsExtending),
-    ...getAllFilesWithItemList(manifestsNx),
     ...getAllFilesWithItemList(manifestsPackages),
-    ...getAllFilesWithItemList(manifestsRecipes),
     ...getAllFilesWithItemList(manifestsTags),
   ].filter(
     (entry) =>
@@ -293,21 +297,17 @@ async function generateEmbeddings() {
         const input = content.replace(/\n/g, ' ');
 
         try {
-          const configuration = new Configuration({
+          const openai = new OpenAI({
             apiKey: process.env.NX_OPENAI_KEY,
           });
-          const openai = new OpenAIApi(configuration);
-
-          const embeddingResponse = await openai.createEmbedding({
+          const embeddingResponse = await openai.embeddings.create({
             model: 'text-embedding-ada-002',
             input,
           });
 
-          if (embeddingResponse.status !== 200) {
-            throw new Error(inspect(embeddingResponse.data, false, 2));
-          }
+          const [responseData] = embeddingResponse.data;
 
-          const [responseData] = embeddingResponse.data.data;
+          const longer_heading = createLongerHeading(heading, url_partial);
 
           const { error: insertPageSectionError, data: pageSection } =
             await supabaseClient
@@ -315,10 +315,14 @@ async function generateEmbeddings() {
               .insert({
                 page_id: page.id,
                 slug,
-                heading,
+                heading:
+                  heading?.length && heading !== null && heading !== 'null'
+                    ? heading
+                    : longer_heading,
+                longer_heading,
                 content,
                 url_partial,
-                token_count: embeddingResponse.data.usage.total_tokens,
+                token_count: embeddingResponse.usage.total_tokens,
                 embedding: responseData.embedding,
               })
               .select()
@@ -370,14 +374,16 @@ function delay(ms: number) {
 
 function getAllFilesFromMapJson(doc): WalkEntry[] {
   const files: WalkEntry[] = [];
-
   function traverse(itemList) {
     for (const item of itemList) {
       if (item.file && item.file.length > 0) {
         // we can exclude some docs here, eg. the deprecated ones
         // the path is the relative path to the file within the nx repo
         // the url_partial is the relative path to the file within the docs site - under nx.dev
-        files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
+        files.push({
+          path: `docs/${item.file}.md`,
+          url_partial: identityMap[item.id]?.path || '',
+        });
       }
 
       if (item.itemList) {
@@ -401,6 +407,9 @@ function getAllFilesWithItemList(data): WalkEntry[] {
         // the path is the relative path to the file within the nx repo
         // the url_partial is the relative path to the file within the docs site - under nx.dev
         files.push({ path: `docs/${item.file}.md`, url_partial: item.path });
+        if (!identityMap[item.id]) {
+          identityMap = { ...identityMap, [item.id]: item };
+        }
       }
 
       if (item.itemList) {
@@ -428,6 +437,29 @@ function getAllFilesWithItemList(data): WalkEntry[] {
     }
   }
   return files;
+}
+
+function createLongerHeading(
+  heading?: string | null,
+  url_partial?: string
+): string | undefined {
+  if (url_partial?.length) {
+    if (heading?.length && heading !== null && heading !== 'null') {
+      return `${heading}${` - ${
+        url_partial.split('/')?.[1]?.[0].toUpperCase() +
+        url_partial.split('/')?.[1]?.slice(1)
+      }`}`;
+    } else {
+      return url_partial
+        .split('#')[0]
+        .split('/')
+        .map((part) =>
+          part?.length ? part[0].toUpperCase() + part.slice(1) + ' - ' : ''
+        )
+        .join('')
+        .slice(0, -3);
+    }
+  }
 }
 
 async function main() {

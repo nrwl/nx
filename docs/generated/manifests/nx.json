@@ -37,7 +37,7 @@
       },
       {
         "id": "tutorials",
-        "name": "5 min Tutorials",
+        "name": "Tutorials",
         "description": "Get started with basic information, concepts and tutorials.",
         "file": "",
         "itemList": [
@@ -133,7 +133,7 @@
   },
   "/getting-started/tutorials": {
     "id": "tutorials",
-    "name": "5 min Tutorials",
+    "name": "Tutorials",
     "description": "Get started with basic information, concepts and tutorials.",
     "file": "",
     "itemList": [
@@ -1228,6 +1228,16 @@
         "tags": ["intro"]
       },
       {
+        "id": "types-of-configuration",
+        "name": "Types of Configuration",
+        "description": "",
+        "file": "shared/concepts/types-of-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/types-of-configuration",
+        "tags": []
+      },
+      {
         "id": "how-caching-works",
         "name": "How Caching Works",
         "description": "",
@@ -1527,6 +1537,16 @@
     "isExternal": false,
     "path": "/concepts/mental-model",
     "tags": ["intro"]
+  },
+  "/concepts/types-of-configuration": {
+    "id": "types-of-configuration",
+    "name": "Types of Configuration",
+    "description": "",
+    "file": "shared/concepts/types-of-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/types-of-configuration",
+    "tags": []
   },
   "/concepts/how-caching-works": {
     "id": "how-caching-works",
@@ -2334,6 +2354,26 @@
             "isExternal": false,
             "path": "/recipes/node/node-aws-lambda",
             "tags": ["deployment", "node"]
+          },
+          {
+            "id": "application-proxies",
+            "name": "Set Up Application Proxies",
+            "description": "",
+            "file": "shared/recipes/node/application-proxies",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/node/application-proxies",
+            "tags": ["node"]
+          },
+          {
+            "id": "wait-for-tasks",
+            "name": "Wait for Tasks to Finish",
+            "description": "",
+            "file": "shared/recipes/node/wait-for-tasks",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/node/wait-for-tasks",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -2343,14 +2383,44 @@
       {
         "id": "storybook",
         "name": "Storybook",
-        "description": "Storybook how tos.",
+        "description": "Storybook strategies and setups.",
         "file": "",
         "itemList": [
           {
+            "id": "overview-react",
+            "name": "Set up Storybook for React Projects",
+            "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
+            "file": "shared/recipes/storybook/plugin-react",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/overview-react",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "overview-angular",
+            "name": "Set up Storybook for Angular Projects",
+            "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
+            "file": "shared/recipes/storybook/plugin-angular",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/overview-angular",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "configuring-storybook",
+            "name": "Configuring Storybook on Nx",
+            "description": "This guide explains how Storybook is configured on your Nx workspace.",
+            "file": "shared/recipes/storybook/configuring-storybook",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/configuring-storybook",
+            "tags": ["storybook"]
+          },
+          {
             "id": "one-storybook-for-all",
             "name": "One main Storybook instance for all projects",
-            "description": "",
-            "file": "shared/recipes/one-storybook-for-all",
+            "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
+            "file": "shared/recipes/storybook/one-storybook-for-all",
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/storybook/one-storybook-for-all",
@@ -2359,8 +2429,8 @@
           {
             "id": "one-storybook-per-scope",
             "name": "One Storybook instance per scope",
-            "description": "",
-            "file": "shared/recipes/one-storybook-per-scope",
+            "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
+            "file": "shared/recipes/storybook/one-storybook-per-scope",
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/storybook/one-storybook-per-scope",
@@ -2369,16 +2439,211 @@
           {
             "id": "one-storybook-with-composition",
             "name": "One main Storybook instance using Storybook Composition",
-            "description": "",
-            "file": "shared/recipes/one-storybook-with-composition",
+            "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
+            "file": "shared/recipes/storybook/one-storybook-with-composition",
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/storybook/one-storybook-with-composition",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "custom-builder-configs",
+            "name": "How to configure Webpack and Vite for Storybook",
+            "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+            "file": "shared/recipes/storybook/custom-builder-configs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/custom-builder-configs",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "storybook-interaction-tests",
+            "name": "Setting up Storybook Interaction Tests with Nx",
+            "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+            "file": "shared/recipes/storybook/interaction-tests",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/storybook-interaction-tests",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "storybook-composition-setup",
+            "name": "Setting up Storybook Composition with Nx",
+            "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
+            "file": "shared/recipes/storybook/storybook-composition-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/storybook-composition-setup",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "angular-storybook-compodoc",
+            "name": "Angular: Set up Compodoc for Storybook on Nx",
+            "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
+            "file": "shared/recipes/storybook/angular-storybook-compodoc",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/angular-storybook-compodoc",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "angular-configuring-styles",
+            "name": "Angular: Configuring styles and preprocessor options",
+            "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
+            "file": "shared/recipes/storybook/angular-configuring-styles",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/angular-configuring-styles",
             "tags": ["storybook"]
           }
         ],
         "isExternal": false,
         "path": "/recipes/storybook",
+        "tags": []
+      },
+      {
+        "id": "cypress",
+        "name": "Cypress",
+        "description": "Cypress related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "cypress-component-testing",
+            "name": "Component Testing",
+            "description": "Component Testing",
+            "file": "shared/packages/cypress/cypress-component-testing",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/cypress/cypress-component-testing",
+            "tags": []
+          },
+          {
+            "id": "cypress-v11-migration",
+            "name": "Cypress v11 Migration Guide",
+            "description": "Cypress v11 Migration Guide",
+            "file": "shared/packages/cypress/cypress-v11-migration",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/cypress/cypress-v11-migration",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/cypress",
+        "tags": []
+      },
+      {
+        "id": "deno",
+        "name": "Deno",
+        "description": "Deno related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "add-deno",
+            "name": "Add a Deno Project",
+            "description": "",
+            "file": "shared/recipes/add-stack/add-deno",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/deno/add-deno",
+            "tags": ["deno"]
+          },
+          {
+            "id": "deno-deploy",
+            "name": "Serverless deployment with Deno Deploy",
+            "description": "",
+            "file": "shared/recipes/deployment/deno-deploy",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/deno/deno-deploy",
+            "tags": ["deployment", "deno"]
+          },
+          {
+            "id": "deno-netlify-functions",
+            "name": "Add and Deploy Netlify Edge Functions with Deno",
+            "description": "",
+            "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/deno/deno-netlify-functions",
+            "tags": ["deployment", "deno"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/deno",
+        "tags": []
+      },
+      {
+        "id": "next",
+        "name": "Next",
+        "description": "Next related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "next-config-setup",
+            "name": "How to configure Next.js plugins",
+            "description": "How to configure Next.js plugins",
+            "file": "shared/packages/next/next-config-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/next/next-config-setup",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/next",
+        "tags": []
+      },
+      {
+        "id": "vite",
+        "name": "Vite",
+        "description": "Vite related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "set-up-vite-manually",
+            "name": "Manually set up your project to use Vite.js",
+            "description": "Manually set up your project to use Vite.js",
+            "file": "shared/packages/vite/set-up-vite-manually",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/vite/set-up-vite-manually",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/vite",
+        "tags": []
+      },
+      {
+        "id": "webpack",
+        "name": "Webpack",
+        "description": "Webpack related recipes",
+        "file": "",
+        "itemList": [
+          {
+            "id": "webpack-config-setup",
+            "name": "How to configure webpack on your Nx workspace",
+            "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+            "file": "shared/packages/webpack/webpack-config-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/webpack/webpack-config-setup",
+            "tags": []
+          },
+          {
+            "id": "webpack-plugins",
+            "name": "Webpack plugins",
+            "description": "Webpack plugins",
+            "file": "shared/packages/webpack/webpack-plugins",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/webpack/webpack-plugins",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/webpack",
         "tags": []
       },
       {
@@ -2550,6 +2815,16 @@
             "tags": ["repository-types"]
           },
           {
+            "id": "standalone-to-integrated",
+            "name": "Convert from a Standalone Repository to an Integrated Repository",
+            "description": "",
+            "file": "shared/recipes/repo-types/standalone-to-integrated",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+            "tags": ["repository-types"]
+          },
+          {
             "id": "eslint",
             "name": "Configuring ESLint with Typescript",
             "description": "",
@@ -2557,6 +2832,16 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/eslint",
+            "tags": []
+          },
+          {
+            "id": "enable-tsc-batch-mode",
+            "name": "Enable Typescript Batch Mode",
+            "description": "",
+            "file": "shared/recipes/enable-tsc-batch-mode",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
             "tags": []
           },
           {
@@ -2610,6 +2895,16 @@
             "tags": []
           },
           {
+            "id": "reduce-repetitive-configuration",
+            "name": "Reduce Repetitive Configuration",
+            "description": "",
+            "file": "shared/recipes/reduce-repetitive-configuration",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+            "tags": []
+          },
+          {
             "id": "root-level-scripts",
             "name": "Run Root-Level NPM Scripts with Nx",
             "description": "",
@@ -2638,16 +2933,6 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/workspace-watching",
             "tags": ["workspace-watching"]
-          },
-          {
-            "id": "standalone-to-integrated",
-            "name": "Convert from a Standalone Repository to an Integrated Repository",
-            "description": "",
-            "file": "shared/recipes/repo-types/standalone-to-integrated",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-            "tags": ["repository-types"]
           },
           {
             "id": "js-and-ts",
@@ -2688,6 +2973,16 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/yarn-pnp",
             "tags": ["yarn", "Plug and Play"]
+          },
+          {
+            "id": "flat-config",
+            "name": "Switching to ESLint's flat config format",
+            "description": "",
+            "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/flat-config",
+            "tags": ["eslint", "flat config"]
           }
         ],
         "isExternal": false,
@@ -2832,26 +3127,6 @@
         "description": "Other recipes you will find useful.",
         "file": "",
         "itemList": [
-          {
-            "id": "deno-deploy",
-            "name": "Serverless deployment with Deno Deploy",
-            "description": "",
-            "file": "shared/recipes/deployment/deno-deploy",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/other/deno-deploy",
-            "tags": ["deployment", "deno"]
-          },
-          {
-            "id": "deno-netlify-functions",
-            "name": "Add and Deploy Netlify Edge Functions with Deno",
-            "description": "",
-            "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/other/deno-netlify-functions",
-            "tags": ["deployment", "deno"]
-          },
           {
             "id": "rescope",
             "name": "Rescope Packages from @nrwl to @nx",
@@ -3462,6 +3737,26 @@
         "isExternal": false,
         "path": "/recipes/node/node-aws-lambda",
         "tags": ["deployment", "node"]
+      },
+      {
+        "id": "application-proxies",
+        "name": "Set Up Application Proxies",
+        "description": "",
+        "file": "shared/recipes/node/application-proxies",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/application-proxies",
+        "tags": ["node"]
+      },
+      {
+        "id": "wait-for-tasks",
+        "name": "Wait for Tasks to Finish",
+        "description": "",
+        "file": "shared/recipes/node/wait-for-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/node/wait-for-tasks",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -3498,17 +3793,67 @@
     "path": "/recipes/node/node-aws-lambda",
     "tags": ["deployment", "node"]
   },
+  "/recipes/node/application-proxies": {
+    "id": "application-proxies",
+    "name": "Set Up Application Proxies",
+    "description": "",
+    "file": "shared/recipes/node/application-proxies",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/application-proxies",
+    "tags": ["node"]
+  },
+  "/recipes/node/wait-for-tasks": {
+    "id": "wait-for-tasks",
+    "name": "Wait for Tasks to Finish",
+    "description": "",
+    "file": "shared/recipes/node/wait-for-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/node/wait-for-tasks",
+    "tags": []
+  },
   "/recipes/storybook": {
     "id": "storybook",
     "name": "Storybook",
-    "description": "Storybook how tos.",
+    "description": "Storybook strategies and setups.",
     "file": "",
     "itemList": [
       {
+        "id": "overview-react",
+        "name": "Set up Storybook for React Projects",
+        "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
+        "file": "shared/recipes/storybook/plugin-react",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/overview-react",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "overview-angular",
+        "name": "Set up Storybook for Angular Projects",
+        "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
+        "file": "shared/recipes/storybook/plugin-angular",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/overview-angular",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "configuring-storybook",
+        "name": "Configuring Storybook on Nx",
+        "description": "This guide explains how Storybook is configured on your Nx workspace.",
+        "file": "shared/recipes/storybook/configuring-storybook",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/configuring-storybook",
+        "tags": ["storybook"]
+      },
+      {
         "id": "one-storybook-for-all",
         "name": "One main Storybook instance for all projects",
-        "description": "",
-        "file": "shared/recipes/one-storybook-for-all",
+        "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
+        "file": "shared/recipes/storybook/one-storybook-for-all",
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/storybook/one-storybook-for-all",
@@ -3517,8 +3862,8 @@
       {
         "id": "one-storybook-per-scope",
         "name": "One Storybook instance per scope",
-        "description": "",
-        "file": "shared/recipes/one-storybook-per-scope",
+        "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
+        "file": "shared/recipes/storybook/one-storybook-per-scope",
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/storybook/one-storybook-per-scope",
@@ -3527,11 +3872,61 @@
       {
         "id": "one-storybook-with-composition",
         "name": "One main Storybook instance using Storybook Composition",
-        "description": "",
-        "file": "shared/recipes/one-storybook-with-composition",
+        "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
+        "file": "shared/recipes/storybook/one-storybook-with-composition",
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/storybook/one-storybook-with-composition",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "custom-builder-configs",
+        "name": "How to configure Webpack and Vite for Storybook",
+        "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+        "file": "shared/recipes/storybook/custom-builder-configs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/custom-builder-configs",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "storybook-interaction-tests",
+        "name": "Setting up Storybook Interaction Tests with Nx",
+        "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+        "file": "shared/recipes/storybook/interaction-tests",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/storybook-interaction-tests",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "storybook-composition-setup",
+        "name": "Setting up Storybook Composition with Nx",
+        "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
+        "file": "shared/recipes/storybook/storybook-composition-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/storybook-composition-setup",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "angular-storybook-compodoc",
+        "name": "Angular: Set up Compodoc for Storybook on Nx",
+        "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
+        "file": "shared/recipes/storybook/angular-storybook-compodoc",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/angular-storybook-compodoc",
+        "tags": ["storybook"]
+      },
+      {
+        "id": "angular-configuring-styles",
+        "name": "Angular: Configuring styles and preprocessor options",
+        "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
+        "file": "shared/recipes/storybook/angular-configuring-styles",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/angular-configuring-styles",
         "tags": ["storybook"]
       }
     ],
@@ -3539,11 +3934,41 @@
     "path": "/recipes/storybook",
     "tags": []
   },
+  "/recipes/storybook/overview-react": {
+    "id": "overview-react",
+    "name": "Set up Storybook for React Projects",
+    "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
+    "file": "shared/recipes/storybook/plugin-react",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/overview-react",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/overview-angular": {
+    "id": "overview-angular",
+    "name": "Set up Storybook for Angular Projects",
+    "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
+    "file": "shared/recipes/storybook/plugin-angular",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/overview-angular",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/configuring-storybook": {
+    "id": "configuring-storybook",
+    "name": "Configuring Storybook on Nx",
+    "description": "This guide explains how Storybook is configured on your Nx workspace.",
+    "file": "shared/recipes/storybook/configuring-storybook",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/configuring-storybook",
+    "tags": ["storybook"]
+  },
   "/recipes/storybook/one-storybook-for-all": {
     "id": "one-storybook-for-all",
     "name": "One main Storybook instance for all projects",
-    "description": "",
-    "file": "shared/recipes/one-storybook-for-all",
+    "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
+    "file": "shared/recipes/storybook/one-storybook-for-all",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/storybook/one-storybook-for-all",
@@ -3552,8 +3977,8 @@
   "/recipes/storybook/one-storybook-per-scope": {
     "id": "one-storybook-per-scope",
     "name": "One Storybook instance per scope",
-    "description": "",
-    "file": "shared/recipes/one-storybook-per-scope",
+    "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
+    "file": "shared/recipes/storybook/one-storybook-per-scope",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/storybook/one-storybook-per-scope",
@@ -3562,12 +3987,297 @@
   "/recipes/storybook/one-storybook-with-composition": {
     "id": "one-storybook-with-composition",
     "name": "One main Storybook instance using Storybook Composition",
-    "description": "",
-    "file": "shared/recipes/one-storybook-with-composition",
+    "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
+    "file": "shared/recipes/storybook/one-storybook-with-composition",
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/storybook/one-storybook-with-composition",
     "tags": ["storybook"]
+  },
+  "/recipes/storybook/custom-builder-configs": {
+    "id": "custom-builder-configs",
+    "name": "How to configure Webpack and Vite for Storybook",
+    "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+    "file": "shared/recipes/storybook/custom-builder-configs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/custom-builder-configs",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/storybook-interaction-tests": {
+    "id": "storybook-interaction-tests",
+    "name": "Setting up Storybook Interaction Tests with Nx",
+    "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+    "file": "shared/recipes/storybook/interaction-tests",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/storybook-interaction-tests",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/storybook-composition-setup": {
+    "id": "storybook-composition-setup",
+    "name": "Setting up Storybook Composition with Nx",
+    "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
+    "file": "shared/recipes/storybook/storybook-composition-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/storybook-composition-setup",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/angular-storybook-compodoc": {
+    "id": "angular-storybook-compodoc",
+    "name": "Angular: Set up Compodoc for Storybook on Nx",
+    "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
+    "file": "shared/recipes/storybook/angular-storybook-compodoc",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/angular-storybook-compodoc",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/angular-configuring-styles": {
+    "id": "angular-configuring-styles",
+    "name": "Angular: Configuring styles and preprocessor options",
+    "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
+    "file": "shared/recipes/storybook/angular-configuring-styles",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/angular-configuring-styles",
+    "tags": ["storybook"]
+  },
+  "/recipes/cypress": {
+    "id": "cypress",
+    "name": "Cypress",
+    "description": "Cypress related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "cypress-component-testing",
+        "name": "Component Testing",
+        "description": "Component Testing",
+        "file": "shared/packages/cypress/cypress-component-testing",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/cypress/cypress-component-testing",
+        "tags": []
+      },
+      {
+        "id": "cypress-v11-migration",
+        "name": "Cypress v11 Migration Guide",
+        "description": "Cypress v11 Migration Guide",
+        "file": "shared/packages/cypress/cypress-v11-migration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/cypress/cypress-v11-migration",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/cypress",
+    "tags": []
+  },
+  "/recipes/cypress/cypress-component-testing": {
+    "id": "cypress-component-testing",
+    "name": "Component Testing",
+    "description": "Component Testing",
+    "file": "shared/packages/cypress/cypress-component-testing",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/cypress/cypress-component-testing",
+    "tags": []
+  },
+  "/recipes/cypress/cypress-v11-migration": {
+    "id": "cypress-v11-migration",
+    "name": "Cypress v11 Migration Guide",
+    "description": "Cypress v11 Migration Guide",
+    "file": "shared/packages/cypress/cypress-v11-migration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/cypress/cypress-v11-migration",
+    "tags": []
+  },
+  "/recipes/deno": {
+    "id": "deno",
+    "name": "Deno",
+    "description": "Deno related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "add-deno",
+        "name": "Add a Deno Project",
+        "description": "",
+        "file": "shared/recipes/add-stack/add-deno",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deno/add-deno",
+        "tags": ["deno"]
+      },
+      {
+        "id": "deno-deploy",
+        "name": "Serverless deployment with Deno Deploy",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-deploy",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deno/deno-deploy",
+        "tags": ["deployment", "deno"]
+      },
+      {
+        "id": "deno-netlify-functions",
+        "name": "Add and Deploy Netlify Edge Functions with Deno",
+        "description": "",
+        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/deno/deno-netlify-functions",
+        "tags": ["deployment", "deno"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/deno",
+    "tags": []
+  },
+  "/recipes/deno/add-deno": {
+    "id": "add-deno",
+    "name": "Add a Deno Project",
+    "description": "",
+    "file": "shared/recipes/add-stack/add-deno",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deno/add-deno",
+    "tags": ["deno"]
+  },
+  "/recipes/deno/deno-deploy": {
+    "id": "deno-deploy",
+    "name": "Serverless deployment with Deno Deploy",
+    "description": "",
+    "file": "shared/recipes/deployment/deno-deploy",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deno/deno-deploy",
+    "tags": ["deployment", "deno"]
+  },
+  "/recipes/deno/deno-netlify-functions": {
+    "id": "deno-netlify-functions",
+    "name": "Add and Deploy Netlify Edge Functions with Deno",
+    "description": "",
+    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/deno/deno-netlify-functions",
+    "tags": ["deployment", "deno"]
+  },
+  "/recipes/next": {
+    "id": "next",
+    "name": "Next",
+    "description": "Next related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "next-config-setup",
+        "name": "How to configure Next.js plugins",
+        "description": "How to configure Next.js plugins",
+        "file": "shared/packages/next/next-config-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/next/next-config-setup",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/next",
+    "tags": []
+  },
+  "/recipes/next/next-config-setup": {
+    "id": "next-config-setup",
+    "name": "How to configure Next.js plugins",
+    "description": "How to configure Next.js plugins",
+    "file": "shared/packages/next/next-config-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/next/next-config-setup",
+    "tags": []
+  },
+  "/recipes/vite": {
+    "id": "vite",
+    "name": "Vite",
+    "description": "Vite related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "set-up-vite-manually",
+        "name": "Manually set up your project to use Vite.js",
+        "description": "Manually set up your project to use Vite.js",
+        "file": "shared/packages/vite/set-up-vite-manually",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/vite/set-up-vite-manually",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/vite",
+    "tags": []
+  },
+  "/recipes/vite/set-up-vite-manually": {
+    "id": "set-up-vite-manually",
+    "name": "Manually set up your project to use Vite.js",
+    "description": "Manually set up your project to use Vite.js",
+    "file": "shared/packages/vite/set-up-vite-manually",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/vite/set-up-vite-manually",
+    "tags": []
+  },
+  "/recipes/webpack": {
+    "id": "webpack",
+    "name": "Webpack",
+    "description": "Webpack related recipes",
+    "file": "",
+    "itemList": [
+      {
+        "id": "webpack-config-setup",
+        "name": "How to configure webpack on your Nx workspace",
+        "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+        "file": "shared/packages/webpack/webpack-config-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/webpack/webpack-config-setup",
+        "tags": []
+      },
+      {
+        "id": "webpack-plugins",
+        "name": "Webpack plugins",
+        "description": "Webpack plugins",
+        "file": "shared/packages/webpack/webpack-plugins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/webpack/webpack-plugins",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/webpack",
+    "tags": []
+  },
+  "/recipes/webpack/webpack-config-setup": {
+    "id": "webpack-config-setup",
+    "name": "How to configure webpack on your Nx workspace",
+    "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+    "file": "shared/packages/webpack/webpack-config-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/webpack/webpack-config-setup",
+    "tags": []
+  },
+  "/recipes/webpack/webpack-plugins": {
+    "id": "webpack-plugins",
+    "name": "Webpack plugins",
+    "description": "Webpack plugins",
+    "file": "shared/packages/webpack/webpack-plugins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/webpack/webpack-plugins",
+    "tags": []
   },
   "/recipes/enforce-module-boundaries": {
     "id": "enforce-module-boundaries",
@@ -3858,6 +4568,16 @@
         "tags": ["repository-types"]
       },
       {
+        "id": "standalone-to-integrated",
+        "name": "Convert from a Standalone Repository to an Integrated Repository",
+        "description": "",
+        "file": "shared/recipes/repo-types/standalone-to-integrated",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+        "tags": ["repository-types"]
+      },
+      {
         "id": "eslint",
         "name": "Configuring ESLint with Typescript",
         "description": "",
@@ -3865,6 +4585,16 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/eslint",
+        "tags": []
+      },
+      {
+        "id": "enable-tsc-batch-mode",
+        "name": "Enable Typescript Batch Mode",
+        "description": "",
+        "file": "shared/recipes/enable-tsc-batch-mode",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
         "tags": []
       },
       {
@@ -3918,6 +4648,16 @@
         "tags": []
       },
       {
+        "id": "reduce-repetitive-configuration",
+        "name": "Reduce Repetitive Configuration",
+        "description": "",
+        "file": "shared/recipes/reduce-repetitive-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+        "tags": []
+      },
+      {
         "id": "root-level-scripts",
         "name": "Run Root-Level NPM Scripts with Nx",
         "description": "",
@@ -3946,16 +4686,6 @@
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/workspace-watching",
         "tags": ["workspace-watching"]
-      },
-      {
-        "id": "standalone-to-integrated",
-        "name": "Convert from a Standalone Repository to an Integrated Repository",
-        "description": "",
-        "file": "shared/recipes/repo-types/standalone-to-integrated",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-        "tags": ["repository-types"]
       },
       {
         "id": "js-and-ts",
@@ -3996,6 +4726,16 @@
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/yarn-pnp",
         "tags": ["yarn", "Plug and Play"]
+      },
+      {
+        "id": "flat-config",
+        "name": "Switching to ESLint's flat config format",
+        "description": "",
+        "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/flat-config",
+        "tags": ["eslint", "flat config"]
       }
     ],
     "isExternal": false,
@@ -4022,6 +4762,16 @@
     "path": "/recipes/tips-n-tricks/integrated-in-package-based",
     "tags": ["repository-types"]
   },
+  "/recipes/tips-n-tricks/standalone-to-integrated": {
+    "id": "standalone-to-integrated",
+    "name": "Convert from a Standalone Repository to an Integrated Repository",
+    "description": "",
+    "file": "shared/recipes/repo-types/standalone-to-integrated",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/standalone-to-integrated",
+    "tags": ["repository-types"]
+  },
   "/recipes/tips-n-tricks/eslint": {
     "id": "eslint",
     "name": "Configuring ESLint with Typescript",
@@ -4030,6 +4780,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/eslint",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/enable-tsc-batch-mode": {
+    "id": "enable-tsc-batch-mode",
+    "name": "Enable Typescript Batch Mode",
+    "description": "",
+    "file": "shared/recipes/enable-tsc-batch-mode",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
     "tags": []
   },
   "/recipes/tips-n-tricks/define-environment-variables": {
@@ -4082,6 +4842,16 @@
     "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
     "tags": []
   },
+  "/recipes/tips-n-tricks/reduce-repetitive-configuration": {
+    "id": "reduce-repetitive-configuration",
+    "name": "Reduce Repetitive Configuration",
+    "description": "",
+    "file": "shared/recipes/reduce-repetitive-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
+    "tags": []
+  },
   "/recipes/tips-n-tricks/root-level-scripts": {
     "id": "root-level-scripts",
     "name": "Run Root-Level NPM Scripts with Nx",
@@ -4111,16 +4881,6 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/workspace-watching",
     "tags": ["workspace-watching"]
-  },
-  "/recipes/tips-n-tricks/standalone-to-integrated": {
-    "id": "standalone-to-integrated",
-    "name": "Convert from a Standalone Repository to an Integrated Repository",
-    "description": "",
-    "file": "shared/recipes/repo-types/standalone-to-integrated",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/standalone-to-integrated",
-    "tags": ["repository-types"]
   },
   "/recipes/tips-n-tricks/js-and-ts": {
     "id": "js-and-ts",
@@ -4161,6 +4921,16 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/yarn-pnp",
     "tags": ["yarn", "Plug and Play"]
+  },
+  "/recipes/tips-n-tricks/flat-config": {
+    "id": "flat-config",
+    "name": "Switching to ESLint's flat config format",
+    "description": "",
+    "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/flat-config",
+    "tags": ["eslint", "flat config"]
   },
   "/recipes/troubleshooting": {
     "id": "troubleshooting",
@@ -4411,26 +5181,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "deno-deploy",
-        "name": "Serverless deployment with Deno Deploy",
-        "description": "",
-        "file": "shared/recipes/deployment/deno-deploy",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/deno-deploy",
-        "tags": ["deployment", "deno"]
-      },
-      {
-        "id": "deno-netlify-functions",
-        "name": "Add and Deploy Netlify Edge Functions with Deno",
-        "description": "",
-        "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/other/deno-netlify-functions",
-        "tags": ["deployment", "deno"]
-      },
-      {
         "id": "rescope",
         "name": "Rescope Packages from @nrwl to @nx",
         "description": "",
@@ -4444,26 +5194,6 @@
     "isExternal": false,
     "path": "/recipes/other",
     "tags": []
-  },
-  "/recipes/other/deno-deploy": {
-    "id": "deno-deploy",
-    "name": "Serverless deployment with Deno Deploy",
-    "description": "",
-    "file": "shared/recipes/deployment/deno-deploy",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/deno-deploy",
-    "tags": ["deployment", "deno"]
-  },
-  "/recipes/other/deno-netlify-functions": {
-    "id": "deno-netlify-functions",
-    "name": "Add and Deploy Netlify Edge Functions with Deno",
-    "description": "",
-    "file": "shared/recipes/deployment/deno-netlify-edge-functions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/other/deno-netlify-functions",
-    "tags": ["deployment", "deno"]
   },
   "/recipes/other/rescope": {
     "id": "rescope",
@@ -4487,6 +5217,16 @@
         "description": "Examples of different ways to use Nx",
         "file": "",
         "itemList": [
+          {
+            "id": "add-express",
+            "name": "Add an Express Project",
+            "description": "Add an Express application to your repo",
+            "file": "shared/recipes/add-stack/add-express",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-express",
+            "tags": []
+          },
           {
             "id": "add-lit",
             "name": "Add a Lit Project",
@@ -4518,6 +5258,36 @@
             "tags": []
           },
           {
+            "id": "add-rust",
+            "name": "Add a Rust Project",
+            "description": "Add a Rust project to your repo",
+            "file": "shared/recipes/add-stack/add-rust",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-rust",
+            "tags": []
+          },
+          {
+            "id": "add-dotnet",
+            "name": "Add a .NET Project",
+            "description": "Add a .NET project to your repo",
+            "file": "shared/recipes/add-stack/add-dotnet",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-dotnet",
+            "tags": []
+          },
+          {
+            "id": "add-nuxt",
+            "name": "Add a Nuxt Project",
+            "description": "Add a nuxt project to your repo",
+            "file": "shared/recipes/add-stack/add-nuxt",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-nuxt",
+            "tags": []
+          },
+          {
             "id": "add-astro",
             "name": "Add an Astro Project",
             "description": "Add Nx to an Astro project",
@@ -4535,6 +5305,26 @@
             "itemList": [],
             "isExternal": false,
             "path": "/showcase/example-repos/add-vue",
+            "tags": []
+          },
+          {
+            "id": "add-svelte",
+            "name": "Add a Svelte Project",
+            "description": "Add a Svelte project to your repo",
+            "file": "shared/recipes/add-stack/add-svelte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-svelte",
+            "tags": []
+          },
+          {
+            "id": "add-fastify",
+            "name": "Add a Fastify Project",
+            "description": "Add a Fastify project to your repo",
+            "file": "shared/recipes/add-stack/add-fastify",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/example-repos/add-fastify",
             "tags": []
           },
           {
@@ -4608,26 +5398,6 @@
             "tags": ["database", "node", "serverless"]
           },
           {
-            "id": "caching",
-            "name": "Large Repo and Caching",
-            "description": "",
-            "file": "shared/examples/caching",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/caching",
-            "tags": []
-          },
-          {
-            "id": "dte",
-            "name": "Large Repo and DTE",
-            "description": "",
-            "file": "shared/examples/dte",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/dte",
-            "tags": []
-          },
-          {
             "id": "mfe",
             "name": "Nx Micro-Frontend Example",
             "description": "",
@@ -4641,6 +5411,47 @@
         "isExternal": false,
         "path": "/showcase/example-repos",
         "tags": []
+      },
+      {
+        "id": "benchmarks",
+        "name": "Benchmarks",
+        "description": "Benchmarks showing how fast Nx is",
+        "file": "",
+        "itemList": [
+          {
+            "id": "tsc-batch-mode",
+            "name": "Typescript Batch Mode Compilation",
+            "description": "",
+            "file": "shared/examples/tsc-batch-mode",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/benchmarks/tsc-batch-mode",
+            "tags": []
+          },
+          {
+            "id": "caching",
+            "name": "Large Repo and Caching",
+            "description": "",
+            "file": "shared/examples/caching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/benchmarks/caching",
+            "tags": []
+          },
+          {
+            "id": "dte",
+            "name": "Large Repo and DTE",
+            "description": "",
+            "file": "shared/examples/dte",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/showcase/benchmarks/dte",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/showcase/benchmarks",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -4653,6 +5464,16 @@
     "description": "Examples of different ways to use Nx",
     "file": "",
     "itemList": [
+      {
+        "id": "add-express",
+        "name": "Add an Express Project",
+        "description": "Add an Express application to your repo",
+        "file": "shared/recipes/add-stack/add-express",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-express",
+        "tags": []
+      },
       {
         "id": "add-lit",
         "name": "Add a Lit Project",
@@ -4684,6 +5505,36 @@
         "tags": []
       },
       {
+        "id": "add-rust",
+        "name": "Add a Rust Project",
+        "description": "Add a Rust project to your repo",
+        "file": "shared/recipes/add-stack/add-rust",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-rust",
+        "tags": []
+      },
+      {
+        "id": "add-dotnet",
+        "name": "Add a .NET Project",
+        "description": "Add a .NET project to your repo",
+        "file": "shared/recipes/add-stack/add-dotnet",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-dotnet",
+        "tags": []
+      },
+      {
+        "id": "add-nuxt",
+        "name": "Add a Nuxt Project",
+        "description": "Add a nuxt project to your repo",
+        "file": "shared/recipes/add-stack/add-nuxt",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-nuxt",
+        "tags": []
+      },
+      {
         "id": "add-astro",
         "name": "Add an Astro Project",
         "description": "Add Nx to an Astro project",
@@ -4701,6 +5552,26 @@
         "itemList": [],
         "isExternal": false,
         "path": "/showcase/example-repos/add-vue",
+        "tags": []
+      },
+      {
+        "id": "add-svelte",
+        "name": "Add a Svelte Project",
+        "description": "Add a Svelte project to your repo",
+        "file": "shared/recipes/add-stack/add-svelte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-svelte",
+        "tags": []
+      },
+      {
+        "id": "add-fastify",
+        "name": "Add a Fastify Project",
+        "description": "Add a Fastify project to your repo",
+        "file": "shared/recipes/add-stack/add-fastify",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/example-repos/add-fastify",
         "tags": []
       },
       {
@@ -4774,26 +5645,6 @@
         "tags": ["database", "node", "serverless"]
       },
       {
-        "id": "caching",
-        "name": "Large Repo and Caching",
-        "description": "",
-        "file": "shared/examples/caching",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/caching",
-        "tags": []
-      },
-      {
-        "id": "dte",
-        "name": "Large Repo and DTE",
-        "description": "",
-        "file": "shared/examples/dte",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/dte",
-        "tags": []
-      },
-      {
         "id": "mfe",
         "name": "Nx Micro-Frontend Example",
         "description": "",
@@ -4806,6 +5657,16 @@
     ],
     "isExternal": false,
     "path": "/showcase/example-repos",
+    "tags": []
+  },
+  "/showcase/example-repos/add-express": {
+    "id": "add-express",
+    "name": "Add an Express Project",
+    "description": "Add an Express application to your repo",
+    "file": "shared/recipes/add-stack/add-express",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-express",
     "tags": []
   },
   "/showcase/example-repos/add-lit": {
@@ -4838,6 +5699,36 @@
     "path": "/showcase/example-repos/add-qwik",
     "tags": []
   },
+  "/showcase/example-repos/add-rust": {
+    "id": "add-rust",
+    "name": "Add a Rust Project",
+    "description": "Add a Rust project to your repo",
+    "file": "shared/recipes/add-stack/add-rust",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-rust",
+    "tags": []
+  },
+  "/showcase/example-repos/add-dotnet": {
+    "id": "add-dotnet",
+    "name": "Add a .NET Project",
+    "description": "Add a .NET project to your repo",
+    "file": "shared/recipes/add-stack/add-dotnet",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-dotnet",
+    "tags": []
+  },
+  "/showcase/example-repos/add-nuxt": {
+    "id": "add-nuxt",
+    "name": "Add a Nuxt Project",
+    "description": "Add a nuxt project to your repo",
+    "file": "shared/recipes/add-stack/add-nuxt",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-nuxt",
+    "tags": []
+  },
   "/showcase/example-repos/add-astro": {
     "id": "add-astro",
     "name": "Add an Astro Project",
@@ -4856,6 +5747,26 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-vue",
+    "tags": []
+  },
+  "/showcase/example-repos/add-svelte": {
+    "id": "add-svelte",
+    "name": "Add a Svelte Project",
+    "description": "Add a Svelte project to your repo",
+    "file": "shared/recipes/add-stack/add-svelte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-svelte",
+    "tags": []
+  },
+  "/showcase/example-repos/add-fastify": {
+    "id": "add-fastify",
+    "name": "Add a Fastify Project",
+    "description": "Add a Fastify project to your repo",
+    "file": "shared/recipes/add-stack/add-fastify",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/example-repos/add-fastify",
     "tags": []
   },
   "/showcase/example-repos/react-nx": {
@@ -4928,26 +5839,6 @@
     "path": "/showcase/example-repos/serverless-fastify-planetscale",
     "tags": ["database", "node", "serverless"]
   },
-  "/showcase/example-repos/caching": {
-    "id": "caching",
-    "name": "Large Repo and Caching",
-    "description": "",
-    "file": "shared/examples/caching",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/caching",
-    "tags": []
-  },
-  "/showcase/example-repos/dte": {
-    "id": "dte",
-    "name": "Large Repo and DTE",
-    "description": "",
-    "file": "shared/examples/dte",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/dte",
-    "tags": []
-  },
   "/showcase/example-repos/mfe": {
     "id": "mfe",
     "name": "Nx Micro-Frontend Example",
@@ -4956,6 +5847,77 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/mfe",
+    "tags": []
+  },
+  "/showcase/benchmarks": {
+    "id": "benchmarks",
+    "name": "Benchmarks",
+    "description": "Benchmarks showing how fast Nx is",
+    "file": "",
+    "itemList": [
+      {
+        "id": "tsc-batch-mode",
+        "name": "Typescript Batch Mode Compilation",
+        "description": "",
+        "file": "shared/examples/tsc-batch-mode",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/benchmarks/tsc-batch-mode",
+        "tags": []
+      },
+      {
+        "id": "caching",
+        "name": "Large Repo and Caching",
+        "description": "",
+        "file": "shared/examples/caching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/benchmarks/caching",
+        "tags": []
+      },
+      {
+        "id": "dte",
+        "name": "Large Repo and DTE",
+        "description": "",
+        "file": "shared/examples/dte",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/showcase/benchmarks/dte",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/showcase/benchmarks",
+    "tags": []
+  },
+  "/showcase/benchmarks/tsc-batch-mode": {
+    "id": "tsc-batch-mode",
+    "name": "Typescript Batch Mode Compilation",
+    "description": "",
+    "file": "shared/examples/tsc-batch-mode",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/benchmarks/tsc-batch-mode",
+    "tags": []
+  },
+  "/showcase/benchmarks/caching": {
+    "id": "caching",
+    "name": "Large Repo and Caching",
+    "description": "",
+    "file": "shared/examples/caching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/benchmarks/caching",
+    "tags": []
+  },
+  "/showcase/benchmarks/dte": {
+    "id": "dte",
+    "name": "Large Repo and DTE",
+    "description": "",
+    "file": "shared/examples/dte",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/showcase/benchmarks/dte",
     "tags": []
   },
   "/reference": {
@@ -5215,6 +6177,16 @@
         "isExternal": false,
         "path": "/deprecated/storybook",
         "tags": []
+      },
+      {
+        "id": "v1-nx-plugin-api",
+        "name": "v1 Nx Plugin API",
+        "description": "",
+        "file": "shared/deprecated/v1-nx-plugin-api",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/v1-nx-plugin-api",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -5420,6 +6392,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/storybook/upgrade-storybook-v6-react",
+    "tags": []
+  },
+  "/deprecated/v1-nx-plugin-api": {
+    "id": "v1-nx-plugin-api",
+    "name": "v1 Nx Plugin API",
+    "description": "",
+    "file": "shared/deprecated/v1-nx-plugin-api",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/v1-nx-plugin-api",
     "tags": []
   },
   "/see-also": {

@@ -12,14 +12,14 @@ Target's configuration
 
 ### Properties
 
-- [command](../../devkit/documents/TargetConfiguration#command)
-- [configurations](../../devkit/documents/TargetConfiguration#configurations)
-- [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration)
-- [dependsOn](../../devkit/documents/TargetConfiguration#dependson)
-- [executor](../../devkit/documents/TargetConfiguration#executor)
-- [inputs](../../devkit/documents/TargetConfiguration#inputs)
-- [options](../../devkit/documents/TargetConfiguration#options)
-- [outputs](../../devkit/documents/TargetConfiguration#outputs)
+- [command](../../devkit/documents/TargetConfiguration#command): string
+- [configurations](../../devkit/documents/TargetConfiguration#configurations): Object
+- [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration): string
+- [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
+- [executor](../../devkit/documents/TargetConfiguration#executor): string
+- [inputs](../../devkit/documents/TargetConfiguration#inputs): (string | InputDefinition)[]
+- [options](../../devkit/documents/TargetConfiguration#options): T
+- [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
 
 ## Properties
 

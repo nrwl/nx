@@ -10,16 +10,16 @@
     "properties": {
       "project": {
         "type": "string",
-        "description": "The project to add a Playwright configuration to",
+        "description": "The project to add a Playwright configuration to.",
         "$default": { "$source": "projectName" },
         "x-priority": "important",
         "x-prompt": "What is the name of the project to set up Playwright for?"
       },
       "directory": {
         "type": "string",
-        "description": "A directory where the project is placed relative from the project root",
+        "description": "A directory where the project is placed relative from the project root.",
         "x-priority": "important",
-        "default": "playwright"
+        "default": "e2e"
       },
       "js": {
         "type": "boolean",

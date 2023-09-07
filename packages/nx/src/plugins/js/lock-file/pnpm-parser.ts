@@ -1,8 +1,8 @@
 import type {
-  PackageSnapshot,
   Lockfile,
-  ProjectSnapshot,
+  PackageSnapshot,
   PackageSnapshots,
+  ProjectSnapshot,
 } from '@pnpm/lockfile-types';
 import {
   isV6Lockfile,
@@ -10,36 +10,65 @@ import {
   parseAndNormalizePnpmLockfile,
   stringifyToPnpmYaml,
 } from './utils/pnpm-normalizer';
-import { getHoistedPackageVersion } from './utils/package-json';
-import { NormalizedPackageJson } from './utils/package-json';
-import { sortObjectByKeys } from '../../../utils/object-sort';
-import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import {
+  getHoistedPackageVersion,
+  NormalizedPackageJson,
+} from './utils/package-json';
+import { sortObjectByKeys } from '../../../utils/object-sort';
+import {
+  ProjectGraphDependencyWithFile,
+  validateDependency,
+} from '../../../project-graph/project-graph-builder';
+import {
+  DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
 
-export function parsePnpmLockfile(
-  lockFileContent: string,
-  builder: ProjectGraphBuilder
-): void {
-  const data = parseAndNormalizePnpmLockfile(lockFileContent);
-  const isV6 = isV6Lockfile(data);
+// we use key => node map to avoid duplicate work when parsing keys
+let keyMap = new Map<string, ProjectGraphExternalNode>();
+let currentLockFileHash: string;
 
-  // we use key => node map to avoid duplicate work when parsing keys
-  const keyMap = new Map<string, ProjectGraphExternalNode>();
+let parsedLockFile: Lockfile;
+function parsePnpmLockFile(lockFileContent: string, lockFileHash: string) {
+  if (lockFileHash === currentLockFileHash) {
+    return parsedLockFile;
+  }
 
-  addNodes(data, builder, keyMap, isV6);
-  addDependencies(data, builder, keyMap, isV6);
+  keyMap.clear();
+  const results = parseAndNormalizePnpmLockfile(lockFileContent);
+  parsedLockFile = results;
+  currentLockFileHash = lockFileHash;
+  return results;
 }
 
-function addNodes(
+export function getPnpmLockfileNodes(
+  lockFileContent: string,
+  lockFileHash: string
+) {
+  const data = parsePnpmLockFile(lockFileContent, lockFileHash);
+  const isV6 = isV6Lockfile(data);
+
+  return getNodes(data, keyMap, isV6);
+}
+
+export function getPnpmLockfileDependencies(
+  lockFileContent: string,
+  lockFileHash: string,
+  projectGraph: ProjectGraph
+) {
+  const data = parsePnpmLockFile(lockFileContent, lockFileHash);
+  const isV6 = isV6Lockfile(data);
+
+  return getDependencies(data, keyMap, isV6, projectGraph);
+}
+
+function getNodes(
   data: Lockfile,
-  builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>,
   isV6: boolean
-) {
+): Record<string, ProjectGraphExternalNode> {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
 
   Object.entries(data.packages).forEach(([key, snapshot]) => {
@@ -80,6 +109,8 @@ function addNodes(
   });
 
   const hoistedDeps = loadPnpmHoistedDepsDefinition();
+  const results: Record<string, ProjectGraphExternalNode> = {};
+
   for (const [packageName, versionMap] of nodes.entries()) {
     let hoistedNode: ProjectGraphExternalNode;
     if (versionMap.size === 1) {
@@ -93,9 +124,10 @@ function addNodes(
     }
 
     versionMap.forEach((node) => {
-      builder.addExternalNode(node);
+      results[node.name] = node;
     });
   }
+  return results;
 }
 
 function getHoistedVersion(
@@ -121,12 +153,13 @@ function getHoistedVersion(
   return version;
 }
 
-function addDependencies(
+function getDependencies(
   data: Lockfile,
-  builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  isV6: boolean
-) {
+  isV6: boolean,
+  projectGraph: ProjectGraph
+): ProjectGraphDependencyWithFile[] {
+  const results: ProjectGraphDependencyWithFile[] = [];
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const node = keyMap.get(key);
     [snapshot.dependencies, snapshot.optionalDependencies].forEach(
@@ -138,16 +171,24 @@ function addDependencies(
               isV6
             );
             const target =
-              builder.graph.externalNodes[`npm:${name}@${version}`] ||
-              builder.graph.externalNodes[`npm:${name}`];
+              projectGraph.externalNodes[`npm:${name}@${version}`] ||
+              projectGraph.externalNodes[`npm:${name}`];
             if (target) {
-              builder.addStaticDependency(node.name, target.name);
+              const dep = {
+                source: node.name,
+                target: target.name,
+                dependencyType: DependencyType.static,
+              };
+              validateDependency(projectGraph, dep);
+              results.push(dep);
             }
           });
         }
       }
     );
   });
+
+  return results;
 }
 
 function parseBaseVersion(rawVersion: string, isV6: boolean): string {

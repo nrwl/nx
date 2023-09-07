@@ -1,4 +1,4 @@
-import { output, PackageManager } from '@nx/devkit';
+import { output, PackageManager, ProjectConfiguration } from '@nx/devkit';
 import { packageInstall, tmpProjPath } from './create-project-utils';
 import {
   detectPackageManager,
@@ -14,10 +14,11 @@ import { TargetConfiguration } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
 import * as isCI from 'is-ci';
-import { Workspaces } from '../../packages/nx/src/config/workspaces';
 import { fileExists, readJson, updateFile } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
+import { retrieveProjectConfigurations } from '../../packages/nx/src/project-graph/utils/retrieve-workspace-files';
+import { readNxJson } from '../../packages/nx/src/config/nx-json';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -34,13 +35,15 @@ export interface RunCmdOpts {
  *
  * maxWorkers required for: node, web, jest
  */
-export function setMaxWorkers() {
+export async function setMaxWorkers() {
   if (isCI) {
-    const ws = new Workspaces(tmpProjPath());
-    const projectsConfigurations = ws.readProjectsConfigurations();
+    const root = tmpProjPath();
+    const projects: Record<string, ProjectConfiguration> = (
+      await retrieveProjectConfigurations(root, readNxJson(root))
+    ).projectNodes;
 
-    Object.keys(projectsConfigurations.projects).forEach((appName) => {
-      let project = projectsConfigurations.projects[appName];
+    Object.keys(projects).forEach((appName) => {
+      let project = projects[appName];
       const { build } = project.targets as {
         [targetName: string]: TargetConfiguration<any>;
       };
@@ -372,10 +375,6 @@ export function runCLI(
     }
 
     const r = stripConsoleColors(logs);
-    const needsMaxWorkers = /g.*(express|nest|node|web|react):app.*/;
-    if (needsMaxWorkers.test(command)) {
-      setMaxWorkers();
-    }
 
     return r;
   } catch (e) {

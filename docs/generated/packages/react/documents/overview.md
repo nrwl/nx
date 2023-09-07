@@ -122,4 +122,4 @@ The library in `dist` is publishable to npm or a private registry.
 
 - [Using Cypress](/packages/cypress)
 - [Using Jest](/packages/jest)
-- [Using Storybook](/packages/storybook/documents/overview-react)
+- [Using Storybook](/recipes/storybook/overview-react)

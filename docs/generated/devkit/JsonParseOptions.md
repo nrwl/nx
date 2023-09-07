@@ -10,10 +10,10 @@
 
 ### Properties
 
-- [allowEmptyContent](../../devkit/documents/JsonParseOptions#allowemptycontent)
-- [allowTrailingComma](../../devkit/documents/JsonParseOptions#allowtrailingcomma)
-- [disallowComments](../../devkit/documents/JsonParseOptions#disallowcomments)
-- [expectComments](../../devkit/documents/JsonParseOptions#expectcomments)
+- [allowEmptyContent](../../devkit/documents/JsonParseOptions#allowemptycontent): boolean
+- [allowTrailingComma](../../devkit/documents/JsonParseOptions#allowtrailingcomma): boolean
+- [disallowComments](../../devkit/documents/JsonParseOptions#disallowcomments): boolean
+- [expectComments](../../devkit/documents/JsonParseOptions#expectcomments): boolean
 
 ## Properties
 

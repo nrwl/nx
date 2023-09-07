@@ -25,7 +25,7 @@ export const backwardCompatibleVersions: Record<
     typesCorsVersion: '~2.8.5',
     expressVersion: '~4.18.2',
     typesExpressVersion: '4.17.14',
-    moduleFederationNodeVersion: '^0.10.1',
+    moduleFederationNodeVersion: '~1.0.5',
     angularEslintVersion: '~14.0.4',
     tailwindVersion: '^3.0.2',
     postcssVersion: '^8.4.5',
@@ -37,6 +37,7 @@ export const backwardCompatibleVersions: Record<
     jestPresetAngularVersion: '~12.2.3',
     typesNodeVersion: '16.11.7',
     jasmineMarblesVersion: '^0.9.2',
+    jsoncEslintParserVersion: '^2.1.0',
   },
   angularV15: {
     angularVersion: '~15.2.0',
@@ -52,7 +53,7 @@ export const backwardCompatibleVersions: Record<
     typesCorsVersion: '~2.8.5',
     expressVersion: '~4.18.2',
     typesExpressVersion: '4.17.14',
-    moduleFederationNodeVersion: '~0.10.1',
+    moduleFederationNodeVersion: '~1.0.5',
     angularEslintVersion: '~15.0.0',
     tailwindVersion: '^3.0.2',
     postcssVersion: '^8.4.5',
@@ -64,5 +65,6 @@ export const backwardCompatibleVersions: Record<
     jestPresetAngularVersion: '~13.0.0',
     typesNodeVersion: '16.11.7',
     jasmineMarblesVersion: '^0.9.2',
+    jsoncEslintParserVersion: '^2.1.0',
   },
 };

@@ -26,6 +26,7 @@
     "./src/utils": "./src/utils/public-api.js",
     "./plugins/component-testing": "./plugins/component-testing.js",
     "./src/generators/utils": "./src/generators/utils/index.js",
+    "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
     "./src/builders/*/schema.json": "./src/builders/*/schema.json",
     "./src/builders/*.impl": "./src/builders/*.impl.js",
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
@@ -72,10 +73,13 @@
     "@angular-devkit/core": ">= 14.0.0 < 17.0.0",
     "@nguniversal/builders": ">= 14.0.0 < 17.0.0",
     "rxjs": "^6.5.3 || ^7.5.0",
-    "esbuild": "^0.17.5"
+    "esbuild": "^0.19.2"
   },
   "peerDependenciesMeta": {
     "@nguniversal/builders": {
+      "optional": true
+    },
+    "esbuild": {
       "optional": true
     }
   },

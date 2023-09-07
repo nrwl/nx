@@ -16,22 +16,22 @@ use ProjectsConfigurations or NxJsonConfiguration
 
 ### Properties
 
-- [affected](../../devkit/documents/Workspace#affected)
-- [cli](../../devkit/documents/Workspace#cli)
-- [defaultProject](../../devkit/documents/Workspace#defaultproject)
-- [extends](../../devkit/documents/Workspace#extends)
-- [generators](../../devkit/documents/Workspace#generators)
-- [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies)
-- [installation](../../devkit/documents/Workspace#installation)
-- [namedInputs](../../devkit/documents/Workspace#namedinputs)
-- [npmScope](../../devkit/documents/Workspace#npmscope)
-- [plugins](../../devkit/documents/Workspace#plugins)
-- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig)
-- [projects](../../devkit/documents/Workspace#projects)
-- [targetDefaults](../../devkit/documents/Workspace#targetdefaults)
-- [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
-- [version](../../devkit/documents/Workspace#version)
-- [workspaceLayout](../../devkit/documents/Workspace#workspacelayout)
+- [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
+- [cli](../../devkit/documents/Workspace#cli): Object
+- [defaultProject](../../devkit/documents/Workspace#defaultproject): string
+- [extends](../../devkit/documents/Workspace#extends): string
+- [generators](../../devkit/documents/Workspace#generators): Object
+- [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry&lt;string[] | &quot;\*&quot;&gt;
+- [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
+- [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
+- [npmScope](../../devkit/documents/Workspace#npmscope): string
+- [plugins](../../devkit/documents/Workspace#plugins): string[]
+- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, unknown&gt;
+- [projects](../../devkit/documents/Workspace#projects): Record&lt;string, ProjectConfiguration&gt;
+- [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
+- [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
+- [version](../../devkit/documents/Workspace#version): number
+- [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
 ## Properties
 
@@ -267,10 +267,11 @@ Where new apps + libs should be placed
 
 #### Type declaration
 
-| Name      | Type     |
-| :-------- | :------- |
-| `appsDir` | `string` |
-| `libsDir` | `string` |
+| Name                        | Type                           |
+| :-------------------------- | :----------------------------- |
+| `appsDir?`                  | `string`                       |
+| `libsDir?`                  | `string`                       |
+| `projectNameAndRootFormat?` | `"as-provided"` \| `"derived"` |
 
 #### Inherited from
 

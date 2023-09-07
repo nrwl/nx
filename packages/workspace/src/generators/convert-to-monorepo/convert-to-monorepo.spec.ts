@@ -29,7 +29,7 @@ describe('monorepo generator', () => {
       libsDir: 'packages',
     });
 
-    expect(readJson(tree, 'packages/my-lib/project.json')).toMatchObject({
+    expect(readProjectConfiguration(tree, 'my-lib')).toMatchObject({
       sourceRoot: 'packages/my-lib/src',
       targets: {
         build: {
@@ -41,7 +41,8 @@ describe('monorepo generator', () => {
         },
       },
     });
-    expect(readJson(tree, 'packages/other-lib/project.json')).toMatchObject({
+    expect(readProjectConfiguration(tree, 'other-lib')).toMatchObject({
+      name: 'other-lib',
       sourceRoot: 'packages/other-lib/src',
     });
 
@@ -67,13 +68,41 @@ describe('monorepo generator', () => {
 
     await monorepoGenerator(tree, {});
 
-    expect(readJson(tree, 'apps/demo/project.json')).toMatchObject({
+    expect(readProjectConfiguration(tree, 'demo')).toMatchObject({
       sourceRoot: 'apps/demo/src',
     });
 
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
     expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
+  });
+
+  it('should respect nested libraries', async () => {
+    await reactAppGenerator(tree, {
+      name: 'demo',
+      style: 'css',
+      bundler: 'vite',
+      unitTestRunner: 'vitest',
+      e2eTestRunner: 'none',
+      linter: 'eslint',
+      rootProject: true,
+    });
+
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      directory: 'inner',
+      style: 'css',
+      bundler: 'vite',
+      unitTestRunner: 'none',
+      e2eTestRunner: 'none',
+      linter: 'eslint',
+      rootProject: true,
+    });
+
+    await monorepoGenerator(tree, {});
+
+    expect(tree.exists('libs/inner/my-lib/tsconfig.json')).toBeTruthy();
+    expect(tree.exists('libs/inner/my-lib/src/index.ts')).toBeTruthy();
   });
 
   it('should convert root React app (Webpack, Jest)', async () => {
@@ -89,7 +118,7 @@ describe('monorepo generator', () => {
 
     await monorepoGenerator(tree, {});
 
-    expect(readJson(tree, 'apps/demo/project.json')).toMatchObject({
+    expect(readProjectConfiguration(tree, 'demo')).toMatchObject({
       sourceRoot: 'apps/demo/src',
       targets: {
         build: {
@@ -129,11 +158,11 @@ describe('monorepo generator', () => {
 
     await monorepoGenerator(tree, {});
 
-    expect(readJson(tree, 'apps/demo/project.json')).toMatchObject({
+    expect(readProjectConfiguration(tree, 'demo')).toMatchObject({
       sourceRoot: 'apps/demo',
     });
     expect(tree.read('apps/demo/app/page.tsx', 'utf-8')).toContain('demo');
-    expect(readJson(tree, 'libs/util/project.json')).toMatchObject({
+    expect(readProjectConfiguration(tree, 'util')).toMatchObject({
       sourceRoot: 'libs/util/src',
     });
     expect(tree.read('libs/util/src/lib/util.ts', 'utf-8')).toContain('util');

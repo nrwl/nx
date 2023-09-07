@@ -50,18 +50,16 @@ describe('StorybookConfiguration generator', () => {
       generateStories: false,
     });
 
-    expect(tree.exists('libs/test-ui-lib/.storybook/main.ts')).toBeTruthy();
-    expect(
-      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
-    ).toBeTruthy();
+    expect(tree.exists('test-ui-lib/.storybook/main.ts')).toBeTruthy();
+    expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
       tree.exists(
-        'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
+        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts'
       )
     ).toBeFalsy();
     expect(
       tree.exists(
-        'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
+        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts'
       )
     ).toBeFalsy();
   });
@@ -74,7 +72,7 @@ describe('StorybookConfiguration generator', () => {
     });
 
     expect(
-      tree.read('libs/test-ui-lib/.storybook/main.ts', 'utf-8')
+      tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -84,19 +82,17 @@ describe('StorybookConfiguration generator', () => {
       generateStories: true,
     });
 
-    expect(tree.exists('libs/test-ui-lib/.storybook/main.ts')).toBeTruthy();
-    expect(
-      tree.exists('libs/test-ui-lib/.storybook/tsconfig.json')
-    ).toBeTruthy();
+    expect(tree.exists('test-ui-lib/.storybook/main.ts')).toBeTruthy();
+    expect(tree.exists('test-ui-lib/.storybook/tsconfig.json')).toBeTruthy();
     expect(
       tree.read(
-        'libs/test-ui-lib/src/lib/test-button/test-button.component.stories.ts',
+        'test-ui-lib/src/lib/test-button/test-button.component.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
     expect(
       tree.read(
-        'libs/test-ui-lib/src/lib/test-other/test-other.component.stories.ts',
+        'test-ui-lib/src/lib/test-other/test-other.component.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -120,7 +116,7 @@ describe('StorybookConfiguration generator', () => {
       standalone: true,
     });
     // add secondary entrypoint
-    writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+    writeJson(tree, `${libName}/package.json`, { name: libName });
     await librarySecondaryEntryPointGenerator(tree, {
       library: libName,
       name: 'secondary-entry-point',
@@ -129,14 +125,14 @@ describe('StorybookConfiguration generator', () => {
     await componentGenerator(tree, {
       name: 'secondary-button',
       project: libName,
-      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      path: `${libName}/secondary-entry-point/src/lib`,
       export: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
       project: libName,
-      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      path: `${libName}/secondary-entry-point/src/lib`,
       standalone: true,
       export: true,
     });
@@ -157,7 +153,7 @@ describe('StorybookConfiguration generator', () => {
       standalone: true,
     });
     // add secondary entrypoint
-    writeJson(tree, `libs/${libName}/package.json`, { name: libName });
+    writeJson(tree, `${libName}/package.json`, { name: libName });
     await librarySecondaryEntryPointGenerator(tree, {
       library: libName,
       name: 'secondary-entry-point',
@@ -166,14 +162,14 @@ describe('StorybookConfiguration generator', () => {
     await componentGenerator(tree, {
       name: 'secondary-button',
       project: libName,
-      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      path: `${libName}/secondary-entry-point/src/lib`,
       export: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
       name: 'secondary-standalone',
       project: libName,
-      path: `libs/${libName}/secondary-entry-point/src/lib`,
+      path: `${libName}/secondary-entry-point/src/lib`,
       standalone: true,
       export: true,
     });

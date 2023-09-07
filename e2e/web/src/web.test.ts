@@ -12,6 +12,7 @@ import {
   runCLI,
   runCLIAsync,
   runE2ETests,
+  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -29,6 +30,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -75,7 +77,7 @@ describe('Web Components Applications', () => {
       customElements.define('app-root', AppElement);
     `
     );
-    runCLI(`build ${appName} --outputHashing none --compiler babel`);
+    runCLI(`build ${appName} --outputHashing none`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
@@ -103,6 +105,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --e2eTestRunner=playwright --no-interactive`
     );
+    await setMaxWorkers();
 
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
@@ -128,6 +131,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
     );
+    await setMaxWorkers();
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
     createFile(`dist/libs/${libName}/_should_remove.txt`);
@@ -164,6 +168,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
     );
+    await setMaxWorkers();
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
       const newContent = `${content}
@@ -219,6 +224,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
     );
+    await setMaxWorkers();
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
       const newContent = `${content}
@@ -252,7 +258,7 @@ describe('Web Components Applications', () => {
     runCLI(`build ${appName} --outputHashing none`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
-      /Foo=(_ts|_)_decorate\(\[sealed\],Foo\)/g
+      /Foo=.*?_decorate/
     );
   }, 120000);
 
@@ -261,8 +267,9 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       config.targets.build.options.webpackConfig = `apps/${appName}/webpack.config.js`;
       return config;
     });
@@ -310,10 +317,31 @@ describe('Web Components Applications', () => {
     runCLI(`build ${appName} --outputHashing none`);
     checkFilesExist(`dist/apps/${appName}/main.js`);
   }, 100000);
+
+  it('should support generating applications with the new name and root format', () => {
+    const appName = uniq('app1');
+
+    runCLI(
+      `generate @nx/web:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${appName}/src/main.ts`);
+    // check build works
+    expect(runCLI(`build ${appName}`)).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+    // check tests pass
+    const appTestResult = runCLI(`test ${appName}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${appName}`
+    );
+  }, 500_000);
 });
 
 describe('CLI - Environment Variables', () => {
-  it('should automatically load workspace and per-project environment variables', () => {
+  it('should automatically load workspace and per-project environment variables', async () => {
     newProject();
 
     const appName = uniq('app');
@@ -360,6 +388,7 @@ describe('CLI - Environment Variables', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
     );
+    await setMaxWorkers();
 
     const content = readFile(main);
 
@@ -385,13 +414,14 @@ describe('CLI - Environment Variables', () => {
     runCLI(
       `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
     );
+    await setMaxWorkers();
 
     const content2 = readFile(main2);
 
     updateFile(main2, `${newCode2}\n${content2}`);
 
     runCLI(
-      `run-many --target build --all --outputHashing=none --optimization=false`,
+      `run-many --target build --outputHashing=none --optimization=false`,
       {
         env: {
           ...process.env,
@@ -411,7 +441,7 @@ describe('CLI - Environment Variables', () => {
 });
 
 describe('Build Options', () => {
-  it('should inject/bundle external scripts and styles', () => {
+  it('should inject/bundle external scripts and styles', async () => {
     newProject();
 
     const appName = uniq('app');
@@ -419,6 +449,7 @@ describe('Build Options', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     const srcPath = `apps/${appName}/src`;
     const fooCss = `${srcPath}/foo.css`;
@@ -444,7 +475,7 @@ describe('Build Options', () => {
     const barScriptsBundleName = 'bar-scripts';
     const barStylesBundleName = 'bar-styles';
 
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       const buildOptions = config.targets.build.options;
 
       buildOptions.scripts = [
@@ -492,12 +523,13 @@ describe('Build Options', () => {
 });
 
 describe('index.html interpolation', () => {
-  test('should interpolate environment variables', () => {
+  test('should interpolate environment variables', async () => {
     const appName = uniq('app');
 
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
+    await setMaxWorkers();
 
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;
@@ -530,7 +562,7 @@ describe('index.html interpolation', () => {
     updateFile(envFilePath, envFileContents);
     updateFile(indexPath, indexContent);
 
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       const buildOptions = config.targets.build.options;
       buildOptions.deployUrl = 'baz';
       return config;

@@ -5,7 +5,6 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -32,7 +31,17 @@ export async function expoLibraryGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  const options = normalizeOptions(host, schema);
+  return await expoLibraryGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function expoLibraryGeneratorInternal(
+  host: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
+  const options = await normalizeOptions(host, schema);
   if (options.publishable === true && !schema.importPath) {
     throw new Error(
       `For publishable libs you have to provide a proper "--importPath" which needs to be a valid npm package name (e.g. my-awesome-lib or @myorg/my-lib)`
@@ -105,7 +114,6 @@ async function addProject(host: Tree, options: NormalizedSchema) {
       nxVersion
     );
 
-    const { libsDir } = getWorkspaceLayout(host);
     const external = [
       'react/jsx-runtime',
       'react-native',
@@ -117,7 +125,7 @@ async function addProject(host: Tree, options: NormalizedSchema) {
       executor: '@nx/rollup:rollup',
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: `dist/${libsDir}/${options.projectDirectory}`,
+        outputPath: `dist/${options.projectRoot}`,
         tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
         project: `${options.projectRoot}/package.json`,
         entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),

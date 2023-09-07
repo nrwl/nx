@@ -3,11 +3,16 @@ import { WorkspaceLibrarySecondaryEntryPoint } from './models';
 import { dirname, join, relative } from 'path';
 import { existsSync, lstatSync, readdirSync } from 'fs';
 
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { PackageJson, readModulePackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from 'nx/src/utils/package-json';
 import { requireNx } from '../../../nx';
 
-const { readJsonFile, joinPathFragments, workspaceRoot } = requireNx();
+let { readJsonFile, joinPathFragments, workspaceRoot, readModulePackageJson } =
+  requireNx();
+
+// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+readModulePackageJson =
+  readModulePackageJson ??
+  require('nx/src/utils/package-json').readModulePackageJson;
 
 export function collectWorkspaceLibrarySecondaryEntryPoints(
   library: WorkspaceLibrary,

@@ -94,12 +94,12 @@ It only uses language primitives and immutable objects
 
 ### Variables
 
-- [NX_VERSION](../../devkit/documents/NX_VERSION)
-- [appRootPath](../../devkit/documents/appRootPath)
-- [cacheDir](../../devkit/documents/cacheDir)
-- [logger](../../devkit/documents/logger)
-- [output](../../devkit/documents/output)
-- [workspaceRoot](../../devkit/documents/workspaceRoot)
+- [NX_VERSION](../../devkit/documents/NX_VERSION): string
+- [appRootPath](../../devkit/documents/appRootPath): string
+- [cacheDir](../../devkit/documents/cacheDir): string
+- [logger](../../devkit/documents/logger): Object
+- [output](../../devkit/documents/output): CLIOutput
+- [workspaceRoot](../../devkit/documents/workspaceRoot): string
 
 ### Functions
 
@@ -138,12 +138,12 @@ It only uses language primitives and immutable objects
 - [offsetFromRoot](../../devkit/documents/offsetFromRoot)
 - [parseJson](../../devkit/documents/parseJson)
 - [parseTargetString](../../devkit/documents/parseTargetString)
-- [readAllWorkspaceConfiguration](../../devkit/documents/readAllWorkspaceConfiguration)
 - [readCachedProjectGraph](../../devkit/documents/readCachedProjectGraph)
 - [readJson](../../devkit/documents/readJson)
 - [readJsonFile](../../devkit/documents/readJsonFile)
 - [readNxJson](../../devkit/documents/readNxJson)
 - [readProjectConfiguration](../../devkit/documents/readProjectConfiguration)
+- [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph)
 - [readRootPackageJson](../../devkit/documents/readRootPackageJson)
 - [readTargetOptions](../../devkit/documents/readTargetOptions)
 - [readWorkspaceConfiguration](../../devkit/documents/readWorkspaceConfiguration)

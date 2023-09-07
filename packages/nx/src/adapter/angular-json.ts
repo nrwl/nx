@@ -1,10 +1,20 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
 import { readJsonFile } from '../utils/fileutils';
-import {
-  ProjectConfiguration,
-  ProjectsConfigurations,
-} from '../config/workspace-json-project-json';
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { NxPluginV2 } from '../devkit-exports';
+
+export const NX_ANGULAR_JSON_PLUGIN_NAME = 'nx-angular-json-plugin';
+
+export const NxAngularJsonPlugin: NxPluginV2 = {
+  name: NX_ANGULAR_JSON_PLUGIN_NAME,
+  createNodes: [
+    'angular.json',
+    (f, ctx) => ({
+      projects: readAngularJson(ctx.workspaceRoot),
+    }),
+  ],
+};
 
 export function shouldMergeAngularProjects(
   root: string,
@@ -43,25 +53,6 @@ function readAngularJson(angularCliWorkspaceRoot: string) {
   return toNewFormat(
     readJsonFile(path.join(angularCliWorkspaceRoot, 'angular.json'))
   ).projects;
-}
-
-export function mergeAngularJsonAndProjects(
-  projects: {
-    [name: string]: ProjectConfiguration;
-  },
-  angularCliWorkspaceRoot: string
-): { [name: string]: ProjectConfiguration } {
-  const res = readAngularJson(angularCliWorkspaceRoot);
-  const folders = new Set();
-  for (let k of Object.keys(res)) {
-    folders.add(res[k].root);
-  }
-  for (let k of Object.keys(projects)) {
-    if (!folders.has(projects[k].root)) {
-      res[k] = projects[k];
-    }
-  }
-  return res;
 }
 
 export function toNewFormat(w: any): ProjectsConfigurations {

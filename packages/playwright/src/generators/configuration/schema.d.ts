@@ -2,6 +2,9 @@ import type { Linter } from '@nx/linter';
 
 export interface ConfigurationGeneratorSchema {
   project: string;
+  /**
+   * this is relative to the projectRoot
+   **/
   directory: string;
   js: boolean; // default is false
   skipFormat: boolean;

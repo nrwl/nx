@@ -202,6 +202,75 @@ describe('Dependency checks (eslint)', () => {
     expect(failures.length).toEqual(0);
   });
 
+  it('should exclude files that are ignored', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {},
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/vite.config.ts': '',
+      './libs/liba/project.json': JSON.stringify(
+        {
+          name: 'liba',
+          targets: {
+            build: {
+              command: 'tsc -p tsconfig.lib.json',
+            },
+          },
+        },
+        null,
+        2
+      ),
+      './nx.json': JSON.stringify({
+        targetDefaults: {
+          build: {
+            inputs: [
+              '{projectRoot}/**/*',
+              '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
+            ],
+          },
+        },
+      }),
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {
+        ignoredFiles: ['{projectRoot}/vite.config.ts'],
+      },
+      `/root/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+        },
+      },
+      {
+        liba: [
+          createFile(`libs/liba/vite.config.ts`, ['npm:external1']),
+          createFile(`libs/liba/package.json`, []),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(0);
+  });
+
   it('should report missing dependencies section and fix it', () => {
     const packageJson = {
       name: '@mycompany/liba',
@@ -446,7 +515,7 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(`
-      "The "liba" project uses the following packages, but they are missing from the "dependencies":
+      "The "liba" project uses the following packages, but they are missing from "dependencies":
           - external2"
     `);
     expect(failures[0].line).toEqual(3);
@@ -1462,10 +1531,62 @@ describe('Dependency checks (eslint)', () => {
     );
     expect(failures.length).toEqual(1);
     expect(failures[0].message).toMatchInlineSnapshot(`
-      "The "liba" project uses the following packages, but they are missing from the "dependencies":
+      "The "liba" project uses the following packages, but they are missing from "dependencies":
           - tslib"
     `);
     expect(failures[0].line).toEqual(3);
+  });
+
+  it('should report missing package if it is in devDependencies', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {},
+      devDependencies: {
+        external1: '^16.0.0',
+      },
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {},
+      `/root/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes,
+        dependencies: {
+          liba: [{ source: 'liba', target: 'npm:external1', type: 'static' }],
+        },
+      },
+      {
+        liba: [
+          createFile(`libs/liba/src/main.ts`, ['npm:external1']),
+          createFile(`libs/liba/package.json`),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(1);
+    expect(failures[0].message).toMatchInlineSnapshot(`
+      "The "liba" project uses the following packages, but they are missing from "dependencies":
+          - external1"
+    `);
   });
 });
 
@@ -1525,8 +1646,8 @@ it('should require swc if @nx/js:swc executor', () => {
   );
   expect(failures.length).toEqual(1);
   expect(failures[0].message).toMatchInlineSnapshot(`
-      "The "liba" project uses the following packages, but they are missing from the "dependencies":
-          - @swc/helpers"
+    "The "liba" project uses the following packages, but they are missing from "dependencies":
+        - @swc/helpers"
   `);
   expect(failures[0].line).toEqual(3);
 });

@@ -1,7 +1,6 @@
 # Interface: ProjectsConfigurations
 
 Projects Configurations
-@note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
 
 ## Hierarchy
 
@@ -13,8 +12,8 @@ Projects Configurations
 
 ### Properties
 
-- [projects](../../devkit/documents/ProjectsConfigurations#projects)
-- [version](../../devkit/documents/ProjectsConfigurations#version)
+- [projects](../../devkit/documents/ProjectsConfigurations#projects): Object
+- [version](../../devkit/documents/ProjectsConfigurations#version): number
 
 ## Properties
 

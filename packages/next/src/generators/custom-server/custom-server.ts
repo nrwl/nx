@@ -3,13 +3,13 @@ import {
   updateJson,
   convertNxGenerator,
   generateFiles,
-  joinPathFragments,
   logger,
   offsetFromRoot,
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { CustomServerSchema } from './schema';
+import { join } from 'path';
 
 export async function customServerGenerator(
   host: Tree,
@@ -52,7 +52,7 @@ export async function customServerGenerator(
     return;
   }
 
-  generateFiles(host, joinPathFragments(__dirname, 'files'), project.root, {
+  generateFiles(host, join(__dirname, 'files'), project.root, {
     ...options,
     offsetFromRoot: offsetFromRoot(project.root),
     projectRoot: project.root,
@@ -99,12 +99,18 @@ export async function customServerGenerator(
   updateProjectConfiguration(host, options.project, project);
 
   updateJson(host, 'nx.json', (json) => {
-    json.tasksRunnerOptions ??= {};
-    json.tasksRunnerOptions.default ??= { options: {} };
-    json.tasksRunnerOptions.default.options.cacheableOperations = [
-      ...json.tasksRunnerOptions.default.options.cacheableOperations,
-      'build-custom-server',
-    ];
+    if (
+      !json.tasksRunnerOptions?.default?.options?.cacheableOperations?.includes(
+        'build-custom-server'
+      )
+    ) {
+      json.tasksRunnerOptions ??= {};
+      json.tasksRunnerOptions.default ??= { options: {} };
+      json.tasksRunnerOptions.default.options.cacheableOperations = [
+        ...json.tasksRunnerOptions.default.options.cacheableOperations,
+        'build-custom-server',
+      ];
+    }
     return json;
   });
 }

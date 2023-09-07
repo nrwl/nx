@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { ExecutorContext } from '@nx/devkit';
 import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
 

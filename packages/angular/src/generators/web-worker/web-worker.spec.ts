@@ -17,16 +17,16 @@ describe('webWorker generator', () => {
   it('should generate files', async () => {
     await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
 
-    expect(tree.exists(`apps/${appName}/tsconfig.worker.json`));
-    expect(tree.exists(`apps/${appName}/src/app/test-worker.worker.ts`));
+    expect(tree.exists(`${appName}/tsconfig.worker.json`));
+    expect(tree.exists(`${appName}/src/app/test-worker.worker.ts`));
   });
 
   it('should extend from tsconfig.base.json', async () => {
     await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
 
-    expect(
-      tree.read(`apps/${appName}/tsconfig.worker.json`, 'utf-8')
-    ).toContain('"extends": "../../tsconfig.base.json"');
+    expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
+      '"extends": "../tsconfig.base.json"'
+    );
   });
 
   it('should extend from tsconfig.json when used instead of tsconfig.base.json', async () => {
@@ -34,9 +34,9 @@ describe('webWorker generator', () => {
 
     await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
 
-    expect(
-      tree.read(`apps/${appName}/tsconfig.worker.json`, 'utf-8')
-    ).toContain('"extends": "../../tsconfig.json"');
+    expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
+      '"extends": "../tsconfig.json"'
+    );
   });
 
   it('should format files', async () => {
@@ -61,7 +61,7 @@ describe('webWorker generator', () => {
 
   it('should add the snippet correctly', async () => {
     // ARRANGE
-    tree.write(`apps/${appName}/src/app/test-worker.ts`, ``);
+    tree.write(`${appName}/src/app/test-worker.ts`, ``);
 
     // ACT
     await webWorkerGenerator(tree, {
@@ -71,7 +71,7 @@ describe('webWorker generator', () => {
     });
 
     // ASSERT
-    expect(tree.read(`apps/${appName}/src/app/test-worker.ts`, 'utf-8'))
+    expect(tree.read(`${appName}/src/app/test-worker.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "if (typeof Worker !== 'undefined') {
         // Create a new
@@ -86,7 +86,7 @@ describe('webWorker generator', () => {
       }
       "
     `);
-    expect(tree.read(`apps/${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
+    expect(tree.read(`${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "/// <reference lib="webworker" />
 

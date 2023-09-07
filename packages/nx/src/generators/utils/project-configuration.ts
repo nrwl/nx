@@ -4,13 +4,16 @@ import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
 } from '../../../plugins/package-json-workspaces';
-import { buildProjectFromProjectJson } from '../../../plugins/project-json';
+import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
-import { mergeProjectConfigurationIntoProjectsConfigurations } from '../../project-graph/utils/project-configuration-utils';
+import {
+  mergeProjectConfigurationIntoRootMap,
+  readProjectConfigurationsFromRootMap,
+} from '../../project-graph/utils/project-configuration-utils';
 import { retrieveProjectConfigurationPathsWithoutPluginInference } from '../../project-graph/utils/retrieve-workspace-files';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
@@ -183,8 +186,6 @@ export function getRelativeProjectJsonSchemaPath(
 function readAndCombineAllProjectConfigurations(tree: Tree): {
   [name: string]: ProjectConfiguration;
 } {
-  const nxJson = readNxJson(tree);
-
   /**
    * We can't update projects that come from plugins anyways, so we are going
    * to ignore them for now. Plugins should add their own add/create/update methods
@@ -207,17 +208,12 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     (r) => deletedFiles.indexOf(r) === -1
   );
 
-  const rootMap: Map<string, string> = new Map();
-  return projectFiles.reduce((projects, projectFile) => {
+  const rootMap: Map<string, ProjectConfiguration> = new Map();
+  for (const projectFile of projectFiles) {
     if (basename(projectFile) === 'project.json') {
       const json = readJson(tree, projectFile);
       const config = buildProjectFromProjectJson(json, projectFile);
-      mergeProjectConfigurationIntoProjectsConfigurations(
-        projects,
-        rootMap,
-        config,
-        projectFile
-      );
+      mergeProjectConfigurationIntoRootMap(rootMap, config, projectFile);
     } else {
       const packageJson = readJson<PackageJson>(tree, projectFile);
       const config = buildProjectConfigurationFromPackageJson(
@@ -225,8 +221,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
         projectFile,
         readNxJson(tree)
       );
-      mergeProjectConfigurationIntoProjectsConfigurations(
-        projects,
+      mergeProjectConfigurationIntoRootMap(
         rootMap,
         // Inferred targets, tags, etc don't show up when running generators
         // This is to help avoid running into issues when trying to update the workspace
@@ -237,8 +232,9 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
         projectFile
       );
     }
-    return projects;
-  }, {});
+  }
+
+  return readProjectConfigurationsFromRootMap(rootMap);
 }
 
 /**
@@ -256,7 +252,11 @@ function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
   for (const change of tree.listChanges()) {
     if (change.type === 'CREATE') {
       const fileName = basename(change.path);
-      if (globPatterns.some((pattern) => minimatch(change.path, pattern))) {
+      if (
+        globPatterns.some((pattern) =>
+          minimatch(change.path, pattern, { dot: true })
+        )
+      ) {
         createdProjectFiles.push(change.path);
       } else if (fileName === 'package.json') {
         try {

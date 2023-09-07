@@ -38,8 +38,8 @@ describe('convertToCypressTen', () => {
   describe('convertCypressProject', () => {
     beforeEach(async () => {
       addProjectConfiguration(tree, 'app', {
-        root: 'apps/app',
-        sourceRoot: 'apps/app/src',
+        root: 'app',
+        sourceRoot: 'app/src',
         targets: {
           serve: {
             executor: '@nx/web:file-server',
@@ -53,31 +53,30 @@ describe('convertToCypressTen', () => {
         name: 'app-e2e',
         skipFormat: true,
         project: 'app',
+        projectNameAndRootFormat: 'as-provided',
       });
     });
 
     it('should update project w/defaults', async () => {
-      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      expect(tree.exists('app-e2e/cypress.json')).toBeTruthy();
 
       await migrateCypressProject(tree);
 
-      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
-      expect(
-        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+      expect(tree.exists('app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'app-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
         'cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
     });
 
     it('should update project w/customized config', async () => {
-      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      expect(tree.exists('app-e2e/cypress.json')).toBeTruthy();
 
-      updateJson(tree, 'apps/app-e2e/cypress.json', (json) => {
+      updateJson(tree, 'app-e2e/cypress.json', (json) => {
         json = {
           ...json,
           baseUrl: 'http://localhost:4200',
@@ -90,28 +89,26 @@ describe('convertToCypressTen', () => {
 
       await migrateCypressProject(tree);
 
-      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
-      expect(
-        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+      expect(tree.exists('app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'app-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
         'cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
     });
 
     it('should not update a non e2e project', async () => {
       await migrateCypressProject(tree);
-      expect(tree.exists('apps/app/cypress.config.ts')).toBeFalsy();
-      expect(tree.exists('apps/app/src/e2e/app.cy.ts')).toBeFalsy();
-      expect(tree.exists('apps/app/src/support/e2e.ts')).toBeFalsy();
+      expect(tree.exists('app/cypress.config.ts')).toBeFalsy();
+      expect(tree.exists('app/src/e2e/app.cy.ts')).toBeFalsy();
+      expect(tree.exists('app/src/support/e2e.ts')).toBeFalsy();
     });
 
     it('should handle custom target names', async () => {
-      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      expect(tree.exists('app-e2e/cypress.json')).toBeTruthy();
       const pc = readProjectConfiguration(tree, 'app-e2e');
       pc.targets = {
         'e2e-custom': {
@@ -123,21 +120,19 @@ describe('convertToCypressTen', () => {
 
       await migrateCypressProject(tree);
 
-      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
-      expect(
-        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+      expect(tree.exists('app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'app-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
         'cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
     });
 
     it('should infer targets with --all flag', async () => {
-      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      expect(tree.exists('app-e2e/cypress.json')).toBeTruthy();
       const pc = readProjectConfiguration(tree, 'app-e2e');
       pc.targets = {
         ...pc.targets,
@@ -150,24 +145,22 @@ describe('convertToCypressTen', () => {
 
       await migrateCypressProject(tree);
 
-      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
-      expect(
-        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+      expect(tree.exists('app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'app-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
         'cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
         readProjectConfiguration(tree, 'app-e2e').targets
       ).toMatchSnapshot();
     });
 
     it('should not break when an invalid target is passed in', async () => {
-      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      expect(tree.exists('app-e2e/cypress.json')).toBeTruthy();
       const pc = readProjectConfiguration(tree, 'app-e2e');
       pc.targets = {
         ...pc.targets,
@@ -180,24 +173,22 @@ describe('convertToCypressTen', () => {
 
       await migrateCypressProject(tree);
 
-      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
-      expect(
-        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+      expect(tree.exists('app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'app-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
         'cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
         readProjectConfiguration(tree, 'app-e2e').targets
       ).toMatchSnapshot();
     });
 
     it('should handle multiple configurations', async () => {
-      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      expect(tree.exists('app-e2e/cypress.json')).toBeTruthy();
       const pc = readProjectConfiguration(tree, 'app-e2e');
       pc.targets = {
         ...pc.targets,
@@ -218,26 +209,24 @@ describe('convertToCypressTen', () => {
 
       await migrateCypressProject(tree);
 
-      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
-      expect(
-        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+      expect(tree.exists('app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'app-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
         'cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
         readProjectConfiguration(tree, 'app-e2e').targets['e2e']
       ).toMatchSnapshot();
     });
 
     it('should handle multiple configurations with no default cypressConfig option', async () => {
-      expect(tree.exists('apps/app-e2e/cypress.json')).toBeTruthy();
+      expect(tree.exists('app-e2e/cypress.json')).toBeTruthy();
       tree.write(
-        'apps/app-e2e/cypress.production.json',
+        'app-e2e/cypress.production.json',
         JSON.stringify({
           fileServerFolder: '.',
           fixturesFolder: './src/fixtures',
@@ -246,8 +235,8 @@ describe('convertToCypressTen', () => {
           pluginsFile: './src/plugins/index',
           supportFile: './src/support/index.ts',
           video: true,
-          videosFolder: '../../dist/cypress/apps/client-e2e/videos',
-          screenshotsFolder: '../../dist/cypress/apps/client-e2e/screenshots',
+          videosFolder: '../dist/cypress/client-e2e/videos',
+          screenshotsFolder: '../dist/cypress/client-e2e/screenshots',
           chromeWebSecurity: false,
         })
       );
@@ -261,12 +250,12 @@ describe('convertToCypressTen', () => {
           },
           configurations: {
             production: {
-              cypressConfig: 'apps/app-e2e/cypress.production.json',
+              cypressConfig: 'app-e2e/cypress.production.json',
               devServerTarget: 'target:serve:production',
             },
             static: {
               baseUrl: 'http://localhost:3000',
-              cypressConfig: 'apps/app-e2e/cypress.json',
+              cypressConfig: 'app-e2e/cypress.json',
             },
           },
         },
@@ -276,18 +265,16 @@ describe('convertToCypressTen', () => {
 
       await migrateCypressProject(tree);
 
-      expect(tree.exists('apps/app-e2e/cypress.config.ts')).toBeTruthy();
-      expect(
-        tree.read('apps/app-e2e/cypress.config.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+      expect(tree.exists('app-e2e/cypress.config.ts')).toBeTruthy();
+      expect(tree.read('app-e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(readJson(tree, 'app-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
         'cypress.production.config.ts',
         'cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
         readProjectConfiguration(tree, 'app-e2e').targets['e2e']
       ).toMatchSnapshot();
@@ -296,8 +283,8 @@ describe('convertToCypressTen', () => {
     it('should handle sharing the same config across projects', async () => {
       mockedInstalledCypressVersion.mockReturnValue(9);
       addProjectConfiguration(tree, 'app-two', {
-        root: 'apps/app-two',
-        sourceRoot: 'apps/app-two/src',
+        root: 'app-two',
+        sourceRoot: 'app-two/src',
         targets: {
           serve: {
             executor: '@nx/web:file-server',
@@ -310,6 +297,7 @@ describe('convertToCypressTen', () => {
         name: 'app-two-e2e',
         skipFormat: true,
         project: 'app-two',
+        projectNameAndRootFormat: 'as-provided',
       });
       const appOneProjectConfig = readProjectConfiguration(tree, 'app-e2e');
       appOneProjectConfig.targets['e2e'].options.cypressConfig = 'cypress.json';
@@ -333,13 +321,13 @@ describe('convertToCypressTen', () => {
       await migrateCypressProject(tree);
 
       expect(tree.read('cypress.config.ts', 'utf-8')).toMatchSnapshot();
-      expect(readJson(tree, 'apps/app-e2e/tsconfig.json').include).toEqual([
+      expect(readJson(tree, 'app-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
-        '../../cypress.config.ts',
+        '../cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(readProjectConfiguration(tree, 'app-e2e').targets['e2e']).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
@@ -353,13 +341,13 @@ describe('convertToCypressTen', () => {
           },
         },
       });
-      expect(readJson(tree, 'apps/app-two-e2e/tsconfig.json').include).toEqual([
+      expect(readJson(tree, 'app-two-e2e/tsconfig.json').include).toEqual([
         'src/**/*.ts',
         'src/**/*.js',
-        '../../cypress.config.ts',
+        '../cypress.config.ts',
       ]);
-      expect(tree.exists('apps/app-two-e2e/src/e2e/app.cy.ts')).toBeTruthy();
-      expect(tree.exists('apps/app-two-e2e/src/support/e2e.ts')).toBeTruthy();
+      expect(tree.exists('app-two-e2e/src/e2e/app.cy.ts')).toBeTruthy();
+      expect(tree.exists('app-two-e2e/src/support/e2e.ts')).toBeTruthy();
       expect(
         readProjectConfiguration(tree, 'app-two-e2e').targets['e2e']
       ).toEqual({
@@ -393,8 +381,8 @@ describe('convertToCypressTen', () => {
     };
 
     const projectConfig = {
-      root: 'apps/app-e2e',
-      sourceRoot: 'apps/app-e2e/src',
+      root: 'app-e2e',
+      sourceRoot: 'app-e2e/src',
     };
     const filePaths = [
       'src/integration/nested/something.spec.ts',
@@ -486,9 +474,7 @@ const eh = require("../../support")
       expect(newIntegrationFolderContents.length).toEqual(
         oldIntegrationFolderContents.length
       );
-      expect(tree.exists('apps/app-e2e/src/fixtures/example.json')).toEqual(
-        true
-      );
+      expect(tree.exists('app-e2e/src/fixtures/example.json')).toEqual(true);
     });
 
     it('should rename files', () => {
@@ -513,7 +499,7 @@ const eh = require("../../support")
   });
 
   describe('updateImports', () => {
-    const filePath = 'apps/app-e2e/src/e2e/sometest.cy.ts';
+    const filePath = 'app-e2e/src/e2e/sometest.cy.ts';
     const fileContents = String.raw`
 import { getGreeting } from '../support/app.po';
 
@@ -554,15 +540,15 @@ describe('a', () => {
   });
 
   describe('Support File Imports', () => {
-    const newImport = 'apps/app-e2e/src/support/e2e.ts';
+    const newImport = 'app-e2e/src/support/e2e.ts';
 
     it('should update imports w/defaults', () => {
-      const oldImport = 'apps/app-e2e/src/support/index.ts';
+      const oldImport = 'app-e2e/src/support/index.ts';
 
       const actual = createSupportFileImport(
         oldImport,
         newImport,
-        'apps/app-e2e/src'
+        'app-e2e/src'
       );
       expect(actual).toEqual({
         oldImportPathLeaf: 'support',
@@ -571,12 +557,12 @@ describe('a', () => {
     });
 
     it('should handle custom support file location', () => {
-      const oldImport = 'apps/app-e2e/src/support/blah.ts';
+      const oldImport = 'app-e2e/src/support/blah.ts';
 
       const actual = createSupportFileImport(
         oldImport,
         newImport,
-        'apps/app-e2e/src'
+        'app-e2e/src'
       );
       expect(actual).toEqual({
         oldImportPathLeaf: 'support/blah',
@@ -585,12 +571,12 @@ describe('a', () => {
     });
 
     it('should handle nested custom support location', () => {
-      const oldImport = 'apps/app-e2e/src/support/blah/abc.ts';
+      const oldImport = 'app-e2e/src/support/blah/abc.ts';
 
       const actual = createSupportFileImport(
         oldImport,
         newImport,
-        'apps/app-e2e/src'
+        'app-e2e/src'
       );
       expect(actual).toEqual({
         oldImportPathLeaf: 'support/blah/abc',
@@ -599,12 +585,12 @@ describe('a', () => {
     });
 
     it('should handle nested custom support location w/index.ts', () => {
-      const oldImport = 'apps/app-e2e/src/support/something/neat/index.ts';
+      const oldImport = 'app-e2e/src/support/something/neat/index.ts';
 
       const actual = createSupportFileImport(
         oldImport,
         newImport,
-        'apps/app-e2e/src'
+        'app-e2e/src'
       );
       expect(actual).toEqual({
         oldImportPathLeaf: 'support/something/neat',
@@ -616,7 +602,7 @@ describe('a', () => {
   describe(updatePluginFile.name, () => {
     it('should update module.exports for ts files', () => {
       tree.write(
-        'apps/app-e2e/src/plugins/index.ts',
+        'app-e2e/src/plugins/index.ts',
         `
 function myCoolFunction() {
   console.log('cool') 
@@ -631,7 +617,7 @@ module.exports.blah = myCoolFunction;
       );
       const actual = updatePluginFile(
         tree,
-        { root: 'apps/app-e2e' },
+        { root: 'app-e2e' },
         {
           cypressConfigJson: {},
           cypressConfigTs: { e2e: { pluginsFile: './src/plugins/index.ts' } },
@@ -641,7 +627,7 @@ module.exports.blah = myCoolFunction;
       expect(actual.cypressConfigTs.e2e.pluginsFile).toEqual(
         './src/plugins/index'
       );
-      expect(tree.read('apps/app-e2e/src/plugins/index.ts', 'utf-8')).toEqual(`
+      expect(tree.read('app-e2e/src/plugins/index.ts', 'utf-8')).toEqual(`
 function myCoolFunction() {
   console.log('cool') 
 }
@@ -665,10 +651,10 @@ module.exports = function(on, config) {
 
 module.exports.blah = myCoolFunction;
 `;
-      tree.write('apps/app-e2e/src/plugins/index.js', pluginFileContent);
+      tree.write('app-e2e/src/plugins/index.js', pluginFileContent);
       const actual = updatePluginFile(
         tree,
-        { root: 'apps/app-e2e' },
+        { root: 'app-e2e' },
         {
           cypressConfigJson: {},
           cypressConfigTs: { e2e: { pluginsFile: './src/plugins/index.js' } },
@@ -678,7 +664,7 @@ module.exports.blah = myCoolFunction;
       expect(actual.cypressConfigTs.e2e.pluginsFile).toEqual(
         './src/plugins/index'
       );
-      expect(tree.read('apps/app-e2e/src/plugins/index.js', 'utf-8')).toEqual(
+      expect(tree.read('app-e2e/src/plugins/index.js', 'utf-8')).toEqual(
         pluginFileContent
       );
     });
@@ -686,7 +672,7 @@ module.exports.blah = myCoolFunction;
     it('should not update if no file is preset', () => {
       const actual = updatePluginFile(
         tree,
-        { root: 'apps/app-e2e' },
+        { root: 'app-e2e' },
         {
           cypressConfigJson: {},
           cypressConfigTs: { e2e: { pluginsFile: false } },
@@ -694,7 +680,7 @@ module.exports.blah = myCoolFunction;
       );
 
       expect(actual.cypressConfigTs.e2e.pluginsFile).toBeFalsy();
-      expect(tree.exists('apps/app-e2e/src/plugins/index.ts')).toBeFalsy();
+      expect(tree.exists('app-e2e/src/plugins/index.ts')).toBeFalsy();
     });
   });
 });

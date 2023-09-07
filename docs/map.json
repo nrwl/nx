@@ -29,7 +29,7 @@
               "file": "shared/getting-started/why-nx"
             },
             {
-              "name": "5 min Tutorials",
+              "name": "Tutorials",
               "id": "tutorials",
               "description": "Get started with basic information, concepts and tutorials.",
               "itemList": [
@@ -362,6 +362,12 @@
               "tags": ["intro"],
               "id": "mental-model",
               "file": "shared/mental-model"
+            },
+            {
+              "name": "Types of Configuration",
+              "tags": [],
+              "id": "types-of-configuration",
+              "file": "shared/concepts/types-of-configuration"
             },
             {
               "name": "How Caching Works",
@@ -704,31 +710,191 @@
                   "id": "node-aws-lambda",
                   "tags": ["deployment", "node"],
                   "file": "shared/recipes/deployment/node-aws-lambda"
+                },
+                {
+                  "name": "Set Up Application Proxies",
+                  "id": "application-proxies",
+                  "tags": ["node"],
+                  "file": "shared/recipes/node/application-proxies"
+                },
+                {
+                  "name": "Wait for Tasks to Finish",
+                  "id": "wait-for-tasks",
+                  "tags": [],
+                  "file": "shared/recipes/node/wait-for-tasks"
                 }
               ]
             },
             {
               "name": "Storybook",
               "id": "storybook",
-              "description": "Storybook how tos.",
+              "description": "Storybook strategies and setups.",
               "itemList": [
+                {
+                  "name": "Set up Storybook for React Projects",
+                  "id": "overview-react",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
+                  "file": "shared/recipes/storybook/plugin-react"
+                },
+                {
+                  "name": "Set up Storybook for Angular Projects",
+                  "id": "overview-angular",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
+                  "file": "shared/recipes/storybook/plugin-angular"
+                },
+                {
+                  "name": "Configuring Storybook on Nx",
+                  "id": "configuring-storybook",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how Storybook is configured on your Nx workspace.",
+                  "file": "shared/recipes/storybook/configuring-storybook"
+                },
                 {
                   "name": "One main Storybook instance for all projects",
                   "id": "one-storybook-for-all",
                   "tags": ["storybook"],
-                  "file": "shared/recipes/one-storybook-for-all"
+                  "description": "This guide explains how to consolidate all your Storybook stories from different projects into one unified Storybook instance. Ideal for Nx workspaces leveraging a single framework.",
+                  "file": "shared/recipes/storybook/one-storybook-for-all"
                 },
                 {
                   "name": "One Storybook instance per scope",
                   "id": "one-storybook-per-scope",
                   "tags": ["storybook"],
-                  "file": "shared/recipes/one-storybook-per-scope"
+                  "description": "This guide explains how to set up individual Storybook instances for each scope within an Nx workspace. It provides a structured approach, emphasizing folder organization and thematic scope separation.",
+                  "file": "shared/recipes/storybook/one-storybook-per-scope"
                 },
                 {
                   "name": "One main Storybook instance using Storybook Composition",
                   "id": "one-storybook-with-composition",
                   "tags": ["storybook"],
-                  "file": "shared/recipes/one-storybook-with-composition"
+                  "description": "This guide explains how to publish a unified Storybook instance from multiple frameworks within an Nx workspace using Storybook Composition.",
+                  "file": "shared/recipes/storybook/one-storybook-with-composition"
+                },
+                {
+                  "name": "How to configure Webpack and Vite for Storybook",
+                  "id": "custom-builder-configs",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
+                  "file": "shared/recipes/storybook/custom-builder-configs"
+                },
+                {
+                  "name": "Setting up Storybook Interaction Tests with Nx",
+                  "id": "storybook-interaction-tests",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
+                  "file": "shared/recipes/storybook/interaction-tests"
+                },
+                {
+                  "name": "Setting up Storybook Composition with Nx",
+                  "id": "storybook-composition-setup",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
+                  "file": "shared/recipes/storybook/storybook-composition-setup"
+                },
+                {
+                  "name": "Angular: Set up Compodoc for Storybook on Nx",
+                  "id": "angular-storybook-compodoc",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
+                  "file": "shared/recipes/storybook/angular-storybook-compodoc"
+                },
+                {
+                  "name": "Angular: Configuring styles and preprocessor options",
+                  "id": "angular-configuring-styles",
+                  "tags": ["storybook"],
+                  "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
+                  "file": "shared/recipes/storybook/angular-configuring-styles"
+                }
+              ]
+            },
+            {
+              "name": "Cypress",
+              "id": "cypress",
+              "description": "Cypress related recipes",
+              "itemList": [
+                {
+                  "id": "cypress-component-testing",
+                  "name": "Component Testing",
+                  "description": "Component Testing",
+                  "file": "shared/packages/cypress/cypress-component-testing"
+                },
+                {
+                  "id": "cypress-v11-migration",
+                  "name": "Cypress v11 Migration Guide",
+                  "description": "Cypress v11 Migration Guide",
+                  "file": "shared/packages/cypress/cypress-v11-migration"
+                }
+              ]
+            },
+            {
+              "name": "Deno",
+              "id": "deno",
+              "description": "Deno related recipes",
+              "itemList": [
+                {
+                  "name": "Add a Deno Project",
+                  "id": "add-deno",
+                  "tags": ["deno"],
+                  "file": "shared/recipes/add-stack/add-deno"
+                },
+                {
+                  "name": "Serverless deployment with Deno Deploy",
+                  "id": "deno-deploy",
+                  "tags": ["deployment", "deno"],
+                  "file": "shared/recipes/deployment/deno-deploy"
+                },
+                {
+                  "name": "Add and Deploy Netlify Edge Functions with Deno",
+                  "id": "deno-netlify-functions",
+                  "tags": ["deployment", "deno"],
+                  "file": "shared/recipes/deployment/deno-netlify-edge-functions"
+                }
+              ]
+            },
+            {
+              "name": "Next",
+              "id": "next",
+              "description": "Next related recipes",
+              "itemList": [
+                {
+                  "id": "next-config-setup",
+                  "name": "How to configure Next.js plugins",
+                  "description": "How to configure Next.js plugins",
+                  "file": "shared/packages/next/next-config-setup"
+                }
+              ]
+            },
+            {
+              "name": "Vite",
+              "id": "vite",
+              "description": "Vite related recipes",
+              "itemList": [
+                {
+                  "id": "set-up-vite-manually",
+                  "name": "Manually set up your project to use Vite.js",
+                  "description": "Manually set up your project to use Vite.js",
+                  "file": "shared/packages/vite/set-up-vite-manually"
+                }
+              ]
+            },
+            {
+              "name": "Webpack",
+              "id": "webpack",
+              "description": "Webpack related recipes",
+              "itemList": [
+                {
+                  "id": "webpack-config-setup",
+                  "name": "How to configure webpack on your Nx workspace",
+                  "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
+                  "file": "shared/packages/webpack/webpack-config-setup"
+                },
+                {
+                  "id": "webpack-plugins",
+                  "name": "Webpack plugins",
+                  "description": "Webpack plugins",
+                  "file": "shared/packages/webpack/webpack-plugins"
                 }
               ]
             },
@@ -830,9 +996,20 @@
                   "file": "shared/recipes/repo-types/integrated-in-package-based"
                 },
                 {
+                  "name": "Convert from a Standalone Repository to an Integrated Repository",
+                  "id": "standalone-to-integrated",
+                  "tags": ["repository-types"],
+                  "file": "shared/recipes/repo-types/standalone-to-integrated"
+                },
+                {
                   "name": "Configuring ESLint with Typescript",
                   "id": "eslint",
                   "file": "shared/eslint"
+                },
+                {
+                  "name": "Enable Typescript Batch Mode",
+                  "id": "enable-tsc-batch-mode",
+                  "file": "shared/recipes/enable-tsc-batch-mode"
                 },
                 {
                   "name": "Define Environment Variables",
@@ -864,6 +1041,12 @@
                   "file": "shared/recipes/identify-dependencies-between-folders"
                 },
                 {
+                  "name": "Reduce Repetitive Configuration",
+                  "id": "reduce-repetitive-configuration",
+                  "tags": [],
+                  "file": "shared/recipes/reduce-repetitive-configuration"
+                },
+                {
                   "name": "Run Root-Level NPM Scripts with Nx",
                   "id": "root-level-scripts",
                   "tags": ["run-tasks"],
@@ -880,12 +1063,6 @@
                   "id": "workspace-watching",
                   "tags": ["workspace-watching"],
                   "file": "shared/recipes/workspace-watching"
-                },
-                {
-                  "name": "Convert from a Standalone Repository to an Integrated Repository",
-                  "id": "standalone-to-integrated",
-                  "tags": ["repository-types"],
-                  "file": "shared/recipes/repo-types/standalone-to-integrated"
                 },
                 {
                   "name": "Use JavaScript instead TypeScript",
@@ -909,6 +1086,12 @@
                   "id": "yarn-pnp",
                   "tags": ["yarn", "Plug and Play"],
                   "file": "shared/recipes/yarn-pnp"
+                },
+                {
+                  "name": "Switching to ESLint's flat config format",
+                  "id": "flat-config",
+                  "tags": ["eslint", "flat config"],
+                  "file": "shared/recipes/tips-n-tricks/migrating-to-flat-eslint"
                 }
               ]
             },
@@ -997,18 +1180,6 @@
               "description": "Other recipes you will find useful.",
               "itemList": [
                 {
-                  "name": "Serverless deployment with Deno Deploy",
-                  "id": "deno-deploy",
-                  "tags": ["deployment", "deno"],
-                  "file": "shared/recipes/deployment/deno-deploy"
-                },
-                {
-                  "name": "Add and Deploy Netlify Edge Functions with Deno",
-                  "id": "deno-netlify-functions",
-                  "tags": ["deployment", "deno"],
-                  "file": "shared/recipes/deployment/deno-netlify-edge-functions"
-                },
-                {
                   "name": "Rescope Packages from @nrwl to @nx",
                   "id": "rescope",
                   "tags": [],
@@ -1029,6 +1200,12 @@
               "description": "Examples of different ways to use Nx",
               "itemList": [
                 {
+                  "name": "Add an Express Project",
+                  "id": "add-express",
+                  "description": "Add an Express application to your repo",
+                  "file": "shared/recipes/add-stack/add-express"
+                },
+                {
                   "name": "Add a Lit Project",
                   "id": "add-lit",
                   "description": "Add a Lit project to your repo",
@@ -1047,6 +1224,24 @@
                   "file": "shared/recipes/add-stack/add-qwik"
                 },
                 {
+                  "name": "Add a Rust Project",
+                  "id": "add-rust",
+                  "description": "Add a Rust project to your repo",
+                  "file": "shared/recipes/add-stack/add-rust"
+                },
+                {
+                  "name": "Add a .NET Project",
+                  "id": "add-dotnet",
+                  "description": "Add a .NET project to your repo",
+                  "file": "shared/recipes/add-stack/add-dotnet"
+                },
+                {
+                  "name": "Add a Nuxt Project",
+                  "id": "add-nuxt",
+                  "description": "Add a nuxt project to your repo",
+                  "file": "shared/recipes/add-stack/add-nuxt"
+                },
+                {
                   "name": "Add an Astro Project",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
@@ -1057,6 +1252,18 @@
                   "id": "add-vue",
                   "description": "Add a Vue project to your repo",
                   "file": "shared/recipes/add-stack/add-vue"
+                },
+                {
+                  "name": "Add a Svelte Project",
+                  "id": "add-svelte",
+                  "description": "Add a Svelte project to your repo",
+                  "file": "shared/recipes/add-stack/add-svelte"
+                },
+                {
+                  "name": "Add a Fastify Project",
+                  "id": "add-fastify",
+                  "description": "Add a Fastify project to your repo",
+                  "file": "shared/recipes/add-stack/add-fastify"
                 },
                 {
                   "name": "Powering Up React Development With Nx",
@@ -1099,6 +1306,23 @@
                   "file": "shared/recipes/database/serverless-fastify-planetscale"
                 },
                 {
+                  "name": "Nx Micro-Frontend Example",
+                  "id": "mfe",
+                  "file": "shared/examples/nx-examples"
+                }
+              ]
+            },
+            {
+              "name": "Benchmarks",
+              "id": "benchmarks",
+              "description": "Benchmarks showing how fast Nx is",
+              "itemList": [
+                {
+                  "name": "Typescript Batch Mode Compilation",
+                  "id": "tsc-batch-mode",
+                  "file": "shared/examples/tsc-batch-mode"
+                },
+                {
                   "name": "Large Repo and Caching",
                   "id": "caching",
                   "file": "shared/examples/caching"
@@ -1107,11 +1331,6 @@
                   "name": "Large Repo and DTE",
                   "id": "dte",
                   "file": "shared/examples/dte"
-                },
-                {
-                  "name": "Nx Micro-Frontend Example",
-                  "id": "mfe",
-                  "file": "shared/examples/nx-examples"
                 }
               ]
             }
@@ -1235,6 +1454,11 @@
                   "file": "shared/deprecated/storybook/storybook-v6-react"
                 }
               ]
+            },
+            {
+              "name": "v1 Nx Plugin API",
+              "id": "v1-nx-plugin-api",
+              "file": "shared/deprecated/v1-nx-plugin-api"
             }
           ]
         },
@@ -1430,12 +1654,6 @@
               "id": "project-graph-plugins",
               "tags": ["create-your-own-plugin", "explore-graph"],
               "file": "shared/recipes/plugins/project-graph-plugins"
-            },
-            {
-              "name": "Identify Custom Projects",
-              "id": "project-inference-plugins",
-              "tags": ["create-your-own-plugin"],
-              "file": "shared/recipes/plugins/project-inference-plugins"
             }
           ]
         }
@@ -1847,12 +2065,6 @@
               "name": "Overview of the Nx Vite Plugin",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
-            },
-            {
-              "id": "set-up-vite-manually",
-              "name": "Manually set up your project to use Vite.js",
-              "description": "This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.",
-              "file": "shared/packages/vite/set-up-vite-manually"
             }
           ]
         },
@@ -1867,18 +2079,6 @@
               "name": "Overview of the Nx Webpack Plugin",
               "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
               "file": "shared/packages/webpack/plugin-overview"
-            },
-            {
-              "id": "webpack-config-setup",
-              "name": "How to configure webpack on your Nx workspace",
-              "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
-              "file": "shared/packages/webpack/webpack-config-setup"
-            },
-            {
-              "id": "webpack-plugins",
-              "name": "Webpack plugins",
-              "description": "Webpack plugins",
-              "file": "shared/packages/webpack/webpack-plugins"
             }
           ]
         },
@@ -1937,20 +2137,9 @@
               "id": "overview",
               "path": "/packages/cypress",
               "file": "shared/packages/cypress/cypress-plugin"
-            },
-            {
-              "name": "Component Testing",
-              "id": "cypress-component-testing",
-              "file": "shared/packages/cypress/cypress-component-testing"
-            },
-            {
-              "name": "v11 Migration Guide",
-              "id": "v11-migration-guide",
-              "file": "shared/packages/cypress/cypress-v11-migration"
             }
           ]
         },
-
         {
           "name": "playwright",
           "id": "playwright",
@@ -1977,18 +2166,6 @@
               "file": "shared/packages/storybook/plugin-overview"
             },
             {
-              "id": "overview-react",
-              "name": "Set up Storybook for React Projects",
-              "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
-              "file": "shared/packages/storybook/plugin-react"
-            },
-            {
-              "id": "overview-angular",
-              "name": "Set up Storybook for Angular Projects",
-              "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
-              "file": "shared/packages/storybook/plugin-angular"
-            },
-            {
               "id": "best-practices",
               "name": "Storybook best practices for making the most out of Nx",
               "description": "The purpose of this guide is to help you set up Storybook in your Nx workspace so that you can get the most out of Nx and its powerful capabilities.",
@@ -1999,42 +2176,6 @@
               "name": "Storybook 7 overview",
               "description": "This guide explains how you can set up Storybook version 7 in your Nx workspace. It contains information about the generators and the frameworks that are supported.",
               "file": "shared/packages/storybook/storybook-7-setup"
-            },
-            {
-              "id": "configuring-storybook",
-              "name": "Configuring Storybook on Nx",
-              "description": "This guide explains how Storybook is configured on your Nx workspace.",
-              "file": "shared/packages/storybook/configuring-storybook"
-            },
-            {
-              "id": "custom-builder-configs",
-              "name": "How to configure Webpack and Vite for Storybook",
-              "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
-              "file": "shared/packages/storybook/custom-builder-configs"
-            },
-            {
-              "id": "storybook-interaction-tests",
-              "name": "Setting up Storybook Interaction Tests with Nx",
-              "description": "This guide explains how you can set up Storybook interaction tests on your Nx workspace.",
-              "file": "shared/packages/storybook/interaction-tests"
-            },
-            {
-              "id": "storybook-composition-setup",
-              "name": "Setting up Storybook Composition with Nx",
-              "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
-              "file": "shared/packages/storybook/storybook-composition-setup"
-            },
-            {
-              "id": "angular-storybook-compodoc",
-              "name": "Angular: Set up Compodoc for Storybook on Nx",
-              "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
-              "file": "shared/packages/storybook/angular-storybook-compodoc"
-            },
-            {
-              "id": "angular-configuring-styles",
-              "name": "Angular: Configuring styles and preprocessor options",
-              "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
-              "file": "shared/packages/storybook/angular-configuring-styles"
             }
           ]
         },
@@ -2125,12 +2266,6 @@
               "name": "Overview",
               "path": "/packages/next",
               "file": "shared/packages/next/plugin-overview"
-            },
-            {
-              "id": "next-config-setup",
-              "name": "How to configure Next.js plugins",
-              "description": "A guide for configuring Next.js plugins with Nx",
-              "file": "shared/packages/next/next-config-setup"
             }
           ]
         },
