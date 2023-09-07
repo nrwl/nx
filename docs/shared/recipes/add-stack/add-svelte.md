@@ -24,9 +24,29 @@ Because we are not using a Nx plugin for Svelte, there are a few items we'll hav
 
 **Create a new Nx workspace**
 
+{% tabs %}
+{%tab label="npm"%}
+
 ```shell
-create-nx-workspace@latest workspace --preset=react-monorepo --style=css --bundler=vite --nx-cloud=true --appName=acme
+npx create-nx-workspace@latest workspace --preset=react-monorepo --style=css --bundler=vite --nx-cloud=true --appName=acme
 ```
+
+{% /tab %}
+{%tab label="yarn"%}
+
+```shell
+npx create-nx-workspace@latest workspace --preset=react-monorepo --style=css --bundler=vite --nx-cloud=true --appName=acme --pm yarn
+```
+
+{% /tab %}
+{%tab label="pnpm"%}
+
+```shell
+npx create-nx-workspace@latest workspace --preset=react-monorepo --style=css --bundler=vite --nx-cloud=true --appName=acme --pm pnpm
+```
+
+{% /tab %}
+{% /tabs %}
 
 **Add @nx/vite, svelte, and other dependencies to your workspace**
 
@@ -45,7 +65,6 @@ yarn add --dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-pl
 ```
 
 {% /tab %}
-
 {%tab label="pnpm"%}
 
 ```shell
