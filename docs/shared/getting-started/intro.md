@@ -111,7 +111,7 @@ Alternatively, here are some recipes that give you more details based on the tec
 
 Connect on our channels and with the Nx Community to ask questions, get help and keep up to date with the latest news.
 
-- Join our [Discord Community](http://go.nx.dev/community)
+- Join our [Discord Community](https://go.nx.dev/community)
 - Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
 - Follow us on [Twitter](https://twitter.com/nxdevtools)
 - Subscribe [to our tech newsletter](https://go.nrwl.io/nx-newsletter)
