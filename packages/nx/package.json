@@ -44,7 +44,6 @@
     "dotenv": "~16.3.1",
     "dotenv-expand": "~10.0.0",
     "enquirer": "~2.3.6",
-    "fast-glob": "3.2.7",
     "figures": "3.2.0",
     "flat": "^5.0.2",
     "fs-extra": "^11.1.0",
