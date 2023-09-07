@@ -63,6 +63,10 @@ type ProjectNameAndRootFormats = {
   derived?: ProjectNameAndRootOptions;
 };
 
+const deprecationWarning = stripIndents`
+    In Nx 18, generating projects will no longer derive the name and root.
+    Please provide the exact project name and root in the future.`;
+
 export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
@@ -73,11 +77,18 @@ export async function determineProjectNameAndRootOptions(
 > {
   validateName(options.name, options.projectNameAndRootFormat);
   const formats = getProjectNameAndRootFormats(tree, options);
+  const configuredDefault = getDefaultProjectNameAndRootFormat(tree);
+
+  if (configuredDefault === 'derived') {
+    logger.warn(
+      deprecationWarning + '\n' + getExample(options.callingGenerator, formats)
+    );
+  }
+
   const format =
     options.projectNameAndRootFormat ??
-    (getDefaultProjectNameAndRootFormat(tree) === 'as-provided'
-      ? 'as-provided'
-      : await determineFormat(tree, formats, options.callingGenerator));
+    configuredDefault ??
+    (await determineFormat(tree, formats, options.callingGenerator));
 
   return {
     ...formats[format],
@@ -113,6 +124,13 @@ function validateName(
       `The project name should match the pattern "${pattern}". The provided value "${name}" does not match.`
     );
   }
+}
+
+function getExample(
+  callingGenerator: string,
+  formats: ProjectNameAndRootFormats
+) {
+  return `Example: nx g ${callingGenerator} ${formats['as-provided'].projectName} --directory ${formats['as-provided'].projectRoot}`;
 }
 
 async function determineFormat(
@@ -157,10 +175,6 @@ async function determineFormat(
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
 
-  const deprecationWarning = stripIndents`
-    In Nx 18, generating projects will no longer derive the name and root.
-    Please provide the exact project name and root in the future.`;
-
   if (result === 'as-provided' && callingGenerator) {
     const { saveDefault } = await prompt<{ saveDefault: boolean }>({
       type: 'confirm',
@@ -174,7 +188,7 @@ async function determineFormat(
       logger.warn(deprecationWarning);
     }
   } else {
-    const example = `Example: nx g ${callingGenerator} ${formats[result].projectName} --directory ${formats[result].projectRoot}`;
+    const example = getExample(callingGenerator, formats);
     logger.warn(deprecationWarning + '\n' + example);
   }
 
@@ -190,7 +204,7 @@ function setProjectNameAndRootFormatDefault(tree: Tree) {
 
 function getDefaultProjectNameAndRootFormat(tree: Tree) {
   const nxJson = readNxJson(tree);
-  return nxJson.workspaceLayout?.projectNameAndRootFormat ?? 'derived';
+  return nxJson.workspaceLayout?.projectNameAndRootFormat;
 }
 
 function getProjectNameAndRootFormats(
