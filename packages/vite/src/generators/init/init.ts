@@ -18,6 +18,7 @@ import {
   vitePluginDtsVersion,
   vitePluginReactVersion,
   vitePluginReactSwcVersion,
+  vitePluginVueVersion,
   vitestUiVersion,
   vitestVersion,
   viteVersion,
@@ -57,6 +58,10 @@ function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
     } else {
       devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
     }
+  }
+
+  if (schema.uiFramework === 'vue') {
+    devDependencies['@vitejs/plugin-vue'] = vitePluginVueVersion;
   }
 
   if (schema.includeLib) {
