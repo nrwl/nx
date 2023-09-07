@@ -15,7 +15,7 @@ function runNxNewCommand(args?: string, silent?: boolean) {
   return execSync(
     `node ${require.resolve(
       'nx'
-    )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nx/workspace --npmScope=proj --preset=empty ${
+    )} new proj --nx-workspace-root=${localTmpDir} --no-interactive --skip-install --collection=@nx/workspace --npmScope=proj --preset=apps ${
       args || ''
     }`,
     {
