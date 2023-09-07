@@ -5,12 +5,11 @@ import {
   readTargetOptions,
   runExecutor,
   stripIndents,
-  Workspaces,
   Target,
   targetToTargetString,
   output,
 } from '@nx/devkit';
-import 'dotenv/config';
+import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
 import { existsSync, readdirSync, unlinkSync, writeFileSync } from 'fs';
 import { basename, dirname, join } from 'path';
 import { getTempTailwindPath } from '../../utils/ct-helpers';
@@ -52,6 +51,7 @@ export interface CypressExecutorOptions extends Json {
   tag?: string;
   port?: number | 'cypress-auto';
   quiet?: boolean;
+  runnerUi?: boolean;
 }
 
 interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
@@ -259,6 +259,7 @@ async function runCypress(
   options.tag = opts.tag;
   options.exit = opts.exit;
   options.headed = opts.headed;
+  options.runnerUi = opts.runnerUi;
 
   if (opts.headless) {
     options.headless = opts.headless;
@@ -421,9 +422,12 @@ ${e.message || e}`);
       context.projectsConfigurations?.projects?.[target.project];
     const targetConfig = projectConfig.targets[target.target];
 
-    const workspace = new Workspaces(context.root);
     const [collection, executor] = targetConfig.executor.split(':');
-    const { schema } = workspace.readExecutor(collection, executor);
+    const { schema } = getExecutorInformation(
+      collection,
+      executor,
+      context.root
+    );
 
     // NOTE: schema won't have a default since readTargetOptions would have
     // already set that and this check wouldn't need to be made

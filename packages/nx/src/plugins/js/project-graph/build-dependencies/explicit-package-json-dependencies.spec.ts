@@ -3,16 +3,14 @@ const tempFs = new TempFs('explicit-package-json');
 
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 
-import {
-  ProjectGraphProcessorContext,
-  ProjectGraphProjectNode,
-} from '../../../../config/project-graph';
+import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
 import { fileHasher } from '../../../../hasher/file-hasher';
+import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
 
 describe('explicit package json dependencies', () => {
-  let ctx: ProjectGraphProcessorContext;
+  let ctx: CreateDependenciesContext;
   let projects: Record<string, ProjectGraphProjectNode>;
 
   beforeEach(async () => {
@@ -55,15 +53,6 @@ describe('explicit package json dependencies', () => {
 
     await fileHasher.init();
 
-    ctx = {
-      projectsConfigurations,
-      nxJsonConfiguration,
-      filesToProcess: createProjectFileMap(
-        projectsConfigurations as any,
-        fileHasher.allFileData()
-      ).projectFileMap,
-    } as any;
-
     projects = {
       proj: {
         name: 'proj',
@@ -83,14 +72,13 @@ describe('explicit package json dependencies', () => {
         data: { root: 'libs/proj4' },
       },
     };
-  });
 
-  afterEach(() => {
-    tempFs.cleanup();
-  });
+    const projectFileMap = createProjectFileMap(
+      projectsConfigurations as any,
+      fileHasher.allFileData()
+    ).projectFileMap;
 
-  it(`should add dependencies for projects based on deps in package.json`, () => {
-    const builder = new ProjectGraphBuilder(undefined, ctx.fileMap);
+    const builder = new ProjectGraphBuilder(undefined, projectFileMap);
     Object.values(projects).forEach((p) => {
       builder.addNode(p);
     });
@@ -103,31 +91,40 @@ describe('explicit package json dependencies', () => {
       },
     });
 
-    const res = buildExplicitPackageJsonDependencies(
-      ctx.nxJsonConfiguration,
-      ctx.projectsConfigurations,
-      builder.graph,
-      ctx.filesToProcess
-    );
+    ctx = {
+      fileMap: projectFileMap,
+      graph: builder.getUpdatedProjectGraph(),
+      projectsConfigurations: projectsConfigurations as any,
+      nxJsonConfiguration,
+      filesToProcess: projectFileMap,
+    };
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+  });
+
+  it(`should add dependencies for projects based on deps in package.json`, () => {
+    const res = buildExplicitPackageJsonDependencies(ctx);
 
     expect(res).toEqual([
       {
-        sourceProjectName: 'proj',
-        targetProjectName: 'proj2',
-        sourceProjectFile: 'libs/proj/package.json',
-        type: 'static',
+        source: 'proj',
+        target: 'proj2',
+        sourceFile: 'libs/proj/package.json',
+        dependencyType: 'static',
       },
       {
-        sourceProjectFile: 'libs/proj/package.json',
-        sourceProjectName: 'proj',
-        targetProjectName: 'npm:external',
-        type: 'static',
+        sourceFile: 'libs/proj/package.json',
+        source: 'proj',
+        target: 'npm:external',
+        dependencyType: 'static',
       },
       {
-        sourceProjectName: 'proj',
-        targetProjectName: 'proj3',
-        sourceProjectFile: 'libs/proj/package.json',
-        type: 'static',
+        source: 'proj',
+        target: 'proj3',
+        sourceFile: 'libs/proj/package.json',
+        dependencyType: 'static',
       },
     ]);
   });

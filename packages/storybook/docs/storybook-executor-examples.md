@@ -111,7 +111,7 @@ You can set the [`browserTarget`](/deprecated/storybook/angular-browser-target) 
 
 {% tab label="Adding styles" %}
 
-You can add paths to stylesheets to be included in the Storybook build by using the `styles` array. You can also add `stylePreprocessorOptions`, much like you would do in the Angular builder. You can read more in our guide about [styles and preprocessor options for Storybook](/packages/storybook/documents/angular-configuring-styles).
+You can add paths to stylesheets to be included in the Storybook build by using the `styles` array. You can also add `stylePreprocessorOptions`, much like you would do in the Angular builder. You can read more in our guide about [styles and preprocessor options for Storybook](/recipes/storybook/angular-configuring-styles).
 
 ```json
 "storybook": {

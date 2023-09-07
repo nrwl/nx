@@ -1,13 +1,9 @@
 import type { Schema } from './schema';
-import {
-  logger,
-  readCachedProjectGraph,
-  workspaceRoot,
-  Workspaces,
-} from '@nx/devkit';
+import { logger, readCachedProjectGraph, workspaceRoot } from '@nx/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
 import {
   getDynamicRemotes,
   getStaticRemotes,
@@ -20,12 +16,11 @@ import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
   context: import('@angular-devkit/architect').BuilderContext
-) {
+): ReturnType<typeof executeWebpackDevServerBuilder> {
   const { ...options } = schema;
   const projectGraph = readCachedProjectGraph();
   const { projects: workspaceProjects } =
     readProjectsConfigurationFromProjectGraph(projectGraph);
-  const ws = new Workspaces(workspaceRoot);
   const project = workspaceProjects[context.target.project];
 
   let pathToManifestFile = join(
@@ -101,7 +96,11 @@ export function executeModuleFederationDevServerBuilder(
     if (options.verbose) {
       const [collection, executor] =
         workspaceProjects[remote].targets[target].executor.split(':');
-      const { schema } = ws.readExecutor(collection, executor);
+      const { schema } = getExecutorInformation(
+        collection,
+        executor,
+        workspaceRoot
+      );
 
       if (schema.additionalProperties || 'verbose' in schema.properties) {
         runOptions.verbose = options.verbose;

@@ -68,9 +68,33 @@ export function getSelectedPackageManager(): 'npm' | 'yarn' | 'pnpm' {
   return (process.env.SELECTED_PM as 'npm' | 'yarn' | 'pnpm') || 'npm';
 }
 
-export function getNpmMajorVersion(): string {
-  const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
-  return npmMajorVersion;
+export function getNpmMajorVersion(): string | undefined {
+  try {
+    const [npmMajorVersion] = execSync(`npm -v`).toString().split('.');
+    return npmMajorVersion;
+  } catch {
+    return undefined;
+  }
+}
+
+export function getYarnMajorVersion(path: string): string | undefined {
+  try {
+    // this fails if path is not yet created
+    const [yarnMajorVersion] = execSync(`yarn -v`, {
+      cwd: path,
+      encoding: 'utf-8',
+    }).split('.');
+    return yarnMajorVersion;
+  } catch {
+    try {
+      const [yarnMajorVersion] = execSync(`yarn -v`, {
+        encoding: 'utf-8',
+      }).split('.');
+      return yarnMajorVersion;
+    } catch {
+      return undefined;
+    }
+  }
 }
 
 export function getLatestLernaVersion(): string {
@@ -109,6 +133,19 @@ export function ensureCypressInstallation() {
       });
     }
   }
+}
+
+export function ensurePlaywrightBrowsersInstallation() {
+  execSync('npx playwright install --with-deps --force', {
+    stdio: isVerbose() ? 'inherit' : 'pipe',
+    encoding: 'utf-8',
+    cwd: tmpProjPath(),
+  });
+  e2eConsoleLogger(
+    `Playwright browsers ${execSync('npx playwright --version')
+      .toString()
+      .trim()} installed.`
+  );
 }
 
 export function getStrippedEnvironmentVariables() {

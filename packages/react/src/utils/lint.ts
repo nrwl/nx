@@ -1,5 +1,4 @@
-import { offsetFromRoot } from '@nx/devkit';
-import type { Linter } from 'eslint';
+import { Linter } from 'eslint';
 import {
   eslintPluginImportVersion,
   eslintPluginReactVersion,
@@ -17,6 +16,9 @@ export const extraEslintDependencies = {
   },
 };
 
+/**
+ * @deprecated Use `addExtendsToLintConfig` from `@nx/linter` instead.
+ */
 export const extendReactEslintJson = (json: Linter.Config) => {
   const { extends: pluginExtends, ...config } = json;
 

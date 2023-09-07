@@ -617,7 +617,7 @@ The default value of this property. Example:
   "linter": {
     "description": "The tool to use for running lint checks.",
     "type": "string",
-    "enum": ["eslint", "tslint"],
+    "enum": ["eslint"],
     "default": "eslint"
   }
 }

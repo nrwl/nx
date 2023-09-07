@@ -36,11 +36,9 @@ describe('react-native:storybook-configuration', () => {
         name: 'test-ui-lib',
       });
 
+      expect(appTree.exists('test-ui-lib/.storybook/main.js')).toBeTruthy();
       expect(
-        appTree.exists('libs/test-ui-lib/.storybook/main.js')
-      ).toBeTruthy();
-      expect(
-        appTree.exists('libs/test-ui-lib/tsconfig.storybook.json')
+        appTree.exists('test-ui-lib/tsconfig.storybook.json')
       ).toBeTruthy();
     });
 
@@ -57,7 +55,7 @@ describe('react-native:storybook-configuration', () => {
 
       expect(
         appTree.exists(
-          'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx'
+          'test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx'
         )
       ).toBeTruthy();
     });
@@ -70,11 +68,9 @@ describe('react-native:storybook-configuration', () => {
         name: 'test-ui-app',
       });
 
+      expect(appTree.exists('test-ui-app/.storybook/main.js')).toBeTruthy();
       expect(
-        appTree.exists('apps/test-ui-app/.storybook/main.js')
-      ).toBeTruthy();
-      expect(
-        appTree.exists('apps/test-ui-app/tsconfig.storybook.json')
+        appTree.exists('test-ui-app/tsconfig.storybook.json')
       ).toBeTruthy();
     });
 
@@ -90,7 +86,7 @@ describe('react-native:storybook-configuration', () => {
       // under the specified 'lib' directory
       expect(
         appTree.exists(
-          'apps/test-ui-app/src/app/my-component/my-component.stories.tsx'
+          'test-ui-app/src/app/my-component/my-component.stories.tsx'
         )
       ).toBeTruthy();
     });
@@ -98,7 +94,7 @@ describe('react-native:storybook-configuration', () => {
 });
 
 export async function createTestUILib(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
 
   await libraryGenerator(appTree, {
     linter: Linter.EsLint,
@@ -106,6 +102,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipTsConfig: false,
     unitTestRunner: 'none',
     name: libName,
+    projectNameAndRootFormat: 'as-provided',
   });
   return appTree;
 }
@@ -114,7 +111,7 @@ export async function createTestAppLib(
   libName: string,
   plainJS = false
 ): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
 
   await applicationGenerator(appTree, {
     e2eTestRunner: 'none',
@@ -125,6 +122,7 @@ export async function createTestAppLib(
     name: libName,
     js: plainJS,
     install: false,
+    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(appTree, {

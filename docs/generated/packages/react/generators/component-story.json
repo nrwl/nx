@@ -30,6 +30,12 @@
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
+      },
+      "interactionTests": {
+        "type": "boolean",
+        "description": "Set up Storybook interaction tests.",
+        "default": true,
+        "x-priority": "important"
       }
     },
     "required": ["project", "componentPath"],

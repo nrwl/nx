@@ -2,7 +2,6 @@ import { Tree } from 'nx/src/generators/tree';
 import {
   addDependenciesToPackageJson,
   ensurePackage,
-  getWorkspaceLayout,
   joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
@@ -37,7 +36,6 @@ export async function addRollupBuildTarget(
 
   const { targets } = readProjectConfiguration(host, options.name);
 
-  const { libsDir } = getWorkspaceLayout(host);
   const external: string[] = ['react', 'react-dom'];
 
   if (options.style === '@emotion/styled') {
@@ -50,10 +48,7 @@ export async function addRollupBuildTarget(
     executor: '@nx/rollup:rollup',
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath:
-        libsDir !== '.'
-          ? `dist/${libsDir}/${options.projectDirectory}`
-          : `dist/${options.projectDirectory}`,
+      outputPath: joinPathFragments('dist', options.projectRoot),
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       project: `${options.projectRoot}/package.json`,
       entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),

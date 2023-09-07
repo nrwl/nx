@@ -7,7 +7,7 @@
  * - Hapi: https://github.com/vercel/next.js/tree/canary/examples/custom-server-hapi
  */
 import { createServer } from 'http';
-import { parse } from 'url';
+import { parse } from 'node:url';
 import * as path from 'path';
 import next from 'next';
 

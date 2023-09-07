@@ -6,14 +6,10 @@ export function updateCypressTsConfig(host: Tree, options: NormalizedSchema) {
     return;
   }
 
-  updateJson(
-    host,
-    `${options.e2eProjectRoot}/${options.e2eProjectName}/tsconfig.json`,
-    (json) => {
-      return {
-        ...json,
-        exclude: [],
-      };
-    }
-  );
+  updateJson(host, `${options.e2eProjectRoot}/tsconfig.json`, (json) => {
+    return {
+      ...json,
+      exclude: [],
+    };
+  });
 }

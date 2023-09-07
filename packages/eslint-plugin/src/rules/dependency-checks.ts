@@ -2,12 +2,7 @@ import { join } from 'path';
 import { satisfies } from 'semver';
 import { AST } from 'jsonc-eslint-parser';
 import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
-import {
-  normalizePath,
-  ProjectGraphProjectNode,
-  FileData,
-  workspaceRoot,
-} from '@nx/devkit';
+import { normalizePath, workspaceRoot } from '@nx/devkit';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
 
 import { createESLintRule } from '../utils/create-eslint-rule';
@@ -16,6 +11,7 @@ import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import {
   getAllDependencies,
   getPackageJson,
+  getProductionDependencies,
 } from '../utils/package-json-utils';
 
 export type Options = [
@@ -26,6 +22,7 @@ export type Options = [
     checkVersionMismatches?: boolean;
     checkMissingPackageJson?: boolean;
     ignoredDependencies?: string[];
+    ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;
   }
 ];
@@ -53,6 +50,7 @@ export default createESLintRule<Options, MessageIds>({
         properties: {
           buildTargets: [{ type: 'string' }],
           ignoredDependencies: [{ type: 'string' }],
+          ignoredFiles: [{ type: 'string' }],
           checkMissingDependencies: { type: 'boolean' },
           checkObsoleteDependencies: { type: 'boolean' },
           checkVersionMismatches: { type: 'boolean' },
@@ -62,8 +60,8 @@ export default createESLintRule<Options, MessageIds>({
       },
     ],
     messages: {
-      missingDependency: `The "{{projectName}}" uses the following packages, but they are missing from the "{{section}}":{{packageNames}}`,
-      obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}".`,
+      missingDependency: `The "{{projectName}}" project uses the following packages, but they are missing from "{{section}}":{{packageNames}}`,
+      obsoleteDependency: `The "{{packageName}}" package is not used by "{{projectName}}" project.`,
       versionMismatch: `The version specifier does not contain the installed version of "{{packageName}}" package: {{version}}.`,
       missingDependencySection: `Dependency sections are missing from the "package.json" but following dependencies were detected:{{dependencies}}`,
     },
@@ -75,6 +73,7 @@ export default createESLintRule<Options, MessageIds>({
       checkObsoleteDependencies: true,
       checkVersionMismatches: true,
       ignoredDependencies: [],
+      ignoredFiles: [],
       includeTransitiveDependencies: false,
     },
   ],
@@ -84,6 +83,7 @@ export default createESLintRule<Options, MessageIds>({
       {
         buildTargets,
         ignoredDependencies,
+        ignoredFiles,
         checkMissingDependencies,
         checkObsoleteDependencies,
         checkVersionMismatches,
@@ -137,6 +137,7 @@ export default createESLintRule<Options, MessageIds>({
       buildTarget, // TODO: What if child library has a build target different from the parent?
       {
         includeTransitiveDependencies,
+        ignoredFiles,
       }
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
@@ -147,11 +148,8 @@ export default createESLintRule<Options, MessageIds>({
       'package.json'
     );
 
-    globalThis.projPackageJsonDeps ??= getAllDependencies(
-      getPackageJson(projPackageJsonPath)
-    );
     const projPackageJsonDeps: Record<string, string> =
-      globalThis.projPackageJsonDeps;
+      getProductionDependencies(projPackageJsonPath);
     const rootPackageJsonDeps = getAllDependencies(rootPackageJson);
 
     function validateMissingDependencies(node: AST.JSONProperty) {
@@ -209,7 +207,9 @@ export default createESLintRule<Options, MessageIds>({
       if (
         npmDependencies[packageName] === '*' ||
         packageRange === '*' ||
-        satisfies(npmDependencies[packageName], packageRange)
+        satisfies(npmDependencies[packageName], packageRange, {
+          includePrerelease: true,
+        })
       ) {
         return;
       }
@@ -286,12 +286,9 @@ export default createESLintRule<Options, MessageIds>({
       if (
         !node.properties ||
         !node.properties.some((p) =>
-          [
-            'dependencies',
-            'peerDependencies',
-            'devDependencies',
-            'optionalDependencies',
-          ].includes((p.key as any).value)
+          ['dependencies', 'peerDependencies', 'optionalDependencies'].includes(
+            (p.key as any).value
+          )
         )
       ) {
         context.report({
@@ -329,12 +326,12 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     return {
-      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer|optional)?dependencies$/i]'](
+      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i]'](
         node: AST.JSONProperty
       ) {
         validateMissingDependencies(node);
       },
-      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(dev|peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
+      ['JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty'](
         node: AST.JSONProperty
       ) {
         const packageName = (node.key as any).value;

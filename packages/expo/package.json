@@ -29,9 +29,11 @@
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^11.1.0",
-    "metro-resolver": "^0.74.1",
+    "metro-config": "0.76.7",
+    "metro-resolver": "0.76.7",
     "node-fetch": "^2.6.7",
     "tar-fs": "^2.1.1",
+    "tslib": "^2.3.0",
     "tsconfig-paths": "^4.1.2",
     "tsconfig-paths-webpack-plugin": "^4.0.0",
     "@nx/detox": "file:../detox",
@@ -43,7 +45,9 @@
     "@nx/webpack": "file:../webpack"
   },
   "peerDependencies": {
-    "expo": "^48.0.19"
+    "expo": ">= 49.0.0",
+    "@expo/cli": ">= 0.10.0",
+    "eas-cli": ">= 3.15.0"
   },
   "builders": "./executors.json",
   "ng-update": {

@@ -1,70 +1,105 @@
-import { TypeScriptImportLocator } from './typescript-import-locator';
 import { TargetProjectLocator } from './target-project-locator';
+import { DependencyType, ProjectGraph } from '../../../../config/project-graph';
+import { join, relative } from 'path';
+import { workspaceRoot } from '../../../../utils/workspace-root';
+import { normalizePath } from '../../../../utils/path';
+import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
 import {
-  DependencyType,
-  ProjectFileMap,
-  ProjectGraph,
-} from '../../../../config/project-graph';
+  ProjectGraphDependencyWithFile,
+  validateDependency,
+} from '../../../../project-graph/project-graph-builder';
 
-export type ExplicitDependency = {
-  sourceProjectName: string;
-  targetProjectName: string;
-  sourceProjectFile: string;
-  type?: DependencyType.static | DependencyType.dynamic;
-};
+function isRoot(graph: ProjectGraph, projectName: string): boolean {
+  return graph.nodes[projectName]?.data?.root === '.';
+}
 
-export function buildExplicitTypeScriptDependencies(
-  graph: ProjectGraph,
-  filesToProcess: ProjectFileMap
-) {
-  function isRoot(projectName: string) {
-    return graph.nodes[projectName]?.data?.root === '.';
-  }
+function convertImportToDependency(
+  importExpr: string,
+  sourceFile: string,
+  source: string,
+  dependencyType: ProjectGraphDependencyWithFile['dependencyType'],
+  targetProjectLocator: TargetProjectLocator
+): ProjectGraphDependencyWithFile {
+  const target =
+    targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
+    `npm:${importExpr}`;
 
-  const importLocator = new TypeScriptImportLocator();
+  return {
+    source,
+    target,
+    sourceFile,
+    dependencyType,
+  };
+}
+
+export function buildExplicitTypeScriptDependencies({
+  fileMap,
+  graph,
+}: CreateDependenciesContext): ProjectGraphDependencyWithFile[] {
   const targetProjectLocator = new TargetProjectLocator(
     graph.nodes as any,
     graph.externalNodes
   );
-  const res: ExplicitDependency[] = [];
-  Object.keys(filesToProcess).forEach((source) => {
-    Object.values(filesToProcess[source]).forEach((f) => {
-      importLocator.fromFile(
-        f.file,
-        (
-          importExpr: string,
-          filePath: string,
-          type: DependencyType.static | DependencyType.dynamic
-        ) => {
-          const target = targetProjectLocator.findProjectWithImport(
-            importExpr,
-            f.file
-          );
-          let targetProjectName;
-          if (target) {
-            if (!isRoot(source) && isRoot(target)) {
-              // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
-              return;
-            }
+  const res: ProjectGraphDependencyWithFile[] = [];
 
-            targetProjectName = target;
-          } else {
-            // treat all unknowns as npm packages, they can be eiher
-            // - mistyped local import, which has to be fixed manually
-            // - node internals, which should still be tracked as a dependency
-            // - npm packages, which are not yet installed but should be tracked
-            targetProjectName = `npm:${importExpr}`;
-          }
+  const filesToProcess: Record<string, string[]> = {};
 
-          res.push({
-            sourceProjectName: source,
-            targetProjectName,
-            sourceProjectFile: f.file,
-            type,
-          });
-        }
+  const moduleExtensions = ['.ts', '.js', '.tsx', '.jsx', '.mts', '.mjs'];
+
+  for (const [project, fileData] of Object.entries(fileMap)) {
+    filesToProcess[project] ??= [];
+    for (const { file } of fileData) {
+      if (moduleExtensions.some((ext) => file.endsWith(ext))) {
+        filesToProcess[project].push(join(workspaceRoot, file));
+      }
+    }
+  }
+
+  const { findImports } = require('../../../../native');
+
+  const imports = findImports(filesToProcess);
+
+  for (const {
+    sourceProject,
+    file,
+    staticImportExpressions,
+    dynamicImportExpressions,
+  } of imports) {
+    const normalizedFilePath = normalizePath(relative(workspaceRoot, file));
+    for (const importExpr of staticImportExpressions) {
+      const dependency = convertImportToDependency(
+        importExpr,
+        normalizedFilePath,
+        sourceProject,
+        DependencyType.static,
+        targetProjectLocator
       );
-    });
-  });
+      // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
+      if (
+        isRoot(graph, dependency.source) ||
+        !isRoot(graph, dependency.target)
+      ) {
+        res.push(dependency);
+      }
+    }
+    for (const importExpr of dynamicImportExpressions) {
+      const dependency = convertImportToDependency(
+        importExpr,
+        normalizedFilePath,
+        sourceProject,
+        DependencyType.dynamic,
+        targetProjectLocator
+      );
+      // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
+      if (
+        isRoot(graph, dependency.source) ||
+        !isRoot(graph, dependency.target)
+      ) {
+        validateDependency(graph, dependency);
+        res.push(dependency);
+      }
+    }
+  }
+
   return res;
 }

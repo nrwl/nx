@@ -70,6 +70,37 @@
         ],
         "no-restricted-imports": "off"
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "typescript",
+              "@nrwl/angular",
+              "@angular-devkit/build-angular",
+              "@angular-devkit/core",
+              "@angular-devkit/architect",
+              "@swc/core", //Optional, used in JS analysis if available
+              "@swc/node-register", //Optional, used in JS analysis if available
+              "rxjs",
+              "@angular-devkit/schematics",
+              "@pnpm/lockfile-types",
+              "@nestjs/cli", // nx init nest makes use of nestjs cli (which should be available in NestJS CLI app) to parse the nest-cli.json file
+              "ts-node", // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
+              "memfs", // used in mock for handling .node files in tests
+              "events", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "process", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "prettier", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "util" // This is coming from @storybook/builder-manager since it uses the browser polyfill
+            ]
+          }
+        ]
+      }
     }
   ]
 }

@@ -4,6 +4,7 @@
   "cli": "nx",
   "title": "Convert a Cypress project from TSLint to ESLint",
   "description": "Convert a Cypress project from TSLint to ESLint.\n_NOTE: Does not work in `--dry-run` mode_.",
+  "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Migrate to ESLint.",
   "examples": [
     {
       "command": "nx g convert-tslint-to-eslint myapp",

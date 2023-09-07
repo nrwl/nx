@@ -64,7 +64,7 @@ header/
 └── dist/  <-- this folder gets recreated
 ```
 
-If your task creates output artifacts in a different location, you can [change the output folder(s)](/reference/project-configuration#outputs) that are cached. You can also [customize which inputs](/more-concepts/customizing-inputs) will invalidate the cache if they are changed.
+If your task creates output artifacts in a different location, you can [change the output folder(s)](/reference/project-configuration#outputs) that are cached. You can also [customize which inputs](/concepts/more-concepts/customizing-inputs) will invalidate the cache if they are changed.
 
 ## Advanced Caching
 

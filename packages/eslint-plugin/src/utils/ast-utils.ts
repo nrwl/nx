@@ -27,9 +27,38 @@ function tryReadBaseJson() {
  */
 export function getBarrelEntryPointByImportScope(
   importScope: string
-): string[] | null {
+): string[] {
+  const tryPaths = (
+    paths: Record<string, string[]>,
+    importScope: string
+  ): string[] => {
+    // TODO check and warn that the entries of paths[importScope] have no wildcards; that'd be user misconfiguration
+    if (paths[importScope]) return paths[importScope];
+
+    // accommodate wildcards (it's not glob) https://www.typescriptlang.org/docs/handbook/module-resolution.html#path-mapping
+    const result = new Set<string>(); // set ensures there are no duplicates
+
+    for (const [alias, targets] of Object.entries(paths)) {
+      if (!alias.endsWith('*')) {
+        continue;
+      }
+      const strippedAlias = alias.slice(0, -1); // remove asterisk
+      if (!importScope.startsWith(strippedAlias)) {
+        continue;
+      }
+      const dynamicPart = importScope.slice(strippedAlias.length);
+      targets.forEach((target) => {
+        result.add(target.replace('*', dynamicPart)); // add interpolated value
+      });
+      // we found the entry for importScope; an import scope not supposed and has no sense having > 1 Aliases; TODO warn on duplicated entries
+      break;
+    }
+
+    return Array.from(result);
+  };
   const tsConfigBase = tryReadBaseJson();
-  return tsConfigBase?.compilerOptions?.paths[importScope] || null;
+  if (!tsConfigBase?.compilerOptions?.paths) return [];
+  return tryPaths(tsConfigBase.compilerOptions.paths, importScope);
 }
 
 export function getBarrelEntryPointProjectNode(
@@ -90,7 +119,20 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
     } else {
       return;
     }
+  } else if (
+    !lstatSync(filePath, {
+      throwIfNoEntry: false,
+    }) /*not folder, but probably not full file with an extension either*/
+  ) {
+    // try to find an extension that exists
+    const ext = ['.ts', '.tsx', '.js', '.jsx'].find((ext) =>
+      lstatSync(filePath + ext, { throwIfNoEntry: false })
+    );
+    if (ext) {
+      filePath += ext;
+    }
   }
+
   const fileContent = readFileSync(filePath, 'utf8');
 
   // use the TypeScript AST to find the path to the file where exportedMember is defined

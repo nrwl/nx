@@ -1,12 +1,13 @@
-import 'dotenv/config';
 import {
+  detectPackageManager,
   ExecutorContext,
   logger,
   readJsonFile,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
-import { join } from 'path';
+import { join, resolve as pathResolve } from 'path';
 import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';
 import { gte } from 'semver';
 import { directoryExists } from '@nx/workspace/src/utilities/fileutils';
@@ -16,8 +17,10 @@ import { updatePackageJson } from './lib/update-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
-import { execSync, ExecSyncOptions } from 'child_process';
+import { ChildProcess, fork } from 'child_process';
 import { createCliOptions } from '../../utils/create-cli-options';
+
+let childProcess: ChildProcess;
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
@@ -46,25 +49,16 @@ export default async function buildExecutor(
     process.env['__NEXT_REACT_ROOT'] ||= 'true';
   }
 
-  const { experimentalAppOnly, profile, debug, outputPath } = options;
-
-  // Set output path here since it can also be set via CLI
-  // We can retrieve it inside plugins/with-nx
-  process.env.NX_NEXT_OUTPUT_PATH ??= outputPath;
-
-  const args = createCliOptions({ experimentalAppOnly, profile, debug });
-  const command = `npx next build ${args.join(' ')}`;
-  const execSyncOptions: ExecSyncOptions = {
-    stdio: 'inherit',
-    encoding: 'utf-8',
-    cwd: projectRoot,
-  };
   try {
-    execSync(command, execSyncOptions);
+    await runCliBuild(workspaceRoot, projectRoot, options);
   } catch (error) {
-    logger.error(`Error occurred while trying to run the ${command}`);
+    logger.error(`Error occurred while trying to run the build command`);
     logger.error(error);
     return { success: false };
+  } finally {
+    if (childProcess) {
+      childProcess.kill();
+    }
   }
 
   if (!directoryExists(options.outputPath)) {
@@ -90,10 +84,19 @@ export default async function buildExecutor(
   writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
 
   if (options.generateLockfile) {
-    const lockFile = createLockFile(builtPackageJson);
-    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
-      encoding: 'utf-8',
-    });
+    const packageManager = detectPackageManager(context.root);
+    const lockFile = createLockFile(
+      builtPackageJson,
+      context.projectGraph,
+      packageManager
+    );
+    writeFileSync(
+      `${options.outputPath}/${getLockFileName(packageManager)}`,
+      lockFile,
+      {
+        encoding: 'utf-8',
+      }
+    );
   }
 
   // If output path is different from source path, then copy over the config and public files.
@@ -105,4 +108,45 @@ export default async function buildExecutor(
     });
   }
   return { success: true };
+}
+
+function runCliBuild(
+  workspaceRoot: string,
+  projectRoot: string,
+  options: NextBuildBuilderOptions
+) {
+  const { experimentalAppOnly, profile, debug, outputPath } = options;
+
+  // Set output path here since it can also be set via CLI
+  // We can retrieve it inside plugins/with-nx
+  process.env.NX_NEXT_OUTPUT_PATH ??= outputPath;
+
+  const args = createCliOptions({ experimentalAppOnly, profile, debug });
+  return new Promise((resolve, reject) => {
+    childProcess = fork(
+      require.resolve('next/dist/bin/next'),
+      ['build', ...args],
+      {
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        stdio: 'inherit',
+        env: process.env,
+      }
+    );
+
+    // Ensure the child process is killed when the parent exits
+    process.on('exit', () => childProcess.kill());
+    process.on('SIGTERM', () => childProcess.kill());
+
+    childProcess.on('error', (err) => {
+      reject(err);
+    });
+
+    childProcess.on('exit', (code) => {
+      if (code === 0) {
+        resolve(code);
+      } else {
+        reject(code);
+      }
+    });
+  });
 }

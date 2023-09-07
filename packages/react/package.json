@@ -36,6 +36,7 @@
     "chalk": "^4.1.0",
     "file-loader": "^6.2.0",
     "minimatch": "3.0.5",
+    "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",

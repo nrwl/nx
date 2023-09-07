@@ -24,6 +24,27 @@
       "rules": {
         "@nx/nx-plugin-checks": "error"
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "@nx/jest",
+              "typescript",
+              "eslint",
+              "tslint-to-eslint-config",
+              "@angular-devkit/core",
+              "@typescript-eslint/eslint-plugin"
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["!**/*"]

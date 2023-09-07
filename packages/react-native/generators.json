@@ -62,14 +62,14 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#reactNativeApplicationGenerator",
+      "factory": "./src/generators/application/application#reactNativeApplicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a React Native application."
     },
     "library": {
-      "factory": "./src/generators/library/library#reactNativeLibraryGenerator",
+      "factory": "./src/generators/library/library#reactNativeLibraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",

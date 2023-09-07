@@ -1,3 +1,4 @@
+import { names } from '@nx/devkit';
 import {
   cleanupProject,
   createFile,
@@ -10,6 +11,7 @@ import {
   promisifiedTreeKill,
   readFile,
   readJson,
+  removeFile,
   rmDist,
   runCLI,
   runCLIAsync,
@@ -63,7 +65,7 @@ describe('Vite Plugin', () => {
     });
 
     describe('set up new React app with --bundler=vite option', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         proj = newProject();
         runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
         createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
@@ -98,7 +100,7 @@ describe('Vite Plugin', () => {
           `
         );
 
-        updateProjectConfig(myApp, (config) => {
+        await updateProjectConfig(myApp, (config) => {
           config.targets.build.options.fileReplacements = [
             {
               replace: `apps/${myApp}/src/environments/environment.ts`,
@@ -240,6 +242,91 @@ describe('Vite Plugin', () => {
       100_000;
   });
 
+  describe('incremental building', () => {
+    const app = uniq('demo');
+    const lib = uniq('my-lib');
+    beforeAll(() => {
+      proj = newProject({ name: uniq('vite-incr-build') });
+      runCLI(`generate @nx/react:app ${app} --bundler=vite --no-interactive`);
+
+      // only this project will be directly used from dist
+      runCLI(
+        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive`
+      );
+
+      runCLI(
+        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive`
+      );
+
+      // because the default js lib builds as cjs it cannot be loaded from dist
+      // so the paths plugin should always resolve to the libs source
+      runCLI(
+        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive`
+      );
+      const buildableLibCmp = names(`${lib}-buildable`).className;
+      const nonBuildableLibCmp = names(lib).className;
+      const buildableJsLibFn = names(`${lib}-js`).propertyName;
+
+      updateFile(`apps/${app}/src/app/app.tsx`, () => {
+        return `
+import styles from './app.module.css';
+import NxWelcome from './nx-welcome';
+import { ${buildableLibCmp} } from '@acme/buildable';
+import { ${buildableJsLibFn} } from '@acme/js-lib';
+import { ${nonBuildableLibCmp} } from '@acme/non-buildable';
+
+export function App() {
+  return (
+     <div>
+       <${buildableLibCmp} />
+       <${nonBuildableLibCmp} />
+       <p>{${buildableJsLibFn}()}</p>
+       <NxWelcome title="${app}" />
+      </div>
+  );
+}
+export default App;
+`;
+      });
+    });
+
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should build app from libs source', () => {
+      const results = runCLI(`build ${app} --buildLibsFromSource=true`);
+      expect(results).toContain('Successfully ran target build for project');
+      // this should be more modules than build from dist
+      expect(results).toContain('40 modules transformed');
+    });
+
+    it('should build app from libs dist', () => {
+      const results = runCLI(`build ${app} --buildLibsFromSource=false`);
+      expect(results).toContain('Successfully ran target build for project');
+      // this should be less modules than building from source
+      expect(results).toContain('38 modules transformed');
+    });
+
+    it('should build app from libs without package.json in lib', () => {
+      removeFile(`libs/${lib}-buildable/package.json`);
+
+      const buildFromSourceResults = runCLI(
+        `build ${app} --buildLibsFromSource=true`
+      );
+      expect(buildFromSourceResults).toContain(
+        'Successfully ran target build for project'
+      );
+
+      const noBuildFromSourceResults = runCLI(
+        `build ${app} --buildLibsFromSource=false`
+      );
+      expect(noBuildFromSourceResults).toContain(
+        'Successfully ran target build for project'
+      );
+    });
+  });
+
   describe('should be able to create libs that use vitest', () => {
     const lib = uniq('my-lib');
     beforeEach(() => {
@@ -255,7 +342,6 @@ describe('Vite Plugin', () => {
         `Successfully ran target test for project ${lib}`
       );
 
-      // TODO(caleb): run tests from project root and make sure they still work
       const nestedResults = await runCLIAsync(`test ${lib} --skip-nx-cache`, {
         cwd: `${tmpProjPath()}/libs/${lib}`,
       });
@@ -270,7 +356,7 @@ describe('Vite Plugin', () => {
         return `/// <reference types="vitest" />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
-        import viteTsConfigPaths from 'vite-tsconfig-paths';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
         export default defineConfig({
           server: {
@@ -279,9 +365,7 @@ describe('Vite Plugin', () => {
           },
           plugins: [
             react(),
-            viteTsConfigPaths({
-              root: './',
-            }),
+            nxViteTsPaths()
           ],
           test: {
             globals: true,
@@ -314,14 +398,15 @@ describe('Vite Plugin', () => {
     }, 100_000);
 
     // TODO: This takes forever and times out everything - find out why
-    xit('should not delete the project directory when coverage is enabled', () => {
+    xit('should not delete the project directory when coverage is enabled', async () => {
       // when coverage is enabled in the vite.config.ts but reportsDirectory is removed
       // from the @nx/vite:test executor options, vite will delete the project root directory
       runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
       updateFile(`libs/${lib}/vite.config.ts`, () => {
         return `import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
 
 export default defineConfig({
   server: {
@@ -330,9 +415,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
-    viteTsConfigPaths({
-      root: './',
-    }),
+    nxViteTsPaths()
   ],
   test: {
     globals: true,
@@ -351,7 +434,7 @@ export default defineConfig({
 });
 `;
       });
-      updateProjectConfig(lib, (config) => {
+      await updateProjectConfig(lib, (config) => {
         delete config.targets.test.options.reportsDirectory;
         return config;
       });

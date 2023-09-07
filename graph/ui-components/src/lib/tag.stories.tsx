@@ -1,15 +1,16 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { Tag } from './tag';
 
-const Story: ComponentMeta<typeof Tag> = {
+const meta: Meta<typeof Tag> = {
   component: Tag,
   title: 'Shared/Tag',
 };
-export default Story;
 
-const Template: ComponentStory<typeof Tag> = (args) => <Tag>{args.text}</Tag>;
+export default meta;
+type Story = StoryObj<typeof Tag>;
 
-export const Primary = Template.bind({});
-Primary.args = {
-  text: 'tag',
+export const Primary: Story = {
+  args: {
+    content: 'tag',
+  },
 };

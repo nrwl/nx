@@ -20,7 +20,7 @@ describe('create-nx-plugin', () => {
 
     runCreatePlugin(pluginName, {
       packageManager,
-      extraArgs: `--createPackageName='false'`,
+      extraArgs: `--createPackageName=false`,
     });
 
     checkFilesExist(
@@ -62,14 +62,14 @@ describe('create-nx-plugin', () => {
 
     runCLI(`build ${pluginName}`);
     checkFilesExist(
-      `dist/${pluginName}/package.json`,
-      `dist/${pluginName}/generators.json`,
-      `e2e/tests/${pluginName}.spec.ts`
+      `dist/packages/${pluginName}/package.json`,
+      `dist/packages/${pluginName}/generators.json`,
+      `packages/${pluginName}-e2e/tests/${pluginName}.spec.ts`
     );
 
     runCLI(`build create-${pluginName}-package`);
-    checkFilesExist(`dist/create-${pluginName}-package/bin/index.js`);
+    checkFilesExist(`dist/packages/create-${pluginName}-package/bin/index.js`);
 
-    expect(() => runCLI(`e2e e2e`)).not.toThrow();
+    expect(() => runCLI(`e2e ${pluginName}-e2e`)).not.toThrow();
   });
 });

@@ -30,6 +30,31 @@
       "rules": {
         "@nx/nx-plugin-checks": "error"
       }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "eslint",
+              "http-server", // Used by readModulePackageJson
+              // Installed by ensurePackage
+              "@nx/linter",
+              "@nx/cypress",
+              "@nx/playwright",
+              "@nx/vite",
+              "@nx/webpack",
+              "@nx/jest"
+            ]
+          }
+        ]
+      }
     }
   ],
   "ignorePatterns": ["!**/*"]

@@ -1,6 +1,5 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import * as build from '@storybook/core-server';
-import 'dotenv/config';
 import {
   pleaseUpgrade,
   storybookConfigExistsCheck,

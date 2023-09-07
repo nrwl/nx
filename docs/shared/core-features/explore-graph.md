@@ -8,7 +8,7 @@ high level view of your code architecture.
 To launch the project graph visualization run:
 
 ```shell
-nx graph
+npx nx graph
 ```
 
 This will open a browser window with an interactive representation of the project graph of your current codebase.
@@ -132,3 +132,13 @@ Try playing around with a [fully interactive graph on a sample repo](https://nrw
 ```
 
 {% /graph %}
+
+## Export Project Graph to JSON
+
+If you prefer to analyze the underlying data of the project graph with a script or some other tool, you can run:
+
+```shell
+nx graph --file=output.json
+```
+
+This will give you all the information that is used to create the project graph visualization.

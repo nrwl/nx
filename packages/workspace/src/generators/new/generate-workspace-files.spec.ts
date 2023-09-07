@@ -11,13 +11,15 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   beforeEach(() => {
     tree = createTree();
+    // we need an actual path for the package manager version check
+    tree.root = process.cwd();
   });
 
   it('should create files', async () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Empty,
+      preset: Preset.Apps,
       defaultBase: 'main',
       isCustomPreset: false,
     });
@@ -78,7 +80,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Empty,
+      preset: Preset.Apps,
       defaultBase: 'main',
       isCustomPreset: false,
     });
@@ -86,10 +88,24 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     expect(nxJson).toMatchInlineSnapshot(`
       {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
+        "namedInputs": {
+          "default": [
+            "{projectRoot}/**/*",
+            "sharedGlobals",
+          ],
+          "production": [
+            "default",
+          ],
+          "sharedGlobals": [],
+        },
         "targetDefaults": {
           "build": {
             "dependsOn": [
               "^build",
+            ],
+            "inputs": [
+              "production",
+              "^production",
             ],
           },
         },
@@ -105,6 +121,9 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             },
             "runner": "nx/tasks-runners/default",
           },
+        },
+        "workspaceLayout": {
+          "projectNameAndRootFormat": "as-provided",
         },
       }
     `);
@@ -158,6 +177,9 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "runner": "nx/tasks-runners/default",
           },
         },
+        "workspaceLayout": {
+          "projectNameAndRootFormat": "as-provided",
+        },
       }
     `);
   });
@@ -166,7 +188,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Empty,
+      preset: Preset.Apps,
       defaultBase: 'main',
       isCustomPreset: false,
     });
@@ -182,7 +204,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
     await generateWorkspaceFiles(tree, {
       name: 'proj',
       directory: 'proj',
-      preset: Preset.Empty,
+      preset: Preset.Apps,
       defaultBase: 'main',
       isCustomPreset: false,
     });
@@ -204,9 +226,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       packageManager: 'npm',
       isCustomPreset: false,
     });
-    expect(tree.exists('/proj/packages/.gitkeep')).toBe(true);
-    expect(tree.exists('/proj/apps/.gitkeep')).toBe(false);
-    expect(tree.exists('/proj/libs/.gitkeep')).toBe(false);
     const nx = readJson(tree, '/proj/nx.json');
     expect(nx).toMatchInlineSnapshot(`
       {
@@ -224,6 +243,9 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             },
             "runner": "nx/tasks-runners/default",
           },
+        },
+        "workspaceLayout": {
+          "projectNameAndRootFormat": "as-provided",
         },
       }
     `);

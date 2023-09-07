@@ -164,6 +164,10 @@
       "type": "boolean",
       "description": "If passed, Cypress output will not be printed to stdout. Only output from the configured Mocha reporter will print.",
       "default": false
+    },
+    "runnerUi": {
+      "type": "boolean",
+      "description": "Displays the Cypress Runner UI. Useful for when Test Replay is enabled and you would still like the Cypress Runner UI to be displayed for screenshots and video."
     }
   },
   "additionalProperties": true,

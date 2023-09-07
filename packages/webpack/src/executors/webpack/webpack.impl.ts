@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
@@ -12,7 +11,7 @@ import {
 } from 'rxjs/operators';
 import { resolve } from 'path';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
 
@@ -121,7 +120,8 @@ export async function* webpackExecutor(
   }
 
   if (!options.buildLibsFromSource && context.targetName) {
-    const { dependencies } = calculateProjectDependencies(
+    const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
       context.projectGraph,
       context.root,
       context.projectName,

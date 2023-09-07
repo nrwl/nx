@@ -12,6 +12,10 @@ export function updateWorkspace(
   options: NormalizedJestProjectSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
+  if (!projectConfig.targets) {
+    projectConfig.targets = {};
+  }
+
   projectConfig.targets.test = {
     executor: '@nx/jest:jest',
     outputs: [
@@ -34,6 +38,9 @@ export function updateWorkspace(
     },
   };
 
+  /**
+   * @deprecated this will be removed in the v17
+   */
   const isUsingTSLint =
     projectConfig.targets.lint?.executor ===
     '@angular-devkit/build-angular:tslint';

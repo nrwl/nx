@@ -5,7 +5,6 @@ import {
   CompleteTaskMessage,
   BatchResults,
 } from './batch-messages';
-import { Workspaces } from '../../config/workspaces';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { combineOptionsForExecutor } from '../../utils/params';
 import { TaskGraph } from '../../config/task-graph';
@@ -16,11 +15,11 @@ import {
 } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
 import { isAsyncIterator } from '../../utils/async-iterator';
+import { getExecutorInformation } from '../../command-line/run/executor-utils';
 
 function getBatchExecutor(executorName: string) {
-  const workspace = new Workspaces(workspaceRoot);
   const [nodeModule, exportName] = executorName.split(':');
-  return workspace.readExecutor(nodeModule, exportName);
+  return getExecutorInformation(nodeModule, exportName, workspaceRoot);
 }
 
 async function runTasks(

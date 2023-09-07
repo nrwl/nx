@@ -78,7 +78,7 @@ Situations like this are pretty common:
 ![task-graph-execution](/shared/mental-model/task-graph-execution.svg)
 
 Because we described the rules in `nx.json`, they will apply to all the projects in the repo. You can also define
-project-specific rules by adding them to the project's configuration ([learn more](/reference/project-configuration#dependson).
+project-specific rules by adding them to the project's configuration ([learn more](/reference/project-configuration#dependson)).
 
 ```jsonc {% fileName="package.json"%}
 {

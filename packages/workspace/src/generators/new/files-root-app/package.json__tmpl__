@@ -1,5 +1,5 @@
 {
-  "name": "@<%= formattedNames.fileName %>/source",
+  "name": "<%= formattedNames.fileName %>",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {

@@ -7,7 +7,7 @@ import {
   Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import type { NormalizedSchema } from '../schema';
+import type { MoveImplOptions } from './types';
 
 /**
  * Updates the Angular module name (including the spec file and index.ts)
@@ -19,8 +19,16 @@ import type { NormalizedSchema } from '../schema';
  */
 export function updateModuleName(
   tree: Tree,
-  { projectName: oldProjectName, newProjectName }: NormalizedSchema
+  { oldProjectName, newProjectName }: MoveImplOptions
 ): void {
+  const unscopedNewProjectName = newProjectName.startsWith('@')
+    ? newProjectName.split('/')[1]
+    : newProjectName;
+
+  if (oldProjectName === unscopedNewProjectName) {
+    return;
+  }
+
   const project = readProjectConfiguration(tree, newProjectName);
 
   if (project.projectType === 'application') {
@@ -31,14 +39,14 @@ export function updateModuleName(
 
   const moduleName = {
     from: `${names(oldProjectName).className}Module`,
-    to: `${names(newProjectName).className}Module`,
+    to: `${names(unscopedNewProjectName).className}Module`,
   };
 
   const findModuleName = new RegExp(`\\b${moduleName.from}`, 'g');
 
   const moduleFile = {
     from: `${oldProjectName}.module`,
-    to: `${newProjectName}.module`,
+    to: `${unscopedNewProjectName}.module`,
   };
 
   const findFileName = new RegExp(`\\b${moduleFile.from}`, 'g');

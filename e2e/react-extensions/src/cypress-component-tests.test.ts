@@ -4,7 +4,7 @@ import {
   ensureCypressInstallation,
   newProject,
   runCLI,
-  runCypressTests,
+  runE2ETests,
   uniq,
   updateFile,
   updateJson,
@@ -17,7 +17,7 @@ describe('React Cypress Component Tests', () => {
   const usedInAppLibName = uniq('cy-react-lib');
   const buildableLibName = uniq('cy-react-buildable-lib');
 
-  beforeAll(() => {
+  beforeAll(async () => {
     projectName = newProject({ name: uniq('cy-react') });
     ensureCypressInstallation();
 
@@ -131,7 +131,7 @@ export default Input;
 `
     );
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       config.targets['build'].options.assets.push({
         glob: '**/*',
         input: 'libs/assets',
@@ -147,7 +147,7 @@ export default Input;
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${appName} --generate-tests`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -158,7 +158,7 @@ export default Input;
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -190,7 +190,7 @@ describe(Input.name, () => {
       `generate @nx/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
     );
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
@@ -221,14 +221,14 @@ ${content}`;
       }
     );
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
         'All specs passed!'
       );
     }
   }, 300_000);
 
-  it('should work with async webpack config', () => {
+  it('should work with async webpack config', async () => {
     // TODO: (caleb) for whatever reason the MF webpack config + CT is running, but cypress is not starting up?
     // are they overriding some option on top of each other causing cypress to not see it's running?
     createFile(
@@ -252,7 +252,7 @@ ${content}`;
         );
       `
     );
-    updateProjectConfig(appName, (config) => {
+    await updateProjectConfig(appName, (config) => {
       config.targets[
         'build'
       ].options.webpackConfig = `apps/${appName}/webpack.config.js`;
@@ -260,7 +260,7 @@ ${content}`;
       return config;
     });
 
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       const results = runCLI(`component-test ${appName}`);
       expect(results).toContain('I am from the custom async Webpack config');
       expect(results).toContain('All specs passed!');
@@ -291,7 +291,7 @@ export default MyComponent;`;
     runCLI(
       `generate @nrwl/react:cypress-component-configuration --project=${viteLibName} --generate-tests --bundler=vite --build-target=${appName}:build`
     );
-    if (runCypressTests()) {
+    if (runE2ETests()) {
       expect(runCLI(`component-test ${viteLibName}`)).toContain(
         'All specs passed!'
       );

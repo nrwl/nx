@@ -5,7 +5,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { basename, dirname, extname, relative } from 'path';
+import { basename, dirname, extname, join, relative } from 'path';
 import {
   findExportDeclarationsForJsx,
   getComponentNode,
@@ -100,7 +100,7 @@ function generateSpecsForComponents(tree: Tree, filePath: string) {
     const namedImportStatement =
       namedImports.length > 0 ? `, { ${namedImports} }` : '';
 
-    generateFiles(tree, joinPathFragments(__dirname, 'files'), componentDir, {
+    generateFiles(tree, join(__dirname, 'files'), componentDir, {
       fileName,
       components,
       importStatement: defaultExport

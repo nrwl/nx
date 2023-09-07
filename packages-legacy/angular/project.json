@@ -11,7 +11,7 @@
         "project": "packages-legacy/angular/ng-package.json",
         "tsConfig": "packages-legacy/angular/tsconfig.runtime.json"
       },
-      "outputs": ["build/packages/angular-legacy"]
+      "outputs": ["{workspaceRoot}/build/packages/angular-legacy"]
     },
     "build-base": {
       "executor": "@nx/js:tsc",
@@ -20,7 +20,6 @@
         "main": "packages-legacy/angular/index.ts",
         "tsConfig": "packages-legacy/angular/tsconfig.json",
         "outputPath": "build/packages/angular-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/angular",

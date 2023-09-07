@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 import type { ExecutorContext } from '@nx/devkit';
 
 import {

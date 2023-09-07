@@ -1,9 +1,9 @@
 import * as chalk from 'chalk';
 import { prompt } from 'enquirer';
+import { relative } from 'path';
 
 import { readNxJson } from '../../config/configuration';
 import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
-import { Workspaces } from '../../config/workspaces';
 import { FileChange, flushChanges, FsTree } from '../../generators/tree';
 import {
   createProjectGraphAsync,
@@ -20,9 +20,11 @@ import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { NxJsonConfiguration } from '../../config/nx-json';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import type { Arguments } from 'yargs';
 import { output } from '../../utils/output';
+import { getGeneratorInformation } from './generator-utils';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -49,11 +51,13 @@ export function printChanges(fileChanges: FileChange[]) {
 
 async function promptForCollection(
   generatorName: string,
-  ws: Workspaces,
   interactive: boolean,
   projectsConfiguration: ProjectsConfigurations
 ): Promise<string> {
-  const localPlugins = await getLocalWorkspacePlugins(projectsConfiguration);
+  const localPlugins = await getLocalWorkspacePlugins(
+    projectsConfiguration,
+    readNxJson()
+  );
 
   const installedCollections = Array.from(
     new Set(findInstalledPlugins().map((x) => x.name))
@@ -69,7 +73,7 @@ async function promptForCollection(
         resolvedCollectionName,
         normalizedGeneratorName,
         generatorConfiguration: { ['x-deprecated']: deprecated, hidden },
-      } = ws.readGenerator(collectionName, generatorName);
+      } = getGeneratorInformation(collectionName, generatorName, workspaceRoot);
       if (hidden) {
         continue;
       }
@@ -94,7 +98,7 @@ async function promptForCollection(
         resolvedCollectionName,
         normalizedGeneratorName,
         generatorConfiguration: { ['x-deprecated']: deprecated, hidden },
-      } = ws.readGenerator(name, generatorName);
+      } = getGeneratorInformation(name, generatorName, workspaceRoot);
       if (hidden) {
         continue;
       }
@@ -156,7 +160,7 @@ async function promptForCollection(
             return true;
           }
           try {
-            ws.readGenerator(value, generatorName);
+            getGeneratorInformation(value, generatorName, workspaceRoot);
             return true;
           } catch {
             logger.error(`\nCould not find ${value}:${generatorName}`);
@@ -200,7 +204,6 @@ function parseGeneratorString(value: string): {
 
 async function convertToGenerateOptions(
   generatorOptions: { [p: string]: any },
-  ws: Workspaces,
   defaultCollectionName: string,
   mode: 'generate' | 'new',
   projectsConfiguration?: ProjectsConfigurations
@@ -219,7 +222,6 @@ async function convertToGenerateOptions(
     } else if (!defaultCollectionName) {
       const generatorString = await promptForCollection(
         generatorDescriptor,
-        ws,
         interactive,
         projectsConfiguration
       );
@@ -300,7 +302,6 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   }
   const verbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
-  const ws = new Workspaces(workspaceRoot);
   const nxJsonConfiguration = readNxJson();
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const projectsConfigurations =
@@ -309,7 +310,6 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   return handleErrors(verbose, async () => {
     const opts = await convertToGenerateOptions(
       args,
-      ws,
       readDefaultCollection(nxJsonConfiguration),
       'generate',
       projectsConfigurations
@@ -325,14 +325,18 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
         ['x-deprecated']: deprecated,
         ['x-use-standalone-layout']: isStandalonePreset,
       },
-    } = ws.readGenerator(opts.collectionName, opts.generatorName);
+    } = getGeneratorInformation(
+      opts.collectionName,
+      opts.generatorName,
+      workspaceRoot
+    );
 
     if (deprecated) {
       logger.warn(
         [
           `${NX_PREFIX}: ${opts.collectionName}:${normalizedGeneratorName} is deprecated`,
           `${deprecated}`,
-        ].join('/n')
+        ].join('\n')
       );
     }
     if (!opts.quiet && !opts.help) {
@@ -354,16 +358,23 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       nxJsonConfiguration,
       schema,
       opts.interactive,
-      ws.calculateDefaultProjectName(
+      calculateDefaultProjectName(
         cwd,
+        workspaceRoot,
         projectsConfigurations,
         nxJsonConfiguration
       ),
-      ws.relativeCwd(cwd),
+      relative(workspaceRoot, cwd),
       verbose
     );
 
-    if (ws.isNxGenerator(opts.collectionName, normalizedGeneratorName)) {
+    if (
+      getGeneratorInformation(
+        opts.collectionName,
+        normalizedGeneratorName,
+        workspaceRoot
+      ).isNxGenerator
+    ) {
       const host = new FsTree(
         workspaceRoot,
         verbose,

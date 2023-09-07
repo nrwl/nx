@@ -12,7 +12,7 @@
         "project": "packages/angular/ng-package.json",
         "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
       },
-      "outputs": ["build/packages/angular"]
+      "outputs": ["{workspaceRoot}/build/packages/angular"]
     },
     "build-base": {
       "executor": "@nx/js:tsc",
@@ -64,9 +64,7 @@
       "dependsOn": ["build-ng", "build-base", "^build"],
       "options": {
         "commands": [
-          {
-            "command": "node ./scripts/copy-readme.js angular"
-          },
+          "node ./scripts/copy-readme.js angular",
           "node ./scripts/add-dependency-to-build.js angular @nrwl/angular"
         ],
         "parallel": false
@@ -74,5 +72,5 @@
     },
     "lint": {}
   },
-  "implicitDependencies": ["workspace", "cypress", "jest"]
+  "implicitDependencies": []
 }

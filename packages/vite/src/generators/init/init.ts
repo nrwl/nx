@@ -20,7 +20,6 @@ import {
   vitePluginReactSwcVersion,
   vitestUiVersion,
   vitestVersion,
-  viteTsConfigPathsVersion,
   viteVersion,
   happyDomVersion,
   edgeRuntimeVmVersion,
@@ -37,7 +36,6 @@ function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   // base deps
   devDependencies['@nx/vite'] = nxVersion;
   devDependencies['vite'] = viteVersion;
-  devDependencies['vite-tsconfig-paths'] = viteTsConfigPathsVersion;
   devDependencies['vitest'] = vitestVersion;
   devDependencies['@vitest/ui'] = vitestUiVersion;
 

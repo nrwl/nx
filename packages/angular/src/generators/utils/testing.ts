@@ -20,7 +20,10 @@ export async function generateTestApplication(
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
-  await applicationGenerator(tree, options);
+  await applicationGenerator(tree, {
+    projectNameAndRootFormat: 'as-provided',
+    ...options,
+  });
 }
 
 export async function generateTestHostApplication(
@@ -29,7 +32,7 @@ export async function generateTestHostApplication(
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
-  await host(tree, options);
+  await host(tree, { projectNameAndRootFormat: 'as-provided', ...options });
 }
 
 export async function generateTestRemoteApplication(
@@ -38,7 +41,7 @@ export async function generateTestRemoteApplication(
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
-  await remote(tree, options);
+  await remote(tree, { projectNameAndRootFormat: 'as-provided', ...options });
 }
 
 export async function generateTestLibrary(
@@ -47,7 +50,10 @@ export async function generateTestLibrary(
 ): Promise<void> {
   addAngularPluginPeerDeps(tree);
   tree.write('.gitignore', '');
-  await libraryGenerator(tree, options);
+  await libraryGenerator(tree, {
+    projectNameAndRootFormat: 'as-provided',
+    ...options,
+  });
 }
 
 export async function createStorybookTestWorkspaceForLib(
@@ -65,6 +71,7 @@ export async function createStorybookTestWorkspaceForLib(
     simpleName: false,
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
+    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(tree, {
@@ -73,7 +80,7 @@ export async function createStorybookTestWorkspaceForLib(
   });
 
   tree.write(
-    `libs/${libName}/src/lib/test-button/test-button.component.ts`,
+    `${libName}/src/lib/test-button/test-button.component.ts`,
     `import { Component, Input } from '@angular/core';
 
 export type ButtonStyle = 'default' | 'primary' | 'accent';
@@ -92,11 +99,11 @@ export class TestButtonComponent {
   );
 
   tree.write(
-    `libs/${libName}/src/lib/test-button/test-button.component.html`,
+    `${libName}/src/lib/test-button/test-button.component.html`,
     `<button [attr.type]="type" [ngClass]="style"></button>`
   );
 
-  const modulePath = `libs/${libName}/src/lib/${libName}.module.ts`;
+  const modulePath = `${libName}/src/lib/${libName}.module.ts`;
   tree.write(
     modulePath,
     `import * as ButtonExports from './test-button/test-button.component';
@@ -112,17 +119,17 @@ export class TestButtonComponent {
   await componentGenerator(tree, {
     name: 'barrel-button',
     project: libName,
-    path: `libs/${libName}/src/lib/barrel`,
+    path: `${libName}/src/lib/barrel`,
     module: 'barrel',
   });
 
   tree.write(
-    `libs/${libName}/src/lib/barrel/barrel-button/index.ts`,
+    `${libName}/src/lib/barrel/barrel-button/index.ts`,
     `export * from './barrel-button.component';`
   );
 
   tree.write(
-    `libs/${libName}/src/lib/barrel/barrel.module.ts`,
+    `${libName}/src/lib/barrel/barrel.module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BarrelButtonComponent } from './barrel-button';
@@ -143,19 +150,19 @@ export class BarrelModule {}`
   await componentGenerator(tree, {
     name: 'variable-declare-button',
     project: libName,
-    path: `libs/${libName}/src/lib/variable-declare`,
+    path: `${libName}/src/lib/variable-declare`,
     module: 'variable-declare',
   });
 
   await componentGenerator(tree, {
     name: 'variable-declare-view',
     project: libName,
-    path: `libs/${libName}/src/lib/variable-declare`,
+    path: `${libName}/src/lib/variable-declare`,
     module: 'variable-declare',
   });
 
   tree.write(
-    `libs/${libName}/src/lib/variable-declare/variable-declare.module.ts`,
+    `${libName}/src/lib/variable-declare/variable-declare.module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VariableDeclareButtonComponent } from './variable-declare-button/variable-declare-button.component';
@@ -183,26 +190,26 @@ export class VariableDeclareModule {}`
   await componentGenerator(tree, {
     name: 'variable-spread-declare-button',
     project: libName,
-    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
   });
 
   await componentGenerator(tree, {
     name: 'variable-spread-declare-view',
     project: libName,
-    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
   });
 
   await componentGenerator(tree, {
     name: 'variable-spread-declare-anotherview',
     project: libName,
-    path: `libs/${libName}/src/lib/variable-spread-declare`,
+    path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
   });
 
   tree.write(
-    `libs/${libName}/src/lib/variable-spread-declare/variable-spread-declare.module.ts`,
+    `${libName}/src/lib/variable-spread-declare/variable-spread-declare.module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { VariableSpreadDeclareButtonComponent } from './variable-spread-declare-button/variable-spread-declare-button.component';
@@ -230,19 +237,19 @@ export class VariableSpreadDeclareModule {}`
   await componentGenerator(tree, {
     name: 'cmp1',
     project: libName,
-    path: `libs/${libName}/src/lib/static-member-declarations`,
+    path: `${libName}/src/lib/static-member-declarations`,
     module: 'static-member-declarations',
   });
 
   await componentGenerator(tree, {
     name: 'cmp2',
     project: libName,
-    path: `libs/${libName}/src/lib/static-member-declarations`,
+    path: `${libName}/src/lib/static-member-declarations`,
     module: 'static-member-declarations',
   });
 
   tree.write(
-    `libs/${libName}/src/lib/static-member-declarations/static-member-declarations.module.ts`,
+    `${libName}/src/lib/static-member-declarations/static-member-declarations.module.ts`,
     `import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Cmp1Component } from './cmp1/cmp1.component';
@@ -262,14 +269,14 @@ export class StaticMemberDeclarationsModule {
   generateModule(tree, {
     name: 'nested',
     project: libName,
-    path: `libs/${libName}/src/lib`,
+    path: `${libName}/src/lib`,
   });
 
   await componentGenerator(tree, {
     name: 'nested-button',
     project: libName,
     module: 'nested',
-    path: `libs/${libName}/src/lib/nested`,
+    path: `${libName}/src/lib/nested`,
   });
 
   await componentGenerator(tree, {

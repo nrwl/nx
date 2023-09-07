@@ -1,5 +1,5 @@
-import 'dotenv/config';
 import {
+  detectPackageManager,
   ExecutorContext,
   logger,
   stripIndents,
@@ -21,7 +21,10 @@ import {
 import { existsSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { registerPaths, validateTypes } from '../../utils/executor-utils';
+import {
+  createBuildableTsConfig,
+  validateTypes,
+} from '../../utils/executor-utils';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -30,7 +33,7 @@ export async function* viteBuildExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  registerPaths(projectRoot, options, context);
+  createBuildableTsConfig(projectRoot, options, context);
 
   const normalizedOptions = normalizeOptions(options);
 
@@ -77,11 +80,20 @@ export async function* viteBuildExecutor(
     builtPackageJson.type = 'module';
 
     writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
+    const packageManager = detectPackageManager(context.root);
 
-    const lockFile = createLockFile(builtPackageJson);
-    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
-      encoding: 'utf-8',
-    });
+    const lockFile = createLockFile(
+      builtPackageJson,
+      context.projectGraph,
+      packageManager
+    );
+    writeFileSync(
+      `${options.outputPath}/${getLockFileName(packageManager)}`,
+      lockFile,
+      {
+        encoding: 'utf-8',
+      }
+    );
   }
   // For buildable libs, copy package.json if it exists.
   else if (

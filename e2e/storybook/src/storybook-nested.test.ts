@@ -24,6 +24,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
       style: 'css',
       bundler: 'vite',
       packageManager: getSelectedPackageManager(),
+      e2eTestRunner: 'none',
     });
 
     runCLI(
@@ -71,7 +72,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
 
     it('should build a React based storybook that references another lib and uses Vite', () => {
       runCLI(
-        `generate @nx/react:lib my-lib --bundler=vite --unitTestRunner=none --no-interactive`
+        `generate @nx/react:lib my-lib --bundler=vite --unitTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
       );
 
       // create a component and a story in the first lib to reference the cmp from the 2nd lib
@@ -79,7 +80,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
       writeFileSync(
         tmpProjPath(`src/app/test-button.tsx`),
         `
-          import { MyLib } from '@${appName}/my-lib';
+          import { MyLib } from 'my-lib';
 
           export function TestButton() {
             return (

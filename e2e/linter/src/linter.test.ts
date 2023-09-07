@@ -1,12 +1,16 @@
 import * as path from 'path';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
+  getSelectedPackageManager,
   newProject,
   readFile,
   readJson,
   runCLI,
+  runCreateWorkspace,
+  setMaxWorkers,
   uniq,
   updateFile,
   updateJson,
@@ -246,6 +250,21 @@ describe('Linter', () => {
           'A project tagged with "validtag" can only depend on libs tagged with "validtag"'
         );
       }, 1000000);
+
+      it('should print the effective configuration for a file specified using --printConfig', () => {
+        const eslint = readJson('.eslintrc.json');
+        eslint.overrides.push({
+          files: ['src/index.ts'],
+          rules: {
+            'specific-rule': 'off',
+          },
+        });
+        updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
+        const out = runCLI(`lint ${myapp} --printConfig src/index.ts`, {
+          silenceError: true,
+        });
+        expect(out).toContain('"specific-rule": [');
+      }, 1000000);
     });
 
     describe('workspace boundary rules', () => {
@@ -452,12 +471,6 @@ describe('Linter', () => {
           ];
           return json;
         });
-        // Set this to false for now until the `@nx/js:lib` generator is updated to include ts/swc helpers by default.
-        // TODO(jack): Remove this once the above is addressed in another PR.
-        updateJson(`libs/${mylib}/tsconfig.lib.json`, (json) => {
-          json.compilerOptions.importHelpers = false;
-          return json;
-        });
         updateJson(`libs/${mylib}/project.json`, (json) => {
           json.targets.lint.options.lintFilePatterns = [
             `libs/${mylib}/**/*.ts`,
@@ -471,7 +484,7 @@ describe('Linter', () => {
       it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
-        const tslibVersion = rootPackageJson.devDependencies['tslib'];
+        const tslibVersion = rootPackageJson.dependencies['tslib'];
 
         let out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain('All files pass linting');
@@ -484,13 +497,12 @@ describe('Linter', () => {
             content.replace(/return .*;/, `return names(${mylib}).className;`)
         );
 
-        // output should now report missing dependencies section
+        // output should now report missing dependency
         out = runCLI(`lint ${mylib}`, { silenceError: true });
-        expect(out).toContain(
-          'Dependency sections are missing from the "package.json"'
-        );
+        expect(out).toContain('they are missing');
+        expect(out).toContain('@nx/devkit');
 
-        // should fix the missing section issue
+        // should fix the missing dependency issue
         out = runCLI(`lint ${mylib} --fix`, { silenceError: true });
         expect(out).toContain(
           `Successfully ran target lint for project ${mylib}`
@@ -500,9 +512,12 @@ describe('Linter', () => {
           {
             "dependencies": {
               "@nx/devkit": "${nxVersion}",
+              "tslib": "${tslibVersion}",
             },
+            "main": "./src/index.js",
             "name": "@proj/${mylib}",
             "type": "commonjs",
+            "typings": "./src/index.d.ts",
             "version": "0.0.1",
           }
         `);
@@ -514,7 +529,7 @@ describe('Linter', () => {
         });
         out = runCLI(`lint ${mylib}`, { silenceError: true });
         expect(out).toContain(
-          `The version specifier does not contain the installed version of "@nx/devkit" package: ${nxVersion}`
+          'version specifier does not contain the installed version of "@nx/devkit"'
         );
 
         // should fix the version mismatch issue
@@ -524,6 +539,78 @@ describe('Linter', () => {
         );
       });
     });
+  });
+
+  describe('Flat config', () => {
+    const packageManager = getSelectedPackageManager() || 'pnpm';
+
+    afterEach(() => cleanupProject());
+
+    it('should convert integrated to flat config', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      runCreateWorkspace(myapp, {
+        preset: 'react-monorepo',
+        appName: myapp,
+        style: 'css',
+        packageManager,
+        bundler: 'vite',
+        e2eTestRunner: 'none',
+      });
+      runCLI(`generate @nx/js:lib ${mylib} --directory libs/${mylib}`);
+
+      // migrate to flat structure
+      runCLI(`generate @nx/linter:convert-to-flat-config`);
+      checkFilesExist(
+        'eslint.config.js',
+        `apps/${myapp}/eslint.config.js`,
+        `libs/${mylib}/eslint.config.js`
+      );
+      checkFilesDoNotExist(
+        '.eslintrc.json',
+        `apps/${myapp}/.eslintrc.json`,
+        `libs/${mylib}/.eslintrc.json`
+      );
+
+      const outFlat = runCLI(`affected -t lint`, {
+        silenceError: true,
+      });
+      expect(outFlat).toContain('All files pass linting');
+    }, 1000000);
+
+    it('should convert standalone to flat config', () => {
+      const myapp = uniq('myapp');
+      const mylib = uniq('mylib');
+
+      runCreateWorkspace(myapp, {
+        preset: 'react-standalone',
+        appName: myapp,
+        style: 'css',
+        packageManager,
+        bundler: 'vite',
+        e2eTestRunner: 'none',
+      });
+      runCLI(`generate @nx/js:lib ${mylib}`);
+
+      // migrate to flat structure
+      runCLI(`generate @nx/linter:convert-to-flat-config`);
+      checkFilesExist(
+        'eslint.config.js',
+        `${mylib}/eslint.config.js`,
+        'eslint.base.config.js'
+      );
+      checkFilesDoNotExist(
+        '.eslintrc.json',
+        `${mylib}/.eslintrc.json`,
+        '.eslintrc.base.json'
+      );
+
+      const outFlat = runCLI(`affected -t lint`, {
+        silenceError: true,
+      });
+      expect(outFlat).toContain('All files pass linting');
+    }, 1000000);
   });
 
   describe('Root projects migration', () => {
@@ -618,8 +705,8 @@ describe('Linter', () => {
       let e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have plugin extends
-      expect(appEslint.overrides[0].extends).toBeDefined();
       expect(appEslint.overrides[1].extends).toBeDefined();
+      expect(appEslint.overrides[2].extends).toBeDefined();
       expect(e2eEslint.overrides[0].extends).toBeDefined();
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
@@ -629,20 +716,21 @@ describe('Linter', () => {
       e2eEslint = readJson('e2e/.eslintrc.json');
 
       // should have no plugin extends
-      expect(appEslint.overrides[0].extends).toEqual([
+      expect(appEslint.overrides[1].extends).toEqual([
         'plugin:@nx/angular',
         'plugin:@angular-eslint/template/process-inline-templates',
       ]);
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
     });
 
-    it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
+    it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', async () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 
       runCLI(
         `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`
       );
+      await setMaxWorkers();
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');

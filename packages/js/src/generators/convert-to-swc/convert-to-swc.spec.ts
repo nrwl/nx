@@ -22,9 +22,9 @@ describe('convert to swc', () => {
   };
 
   beforeAll(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    tree.write('/apps/.gitignore', '');
-    tree.write('/libs/.gitignore', '');
+    tree = createTreeWithEmptyWorkspace();
+    tree.write('/.gitignore', '');
+    tree.write('/.gitignore', '');
   });
 
   it('should convert tsc to swc', async () => {
@@ -32,6 +32,7 @@ describe('convert to swc', () => {
       ...defaultLibGenerationOptions,
       name: 'tsc-lib',
       bundler: 'tsc',
+      projectNameAndRootFormat: 'as-provided',
     });
 
     expect(
@@ -49,7 +50,7 @@ describe('convert to swc', () => {
       )
     ).toEqual(true);
     expect(tree.read('package.json', 'utf-8')).toContain('@swc/core');
-    expect(tree.read('libs/tsc-lib/package.json', 'utf-8')).toContain(
+    expect(tree.read('tsc-lib/package.json', 'utf-8')).toContain(
       '@swc/helpers'
     );
   });

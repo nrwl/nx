@@ -28,12 +28,6 @@ export class FileHasher {
     return hashFile(path).hash;
   }
 
-  hashFilesMatchingGlobs(path: string, globs: string[]): string {
-    // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
-    const { hashFilesMatchingGlobs } = require('../native');
-    return hashFilesMatchingGlobs(path, globs);
-  }
-
   clear(): void {
     this.fileHashes = new Map<string, string>();
     this.isInitialized = false;
@@ -94,4 +88,16 @@ export function hashArray(content: string[]): string {
   // Import as needed. There is also an issue running unit tests in Nx repo if this is a top-level import.
   const { hashArray } = require('../native');
   return hashArray(content);
+}
+
+export function hashObject(obj: object): string {
+  const { hashArray } = require('../native');
+  const parts: string[] = [];
+
+  for (const key of Object.keys(obj).sort()) {
+    parts.push(key);
+    parts.push(JSON.stringify(obj[key]));
+  }
+
+  return hashArray(parts);
 }

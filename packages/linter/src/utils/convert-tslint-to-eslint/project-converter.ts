@@ -24,6 +24,8 @@ import {
 
 /**
  * Common schema used by all implementations of convert-tslint-to-eslint generators
+ *
+ * @deprecated This will be removed in v17
  */
 export interface ConvertTSLintToESLintSchema {
   project: string;
@@ -34,6 +36,7 @@ export interface ConvertTSLintToESLintSchema {
 }
 
 /**
+ *
  * When we convert a TSLint setup to an ESLint setup for a particular project, there are a number of
  * shared/common concerns (implemented as library utilities within @nx/linter), and a few things
  * which are specific to this package and the types of projects it produces.
@@ -49,6 +52,8 @@ export interface ConvertTSLintToESLintSchema {
  *
  * - The user's project-level tslint.json file will be converted into a corresponding .eslintrc.json file
  * and it will extend from the root workspace .eslintrc.json file as normal.
+ *
+ * @deprecated This will be removed in v17
  */
 export class ProjectConverter {
   private readonly projectConfig: ProjectConfiguration;

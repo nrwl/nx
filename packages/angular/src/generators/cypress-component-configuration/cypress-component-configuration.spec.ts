@@ -89,16 +89,14 @@ describe('Cypress Component Testing Configuration', () => {
         generateTests: false,
       });
       expect(
-        tree.exists(
-          'libs/fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts'
-        )
+        tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts')
       ).toBeFalsy();
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
-          cypressConfig: 'libs/fancy-lib/cypress.config.ts',
+          cypressConfig: 'fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
           skipServe: true,
           testingType: 'component',
@@ -151,16 +149,14 @@ describe('Cypress Component Testing Configuration', () => {
         generateTests: false,
       });
       expect(
-        tree.exists(
-          'libs/fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts'
-        )
+        tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts')
       ).toBeFalsy();
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
-          cypressConfig: 'libs/fancy-lib/cypress.config.ts',
+          cypressConfig: 'fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build:development',
           skipServe: true,
           testingType: 'component',
@@ -252,7 +248,7 @@ describe('Cypress Component Testing Configuration', () => {
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
-          cypressConfig: 'apps/fancy-app/cypress.config.ts',
+          cypressConfig: 'fancy-app/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
           skipServe: true,
           testingType: 'component',
@@ -273,7 +269,7 @@ describe('Cypress Component Testing Configuration', () => {
         export: true,
       });
       tree.write(
-        'apps/fancy-app/src/app/blah.component.ts',
+        'fancy-app/src/app/blah.component.ts',
         `import {FancyCmpComponent} from '@something/fancy-lib'`
       );
       projectGraph = {
@@ -312,7 +308,7 @@ describe('Cypress Component Testing Configuration', () => {
       ).toEqual({
         executor: '@nx/cypress:cypress',
         options: {
-          cypressConfig: 'libs/fancy-lib/cypress.config.ts',
+          cypressConfig: 'fancy-lib/cypress.config.ts',
           devServerTarget: 'fancy-app:build',
           skipServe: true,
           testingType: 'component',
@@ -363,7 +359,7 @@ describe('Cypress Component Testing Configuration', () => {
       generateTests: true,
     });
 
-    expect(tree.read('libs/my-lib/cypress.config.ts', 'utf-8'))
+    expect(tree.read('my-lib/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
       import { defineConfig } from 'cypress';
@@ -374,7 +370,7 @@ describe('Cypress Component Testing Configuration', () => {
       "
     `);
     expect(
-      tree.read('libs/my-lib/cypress/support/component.ts', 'utf-8')
+      tree.read('my-lib/cypress/support/component.ts', 'utf-8')
     ).toMatchSnapshot('component.ts');
   });
   it('should work with simple components', async () => {
@@ -421,7 +417,7 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     const [one, two, three] = getCmpsFromTree(tree, {
-      basePath: 'libs/my-lib/src/lib',
+      basePath: 'my-lib/src/lib',
       name: 'something',
     });
     expect(one.cy).toMatchSnapshot();
@@ -473,7 +469,7 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     const [one, two, three] = getCmpsFromTree(tree, {
-      basePath: 'libs/my-lib-standalone/src/lib',
+      basePath: 'my-lib-standalone/src/lib',
       name: 'something',
     });
     expect(one.cy).toMatchSnapshot();
@@ -491,7 +487,7 @@ describe('Cypress Component Testing Configuration', () => {
       name: 'something',
       standalone: false,
       withInputs: true,
-      basePath: 'libs/with-inputs-cmp/src/lib',
+      basePath: 'with-inputs-cmp/src/lib',
     });
     projectGraph = {
       nodes: {
@@ -527,7 +523,7 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     const [one, two, three] = getCmpsFromTree(tree, {
-      basePath: 'libs/with-inputs-cmp/src/lib',
+      basePath: 'with-inputs-cmp/src/lib',
       name: 'something',
     });
     expect(one.cy).toMatchSnapshot();
@@ -545,7 +541,7 @@ describe('Cypress Component Testing Configuration', () => {
       name: 'something',
       standalone: true,
       withInputs: true,
-      basePath: 'libs/with-inputs-standalone-cmp/src/lib',
+      basePath: 'with-inputs-standalone-cmp/src/lib',
     });
     projectGraph = {
       nodes: {
@@ -581,7 +577,7 @@ describe('Cypress Component Testing Configuration', () => {
     });
 
     const [one, two, three] = getCmpsFromTree(tree, {
-      basePath: 'libs/with-inputs-standalone-cmp/src/lib',
+      basePath: 'with-inputs-standalone-cmp/src/lib',
       name: 'something',
     });
     expect(one.cy).toMatchSnapshot();
@@ -603,13 +599,13 @@ describe('Cypress Component Testing Configuration', () => {
     });
     await componentGenerator(tree, {
       name: 'fancy-button',
-      path: 'libs/secondary/src/lib/button',
+      path: 'secondary/src/lib/button',
       project: 'secondary',
       flat: true,
     });
     await componentGenerator(tree, {
       name: 'standalone-fancy-button',
-      path: 'libs/secondary/src/lib/button',
+      path: 'secondary/src/lib/button',
       project: 'secondary',
       standalone: true,
       flat: true,
@@ -641,13 +637,13 @@ describe('Cypress Component Testing Configuration', () => {
     });
     expect(
       tree.read(
-        'libs/secondary/src/lib/button/fancy-button.component.cy.ts',
+        'secondary/src/lib/button/fancy-button.component.cy.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
     expect(
       tree.read(
-        'libs/secondary/src/lib/button/standalone-fancy-button.component.cy.ts',
+        'secondary/src/lib/button/standalone-fancy-button.component.cy.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -660,15 +656,15 @@ describe('Cypress Component Testing Configuration', () => {
     });
     await setup(tree, { project: 'cool-lib', name: 'abc', standalone: false });
     tree.write(
-      'libs/cool-lib/src/lib/abc-one/abc-one.component.cy.ts',
+      'cool-lib/src/lib/abc-one/abc-one.component.cy.ts',
       `const msg = 'should not overwrite abc-one';`
     );
     tree.write(
-      'libs/cool-lib/src/lib/abc-two/abc-two.component.cy.ts',
+      'cool-lib/src/lib/abc-two/abc-two.component.cy.ts',
       `const msg = 'should not overwrite abc-two';`
     );
     tree.write(
-      'libs/cool-lib/src/lib/abc-three/abc-three.component.cy.ts',
+      'cool-lib/src/lib/abc-three/abc-three.component.cy.ts',
       `const msg = 'should not overwrite abc-three';`
     );
     projectGraph = {
@@ -698,7 +694,7 @@ describe('Cypress Component Testing Configuration', () => {
 
     const [one, two, three] = getCmpsFromTree(tree, {
       name: 'abc',
-      basePath: 'libs/cool-lib/src/lib',
+      basePath: 'cool-lib/src/lib',
     });
 
     expect(one.cy).toMatchInlineSnapshot(`
@@ -733,7 +729,7 @@ describe('Cypress Component Testing Configuration', () => {
       flat: true,
     });
     tree.write(
-      `libs/multiple-components/src/lib/cmp-one.component.ts`,
+      `multiple-components/src/lib/cmp-one.component.ts`,
       `
 import { Component, OnInit } from '@angular/core';
 
@@ -790,10 +786,7 @@ export class MultipleComponentsModule { }
       generateTests: true,
     });
     expect(
-      tree.read(
-        'libs/multiple-components/src/lib/cmp-one.component.cy.ts',
-        'utf-8'
-      )
+      tree.read('multiple-components/src/lib/cmp-one.component.cy.ts', 'utf-8')
     ).toEqual('');
   });
 });

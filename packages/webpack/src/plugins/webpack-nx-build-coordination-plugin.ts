@@ -1,13 +1,12 @@
-import { watch } from 'chokidar';
-import { execSync } from 'child_process';
-import { workspaceLayout } from '@nx/devkit';
-import { joinPathFragments } from '@nx/devkit';
-import ignore from 'ignore';
-import { readFileSync } from 'fs';
+import { exec } from 'child_process';
 import type { Compiler } from 'webpack';
+import { daemonClient } from 'nx/src/daemon/client/client';
+import { BatchFunctionRunner } from 'nx/src/command-line/watch';
+import { output } from 'nx/src/utils/output';
 
 export class WebpackNxBuildCoordinationPlugin {
   private currentlyRunning: 'none' | 'nx-build' | 'webpack-build' = 'none';
+  private buildCmdProcess: ReturnType<typeof exec> | null = null;
 
   constructor(private readonly buildCmd: string, skipInitialBuild?: boolean) {
     if (!skipInitialBuild) {
@@ -31,9 +30,11 @@ export class WebpackNxBuildCoordinationPlugin {
     });
   }
 
-  startWatchingBuildableLibs() {
-    createFileWatcher(process.cwd(), () => {
-      this.buildChangedProjects();
+  async startWatchingBuildableLibs() {
+    const unregisterFileWatcher = await this.createFileWatcher();
+
+    process.on('exit', () => {
+      unregisterFileWatcher();
     });
   }
 
@@ -43,45 +44,53 @@ export class WebpackNxBuildCoordinationPlugin {
     }
     this.currentlyRunning = 'nx-build';
     try {
-      execSync(this.buildCmd, { stdio: [0, 1, 2] });
-      // eslint-disable-next-line no-empty
-    } catch (e) {}
-    this.currentlyRunning = 'none';
+      return await new Promise<void>((res) => {
+        this.buildCmdProcess = exec(this.buildCmd);
+
+        this.buildCmdProcess.stdout.pipe(process.stdout);
+        this.buildCmdProcess.stderr.pipe(process.stderr);
+        this.buildCmdProcess.on('exit', () => {
+          res();
+        });
+        this.buildCmdProcess.on('error', () => {
+          res();
+        });
+      });
+    } finally {
+      this.currentlyRunning = 'none';
+      this.buildCmdProcess = null;
+    }
+  }
+
+  private createFileWatcher() {
+    const runner = new BatchFunctionRunner(() => this.buildChangedProjects());
+    return daemonClient.registerFileWatcher(
+      {
+        watchProjects: 'all',
+      },
+      (err, { changedProjects, changedFiles }) => {
+        if (err === 'closed') {
+          output.error({
+            title: 'Watch connection closed',
+            bodyLines: [
+              'The daemon has closed the connection to this watch process.',
+              'Please restart your watch command.',
+            ],
+          });
+          process.exit(1);
+        }
+
+        if (this.buildCmdProcess) {
+          this.buildCmdProcess.kill(2);
+          this.buildCmdProcess = null;
+        }
+        // Queue a build
+        runner.enqueue(changedProjects, changedFiles);
+      }
+    );
   }
 }
 
 function sleep(time: number) {
   return new Promise((resolve) => setTimeout(resolve, time));
-}
-
-function getIgnoredGlobs(root: string) {
-  const ig = ignore();
-  try {
-    ig.add(readFileSync(`${root}/.gitignore`, 'utf-8'));
-  } catch {}
-  try {
-    ig.add(readFileSync(`${root}/.nxignore`, 'utf-8'));
-  } catch {}
-  return ig;
-}
-
-function createFileWatcher(root: string, changeHandler: () => void) {
-  const ignoredGlobs = getIgnoredGlobs(root);
-  const layout = workspaceLayout();
-
-  const watcher = watch(
-    [
-      joinPathFragments(layout.appsDir, '**'),
-      joinPathFragments(layout.libsDir, '**'),
-    ],
-    {
-      cwd: root,
-      ignoreInitial: true,
-    }
-  );
-  watcher.on('all', (_event: string, path: string) => {
-    if (ignoredGlobs.ignores(path)) return;
-    changeHandler();
-  });
-  return { close: () => watcher.close() };
 }

@@ -1,13 +1,12 @@
-import { join } from 'path';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   convertNxGenerator,
   ensurePackage,
-  extractLayoutDirectory,
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
   getWorkspaceLayout,
   joinPathFragments,
   names,
@@ -19,12 +18,13 @@ import {
   Tree,
   updateNxJson,
   updateProjectConfiguration,
+  writeJson,
 } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
 import type { Linter } from '@nx/linter';
-
-import { getRelativePathToRootTsConfig } from '@nx/js';
-
+import { join } from 'path';
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
@@ -178,7 +178,14 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
 }
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
+  return await applicationGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
+  const options = await normalizeOptions(host, schema);
 
   const tasks: GeneratorCallback[] = [];
 
@@ -241,10 +248,7 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = await ensurePackage(
-      '@nx/linter',
-      nxVersion
-    );
+    const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -260,22 +264,51 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.e2eTestRunner === 'cypress') {
-    const { cypressProjectGenerator } = await ensurePackage<
+    const { cypressProjectGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
     const cypressTask = await cypressProjectGenerator(host, {
       ...options,
-      name: `${options.name}-e2e`,
-      directory: options.directory,
+      name: options.e2eProjectName,
+      directory: options.e2eProjectRoot,
+      // the name and root are already normalized, instruct the generator to use them as is
+      projectNameAndRootFormat: 'as-provided',
       project: options.projectName,
       skipFormat: true,
     });
     tasks.push(cypressTask);
+  } else if (options.e2eTestRunner === 'playwright') {
+    const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
+      typeof import('@nx/playwright')
+    >('@nx/playwright', nxVersion);
+
+    addProjectConfiguration(host, options.e2eProjectName, {
+      root: options.e2eProjectRoot,
+      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+      projectType: 'application',
+      targets: {},
+      implicitDependencies: [options.projectName],
+    });
+    const playwrightTask = await playwrightConfigGenerator(host, {
+      project: options.e2eProjectName,
+      skipFormat: true,
+      skipPackageJson: false,
+      directory: 'src',
+      js: false,
+      linter: options.linter,
+      setParserOptionsProject: options.setParserOptionsProject,
+      webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
+        options.name
+      }`,
+      webServerAddress: 'http://localhost:4200',
+    });
+    tasks.push(playwrightTask);
   }
   if (options.unitTestRunner === 'jest') {
-    const { configurationGenerator } = await ensurePackage<
-      typeof import('@nx/jest')
-    >('@nx/jest', nxVersion);
+    const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
+      '@nx/jest',
+      nxVersion
+    );
     const jestTask = await configurationGenerator(host, {
       project: options.projectName,
       skipSerializers: true,
@@ -287,12 +320,24 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   }
 
   if (options.compiler === 'swc') {
+    writeJson(host, joinPathFragments(options.appProjectRoot, '.swcrc'), {
+      jsc: {
+        parser: {
+          syntax: 'typescript',
+        },
+        target: 'es2016',
+      },
+    });
     const installTask = addDependenciesToPackageJson(
       host,
       {},
       { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
     );
     tasks.push(installTask);
+  } else {
+    writeJson(host, joinPathFragments(options.appProjectRoot, '.babelrc'), {
+      presets: ['@nx/js/babel'],
+    });
   }
 
   setDefaults(host, options);
@@ -303,23 +348,27 @@ export async function applicationGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
+async function normalizeOptions(
+  host: Tree,
+  options: Schema
+): Promise<NormalizedSchema> {
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    projectNameAndRootFormat,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/web:application',
+  });
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
-  const appDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-
-  const { appsDir: defaultAppsDir, npmScope } = getWorkspaceLayout(host);
-  const appsDir = layoutDirectory ?? defaultAppsDir;
-
-  const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
   const e2eProjectName = `${appProjectName}-e2e`;
+  const e2eProjectRoot = `${appProjectRoot}-e2e`;
 
-  const appProjectRoot = joinPathFragments(appsDir, appDirectory);
-  const e2eProjectRoot = joinPathFragments(appsDir, `${appDirectory}-e2e`);
+  const { npmScope } = getWorkspaceLayout(host);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

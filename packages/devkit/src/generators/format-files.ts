@@ -1,11 +1,13 @@
 import type { Tree } from 'nx/src/generators/tree';
 import * as path from 'path';
 import type * as Prettier from 'prettier';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { sortObjectByKeys } from 'nx/src/utils/object-sort';
 import { requireNx } from '../../nx';
 
-const { updateJson, readJson } = requireNx();
+let { updateJson, readJson, sortObjectByKeys } = requireNx();
+
+// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+sortObjectByKeys =
+  sortObjectByKeys ?? require('nx/src/utils/object-sort').sortObjectByKeys;
 
 /**
  * Formats all the created or updated files using Prettier
@@ -53,7 +55,10 @@ export async function formatFiles(tree: Tree): Promise<void> {
 
         tree.write(
           file.path,
-          prettier.format(file.content.toString('utf-8'), options)
+          // In prettier v3 the format result is a promise
+          await (prettier.format(file.content.toString('utf-8'), options) as
+            | Promise<string>
+            | string)
         );
       } catch (e) {
         console.warn(`Could not format ${file.path}. Error: "${e.message}"`);

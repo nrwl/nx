@@ -1,4 +1,5 @@
-import { Linter } from '@nx/linter';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import type { Linter } from '@nx/linter';
 
 /**
  * Same as the @nx/react library schema, except it removes keys: style, component, routing, appProject
@@ -6,6 +7,7 @@ import { Linter } from '@nx/linter';
 export interface Schema {
   name: string;
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   skipTsConfig: boolean; // default is false
   skipFormat: boolean; // default is false
   tags?: string;

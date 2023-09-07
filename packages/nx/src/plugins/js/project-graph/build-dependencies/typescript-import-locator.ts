@@ -1,13 +1,25 @@
-import type * as ts from 'typescript';
+import type {
+  Identifier,
+  Node,
+  PropertyAssignment,
+  PropertyName,
+  Scanner,
+  StringLiteral,
+} from 'typescript';
 import * as path from 'path';
-import { stripSourceCode } from './strip-source-code';
 import { DependencyType } from '../../../../config/project-graph';
 import { defaultFileRead } from '../../../../project-graph/file-utils';
+import { stripSourceCode } from './strip-source-code';
 
 let tsModule: typeof import('typescript');
 
+/**
+ * @deprecated This is deprecated and will be removed in Nx 18.
+ * This was not intended to be exposed.
+ * Please talk to us if you need this.
+ */
 export class TypeScriptImportLocator {
-  private readonly scanner: ts.Scanner;
+  private readonly scanner: Scanner;
 
   constructor() {
     tsModule = require('typescript');
@@ -94,10 +106,10 @@ export class TypeScriptImportLocator {
 
     if (node.kind === tsModule.SyntaxKind.PropertyAssignment) {
       const name = this.getPropertyAssignmentName(
-        (node as ts.PropertyAssignment).name
+        (node as PropertyAssignment).name
       );
       if (name === 'loadChildren') {
-        const init = (node as ts.PropertyAssignment).initializer;
+        const init = (node as PropertyAssignment).initializer;
         if (
           init.kind === tsModule.SyntaxKind.StringLiteral &&
           !this.ignoreLoadChildrenDependency(node.getFullText())
@@ -117,7 +129,7 @@ export class TypeScriptImportLocator {
     );
   }
 
-  private ignoreStatement(node: ts.Node) {
+  private ignoreStatement(node: Node) {
     return stripSourceCode(this.scanner, node.getFullText()) === '';
   }
 
@@ -146,18 +158,18 @@ export class TypeScriptImportLocator {
     return false;
   }
 
-  private getPropertyAssignmentName(nameNode: ts.PropertyName) {
+  private getPropertyAssignmentName(nameNode: PropertyName) {
     switch (nameNode.kind) {
       case tsModule.SyntaxKind.Identifier:
-        return (nameNode as ts.Identifier).getText();
+        return (nameNode as Identifier).getText();
       case tsModule.SyntaxKind.StringLiteral:
-        return (nameNode as ts.StringLiteral).text;
+        return (nameNode as StringLiteral).text;
       default:
         return null;
     }
   }
 
-  private getStringLiteralValue(node: ts.Node): string {
+  private getStringLiteralValue(node: Node): string {
     return node.getText().slice(1, -1);
   }
 }

@@ -276,6 +276,7 @@ export class RenderGraph {
           type: edge.data('type'),
           source: edge.source().id(),
           target: edge.target().id(),
+          sourceRoot: edge.source().data('root'),
           fileDependencies:
             edge
               .source()

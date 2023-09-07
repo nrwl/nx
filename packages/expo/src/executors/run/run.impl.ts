@@ -1,5 +1,5 @@
 import { ExecutorContext, names } from '@nx/devkit';
-import { join } from 'path';
+import { join, resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
 import { existsSync } from 'fs-extra';
@@ -29,18 +29,6 @@ export default async function* runExecutor(
   }
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
-  if (options.sync) {
-    displayNewlyAddedDepsMessage(
-      context.projectName,
-      await syncDeps(
-        context.projectName,
-        projectRoot,
-        context.root,
-        context.projectGraph
-      )
-    );
-  }
 
   if (!existsSync(join(context.root, projectRoot, options.platform))) {
     await prebuildAsync(context.root, projectRoot, {
@@ -53,7 +41,7 @@ export default async function* runExecutor(
   if (options.install) {
     await installAsync(context.root, {});
     if (options.platform === 'ios') {
-      await podInstall(join(context.root, projectRoot, 'ios'));
+      podInstall(join(context.root, projectRoot, 'ios'));
     }
   }
 
@@ -75,10 +63,11 @@ function runCliRun(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
+      require.resolve('@expo/cli/build/bin/cli'),
       ['run:' + options.platform, ...createRunOptions(options), '--no-install'], // pass in no-install to prevent node_modules install
       {
-        cwd: projectRoot,
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: process.env,
       }
     );
 

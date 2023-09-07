@@ -9,7 +9,9 @@
     "project": {
       "type": "string",
       "description": "The name of the project to test.",
-      "$default": { "$source": "projectName" }
+      "$default": {
+        "$source": "projectName"
+      }
     },
     "uiFramework": {
       "type": "string",
@@ -29,8 +31,8 @@
     },
     "coverageProvider": {
       "type": "string",
-      "enum": ["c8", "istanbul"],
-      "default": "c8",
+      "enum": ["v8", "c8", "istanbul"],
+      "default": "v8",
       "description": "Coverage provider to use."
     },
     "testTarget": {

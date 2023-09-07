@@ -58,6 +58,15 @@
         "path": "/packages/angular/executors/package",
         "type": "executor"
       },
+      "/packages/angular/executors/browser-esbuild": {
+        "description": "Builds your application with esbuild and adds support for incremental builds.",
+        "file": "generated/packages/angular/executors/browser-esbuild.json",
+        "hidden": false,
+        "name": "browser-esbuild",
+        "originalFilePath": "/packages/angular/src/executors/browser-esbuild/schema.json",
+        "path": "/packages/angular/executors/browser-esbuild",
+        "type": "executor"
+      },
       "/packages/angular/executors/webpack-browser": {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
@@ -427,28 +436,6 @@
         "path": "/packages/cypress/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/cypress/cypress-plugin"
-      },
-      "/packages/cypress/documents/cypress-component-testing": {
-        "id": "cypress-component-testing",
-        "name": "Component Testing",
-        "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
-        "file": "generated/packages/cypress/documents/cypress-component-testing",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/cypress/documents/cypress-component-testing",
-        "tags": [],
-        "originalFilePath": "shared/packages/cypress/cypress-component-testing"
-      },
-      "/packages/cypress/documents/v11-migration-guide": {
-        "id": "v11-migration-guide",
-        "name": "v11 Migration Guide",
-        "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
-        "file": "generated/packages/cypress/documents/v11-migration-guide",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/cypress/documents/v11-migration-guide",
-        "tags": [],
-        "originalFilePath": "shared/packages/cypress/cypress-v11-migration"
       }
     },
     "root": "/packages/cypress",
@@ -590,7 +577,7 @@
         "isExternal": false,
         "path": "/packages/devkit/documents/nx_devkit",
         "tags": [],
-        "originalFilePath": "generated/devkit/nx_devkit"
+        "originalFilePath": "generated/devkit/README"
       },
       "/packages/devkit/documents/ngcli_adapter": {
         "id": "ngcli_adapter",
@@ -601,7 +588,7 @@
         "isExternal": false,
         "path": "/packages/devkit/documents/ngcli_adapter",
         "tags": [],
-        "originalFilePath": "generated/devkit/ngcli_adapter"
+        "originalFilePath": "generated/devkit/ngcli_adapter/README"
       }
     },
     "root": "/packages/devkit",
@@ -654,7 +641,7 @@
       "/packages/esbuild/generators/configuration": {
         "description": "Add esbuild configuration to a project.",
         "file": "generated/packages/esbuild/generators/configuration.json",
-        "hidden": true,
+        "hidden": false,
         "name": "configuration",
         "originalFilePath": "/packages/esbuild/src/generators/configuration/schema.json",
         "path": "/packages/esbuild/generators/configuration",
@@ -1131,6 +1118,15 @@
         "originalFilePath": "/packages/linter/src/generators/workspace-rule/schema.json",
         "path": "/packages/linter/generators/workspace-rule",
         "type": "generator"
+      },
+      "/packages/linter/generators/convert-to-flat-config": {
+        "description": "Convert an Nx workspace's ESLint configs to use Flat Config.",
+        "file": "generated/packages/linter/generators/convert-to-flat-config.json",
+        "hidden": false,
+        "name": "convert-to-flat-config",
+        "originalFilePath": "/packages/linter/src/generators/convert-to-flat-config/schema.json",
+        "path": "/packages/linter/generators/convert-to-flat-config",
+        "type": "generator"
       }
     },
     "path": "/packages/linter"
@@ -1347,17 +1343,6 @@
         "path": "/packages/next/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/next/plugin-overview"
-      },
-      "/packages/next/documents/next-config-setup": {
-        "id": "next-config-setup",
-        "name": "How to configure Next.js plugins",
-        "description": "A guide for configuring Next.js plugins with Nx",
-        "file": "generated/packages/next/documents/next-config-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/next/documents/next-config-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/next/next-config-setup"
       }
     },
     "root": "/packages/next",
@@ -1643,7 +1628,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/format-check",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/format-check"
       },
       "/packages/nx/documents/format-write": {
@@ -1654,7 +1639,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/format-write",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/format-write"
       },
       "/packages/nx/documents/migrate": {
@@ -1698,7 +1683,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/packages/nx/documents/workspace-lint",
-        "tags": ["enforce-project-boundaries"],
+        "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/workspace-lint"
       },
       "/packages/nx/documents/workspace-generator": {
@@ -1823,6 +1808,59 @@
     },
     "generators": {},
     "path": "/packages/nx"
+  },
+  "playwright": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "playwright",
+    "packageName": "@nx/playwright",
+    "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
+    "documents": {
+      "/packages/playwright/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
+        "file": "generated/packages/playwright/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/packages/playwright/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/playwright/playwright-plugin"
+      }
+    },
+    "root": "/packages/playwright",
+    "source": "/packages/playwright/src",
+    "executors": {
+      "/packages/playwright/executors/playwright": {
+        "description": "Run Playwright tests.",
+        "file": "generated/packages/playwright/executors/playwright.json",
+        "hidden": false,
+        "name": "playwright",
+        "originalFilePath": "/packages/playwright/src/executors/playwright/schema.json",
+        "path": "/packages/playwright/executors/playwright",
+        "type": "executor"
+      }
+    },
+    "generators": {
+      "/packages/playwright/generators/configuration": {
+        "description": "Add Nx Playwright configuration to your project",
+        "file": "generated/packages/playwright/generators/configuration.json",
+        "hidden": false,
+        "name": "configuration",
+        "originalFilePath": "/packages/playwright/src/generators/configuration/schema.json",
+        "path": "/packages/playwright/generators/configuration",
+        "type": "generator"
+      },
+      "/packages/playwright/generators/init": {
+        "description": "Initializes a Playwright project in the current workspace",
+        "file": "generated/packages/playwright/generators/init.json",
+        "hidden": false,
+        "name": "init",
+        "originalFilePath": "/packages/playwright/src/generators/init/schema.json",
+        "path": "/packages/playwright/generators/init",
+        "type": "generator"
+      }
+    },
+    "path": "/packages/playwright"
   },
   "plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
@@ -2339,7 +2377,7 @@
       "/packages/rollup/generators/configuration": {
         "description": "Add rollup configuration to a project.",
         "file": "generated/packages/rollup/generators/configuration.json",
-        "hidden": true,
+        "hidden": false,
         "name": "configuration",
         "originalFilePath": "/packages/rollup/src/generators/configuration/schema.json",
         "path": "/packages/rollup/generators/configuration",
@@ -2365,28 +2403,6 @@
         "tags": [],
         "originalFilePath": "shared/packages/storybook/plugin-overview"
       },
-      "/packages/storybook/documents/overview-react": {
-        "id": "overview-react",
-        "name": "Set up Storybook for React Projects",
-        "description": "This guide explains how to set up Storybook for React projects in your Nx workspace.",
-        "file": "generated/packages/storybook/documents/overview-react",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/overview-react",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/plugin-react"
-      },
-      "/packages/storybook/documents/overview-angular": {
-        "id": "overview-angular",
-        "name": "Set up Storybook for Angular Projects",
-        "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
-        "file": "generated/packages/storybook/documents/overview-angular",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/overview-angular",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/plugin-angular"
-      },
       "/packages/storybook/documents/best-practices": {
         "id": "best-practices",
         "name": "Storybook best practices for making the most out of Nx",
@@ -2408,61 +2424,6 @@
         "path": "/packages/storybook/documents/storybook-7-setup",
         "tags": [],
         "originalFilePath": "shared/packages/storybook/storybook-7-setup"
-      },
-      "/packages/storybook/documents/configuring-storybook": {
-        "id": "configuring-storybook",
-        "name": "Configuring Storybook on Nx",
-        "description": "This guide explains how Storybook is configured on your Nx workspace.",
-        "file": "generated/packages/storybook/documents/configuring-storybook",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/configuring-storybook",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/configuring-storybook"
-      },
-      "/packages/storybook/documents/custom-builder-configs": {
-        "id": "custom-builder-configs",
-        "name": "How to configure Webpack and Vite for Storybook",
-        "description": "This guide explains how to customize the webpack configuration and your vite configuration for Storybook.",
-        "file": "generated/packages/storybook/documents/custom-builder-configs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/custom-builder-configs",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/custom-builder-configs"
-      },
-      "/packages/storybook/documents/storybook-composition-setup": {
-        "id": "storybook-composition-setup",
-        "name": "Setting up Storybook Composition with Nx",
-        "description": "This guide explains how you can set up Storybook composition on your Nx workspace.",
-        "file": "generated/packages/storybook/documents/storybook-composition-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/storybook-composition-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/storybook-composition-setup"
-      },
-      "/packages/storybook/documents/angular-storybook-compodoc": {
-        "id": "angular-storybook-compodoc",
-        "name": "Angular: Set up Compodoc for Storybook on Nx",
-        "description": "This guide explains how to set up Compodoc for Storybook on Angular projects in a Nx workspace.",
-        "file": "generated/packages/storybook/documents/angular-storybook-compodoc",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/angular-storybook-compodoc",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-storybook-compodoc"
-      },
-      "/packages/storybook/documents/angular-configuring-styles": {
-        "id": "angular-configuring-styles",
-        "name": "Angular: Configuring styles and preprocessor options",
-        "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
-        "file": "generated/packages/storybook/documents/angular-configuring-styles",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/storybook/documents/angular-configuring-styles",
-        "tags": [],
-        "originalFilePath": "shared/packages/storybook/angular-configuring-styles"
       }
     },
     "root": "/packages/storybook",
@@ -2555,17 +2516,6 @@
         "path": "/packages/vite/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/vite/vite-plugin"
-      },
-      "/packages/vite/documents/set-up-vite-manually": {
-        "id": "set-up-vite-manually",
-        "name": "Manually set up your project to use Vite.js",
-        "description": "This guide explains how you can manually set up your project to use Vite.js in your Nx workspace.",
-        "file": "generated/packages/vite/documents/set-up-vite-manually",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/vite/documents/set-up-vite-manually",
-        "tags": [],
-        "originalFilePath": "shared/packages/vite/set-up-vite-manually"
       }
     },
     "root": "/packages/vite",
@@ -2717,28 +2667,6 @@
         "path": "/packages/webpack/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/webpack/plugin-overview"
-      },
-      "/packages/webpack/documents/webpack-config-setup": {
-        "id": "webpack-config-setup",
-        "name": "How to configure webpack on your Nx workspace",
-        "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
-        "file": "generated/packages/webpack/documents/webpack-config-setup",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/webpack/documents/webpack-config-setup",
-        "tags": [],
-        "originalFilePath": "shared/packages/webpack/webpack-config-setup"
-      },
-      "/packages/webpack/documents/webpack-plugins": {
-        "id": "webpack-plugins",
-        "name": "Webpack plugins",
-        "description": "Webpack plugins",
-        "file": "generated/packages/webpack/documents/webpack-plugins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/packages/webpack/documents/webpack-plugins",
-        "tags": [],
-        "originalFilePath": "shared/packages/webpack/webpack-plugins"
       }
     },
     "root": "/packages/webpack",
@@ -2862,6 +2790,15 @@
         "name": "remove",
         "originalFilePath": "/packages/workspace/src/generators/remove/schema.json",
         "path": "/packages/workspace/generators/remove",
+        "type": "generator"
+      },
+      "/packages/workspace/generators/convert-to-monorepo": {
+        "description": "Convert a Nx project to a monorepo.",
+        "file": "generated/packages/workspace/generators/convert-to-monorepo.json",
+        "hidden": false,
+        "name": "convert-to-monorepo",
+        "originalFilePath": "/packages/workspace/src/generators/convert-to-monorepo/schema.json",
+        "path": "/packages/workspace/generators/convert-to-monorepo",
         "type": "generator"
       },
       "/packages/workspace/generators/new": {

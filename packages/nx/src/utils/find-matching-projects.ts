@@ -245,7 +245,12 @@ export const getMatchingStringsWithCache = (() => {
     }
     const patternCache = minimatchCache.get(pattern)!;
     if (!regexCache.has(pattern)) {
-      regexCache.set(pattern, minimatch.makeRe(pattern));
+      const regex = minimatch.makeRe(pattern, { dot: true });
+      if (regex) {
+        regexCache.set(pattern, regex);
+      } else {
+        throw new Error('Invalid glob pattern ' + pattern);
+      }
     }
     const matcher = regexCache.get(pattern);
     return items.filter((item) => {
