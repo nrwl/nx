@@ -34,7 +34,7 @@ export function updateImports(
   schema: NormalizedSchema,
   project: ProjectConfiguration
 ) {
-  if (project.projectType === 'application') {
+  if (project.projectType !== 'library') {
     return;
   }
 
