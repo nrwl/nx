@@ -15,7 +15,7 @@ import {
   getGlobalFlatEslintConfiguration,
 } from './global-eslint-config';
 import { useFlatConfig } from '../../utils/flat-config';
-import { eslintrcVersion } from '../../utils/versions';
+import { eslintVersion } from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addImportToFlatConfig,
@@ -35,7 +35,7 @@ export function migrateConfigToMonorepoStyle(
       tree,
       {},
       {
-        '@eslint/js': eslintrcVersion,
+        '@eslint/js': eslintVersion,
       }
     );
     tree.write(
