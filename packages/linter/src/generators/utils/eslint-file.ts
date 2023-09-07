@@ -55,7 +55,7 @@ export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
 export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
   const eslintFile = findEslintFile(tree, projectRoot);
   if (!eslintFile) {
-    return;
+    return false;
   }
   return eslintFile.endsWith('.json') || eslintFile.endsWith('.config.js');
 }

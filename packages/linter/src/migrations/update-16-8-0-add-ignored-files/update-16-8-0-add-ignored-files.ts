@@ -17,8 +17,12 @@ export default function update(tree: Tree) {
   const addIgnorePattern =
     (ignorePattern: string) => (_options: unknown, projectName: string) => {
       const project = projects.get(projectName);
-      if (!findEslintFile(tree, project.root) || !isEslintConfigSupported(tree))
+      if (
+        !findEslintFile(tree, project.root) ||
+        !isEslintConfigSupported(tree)
+      ) {
         return;
+      }
       if (
         lintConfigHasOverride(
           tree,

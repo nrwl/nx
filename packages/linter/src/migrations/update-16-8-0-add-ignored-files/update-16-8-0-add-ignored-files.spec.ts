@@ -8,6 +8,7 @@ describe('update-16-8-0-add-ignored-files migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    tree.write('.eslintrc.json', '{}');
   });
 
   it('should run successfully when eslint config is not present', async () => {
