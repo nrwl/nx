@@ -12,20 +12,20 @@ import {
   getOutputsForTargetAndConfiguration,
   joinPathFragments,
   ProjectFileMap,
+  ProjectGraph,
+  ProjectGraphExternalNode,
   ProjectGraphProjectNode,
   readJsonFile,
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
-import { basename, join, parse, relative } from 'path';
+import { basename, join, parse } from 'path';
 import { writeFileSync } from 'fs-extra';
-import { isNpmProject } from 'nx/src/project-graph/operators';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { existsSync } from 'fs';
 import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
-import * as fastGlob from 'fast-glob';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 
@@ -117,9 +117,29 @@ export function updatePackageJson(
   }
 }
 
+function isNpmNode(
+  node: ProjectGraphProjectNode | ProjectGraphExternalNode,
+  graph: ProjectGraph
+): node is ProjectGraphExternalNode {
+  return !!(graph.externalNodes[node.name]?.type === 'npm');
+}
+
+function isWorkspaceProject(
+  node: ProjectGraphProjectNode | ProjectGraphExternalNode,
+  graph: ProjectGraph
+): node is ProjectGraphProjectNode {
+  return !!graph.nodes[node.name];
+}
+
 function addMissingDependencies(
   packageJson: PackageJson,
-  { projectName, targetName, configurationName, root }: ExecutorContext,
+  {
+    projectName,
+    targetName,
+    configurationName,
+    root,
+    projectGraph,
+  }: ExecutorContext,
   dependencies: DependentBuildableProjectNode[],
   propType: 'dependencies' | 'peerDependencies' = 'dependencies'
 ) {
@@ -127,7 +147,7 @@ function addMissingDependencies(
     joinPathFragments(workspaceRoot, 'package.json')
   );
   dependencies.forEach((entry) => {
-    if (isNpmProject(entry.node)) {
+    if (isNpmNode(entry.node, projectGraph)) {
       const { packageName, version } = entry.node.data;
       if (
         packageJson.dependencies?.[packageName] ||
@@ -142,7 +162,7 @@ function addMissingDependencies(
 
       packageJson[propType] ??= {};
       packageJson[propType][packageName] = version;
-    } else {
+    } else if (isWorkspaceProject(entry.node, projectGraph)) {
       const packageName = entry.name;
       if (
         !packageJson.dependencies?.[packageName] &&
