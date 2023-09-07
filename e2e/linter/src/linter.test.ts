@@ -706,7 +706,6 @@ describe('Linter', () => {
 
       // should have plugin extends
       expect(appEslint.overrides[1].extends).toBeDefined();
-      expect(appEslint.overrides[2].extends).toBeDefined();
       expect(e2eEslint.overrides[0].extends).toBeDefined();
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
@@ -717,8 +716,7 @@ describe('Linter', () => {
 
       // should have no plugin extends
       expect(appEslint.overrides[1].extends).toEqual([
-        'plugin:@nx/angular',
-        'plugin:@angular-eslint/template/process-inline-templates',
+        'plugin:@nx/angular-template',
       ]);
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
     });
