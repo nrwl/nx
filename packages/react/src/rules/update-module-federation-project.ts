@@ -38,6 +38,7 @@ export function updateModuleFederationProject(
     defaultConfiguration: 'production',
     options: {
       buildTarget: `${options.projectName}:build`,
+      watch: false,
       port: options.devServerPort,
     },
     configurations: {
