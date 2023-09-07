@@ -51,7 +51,17 @@ function main() {
     process.env.NX_DAEMON = 'false';
     require('nx/src/command-line/nx-commands').commandsObject.argv;
   } else {
-    if (workspace && workspace.type === 'nx') {
+    // v8-compile-cache doesn't support ESM. Attempting to import ESM
+    // with it enabled results in an error that reads "Invalid host options".
+    //
+    // Angular CLI, and prettier both use ESM so we need to disable it in these cases.
+    if (
+      workspace &&
+      workspace.type === 'nx' &&
+      !['format', 'format:check', 'format:write', 'g', 'generate'].some(
+        (cmd) => process.argv[3] === cmd
+      )
+    ) {
       require('v8-compile-cache');
     }
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
