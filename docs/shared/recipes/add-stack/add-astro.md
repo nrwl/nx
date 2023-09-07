@@ -89,10 +89,13 @@ npm i -DE @nx/js@<nx-version>
 
 Then generate a project
 
-```{% command="nx g lib --simpleName --minimal}
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
+```{% command="nx g @nx/js:lib ui --directory=libs/ui --simpleName --minimal}
 >  NX  Generating @nx/js:library
 
-✔ What name would you like to use for the library? · ui
 ✔ Which unit test runner would you like to use? · none
 ✔ Which bundler would you like to use to build the library? Choose 'none' to skip build setup. · none
 

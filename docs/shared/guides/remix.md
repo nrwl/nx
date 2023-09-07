@@ -33,7 +33,11 @@ npm install --save-dev @nx/remix
 
 ## Generate a Remix Application
 
-```{% command="nx g @nx/remix:app myapp" path="~/acme" %}
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
+```{% command="nx g @nx/remix:app myapp --directory=apps/myapp" path="~/acme" %}
 >  NX  Generating @nx/remix:application
 
 ✔ What unit test runner should be used? · vitest
@@ -120,7 +124,7 @@ When developing your application, it often makes sense to split your codebase in
 
 To generate a library to use in your Remix application run:
 
-```{% command="nx g @nx/remix:lib login" path="~/acme" %}
+```{% command="nx g @nx/remix:lib login --directory=libs/login" path="~/acme" %}
 >  NX  Generating @nx/remix:library
 
 ✔ What test runner should be used? · vitest

@@ -53,11 +53,15 @@ pnpm i --save-dev @nx/web solid-devtools vite-plugin-solid
 
 ## Create an Application
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 We'll start with a web application and then tweak the settings to match what we need. Add a new web application to your
 workspace with the following command:
 
 ```shell
-nx g @nx/web:app my-solid-app --bundler=vite
+nx g @nx/web:app my-solid-app --directory=apps/my-solid-app --bundler=vite
 ```
 
 The `@nx/web:app` generator will create some files that are unnecessary for our Solid application.
@@ -228,11 +232,15 @@ You can now run `nx serve my-solid-app` and your Solid application can be viewed
 
 ## Create a Library
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 Let's create a library that our Solid application is going to consume. To create a new library, install the `@nx/js`
 package and run:
 
 ```shell
-nx g @nx/js:lib my-lib
+nx g @nx/js:lib my-lib --directory=libs/my-lib
 ```
 
 Once the library is created, update the following files.

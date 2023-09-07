@@ -34,8 +34,12 @@ nx g @nx/angular:library my-lib --buildable
 {% tab label="Nested Folder & Import"%}
 Creates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=nested`. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 ```bash
-nx g @nx/angular:library --directory=nested --importPath=@myorg/nested/my-lib my-lib
+nx g @nx/angular:library --directory=libs/nested/my-lib --importPath=@myorg/nested/my-lib my-lib
 ```
 
 {% /tab %}

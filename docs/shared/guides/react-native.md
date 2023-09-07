@@ -146,7 +146,7 @@ yarn add @nx/react-native --dev
 To create additional React Native apps run:
 
 ```shell
-npx nx g @nx/react-native:app
+npx nx g @nx/react-native:app mobile --directory=apps/mobile
 ```
 
 ## Generating a Library
@@ -163,7 +163,7 @@ and [Library Types](/concepts/more-concepts/library-types).
 To generate a new library run:
 
 ```shell
-npx nx g @nx/react-native:lib shared-ui-layout
+npx nx g @nx/react-native:lib shared-ui-layout --directory=libs/shared-ui-layout
 ```
 
 And you will see the following:
@@ -248,7 +248,7 @@ That's it! There is no need to build the library prior to using it. When you upd
 For libraries intended to be built and published to a registry (e.g. npm) you can use the `--publishable` and `--importPath` options.
 
 ```shell
-npx nx g @nx/react-native:lib shared-ui-layout --publishable --importPath=@happynrwl/ui-components
+npx nx g @nx/react-native:lib shared-ui-layout --directory=libs/shared-ui-layout --publishable --importPath=@happynrwl/ui-components
 npx nx g @nx/react-native:component layout --project=shared-ui-layout --export
 ```
 

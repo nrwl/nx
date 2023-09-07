@@ -34,10 +34,14 @@ Please note that `ngcc` doesn’t support `pnpm` ([#32087](https://github.com/an
 
 To enable incremental builds you need to use buildable libraries.
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 You can generate a new buildable library with:
 
 ```shell
-nx g @nx/angular:lib my-lib --buildable
+nx g @nx/angular:lib my-lib --directory=libs/my-lib --buildable
 ```
 
 The generated buildable library uses the `@nx/angular:ng-packagr-lite` executor which is optimized for the incremental
