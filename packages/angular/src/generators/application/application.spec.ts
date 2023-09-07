@@ -513,13 +513,6 @@ describe('app', () => {
             ],
             "overrides": [
               {
-                "files": [
-                  "*.json",
-                ],
-                "parser": "jsonc-eslint-parser",
-                "rules": {},
-              },
-              {
                 "extends": [
                   "plugin:@nx/angular",
                   "plugin:@angular-eslint/template/process-inline-templates",
