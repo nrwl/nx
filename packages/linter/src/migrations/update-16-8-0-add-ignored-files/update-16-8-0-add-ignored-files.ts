@@ -2,6 +2,7 @@ import { getProjects, Tree } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import {
   findEslintFile,
+  isEslintConfigSupported,
   lintConfigHasOverride,
   updateOverrideInLintConfig,
 } from '../../generators/utils/eslint-file';
@@ -16,7 +17,12 @@ export default function update(tree: Tree) {
   const addIgnorePattern =
     (ignorePattern: string) => (_options: unknown, projectName: string) => {
       const project = projects.get(projectName);
-      if (!findEslintFile(tree, project.root)) return;
+      if (
+        !findEslintFile(tree, project.root) ||
+        !isEslintConfigSupported(tree)
+      ) {
+        return;
+      }
       if (
         lintConfigHasOverride(
           tree,

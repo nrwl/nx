@@ -55,7 +55,7 @@ export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
 export function isEslintConfigSupported(tree: Tree, projectRoot = ''): boolean {
   const eslintFile = findEslintFile(tree, projectRoot);
   if (!eslintFile) {
-    return;
+    return false;
   }
   return eslintFile.endsWith('.json') || eslintFile.endsWith('.config.js');
 }
@@ -233,6 +233,9 @@ export function lintConfigHasOverride(
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
   checkBaseConfig = false
 ): boolean {
+  if (!isEslintConfigSupported(tree, root)) {
+    return false;
+  }
   const isBase =
     checkBaseConfig && findEslintFile(tree, root).includes('.base');
   if (useFlatConfig(tree)) {
@@ -248,9 +251,7 @@ export function lintConfigHasOverride(
       isBase ? baseEsLintConfigFile : '.eslintrc.json'
     );
 
-    return tree.exists(fileName)
-      ? readJson(tree, fileName).overrides?.some(lookup) || false
-      : false;
+    return readJson(tree, fileName).overrides?.some(lookup) || false;
   }
 }
 
