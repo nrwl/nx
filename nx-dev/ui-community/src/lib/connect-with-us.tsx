@@ -49,18 +49,17 @@ export function ConnectWithUs(): JSX.Element {
               </div>
               <h4 className="mb-2 text-lg font-bold">Join us on Discord</h4>
               <a
-                href="https://discord.com/invite/SWyp4xfGjn"
+                href="https://go.nx.dev/community"
                 rel="noreferrer"
                 target="_blank"
-                title="Nx Community Discord channel"
+                title="Nx Official Discord Server"
                 className="focus:outline-none"
               >
                 <span className="absolute inset-0" aria-hidden="true"></span>
                 <p className="leading-relaxed">
-                  Join the Nx Community Discord to meet a friendly community of
-                  Nx users. With more than{' '}
-                  <span className="font-semibold">5k+ users</span>, this is a
-                  really great place to ask questions or to talk new ideas!
+                  Join the Official Nx Discord Server to meet a friendly
+                  community of Nx users. This is a really great place to ask
+                  questions or to talk new ideas!
                 </p>
               </a>
             </div>

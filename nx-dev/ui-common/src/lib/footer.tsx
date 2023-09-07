@@ -35,7 +35,7 @@ export function Footer(): JSX.Element {
       },
       {
         name: 'Discord',
-        href: 'https://discord.com/invite/SWyp4xfGjn?utm_source=nx.dev',
+        href: 'https://go.nx.dev/community',
       },
       {
         name: 'Help Us',
@@ -62,7 +62,7 @@ export function Footer(): JSX.Element {
       {
         name: 'Discord',
         label: 'Community channel',
-        href: 'https://discord.com/invite/SWyp4xfGjn',
+        href: 'https://go.nx.dev/community',
         icon: (props: any) => (
           <svg
             fill="currentColor"

@@ -130,9 +130,9 @@ export function ChampionPerks(): JSX.Element {
               </p>
             </dt>
             <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
-              You'll have a dedicated slack channel with the Nx team and monthly
-              video calls with Nx team members to share feedback and brainstorm
-              content ideas.
+              You'll have a dedicated Discord channel with the Nx team and
+              monthly video calls with Nx team members to share feedback and
+              brainstorm content ideas.
             </dd>
           </div>
           <div key="Join the Program" className="group">

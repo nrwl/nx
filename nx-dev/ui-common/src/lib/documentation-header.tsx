@@ -72,7 +72,7 @@ export function DocumentationHeader({
     {
       name: 'Discord',
       label: 'Community channel',
-      href: 'https://discord.com/invite/SWyp4xfGjn',
+      href: 'https://go.nx.dev/community',
       icon: (props: any) => (
         <svg
           fill="currentColor"
