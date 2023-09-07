@@ -598,11 +598,6 @@ describe('lib', () => {
           "ignorePatterns": ["!**/*"],
           "overrides": [
             {
-              "files": ["*.json"],
-              "parser": "jsonc-eslint-parser",
-              "rules": {}
-            },
-            {
               "files": ["*.ts"],
               "extends": [
                 "plugin:@nx/angular",
@@ -631,6 +626,13 @@ describe('lib', () => {
               "files": ["*.html"],
               "extends": ["plugin:@nx/angular-template"],
               "rules": {}
+            },
+            {
+              "files": ["*.json"],
+              "parser": "jsonc-eslint-parser",
+              "rules": {
+                "@nx/dependency-checks": "error"
+              }
             }
           ]
         }
@@ -1158,12 +1160,65 @@ describe('lib', () => {
             ],
             "overrides": [
               {
-                "files": [
-                  "*.json",
+                "extends": [
+                  "plugin:@nx/angular",
+                  "plugin:@angular-eslint/template/process-inline-templates",
                 ],
-                "parser": "jsonc-eslint-parser",
+                "files": [
+                  "*.ts",
+                ],
+                "rules": {
+                  "@angular-eslint/component-selector": [
+                    "error",
+                    {
+                      "prefix": "proj",
+                      "style": "kebab-case",
+                      "type": "element",
+                    },
+                  ],
+                  "@angular-eslint/directive-selector": [
+                    "error",
+                    {
+                      "prefix": "proj",
+                      "style": "camelCase",
+                      "type": "attribute",
+                    },
+                  ],
+                },
+              },
+              {
+                "extends": [
+                  "plugin:@nx/angular-template",
+                ],
+                "files": [
+                  "*.html",
+                ],
                 "rules": {},
               },
+            ],
+          }
+        `);
+      });
+
+      it('should add dependency checks to buildable libs', async () => {
+        // ACT
+        await runLibraryGeneratorWithOpts({
+          linter: Linter.EsLint,
+          buildable: true,
+        });
+
+        // ASSERT
+
+        const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
+        expect(eslintConfig).toMatchInlineSnapshot(`
+          {
+            "extends": [
+              "../.eslintrc.json",
+            ],
+            "ignorePatterns": [
+              "!**/*",
+            ],
+            "overrides": [
               {
                 "extends": [
                   "plugin:@nx/angular",
@@ -1199,6 +1254,15 @@ describe('lib', () => {
                   "*.html",
                 ],
                 "rules": {},
+              },
+              {
+                "files": [
+                  "*.json",
+                ],
+                "parser": "jsonc-eslint-parser",
+                "rules": {
+                  "@nx/dependency-checks": "error",
+                },
               },
             ],
           }

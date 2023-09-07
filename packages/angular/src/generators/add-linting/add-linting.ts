@@ -2,6 +2,7 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  readProjectConfiguration,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -48,11 +49,6 @@ export async function addLintingGenerator(
 
     replaceOverridesInLintConfig(tree, options.projectRoot, [
       {
-        files: ['*.json'],
-        parser: 'jsonc-eslint-parser',
-        rules: {},
-      },
-      {
         files: ['*.ts'],
         ...(hasParserOptions
           ? {
@@ -93,6 +89,17 @@ export async function addLintingGenerator(
          */
         rules: {},
       },
+      ...(isBuildableLibraryProject(tree, options.projectName)
+        ? [
+            {
+              files: ['*.json'],
+              parser: 'jsonc-eslint-parser',
+              rules: {
+                '@nx/dependency-checks': 'error',
+              } as any,
+            },
+          ]
+        : []),
     ]);
   }
 
@@ -106,6 +113,15 @@ export async function addLintingGenerator(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function isBuildableLibraryProject(tree: Tree, projectName: string): boolean {
+  const projectConfig = readProjectConfiguration(tree, projectName);
+  return (
+    projectConfig.projectType === 'library' &&
+    projectConfig.targets?.build &&
+    !!projectConfig.targets.build
+  );
 }
 
 export default addLintingGenerator;
