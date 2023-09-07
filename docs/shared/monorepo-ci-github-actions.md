@@ -25,7 +25,7 @@ jobs:
 
       - run: npx nx format:check
       - run: npx nx affected -t lint --parallel=3
-      - run: npx nx affected -t test --parallel=3 --configuration=ci
+      - run: npx nx affected -t test --parallel=3
       - run: npx nx affected -t build --parallel=3
 ```
 
@@ -86,12 +86,11 @@ on:
   pull_request:
 
 env:
-  NX_CLOUD_DISTRIBUTED_EXECUTION: true
-  NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3
+  NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables DTE
+  NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: 3 # expected number of agents
   NX_BRANCH: ${{ github.event.number || github.ref_name }}
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-  NX_CLOUD_AUTH_TOKEN: ${{ secrets.NX_CLOUD_AUTH_TOKEN }}
-  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # this is needed if our pipeline publishes to npm
 
 jobs:
   main:
@@ -143,7 +142,7 @@ jobs:
           npx nx affected -t lint --parallel=3 & 
           pids+=($!)
 
-          npx nx affected -t test --parallel=3 --configuration=ci & 
+          npx nx affected -t test --parallel=3 & 
           pids+=($!)
 
           npx nx affected -t build --parallel=3 & 
