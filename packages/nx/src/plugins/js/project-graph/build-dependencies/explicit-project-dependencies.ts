@@ -46,6 +46,11 @@ export function buildExplicitTypeScriptDependencies({
 
   const moduleExtensions = ['.ts', '.js', '.tsx', '.jsx', '.mts', '.mjs'];
 
+  // TODO: This can be removed when vue is stable
+  if (isVuePluginInstalled()) {
+    moduleExtensions.push('.vue');
+  }
+
   for (const [project, fileData] of Object.entries(fileMap)) {
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {
@@ -102,4 +107,14 @@ export function buildExplicitTypeScriptDependencies({
   }
 
   return res;
+}
+
+function isVuePluginInstalled() {
+  try {
+    // nx-ignore-next-line
+    require.resolve('@nx/vue');
+    return true;
+  } catch {
+    return false;
+  }
 }
