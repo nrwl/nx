@@ -65,6 +65,7 @@ export class Cache {
     const res = await this.getFromLocalDir(task);
 
     if (res) {
+      await this.assertLocalCacheValidity(task);
       return { ...res, remote: false };
     } else if (this.options.remoteCache) {
       // didn't find it locally but we have a remote cache
@@ -227,31 +228,6 @@ export class Cache {
         code = Number(await readFile(join(td, 'code'), 'utf-8'));
       } catch {}
 
-      let sourceMachineId = null;
-      try {
-        sourceMachineId = await readFile(join(td, 'source'), 'utf-8');
-      } catch {}
-
-      if (
-        sourceMachineId &&
-        sourceMachineId != (await this.currentMachineId())
-      ) {
-        if (
-          process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != '0' &&
-          process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != 'false'
-        ) {
-          const error = [
-            `Invalid Cache Directory for Task "${task.id}"`,
-            `The local cache artifact in "${td}" was not been generated on this machine.`,
-            `As a result, the cache's content integrity cannot be confirmed, which may make cache restoration potentially unsafe.`,
-            `If your machine ID has changed since the artifact was cached, run "nx reset" to fix this issue.`,
-            `Read about the error and how to address it here: https://nx.dev/recipes/troubleshooting/unknown-local-cache`,
-            ``,
-          ].join('\n');
-          throw new Error(error);
-        }
-      }
-
       return {
         terminalOutput,
         outputsPath: join(td, 'outputs'),
@@ -259,6 +235,31 @@ export class Cache {
       };
     } else {
       return null;
+    }
+  }
+
+  private async assertLocalCacheValidity(task: Task) {
+    const td = join(this.cachePath, task.hash);
+    let sourceMachineId = null;
+    try {
+      sourceMachineId = await readFile(join(td, 'source'), 'utf-8');
+    } catch {}
+
+    if (sourceMachineId && sourceMachineId != (await this.currentMachineId())) {
+      if (
+        process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != '0' &&
+        process.env.NX_REJECT_UNKNOWN_LOCAL_CACHE != 'false'
+      ) {
+        const error = [
+          `Invalid Cache Directory for Task "${task.id}"`,
+          `The local cache artifact in "${td}" was not been generated on this machine.`,
+          `As a result, the cache's content integrity cannot be confirmed, which may make cache restoration potentially unsafe.`,
+          `If your machine ID has changed since the artifact was cached, run "nx reset" to fix this issue.`,
+          `Read about the error and how to address it here: https://nx.dev/recipes/troubleshooting/unknown-local-cache`,
+          ``,
+        ].join('\n');
+        throw new Error(error);
+      }
     }
   }
 
