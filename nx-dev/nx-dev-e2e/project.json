@@ -15,7 +15,8 @@
       "executor": "@nx/playwright:playwright",
       "outputs": ["{workspaceRoot}/dist/.playwright/nx-dev/nx-dev-e2e"],
       "options": {
-        "config": "nx-dev/nx-dev-e2e/playwright.config.ts"
+        "config": "nx-dev/nx-dev-e2e/playwright.config.ts",
+        "project": ["chromium"]
       }
     }
   },
