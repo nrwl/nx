@@ -18,13 +18,28 @@ What are you going to learn?
 Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for a React standalone app setup then check out our [React standalone app tutorial](/getting-started/tutorials/react-standalone-tutorial).
 {% /callout %}
 
-Note, while you could easily use Nx together with your manually set up React application, we're going to use the `@nx/react` plugin for this tutorial which provides some nice enhancements when working with React. Visit our ["Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
+## Why Use an Integrated Monorepo?
+
+An integrated monorepo is a repository configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.
+
+You'll notice that instead of using npm/yarn/pnpm workspaces, projects within the repository are linked using typescript path aliases that are defined in the `tsconfig.base.json` file. Also, since we're creating projects using Nx plugin generators, all new projects come preconfigured with useful tools like Prettier, ESLint and Jest.
+
+Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
+
+Features of an integrated monorepo:
+
+- [Install dependencies at the root by default](/concepts/more-concepts/dependency-management#single-version-policy)
+- [Scaffold new code with generators](/core-features/plugin-features/use-code-generators)
+- [Run tasks with executors](/core-features/plugin-features/use-task-executors)
+- [Updates dependencies with automated migrations](/core-features/automate-updating-dependencies)
+
+Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
 
 ## Warm Up
 
 Here's the source code of the final result for this tutorial.
 
-{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-standalone" /%}
+{% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/react-monorepo" /%}
 
 <!-- {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%} -->
 
@@ -42,20 +57,20 @@ Create a new React monorepo with the following command:
 ```{% command="npx create-nx-workspace@latest react-monorepo --preset=react-monorepo" path="~" %}
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Application name · myreactapp
+✔ Application name · react-store
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
-Let's name the initial application `myreactapp`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
+Let's name the initial application `react-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
 
 ```
 └─ react-monorepo
    ├─ ...
    ├─ apps
-   │  ├─ myreactapp
+   │  ├─ react-store
    │  │  ├─ public
    │  │  │  └─ ...
    │  │  ├─ src
@@ -73,7 +88,7 @@ Let's name the initial application `myreactapp`. In this tutorial we're going to
    │  │  ├─ tsconfig.json
    │  │  ├─ tsconfig.spec.json
    │  │  └─ vite.config.ts
-   │  └─ myreactapp-e2e
+   │  └─ react-store-e2e
    │     └─ ...
    ├─ nx.json
    ├─ tsconfig.base.json
@@ -82,28 +97,15 @@ Let's name the initial application `myreactapp`. In this tutorial we're going to
 
 The setup includes..
 
-- a new React application (`apps/myreactapp/`)
-- a Cypress based set of e2e tests (`apps/myreactapp-e2e/`)
+- a new React application (`apps/react-store/`)
+- a Cypress based set of e2e tests (`apps/react-store-e2e/`)
 - Prettier preconfigured
 - ESLint preconfigured
 - Jest preconfigured
 
-## Why Use an Integrated Monorepo?
+Typically, an integrated Nx workspace places application projects in the `apps` folder and library projects in the `libs` folder. [Applications are encouraged to be as light-weight as possible](/concepts/more-concepts/applications-and-libraries) so that more code is pushed into libraries and can be reused in other projects. This [folder structure](/concepts/more-concepts/folder-structure) is just a suggestion and can be modified to suit your organization's needs.
 
-An integrated monorepo is a repository configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.
-
-You'll notice that instead of use npm/yarn/pnpm workspaces, projects within the repository are linked using typescript path aliases that are defined in the `tsconfig.base.json` file. Also, since we're creating projects using Nx plugin generators, all new projects come preconfigured with useful tools like Prettier, ESLint and Jest.
-
-Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
-
-Features of an integrated monorepo:
-
-- [Install dependencies at the root by default](/concepts/more-concepts/dependency-management#single-version-policy)
-- [Scaffold new code with generators](/core-features/plugin-features/use-code-generators)
-- [Run tasks with executors](/core-features/plugin-features/use-task-executors)
-- [Updates dependencies with automated migrations](/core-features/automate-updating-dependencies)
-
-Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
+The [`nx.json` file](/reference/nx-json) contains configuration settings for Nx itself and global default settings that individual projects inherit. The `apps/react-store/project.json` file contains [settings that are specific to the `react-store` project](/reference/project-configuration). We'll examine that file more in the next section.
 
 ## Serving the App
 
@@ -112,7 +114,7 @@ Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
 To serve your new React application, just run:
 
 ```shell
-nx serve myreactapp
+nx serve react-store
 ```
 
 Your application should be served at [http://localhost:4200](http://localhost:4200).
@@ -123,9 +125,9 @@ Nx uses the following syntax to run tasks:
 
 All targets, such as `serve`, `build`, `test` or your custom ones, are defined in the `project.json` file.
 
-```json {% fileName="apps/myreactapp/project.json"}
+```json {% fileName="apps/react-store/project.json"}
 {
-  "name": "myreactapp",
+  "name": "react-store",
   ...
   "targets": {
     "serve": { ... },
@@ -142,22 +144,22 @@ Each target contains a configuration object that tells Nx how to run that target
 
 ```json {% fileName="project.json"}
 {
-  "name": "myreactapp",
+  "name": "react-store",
   ...
   "targets": {
     "serve": {
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "myreactapp:build"
+        "buildTarget": "react-store:build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "myreactapp:build:development",
+          "buildTarget": "react-store:build:development",
           "hmr": true
         },
         "production": {
-          "buildTarget": "myreactapp:build:production",
+          "buildTarget": "react-store:build:production",
           "hmr": false
         }
       }
@@ -172,55 +174,7 @@ The most critical parts are:
 - `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the React app using Vite.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
-Learn more about how to [run tasks with Nx](/core-features/run-tasks).
-
-## Testing and Linting - Running Multiple Tasks
-
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=410" /%} -->
-
-Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
-
-```bash
-nx test # runs tests using Vitest (or you can configure it to use Jest)
-nx lint # runs linting with ESLint
-nx e2e e2e # runs e2e tests with Cypress
-```
-
-More conveniently, we can also run them in parallel using the following syntax:
-
-```{% command="nx run-many -t test lint e2e" path="myreactapp" %}
-
-    ✔  nx run e2e:lint (2s)
-    ✔  nx run myreactapp:lint (2s)
-    ✔  nx run myreactapp:test (2s)
-    ✔  nx run e2e:e2e (6s)
-
- ——————————————————————————————————————————————————————
-
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (7s)
-```
-
-### Caching
-
-One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
-
-Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
-
-```{% command="nx run-many -t test lint e2e" path="myreactapp" %}
-
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
-    ✔  nx run myreactapp:test  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
-
- ——————————————————————————————————————————————————————
-
- >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
-
-   Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
-```
-
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Learn more about how to [run tasks with Nx](/core-features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.
 
 ## Adding Another Application
 
@@ -228,7 +182,7 @@ Not all tasks might be cacheable though. You can configure `cacheableOperations`
 
 Nx plugins usually provide [generators](/core-features/plugin-features/use-code-generators) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin provides, run the following command and inspect the output:
 
-```{% command="npx nx list @nx/react" path="myreactapp" %}
+```{% command="npx nx list @nx/react" path="react-monorepo" %}
 
  >  NX   Capabilities in @nx/react:
 
@@ -244,12 +198,12 @@ Nx plugins usually provide [generators](/core-features/plugin-features/use-code-
    stories : Create stories/specs for all components declared in an app or library.
    component-cypress-spec : Create a Cypress spec for a UI component that has a story.
    hook : Create a hook.
-   host : Generate a host react application
-   remote : Generate a remote react application
    cypress-component-configuration : Setup Cypress component testing for a React project
    component-test : Generate a Cypress component test for a React component
    setup-tailwind : Set up Tailwind configuration for a project.
    setup-ssr : Set up SSR configuration for a project.
+   host : Generate a host react application
+   remote : Generate a remote react application
 
    EXECUTORS/BUILDERS
 
@@ -265,54 +219,47 @@ More info can be found in [the integrate with editors article](/core-features/in
 
 {% /callout %}
 
-Run the following command to generate a new `second-app` application. Note how we append `--dry-run` to first check the output.
+Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/react:app second-app --dry-run" path="react-monorepo" %}
+```{% command="npx nx g @nx/react:app inventory --directory=apps/inventory --dry-run" path="react-monorepo" %}
 >  NX  Generating @nx/react:application
 
 ✔ Would you like to add React Router to this application? (y/N) · false
 ✔ Which E2E test runner would you like to use? · cypress
 A custom environment was provided: undefined. You need to install it manually.
-CREATE apps/second-app/index.html
-CREATE apps/second-app/public/favicon.ico
-CREATE apps/second-app/src/app/app.spec.tsx
-CREATE apps/second-app/src/assets/.gitkeep
-CREATE apps/second-app/src/main.tsx
-CREATE apps/second-app/tsconfig.app.json
-CREATE apps/second-app/src/app/nx-welcome.tsx
-CREATE apps/second-app/src/app/app.module.css
-CREATE apps/second-app/src/app/app.tsx
-CREATE apps/second-app/src/styles.css
-CREATE apps/second-app/tsconfig.json
-CREATE apps/second-app/project.json
-CREATE apps/second-app/vite.config.ts
-CREATE apps/second-app/tsconfig.spec.json
-CREATE apps/second-app/.eslintrc.json
-CREATE apps/second-app-e2e/cypress.config.ts
-CREATE apps/second-app-e2e/src/e2e/app.cy.ts
-CREATE apps/second-app-e2e/src/fixtures/example.json
-CREATE apps/second-app-e2e/src/support/app.po.ts
-CREATE apps/second-app-e2e/src/support/commands.ts
-CREATE apps/second-app-e2e/src/support/e2e.ts
-CREATE apps/second-app-e2e/tsconfig.json
-CREATE apps/second-app-e2e/project.json
-CREATE apps/second-app-e2e/.eslintrc.json
+CREATE apps/inventory/index.html
+CREATE apps/inventory/public/favicon.ico
+CREATE apps/inventory/src/app/app.spec.tsx
+CREATE apps/inventory/src/assets/.gitkeep
+CREATE apps/inventory/src/main.tsx
+CREATE apps/inventory/tsconfig.app.json
+CREATE apps/inventory/src/app/nx-welcome.tsx
+CREATE apps/inventory/src/app/app.module.css
+CREATE apps/inventory/src/app/app.tsx
+CREATE apps/inventory/src/styles.css
+CREATE apps/inventory/tsconfig.json
+CREATE apps/inventory/project.json
+CREATE apps/inventory/vite.config.ts
+CREATE apps/inventory/tsconfig.spec.json
+CREATE apps/inventory/.eslintrc.json
+CREATE apps/inventory-e2e/cypress.config.ts
+CREATE apps/inventory-e2e/src/e2e/app.cy.ts
+CREATE apps/inventory-e2e/src/fixtures/example.json
+CREATE apps/inventory-e2e/src/support/app.po.ts
+CREATE apps/inventory-e2e/src/support/commands.ts
+CREATE apps/inventory-e2e/src/support/e2e.ts
+CREATE apps/inventory-e2e/tsconfig.json
+CREATE apps/inventory-e2e/project.json
+CREATE apps/inventory-e2e/.eslintrc.json
 
 NOTE: The "dryRun" flag means no changes were made.
 ```
 
-As you can see, it generates a new application in the `apps/second-app/` folder. If you want to actually run the generator, remove the `--dry-run` flag.
+As you can see, it generates a new application in the `apps/inventory/` folder. Let's actually run the generator by removing the `--dry-run` flag.
 
-## You're ready to go!
-
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=906" /%} -->
-
-In the previous sections you learned about the basics of using Nx, running tasks and navigating an Nx workspace. You're ready to ship features now!
-
-But there's more to learn. You have two possibilities here:
-
-- [Jump to the next steps section](#next-steps) to find where to go from here or
-- keep reading and learn some more about what makes Nx unique when working with React.
+```shell
+npx nx g @nx/react:app inventory --directory=apps/inventory
+```
 
 ## Sharing Code with Local Libraries
 
@@ -324,7 +271,7 @@ When you develop your React application, usually all your logic sits in the `app
 └─ react-monorepo
    ├─ ...
    ├─ apps
-   │  └─ myreactapp
+   │  └─ react-store
    │     ├─ ...
    │     ├─ src
    │     │  ├─ app
@@ -356,12 +303,12 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the React library generator:
 
 ```
-nx g @nx/react:library products --unitTestRunner=vitest --bundler=none
-nx g @nx/react:library orders --unitTestRunner=vitest --bundler=none
-nx g @nx/react:library shared/ui --unitTestRunner=vitest --bundler=none
+nx g @nx/react:library products --directory=libs/products --unitTestRunner=vitest --bundler=none
+nx g @nx/react:library orders --directory=libs/orders --unitTestRunner=vitest --bundler=none
+nx g @nx/react:library shared-ui --directory=libs/shared/ui --unitTestRunner=vitest --bundler=none
 ```
 
-Note how we type out the path relative to the `libs` folder to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/packages/workspace/generators/move) to move a project to a different folder.
+Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/packages/workspace/generators/move) to move a project to a different folder.
 
 Running the above commands should lead to the following directory structure:
 
@@ -403,11 +350,11 @@ Running the above commands should lead to the following directory structure:
 Each of these libraries
 
 - has its own `project.json` file with corresponding targets you can run (e.g. running tests for just orders: `nx test orders`)
-- has a name based on the path to the library, e.g. `shared-ui`; you can find the name in the corresponding `project.json` file
+- has the name you specified in the generate command; you can find the name in the corresponding `project.json` file
 - has a dedicated `index.ts` file which is the "public API" of the library
 - is mapped in the `tsconfig.base.json` at the root of the workspace
 
-### Importing Libraries into the React Application
+### Importing Libraries into the React Applications
 
 <!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1245" /%} -->
 
@@ -420,7 +367,7 @@ All libraries that we generate automatically have aliases created in the root-le
     "paths": {
       "@react-monorepo/products": ["libs/products/src/index.ts"],
       "@react-monorepo/orders": ["libs/orders/src/index.ts"],
-      "@react-monorepo/shared/ui": ["libs/shared/ui/src/index.ts"]
+      "@react-monorepo/shared-ui": ["libs/shared/ui/src/index.ts"]
     },
     ...
   },
@@ -466,7 +413,7 @@ npm install react-router-dom
 
 Configure it in the `main.tsx`.
 
-```tsx {% fileName="src/main.tsx" %}
+```tsx {% fileName="apps/react-store/src/main.tsx" %}
 import { StrictMode } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import ReactDOM from 'react-dom/client';
@@ -488,7 +435,7 @@ root.render(
 
 Then we can import the `ProductList` component into our `app.tsx` and render it via the routing mechanism whenever a user hits the `/products` route.
 
-```tsx {% fileName="src/app/app.tsx" %}
+```tsx {% fileName="apps/react-store/src/app/app.tsx" %}
 import { Route, Routes } from 'react-router-dom';
 
 // importing the component from the library
@@ -510,7 +457,7 @@ export function App() {
 export default App;
 ```
 
-Serving your app (`nx serve myreactapp`) and then navigating to `/products` should give you the following result:
+Serving your app (`nx serve react-store`) and then navigating to `/products` should give you the following result:
 
 ![products route](/shared/images/tutorial-react-standalone/react-tutorial-products-route.png)
 
@@ -521,7 +468,7 @@ Let's apply the same for our `orders` library.
 
 In the end, your `app.tsx` should look similar to this:
 
-```tsx {% fileName="src/app/app.tsx" %}
+```tsx {% fileName="apps/react-store/src/app/app.tsx" %}
 import { Route, Routes } from 'react-router-dom';
 import { ProductList } from '@react-monorepo/products';
 import { OrderList } from '@react-monorepo/orders';
@@ -543,26 +490,17 @@ export function App() {
 export default App;
 ```
 
-## Building the App for Deployment
+Let's also show products in the `inventory` app.
 
-<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=856" /%} -->
+```tsx {% fileName="apps/inventory/src/app/app.tsx" %}
+import { ProductList } from '@react-monorepo/products';
 
-If you're ready and want to ship your application, you can build it using
+export function App() {
+  return <ProductList />;
+}
 
-```{% command="npx nx build myreactapp" path="react-monorepo" %}
-vite v4.3.5 building for production...
-✓ 33 libs transformed.
-dist/myreactapp/index.html                   0.48 kB │ gzip:  0.30 kB
-dist/myreactapp/assets/index-e3b0c442.css    0.00 kB │ gzip:  0.02 kB
-dist/myreactapp/assets/index-378e8124.js   165.64 kB │ gzip: 51.63 kB
-✓ built in 496ms
-
- ——————————————————————————————————————————————————————————————————————————————————————————————————————————
-
- >  NX   Successfully ran target build for project reactutorial (1s)
+export default App;
 ```
-
-All the required files will be placed in the `dist/myreactapp` folder and can be deployed to your favorite hosting provider.
 
 ## Visualizing your Project Structure
 
@@ -584,14 +522,28 @@ You should be able to see something similar to the following in your browser.
 {
   "projects": [
     {
-      "name": "myreactapp",
+      "name": "react-store",
       "type": "app",
       "data": {
         "tags": []
       }
     },
     {
-      "name": "myreactapp-e2e",
+      "name": "react-store-e2e",
+      "type": "e2e",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "inventory",
+      "type": "app",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "inventory-e2e",
       "type": "e2e",
       "data": {
         "tags": []
@@ -621,12 +573,22 @@ You should be able to see something similar to the following in your browser.
     }
   ],
   "dependencies": {
-    "myreactapp": [
-      { "source": "myreactapp", "target": "orders", "type": "static" },
-      { "source": "myreactapp", "target": "products", "type": "static" }
+    "react-store": [
+      { "source": "react-store", "target": "orders", "type": "static" },
+      { "source": "react-store", "target": "products", "type": "static" }
     ],
-    "myreactapp-e2e": [
-      { "source": "myreactapp-e2e", "target": "myreactapp", "type": "implicit" }
+    "react-store-e2e": [
+      {
+        "source": "react-store-e2e",
+        "target": "react-store",
+        "type": "implicit"
+      }
+    ],
+    "inventory": [
+      { "source": "inventory", "target": "products", "type": "static" }
+    ],
+    "inventory-e2e": [
+      { "source": "inventory-e2e", "target": "inventory", "type": "implicit" }
     ],
     "shared-ui": [],
     "orders": [],
@@ -644,6 +606,226 @@ You should be able to see something similar to the following in your browser.
 Notice how `shared-ui` is not yet connected to anything because we didn't import it in any of our projects.
 
 Exercise for you: change the codebase such that `shared-ui` is used by `orders` and `products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
+
+## Testing and Linting - Running Multiple Tasks
+
+<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=410" /%} -->
+
+Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
+
+```bash
+nx test react-store # runs the tests for react-store
+nx lint inventory # runs the linter on inventory
+nx e2e react-store-e2e # runs e2e tests for the react-store
+```
+
+More conveniently, we can also run tasks in parallel using the following syntax:
+
+```shell
+nx run-many -t test
+```
+
+### Testing Affected Projects
+
+Commit your changes to git.
+
+```shell
+git commit -a -m "some commit message"
+```
+
+And then make a small change to the `products` library.
+
+```tsx {% fileName="libs/products/src/lib/product-list/product-list.tsx" %}
+import styles from './product-list.module.css';
+
+/* eslint-disable-next-line */
+export interface ProductListProps {}
+
+export function ProductList(props: ProductListProps) {
+  return (
+    <div className={styles['container']}>
+      <h1>Welcome to ProductList!</h1>
+      <p>This is a change. 👋</p>
+    </div>
+  );
+}
+
+export default ProductList;
+```
+
+One of the key features of Nx in a monorepo setting is that you're able to run tasks only for projects that are actually affected by the code changes that you've made. To run the tests for only the projects affected by this change, run:
+
+```shell
+nx affected -t test
+```
+
+Note that the unit tests were run for `products`, `react-store` and `inventory`, but not for `orders` because a change to `products` can not possibly break the tests for `orders`. In a small repo like this, there isn't a lot of time saved, but as there are more tests and more projects, this quickly becomes an essential command.
+
+You can also see what projects are affected in the graph visualizer with;
+
+```shell
+nx graph --affected
+```
+
+{% graph height="450px" %}
+
+```json
+{
+  "projects": [
+    {
+      "name": "react-store",
+      "type": "app",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "react-store-e2e",
+      "type": "e2e",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "inventory",
+      "type": "app",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "inventory-e2e",
+      "type": "e2e",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "shared-ui",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+    {
+      "name": "orders",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    },
+
+    {
+      "name": "products",
+      "type": "lib",
+      "data": {
+        "tags": []
+      }
+    }
+  ],
+  "dependencies": {
+    "react-store": [
+      { "source": "react-store", "target": "orders", "type": "static" },
+      { "source": "react-store", "target": "products", "type": "static" }
+    ],
+    "react-store-e2e": [
+      {
+        "source": "react-store-e2e",
+        "target": "react-store",
+        "type": "implicit"
+      }
+    ],
+    "inventory": [
+      { "source": "inventory", "target": "products", "type": "static" }
+    ],
+    "inventory-e2e": [
+      { "source": "inventory-e2e", "target": "inventory", "type": "implicit" }
+    ],
+    "shared-ui": [],
+    "orders": [],
+    "products": []
+  },
+  "workspaceLayout": { "appsDir": "", "libsDir": "" },
+  "affectedProjectIds": [
+    "products",
+    "inventory",
+    "inventory-e2e",
+    "react-store",
+    "react-store-e2e"
+  ],
+  "focus": null,
+  "groupByFolder": false
+}
+```
+
+{% /graph %}
+
+## Building the Apps for Deployment
+
+<!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=856" /%} -->
+
+If you're ready and want to ship your applications, you can build them using
+
+```{% command="npx nx run-many -t build" path="react-monorepo" %}
+// todo
+vite v4.3.5 building for production...
+✓ 33 libs transformed.
+dist/react-store/index.html                   0.48 kB │ gzip:  0.30 kB
+dist/react-store/assets/index-e3b0c442.css    0.00 kB │ gzip:  0.02 kB
+dist/react-store/assets/index-378e8124.js   165.64 kB │ gzip: 51.63 kB
+✓ built in 496ms
+
+ ——————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+ >  NX   Successfully ran target build for project reactutorial (1s)
+```
+
+All the required files will be placed in `dist/react-store` and `dist/inventory` and can be deployed to your favorite hosting provider.
+
+You can even create your own `deploy` task that sends the build output to your hosting provider.
+
+```json {% fileName="apps/react-store/project.json" %}
+{
+  "targets": {
+    "deploy": {
+      "dependsOn": "build",
+      "command": "netlify deploy --dir=dist/react-store"
+    }
+  }
+}
+```
+
+Replace the `command` with whatever terminal command you use to deploy your site.
+
+The `"dependsOn": "build"` setting tells Nx to make sure that the project's `build` task has been run successfully before the `deploy` task.
+
+With the `deploy` tasks defined, you can deploy a single application with `nx deploy react-store` or deploy any applications affected by the current changes with:
+
+```shell
+nx affected -t deploy
+```
+
+### Caching
+
+One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
+
+Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
+
+```{% command="nx run-many -t test lint e2e" path="react-monorepo" %}
+
+    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+    ✔  nx run react-store:lint  [existing outputs match the cache, left as is]
+    ✔  nx run react-store:test  [existing outputs match the cache, left as is]
+    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
+
+ ——————————————————————————————————————————————————————
+
+ >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+
+   Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
+```
+
+Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
 
 ## Imposing Constraints with Module Boundary Rules
 
@@ -775,29 +957,35 @@ export default ProductList;
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
-    ✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run shared-ui:lint (1s)
-
+>  NX   Running target lint for 7 projects
     ✖  nx run products:lint
        Linting "products"...
 
-       /Users/.../react-monorepo/libs/products/src/lib/product-list/product-list.tsx
-         3:1  error  A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+       /Users/isaac/Documents/code/nx-recipes/react-monorepo/libs/products/src/lib/product-list/product-list.tsx
+         4:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+         4:10  warning  'OrderList' is defined but never used                                                                        @typescript-eslint/no-unused-vars
 
-       ✖ 1 problem (1 error, 0 warnings)
+       ✖ 2 problems (1 error, 1 warning)
+
+       Lint warnings found in the listed files.
 
        Lint errors found in the listed files.
 
-    ✔  nx run orders:lint (1s)
 
- ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    ✔  nx run orders:lint (996ms)
+    ✔  nx run react-store:lint (1s)
+    ✔  nx run react-store-e2e:lint (581ms)
+    ✔  nx run inventory-e2e:lint (588ms)
+    ✔  nx run inventory:lint (836ms)
+    ✔  nx run shared-ui:lint (753ms)
 
- >  NX   Ran target lint for 5 projects (1s)
+ ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-    ✔    4/5 succeeded [2 read from cache]
+ >  NX   Ran target lint for 7 projects (2s)
 
-    ✖    1/5 targets failed, including the following:
+    ✔    6/7 succeeded [0 read from cache]
+
+    ✖    1/7 targets failed, including the following:
          - nx run products:lint
 ```
 
@@ -806,6 +994,30 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 ![ESLint module boundary error](/shared/images/tutorial-react-standalone/react-standalone-module-boundaries.png)
 
 Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
+
+## Setting Up CI
+
+Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/concepts/affected) and Nx Cloud's [distributed caching](/core-features/remote-cache). Nx also [decreases the worst case CI time](/concepts/dte) with Nx Cloud's distributed task execution.
+
+To set up Nx Cloud run:
+
+```shell
+nx connect
+```
+
+And click the link provided. You'll need to follow the instructions on the website to sign up for your account.
+
+Then you can set up your CI with the following command:
+
+```shell
+nx generate ci-workflow --ci=github
+```
+
+{% callout type="note" title="Choose your CI provider" %}
+You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
+{% /callout %}
+
+This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/core-features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
 ## Next Steps
 

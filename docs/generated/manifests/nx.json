@@ -62,16 +62,6 @@
             "tags": []
           },
           {
-            "id": "react-monorepo-tutorial",
-            "name": "React Monorepo",
-            "description": "",
-            "file": "shared/react-tutorial/react-monorepo",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/getting-started/tutorials/react-monorepo-tutorial",
-            "tags": []
-          },
-          {
             "id": "react-standalone-tutorial",
             "name": "React Standalone",
             "description": "",
@@ -79,6 +69,16 @@
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/react-standalone-tutorial",
+            "tags": []
+          },
+          {
+            "id": "react-monorepo-tutorial",
+            "name": "React Monorepo",
+            "description": "",
+            "file": "shared/react-tutorial/react-monorepo",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/getting-started/tutorials/react-monorepo-tutorial",
             "tags": []
           },
           {
@@ -168,16 +168,6 @@
         "tags": []
       },
       {
-        "id": "react-monorepo-tutorial",
-        "name": "React Monorepo",
-        "description": "",
-        "file": "shared/react-tutorial/react-monorepo",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/getting-started/tutorials/react-monorepo-tutorial",
-        "tags": []
-      },
-      {
         "id": "react-standalone-tutorial",
         "name": "React Standalone",
         "description": "",
@@ -185,6 +175,16 @@
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/react-standalone-tutorial",
+        "tags": []
+      },
+      {
+        "id": "react-monorepo-tutorial",
+        "name": "React Monorepo",
+        "description": "",
+        "file": "shared/react-tutorial/react-monorepo",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/tutorials/react-monorepo-tutorial",
         "tags": []
       },
       {
@@ -232,16 +232,6 @@
     "path": "/getting-started/tutorials/integrated-repo-tutorial",
     "tags": []
   },
-  "/getting-started/tutorials/react-monorepo-tutorial": {
-    "id": "react-monorepo-tutorial",
-    "name": "React Monorepo",
-    "description": "",
-    "file": "shared/react-tutorial/react-monorepo",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/getting-started/tutorials/react-monorepo-tutorial",
-    "tags": []
-  },
   "/getting-started/tutorials/react-standalone-tutorial": {
     "id": "react-standalone-tutorial",
     "name": "React Standalone",
@@ -250,6 +240,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/react-standalone-tutorial",
+    "tags": []
+  },
+  "/getting-started/tutorials/react-monorepo-tutorial": {
+    "id": "react-monorepo-tutorial",
+    "name": "React Monorepo",
+    "description": "",
+    "file": "shared/react-tutorial/react-monorepo",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/tutorials/react-monorepo-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/angular-standalone-tutorial": {
