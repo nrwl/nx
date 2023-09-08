@@ -15,6 +15,7 @@
           "build-ng",
           "build-base",
           "build-native",
+          "build-client",
           "e2e",
           "e2e-macos",
           "test",
