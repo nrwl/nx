@@ -84,7 +84,7 @@ export async function getModuleFederationConfig(
   const npmPackages = sharePackages(dependencies.npmPackages);
 
   const sharedDependencies = {
-    ...sharedLibraries.getLibraries(),
+    ...sharedLibraries.getLibraries(project.root),
     ...npmPackages,
   };
 

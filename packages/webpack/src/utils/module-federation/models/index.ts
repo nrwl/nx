@@ -1,6 +1,7 @@
 import type { NormalModuleReplacementPlugin } from 'webpack';
 
 export type ModuleFederationLibrary = { type: string; name: string };
+
 export type WorkspaceLibrary = {
   name: string;
   root: string;
@@ -9,7 +10,10 @@ export type WorkspaceLibrary = {
 
 export type SharedWorkspaceLibraryConfig = {
   getAliases: () => Record<string, string>;
-  getLibraries: (eager?: boolean) => Record<string, SharedLibraryConfig>;
+  getLibraries: (
+    projectRoot: string,
+    eager?: boolean
+  ) => Record<string, SharedLibraryConfig>;
   getReplacementPlugin: () => NormalModuleReplacementPlugin;
 };
 
