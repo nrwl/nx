@@ -27,7 +27,8 @@ installation. You can check your `package.json` and make sure you have the follo
 ```
 
 {% callout type="warning" title="PNPM support" %}
-To use `ngcc` with `pnpm`, set [`node-linker=hoisted` in `.npmrc`](https://pnpm.io/npmrc#node-linker) ([angular/angular#50735](https://github.com/angular/angular/issues/50735)) and explicitly declare `node-gyp-build` in `package.json` ([#16319](https://github.com/nrwl/nx/issues/16319) and [parcel-bundler/watcher#142](https://github.com/parcel-bundler/watcher/issues/142)), e.g.
+To use `ngcc` with `pnpm`, set [`node-linker=hoisted` in `.npmrc`](https://pnpm.io/npmrc#node-linker) and explicitly declare `node-gyp-build` in `package.json`
+See [angular/angular#50735](https://github.com/angular/angular/issues/50735), [nrwl/nx#16319](https://github.com/nrwl/nx/issues/16319) and [parcel-bundler/watcher#142](https://github.com/parcel-bundler/watcher/issues/142) for more details.
 
 ```ini {% fileName=".npmrc" %}
 node-linker=hoisted

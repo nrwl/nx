@@ -7,7 +7,7 @@ import {
 import { join } from 'path';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
-import { eslintrcVersion } from '../../../utils/versions';
+import { eslintVersion, eslintrcVersion } from '../../../utils/versions';
 import {
   createNodeList,
   generateAst,
@@ -255,7 +255,7 @@ function addExtends(
         tree,
         {},
         {
-          '@eslint/js': eslintrcVersion,
+          '@eslint/js': eslintVersion,
         }
       );
 
@@ -279,7 +279,7 @@ function addExtends(
       tree,
       {},
       {
-        '@eslint/js': eslintrcVersion,
+        '@eslint/js': eslintVersion,
       }
     );
 

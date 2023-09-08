@@ -59,7 +59,7 @@ function main() {
       workspace &&
       workspace.type === 'nx' &&
       !['format', 'format:check', 'format:write', 'g', 'generate'].some(
-        (cmd) => process.argv[3] === cmd
+        (cmd) => process.argv[2] === cmd
       )
     ) {
       require('v8-compile-cache');

@@ -7,6 +7,10 @@ The `@nx/eslint-plugin` package is an ESLint plugin that contains a collection o
 
 ### Installation
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/eslint-plugin` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 In any Nx workspace, you can install `@nx/eslint-plugin` by running the following commands if the package is not already installed:
 
 {% tabs %}

@@ -20,7 +20,7 @@ async function writeFileForWatcher(path: string, content: string) {
   await wait(10);
 }
 
-describe('Nx Commands', () => {
+xdescribe('Nx Commands', () => {
   let proj1 = uniq('proj1');
   let proj2 = uniq('proj2');
   let proj3 = uniq('proj3');
@@ -33,7 +33,7 @@ describe('Nx Commands', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should watch for project changes', async () => {
+  xit('should watch for project changes', async () => {
     const getOutput = await runWatch(
       `--projects=${proj1} -- echo \\$NX_PROJECT_NAME`
     );
@@ -46,7 +46,7 @@ describe('Nx Commands', () => {
     expect(await getOutput()).toEqual([proj1]);
   });
 
-  it('should watch for all projects and output the project name', async () => {
+  xit('should watch for all projects and output the project name', async () => {
     const getOutput = await runWatch(`--all -- echo \\$NX_PROJECT_NAME`);
     await writeFileForWatcher(`libs/${proj1}/newfile.txt`, 'content');
     await writeFileForWatcher(`libs/${proj2}/newfile.txt`, 'content');

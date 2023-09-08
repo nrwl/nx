@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * @type {import('@nx/devkit').ModuleFederationConfig}
+ * @type {import('@nx/webpack').ModuleFederationConfig}
  **/
 const moduleFederationConfig = {
     name: '<%= projectName %>',

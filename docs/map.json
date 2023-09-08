@@ -1012,6 +1012,12 @@
                   "file": "shared/recipes/enable-tsc-batch-mode"
                 },
                 {
+                  "name": "Keep Nx Versions in Sync",
+                  "id": "keep-nx-versions-in-sync",
+                  "tags": ["automate-updating-dependencies"],
+                  "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync"
+                },
+                {
                   "name": "Define Environment Variables",
                   "id": "define-environment-variables",
                   "tags": ["environment-variables"],

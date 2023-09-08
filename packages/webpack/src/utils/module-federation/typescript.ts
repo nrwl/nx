@@ -1,9 +1,7 @@
 import { existsSync } from 'fs';
 import { ParsedCommandLine } from 'typescript';
 import { dirname, join } from 'path';
-import { requireNx } from '../../../nx';
-
-const { workspaceRoot } = requireNx();
+import { workspaceRoot } from '@nx/devkit';
 
 let tsConfig: ParsedCommandLine;
 let tsPathMappings: ParsedCommandLine['options']['paths'];
@@ -35,6 +33,7 @@ function readTsConfiguration(tsConfigPath: string): ParsedCommandLine {
 }
 
 let tsModule: typeof import('typescript');
+
 export function readTsConfig(tsConfigPath: string): ParsedCommandLine {
   if (!tsModule) {
     tsModule = require('typescript');

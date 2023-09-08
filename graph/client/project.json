@@ -30,7 +30,7 @@
         "parallel": false
       }
     },
-    "build-base": {
+    "build-client": {
       "executor": "@nx/webpack:webpack",
       "options": {
         "maxWorkers": 8,
@@ -185,27 +185,27 @@
       "executor": "@nx/webpack:dev-server",
       "configurations": {
         "dev": {
-          "buildTarget": "graph-client:build-base:dev",
+          "buildTarget": "graph-client:build-client:dev",
           "port": 4201
         },
         "nx-console": {
-          "buildTarget": "graph-client:build-base:nx-console",
+          "buildTarget": "graph-client:build-client:nx-console",
           "port": 4202
         },
         "release": {
-          "buildTarget": "graph-client:build-base:release",
+          "buildTarget": "graph-client:build-client:release",
           "port": 4203
         },
         "watch": {
-          "buildTarget": "graph-client:build-base:watch",
+          "buildTarget": "graph-client:build-client:watch",
           "port": 4204
         },
         "release-static": {
-          "buildTarget": "graph-client:build-base:release-static",
+          "buildTarget": "graph-client:build-client:release-static",
           "port": 4205
         },
         "dev-e2e": {
-          "buildTarget": "graph-client:build-base:dev-e2e",
+          "buildTarget": "graph-client:build-client:dev-e2e",
           "port": 4206
         }
       },

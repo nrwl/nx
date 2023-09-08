@@ -75,6 +75,7 @@
       "command": "echo hi"
     },
     "build": {
+      "dependsOn": ["^build-client", "build-base", "build-native"],
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/nx"],
       "options": {
