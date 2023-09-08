@@ -5806,6 +5806,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Authenticate via SAML on Managed Version",
+            "path": "/nx-cloud/private-cloud/auth-saml-managed",
+            "id": "auth-saml-managed",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Advanced Configuration",
             "path": "/nx-cloud/private-cloud/advanced-config",
             "id": "advanced-config",
@@ -5868,6 +5876,14 @@
         "name": "Authenticate via SAML",
         "path": "/nx-cloud/private-cloud/auth-saml",
         "id": "auth-saml",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate via SAML on Managed Version",
+        "path": "/nx-cloud/private-cloud/auth-saml-managed",
+        "id": "auth-saml-managed",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
