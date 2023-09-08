@@ -1,6 +1,5 @@
 import {
   updateJson,
-  updateProjectConfig,
   cleanupProject,
   newProject,
   runCLI,
@@ -161,7 +160,7 @@ describe('packaging libs', () => {
     );
 
     // Add additional entry points for `exports` field
-    await updateProjectConfig(tscLib, (json) => {
+    updateJson(join('libs', tscLib, 'project.json'), (json) => {
       json.targets.build.options.additionalEntryPoints = [
         `libs/${tscLib}/src/foo/*.ts`,
       ];
@@ -169,7 +168,7 @@ describe('packaging libs', () => {
     });
     updateFile(`libs/${tscLib}/src/foo/bar.ts`, `export const bar = 'bar';`);
     updateFile(`libs/${tscLib}/src/foo/faz.ts`, `export const faz = 'faz';`);
-    await updateProjectConfig(swcLib, (json) => {
+    updateJson(join('libs', swcLib, 'project.json'), (json) => {
       json.targets.build.options.additionalEntryPoints = [
         `libs/${swcLib}/src/foo/*.ts`,
       ];

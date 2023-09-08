@@ -5,8 +5,9 @@ import {
   setMaxWorkers,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('js:node executor', () => {
   let scope: string;
@@ -31,7 +32,7 @@ describe('js:node executor', () => {
         `;
     });
 
-    await updateProjectConfig(esbuildLib, (config) => {
+    updateJson(join('libs', esbuildLib, 'project.json'), (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {
@@ -62,7 +63,7 @@ describe('js:node executor', () => {
         `;
     });
 
-    await updateProjectConfig(rollupLib, (config) => {
+    updateJson(join('libs', rollupLib, 'project.json'), (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {
@@ -88,7 +89,7 @@ describe('js:node executor', () => {
         `;
     });
 
-    await updateProjectConfig(tscLib, (config) => {
+    updateJson(join('libs', tscLib, 'project.json'), (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {
@@ -114,7 +115,7 @@ describe('js:node executor', () => {
         `;
     });
 
-    await updateProjectConfig(swcLib, (config) => {
+    updateJson(join('libs', swcLib, 'project.json'), (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {
@@ -135,7 +136,7 @@ describe('js:node executor', () => {
     runCLI(
       `generate @nx/node:application ${webpackProject} --bundler=webpack --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', webpackProject, 'project.json'));
 
     updateFile(`apps/${webpackProject}/src/main.ts`, () => {
       return `
@@ -143,7 +144,7 @@ describe('js:node executor', () => {
         `;
     });
 
-    await updateProjectConfig(webpackProject, (config) => {
+    updateJson(join('apps', webpackProject, 'project.json'), (config) => {
       config.targets['run-node'] = {
         executor: '@nx/js:node',
         options: {

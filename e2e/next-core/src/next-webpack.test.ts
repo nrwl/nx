@@ -6,8 +6,9 @@ import {
   runCLI,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Next.js Webpack', () => {
   let proj: string;
@@ -80,7 +81,7 @@ describe('Next.js Webpack', () => {
     checkFilesExist(`dist/apps/${appName}/next.config.js`);
 
     // Make sure withNx works with run-commands.
-    await updateProjectConfig(appName, (json) => {
+    updateJson(join('apps', appName, 'project.json'), (json) => {
       json.targets.build = {
         command: 'npx next build',
         outputs: [`apps/${appName}/.next`],

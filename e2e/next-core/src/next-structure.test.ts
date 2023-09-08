@@ -1,4 +1,4 @@
-import { removeSync, mkdirSync } from 'fs-extra';
+import { mkdirSync, removeSync } from 'fs-extra';
 import { capitalize } from '@nx/devkit/src/utils/string-utils';
 import { checkApp } from './utils';
 import {
@@ -13,8 +13,9 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Next.js Apps Libs', () => {
   let proj: string;
@@ -57,7 +58,7 @@ describe('Next.js Apps Libs', () => {
 
     // Additional assets that should be copied to dist
     const sharedLib = uniq('sharedLib');
-    await updateProjectConfig(appName, (json) => {
+    updateJson(join('packages', appName, 'project.json'), (json) => {
       json.targets.build.options.assets = [
         {
           glob: '**/*',

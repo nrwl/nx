@@ -16,7 +16,7 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 import { copyFileSync } from 'fs';
@@ -30,7 +30,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -105,7 +105,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --e2eTestRunner=playwright --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
@@ -131,7 +131,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     createFile(`dist/apps/${appName}/_should_remove.txt`);
     createFile(`dist/libs/${libName}/_should_remove.txt`);
@@ -168,7 +168,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
       const newContent = `${content}
@@ -224,7 +224,7 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
       const newContent = `${content}
@@ -267,9 +267,9 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
-    await updateProjectConfig(appName, (config) => {
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets.build.options.webpackConfig = `apps/${appName}/webpack.config.js`;
       return config;
     });
@@ -388,7 +388,7 @@ describe('CLI - Environment Variables', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const content = readFile(main);
 
@@ -414,7 +414,7 @@ describe('CLI - Environment Variables', () => {
     runCLI(
       `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName2, 'project.json'));
 
     const content2 = readFile(main2);
 
@@ -449,7 +449,7 @@ describe('Build Options', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const srcPath = `apps/${appName}/src`;
     const fooCss = `${srcPath}/foo.css`;
@@ -475,7 +475,7 @@ describe('Build Options', () => {
     const barScriptsBundleName = 'bar-scripts';
     const barStylesBundleName = 'bar-styles';
 
-    await updateProjectConfig(appName, (config) => {
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       const buildOptions = config.targets.build.options;
 
       buildOptions.scripts = [
@@ -529,7 +529,7 @@ describe('index.html interpolation', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;
@@ -562,7 +562,7 @@ describe('index.html interpolation', () => {
     updateFile(envFilePath, envFileContents);
     updateFile(indexPath, indexContent);
 
-    await updateProjectConfig(appName, (config) => {
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       const buildOptions = config.targets.build.options;
       buildOptions.deployUrl = 'baz';
       return config;
