@@ -21176,8 +21176,8 @@
             "hash": "22b0c37a15a16aed47c139ff98f611f33df757be",
             "deps": [
               "npm:@babel/core",
-              "npm:@babel/plugin-proposal-class-properties",
               "npm:@babel/plugin-proposal-decorators",
+              "npm:@babel/plugin-transform-class-properties",
               "npm:@babel/plugin-transform-runtime",
               "npm:@babel/preset-env",
               "npm:@babel/preset-typescript",
