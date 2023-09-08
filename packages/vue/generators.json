@@ -1,5 +1,29 @@
 {
   "name": "Nx Vue",
   "version": "0.1",
-  "generators": {}
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#vueInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nx/vue` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+
+    "library": {
+      "factory": "./src/generators/library/library",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a Vue library."
+    },
+
+    "component": {
+      "factory": "./src/generators/component/component",
+      "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
+      "x-type": "component",
+      "description": "Create a Vue component."
+    }
+  }
 }

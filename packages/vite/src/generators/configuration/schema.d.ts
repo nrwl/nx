@@ -6,6 +6,7 @@ export interface ViteConfigurationGeneratorSchema {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   includeLib?: boolean;
+  skipViteConfig?: boolean;
   buildTarget?: string;
   serveTarget?: string;
   testTarget?: string;

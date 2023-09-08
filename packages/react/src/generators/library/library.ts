@@ -69,9 +69,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   // Set up build target
   if (options.buildable && options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
+    const { viteConfigurationGenerator, createOrEditViteConfig } =
+      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,
@@ -82,8 +81,34 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       compiler: options.compiler,
       skipFormat: true,
       testEnvironment: 'jsdom',
+      skipViteConfig: true,
     });
     tasks.push(viteTask);
+    const viteConfigCreation = createOrEditViteConfig(
+      host,
+      {
+        project: options.name,
+        includeLib: true,
+        includeVitest: options.unitTestRunner === 'vitest',
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          `'react'`,
+          `'react-dom'`,
+          `'react/jsx-runtime'`,
+        ],
+        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+        importLines: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      false
+    );
+    tasks.push((): void => {
+      viteConfigCreation;
+    });
   } else if (options.buildable && options.bundler === 'rollup') {
     const rollupTask = await addRollupBuildTarget(host, options);
     tasks.push(rollupTask);
@@ -120,10 +145,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // tests are already configured if bundler is vite
   ) {
-    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
-      '@nx/vite',
-      nxVersion
-    );
+    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.name,
@@ -131,8 +155,30 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
+      skipViteConfig: true,
     });
     tasks.push(vitestTask);
+    const vitestConfigCreation = createOrEditViteConfig(
+      host,
+      {
+        project: options.name,
+        includeLib: true,
+        includeVitest: true,
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          `'react'`,
+          `'react-dom'`,
+          `'react/jsx-runtime'`,
+        ],
+        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+        importLines: [`import react from '@vitejs/plugin-react'`],
+        plugins: ['react()'],
+      },
+      true
+    );
+    tasks.push((): void => {
+      vitestConfigCreation;
+    });
   }
 
   if (options.component) {

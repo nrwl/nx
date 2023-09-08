@@ -362,6 +362,16 @@
     }
   },
   {
+    "name": "vue",
+    "packageName": "vue",
+    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "path": "generated/packages/vite.json",
+    "schemas": {
+      "executors": [],
+      "generators": ["init", "library", "application", "component"]
+    }
+  },
+  {
     "name": "web",
     "packageName": "web",
     "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",

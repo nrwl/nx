@@ -2069,6 +2069,20 @@
           ]
         },
         {
+          "name": "vue",
+          "id": "vue",
+          "description": "Vue package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "path": "/packages/vue",
+              "name": "Overview of the Nx Vue Plugin",
+              "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
+              "file": "shared/packages/vue/vue-plugin"
+            }
+          ]
+        },
+        {
           "name": "webpack",
           "id": "webpack",
           "description": "Webpack package.",

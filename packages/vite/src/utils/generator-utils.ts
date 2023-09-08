@@ -477,9 +477,21 @@ export function moveAndEditIndexHtml(
   }
 }
 
+export interface ViteConfigFileOptions {
+  project: string;
+  includeLib?: boolean;
+  includeVitest?: boolean;
+  inSourceTests?: boolean;
+  testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
+  rollupOptionsExternalString?: string;
+  rollupOptionsExternal?: string[];
+  importLines?: string[];
+  plugins?: string[];
+}
+
 export function createOrEditViteConfig(
   tree: Tree,
-  options: ViteConfigurationGeneratorSchema,
+  options: ViteConfigFileOptions,
   onlyVitest: boolean,
   projectAlreadyHasViteTargets?: TargetFlags
 ) {
@@ -505,11 +517,7 @@ export function createOrEditViteConfig(
         },
         rollupOptions: {
           // External packages that should not be bundled into your library.
-          external: [${
-            options.uiFramework === 'react'
-              ? "'react', 'react-dom', 'react/jsx-runtime'"
-              : ''
-          }]
+          external: [${options.rollupOptionsExternal ?? ''}]
         }
       },`
     : ``;
@@ -554,15 +562,6 @@ export function createOrEditViteConfig(
   },`
     : '';
 
-  const reactPluginImportLine =
-    options.uiFramework === 'react'
-      ? options.compiler === 'swc'
-        ? `import react from '@vitejs/plugin-react-swc';`
-        : `import react from '@vitejs/plugin-react';`
-      : '';
-
-  const reactPlugin = options.uiFramework === 'react' ? `react(),` : '';
-
   const devServerOption = onlyVitest
     ? ''
     : options.includeLib
@@ -586,7 +585,9 @@ export function createOrEditViteConfig(
   const pluginOption = `
     plugins: [
       ${dtsPlugin}
-      ${reactPlugin}
+      ${options.plugins?.length > 0 ? options.plugins?.join(',\n') : ''}${
+    options.plugins?.length > 0 ? ',' : ''
+  }
       nxViteTsPaths(),
     ],
     `;
@@ -621,7 +622,9 @@ export function createOrEditViteConfig(
   viteConfigContent = `
       /// <reference types="vitest" />
       import { defineConfig } from 'vite';
-      ${reactPluginImportLine}
+      ${
+        options.importLines?.length > 0 ? options.importLines?.join(';\n') : ''
+      }${options.importLines?.length > 0 ? ';' : ''}
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       ${dtsImportLine}
       
@@ -774,7 +777,7 @@ export async function handleUnknownExecutors(projectName: string) {
 function handleViteConfigFileExists(
   tree: Tree,
   viteConfigPath: string,
-  options: ViteConfigurationGeneratorSchema,
+  options: ViteConfigFileOptions,
   buildOption: string,
   dtsPlugin: string,
   dtsImportLine: string,
@@ -784,7 +787,10 @@ function handleViteConfigFileExists(
   offsetFromRoot: string,
   projectAlreadyHasViteTargets?: TargetFlags
 ) {
-  if (projectAlreadyHasViteTargets.build && projectAlreadyHasViteTargets.test) {
+  if (
+    projectAlreadyHasViteTargets?.build &&
+    projectAlreadyHasViteTargets?.test
+  ) {
     return;
   }
 
@@ -797,10 +803,7 @@ function handleViteConfigFileExists(
       formats: ['es', 'cjs'],
     },
     rollupOptions: {
-      external:
-        options.uiFramework === 'react'
-          ? ['react', 'react-dom', 'react/jsx-runtime']
-          : [],
+      external: options.rollupOptionsExternal ?? [],
     },
   };
 
@@ -824,7 +827,7 @@ function handleViteConfigFileExists(
     testOption,
     testOptionObject,
     cacheDir,
-    projectAlreadyHasViteTargets
+    projectAlreadyHasViteTargets ?? {}
   );
 
   if (!changed) {

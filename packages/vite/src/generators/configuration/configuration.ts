@@ -198,7 +198,34 @@ export async function viteConfigurationGenerator(
     });
   }
 
-  createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);
+  if (!schema.skipViteConfig) {
+    if (schema.uiFramework === 'react') {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: schema.project,
+          includeLib: schema.includeLib,
+          includeVitest: schema.includeVitest,
+          inSourceTests: schema.inSourceTests,
+          rollupOptionsExternal: [
+            `'react'`,
+            `'react-dom'`,
+            `'react/jsx-runtime'`,
+          ],
+          rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+          importLines: [
+            schema.compiler === 'swc'
+              ? `import react from '@vitejs/plugin-react-swc'`
+              : `import react from '@vitejs/plugin-react'`,
+          ],
+          plugins: ['react()'],
+        },
+        false
+      );
+    } else {
+      createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);
+    }
+  }
 
   if (schema.includeVitest) {
     const vitestTask = await vitestGenerator(tree, {

@@ -67,6 +67,12 @@
       "type": "string",
       "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
       "default": "jsdom"
+    },
+    "skipViteConfig": {
+      "type": "boolean",
+      "default": false,
+      "description": "Skip generating a vite config file.",
+      "hidden": true
     }
   },
   "examplesFile": "../../../docs/configuration-examples.md"

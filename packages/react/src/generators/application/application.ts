@@ -39,6 +39,7 @@ import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
 } from '@nx/linter/src/generators/utils/eslint-file';
+import { createOrEditViteConfig } from '@nx/vite';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -136,8 +137,34 @@ export async function applicationGeneratorInternal(
       inSourceTests: options.inSourceTests,
       compiler: options.compiler,
       skipFormat: true,
+      skipViteConfig: true,
     });
     tasks.push(viteTask);
+    const viteConfigCreation = createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: options.unitTestRunner === 'vitest',
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          `'react'`,
+          `'react-dom'`,
+          `'react/jsx-runtime'`,
+        ],
+        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+        importLines: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      false
+    );
+    tasks.push((): void => {
+      viteConfigCreation;
+    });
   } else if (options.bundler === 'webpack') {
     const { webpackInitGenerator } = ensurePackage<
       typeof import('@nx/webpack')
@@ -178,8 +205,34 @@ export async function applicationGeneratorInternal(
       project: options.projectName,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      skipViteConfig: true,
     });
     tasks.push(vitestTask);
+    const vitestConfigCreation = createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: true,
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          `'react'`,
+          `'react-dom'`,
+          `'react/jsx-runtime'`,
+        ],
+        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+        importLines: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      true
+    );
+    tasks.push((): void => {
+      vitestConfigCreation;
+    });
   }
 
   if (

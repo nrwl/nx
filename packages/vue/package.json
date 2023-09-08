@@ -28,14 +28,16 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "tslib": "^2.3.0"
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/vite": "file:../vite"
   },
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {
-    "nx": ">= 15 <= 17"
-  },
+  "peerDependencies": {},
   "exports": {
     ".": "./index.js",
     "./package.json": "./package.json",
