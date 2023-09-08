@@ -21,6 +21,10 @@ Yarn users can use the following command instead:
 yarn create nx-workspace my-workspace --preset=nest
 ```
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/nest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 To add the Nest plugin to an existing workspace, run one the following commands:
 
 ```shell

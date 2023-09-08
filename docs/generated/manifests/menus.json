@@ -2283,6 +2283,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Keep Nx Versions in Sync",
+                "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+                "id": "keep-nx-versions-in-sync",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Define Environment Variables",
                 "path": "/recipes/tips-n-tricks/define-environment-variables",
                 "id": "define-environment-variables",
@@ -3688,6 +3696,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Keep Nx Versions in Sync",
+            "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+            "id": "keep-nx-versions-in-sync",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Define Environment Variables",
             "path": "/recipes/tips-n-tricks/define-environment-variables",
             "id": "define-environment-variables",
@@ -3838,6 +3854,14 @@
         "name": "Enable Typescript Batch Mode",
         "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
         "id": "enable-tsc-batch-mode",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Keep Nx Versions in Sync",
+        "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+        "id": "keep-nx-versions-in-sync",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

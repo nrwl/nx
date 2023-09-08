@@ -27,6 +27,10 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 
 ## Install Nx Remix Plugin
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/remix` version that is on the same minor version as the `nx` version in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync). The `@nx/remix` package is still being developed under [nx-labs](https://github.com/nrwl/nx-labs), so the publishing cadence is not perfectly coordinated with the other Nx packages.
+{% /callout %}
+
 ```shell
 npm install --save-dev @nx/remix
 ```

@@ -8,6 +8,10 @@ The Nx Plugin for Web Components contains generators for managing Web Component 
 
 To create a new workspace with web, run `npx create-nx-workspace@latest --preset=web-components`.
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/web` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 To add the web plugin to an existing workspace, run one of the following:
 
 ```shell

@@ -2845,6 +2845,16 @@
             "tags": []
           },
           {
+            "id": "keep-nx-versions-in-sync",
+            "name": "Keep Nx Versions in Sync",
+            "description": "",
+            "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+            "tags": ["automate-updating-dependencies"]
+          },
+          {
             "id": "define-environment-variables",
             "name": "Define Environment Variables",
             "description": "",
@@ -4598,6 +4608,16 @@
         "tags": []
       },
       {
+        "id": "keep-nx-versions-in-sync",
+        "name": "Keep Nx Versions in Sync",
+        "description": "",
+        "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+        "tags": ["automate-updating-dependencies"]
+      },
+      {
         "id": "define-environment-variables",
         "name": "Define Environment Variables",
         "description": "",
@@ -4791,6 +4811,16 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
     "tags": []
+  },
+  "/recipes/tips-n-tricks/keep-nx-versions-in-sync": {
+    "id": "keep-nx-versions-in-sync",
+    "name": "Keep Nx Versions in Sync",
+    "description": "",
+    "file": "shared/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
+    "tags": ["automate-updating-dependencies"]
   },
   "/recipes/tips-n-tricks/define-environment-variables": {
     "id": "define-environment-variables",

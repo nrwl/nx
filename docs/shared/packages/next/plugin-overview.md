@@ -10,7 +10,7 @@ The Next.js plugin contains executors and generators for managing Next.js applic
 
 To create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest --preset=next`.
 
-To add Next.js to an existing Nx workspace, install the `@nx/next` package. Make sure to install the version that matches your `@nx/workspace` version.
+To add Next.js to an existing Nx workspace, install the `@nx/next` package. Make sure to install the version that matches your `nx` version.
 
 {% tabs %}
 {% tab label="npm" %}
