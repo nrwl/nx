@@ -87,6 +87,7 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 /packages/web/** @nrwl/nx-js-reviewers
 /e2e/web/** @nrwl/nx-js-reviewers
 /packages/webpack/** @nrwl/nx-js-reviewers
+/packages/webpack/src/utils/module-federation @jaysoo @Coly010
 /e2e/webpack/** @nrwl/nx-js-reviewers
 /packages/esbuild/** @nrwl/nx-js-reviewers
 /e2e/esbuild/** @nrwl/nx-js-reviewers
@@ -131,7 +132,6 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 /packages/devkit/index.d.ts @FrozenPandaz @vsavkin
 /packages/devkit/public-api.ts @FrozenPandaz @vsavkin
 /packages/devkit/nx.ts @FrozenPandaz @vsavkin
-/packages/devkit/src/utils/module-federation @jaysoo @Coly010
 
 # Nx-Plugin
 /docs/generated/packages/plugin/** @nrwl/nx-devkit-reviewers @nrwl/nx-docs-reviewers
