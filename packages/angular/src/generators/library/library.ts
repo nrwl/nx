@@ -5,7 +5,7 @@ import {
   joinPathFragments,
   Tree,
 } from '@nx/devkit';
-import { jestProjectGenerator } from '@nx/jest';
+import { configurationGenerator } from '@nx/jest';
 import { Linter } from '@nx/linter';
 import { addTsConfigPath } from '@nx/js';
 import { lt } from 'semver';
@@ -37,6 +37,18 @@ export async function libraryGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  return await libraryGeneratorInternal(tree, {
+    // provide a default projectNameAndRootFormat to avoid breaking changes
+    // to external generators invoking this one
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function libraryGeneratorInternal(
+  tree: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   // Do some validation checks
   if (!schema.routing && schema.lazy) {
     throw new Error(`To use "--lazy" option, "--routing" must also be set.`);
@@ -61,7 +73,7 @@ export async function libraryGenerator(
     );
   }
 
-  const options = normalizeOptions(tree, schema);
+  const options = await normalizeOptions(tree, schema);
   const { libraryOptions } = options;
 
   const pkgVersions = versions(tree);
@@ -124,7 +136,7 @@ async function addUnitTestRunner(
   options: NormalizedSchema['libraryOptions']
 ) {
   if (options.unitTestRunner === 'jest') {
-    await jestProjectGenerator(host, {
+    await configurationGenerator(host, {
       project: options.name,
       setupFile: 'angular',
       supportTsx: false,

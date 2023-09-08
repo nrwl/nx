@@ -11,14 +11,14 @@
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application",
+      "factory": "./src/generators/application/application#applicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",
       "description": "Create a node application."
     },
     "library": {
-      "factory": "./src/generators/library/library",
+      "factory": "./src/generators/library/library#libraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "aliases": ["lib"],
       "x-type": "library",

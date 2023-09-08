@@ -31,7 +31,7 @@ export class GraphService {
   constructor(
     container: string | HTMLElement,
     theme: 'light' | 'dark',
-    renderMode?: 'nx-console' | 'nx-docs',
+    public renderMode?: 'nx-console' | 'nx-docs',
     rankDir: 'TB' | 'LR' = 'TB'
   ) {
     use(cytoscapeDagre);

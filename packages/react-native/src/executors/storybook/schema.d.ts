@@ -3,7 +3,7 @@ export interface ReactNativeStorybookOptions {
   outputFile: string;
   pattern: string;
   /**
-   * @deprecated going to be removed in 17
+   * @deprecated TODO(v17) no longer used going to be removed in 17
    */
   silent: boolean;
 }

@@ -1,6 +1,6 @@
 {
   "name": "plugin",
-  "factory": "./src/generators/plugin/plugin",
+  "factory": "./src/generators/plugin/plugin#pluginGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -11,7 +11,7 @@
     "examples": [
       {
         "command": "nx g plugin my-plugin --directory=plugins --importPath=@myorg/my-plugin",
-        "description": "Generate `libs/plugins/my-plugin`"
+        "description": "Generates an Nx plugin project called `plugins-my-plugin` at `libs/plugins/my-plugin`. The project will have an npm package name and import path of `@myorg/my-plugin`."
       }
     ],
     "properties": {
@@ -20,11 +20,17 @@
         "description": "Plugin name",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the plugin?",
-        "x-priority": "important"
+        "x-priority": "important",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
       },
       "directory": {
         "type": "string",
         "description": "A directory where the plugin is placed."
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "importPath": {
         "type": "string",
@@ -98,7 +104,7 @@
     "presets": []
   },
   "description": "Create a Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/plugin/plugin.ts",
+  "implementation": "/packages/plugin/src/generators/plugin/plugin#pluginGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/plugin/schema.json",

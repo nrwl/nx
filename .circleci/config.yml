@@ -5,7 +5,6 @@ version: 2.1
 # -------------------------
 orbs:
   nx: nrwl/nx@1.6.1
-  node: circleci/node@5.0.2
   rust: circleci/rust@1.6.0
   browser-tools: circleci/browser-tools@1.4.0
 
@@ -20,14 +19,14 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/rust:1.66.1-browsers
+      - image: cimg/rust:1.70.0-browsers
     resource_class: medium+
 
   macos:
     <<: *defaults
     resource_class: macos.x86.medium.gen2
     macos:
-      xcode: &_XCODE_VERSION '13.0.0'
+      xcode: '14.2.0'
 
 # -------------------------
 #        COMMANDS
@@ -42,14 +41,27 @@ commands:
           name: Restore pnpm Package Cache
           keys:
             - node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
-      - run:
-          name: Install pnpm package manager
-          command: |
-            npm install -g @pnpm/exe@8.3.1
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - run:
+                name: Install pnpm package manager (linux)
+                command: |
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.3.1
+      - when:
+          condition:
+            equal: [<< parameters.os >>, macos]
+          steps:
+            - run:
+                name: Install pnpm package manager (macos)
+                command: |
+                  npm install -g @pnpm/exe@8.3.1
       - run:
           name: Install Dependencies
           command: |
             pnpm install --frozen-lockfile
+            pnpm playwright install --with-deps firefox webkit chrome
       - save_cache:
           name: Save pnpm Package Cache
           key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
@@ -95,9 +107,6 @@ commands:
                   sudo apt-get install -y ca-certificates lsof
             - browser-tools/install-chrome
             - browser-tools/install-chromedriver
-      - node/install:
-          # Use LTS version
-          node-version: ''
       - run-pnpm-install:
           os: << parameters.os >>
 
@@ -124,7 +133,7 @@ jobs:
       GIT_COMMITTER_NAME: Test
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>
       SELECTED_PM: << parameters.pm >>
-      NX_E2E_RUN_CYPRESS: 'true'
+      NX_E2E_RUN_E2E: 'true'
       NX_VERBOSE_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
       NX_PERF_LOGGING: 'false'
@@ -137,7 +146,7 @@ jobs:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-<< parameters.os >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"<< parameters.os >>\";" >> $BASH_ENV
       - setup:
           os: << parameters.os >>
       - run:
@@ -160,7 +169,7 @@ jobs:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-linux-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"linux\";" >> $BASH_ENV
       - setup:
           os: linux
       - nx/set-shas:
@@ -179,7 +188,7 @@ jobs:
             pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
-            pnpm nx run-many -t check-imports check-commit check-lock-files depcheck check-codeowners documentation --parallel=1 --no-dte &
+            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
             pids+=($!)
 
             pnpm nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
@@ -200,14 +209,13 @@ jobs:
     executor: macos
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
-      NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
     steps:
       - run:
           name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-macos-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
+            echo "export NX_CI_EXECUTION_ENV=\"macos\";" >> $BASH_ENV
       - setup:
           os: macos
       - rust/install

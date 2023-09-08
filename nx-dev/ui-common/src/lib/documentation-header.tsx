@@ -40,9 +40,9 @@ export function DocumentationHeader({
   const router = useRouter();
   const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
   const isPackages: boolean = router.asPath.startsWith('/packages');
-  const isPlugins: boolean = router.asPath.startsWith('/plugins');
-  const isRecipes: boolean = router.asPath.startsWith('/recipes');
-  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isRecipes;
+  const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
+  const isChangelog: boolean = router.asPath.startsWith('/changelog');
+  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isChangelog;
 
   const sections = [
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
@@ -52,27 +52,27 @@ export function DocumentationHeader({
       current: isNxCloud,
     },
     {
+      name: 'Extending Nx',
+      href: '/extending-nx/intro/getting-started',
+      current: isPlugins,
+    },
+    {
       name: 'Packages',
       href: '/packages',
       current: isPackages,
     },
     {
-      name: 'Plugins',
-      href: '/plugins/intro/getting-started',
-      current: isPlugins,
-    },
-    {
-      name: 'Recipes',
-      href: '/recipes',
-      current: isRecipes,
+      name: 'Changelog',
+      href: '/changelog',
+      current: isChangelog,
     },
   ];
 
   const communityLinks = [
     {
-      name: 'Slack',
+      name: 'Discord',
       label: 'Community channel',
-      href: 'https://go.nrwl.io/join-slack?utm_source=nx.dev',
+      href: 'https://go.nx.dev/community',
       icon: (props: any) => (
         <svg
           fill="currentColor"
@@ -81,15 +81,15 @@ export function DocumentationHeader({
           xmlns="http://www.w3.org/2000/svg"
           {...props}
         >
-          {/*<title>Slack</title>*/}
-          <path d="M5.04 15.16a2.53 2.53 0 0 1-2.52 2.53A2.53 2.53 0 0 1 0 15.16a2.53 2.53 0 0 1 2.52-2.52h2.52v2.52zm1.27 0a2.53 2.53 0 0 1 2.52-2.52 2.53 2.53 0 0 1 2.52 2.52v6.32A2.53 2.53 0 0 1 8.84 24a2.53 2.53 0 0 1-2.52-2.52v-6.31zM8.83 5.04a2.53 2.53 0 0 1-2.52-2.52A2.53 2.53 0 0 1 8.83 0a2.53 2.53 0 0 1 2.52 2.52v2.52H8.84zm0 1.27a2.53 2.53 0 0 1 2.52 2.52 2.53 2.53 0 0 1-2.52 2.52h-6.3A2.53 2.53 0 0 1 0 8.84a2.53 2.53 0 0 1 2.52-2.52h6.31zm10.13 2.52a2.53 2.53 0 0 1 2.52-2.52A2.53 2.53 0 0 1 24 8.83a2.53 2.53 0 0 1-2.52 2.52h-2.52V8.84zm-1.27 0a2.53 2.53 0 0 1-2.53 2.52 2.53 2.53 0 0 1-2.52-2.52v-6.3A2.53 2.53 0 0 1 15.16 0a2.53 2.53 0 0 1 2.53 2.52v6.31zm-2.53 10.13a2.53 2.53 0 0 1 2.53 2.52A2.53 2.53 0 0 1 15.16 24a2.53 2.53 0 0 1-2.52-2.52v-2.52h2.52zm0-1.27a2.53 2.53 0 0 1-2.52-2.53 2.53 2.53 0 0 1 2.52-2.52h6.32A2.53 2.53 0 0 1 24 15.16a2.53 2.53 0 0 1-2.52 2.53h-6.31z" />
+          {/*<title>Discord</title>*/}
+          <path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z" />
         </svg>
       ),
     },
     {
-      name: 'Twitter',
+      name: 'X',
       label: 'Latest news',
-      href: 'https://twitter.com/NXdevtools?utm_source=nx.dev',
+      href: 'https://x.com/NxDevTools?utm_source=nx.dev',
       icon: (props: any) => (
         <svg
           fill="currentColor"
@@ -98,8 +98,8 @@ export function DocumentationHeader({
           xmlns="http://www.w3.org/2000/svg"
           {...props}
         >
-          {/*<title>Twitter</title>*/}
-          <path d="M8.29 20.25c7.55 0 11.68-6.25 11.68-11.67 0-.18 0-.36-.02-.53A8.35 8.35 0 0 0 22 5.92a8.19 8.19 0 0 1-2.36.65 4.12 4.12 0 0 0 1.8-2.27 8.22 8.22 0 0 1-2.6 1 4.1 4.1 0 0 0-7 3.73A11.65 11.65 0 0 1 3.4 4.75a4.1 4.1 0 0 0 1.27 5.48A4.07 4.07 0 0 1 2.8 9.7v.05a4.1 4.1 0 0 0 3.3 4.03 4.1 4.1 0 0 1-1.86.07 4.1 4.1 0 0 0 3.83 2.85A8.23 8.23 0 0 1 2 18.4a11.62 11.62 0 0 0 6.29 1.84" />
+          {/*<title>X</title>*/}
+          <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
         </svg>
       ),
     },
@@ -161,15 +161,15 @@ export function DocumentationHeader({
           </button>
 
           {/*SEARCH*/}
-          <div className="mx-4 w-full">
+          <div className="mx-4 w-auto">
             <AlgoliaSearch />
           </div>
         </div>
         {/*LOGO*/}
         <div className="flex items-center">
           <Link
-            href="/getting-started/intro"
-            className="flex items-center px-4 text-slate-900 dark:text-white lg:px-0"
+            href="/"
+            className="flex flex-grow items-center px-4 text-slate-900 dark:text-white lg:px-0"
           >
             <svg
               role="img"
@@ -181,7 +181,12 @@ export function DocumentationHeader({
               <title>Nx</title>
               <path d="M11.987 14.138l-3.132 4.923-5.193-8.427-.012 8.822H0V4.544h3.691l5.247 8.833.005-3.998 3.044 4.759zm.601-5.761c.024-.048 0-3.784.008-3.833h-3.65c.002.059-.005 3.776-.003 3.833h3.645zm5.634 4.134a2.061 2.061 0 0 0-1.969 1.336 1.963 1.963 0 0 1 2.343-.739c.396.161.917.422 1.33.283a2.1 2.1 0 0 0-1.704-.88zm3.39 1.061c-.375-.13-.8-.277-1.109-.681-.06-.08-.116-.17-.176-.265a2.143 2.143 0 0 0-.533-.642c-.294-.216-.68-.322-1.18-.322a2.482 2.482 0 0 0-2.294 1.536 2.325 2.325 0 0 1 4.002.388.75.75 0 0 0 .836.334c.493-.105.46.36 1.203.518v-.133c-.003-.446-.246-.55-.75-.733zm2.024 1.266a.723.723 0 0 0 .347-.638c-.01-2.957-2.41-5.487-5.37-5.487a5.364 5.364 0 0 0-4.487 2.418c-.01-.026-1.522-2.39-1.538-2.418H8.943l3.463 5.423-3.379 5.32h3.54l1.54-2.366 1.568 2.366h3.541l-3.21-5.052a.7.7 0 0 1-.084-.32 2.69 2.69 0 0 1 2.69-2.691h.001c1.488 0 1.736.89 2.057 1.308.634.826 1.9.464 1.9 1.541a.707.707 0 0 0 1.066.596zm.35.133c-.173.372-.56.338-.755.639-.176.271.114.412.114.412s.337.156.538-.311c.104-.231.14-.488.103-.74z" />
             </svg>
-            <span className="ml-2 text-xl font-bold uppercase tracking-wide">
+          </Link>
+          <Link
+            href="/getting-started/intro"
+            className="hidden lg:flex ml-2 items-center px-4 text-slate-900 dark:text-white lg:px-0"
+          >
+            <span className="text-xl font-bold uppercase tracking-wide">
               Docs
             </span>
           </Link>

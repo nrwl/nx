@@ -6,8 +6,8 @@ import { Linter } from '@nx/linter';
 
 describe('react:component-story', () => {
   let appTree: Tree;
-  let cmpPath = 'libs/test-ui-lib/src/lib/test-ui-lib.tsx';
-  let storyFilePath = 'libs/test-ui-lib/src/lib/test-ui-lib.stories.tsx';
+  let cmpPath = 'test-ui-lib/src/lib/test-ui-lib.tsx';
+  let storyFilePath = 'test-ui-lib/src/lib/test-ui-lib.stories.tsx';
 
   describe('default setup', () => {
     beforeEach(async () => {
@@ -27,10 +27,11 @@ describe('react:component-story', () => {
           await componentStoryGenerator(appTree, {
             componentPath: 'lib/test-ui-lib.tsx',
             project: 'test-ui-lib',
+            interactionTests: true,
           });
         } catch (e) {
           expect(e.message).toContain(
-            'Could not find any React component in file libs/test-ui-lib/src/lib/test-ui-lib.tsx'
+            'Could not find any React component in file test-ui-lib/src/lib/test-ui-lib.tsx'
           );
         }
       });
@@ -55,11 +56,11 @@ describe('react:component-story', () => {
 
     describe('when using plain JS components', () => {
       let storyFilePathPlain =
-        'libs/test-ui-lib/src/lib/test-ui-libplain.stories.jsx';
+        'test-ui-lib/src/lib/test-ui-libplain.stories.jsx';
 
       beforeEach(async () => {
         appTree.write(
-          'libs/test-ui-lib/src/lib/test-ui-libplain.jsx',
+          'test-ui-lib/src/lib/test-ui-libplain.jsx',
           `import React from 'react';
   
           import './test.scss';
@@ -493,11 +494,11 @@ describe('react:component-story', () => {
           });
 
           const storyFilePathOne =
-            'libs/test-ui-lib/src/lib/test-ui-lib--One.stories.tsx';
+            'test-ui-lib/src/lib/test-ui-lib--One.stories.tsx';
           const storyFilePathTwo =
-            'libs/test-ui-lib/src/lib/test-ui-lib--Two.stories.tsx';
+            'test-ui-lib/src/lib/test-ui-lib--Two.stories.tsx';
           const storyFilePathThree =
-            'libs/test-ui-lib/src/lib/test-ui-lib--Three.stories.tsx';
+            'test-ui-lib/src/lib/test-ui-lib--Three.stories.tsx';
           expect(appTree.read(storyFilePathOne, 'utf-8')).toMatchSnapshot();
           expect(appTree.read(storyFilePathTwo, 'utf-8')).toMatchSnapshot();
           expect(appTree.read(storyFilePathThree, 'utf-8')).toMatchSnapshot();
@@ -506,12 +507,13 @@ describe('react:component-story', () => {
     });
   });
 
-  describe('using eslint', () => {
+  describe('using eslint - not using interaction tests', () => {
     beforeEach(async () => {
       appTree = await createTestUILib('test-ui-lib');
       await componentStoryGenerator(appTree, {
         componentPath: 'lib/test-ui-lib.tsx',
         project: 'test-ui-lib',
+        interactionTests: false,
       });
     });
 
@@ -522,7 +524,7 @@ describe('react:component-story', () => {
 });
 
 export async function createTestUILib(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
   await libraryGenerator(appTree, {
     name: libName,
     linter: Linter.EsLint,
@@ -531,6 +533,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipTsConfig: false,
     style: 'css',
     unitTestRunner: 'jest',
+    projectNameAndRootFormat: 'as-provided',
   });
 
   const currentWorkspaceJson = getProjects(appTree);

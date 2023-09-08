@@ -41,10 +41,6 @@ export const examples: Record<string, Example[]> = {
       description: 'Run tests in parallel',
     },
     {
-      command: 'affected -t test --all',
-      description: 'Run the test target for all projects',
-    },
-    {
       command: 'affected -t lint test build',
       description:
         'Run lint, test, and build targets for affected projects. Requires Nx v15.4+',
@@ -65,7 +61,7 @@ export const examples: Record<string, Example[]> = {
         'Run tests for all the projects affected by the last commit on main',
     },
     {
-      command: "affected -t build --exclude '*,!tag:dotnet'",
+      command: "affected -t=build --exclude='*,!tag:dotnet'",
       description: 'Run build for only projects with the tag `dotnet`',
     },
     {
@@ -77,10 +73,6 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'affected:test --parallel=5',
       description: 'Run tests in parallel',
-    },
-    {
-      command: 'affected:test --all',
-      description: 'Run the test target for all projects',
     },
     {
       command: 'affected:test --files=libs/mylib/src/index.ts',
@@ -104,10 +96,6 @@ export const examples: Record<string, Example[]> = {
       description: 'Run build in parallel',
     },
     {
-      command: 'affected:build --all',
-      description: 'Run the build target for all projects',
-    },
-    {
       command: 'affected:build --files=libs/mylib/src/index.ts',
       description:
         'Run build for all the projects affected by changing the index.ts file',
@@ -129,10 +117,6 @@ export const examples: Record<string, Example[]> = {
       description: 'Run tests in parallel',
     },
     {
-      command: 'affected:e2e --all',
-      description: 'Run the test target for all projects',
-    },
-    {
       command: 'affected:e2e --files=libs/mylib/src/index.ts',
       description:
         'Run tests for all the projects affected by changing the index.ts file',
@@ -152,10 +136,6 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'affected:lint --parallel=5',
       description: 'Run lint in parallel',
-    },
-    {
-      command: 'affected:lint --all',
-      description: 'Run the lint target for all projects',
     },
     {
       command: 'affected:lint --files=libs/mylib/src/index.ts',
@@ -293,7 +273,7 @@ export const examples: Record<string, Example[]> = {
       description: 'Test all projects with a `type:feature` or `type:ui` tag',
     },
     {
-      command: 'run-many --targets=lint,test,build --all',
+      command: 'run-many --targets=lint,test,build',
       description:
         'Run lint, test, and build targets for all projects. Requires Nx v15.4+',
     },
@@ -354,9 +334,9 @@ export const examples: Record<string, Example[]> = {
     },
 
     {
-      command: 'show projects --pattern=api-*',
+      command: 'show projects --projects api-*',
       description:
-        'Show all projects with names starting with "api-". The pattern option is useful to see which projects would be selected by run-many.',
+        'Show all projects with names starting with "api-". The "projects" option is useful to see which projects would be selected by run-many.',
     },
 
     {
@@ -370,7 +350,7 @@ export const examples: Record<string, Example[]> = {
     },
 
     {
-      command: 'show projects --affected --exclude *-e2e',
+      command: 'show projects --affected --exclude=*-e2e',
       description:
         'Show affected projects in the workspace, excluding end-to-end projects',
     },

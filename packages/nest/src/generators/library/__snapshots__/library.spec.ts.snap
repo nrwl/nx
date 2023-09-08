@@ -4,12 +4,12 @@ exports[`lib --testEnvironment should set target jest testEnvironment to jsdom 1
 "/* eslint-disable */
 export default {
   displayName: 'my-lib',
-  preset: '../../jest.preset.js',
+  preset: '../jest.preset.js',
   transform: {
     '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/my-lib',
+  coverageDirectory: '../coverage/my-lib',
 };
 "
 `;
@@ -18,13 +18,13 @@ exports[`lib --testEnvironment should set target jest testEnvironment to node by
 "/* eslint-disable */
 export default {
   displayName: 'my-lib',
-  preset: '../../jest.preset.js',
+  preset: '../jest.preset.js',
   testEnvironment: 'node',
   transform: {
     '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/my-lib',
+  coverageDirectory: '../coverage/my-lib',
 };
 "
 `;
@@ -40,7 +40,7 @@ exports[`lib --unit-test-runner none should not generate test configuration 1`] 
     "noPropertyAccessFromIndexSignature": true,
     "strict": true,
   },
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [
@@ -56,7 +56,7 @@ exports[`lib --unit-test-runner none should not generate test configuration 2`] 
   "executor": "@nx/linter:eslint",
   "options": {
     "lintFilePatterns": [
-      "libs/my-lib/**/*.ts",
+      "my-lib/**/*.ts",
     ],
   },
   "outputs": [
@@ -76,7 +76,7 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
     "noPropertyAccessFromIndexSignature": true,
     "strict": true,
   },
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [
@@ -114,7 +114,7 @@ exports[`lib not nested should create a local tsconfig.json 1`] = `
     "noPropertyAccessFromIndexSignature": true,
     "strict": true,
   },
-  "extends": "../../tsconfig.base.json",
+  "extends": "../tsconfig.base.json",
   "files": [],
   "include": [],
   "references": [
@@ -131,7 +131,7 @@ exports[`lib not nested should create a local tsconfig.json 1`] = `
 exports[`lib not nested should generate files 1`] = `
 {
   "extends": [
-    "../../.eslintrc.json",
+    "../.eslintrc.json",
   ],
   "ignorePatterns": [
     "!**/*",

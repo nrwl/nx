@@ -30,6 +30,7 @@ describe('getUpdatedPackageJsonContent', () => {
     expect(json).toEqual({
       name: 'test',
       main: './src/index.js',
+      type: 'commonjs',
       types: './src/index.d.ts',
       version: '0.0.1',
     });
@@ -99,63 +100,8 @@ describe('getUpdatedPackageJsonContent', () => {
     expect(json).toEqual({
       name: 'test',
       main: './src/index.js',
+      type: 'commonjs',
       version: '0.0.1',
-    });
-  });
-
-  it('should support generated exports field', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-        format: ['esm'],
-        generateExportsField: true,
-      }
-    );
-
-    expect(json).toEqual({
-      name: 'test',
-      type: 'module',
-      main: './src/index.js',
-      module: './src/index.js',
-      types: './src/index.d.ts',
-      version: '0.0.1',
-      exports: {
-        '.': { import: './src/index.js' },
-      },
-    });
-  });
-
-  it('should support different CJS file extension', () => {
-    const json = getUpdatedPackageJsonContent(
-      {
-        name: 'test',
-        version: '0.0.1',
-      },
-      {
-        main: 'proj/src/index.ts',
-        outputPath: 'dist/proj',
-        projectRoot: 'proj',
-        format: ['esm', 'cjs'],
-        outputFileExtensionForCjs: '.cjs',
-        generateExportsField: true,
-      }
-    );
-
-    expect(json).toEqual({
-      name: 'test',
-      main: './src/index.cjs',
-      module: './src/index.js',
-      types: './src/index.d.ts',
-      version: '0.0.1',
-      exports: {
-        '.': { require: './src/index.cjs', import: './src/index.js' },
-      },
     });
   });
 
@@ -176,68 +122,181 @@ describe('getUpdatedPackageJsonContent', () => {
     expect(json).toEqual({
       name: 'test',
       main: './src/index.js',
+      type: 'commonjs',
       version: '0.0.1',
     });
   });
 
-  it('should support different exports field shape', () => {
-    // exports: string
-    expect(
-      getUpdatedPackageJsonContent(
+  describe('generateExportsField: true', () => {
+    it('should add ESM exports', () => {
+      const json = getUpdatedPackageJsonContent(
         {
           name: 'test',
           version: '0.0.1',
-          exports: './custom.js',
         },
         {
           main: 'proj/src/index.ts',
           outputPath: 'dist/proj',
           projectRoot: 'proj',
-          format: ['esm', 'cjs'],
-          outputFileExtensionForCjs: '.cjs',
+          format: ['esm'],
           generateExportsField: true,
         }
-      )
-    ).toEqual({
-      name: 'test',
-      main: './src/index.cjs',
-      module: './src/index.js',
-      types: './src/index.d.ts',
-      version: '0.0.1',
-      exports: './custom.js',
+      );
+
+      expect(json).toEqual({
+        name: 'test',
+        type: 'module',
+        main: './src/index.js',
+        module: './src/index.js',
+        types: './src/index.d.ts',
+        version: '0.0.1',
+        exports: {
+          '.': './src/index.js',
+          './package.json': './package.json',
+        },
+      });
     });
 
-    // exports: { '.': string }
-    expect(
-      getUpdatedPackageJsonContent(
+    it('should add CJS exports', () => {
+      const json = getUpdatedPackageJsonContent(
         {
           name: 'test',
           version: '0.0.1',
-          exports: {
-            '.': './custom.js',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['cjs'],
+          outputFileExtensionForCjs: '.cjs',
+          generateExportsField: true,
+        }
+      );
+
+      expect(json).toEqual({
+        name: 'test',
+        main: './src/index.cjs',
+        types: './src/index.d.ts',
+        version: '0.0.1',
+        type: 'commonjs',
+        exports: {
+          '.': './src/index.cjs',
+          './package.json': './package.json',
+        },
+      });
+    });
+
+    it('should add additional entry-points into package.json', () => {
+      // CJS only
+      expect(
+        getUpdatedPackageJsonContent(
+          {
+            name: 'test',
+            version: '0.0.1',
           },
+          {
+            main: 'proj/src/index.ts',
+            additionalEntryPoints: [
+              'proj/src/foo.ts',
+              'proj/src/bar.ts',
+              'proj/migrations.json',
+            ],
+            outputPath: 'dist/proj',
+            projectRoot: 'proj',
+            format: ['cjs'],
+            generateExportsField: true,
+          }
+        )
+      ).toEqual({
+        name: 'test',
+        main: './src/index.js',
+        type: 'commonjs',
+        types: './src/index.d.ts',
+        version: '0.0.1',
+        exports: {
+          '.': './src/index.js',
+          './foo': './src/foo.js',
+          './bar': './src/bar.js',
+          './package.json': './package.json',
+          './migrations.json': './migrations.json',
         },
-        {
-          main: 'proj/src/index.ts',
-          outputPath: 'dist/proj',
-          projectRoot: 'proj',
-          format: ['esm', 'cjs'],
-          outputFileExtensionForCjs: '.cjs',
-          generateExportsField: true,
-        }
-      )
-    ).toEqual({
-      name: 'test',
-      main: './src/index.cjs',
-      module: './src/index.js',
-      types: './src/index.d.ts',
-      version: '0.0.1',
-      exports: {
-        '.': './custom.js',
-      },
-    });
+      });
 
-    // exports: { './custom': string }
+      // ESM only
+      expect(
+        getUpdatedPackageJsonContent(
+          {
+            name: 'test',
+            version: '0.0.1',
+          },
+          {
+            main: 'proj/src/index.ts',
+            additionalEntryPoints: ['proj/src/foo.ts', 'proj/src/bar.ts'],
+            outputPath: 'dist/proj',
+            projectRoot: 'proj',
+            format: ['esm'],
+            generateExportsField: true,
+          }
+        )
+      ).toEqual({
+        name: 'test',
+        type: 'module',
+        main: './src/index.js',
+        module: './src/index.js',
+        types: './src/index.d.ts',
+        version: '0.0.1',
+        exports: {
+          '.': './src/index.js',
+          './foo': './src/foo.js',
+          './bar': './src/bar.js',
+          './package.json': './package.json',
+        },
+      });
+
+      // Dual format
+      expect(
+        getUpdatedPackageJsonContent(
+          {
+            name: 'test',
+            version: '0.0.1',
+          },
+          {
+            main: 'proj/src/index.ts',
+            additionalEntryPoints: ['proj/src/foo.ts', 'proj/src/bar.ts'],
+            outputPath: 'dist/proj',
+            projectRoot: 'proj',
+            format: ['cjs', 'esm'],
+            outputFileExtensionForCjs: '.cjs',
+            generateExportsField: true,
+          }
+        )
+      ).toEqual({
+        name: 'test',
+        main: './src/index.cjs',
+        module: './src/index.js',
+        types: './src/index.d.ts',
+        version: '0.0.1',
+        exports: {
+          '.': {
+            import: './src/index.js',
+            default: './src/index.cjs',
+          },
+          './foo': {
+            import: './src/foo.js',
+            default: './src/foo.cjs',
+          },
+          './bar': {
+            import: './src/bar.js',
+            default: './src/bar.cjs',
+          },
+          './package.json': './package.json',
+        },
+      });
+    });
+  });
+
+  it('should support existing exports', () => {
+    // Merge additional exports from user
     expect(
       getUpdatedPackageJsonContent(
         {
@@ -265,8 +324,9 @@ describe('getUpdatedPackageJsonContent', () => {
       exports: {
         '.': {
           import: './src/index.js',
-          require: './src/index.cjs',
+          default: './src/index.cjs',
         },
+        './package.json': './package.json',
         './custom': './custom.js',
       },
     });
@@ -290,7 +350,7 @@ describe('updatePackageJson', () => {
   const fileMap = {
     '@org/lib1': [
       {
-        file: 'test.ts',
+        file: 'libs/lib1/src/test.ts',
         hash: '',
         deps: ['npm:external1', 'npm:external2'],
       },
@@ -380,6 +440,7 @@ describe('updatePackageJson', () => {
       {
         "main": "./main.js",
         "name": "@org/lib1",
+        "type": "commonjs",
         "types": "./main.d.ts",
         "version": "0.0.1",
       }
@@ -441,6 +502,7 @@ describe('updatePackageJson', () => {
         },
         "main": "./main.js",
         "name": "@org/lib1",
+        "type": "commonjs",
         "types": "./main.d.ts",
         "version": "0.0.3",
       }

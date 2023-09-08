@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import {
   ExecutorContext,
   parseTargetString,
@@ -45,7 +44,11 @@ export default async function* serveExecutor(
   // Setting port that the custom server should use.
   process.env.PORT = `${options.port}`;
 
-  const args = createCliOptions({ port, keepAliveTimeout, hostname });
+  const args = createCliOptions({ port, hostname });
+
+  if (keepAliveTimeout && !options.dev) {
+    args.push(`--keepAliveTimeout=${keepAliveTimeout}`);
+  }
 
   const nextDir = resolve(context.root, buildOptions.outputPath);
 
@@ -78,7 +81,7 @@ export default async function* serveExecutor(
       process.on('SIGTERM', () => killServer());
       process.on('SIGHUP', () => killServer());
 
-      await waitForPortOpen(port);
+      await waitForPortOpen(port, { host: options.hostname });
 
       next({
         success: true,

@@ -26,7 +26,18 @@ export function getArgsDefaultValue(property: ts.SyntaxKind): string {
 export function getDefaultsForComponent(
   sourceFile: ts.SourceFile,
   cmpDeclaration: ts.Node
-) {
+): {
+  propsTypeName: string;
+  props: {
+    name: string;
+    defaultValue: any;
+  }[];
+  argTypes: {
+    name: string;
+    type: string;
+    actionText: string;
+  }[];
+} {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }

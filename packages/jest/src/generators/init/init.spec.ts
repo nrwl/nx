@@ -86,6 +86,7 @@ export default {
     );
     expect(productionFileSet).toContain('!{projectRoot}/tsconfig.spec.json');
     expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');
+    expect(productionFileSet).toContain('!{projectRoot}/src/test-setup.[jt]s');
     expect(testDefaults).toEqual({
       inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
     });
@@ -210,6 +211,7 @@ export default {
       addProjectConfiguration(tree, 'my-project', {
         root: '.',
         name: 'my-project',
+        projectType: 'application',
         sourceRoot: 'src',
         targets: {
           test: {
@@ -260,6 +262,7 @@ projects: getJestProjects()
         root: '.',
         name: 'my-project',
         sourceRoot: 'src',
+        projectType: 'application',
         targets: {
           test: {
             executor: '@nx/jest:jest',

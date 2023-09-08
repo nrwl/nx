@@ -22,9 +22,11 @@ import initGenerator from '../init/init';
 import {
   vitestCoverageC8Version,
   vitestCoverageIstanbulVersion,
+  vitestCoverageV8Version,
 } from '../../utils/versions';
 
 import { addTsLibDependencies } from '@nx/js';
+import { join } from 'path';
 
 export async function vitestGenerator(
   tree: Tree,
@@ -64,16 +66,14 @@ export async function vitestGenerator(
   createFiles(tree, schema, root);
   updateTsConfig(tree, schema, root);
 
+  const coverageProviderDependency = getCoverageProviderDependency(
+    schema.coverageProvider
+  );
+
   const installCoverageProviderTask = addDependenciesToPackageJson(
     tree,
     {},
-    schema.coverageProvider === 'istanbul'
-      ? {
-          '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
-        }
-      : {
-          '@vitest/coverage-c8': vitestCoverageC8Version,
-        }
+    coverageProviderDependency
   );
   tasks.push(installCoverageProviderTask);
 
@@ -142,12 +142,31 @@ function createFiles(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
-  generateFiles(tree, joinPathFragments(__dirname, 'files'), projectRoot, {
+  generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
     ...options,
     projectRoot,
     offsetFromRoot: offsetFromRoot(projectRoot),
   });
+}
+
+function getCoverageProviderDependency(
+  coverageProvider: VitestGeneratorSchema['coverageProvider']
+) {
+  switch (coverageProvider) {
+    case 'c8':
+      return {
+        '@vitest/coverage-c8': vitestCoverageC8Version,
+      };
+    case 'istanbul':
+      return {
+        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
+      };
+    default:
+      return {
+        '@vitest/coverage-v8': vitestCoverageV8Version,
+      };
+  }
 }
 
 export default vitestGenerator;

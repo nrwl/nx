@@ -23,7 +23,7 @@ starting point not the definite list of what you must and must not do.
 
 - Apps configure dependency injection and wire up libraries. They should not contain any components, services, or
   business logic.
-- Libs contain services, components, utilities, etc. They have well-≠defined public API.
+- Libs contain services, components, utilities, etc. They have well-defined public API.
 
 A typical Nx workspace has many more libs than apps, so pay especially careful attention to the organization of the libs
 directory.
@@ -148,7 +148,7 @@ For a large organization it's crucial to establish how projects can depend on ea
   feature libraries.
 
 Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about
-tags [here](/core-features/enforce-project-boundaries).
+tags [here](/core-features/enforce-module-boundaries).
 
 ## Code Ownership
 
@@ -159,7 +159,7 @@ Since Nx allows us to group apps and libs in directories, those directories can 
 why the structure of an Nx workspace often reflects the structure of an organization. GitHub users can use
 the `CODEOWNERS` file for that.
 
-```shell
+```plaintext
 /libs/happynrwlapp          julie-happynrwlapp-lead
 /apps/happynrwlapp          julie-happynrwlapp-lead
 /libs/shared/ui             hank-the-ui-guy
@@ -191,7 +191,7 @@ Read more about workspace generators in the Workspace Generators guide.
 ### Workspace Lint Checks
 
 Custom lint checks is another great way to enforce best practices. We can create custom lint checks in the `tools/lint`
-directory and then register them in `tslint.json` or `.eslintrc.json`.
+directory and then register them in `.eslintrc.json`.
 
 ## Developer Workflow
 

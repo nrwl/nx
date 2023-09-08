@@ -1,0 +1,59 @@
+{
+  "name": "@nx/playwright",
+  "version": "0.0.1",
+  "type": "commonjs",
+  "homepage": "https://nx.dev",
+  "private": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "description": "The Nx Plugin for Playwright contains executors and generators allowing your workspace to use the powerful Playwright integration testing capabilities.",
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Playwright",
+    "CLI"
+  ],
+  "main": "./index.js",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/playwright"
+  },
+  "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "@nx/linter": "file:../linter",
+    "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "@playwright/test": "^1.36.0"
+  },
+  "peerDependenciesMeta": {
+    "@playwright/test": {
+      "optional": true
+    }
+  },
+  "executors": "./executors.json",
+  "generators": "./generators.json",
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./executors.json": "./executors.json",
+    "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./preset": "./src/utils/preset.js"
+  }
+}

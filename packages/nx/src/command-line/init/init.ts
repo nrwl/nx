@@ -22,26 +22,19 @@ export interface InitArgs {
   vite: boolean;
   nxCloud?: boolean;
   cacheable?: string[];
+  useDotNxInstallation?: boolean;
 }
 
 export async function initHandler(options: InitArgs) {
-  const args = process.argv.slice(2).join(' ');
-  const flags = parser(args, {
-    boolean: ['useDotNxInstallation'],
-    alias: {
-      useDotNxInstallation: ['encapsulated'],
-    },
-    default: {
-      useDotNxInstallation: false,
-    },
-  }) as any as { useDotNxInstallation: boolean };
+  // strip the 'init' command itself so we don't forward it
+  const args = process.argv.slice(3).join(' ');
 
   const version =
     process.env.NX_VERSION ?? (prerelease(nxVersion) ? 'next' : 'latest');
   if (process.env.NX_VERSION) {
     console.log(`Using version ${process.env.NX_VERSION}`);
   }
-  if (flags.useDotNxInstallation === true) {
+  if (options.useDotNxInstallation === true) {
     setupDotNxInstallation(version);
   } else if (existsSync('package.json')) {
     const packageJson: PackageJson = readJsonFile('package.json');

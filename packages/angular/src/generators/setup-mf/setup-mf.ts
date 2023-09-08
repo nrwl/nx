@@ -44,7 +44,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     installTask = addDependenciesToPackageJson(
       tree,
       {},
-      { '@nx/web': nxVersion }
+      { '@nx/web': nxVersion, '@nx/webpack': nxVersion }
     );
   }
 
@@ -61,6 +61,11 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   if (options.mfType === 'host') {
     setupHostIfDynamic(tree, options);
     updateHostAppRoutes(tree, options);
+    installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nx/webpack': nxVersion }
+    );
   }
 
   if (!options.skipE2E) {

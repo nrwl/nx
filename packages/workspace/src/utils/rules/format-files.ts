@@ -63,7 +63,13 @@ export function formatFiles(
         }
 
         try {
-          host.overwrite(file.path, prettier.format(file.content, options));
+          host.overwrite(
+            file.path,
+            // In prettier v3 the format result is a promise
+            await (prettier.format(file.content, options) as
+              | Promise<string>
+              | string)
+          );
         } catch (e) {
           context.logger.warn(
             `Could not format ${file.path} because ${e.message}`

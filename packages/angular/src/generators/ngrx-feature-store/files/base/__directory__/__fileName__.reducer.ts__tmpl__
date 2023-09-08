@@ -1,8 +1,8 @@
 import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
 import { createReducer, on, Action } from '@ngrx/store';
 
-import * as <%= className %>Actions from './<%= fileName %>.actions';
-import { <%= className %>Entity } from './<%= fileName %>.models';
+import * as <%= className %>Actions from './<%= relativeFileName %>.actions';
+import { <%= className %>Entity } from './<%= relativeFileName %>.models';
 
 export const <%= constantName %>_FEATURE_KEY = '<%= propertyName %>';
 

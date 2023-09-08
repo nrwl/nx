@@ -76,7 +76,6 @@ describe('Nx Plugin', () => {
         [`update-${version}`]: {
           version,
           description: `update-${version}`,
-          cli: `nx`,
           implementation: `./src/migrations/update-${version}/update-${version}`,
         },
       }),
@@ -382,14 +381,14 @@ describe('Nx Plugin', () => {
   });
 
   describe('--directory', () => {
-    it('should create a plugin in the specified directory', () => {
+    it('should create a plugin in the specified directory', async () => {
       const plugin = uniq('plugin');
       runCLI(
         `generate @nx/plugin:plugin ${plugin} --linter=eslint --directory subdir --e2eTestRunner=jest`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
-      const pluginProject = readProjectConfig(`subdir-${plugin}`);
-      const pluginE2EProject = readProjectConfig(`subdir-${plugin}-e2e`);
+      const pluginProject = await readProjectConfig(`subdir-${plugin}`);
+      const pluginE2EProject = await readProjectConfig(`subdir-${plugin}-e2e`);
       expect(pluginProject.targets).toBeDefined();
       expect(pluginE2EProject).toBeTruthy();
     }, 90000);
@@ -400,7 +399,7 @@ describe('Nx Plugin', () => {
       runCLI(
         `generate @nx/plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
       );
-      const pluginProject = readProjectConfig(plugin);
+      const pluginProject = await readProjectConfig(plugin);
       expect(pluginProject.tags).toEqual(['e2etag', 'e2ePackage']);
     }, 90000);
   });
@@ -434,5 +433,44 @@ describe('Nx Plugin', () => {
         `generate @nx/plugin:create-package ${plugin} --project=invalid-plugin`
       )
     ).toThrow();
+  });
+
+  it('should support the new name and root format', async () => {
+    const plugin = uniq('plugin');
+    const createAppName = `create-${plugin}-app`;
+
+    runCLI(
+      `generate @nx/plugin:plugin ${plugin} --e2eTestRunner jest --publishable --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${plugin}/src/index.ts`);
+    // check build works
+    expect(runCLI(`build ${plugin}`)).toContain(
+      `Successfully ran target build for project ${plugin}`
+    );
+    // check tests pass
+    const appTestResult = runCLI(`test ${plugin}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${plugin}`
+    );
+
+    runCLI(
+      `generate @nx/plugin:create-package ${createAppName} --project=${plugin} --e2eProject=${plugin}-e2e --project-name-and-root-format=as-provided`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${plugin}/src/generators/preset`, `${createAppName}`);
+    // check build works
+    expect(runCLI(`build ${createAppName}`)).toContain(
+      `Successfully ran target build for project ${createAppName}`
+    );
+    // check tests pass
+    const libTestResult = runCLI(`test ${createAppName}`);
+    expect(libTestResult).toContain(
+      `Successfully ran target test for project ${createAppName}`
+    );
   });
 });

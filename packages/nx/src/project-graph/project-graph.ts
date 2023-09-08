@@ -16,7 +16,7 @@ import { fileExists } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
 import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
-import { readNxJson } from './file-utils';
+import { readNxJson } from '../config/nx-json';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -54,6 +54,9 @@ export function readCachedProjectConfiguration(
   return node.data;
 }
 
+/**
+ * Get the {@link ProjectsConfigurations} from the {@link ProjectGraph}
+ */
 export function readProjectsConfigurationFromProjectGraph(
   projectGraph: ProjectGraph
 ): ProjectsConfigurations {
@@ -71,13 +74,18 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   const nxJson = readNxJson();
 
-  const { allWorkspaceFiles, projectFileMap, projectConfigurations } =
-    await retrieveWorkspaceFiles(workspaceRoot, nxJson);
+  const {
+    allWorkspaceFiles,
+    projectFileMap,
+    projectConfigurations,
+    externalNodes,
+  } = await retrieveWorkspaceFiles(workspaceRoot, nxJson);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   return (
     await buildProjectGraphUsingProjectFileMap(
-      projectConfigurations,
+      projectConfigurations.projects,
+      externalNodes,
       projectFileMap,
       allWorkspaceFiles,
       cacheEnabled ? readProjectFileMapCache() : null,
@@ -112,7 +120,7 @@ function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
  * * It is running in the docker container.
  * * The daemon process is disabled because of the previous error when starting the daemon.
  * * `NX_DAEMON` is set to `false`.
- * * `useDaemon` is set to false in `nx.json`
+ * * `useDaemonProcess` is set to false in the options of the tasks runner inside `nx.json`
  *
  * `NX_DAEMON` env variable takes precedence:
  * * If it is set to true, the daemon will always be used.

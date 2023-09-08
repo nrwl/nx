@@ -1,7 +1,6 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import * as build from '@storybook/core-server';
 import { CLIOptions } from '@storybook/types';
-import 'dotenv/config';
 import {
   pleaseUpgrade,
   storybookConfigExistsCheck,

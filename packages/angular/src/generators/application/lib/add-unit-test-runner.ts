@@ -1,13 +1,13 @@
 import { Tree, joinPathFragments } from '@nx/devkit';
 import type { NormalizedSchema } from './normalized-schema';
 
-import { jestProjectGenerator } from '@nx/jest';
+import { configurationGenerator } from '@nx/jest';
 
 import { UnitTestRunner } from '../../../utils/test-runners';
 
 export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner === UnitTestRunner.Jest) {
-    await jestProjectGenerator(host, {
+    await configurationGenerator(host, {
       project: options.name,
       setupFile: 'angular',
       supportTsx: false,

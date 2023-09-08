@@ -18,7 +18,11 @@ export async function killTree(pid: number, signal: NodeJS.Signals) {
 
     switch (process.platform) {
       case 'win32':
-        exec('taskkill /pid ' + pid + ' /T /F', callback);
+        exec('taskkill /pid ' + pid + ' /T /F', (error) => {
+          // Ignore Fatal errors (128) because it might be due to the process already being killed.
+          // On Linux/Mac we can check ESRCH (no such process), but on Windows we can't.
+          callback(error?.code !== 128 ? error : null);
+        });
         break;
       case 'darwin':
         buildProcessTree(

@@ -184,6 +184,9 @@ function migrateProjectLevelStorybookInstance(
   const { nextBuildTarget, compiler } =
     findStorybookAndBuildTargetsAndCompiler(targets);
 
+  const mainDir =
+    !!nextBuildTarget && projectType === 'application' ? 'components' : 'src';
+
   createProjectStorybookDir(
     tree,
     projectName,
@@ -193,6 +196,8 @@ function migrateProjectLevelStorybookInstance(
     root,
     projectType,
     false,
+    false,
+    mainDir,
     !!nextBuildTarget,
     compiler === 'swc'
   );

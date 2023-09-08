@@ -32,7 +32,7 @@
       "tsConfiguration": {
         "type": "boolean",
         "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
-        "default": false
+        "default": true
       },
       "linter": {
         "description": "The tool to use for running lint checks.",

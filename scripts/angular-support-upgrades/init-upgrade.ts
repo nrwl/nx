@@ -6,7 +6,7 @@
  * Run the following command from the root of the workspace.
  * Replace the versions with the correct target versions
  *
- * npx ts-node scripts/angular-support-upgrades/init-upgrade.ts --angularVersion=next --targetNxVersion=15.5.0 --targetNxMigrationVersion=15.5.0-beta.0
+ * pnpm ts-node scripts/angular-support-upgrades/init-upgrade.ts --angularVersion=next --targetNxVersion=15.5.0 --targetNxMigrationVersion=15.5.0-beta.0
  *
  */
 import { execSync } from 'child_process';

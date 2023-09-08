@@ -254,6 +254,57 @@ describe('ngrx-feature-store', () => {
         tree.read(`feature-module/src/index.ts`, 'utf-8')
       ).toMatchSnapshot();
     });
+
+    it('should generate into a subdirectory correctly when a path is passed as the name', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+      await addNgModuleLib(tree);
+      const statePath = 'feature-module/src/lib/+state';
+      // ACT
+      await ngrxFeatureStoreGenerator(tree, {
+        name: 'users/users',
+        minimal: false,
+        directory: '+state',
+        facade: true,
+        parent,
+      });
+
+      // ASSERT
+      expect(
+        tree.read(`feature-module/src/index.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          `feature-module/src/lib/+state/users/users.actions.ts`,
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          `feature-module/src/lib/+state/users/users.effects.ts`,
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          `feature-module/src/lib/+state/users/users.facade.ts`,
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          `feature-module/src/lib/+state/users/users.reducer.ts`,
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          `feature-module/src/lib/+state/users/users.selectors.ts`,
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(tree.read(parent, 'utf-8')).toMatchSnapshot();
+    });
   });
 
   describe('Standalone APIs', () => {

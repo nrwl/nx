@@ -27,7 +27,7 @@ export default async function* prebuildExecutor(
     if (options.install) {
       await installAsync(context.root, {});
       if (options.platform === 'ios') {
-        await podInstall(join(context.root, projectRoot, 'ios'));
+        podInstall(join(context.root, projectRoot, 'ios'));
       }
     }
 
@@ -48,7 +48,7 @@ export function prebuildAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/@expo/cli/build/bin/cli'),
+      require.resolve('@expo/cli/build/bin/cli'),
       ['prebuild', ...createPrebuildOptions(options), '--no-install'],
       { cwd: join(workspaceRoot, projectRoot), env: process.env }
     );

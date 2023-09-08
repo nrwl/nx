@@ -5,9 +5,10 @@ Local plugin generators provide a way to automate many tasks you regularly perfo
 Nx provides tooling around creating, and running custom generators from within your workspace. This guide shows you how to create, run, and customize generators within your Nx workspace.
 
 {% youtube
-src="https://www.youtube.com/embed/ubgroK5T6cA"
-title="Create a Nx Generator in 100 seconds"
-width="100%" /%}
+src="https://www.youtube.com/embed/myqfGDWC2go"
+title="Scaffold new Pkgs in a PNPM Workspaces Monorepo"
+caption="Demoes how to use Nx generators in a PNPM workspace to automate the creation of libraries"
+/%}
 
 ## Creating a generator
 

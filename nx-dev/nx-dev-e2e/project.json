@@ -4,6 +4,7 @@
   "sourceRoot": "nx-dev/nx-dev-e2e/src",
   "projectType": "application",
   "targets": {
+    "lint": {},
     "e2e": {
       "dependsOn": [
         {
@@ -11,14 +12,13 @@
           "dependencies": true
         }
       ],
-      "executor": "@nx/cypress:cypress",
+      "executor": "@nx/playwright:playwright",
+      "outputs": ["{workspaceRoot}/dist/.playwright/nx-dev/nx-dev-e2e"],
       "options": {
-        "cypressConfig": "nx-dev/nx-dev-e2e/cypress.config.ts",
-        "devServerTarget": "nx-dev:serve:production",
-        "testingType": "e2e"
+        "config": "nx-dev/nx-dev-e2e/playwright.config.ts",
+        "project": ["chromium"]
       }
-    },
-    "lint": {}
+    }
   },
   "tags": ["scope:nx-dev", "type:e2e"],
   "implicitDependencies": ["nx-dev"]

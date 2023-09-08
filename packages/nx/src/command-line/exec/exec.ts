@@ -18,7 +18,7 @@ import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { calculateDefaultProjectName } from '../run/run-one';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 
 export async function nxExecCommand(
   args: Record<string, string[]>

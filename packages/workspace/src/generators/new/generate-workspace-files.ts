@@ -10,7 +10,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
-import { join, join as pathJoin } from 'path';
+import { join } from 'path';
 import { Preset } from '../utils/presets';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { NormalizedSchema } from './new';
@@ -22,22 +22,29 @@ export async function generateWorkspaceFiles(
   if (!options.name) {
     throw new Error(`Invalid options, "name" is required.`);
   }
+  // we need to check package manager version before the package.json is generated
+  // since it might influence the version report
+  const packageManagerVersion = getPackageManagerVersion(
+    options.packageManager as PackageManager,
+    tree.root
+  );
   options = normalizeOptions(options);
   createReadme(tree, options);
   createFiles(tree, options);
   createNxJson(tree, options);
 
-  const [packageMajor] = getPackageManagerVersion(
-    options.packageManager as PackageManager
-  ).split('.');
+  const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     createNpmrc(tree, options);
-  } else if (options.packageManager === 'yarn' && +packageMajor >= 2) {
-    createYarnrcYml(tree, options);
+  } else if (options.packageManager === 'yarn') {
+    if (+packageMajor >= 2) {
+      createYarnrcYml(tree, options);
+      // avoids errors when using nested yarn projects
+      tree.write(join(options.directory, 'yarn.lock'), '');
+    }
   }
   setPresetProperty(tree, options);
   addNpmScripts(tree, options);
-  createAppsAndLibsFolders(tree, options);
   setUpWorkspacesInPackageJson(tree, options);
 
   await formatFiles(tree);
@@ -45,22 +52,17 @@ export async function generateWorkspaceFiles(
 
 function setPresetProperty(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
-    if (options.preset === Preset.Core || options.preset === Preset.NPM) {
+    if (options.preset === Preset.NPM) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
       delete json.implicitDependencies;
       delete json.targetDefaults;
-      delete json.workspaceLayout;
     }
     return json;
   });
 }
 
 function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
-  if (
-    options.preset === Preset.Core ||
-    options.preset === Preset.TS ||
-    options.preset === Preset.NPM
-  ) {
+  if (options.preset === Preset.TS || options.preset === Preset.NPM) {
     tree.write(join(options.directory, 'packages/.gitkeep'), '');
   } else if (
     options.preset === Preset.AngularStandalone ||
@@ -94,6 +96,9 @@ function createNxJson(
         },
       },
     },
+    workspaceLayout: {
+      projectNameAndRootFormat: 'as-provided',
+    },
   };
 
   nxJson.targetDefaults = {
@@ -105,11 +110,7 @@ function createNxJson(
   if (defaultBase === 'main') {
     delete nxJson.affected;
   }
-  if (
-    preset !== Preset.Core &&
-    preset !== Preset.NPM &&
-    preset !== Preset.Empty
-  ) {
+  if (preset !== Preset.NPM) {
     nxJson.namedInputs = {
       default: ['{projectRoot}/**/*', 'sharedGlobals'],
       production: ['default'],
@@ -130,10 +131,10 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.NextJsStandalone ||
     options.preset === Preset.TsStandalone
       ? './files-root-app'
-      : options.preset === Preset.NPM || options.preset === Preset.Core
+      : options.preset === Preset.NPM
       ? './files-package-based-repo'
       : './files-integrated-repo';
-  generateFiles(tree, pathJoin(__dirname, filesDirName), options.directory, {
+  generateFiles(tree, join(__dirname, filesDirName), options.directory, {
     formattedNames,
     dot: '.',
     tmpl: '',
@@ -225,7 +226,7 @@ function normalizeOptions(options: NormalizedSchema) {
 }
 
 function setUpWorkspacesInPackageJson(tree: Tree, options: NormalizedSchema) {
-  if (options.preset === Preset.NPM || options.preset === Preset.Core) {
+  if (options.preset === Preset.NPM) {
     if (options.packageManager === 'pnpm') {
       tree.write(
         join(options.directory, 'pnpm-workspace.yaml'),

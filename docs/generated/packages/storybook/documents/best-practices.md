@@ -39,9 +39,9 @@ If you are on a project using Angular, React or React Native, you can also gener
 
 If your project is not configured yet, check out one of these guides:
 
-- [Set up Storybook for React Projects](/packages/storybook/documents/overview-react)
+- [Set up Storybook for React Projects](/recipes/storybook/overview-react)
 
-- [Set up Storybook for Angular Projects](/packages/storybook/documents/overview-angular)
+- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
 
 If your project is [already configured](/packages/storybook), you can use the `stories` generator:
 
@@ -55,7 +55,7 @@ The stories generator will read your inputs (if you’re using Angular), or your
 
 #### Cypress tests generation
 
-Nx also generates Cypress tests for your components, that point to the corresponding component’s story. You can read more about how the Cypress tests are generated and how they look like in the [storybook-configuration generator documentation](/packages/storybook/documents/overview-react#cypress-tests-for-stories).
+Nx also generates Cypress tests for your components, that point to the corresponding component’s story. You can read more about how the Cypress tests are generated and how they look like in the [storybook-configuration generator documentation](/recipes/storybook/overview-react#cypress-tests-for-stories).
 
 Take a look at the generated code of the Cypress test file, specifically at the URL which Cypress visits:
 
@@ -91,7 +91,7 @@ In the following section, we are going to see how to set up Storybook in these c
 
 ### Philosophy
 
-Setting up Storybook on Nx reflects - and takes advantage of - the [mental model](/concepts/mental-model) of Nx, and especially the architecture of [Applications and Libraries](/more-concepts/applications-and-libraries). What that means, in essence, is that you still maintain the individual Storybook instances (per project) which you use for testing and local development, but you also keep one extra “container” for publishing, that serves as a single entry point. Let’s see this in more detail.
+Setting up Storybook on Nx reflects - and takes advantage of - the [mental model](/concepts/mental-model) of Nx, and especially the architecture of [Applications and Libraries](/concepts/more-concepts/applications-and-libraries). What that means, in essence, is that you still maintain the individual Storybook instances (per project) which you use for testing and local development, but you also keep one extra “container” for publishing, that serves as a single entry point. Let’s see this in more detail.
 
 #### Local development and testing
 
@@ -121,17 +121,17 @@ Since each Storybook, in this case, is attached to a project, so is the serving 
 
 #### Publishing
 
-When you are publishing your Storybook, you can follow the same principles described in the [Applications and Libraries Mental Model](/more-concepts/applications-and-libraries#mental-model) documentation page. The general idea is to have one central Storybook container, into which you are going to gather your stories from multiple libraries.
+When you are publishing your Storybook, you can follow the same principles described in the [Applications and Libraries Mental Model](/concepts/more-concepts/applications-and-libraries#mental-model) documentation page. The general idea is to have one central Storybook container, into which you are going to gather your stories from multiple libraries.
 
 You can think of the central Storybook container as a grouping of similar-concept or same-scope UI parts of your workspace. In the same way you are scoping libraries, you can group your stories as well.
 
 Then, according to your use-case, you can have one central Storybook for your whole workspace, importing all the stories from all the projects. Alternatively, you can have one Storybook per "scope", which imports all the stories from projects the same scope. Or even one Storybook per application, importing all the stories of all the libraries that it is depending on. As you can see, there are many options, and you can choose the one that best suits your needs.
 
 {% callout type="note" title="Storybook Composition" %}
-In order to achieve some things mentioned above, you may use [Storybook Composition](/packages/storybook/documents/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
+In order to achieve some things mentioned above, you may use [Storybook Composition](/recipes/storybook/storybook-composition-setup). However, in this case, you would still need to build each project’s Storybook individually, and also deploy it individually. So in the cases where you have multiple projects, Storybook Composition would not be very efficient.
 {% /callout %}
 
-Before moving on to the examples section, it could be useful to read the [Library Types](/more-concepts/library-types) documentation page and the [Grouping libraries](/more-concepts/grouping-libraries) documentation page. These could help you decide which way fits your use case better.
+Before moving on to the examples section, it could be useful to read the [Library Types](/concepts/more-concepts/library-types) documentation page and the [Grouping libraries](/concepts/more-concepts/grouping-libraries) documentation page. These could help you decide which way fits your use case better.
 
 ## Examples / Use cases
 
@@ -146,7 +146,7 @@ You can check out the following examples (recipes) to see publishing strategies 
 In this guide, we have given a direction towards the most efficient way to use Storybook in a Nx workspace, in a way that takes advantage of the all that Nx has to offer.
 We have covered the different ways to set up Storybook, and publish it, too. We have also covered the different use cases that apply to each of the solutions.
 
-If you have any questions or suggestions, please feel free to reach out to us on [GitHub](https://github.com/nrwl/nx), and don't hesitate to ask your questions or share your stories in our [Nx community Slack](https://join.slack.com/t/nrwlcommunity/shared_invite/zt-1fmyh7hib-MsIDqDDxoutA1gqeFHCnyA).
+If you have any questions or suggestions, please feel free to reach out to us on [GitHub](https://github.com/nrwl/nx), and don't hesitate to ask your questions or share your stories in the [Official Nx Discord Server](https://go.nx.dev/community).
 
 ### Nx & Storybook documentation
 

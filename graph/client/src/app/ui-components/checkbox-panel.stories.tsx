@@ -1,20 +1,20 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { CheckboxPanel } from './checkbox-panel';
 
-export default {
+const meta: Meta<typeof CheckboxPanel> = {
   component: CheckboxPanel,
   title: 'Shared/CheckboxPanel',
   argTypes: { checkChanged: { action: 'checkChanged' } },
-} as ComponentMeta<typeof CheckboxPanel>;
+};
 
-const Template: ComponentStory<typeof CheckboxPanel> = (args) => (
-  <CheckboxPanel {...args} />
-);
+export default meta;
+type Story = StoryObj<typeof CheckboxPanel>;
 
-export const Primary = Template.bind({});
-Primary.args = {
-  checked: false,
-  name: 'option-to-check',
-  label: 'Option to check',
-  description: 'You can check this option.',
+export const Primary: Story = {
+  args: {
+    checked: false,
+    name: 'option-to-check',
+    label: 'Option to check',
+    description: 'You can check this option.',
+  },
 };

@@ -36,13 +36,9 @@ interface BaseArguments extends CreateWorkspaceOptions {
 
 interface NoneArguments extends BaseArguments {
   stack: 'none';
-  workspaceType: 'package-based' | 'integrated';
-}
-
-interface TsArguments extends BaseArguments {
-  stack: 'ts';
-  workspaceType: 'standalone' | 'integrated';
+  workspaceType: 'package-based' | 'integrated' | 'standalone';
   js: boolean;
+  appName: string | undefined;
 }
 
 interface ReactArguments extends BaseArguments {
@@ -53,6 +49,7 @@ interface ReactArguments extends BaseArguments {
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
+  e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
 interface AngularArguments extends BaseArguments {
@@ -62,6 +59,7 @@ interface AngularArguments extends BaseArguments {
   style: string;
   routing: boolean;
   standaloneApi: boolean;
+  e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
 interface NodeArguments extends BaseArguments {
@@ -78,7 +76,6 @@ interface UnknownStackArguments extends BaseArguments {
 
 type Arguments =
   | NoneArguments
-  | TsArguments
   | ReactArguments
   | AngularArguments
   | NodeArguments
@@ -108,7 +105,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
               .map((p) => `"${p}"`)
               .join(
                 ', '
-              )}]. To build your own see https://nx.dev/plugins/recipes/create-preset`,
+              )}]. To build your own see https://nx.dev/extending-nx/recipes/create-preset`,
             type: 'string',
           })
           .option('interactive', {
@@ -152,6 +149,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('nextAppDir', {
             describe: chalk.dim`Enable the App Router for Next.js`,
             type: 'boolean',
+          })
+          .option('e2eTestRunner', {
+            describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
+            choices: ['cypress', 'playwright', 'none'],
+            type: 'string',
           }),
         withNxCloud,
         withCI,
@@ -169,7 +171,14 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
         throw error;
       });
     },
-    [normalizeArgsMiddleware as yargs.MiddlewareFunction<{}>]
+    [
+      normalizeArgsMiddleware,
+      normalizeAndWarnOnDeprecatedPreset({
+        // TODO(v18): Remove Empty and Core presets
+        [Preset.Core]: Preset.NPM,
+        [Preset.Empty]: Preset.Apps,
+      }),
+    ] as yargs.MiddlewareFunction<{}>[]
   )
   .help('help', chalk.dim`Show help`)
   .updateLocale(yargsDecorator)
@@ -213,6 +222,28 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       title: `Successfully applied preset: ${parsedArgs.preset}`,
     });
   }
+}
+
+function normalizeAndWarnOnDeprecatedPreset(
+  deprecatedPresets: Partial<Record<Preset, Preset>>
+): (argv: yargs.Arguments<Arguments>) => Promise<void> {
+  return async (args: yargs.Arguments<Arguments>): Promise<void> => {
+    if (!args.preset) return;
+    if (deprecatedPresets[args.preset]) {
+      args.preset = deprecatedPresets[args.preset] as Preset;
+      output.addVerticalSeparator();
+      output.note({
+        title: `The "${args.preset}" preset is deprecated.`,
+        bodyLines: [
+          `The "${
+            args.preset
+          }" preset will be removed in a future Nx release. Use the "${
+            deprecatedPresets[args.preset]
+          }" preset instead.`,
+        ],
+      });
+    }
+  };
 }
 
 /**
@@ -316,7 +347,7 @@ async function determineFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'none' | 'ts' | 'react' | 'angular' | 'node' | 'unknown'> {
+): Promise<'none' | 'react' | 'angular' | 'node' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -334,14 +365,11 @@ async function determineStack(
       case Preset.NodeStandalone:
       case Preset.Express:
         return 'node';
-      case Preset.Core:
-      case Preset.Empty:
       case Preset.Apps:
       case Preset.NPM:
-        return 'none';
       case Preset.TS:
       case Preset.TsStandalone:
-        return 'ts';
+        return 'none';
       case Preset.WebComponents:
       case Preset.ReactNative:
       case Preset.Expo:
@@ -351,7 +379,7 @@ async function determineStack(
   }
 
   const { stack } = await enquirer.prompt<{
-    stack: 'none' | 'ts' | 'react' | 'angular' | 'node';
+    stack: 'none' | 'react' | 'angular' | 'node';
   }>([
     {
       name: 'stack',
@@ -360,23 +388,19 @@ async function determineStack(
       choices: [
         {
           name: `none`,
-          message: `None:          Configures a minimal structure without specific frameworks or technologies.`,
-        },
-        {
-          name: `ts`,
-          message: `TS/JS:         Configures a TypeScript/JavaScript package without specific frameworks or platforms.`,
+          message: `None:          Configures a TypeScript/JavaScript project with minimal structure.`,
         },
         {
           name: `react`,
-          message: `React:         Configures a React app with your framework of choice.`,
+          message: `React:         Configures a React application with your framework of choice.`,
         },
         {
           name: `angular`,
-          message: `Angular:       Configures a Angular app with modern tooling.`,
+          message: `Angular:       Configures a Angular application with modern tooling.`,
         },
         {
           name: `node`,
-          message: `Node:          Configures a Node API with your framework of choice.`,
+          message: `Node:          Configures a Node API application with your framework of choice.`,
         },
       ],
     },
@@ -391,8 +415,6 @@ async function determinePresetOptions(
   switch (parsedArgs.stack) {
     case 'none':
       return determineNoneOptions(parsedArgs);
-    case 'ts':
-      return determineTsOptions(parsedArgs);
     case 'react':
       return determineReactOptions(parsedArgs);
     case 'angular':
@@ -405,57 +427,25 @@ async function determinePresetOptions(
 }
 
 async function determineNoneOptions(
-  parsedArgs: yargs.Arguments<Arguments>
-): Promise<Partial<Arguments>> {
-  if (parsedArgs.preset) return parsedArgs;
-
-  const { workspaceType } = await enquirer.prompt<{
-    workspaceType: 'package-based' | 'integrated';
-  }>([
-    {
-      type: 'autocomplete',
-      name: 'workspaceType',
-      message: `Package-based or integrated?`,
-      initial: 'package-based' as any,
-      choices: [
-        {
-          name: 'package-based',
-          message:
-            'Package-based:           Nx makes it fast, but lets you run things your way.',
-        },
-        {
-          name: 'integrated',
-          message:
-            'Integrated:              Nx creates a workspace structure most suitable for building apps.',
-        },
-      ],
-    },
-  ]);
-
-  if (workspaceType === 'integrated') {
-    return {
-      preset: Preset.Apps,
-    };
-  } else {
-    return {
-      preset: Preset.NPM,
-    };
-  }
-}
-
-async function determineTsOptions(
-  parsedArgs: yargs.Arguments<TsArguments>
-): Promise<Partial<Arguments>> {
+  parsedArgs: yargs.Arguments<NoneArguments>
+): Promise<Partial<NoneArguments>> {
   let preset: Preset;
-  let workspaceType: 'standalone' | 'integrated' | undefined = undefined;
+  let workspaceType: 'package-based' | 'standalone' | 'integrated' | undefined =
+    undefined;
   let appName: string | undefined = undefined;
-  let js = false;
+  let js: boolean | undefined;
 
   if (parsedArgs.preset) {
     preset = parsedArgs.preset;
   } else {
-    workspaceType = await determineStandAloneOrMonorepo();
-    preset = workspaceType === 'standalone' ? Preset.TsStandalone : Preset.TS;
+    workspaceType = await determinePackageBasedOrIntegratedOrStandalone();
+    if (workspaceType === 'standalone') {
+      preset = Preset.TsStandalone;
+    } else if (workspaceType === 'integrated') {
+      preset = Preset.Apps;
+    } else {
+      preset = Preset.NPM;
+    }
   }
 
   if (parsedArgs.js !== undefined) {
@@ -492,9 +482,10 @@ async function determineReactOptions(
   let style: undefined | string = undefined;
   let appName: string;
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
+  let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
 
-  if (parsedArgs.preset) {
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
     if (
       preset === Preset.ReactStandalone ||
@@ -512,7 +503,7 @@ async function determineReactOptions(
     const workspaceType =
       framework === 'react-native' || framework === 'expo'
         ? 'integrated'
-        : await determineStandAloneOrMonorepo();
+        : await determineStandaloneOrMonorepo();
 
     if (workspaceType === 'standalone') {
       appName = parsedArgs.name;
@@ -541,8 +532,10 @@ async function determineReactOptions(
 
   if (preset === Preset.ReactStandalone || preset === Preset.ReactMonorepo) {
     bundler = await determineReactBundler(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
+    e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
   if (parsedArgs.style) {
@@ -593,7 +586,7 @@ async function determineReactOptions(
     style = reply.style;
   }
 
-  return { preset, style, appName, bundler, nextAppDir };
+  return { preset, style, appName, bundler, nextAppDir, e2eTestRunner };
 }
 
 async function determineAngularOptions(
@@ -603,9 +596,10 @@ async function determineAngularOptions(
   let style: string;
   let appName: string;
   let standaloneApi: boolean;
+  let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let routing: boolean;
 
-  if (parsedArgs.preset) {
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.Angular) {
     preset = parsedArgs.preset;
 
     if (preset === Preset.AngularStandalone) {
@@ -614,7 +608,7 @@ async function determineAngularOptions(
       appName = await determineAppName(parsedArgs);
     }
   } else {
-    const workspaceType = await determineStandAloneOrMonorepo();
+    const workspaceType = await determineStandaloneOrMonorepo();
 
     if (workspaceType === 'standalone') {
       preset = Preset.AngularStandalone;
@@ -652,6 +646,8 @@ async function determineAngularOptions(
     ]);
     style = reply.style;
   }
+
+  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   if (parsedArgs.standaloneApi !== undefined) {
     standaloneApi = parsedArgs.standaloneApi;
@@ -699,7 +695,7 @@ async function determineAngularOptions(
     routing = reply.routing === 'Yes';
   }
 
-  return { preset, style, appName, standaloneApi, routing };
+  return { preset, style, appName, standaloneApi, routing, e2eTestRunner };
 }
 
 async function determineNodeOptions(
@@ -731,7 +727,7 @@ async function determineNodeOptions(
   } else {
     framework = await determineNodeFramework(parsedArgs);
 
-    const workspaceType = await determineStandAloneOrMonorepo();
+    const workspaceType = await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       preset = Preset.NodeStandalone;
       appName = parsedArgs.name;
@@ -773,7 +769,48 @@ async function determineNodeOptions(
   };
 }
 
-async function determineStandAloneOrMonorepo(): Promise<
+async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
+  'package-based' | 'integrated' | 'standalone'
+> {
+  const { workspaceType } = await enquirer.prompt<{
+    workspaceType: 'standalone' | 'integrated' | 'package-based';
+  }>([
+    {
+      type: 'autocomplete',
+      name: 'workspaceType',
+      message: `Package-based monorepo, integrated monorepo, or standalone project?`,
+      initial: 'package-based' as any,
+      choices: [
+        {
+          name: 'package-based',
+          message:
+            'Package-based Monorepo:     Nx makes it fast, but lets you run things your way.',
+        },
+        {
+          name: 'integrated',
+          message:
+            'Integrated Monorepo:        Nx creates a monorepo that contains multiple projects.',
+        },
+        {
+          name: 'standalone',
+          message:
+            'Standalone:                 Nx creates a single project and makes it fast.',
+        },
+      ],
+    },
+  ]);
+
+  invariant(workspaceType, {
+    title: 'Invalid workspace type',
+    bodyLines: [
+      `It must be one of the following: standalone, integrated. Got ${workspaceType}`,
+    ],
+  });
+
+  return workspaceType;
+}
+
+async function determineStandaloneOrMonorepo(): Promise<
   'integrated' | 'standalone'
 > {
   const { workspaceType } = await enquirer.prompt<{
@@ -782,18 +819,18 @@ async function determineStandAloneOrMonorepo(): Promise<
     {
       type: 'autocomplete',
       name: 'workspaceType',
-      message: `Standalone project or integrated monorepo?`,
+      message: `Integrated monorepo, or standalone project?`,
       initial: 'standalone' as any,
       choices: [
-        {
-          name: 'standalone',
-          message:
-            'Standalone:           Nx creates a single project and makes it fast.',
-        },
         {
           name: 'integrated',
           message:
             'Integrated Monorepo:  Nx creates a monorepo that contains multiple projects.',
+        },
+        {
+          name: 'standalone',
+          message:
+            'Standalone:           Nx creates a single project and makes it fast.',
         },
       ],
     },
@@ -953,4 +990,36 @@ async function determineNodeFramework(
     },
   ]);
   return reply.framework;
+}
+
+async function determineE2eTestRunner(
+  parsedArgs: yargs.Arguments<{
+    e2eTestRunner?: 'none' | 'cypress' | 'playwright';
+  }>
+): Promise<'none' | 'cypress' | 'playwright'> {
+  if (parsedArgs.e2eTestRunner) return parsedArgs.e2eTestRunner;
+  const reply = await enquirer.prompt<{
+    e2eTestRunner: 'none' | 'cypress' | 'playwright';
+  }>([
+    {
+      message: 'Test runner to use for end to end (E2E) tests',
+      type: 'autocomplete',
+      name: 'e2eTestRunner',
+      choices: [
+        {
+          name: 'cypress',
+          message: 'Cypress [ https://www.cypress.io/ ]',
+        },
+        {
+          name: 'playwright',
+          message: 'Playwright [ https://playwright.dev/ ]',
+        },
+        {
+          name: 'none',
+          message: 'None',
+        },
+      ],
+    },
+  ]);
+  return reply.e2eTestRunner;
 }

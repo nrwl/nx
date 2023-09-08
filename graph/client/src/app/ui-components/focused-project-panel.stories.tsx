@@ -1,17 +1,17 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { FocusedPanel } from './focused-panel';
 
-export default {
+const meta: Meta<typeof FocusedPanel> = {
   component: FocusedPanel,
   title: 'Project Graph/FocusedProjectPanel',
   argTypes: { resetFocus: { action: 'resetFocus' } },
-} as ComponentMeta<typeof FocusedPanel>;
+};
 
-const Template: ComponentStory<typeof FocusedPanel> = (args) => (
-  <FocusedPanel {...args} />
-);
+export default meta;
+type Story = StoryObj<typeof FocusedPanel>;
 
-export const Primary = Template.bind({});
-Primary.args = {
-  focusedProject: 'store',
+export const Primary: Story = {
+  args: {
+    focusedLabel: 'store',
+  },
 };

@@ -14,7 +14,6 @@ describe('Create Files', () => {
     createFiles(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
-      e2eProjectDirectory: 'apps',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',

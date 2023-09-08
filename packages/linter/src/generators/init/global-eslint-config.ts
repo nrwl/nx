@@ -1,10 +1,19 @@
-import { ESLint, Linter as LinterType } from 'eslint';
+import { Linter } from 'eslint';
+import {
+  addBlockToFlatConfigExport,
+  addImportToFlatConfig,
+  addPluginsToExportsBlock,
+  createNodeList,
+  generateFlatOverride,
+  stringifyNodeList,
+} from '../utils/flat-config/ast-utils';
+import { addPluginsToLintConfig } from '../utils/eslint-file';
 
 /**
  * This configuration is intended to apply to all TypeScript source files.
  * See the eslint-plugin package for what is in the referenced shareable config.
  */
-export const globalTypeScriptOverrides = {
+export const typeScriptOverride = {
   files: ['*.ts', '*.tsx'],
   extends: ['plugin:@nx/typescript'],
   /**
@@ -18,7 +27,7 @@ export const globalTypeScriptOverrides = {
  * This configuration is intended to apply to all JavaScript source files.
  * See the eslint-plugin package for what is in the referenced shareable config.
  */
-export const globalJavaScriptOverrides = {
+export const javaScriptOverride = {
   files: ['*.js', '*.jsx'],
   extends: ['plugin:@nx/javascript'],
   /**
@@ -32,7 +41,7 @@ export const globalJavaScriptOverrides = {
  * This configuration is intended to apply to all "source code" (but not
  * markup like HTML, or other custom file types like GraphQL)
  */
-export const moduleBoundariesOverride = {
+const moduleBoundariesOverride = {
   files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
   rules: {
     '@nx/enforce-module-boundaries': [
@@ -43,14 +52,26 @@ export const moduleBoundariesOverride = {
         depConstraints: [{ sourceTag: '*', onlyDependOnLibsWithTags: ['*'] }],
       },
     ],
-  } as LinterType.RulesRecord,
+  } as Linter.RulesRecord,
+};
+
+/**
+ * This configuration is intended to apply to all "source code" (but not
+ * markup like HTML, or other custom file types like GraphQL)
+ */
+const jestOverride = {
+  files: ['*.spec.ts', '*.spec.tsx', '*.spec.js', '*.spec.jsx'],
+  env: {
+    jest: true,
+  },
+  rules: {},
 };
 
 export const getGlobalEsLintConfiguration = (
   unitTestRunner?: string,
   rootProject?: boolean
-) => {
-  const config: LinterType.Config = {
+): Linter.Config => {
+  const config: Linter.Config = {
     root: true,
     ignorePatterns: rootProject ? ['!**/*'] : ['**/*'],
     plugins: ['@nx'],
@@ -63,18 +84,44 @@ export const getGlobalEsLintConfiguration = (
      */
     overrides: [
       ...(rootProject ? [] : [moduleBoundariesOverride]),
-      globalTypeScriptOverrides,
-      globalJavaScriptOverrides,
+      typeScriptOverride,
+      javaScriptOverride,
+      ...(unitTestRunner === 'jest' ? [jestOverride] : []),
     ],
   };
-  if (unitTestRunner === 'jest') {
-    config.overrides.push({
-      files: ['*.spec.ts', '*.spec.tsx', '*.spec.js', '*.spec.jsx'],
-      env: {
-        jest: true,
-      },
-      rules: {},
-    });
-  }
   return config;
+};
+
+export const getGlobalFlatEslintConfiguration = (
+  unitTestRunner?: string,
+  rootProject?: boolean
+): string => {
+  const nodeList = createNodeList(new Map(), [], true);
+  let content = stringifyNodeList(nodeList, '', 'eslint.config.js');
+  content = addImportToFlatConfig(content, 'nxPlugin', '@nx/eslint-plugin');
+  content = addPluginsToExportsBlock(content, [
+    { name: '@nx', varName: 'nxPlugin', imp: '@nx/eslint-plugin' },
+  ]);
+  if (!rootProject) {
+    content = addBlockToFlatConfigExport(
+      content,
+      generateFlatOverride(moduleBoundariesOverride, '')
+    );
+  }
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatOverride(typeScriptOverride, '')
+  );
+  content = addBlockToFlatConfigExport(
+    content,
+    generateFlatOverride(javaScriptOverride, '')
+  );
+  if (unitTestRunner === 'jest') {
+    content = addBlockToFlatConfigExport(
+      content,
+      generateFlatOverride(jestOverride, '')
+    );
+  }
+
+  return content;
 };

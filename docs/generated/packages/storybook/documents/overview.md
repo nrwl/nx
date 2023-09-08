@@ -15,6 +15,10 @@ Starting with Nx 16, Storybook 7 is used by default to configure your projects.
 
 ### Add the Storybook plugin
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/storybook` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 {% tabs %}
 {% tab label="yarn" %}
 
@@ -27,6 +31,13 @@ yarn add -D @nx/storybook
 
 ```shell
 npm install -D @nx/storybook
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/storybook
 ```
 
 {% /tab %}
@@ -178,7 +189,7 @@ To register a [Storybook addon](https://storybook.js.org/addons/) for all Storyb
 
 ### Setting up documentation
 
-To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/packages/storybook/documents/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
+To set up documentation, you can use [Storybook Autodocs](https://storybook.js.org/docs/react/writing-docs/autodocs). For Angular, [you can use `compodoc`](/recipes/storybook/angular-storybook-compodoc) to infer `argTypes`. You can read more about `argTypes` in the [official Storybook `argTypes` documentation](https://storybook.js.org/docs/angular/api/argtypes#automatic-argtype-inference).
 
 You can read more about how to best set up documentation using Storybook for your project in the [official Storybook documentation](https://storybook.js.org/docs/react/writing-docs/introduction).
 
@@ -186,8 +197,12 @@ You can read more about how to best set up documentation using Storybook for you
 
 You can find dedicated information for React and Angular:
 
-- [Set up Storybook for Angular Projects](/packages/storybook/documents/overview-angular)
-- [Set up Storybook for React Projects](/packages/storybook/documents/overview-react)
+- [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
+- [Set up Storybook for React Projects](/recipes/storybook/overview-react)
+
+You can find all Storybook-related Nx documentation in the [Storybook recipes section](/recipes/storybook).
+
+For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
 ### Migration Scenarios
 
@@ -197,10 +212,6 @@ Here's more information on common migration scenarios for Storybook with Nx. For
 - [Migrate to the Nx React Storybook Addon](/deprecated/storybook/migrate-webpack-final-react)
 - [Storybook 7 migration generator](/packages/storybook/generators/migrate-7)
 - [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup)
-
-You can find all Storybook-related Nx documentation [here](/packages#storybook).
-
-For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/basics/introduction/).
 
 ## Older documentation
 

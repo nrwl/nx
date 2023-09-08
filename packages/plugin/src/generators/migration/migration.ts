@@ -15,6 +15,7 @@ import type { Schema } from './schema';
 import * as path from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
+import { nxVersion } from '../../utils/versions';
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
@@ -72,7 +73,6 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
   generators[options.name] = {
     version: options.packageVersion,
     description: options.description,
-    cli: 'nx',
     implementation: `./src/migrations/${options.name}/${options.name}`,
   };
   migrations.generators = generators;
@@ -107,6 +107,12 @@ function updatePackageJson(host: Tree, options: NormalizedSchema) {
       } else if (preexistingValue.migrations) {
         preexistingValue.migrations = './migrations.json';
       }
+
+      // add dependencies
+      json.dependencies = {
+        '@nx/devkit': nxVersion,
+        ...json.dependencies,
+      };
 
       return json;
     }

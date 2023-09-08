@@ -32,6 +32,8 @@ describe('new', () => {
 
   beforeEach(() => {
     tree = createTree();
+    // we need an actual path for the package manager version check
+    tree.root = process.cwd();
   });
 
   it('should generate an empty nx.json', async () => {
@@ -51,7 +53,7 @@ describe('new', () => {
         name: 'my-workspace',
         directory: 'my-workspace',
         appName: 'app',
-        preset: Preset.Empty,
+        preset: Preset.Apps,
       });
 
       expect(readJson(tree, 'my-workspace/package.json')).toMatchSnapshot();

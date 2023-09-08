@@ -1,14 +1,14 @@
 import { Tree } from 'nx/src/generators/tree';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import { joinPathFragments } from 'nx/src/utils/path';
-import { updateJson } from 'nx/src/generators/utils/json';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 
 import { NormalizedSchema } from '../schema';
+import { extraEslintDependencies } from '../../../utils/lint';
 import {
-  extendReactEslintJson,
-  extraEslintDependencies,
-} from '../../../utils/lint';
+  addExtendsToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/linter/src/generators/utils/eslint-file';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.EsLint) {
@@ -25,11 +25,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       setParserOptionsProject: options.setParserOptionsProject,
     });
 
-    updateJson(
-      host,
-      joinPathFragments(options.projectRoot, '.eslintrc.json'),
-      extendReactEslintJson
-    );
+    if (isEslintConfigSupported(host)) {
+      addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    }
 
     let installTask = () => {};
     if (!options.skipPackageJson) {

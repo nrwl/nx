@@ -1,20 +1,22 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { Dropdown } from './dropdown';
 
-export default {
+const meta: Meta<typeof Dropdown> = {
   component: Dropdown,
   title: 'Shared/Dropdown',
   argTypes: {
     onChange: { action: 'onChange' },
   },
-} as ComponentMeta<typeof Dropdown>;
+};
 
-const Template: ComponentStory<typeof Dropdown> = (args) => (
-  <Dropdown {...args}>
-    <option value="Option 1">Option 1</option>
-    <option value="Option 2">Option 2</option>
-  </Dropdown>
-);
+export default meta;
+type Story = StoryObj<typeof Dropdown>;
 
-export const Primary = Template.bind({});
-Primary.args = {};
+export const Primary: Story = {
+  render: () => (
+    <Dropdown {...{}}>
+      <option value="Option 1">Option 1</option>
+      <option value="Option 2">Option 2</option>
+    </Dropdown>
+  ),
+};

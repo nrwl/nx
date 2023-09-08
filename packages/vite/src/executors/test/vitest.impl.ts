@@ -2,13 +2,14 @@ import {
   ExecutorContext,
   joinPathFragments,
   logger,
+  readJsonFile,
   stripIndents,
   workspaceRoot,
 } from '@nx/devkit';
 import { CoverageOptions, File, Reporter } from 'vitest';
 import { loadConfigFromFile } from 'vite';
 import { VitestExecutorOptions } from './schema';
-import { relative, resolve } from 'path';
+import { join, relative, resolve } from 'path';
 import { existsSync } from 'fs';
 import { registerTsConfigPaths } from '@nx/js/src/internal';
 
@@ -62,7 +63,7 @@ export async function* vitestExecutor(
   const nxReporter = new NxReporter(options.watch);
   const settings = await getSettings(options, context, projectRoot);
   settings.reporters.push(nxReporter);
-  const cliFilters = options.testFile ? [options.testFile] : [];
+  const cliFilters = options.testFiles ?? [];
 
   const ctx = await startVitest(options.mode, cliFilters, settings);
 
@@ -99,6 +100,17 @@ async function getSettings(
   context: ExecutorContext,
   projectRoot: string
 ) {
+  const packageJsonPath = join(workspaceRoot, 'package.json');
+  const packageJson = existsSync(packageJsonPath)
+    ? readJsonFile(packageJsonPath)
+    : undefined;
+  let provider: 'v8' | 'c8' = 'v8';
+  if (
+    packageJson?.dependencies?.['@vitest/coverage-c8'] ||
+    packageJson?.devDependencies?.['@vitest/coverage-c8']
+  ) {
+    provider = 'c8';
+  }
   const offset = relative(workspaceRoot, context.cwd);
   // if reportsDirectory is not provided vitest will remove all files in the project root
   // when coverage is enabled in the vite.config.ts
@@ -106,7 +118,7 @@ async function getSettings(
     ? {
         enabled: options.coverage,
         reportsDirectory: options.reportsDirectory,
-        provider: 'c8',
+        provider,
       }
     : ({} as CoverageOptions);
 

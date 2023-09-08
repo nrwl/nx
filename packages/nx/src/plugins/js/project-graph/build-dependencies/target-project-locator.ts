@@ -3,7 +3,7 @@ import {
   resolveModuleByImport,
 } from '../../utils/typescript';
 import { isRelativePath, readJsonFile } from '../../../../utils/fileutils';
-import { dirname, join, posix } from 'path';
+import { dirname, join, posix, relative, resolve } from 'path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import {
   ProjectGraphExternalNode,
@@ -40,28 +40,33 @@ export class TargetProjectLocator {
    * @param filePath
    */
   findProjectWithImport(importExpr: string, filePath: string): string {
-    const normalizedImportExpr = importExpr.split('#')[0];
-    if (isRelativePath(normalizedImportExpr)) {
-      const resolvedModule = posix.join(
-        dirname(filePath),
-        normalizedImportExpr
-      );
+    if (isRelativePath(importExpr)) {
+      const resolvedModule = posix.join(dirname(filePath), importExpr);
       return this.findProjectOfResolvedModule(resolvedModule);
     }
 
     // find project using tsconfig paths
-    const paths = this.findPaths(normalizedImportExpr);
-    if (paths) {
+    const results = this.findPaths(importExpr);
+    if (results) {
+      const [path, paths] = results;
       for (let p of paths) {
-        const maybeResolvedProject = this.findProjectOfResolvedModule(p);
+        const r = p.endsWith('/*')
+          ? join(dirname(p), relative(path.replace(/\*$/, ''), importExpr))
+          : p;
+        const maybeResolvedProject = this.findProjectOfResolvedModule(r);
         if (maybeResolvedProject) {
           return maybeResolvedProject;
         }
       }
     }
 
+    if (builtInModuleSet.has(importExpr)) {
+      this.npmResolutionCache.set(importExpr, null);
+      return null;
+    }
+
     // try to find npm package before using expensive typescript resolution
-    const npmProject = this.findNpmPackage(normalizedImportExpr);
+    const npmProject = this.findNpmPackage(importExpr);
     if (npmProject) {
       return npmProject;
     }
@@ -71,7 +76,7 @@ export class TargetProjectLocator {
       // and existed only because of the incomplete `paths` matching
       // if import cannot be matched using tsconfig `paths` the compilation would fail anyway
       const resolvedProject = this.resolveImportWithTypescript(
-        normalizedImportExpr,
+        importExpr,
         filePath
       );
       if (resolvedProject) {
@@ -79,14 +84,9 @@ export class TargetProjectLocator {
       }
     }
 
-    if (builtInModuleSet.has(normalizedImportExpr)) {
-      this.npmResolutionCache.set(normalizedImportExpr, null);
-      return null;
-    }
-
     try {
       const resolvedModule = this.resolveImportWithRequire(
-        normalizedImportExpr,
+        importExpr,
         filePath
       );
 
@@ -94,7 +94,7 @@ export class TargetProjectLocator {
     } catch {}
 
     // nothing found, cache for later
-    this.npmResolutionCache.set(normalizedImportExpr, null);
+    this.npmResolutionCache.set(importExpr, null);
     return null;
   }
 
@@ -108,7 +108,7 @@ export class TargetProjectLocator {
       return undefined;
     }
     if (this.paths[normalizedImportExpr]) {
-      return this.paths[normalizedImportExpr];
+      return [normalizedImportExpr, this.paths[normalizedImportExpr]];
     }
     const wildcardPath = Object.keys(this.paths).find(
       (path) =>
@@ -117,7 +117,7 @@ export class TargetProjectLocator {
           normalizedImportExpr === path.replace(/\/\*$/, ''))
     );
     if (wildcardPath) {
-      return this.paths[wildcardPath];
+      return [wildcardPath, this.paths[wildcardPath]];
     }
     return undefined;
   }

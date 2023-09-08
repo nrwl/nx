@@ -70,7 +70,7 @@ Now, let's continue by creating an empty Nx workspace.
 
 ```shell
 # Replace acme with desired scope
-npx create-nx-workspace acme --preset=empty
+npx create-nx-workspace acme --preset=apps
 cd acme
 ```
 
@@ -274,7 +274,7 @@ To analyze your bundle, run build with `--statsJson` and use a tool
 like [`webpack-bundle-analyzer`](https://www.npmjs.com/package/webpack-bundle-analyzer) to the size of your bundles.
 
 If you have any feedback regarding this feature, we'd love to hear from you--check
-our [community page](https://nx.dev/community) for links to our Slack and Twitter.
+our [community page](https://nx.dev/community) for links to our Discord and Twitter.
 {% /callout %}
 
 ## Distributed computation caching with Nx Cloud
@@ -440,7 +440,7 @@ first before building the remotes.
 
 ## Summary
 
-You could use Module Federation to implement [micro frontends](/more-concepts/micro-frontend-architecture), but this
+You could use Module Federation to implement [micro frontends](/concepts/more-concepts/micro-frontend-architecture), but this
 guide showed how to use it to speed up your builds.
 
 Module Federation allows you to split a single build process into multiple processes which can run in parallel or even

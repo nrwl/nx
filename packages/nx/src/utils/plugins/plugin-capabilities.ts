@@ -33,14 +33,17 @@ function tryGetCollection<T extends object>(
 
 export async function getPluginCapabilities(
   workspaceRoot: string,
-  pluginName: string
+  pluginName: string,
+  includeRuntimeCapabilities = false
 ): Promise<PluginCapabilities | null> {
   try {
     const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
       pluginName,
       getNxRequirePaths(workspaceRoot)
     );
-    const pluginModule = await tryGetModule(packageJson, workspaceRoot);
+    const pluginModule = includeRuntimeCapabilities
+      ? await tryGetModule(packageJson, workspaceRoot)
+      : ({} as Record<string, unknown>);
     return {
       name: pluginName,
       generators: {
@@ -75,8 +78,15 @@ export async function getPluginCapabilities(
           'executors'
         ),
       },
-      projectGraphExtension: !!pluginModule?.processProjectGraph,
-      projectInference: !!pluginModule?.projectFilePatterns,
+      projectGraphExtension:
+        pluginModule &&
+        ('processProjectGraph' in pluginModule ||
+          'createNodes' in pluginModule ||
+          'createDependencies' in pluginModule),
+      projectInference:
+        pluginModule &&
+        ('projectFilePatterns' in pluginModule ||
+          'createNodes' in pluginModule),
     };
   } catch {
     return null;

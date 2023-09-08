@@ -19,7 +19,6 @@ description: This page contains examples for the @nx/next:build executor.
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "root": ".",
         "outputPath": "dist/acme"
       }
     }
@@ -47,7 +46,6 @@ This is the default configuration for Next.js standalone projects. Our `@nx/next
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "root": ".",
         "outputPath": "dist/acme"
       },
       "configurations": {
@@ -78,7 +76,6 @@ Updating the build options to include `debug`.
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "root": ".",
         "outputPath": "dist/acme"
       },
       "configurations": {
@@ -115,7 +112,6 @@ Updating the build options to include `profile`.
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "root": ".",
         "outputPath": "dist/acme"
       },
       "configurations": {
@@ -154,7 +150,6 @@ Updating the build options to include `experimentalAppOnly`.
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "root": ".",
         "outputPath": "dist/acme"
       },
       "configurations": {

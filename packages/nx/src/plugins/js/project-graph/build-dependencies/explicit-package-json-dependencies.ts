@@ -2,7 +2,6 @@ import { defaultFileRead } from '../../../../project-graph/file-utils';
 import { join } from 'path';
 import {
   DependencyType,
-  ProjectFileMap,
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
@@ -10,16 +9,20 @@ import { parseJson } from '../../../../utils/json';
 import { joinPathFragments } from '../../../../utils/path';
 import { ProjectsConfigurations } from '../../../../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../../../../config/nx-json';
-import { ExplicitDependency } from './explicit-project-dependencies';
 import { PackageJson } from '../../../../utils/package-json';
+import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import {
+  ProjectGraphDependencyWithFile,
+  validateDependency,
+} from '../../../../project-graph/project-graph-builder';
 
-export function buildExplicitPackageJsonDependencies(
-  nxJsonConfiguration: NxJsonConfiguration,
-  projectsConfigurations: ProjectsConfigurations,
-  graph: ProjectGraph,
-  filesToProcess: ProjectFileMap
-) {
-  const res = [] as any;
+export function buildExplicitPackageJsonDependencies({
+  nxJsonConfiguration,
+  projectsConfigurations,
+  graph,
+  filesToProcess,
+}: CreateDependenciesContext): ProjectGraphDependencyWithFile[] {
+  const res: ProjectGraphDependencyWithFile[] = [];
   let packageNameMap = undefined;
   const nodes = Object.values(graph.nodes);
   Object.keys(filesToProcess).forEach((source) => {
@@ -82,7 +85,7 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   graph: ProjectGraph,
-  collectedDeps: ExplicitDependency[],
+  collectedDeps: ProjectGraphDependencyWithFile[],
   packageNameMap: { [packageName: string]: string }
 ) {
   try {
@@ -91,19 +94,23 @@ function processPackageJson(
     deps.forEach((d) => {
       // package.json refers to another project in the monorepo
       if (packageNameMap[d]) {
-        collectedDeps.push({
-          sourceProjectName: sourceProject,
-          targetProjectName: packageNameMap[d],
-          sourceProjectFile: fileName,
-          type: DependencyType.static,
-        });
+        const dependency = {
+          source: sourceProject,
+          target: packageNameMap[d],
+          sourceFile: fileName,
+          dependencyType: DependencyType.static,
+        };
+        validateDependency(graph, dependency);
+        collectedDeps.push(dependency);
       } else if (graph.externalNodes[`npm:${d}`]) {
-        collectedDeps.push({
-          sourceProjectName: sourceProject,
-          targetProjectName: `npm:${d}`,
-          sourceProjectFile: fileName,
-          type: DependencyType.static,
-        });
+        const dependency = {
+          source: sourceProject,
+          target: `npm:${d}`,
+          sourceFile: fileName,
+          dependencyType: DependencyType.static,
+        };
+        validateDependency(graph, dependency);
+        collectedDeps.push(dependency);
       }
     });
   } catch (e) {

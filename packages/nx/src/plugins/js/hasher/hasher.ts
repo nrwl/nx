@@ -1,6 +1,6 @@
 import { ProjectGraphProjectNode } from '../../../config/project-graph';
 import { readJsonFile } from '../../../utils/fileutils';
-import { getRootTsConfigFileName } from '../utils/typescript';
+import { getRootTsConfigPath } from '../utils/typescript';
 import {
   findProjectForPath,
   ProjectRootMappings,
@@ -16,7 +16,7 @@ interface TsconfigJsonConfiguration {
 
 function readTsConfigJson(): TsconfigJsonConfiguration {
   try {
-    const res = readJsonFile(getRootTsConfigFileName());
+    const res = readJsonFile(getRootTsConfigPath());
     res.compilerOptions.paths ??= {};
     return res;
   } catch {

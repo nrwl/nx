@@ -1,4 +1,8 @@
 import { vol } from 'memfs';
+jest.mock('../../../../utils/workspace-root', () => ({
+  workspaceRoot: '/root',
+}));
+jest.mock('fs', () => require('memfs').fs);
 import { TargetProjectLocator } from './target-project-locator';
 import {
   ProjectGraphExternalNode,
@@ -6,22 +10,12 @@ import {
   ProjectGraphProjectNode,
 } from '../../../../config/project-graph';
 
-jest.mock('nx/src/utils/workspace-root', () => ({
-  workspaceRoot: '/root',
-}));
-jest.mock('fs', () => require('memfs').fs);
-
 describe('findTargetProjectWithImport', () => {
   let projects: Record<string, ProjectGraphProjectNode>;
   let npmProjects: Record<string, ProjectGraphExternalNode>;
   let fsJson;
   let targetProjectLocator: TargetProjectLocator;
   beforeEach(() => {
-    const projecstConfigurations = {
-      projects: {
-        proj1: {},
-      },
-    };
     const nxJson = {
       npmScope: 'proj',
     };
@@ -44,109 +38,16 @@ describe('findTargetProjectWithImport', () => {
           '@proj/proj1234/*': ['libs/proj1234/*'],
           '@proj/proj1234-child': ['libs/proj1234-child'],
           '@proj/proj1234-child/*': ['libs/proj1234-child/*'],
+          '#hash-path': ['libs/hash-project/src/index.ts'],
+          'parent-path/*': ['libs/parent-path/*'],
         },
       },
     };
     fsJson = {
-      './workspace.json': JSON.stringify(projecstConfigurations),
       './nx.json': JSON.stringify(nxJson),
       './tsconfig.base.json': JSON.stringify(tsConfig),
-      './libs/proj/index.ts': `import {a} from '@proj/my-second-proj';
-                              import('@proj/project-3');
-                              const a = { loadChildren: '@proj/proj4ab#a' };
-      `,
-      './libs/proj2/index.ts': `export const a = 2;`,
-      './libs/proj2/deep/index.ts': `export const a = 22;`,
-      './libs/proj3a/index.ts': `export const a = 3;`,
-      './libs/proj4ab/index.ts': `export const a = 4;`,
-      './libs/proj5/index.ts': `export const a = 5;`,
-      './libs/proj6/index.ts': `export const a = 6;`,
-      './libs/proj7/index.ts': `export const a = 7;`,
-      './libs/proj123/index.ts': 'export const a = 123',
-      './libs/proj1234/index.ts': 'export const a = 1234',
-      './libs/proj1234-child/index.ts': 'export const a = 12345',
     };
     vol.fromJSON(fsJson, '/root');
-
-    const ctx = {
-      workspace: {
-        ...projecstConfigurations,
-        ...nxJson,
-      } as any,
-      fileMap: {
-        rootProj: [
-          {
-            file: 'index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj: [
-          {
-            file: 'libs/proj/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj2: [
-          {
-            file: 'libs/proj2/index.ts',
-            hash: 'some-hash',
-          },
-          {
-            file: 'libs/proj2/deep/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj3a: [
-          {
-            file: 'libs/proj3a/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj4ab: [
-          {
-            file: 'libs/proj4ab/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj5: [
-          {
-            file: 'libs/proj5/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj6: [
-          {
-            file: 'libs/proj6/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj7: [
-          {
-            file: 'libs/proj7/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj123: [
-          {
-            file: 'libs/proj123/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        proj1234: [
-          {
-            file: 'libs/proj1234/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-        'proj1234-child': [
-          {
-            file: 'libs/proj1234-child/index.ts',
-            hash: 'some-hash',
-          },
-        ],
-      },
-    } as any;
-
     projects = {
       rootProj: {
         name: 'rootProj',
@@ -223,6 +124,27 @@ describe('findTargetProjectWithImport', () => {
         type: 'lib',
         data: {
           root: 'libs/proj1234-child',
+        },
+      },
+      'hash-project': {
+        name: 'hash-project',
+        type: 'lib',
+        data: {
+          root: 'libs/hash-project',
+        },
+      },
+      'parent-project': {
+        name: 'parent-project',
+        type: 'lib',
+        data: {
+          root: 'libs/parent-path',
+        },
+      },
+      'child-project': {
+        name: 'child-project',
+        type: 'lib',
+        data: {
+          root: 'libs/parent-path/child-path',
         },
       },
     };
@@ -380,7 +302,7 @@ describe('findTargetProjectWithImport', () => {
     expect(parentProj).toEqual('proj1234');
   });
 
-  it('should be able to npm dependencies', () => {
+  it('should be able to locate npm dependencies', () => {
     const result1 = targetProjectLocator.findProjectWithImport(
       '@ng/core',
       'libs/proj1/index.ts'
@@ -394,14 +316,31 @@ describe('findTargetProjectWithImport', () => {
     expect(result2).toEqual('npm:npm-package');
   });
 
-  it('should be able to resolve a module using a normalized path', () => {
-    const proj4ab = targetProjectLocator.findProjectWithImport(
-      '@proj/proj4ab#a',
+  it('should be able to resolve wildcard paths', () => {
+    const parentProject = targetProjectLocator.findProjectWithImport(
+      'parent-path',
       'libs/proj1/index.ts'
     );
 
-    expect(proj4ab).toEqual('proj4ab');
+    expect(parentProject).toEqual('parent-project');
+
+    const childProject = targetProjectLocator.findProjectWithImport(
+      'parent-path/child-path',
+      'libs/proj1/index.ts'
+    );
+
+    expect(childProject).toEqual('child-project');
   });
+
+  it('should be able to resolve paths that start with a #', () => {
+    const proj = targetProjectLocator.findProjectWithImport(
+      '#hash-path',
+      'libs/proj1/index.ts'
+    );
+
+    expect(proj).toEqual('hash-project');
+  });
+
   it('should be able to resolve a modules when npm packages exist', () => {
     const proj5 = targetProjectLocator.findProjectWithImport(
       '@proj/proj5',
@@ -785,14 +724,6 @@ describe('findTargetProjectWithImport (without tsconfig.json)', () => {
     expect(result2).toEqual('npm:npm-package');
   });
 
-  it('should be able to resolve a module using a normalized path', () => {
-    const proj4ab = targetProjectLocator.findProjectWithImport(
-      '@proj/proj4ab#a',
-      'libs/proj1/index.ts'
-    );
-
-    expect(proj4ab).toEqual('proj4ab');
-  });
   it('should be able to resolve paths that have similar names', () => {
     const proj = targetProjectLocator.findProjectWithImport(
       '@proj/proj123',

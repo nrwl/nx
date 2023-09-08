@@ -8,13 +8,14 @@ export const reactDomVersion = '18.2.0';
 export const reactIsVersion = '18.2.0';
 export const swcLoaderVersion = '0.1.15';
 export const babelLoaderVersion = '^9.1.2';
-export const typesReactVersion = '18.2.12';
-export const typesReactDomVersion = '18.2.5';
-export const typesReactIsVersion = '18.2.0';
+export const typesReactVersion = '18.2.14';
+export const typesReactDomVersion = '18.2.6';
+export const typesReactIsVersion = '18.2.1';
 
 export const typesNodeVersion = '18.14.2';
 
 export const babelPresetReactVersion = '^7.14.5';
+export const babelCoreVersion = '^7.14.5';
 
 export const styledComponentsVersion = '5.3.6';
 export const typesStyledComponentsVersion = '5.1.26';

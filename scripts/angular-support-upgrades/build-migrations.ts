@@ -29,10 +29,9 @@ async function addMigrationPackageGroup(
   } else {
     angularPackageMigrations.packageJsonUpdates[targetNxVersion][
       'x-prompt'
-    ] = `Do you want to update the Angular version to v${promptAndRequirements.promptVersion}?`;
+    ] = `Do you want to update the Angular version to ${promptAndRequirements.promptVersion}?`;
     angularPackageMigrations.packageJsonUpdates[targetNxVersion].requires = {
       '@angular/core': promptAndRequirements.angularCoreRequirement,
-      typescript: promptAndRequirements.typescriptRequirement,
     };
   }
 
@@ -58,7 +57,6 @@ async function getPromptAndRequiredVersions(
 ): Promise<{
   angularCoreRequirement: string;
   promptVersion: string;
-  typescriptRequirement: string;
 } | null> {
   // @angular/core
   const angularCoreMetadata = await axios.get(
@@ -80,17 +78,7 @@ async function getPromptAndRequiredVersions(
     minorVersion !== 0 ? `.${minorVersion}` : ''
   }`;
 
-  // typescript
-  const angularCompilerCliVersion = packageVersionMap.get(
-    '@angular/compiler-cli'
-  );
-  const angularCompilerCliMetadata = await axios.get(
-    `https://registry.npmjs.org/@angular/compiler-cli/${angularCompilerCliVersion}`
-  );
-  const typescriptRequirement =
-    angularCompilerCliMetadata.data.peerDependencies.typescript;
-
-  return { angularCoreRequirement, promptVersion, typescriptRequirement };
+  return { angularCoreRequirement, promptVersion };
 }
 
 export async function buildMigrations(

@@ -1,5 +1,4 @@
-import 'dotenv/config';
-import { ExecutorContext, logger } from '@nx/devkit';
+import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
@@ -12,7 +11,7 @@ import {
 } from 'rxjs/operators';
 import { resolve } from 'path';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   createTmpTsConfig,
 } from '@nx/js/src/utils/buildable-libs-utils';
 
@@ -121,7 +120,8 @@ export async function* webpackExecutor(
   }
 
   if (!options.buildLibsFromSource && context.targetName) {
-    const { dependencies } = calculateProjectDependencies(
+    const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
       context.projectGraph,
       context.root,
       context.projectName,
@@ -139,6 +139,13 @@ export async function* webpackExecutor(
   // Delete output path before bundling
   if (options.deleteOutputPath) {
     deleteOutputDir(context.root, options.outputPath);
+  }
+
+  if (options.generatePackageJson && metadata.projectType !== 'application') {
+    logger.warn(
+      stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+    );
   }
 
   const configs = await getWebpackConfigs(options, context);

@@ -10,7 +10,7 @@ Nx uses enhanced webpack configuration files (e.g. `webpack.config.js`). These c
 functionality to the webpack build.
 
 This guide contains information on the plugins provided by Nx. For more information on customizing webpack configuration, refer to the
-[Nx Webpack configuration guide](/packages/webpack/documents/webpack-config-setup).
+[Nx Webpack configuration guide](/recipes/webpack/webpack-config-setup).
 
 ## withNx
 
@@ -165,7 +165,7 @@ module.exports = composePlugins(
 The `withModuleFederation` and `withModuleFederationForSSR` plugins add module federation support to the webpack build. These plugins use
 [`ModuleFederationPlugin`](https://webpack.js.org/concepts/module-federation/) and provide a simpler API through Nx.
 
-For more information, refer to the [Module Federation recipe](/recipes/module-federation/faster-builds).
+For more information, refer to the [Module Federation recipe](/concepts/more-concepts/faster-builds-with-module-federation).
 
 ### Options
 

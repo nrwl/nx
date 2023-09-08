@@ -89,6 +89,24 @@ describe('testing utilities', () => {
       );
 
       appTree.write(
+        `test-ui-lib/src/lib/button/button.other.stories.ts`,
+        `
+        import type { Meta } from '@storybook/react';
+        import { Button } from './button';
+        
+        const Story: Meta<typeof Button> = {
+          component: Button,
+          title: 'Layout/Texts/Button',
+        };
+        export default Story;
+        
+        export const Primary = {
+          args: {},
+        };
+        `
+      );
+
+      appTree.write(
         `test-ui-lib/src/lib/button/button.component.other.ts`,
         `
         import { Button } from './button';
@@ -151,6 +169,14 @@ describe('testing utilities', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
           'test-ui-lib/src/lib/button/button.component.stories.ts'
+        );
+        expect(fileIsStory).toBeTruthy();
+      });
+
+      it('should verify it is story when using Meta', () => {
+        const fileIsStory = isTheFileAStory(
+          appTree,
+          'test-ui-lib/src/lib/button/button.other.stories.ts'
         );
         expect(fileIsStory).toBeTruthy();
       });

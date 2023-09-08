@@ -58,9 +58,10 @@
         "type": "string",
         "description": "Directory to write coverage report to."
       },
-      "testFile": {
-        "description": "The name of the file to test.",
-        "type": "string"
+      "testFiles": {
+        "aliases": ["testFile"],
+        "type": "array",
+        "items": { "type": "string" }
       }
     },
     "required": [],

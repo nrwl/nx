@@ -32,7 +32,7 @@ The starting point of any non-trivial monorepo management tool is to be able to 
 
 - Turborepo only analyzes package.json files to understand how projects relate to each other. Built-in Nx plugins also analyze package.json files but in addition they analyze JS/TS files, so you don't have to have bogus package.json files (that you don’t use for the purposes of installing packages or publishing) in your repo. There are plugins for Nx that do that for other languages (e.g., Golang, .Net).
 - Since the computation of the project graph can take a lot of time for complex workspaces, both Nx and Turborepo have a daemon process to create the graph in the background.
-- **Nx has [project boundary rules](/core-features/enforce-project-boundaries), which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have project boundary rules. **Project boundary rules prevent the monorepo from becoming a “big ball of mud”.**
+- **Nx has [module boundary rules](/core-features/enforce-module-boundaries), which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have project boundary rules. **Project boundary rules prevent the monorepo from becoming a “big ball of mud”.**
 
 #### 3. Project graph visualization
 
@@ -173,6 +173,5 @@ Nx was released in 2016. Turborepo was open sourced in December of 2021. Turbore
 - There are about [3 million downloads per week](https://www.npmjs.com/package/@nx/tao).
 - There are about 1 million+ unique [Nx Console](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console) (a plugin for VSCode) installations.
 - There is a rich ecosystem of [third-party plugins.](https://nx.dev/community)
-- There are 5500+ active users in [the community slack.](https://nrwlcommunity.slack.com/join/shared_invite/zt-jba969hz-e5zm1Ou_jiOP1J2h8UTu0w#/shared-invite/email)
 
 From day 1 Nx has always been an **MIT-licensed open source project**, and we did everything to make sure companies using Nx won’t end up in the vendor lock-in. We clearly separated Nx the open source project and Nx Cloud the SAAS product. For instance, Nx Cloud is built using the public APIs Nx provides (you can build your own and some companies do). Nx Cloud docs are on a separate domain etc.

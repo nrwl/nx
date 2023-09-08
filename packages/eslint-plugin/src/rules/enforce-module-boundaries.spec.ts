@@ -1,11 +1,6 @@
 import 'nx/src/utils/testing/mock-fs';
 
-import type {
-  FileData,
-  ProjectFileMap,
-  ProjectGraph,
-  ProjectGraphDependency,
-} from '@nx/devkit';
+import type { FileData, ProjectFileMap, ProjectGraph } from '@nx/devkit';
 import { DependencyType } from '@nx/devkit';
 import * as parser from '@typescript-eslint/parser';
 import { TSESLint } from '@typescript-eslint/utils';
@@ -470,7 +465,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'A project tagged with "api" is not allowed to import the "npm-package" package';
+        'A project tagged with "api" is not allowed to import "npm-package"';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -512,7 +507,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'A project tagged with "api" is not allowed to import the "npm-awesome-package" package';
+        'A project tagged with "api" is not allowed to import "npm-awesome-package"';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -554,7 +549,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'A project tagged with "api" is not allowed to import the "npm-package" package';
+        'A project tagged with "api" is not allowed to import "npm-package"';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -575,7 +570,57 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message =
-        'A project tagged with "api" is not allowed to import the "npm-package" package';
+        'A project tagged with "api" is not allowed to import "npm-package"';
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(message);
+      expect(failures[1].message).toEqual(message);
+    });
+
+    it('should not error when importing package nested allowed route', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            {
+              sourceTag: 'api',
+              allowedExternalImports: ['npm-package/*'],
+              bannedExternalImports: ['npm-package/testing'],
+            },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package/allowed';
+          import('npm-package/allowed');
+        `,
+        graph,
+        fileMap
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should error when importing package nested forbidden route', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            {
+              sourceTag: 'api',
+              allowedExternalImports: ['npm-package/*'],
+              bannedExternalImports: ['npm-package/testing'],
+            },
+          ],
+        },
+        `${process.cwd()}/proj/libs/api/src/index.ts`,
+        `
+          import 'npm-package/testing';
+          import('npm-package/testing');
+        `,
+        graph,
+        fileMap
+      );
+
+      const message =
+        'A project tagged with "api" is not allowed to import "npm-package/testing"';
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
@@ -642,7 +687,7 @@ describe('Enforce Module Boundaries (eslint)', () => {
       );
 
       const message = (packageName) =>
-        `A project tagged with "api" is not allowed to import the "${packageName}" package`;
+        `A project tagged with "api" is not allowed to import "${packageName}"`;
       expect(failures.length).toEqual(2);
       expect(failures[0].message).toEqual(message('npm-package'));
       expect(failures[1].message).toEqual(message('npm-awesome-package'));
@@ -872,6 +917,32 @@ Violation detected in:
         },
         `${process.cwd()}/proj/libs/api/src/index.ts`,
         `
+          import '@mycompany/impl';
+          import('@mycompany/impl');
+        `,
+        graph,
+        fileMap
+      );
+
+      expect(failures.length).toEqual(0);
+    });
+
+    it('should support globs', () => {
+      const failures = runRule(
+        {
+          depConstraints: [
+            {
+              sourceTag: 'p*',
+              onlyDependOnLibsWithTags: ['domain*'],
+            },
+          ],
+        },
+        `${process.cwd()}/proj/libs/public/src/index.ts`,
+        `
+          import '@mycompany/impl-domain2';
+          import('@mycompany/impl-domain2');
+          import '@mycompany/impl-both-domains';
+          import('@mycompany/impl-both-domains');
           import '@mycompany/impl';
           import('@mycompany/impl');
         `,

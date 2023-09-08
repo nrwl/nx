@@ -1,5 +1,10 @@
 # Adding Nx to your Existing Project
 
+{% youtube
+src="https://www.youtube.com/embed/VmGCZ77ao_I"
+title="Add Nx to any project"
+width="100%" /%}
+
 Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilities for the package scripts. Each project usually has a set of scripts in the `package.json`:
 
 ```json {% fileName="package.json" %}
@@ -109,13 +114,13 @@ For example, excluding markdown files from the `lint` task cache:
 
 This includes all TypeScript files, but excludes markdown files. As a result, changing your README won't invalidate your "lint cache".
 
-Learn more about [Nx Inputs](/more-concepts/customizing-inputs).
+Learn more about [Nx Inputs](/concepts/more-concepts/customizing-inputs).
 
 ## Learn More
 
 {% cards %}
 
-{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" type="documentation" url="/more-concepts/customizing-inputs" /%}
+{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" type="documentation" url="/concepts/more-concepts/customizing-inputs" /%}
 
 {% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="/core-features/cache-task-results" /%}
 

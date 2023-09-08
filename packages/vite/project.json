@@ -18,7 +18,6 @@
         "outputPath": "build/packages/vite",
         "tsConfig": "packages/vite/tsconfig.lib.json",
         "main": "packages/vite/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages/vite",

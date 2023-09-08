@@ -4,17 +4,17 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreModule, Store } from '@ngrx/store';
 import { readFirst } from '@nx/angular/testing';
 
-import * as <%= className %>Actions from './<%= fileName %>.actions';
-import { <%= className %>Effects } from './<%= fileName %>.effects';
-import { <%= className %>Facade } from './<%= fileName %>.facade';
-import { <%= className %>Entity } from './<%= fileName %>.models';
+import * as <%= className %>Actions from './<%= relativeFileName %>.actions';
+import { <%= className %>Effects } from './<%= relativeFileName %>.effects';
+import { <%= className %>Facade } from './<%= relativeFileName %>.facade';
+import { <%= className %>Entity } from './<%= relativeFileName %>.models';
 import {
   <%= constantName %>_FEATURE_KEY,
   <%= className %>State,
   initial<%= className %>State,
   <%= propertyName %>Reducer
-} from './<%= fileName %>.reducer';
-import * as <%= className %>Selectors from './<%= fileName %>.selectors';
+} from './<%= relativeFileName %>.reducer';
+import * as <%= className %>Selectors from './<%= relativeFileName %>.selectors';
 
 interface TestSchema {
   <%= propertyName %>: <%= className %>State;

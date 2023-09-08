@@ -6,7 +6,7 @@ import * as http from 'http';
 import * as open from 'open';
 import { basename, dirname, extname, isAbsolute, join, parse } from 'path';
 import { performance } from 'perf_hooks';
-import { URL } from 'url';
+import { URL } from 'node:url';
 import { readNxJson, workspaceLayout } from '../../config/configuration';
 import { output } from '../../utils/output';
 import { writeJsonFile } from '../../utils/fileutils';
@@ -400,9 +400,7 @@ export async function generateGraph(
     } else if (args.projects) {
       url.searchParams.append(
         'projects',
-        args.projects
-          .map((projectName) => encodeURIComponent(projectName))
-          .join(' ')
+        args.projects.map((projectName) => projectName).join(' ')
       );
     } else if (args.affected) {
       url.pathname += '/affected';

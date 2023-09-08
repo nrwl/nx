@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { ExecutorContext } from '@nx/devkit';
 import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
 
@@ -11,7 +10,7 @@ import {
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
-import { registerPaths } from '../../utils/executor-utils';
+import { createBuildableTsConfig } from '../../utils/executor-utils';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
@@ -20,7 +19,7 @@ export async function* viteDevServerExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  registerPaths(projectRoot, options, context);
+  createBuildableTsConfig(projectRoot, options, context);
 
   // Retrieve the option for the configured buildTarget.
   const buildTargetOptions: ViteBuildExecutorOptions = getNxTargetOptions(

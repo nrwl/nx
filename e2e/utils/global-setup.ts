@@ -1,9 +1,12 @@
-import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { join } from 'path';
+
+import { registerTsConfigPaths } from '../../packages/nx/src/plugins/js/utils/register';
+import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { exec } from 'child_process';
 import { tmpdir } from 'tmp';
-import { existsSync } from 'fs-extra';
+import { existsSync, removeSync } from 'fs-extra';
 import { Config } from '@jest/types';
+import * as isCI from 'is-ci';
 
 export default async function (globalConfig: Config.ConfigGlobals) {
   const isVerbose: boolean =
@@ -19,13 +22,16 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     storage: storageLocation,
   });
 
-  if (
-    process.env.NX_E2E_SKIP_BUILD_CLEANUP !== 'true' ||
-    !existsSync('./build')
-  ) {
+  if (process.env.NX_E2E_SKIP_CLEANUP !== 'true' || !existsSync('./build')) {
+    if (!isCI) {
+      registerTsConfigPaths(join(__dirname, '../../tsconfig.base.json'));
+      const { e2eCwd } = await import('./get-env-info');
+      removeSync(e2eCwd);
+    }
     console.log('Publishing packages to local registry');
+    const publishVersion = process.env.PUBLISHED_VERSION ?? 'major';
     await new Promise<void>((res, rej) => {
-      const publishProcess = exec('pnpm nx-release --local major', {
+      const publishProcess = exec(`pnpm nx-release --local ${publishVersion}`, {
         env: process.env,
       });
       let logs = Buffer.from('');

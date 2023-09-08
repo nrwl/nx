@@ -2,12 +2,10 @@ import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
-  killPort,
   newProject,
   readProjectConfig,
   runCLI,
   runCLIAsync,
-  runCypressTests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -45,11 +43,15 @@ describe('React Module Federation', () => {
       combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
     });
 
+    expect(await readPort(shell)).toEqual(4200);
+    expect(await readPort(remote1)).toEqual(4201);
+    expect(await readPort(remote2)).toEqual(4202);
+    expect(await readPort(remote3)).toEqual(4203);
+
     updateFile(
       `apps/${shell}/webpack.config.js`,
       stripIndents`
-        import { ModuleFederationConfig } from '@nx/devkit';
-        import { composePlugins, withNx } from '@nx/webpack';
+        import { composePlugins, withNx, ModuleFederationConfig } from '@nx/webpack';
         import { withReact } from '@nx/react';
         import { withModuleFederation } from '@nx/react/module-federation');
         
@@ -59,10 +61,10 @@ describe('React Module Federation', () => {
           ...baseConfig,
               remotes: [
                 '${remote1}',
-                ['${remote2}', 'http://localhost:${readPort(
+                ['${remote2}', 'http://localhost:${await readPort(
         remote2
       )}/remoteEntry.js'],
-                ['${remote3}', 'http://localhost:${readPort(remote3)}'],
+                ['${remote3}', 'http://localhost:${await readPort(remote3)}'],
               ],
         };
 
@@ -106,21 +108,38 @@ describe('React Module Federation', () => {
     //   expect(e2eResults).toContain('All specs passed!');
     //   expect(
     //     await killPorts([
-    //       readPort(shell),
-    //       readPort(remote1),
-    //       readPort(remote2),
-    //       readPort(remote3),
+    //       await readPort(shell),
+    //       await readPort(remote1),
+    //       await readPort(remote2),
+    //       await readPort(remote3),
     //     ])
     //   ).toBeTruthy();
     // }
   }, 500_000);
 
-  function readPort(appName: string): number {
-    const config = readProjectConfig(appName);
+  it('should should support generating host and remote apps with the new name and root format', async () => {
+    const shell = uniq('shell');
+    const remote = uniq('remote');
+
+    runCLI(
+      `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive`
+    );
+    runCLI(
+      `generate @nx/react:remote ${remote} --host=${shell} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${shell}/module-federation.config.js`);
+    checkFilesExist(`${remote}/module-federation.config.js`);
+
+    // check default generated host is built successfully
+    const buildOutput = runCLI(`run ${shell}:build:development`);
+    expect(buildOutput).toContain('Successfully ran target build');
+  }, 500_000);
+
+  async function readPort(appName: string): Promise<number> {
+    const config = await readProjectConfig(appName);
     return config.targets.serve.options.port;
   }
 });
-
-function killPorts(ports: number[]): Promise<boolean[]> {
-  return Promise.all(ports.map((p) => killPort(p)));
-}

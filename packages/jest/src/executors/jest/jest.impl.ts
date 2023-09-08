@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { runCLI } from 'jest';
 import { readConfig, readConfigs } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
@@ -71,6 +70,7 @@ export async function jestConfigParser(
     ci: options.ci,
     color: options.color,
     detectOpenHandles: options.detectOpenHandles,
+    forceExit: options.forceExit,
     logHeapUsage: options.logHeapUsage,
     detectLeaks: options.detectLeaks,
     json: options.json,

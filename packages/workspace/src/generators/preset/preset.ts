@@ -1,12 +1,7 @@
-import {
-  installPackagesTask,
-  names,
-  readNxJson,
-  Tree,
-  updateNxJson,
-} from '@nx/devkit';
+import { installPackagesTask, names, Tree } from '@nx/devkit';
 import { Schema } from './schema';
 import { Preset } from '../utils/presets';
+import { join } from 'path';
 
 export async function presetGenerator(tree: Tree, options: Schema) {
   options = normalizeOptions(options);
@@ -20,7 +15,7 @@ export async function presetGenerator(tree: Tree, options: Schema) {
 export default presetGenerator;
 
 async function createPreset(tree: Tree, options: Schema) {
-  if (options.preset === Preset.Empty || options.preset === Preset.Apps) {
+  if (options.preset === Preset.Apps) {
     return;
   } else if (options.preset === Preset.AngularMonorepo) {
     const {
@@ -29,6 +24,8 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return angularApplicationGenerator(tree, {
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       standalone: options.standaloneApi,
@@ -42,6 +39,8 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return angularApplicationGenerator(tree, {
       name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       routing: options.routing,
@@ -55,6 +54,8 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return reactApplicationGenerator(tree, {
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       bundler: options.bundler ?? 'webpack',
@@ -66,6 +67,8 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return reactApplicationGenerator(tree, {
       name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       rootProject: true,
@@ -79,8 +82,11 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return nextApplicationGenerator(tree, {
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
+      appDir: options.nextAppDir,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
     });
   } else if (options.preset === Preset.NextJsStandalone) {
@@ -88,6 +94,8 @@ async function createPreset(tree: Tree, options: Schema) {
       '/next');
     return nextApplicationGenerator(tree, {
       name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
@@ -100,6 +108,8 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return webApplicationGenerator(tree, {
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       style: options.style,
       linter: options.linter,
       bundler: 'vite',
@@ -111,6 +121,8 @@ async function createPreset(tree: Tree, options: Schema) {
 
     return nestApplicationGenerator(tree, {
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
     });
@@ -120,6 +132,8 @@ async function createPreset(tree: Tree, options: Schema) {
     } = require('@nx' + '/express');
     return expressApplicationGenerator(tree, {
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'jest',
     });
@@ -128,6 +142,8 @@ async function createPreset(tree: Tree, options: Schema) {
       '/react-native');
     return reactNativeApplicationGenerator(tree, {
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
     });
@@ -135,24 +151,20 @@ async function createPreset(tree: Tree, options: Schema) {
     const { expoApplicationGenerator } = require('@nx' + '/expo');
     return expoApplicationGenerator(tree, {
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       e2eTestRunner: options.e2eTestRunner ?? 'detox',
     });
   } else if (options.preset === Preset.TS) {
-    const c = readNxJson(tree);
     const { initGenerator } = require('@nx' + '/js');
-    c.workspaceLayout = {
-      appsDir: 'packages',
-      libsDir: 'packages',
-    };
-    updateNxJson(tree, c);
     return initGenerator(tree, {});
   } else if (options.preset === Preset.TsStandalone) {
-    const c = readNxJson(tree);
     const { libraryGenerator } = require('@nx' + '/js');
-    updateNxJson(tree, c);
     return libraryGenerator(tree, {
       name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
       bundler: 'tsc',
       unitTestRunner: 'vitest',
       testEnvironment: 'node',
@@ -166,6 +178,8 @@ async function createPreset(tree: Tree, options: Schema) {
     return nodeApplicationGenerator(tree, {
       bundler,
       name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       standaloneConfig: options.standaloneConfig,
       framework: options.framework,
@@ -180,6 +194,8 @@ async function createPreset(tree: Tree, options: Schema) {
     return nodeApplicationGenerator(tree, {
       bundler,
       name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
       linter: options.linter,
       framework: options.framework,
       docker: options.docker,

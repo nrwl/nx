@@ -1,31 +1,28 @@
 import {
+  ChampionCard,
+  ChampionPerks,
   Footer,
   Header,
   SectionHeading,
-  ChampionCard,
-  Champion,
-  ChampionPerks,
 } from '@nx/nx-dev/ui-common';
 import { ConnectWithUs } from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { champions1, champions2, champions3 } from '../lib/champions';
 
-interface CommunityProps {}
-
-export default function Community(props: CommunityProps): JSX.Element {
+export default function Community(): JSX.Element {
   const router = useRouter();
 
   return (
     <>
       <NextSeo
         title="Nx Community"
-        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter"
+        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and Twitter"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Community',
           description:
-            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Slack and Twitter',
+            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and Twitter',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.webp',

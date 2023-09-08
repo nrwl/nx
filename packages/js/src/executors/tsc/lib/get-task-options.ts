@@ -3,52 +3,14 @@ import type {
   ProjectGraphProjectNode,
   Target,
 } from '@nx/devkit';
-import { getOutputsForTargetAndConfiguration } from '@nx/devkit';
-import { join } from 'path';
 import type {
   ExecutorOptions,
   NormalizedExecutorOptions,
 } from '../../../utils/schema';
 import { normalizeOptions } from './normalize-options';
 
-export function getTaskOptions(
-  taskName: string,
-  context: ExecutorContext
-):
-  | NormalizedExecutorOptions
-  | {
-      tsConfig: string | null;
-      rootDir: string;
-      outputPath: string;
-    } {
-  const result = getTaskWithTscExecutorOptions(taskName, context);
-  if (result) {
-    return result;
-  }
-
-  const { taskOptions, root, projectNode, target } = parseTaskInfo(
-    taskName,
-    context
-  );
-
-  const outputs = getOutputsForTargetAndConfiguration(
-    { overrides: context.taskGraph.tasks[taskName].overrides, target },
-    projectNode
-  );
-
-  const outputPath = outputs.length
-    ? join(context.root, outputs[0])
-    : join(context.root, 'dist', root);
-  const rootDir = join(context.root, root);
-  const tsConfig = taskOptions.tsConfig
-    ? join(context.root, taskOptions.tsConfig)
-    : null;
-
-  return { tsConfig, rootDir, outputPath };
-}
-
 const tasksOptionsCache = new Map<string, NormalizedExecutorOptions>();
-export function getTaskWithTscExecutorOptions(
+export function getTaskOptions(
   taskName: string,
   context: ExecutorContext
 ): NormalizedExecutorOptions | null {

@@ -409,20 +409,38 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
       ...config.module,
       rules: [
         ...(config.module.rules ?? []),
+        // Images: Inline small images, and emit a separate file otherwise.
         {
-          test: /\.(bmp|png|jpe?g|gif|webp|avif)$/,
+          test: /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/,
           type: 'asset',
           parser: {
             dataUrlCondition: {
               maxSize: 10_000, // 10 kB
             },
           },
+          generator: {
+            filename: `[name]${hashFormat.file}[ext]`,
+          },
         },
+        // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
         {
-          test: /\.(eot|svg|cur|jpg|png|webp|gif|otf|ttf|woff|woff2|ani)$/,
-          loader: require.resolve('file-loader'),
-          options: {
-            name: `[name]${hashFormat.file}.[ext]`,
+          test: /\.svg$/,
+          type: 'asset',
+          parser: {
+            dataUrlCondition: {
+              maxSize: 10_000, // 10 kB
+            },
+          },
+          generator: {
+            filename: `[name]${hashFormat.file}[ext]`,
+          },
+        },
+        // Fonts: Emit separate file and export the URL.
+        {
+          test: /\.(eot|otf|ttf|woff|woff2)$/,
+          type: 'asset/resource',
+          generator: {
+            filename: `[name]${hashFormat.file}[ext]`,
           },
         },
         ...rules,

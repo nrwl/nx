@@ -24,7 +24,7 @@
   },
   "homepage": "https://nx.dev",
   "peerDependencies": {
-    "@typescript-eslint/parser": "^5.58.0",
+    "@typescript-eslint/parser": "^5.60.1",
     "eslint-config-prettier": "^8.1.0"
   },
   "peerDependenciesMeta": {
@@ -35,11 +35,13 @@
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "@typescript-eslint/type-utils": "^5.58.0",
-    "@typescript-eslint/utils": "^5.58.0",
+    "@typescript-eslint/type-utils": "^5.60.1",
+    "@typescript-eslint/utils": "^5.60.1",
     "chalk": "^4.1.0",
     "confusing-browser-globals": "^1.0.9",
-    "semver": "7.3.4"
+    "jsonc-eslint-parser": "^2.1.0",
+    "semver": "7.5.3",
+    "tslib": "^2.3.0"
   },
   "publishConfig": {
     "access": "public"

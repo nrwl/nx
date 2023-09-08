@@ -11,6 +11,12 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/nest with @nx/nest",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-4-0-support-nestjs-10": {
+      "cli": "nx",
+      "version": "16.4.0-beta.16",
+      "description": "Update TsConfig target to es2021 and CacheModule if being used. Read more at https://docs.nestjs.com/migration-guide",
+      "implementation": "./src/migrations/update-16-4-0-cache-manager/nestjs-10-updates"
     }
   },
   "packageJsonUpdates": {

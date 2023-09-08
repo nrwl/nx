@@ -59,6 +59,12 @@
       "version": "16.4.0-beta.10",
       "description": "Remove tsconfig.e2e.json and add settings to project tsconfig.json. tsConfigs executor option is now deprecated. The project level tsconfig.json file should be used instead.",
       "implementation": "./src/migrations/update-16-4-0/tsconfig-sourcemaps"
+    },
+    "update-16-8-0-cypress-13": {
+      "cli": "nx",
+      "version": "16.8.0-beta.4",
+      "description": "Update to Cypress v13. Most noteable change is video recording is off by default. This migration will only update if the workspace is already on Cypress v12. https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-130",
+      "implementation": "./src/migrations/update-16-8-0/cypress-13"
     }
   },
   "packageJsonUpdates": {
@@ -70,6 +76,27 @@
       "packages": {
         "cypress": {
           "version": "^12.11.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.5.0": {
+      "version": "16.5.0-beta.0",
+      "requires": {
+        "cypress": ">=12.0.0 <12.16.0"
+      },
+      "packages": {
+        "cypress": {
+          "version": "^12.16.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.7.0": {
+      "version": "16.7.0-beta.3",
+      "packages": {
+        "eslint-plugin-cypress": {
+          "version": "^2.13.4",
           "alwaysAddToPackageJson": false
         }
       }

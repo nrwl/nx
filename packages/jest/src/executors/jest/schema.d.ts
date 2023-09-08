@@ -15,6 +15,7 @@ export interface JestExecutorOptions {
   color?: boolean;
   clearCache?: boolean;
   findRelatedTests?: string;
+  forceExit?: boolean;
   json?: boolean;
   maxWorkers?: number | string;
   onlyChanged?: boolean;

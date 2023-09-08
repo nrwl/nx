@@ -24,6 +24,7 @@ import {
 } from '../../utils/versions';
 import { addStaticRouter } from '../../utils/ast-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { join } from 'path';
 
 let tsModule: typeof import('typescript');
 
@@ -115,6 +116,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         target: 'node',
         main: `${projectRoot}/server.ts`,
         outputPath: joinPathFragments(originalOutputPath, 'server'),
+        outputFileName: 'server.js',
         tsConfig: `${projectRoot}/tsconfig.server.json`,
         compiler: 'babel',
         externalDependencies: 'all',
@@ -191,7 +193,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     ];
   }
 
-  generateFiles(tree, joinPathFragments(__dirname, 'files'), projectRoot, {
+  generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
     extraInclude:
       options.extraInclude?.length > 0

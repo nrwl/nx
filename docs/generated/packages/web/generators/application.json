@@ -1,6 +1,6 @@
 {
   "name": "application",
-  "factory": "./src/generators/application/application#applicationGenerator",
+  "factory": "./src/generators/application/application#applicationGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -14,11 +14,16 @@
         "type": "string",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the application?",
-        "pattern": "^[a-zA-Z].*$"
+        "pattern": "^[a-zA-Z][^:]*$"
       },
       "directory": {
         "description": "The directory of the new application.",
         "type": "string"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -79,7 +84,8 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["cypress", "none"],
+        "enum": ["cypress", "playwright", "none"],
+        "x-prompt": "Which E2E test runner would you like to use?",
         "description": "Test runner to use for end to end (e2e) tests",
         "default": "cypress"
       },
@@ -100,13 +106,13 @@
       }
     },
     "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/web:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/web:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory\" %}\n\nCreate an application named `my-app` in the `my-dir` directory:\n\n```bash\nnx g @nx/web:app my-app --directory=my-dir\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nx/web:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Application\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/web:application my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Application using Vite as bundler\" %}\n\nCreate an application named `my-app`:\n\n```bash\nnx g @nx/web:app my-app --bundler=vite\n```\n\n{% /tab %}\n\n{% tab label=\"Specify directory\" %}\n\nCreate an application named `my-app` in the `my-dir` directory:\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=my-dir`. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.\n{% /callout %}\n\n```bash\nnx g @nx/web:app my-app --directory=apps/my-dir/my-app\n```\n\n{% /tab %}\n\n{% tab label=\"Add tags\" %}\n\nAdd tags to the application (used for linting).\n\n```bash\nnx g @nx/web:app my-app --tags=scope:admin,type:ui\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "aliases": ["app"],
   "x-type": "application",
   "description": "Create an web application.",
-  "implementation": "/packages/web/src/generators/application/application#applicationGenerator.ts",
+  "implementation": "/packages/web/src/generators/application/application#applicationGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/web/src/generators/application/schema.json",
   "type": "generator"

@@ -14,6 +14,10 @@ To create a new workspace with expo, run the following command:
 
 Install the expo plugin
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/expo` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 {% tabs %}
 {%tab label="npm"%}
 
@@ -50,7 +54,7 @@ nx start my-app
 To generate a new library run:
 
 ```shell
-npx nx g @nx/react-native:lib your-lib-name
+npx nx g @nx/expo:lib your-lib-name
 ```
 
 ### Generating Components
@@ -58,7 +62,7 @@ npx nx g @nx/react-native:lib your-lib-name
 To generate a new component inside library run:
 
 ```shell
-npx nx g @nx/react-native:component your-component-name --project=your-lib-name --export
+npx nx g @nx/expo:component your-component-name --project=your-lib-name --export
 ```
 
 Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`
@@ -247,6 +251,28 @@ To check the details of your build status, run:
 nx build-list  <app-name>
 ```
 
+### Submit an EAS Build
+
+EAS Submit is a hosted service for uploading and submitting your app binaries to the app stores. Since it's a hosted service, you can submit your app to both stores as long as you can run EAS CLI on your machine.
+
+To submit an EAS build:
+
+```shell
+nx submit <app-name>
+```
+
+### Update an EAS Build
+
+EAS Update is a hosted service that serves updates for projects using the `expo-updates` library.
+
+EAS Update makes fixing small bugs and pushing quick fixes a snap in between app store submissions. It accomplishes this by allowing an end-user's app to swap out the non-native parts of their app (for example, JS, styling, and image changes) with a new update that contains bug fixes and other updates.
+
+To update an EAS build:
+
+```shell
+nx update <app-name>
+```
+
 ### Testing Projects
 
 You can run unit tests with:
@@ -269,6 +295,8 @@ Below table is a map between expo commands and Nx commands:
 | `expo install`     | `nx install <app-name>`     |
 | `eas build`        | `nx build <app-name>`       |
 | `eas build:list`   | `nx build-list <app-name>`  |
+| `eas update`       | `nx update <app-name>`      |
+| `eas submit`       | `nx submit <app-name>`      |
 
 ## More Documentation
 

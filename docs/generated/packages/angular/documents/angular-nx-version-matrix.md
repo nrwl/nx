@@ -14,6 +14,8 @@ We provide a recommended version, and it is usually the latest minor version of 
 
 | Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_                    |
 | --------------- | ------------------------------ | --------------------------------------- |
+| ~16.2.0         | **latest**                     | 16.7.0 <= latest                        |
+| ~16.1.0         | **latest**                     | 16.4.0 <= latest                        |
 | ~16.0.0         | **latest**                     | 16.1.0 <= latest                        |
 | ~15.2.0         | **latest**                     | 15.8.0 <= latest                        |
 | ~15.1.0         | **latest**                     | 15.5.0 <= latest                        |

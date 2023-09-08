@@ -40,40 +40,23 @@ export function createPackageJson(
   } = {},
   fileMap: ProjectFileMap = null
 ): PackageJson {
-  if (fileMap == null) {
-    fileMap = readProjectFileMapCache()?.projectFileMap || {};
-  }
-
   const projectNode = graph.nodes[projectName];
   const isLibrary = projectNode.type === 'lib';
 
-  const { selfInputs, dependencyInputs } = options.target
-    ? getTargetInputs(readNxJson(), projectNode, options.target)
-    : { selfInputs: [], dependencyInputs: [] };
+  const rootPackageJson = readJsonFile(
+    `${options.root || workspaceRoot}/package.json`
+  );
 
-  const npmDeps: NpmDeps = {
-    dependencies: {},
-    peerDependencies: {},
-    peerDependenciesMeta: {},
-  };
-
-  const seen = new Set<string>();
-
-  options.helperDependencies?.forEach((dep) => {
-    seen.add(dep);
-    npmDeps.dependencies[graph.externalNodes[dep].data.packageName] =
-      graph.externalNodes[dep].data.version;
-    recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
-  });
-
-  findAllNpmDeps(
-    fileMap,
+  const npmDeps = findProjectsNpmDependencies(
     projectNode,
     graph,
-    npmDeps,
-    seen,
-    dependencyInputs,
-    selfInputs
+    options.target,
+    rootPackageJson,
+    {
+      helperDependencies: options.helperDependencies,
+      isProduction: options.isProduction,
+    },
+    fileMap
   );
 
   // default package.json if one does not exist
@@ -117,9 +100,6 @@ export function createPackageJson(
     );
   };
 
-  const rootPackageJson = readJsonFile(
-    `${options.root || workspaceRoot}/package.json`
-  );
   Object.entries(npmDeps.dependencies).forEach(([packageName, version]) => {
     if (
       rootPackageJson.devDependencies?.[packageName] &&
@@ -200,12 +180,71 @@ export function createPackageJson(
   return packageJson;
 }
 
+export function findProjectsNpmDependencies(
+  projectNode: ProjectGraphProjectNode,
+  graph: ProjectGraph,
+  target: string,
+  rootPackageJson: PackageJson,
+  options: {
+    helperDependencies?: string[];
+    ignoredDependencies?: string[];
+    isProduction?: boolean;
+  },
+  fileMap?: ProjectFileMap
+): NpmDeps {
+  if (fileMap == null) {
+    fileMap = readProjectFileMapCache()?.projectFileMap || {};
+  }
+
+  const { selfInputs, dependencyInputs } = target
+    ? getTargetInputs(readNxJson(), projectNode, target)
+    : { selfInputs: [], dependencyInputs: [] };
+
+  const npmDeps: NpmDeps = {
+    dependencies: {},
+    peerDependencies: {},
+    peerDependenciesMeta: {},
+  };
+
+  const seen = new Set<string>();
+
+  options.helperDependencies?.forEach((dep) => {
+    seen.add(dep);
+    npmDeps.dependencies[graph.externalNodes[dep].data.packageName] =
+      graph.externalNodes[dep].data.version;
+    recursivelyCollectPeerDependencies(dep, graph, npmDeps, seen);
+  });
+
+  // if it's production, we want to ignore all found devDependencies
+  const ignoredDependencies =
+    options.isProduction && rootPackageJson.devDependencies
+      ? [
+          ...(options.ignoredDependencies || []),
+          ...Object.keys(rootPackageJson.devDependencies),
+        ]
+      : options.ignoredDependencies || [];
+
+  findAllNpmDeps(
+    fileMap,
+    projectNode,
+    graph,
+    npmDeps,
+    seen,
+    ignoredDependencies,
+    dependencyInputs,
+    selfInputs
+  );
+
+  return npmDeps;
+}
+
 function findAllNpmDeps(
   projectFileMap: ProjectFileMap,
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
   npmDeps: NpmDeps,
   seen: Set<string>,
+  ignoredDependencies: string[],
   dependencyPatterns: string[],
   rootPatterns?: string[]
 ): void {
@@ -240,6 +279,14 @@ function findAllNpmDeps(
     } else {
       if (node) {
         seen.add(dep);
+        // do not add ignored dependencies to the list or non-npm dependencies
+        if (
+          ignoredDependencies.includes(node.data.packageName) ||
+          node.type !== 'npm'
+        ) {
+          continue;
+        }
+
         npmDeps.dependencies[node.data.packageName] = node.data.version;
         recursivelyCollectPeerDependencies(node.name, graph, npmDeps, seen);
       } else if (graph.nodes[dep]) {
@@ -249,6 +296,7 @@ function findAllNpmDeps(
           graph,
           npmDeps,
           seen,
+          ignoredDependencies,
           dependencyPatterns
         );
       }

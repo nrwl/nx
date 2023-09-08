@@ -3,21 +3,45 @@ import {
   convertNxGenerator,
   formatFiles,
   generateFiles,
-  getWorkspaceLayout,
-  names,
   Tree,
   writeJson,
 } from '@nx/devkit';
+import {
+  determineProjectNameAndRootOptions,
+  type ProjectNameAndRootFormat,
+} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
 import { getImportPath } from '../../utilities/get-import-path';
 
 export interface ProjectOptions {
   name: string;
+  directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+}
+interface NormalizedProjectOptions extends ProjectOptions {
+  projectRoot: string;
 }
 
-function normalizeOptions(options: ProjectOptions): ProjectOptions {
-  options.name = names(options.name).fileName;
-  return options;
+async function normalizeOptions(
+  tree: Tree,
+  options: ProjectOptions
+): Promise<NormalizedProjectOptions> {
+  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    tree,
+    {
+      name: options.name,
+      projectType: 'library',
+      directory: options.directory,
+      projectNameAndRootFormat: options.projectNameAndRootFormat,
+      callingGenerator: '@nx/workspace:npm-package',
+    }
+  );
+
+  return {
+    ...options,
+    name: projectName,
+    projectRoot,
+  };
 }
 
 function addFiles(projectRoot: string, tree: Tree, options: ProjectOptions) {
@@ -34,21 +58,30 @@ function addFiles(projectRoot: string, tree: Tree, options: ProjectOptions) {
 }
 
 export async function npmPackageGenerator(tree: Tree, options: ProjectOptions) {
-  options = normalizeOptions(options);
+  return await npmPackageGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...options,
+  });
+}
 
-  const { libsDir } = getWorkspaceLayout(tree);
-  const projectRoot = join(libsDir, options.name);
+export async function npmPackageGeneratorInternal(
+  tree: Tree,
+  _options: ProjectOptions
+) {
+  const options = await normalizeOptions(tree, _options);
 
   addProjectConfiguration(tree, options.name, {
-    root: projectRoot,
+    root: options.projectRoot,
   });
 
-  const fileCount = tree.children(projectRoot).length;
-  const projectJsonExists = tree.exists(join(projectRoot, 'project.json'));
+  const fileCount = tree.children(options.projectRoot).length;
+  const projectJsonExists = tree.exists(
+    join(options.projectRoot, 'project.json')
+  );
   const isEmpty = fileCount === 0 || (fileCount === 1 && projectJsonExists);
 
   if (isEmpty) {
-    addFiles(projectRoot, tree, options);
+    addFiles(options.projectRoot, tree, options);
   }
 
   await formatFiles(tree);

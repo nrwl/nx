@@ -24,10 +24,10 @@ import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
-import { Workspaces } from '../config/workspaces';
 import {
   DaemonBasedTaskHasher,
   InProcessTaskHasher,
+  TaskHasher,
 } from '../hasher/task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
@@ -46,10 +46,11 @@ async function getTerminalOutputLifeCycle(
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   const isRunOne = initiatingProject != null;
-  const useDynamicOutput =
-    shouldUseDynamicLifeCycle(tasks, runnerOptions, nxArgs.outputStyle) &&
-    process.env.NX_VERBOSE_LOGGING !== 'true' &&
-    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT !== 'false';
+  const useDynamicOutput = shouldUseDynamicLifeCycle(
+    tasks,
+    runnerOptions,
+    nxArgs.outputStyle
+  );
 
   const overridesWithoutHidden = { ...overrides };
   delete overridesWithoutHidden['__overrides_unparsed__'];
@@ -195,10 +196,7 @@ export async function runCommand(
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
-  if (process.env.NX_BATCH_MODE === 'true') {
-    nxArgs.outputStyle = 'stream';
-  }
-  if (nxArgs.outputStyle == 'stream') {
+  if (nxArgs.outputStyle == 'stream' || process.env.NX_BATCH_MODE === 'true') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
   }
@@ -233,16 +231,15 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher;
+  let hasher: TaskHasher;
   if (daemonClient.enabled()) {
-    hasher = new DaemonBasedTaskHasher(daemonClient, taskGraph, runnerOptions);
+    hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
   } else {
     const { projectFileMap, allWorkspaceFiles } = getProjectFileMap();
     hasher = new InProcessTaskHasher(
       projectFileMap,
       allWorkspaceFiles,
       projectGraph,
-      taskGraph,
       nxJson,
       runnerOptions,
       fileHasher
@@ -254,7 +251,6 @@ export async function invokeTasksRunner({
   // a distributed fashion
   performance.mark('hashing:start');
   await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
-    new Workspaces(workspaceRoot),
     hasher,
     projectGraph,
     taskGraph,
@@ -276,7 +272,33 @@ export async function invokeTasksRunner({
       nxJson,
       nxArgs,
       taskGraph,
-      hasher,
+      hasher: {
+        hashTask(task: Task, taskGraph_?: TaskGraph) {
+          if (!taskGraph_) {
+            output.warn({
+              title: `TaskGraph is now required as an argument to hashTasks`,
+              bodyLines: [
+                `The TaskGraph object can be retrieved from the context`,
+              ],
+            });
+            taskGraph_ = taskGraph;
+          }
+          return hasher.hashTask(task, taskGraph_);
+        },
+        hashTasks(task: Task[], taskGraph_?: TaskGraph) {
+          if (!taskGraph_) {
+            output.warn({
+              title: `TaskGraph is now required as an argument to hashTasks`,
+              bodyLines: [
+                `The TaskGraph object can be retrieved from the context`,
+              ],
+            });
+            taskGraph_ = taskGraph;
+          }
+
+          return hasher.hashTasks(task, taskGraph_);
+        },
+      },
       daemon: daemonClient,
     }
   );
@@ -360,12 +382,18 @@ function shouldUseDynamicLifeCycle(
   options: any,
   outputStyle: string
 ) {
+  if (
+    process.env.NX_BATCH_MODE === 'true' ||
+    process.env.NX_VERBOSE_LOGGING === 'true' ||
+    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT === 'false'
+  ) {
+    return false;
+  }
   if (!process.stdout.isTTY) return false;
   if (isCI()) return false;
   if (outputStyle === 'static' || outputStyle === 'stream') return false;
 
-  const noForwarding = !tasks.find((t) => shouldStreamOutput(t, null, options));
-  return noForwarding;
+  return !tasks.find((t) => shouldStreamOutput(t, null, options));
 }
 
 export function getRunner(

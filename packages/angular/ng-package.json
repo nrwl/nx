@@ -14,7 +14,6 @@
     "@phenomnomnominal/tsquery",
     "@typescript-eslint/",
     "chalk",
-    "chokidar",
     "ignore",
     "minimatch",
     "rxjs-for-await",
@@ -25,7 +24,8 @@
     "webpack",
     "http-server",
     "magic-string",
-    "enquirer"
+    "enquirer",
+    "find-cache-dir"
   ],
   "keepLifecycleScripts": true
 }

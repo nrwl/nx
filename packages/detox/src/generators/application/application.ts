@@ -14,7 +14,17 @@ import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
+  return await detoxApplicationGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function detoxApplicationGeneratorInternal(
+  host: Tree,
+  schema: Schema
+) {
+  const options = await normalizeOptions(host, schema);
 
   const initTask = await detoxInitGenerator(host, {
     ...options,

@@ -1,3 +1,5 @@
+# Enforce module boundaries rule
+
 The `@nx/enforce-module-boundaries` ESLint rule enables you to define strict rules for accessing resources between different projects in the repository. Enforcing strict boundaries helps to prevent unplanned cross-dependencies.
 
 ## Usage
@@ -51,7 +53,7 @@ The `depConstraints` is an array of objects representing the constraints defined
 
 Read more about the proper usage of this rule:
 
-- [Enforce Project Boundaries](/core-features/enforce-project-boundaries)
+- [Enforce Module Boundaries](/core-features/enforce-module-boundaries)
 - [Ban Dependencies with Certain Tags](/recipes/enforce-module-boundaries/ban-dependencies-with-tags)
 - [Tag in Multiple Dimensions](/recipes/enforce-module-boundaries/tag-multiple-dimensions)
 - [Ban External Imports](/recipes/enforce-module-boundaries/ban-external-imports)

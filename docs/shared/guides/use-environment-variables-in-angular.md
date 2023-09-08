@@ -101,6 +101,14 @@ Now, when we define variables in our `.env` file, such as...
 NX_API_URL=http://localhost:3333
 ```
 
+{% callout type="note" title="Set environment variables from the terminal" %}
+Alternatively, you can set the variable when running a terminal command by using:
+
+- MacOS & Linux: `NX_API_URL=http://localhost:9999 npm run build-prod`
+- Windows: `set NX_API_URL=http://localhost:9999 & npm run build-prod`
+
+{% /callout %}
+
 Finally, We can use environment variables in our code. For example,
 
 ```typescript {% fileName="apps/myapp/src/main.ts" %}

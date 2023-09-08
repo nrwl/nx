@@ -1,25 +1,21 @@
-import { formatFiles, Tree } from '@nx/devkit';
-import { moveGenerator } from '@nx/workspace/generators';
-import { updateModuleName } from './lib/update-module-name';
-import { updateNgPackage } from './lib/update-ng-package';
-import { Schema } from './schema';
+import type { Tree } from '@nx/devkit';
+import { moveGeneratorInternal } from '@nx/workspace/src/generators/move/move';
+import type { Schema } from './schema';
 
-/**
- * Moves an Angular lib/app to another folder (and renames it in the process)
- *
- * @remarks It's important to note that `updateModuleName` is done after the update
- * to the workspace, so it can't use the same tricks as the `@nx/workspace` rules
- * to get the before and after names and paths.
- */
 export async function angularMoveGenerator(
   tree: Tree,
   schema: Schema
 ): Promise<void> {
-  await moveGenerator(tree, { ...schema, skipFormat: true });
-  updateModuleName(tree, schema);
-  updateNgPackage(tree, schema);
+  await angularMoveGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
 
-  if (!schema.skipFormat) {
-    await formatFiles(tree);
-  }
+export async function angularMoveGeneratorInternal(
+  tree: Tree,
+  schema: Schema
+): Promise<void> {
+  process.env.NX_ANGULAR_MOVE_INVOKED = 'true';
+  await moveGeneratorInternal(tree, schema);
 }

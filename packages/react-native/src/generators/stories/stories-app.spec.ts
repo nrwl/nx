@@ -21,14 +21,10 @@ describe('react:stories for applications', () => {
       project: 'test-ui-app',
     });
 
-    expect(appTree.exists('apps/test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.stories.tsx')).toBeTruthy();
     expect(
-      appTree.exists('apps/test-ui-app/src/app/App.stories.tsx')
-    ).toBeTruthy();
-    expect(
-      appTree.exists(
-        'apps/test-ui-app/src/app/another-cmp/another-cmp.stories.tsx'
-      )
+      appTree.exists('test-ui-app/src/app/another-cmp/another-cmp.stories.tsx')
     ).toBeTruthy();
   });
 
@@ -39,17 +35,13 @@ describe('react:stories for applications', () => {
     });
     await storiesGenerator(appTree, {
       project: 'test-ui-app',
-      ignorePaths: ['apps/test-ui-app/src/app/**'],
+      ignorePaths: ['test-ui-app/src/app/**'],
     });
 
-    expect(appTree.exists('apps/test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.stories.tsx')).toBeFalsy();
     expect(
-      appTree.exists('apps/test-ui-app/src/app/App.stories.tsx')
-    ).toBeFalsy();
-    expect(
-      appTree.exists(
-        'apps/test-ui-app/src/app/another-cmp/another-cmp.stories.tsx'
-      )
+      appTree.exists('test-ui-app/src/app/another-cmp/another-cmp.stories.tsx')
     ).toBeFalsy();
   });
 
@@ -61,18 +53,14 @@ describe('react:stories for applications', () => {
 
     await storiesGenerator(appTree, {
       project: 'test-ui-app',
-      ignorePaths: [
-        'apps/test-ui-app/src/app/another-new-cmp/another-new-cmp.tsx',
-      ],
+      ignorePaths: ['test-ui-app/src/app/another-new-cmp/another-new-cmp.tsx'],
     });
 
-    expect(appTree.exists('apps/test-ui-app/src/app/App.tsx')).toBeTruthy();
-    expect(
-      appTree.exists('apps/test-ui-app/src/app/App.stories.tsx')
-    ).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.stories.tsx')).toBeTruthy();
     expect(
       appTree.exists(
-        'apps/test-ui-app/src/app/another-new-cmp/another-new-cmp.stories.tsx'
+        'test-ui-app/src/app/another-new-cmp/another-new-cmp.stories.tsx'
       )
     ).toBeFalsy();
   });
@@ -89,23 +77,19 @@ describe('react:stories for applications', () => {
     });
     await storiesGenerator(appTree, {
       project: 'test-ui-app',
-      ignorePaths: [
-        'apps/test-ui-app/src/app/another-new-cmp/another-new-cmp.tsx',
-      ],
+      ignorePaths: ['test-ui-app/src/app/another-new-cmp/another-new-cmp.tsx'],
     });
 
-    expect(appTree.exists('apps/test-ui-app/src/app/App.tsx')).toBeTruthy();
-    expect(
-      appTree.exists('apps/test-ui-app/src/app/App.stories.tsx')
-    ).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.tsx')).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.stories.tsx')).toBeTruthy();
     expect(
       appTree.exists(
-        'apps/test-ui-app/src/app/another-new-cmp/comp-a/comp-a.stories.tsx'
+        'test-ui-app/src/app/another-new-cmp/comp-a/comp-a.stories.tsx'
       )
     ).toBeTruthy();
     expect(
       appTree.exists(
-        'apps/test-ui-app/src/app/another-new-cmp/another-new-cmp.stories.tsx'
+        'test-ui-app/src/app/another-new-cmp/another-new-cmp.stories.tsx'
       )
     ).toBeFalsy();
   });
@@ -113,7 +97,7 @@ describe('react:stories for applications', () => {
   it('should ignore files that do not contain components', async () => {
     // create another component
     appTree.write(
-      'apps/test-ui-app/src/app/some-utils.js',
+      'test-ui-app/src/app/some-utils.js',
       `export const add = (a: number, b: number) => a + b;`
     );
 
@@ -123,14 +107,12 @@ describe('react:stories for applications', () => {
 
     // should just create the story and not error, even though there's a js file
     // not containing any react component
-    expect(
-      appTree.exists('apps/test-ui-app/src/app/App.stories.tsx')
-    ).toBeTruthy();
+    expect(appTree.exists('test-ui-app/src/app/App.stories.tsx')).toBeTruthy();
   });
 });
 
 export async function createTestUIApp(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
   appTree.write('.gitignore', '');
 
   await applicationGenerator(appTree, {
@@ -140,6 +122,7 @@ export async function createTestUIApp(libName: string): Promise<Tree> {
     unitTestRunner: 'none',
     name: libName,
     install: false,
+    projectNameAndRootFormat: 'as-provided',
   });
   return appTree;
 }

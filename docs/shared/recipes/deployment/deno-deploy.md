@@ -42,10 +42,14 @@ pnpm add -D @nx/deno
 {% /tab %}
 {% /tabs %}
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 Then generate a new Deno app with the following command:
 
 ```shell
-nx g @nx/deno:app denoapp
+nx g @nx/deno:app denoapp --directory=apps/denoapp
 ```
 
 ## Configuring Deno Deploy

@@ -4,6 +4,7 @@
   "$id": "NxPluginE2E",
   "title": "Create an E2E app for a Nx Plugin",
   "description": "Create an E2E app for a Nx Plugin.",
+  "examplesFile": "../../../docs/generators/e2e-project-examples.md",
   "type": "object",
   "properties": {
     "pluginName": {
@@ -20,6 +21,11 @@
       "type": "string",
       "description": "the directory where the plugin is placed."
     },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
+    },
     "pluginOutputPath": {
       "type": "string",
       "description": "the output path of the plugin after it builds.",
@@ -28,12 +34,6 @@
     "jestConfig": {
       "type": "string",
       "description": "Jest config file."
-    },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

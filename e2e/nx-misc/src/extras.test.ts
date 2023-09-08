@@ -5,6 +5,7 @@ import {
   newProject,
   readJson,
   runCLI,
+  setMaxWorkers,
   uniq,
   updateFile,
   updateProjectConfig,
@@ -18,7 +19,9 @@ describe('Extra Nx Misc Tests', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
       runCLI(`generate @nx/web:app ${myapp}`);
-      updateProjectConfig(myapp, (c) => {
+      await setMaxWorkers();
+
+      await updateProjectConfig(myapp, (c) => {
         c.targets['inner'] = {
           command: 'echo inner',
         };
@@ -122,7 +125,7 @@ describe('Extra Nx Misc Tests', () => {
         process.platform === 'win32'
           ? `%SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%` // Windows
           : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
-      updateProjectConfig(mylib, (config) => {
+      await updateProjectConfig(mylib, (config) => {
         config.targets.echoEnvVariables.options.command += ` ${command}`;
         return config;
       });
@@ -135,7 +138,7 @@ describe('Extra Nx Misc Tests', () => {
     }, 120000);
 
     it('should pass options', async () => {
-      updateProjectConfig(mylib, (config) => {
+      await updateProjectConfig(mylib, (config) => {
         config.targets.echo = {
           command: 'echo --var1={args.var1}',
           options: {
@@ -151,7 +154,7 @@ describe('Extra Nx Misc Tests', () => {
 
     it('should interpolate provided arguments', async () => {
       const echoTarget = uniq('echo');
-      updateProjectConfig(mylib, (config) => {
+      await updateProjectConfig(mylib, (config) => {
         config.targets[echoTarget] = {
           executor: 'nx:run-commands',
           options: {
@@ -186,7 +189,7 @@ describe('Extra Nx Misc Tests', () => {
     }, 120000);
 
     it('should fail when a process exits non-zero', async () => {
-      updateProjectConfig(mylib, (config) => {
+      await updateProjectConfig(mylib, (config) => {
         config.targets.error = {
           executor: 'nx:run-commands',
           options: {
@@ -207,7 +210,7 @@ describe('Extra Nx Misc Tests', () => {
     });
 
     it('run command should not break if output property is missing in options and arguments', async () => {
-      updateProjectConfig(mylib, (config) => {
+      await updateProjectConfig(mylib, (config) => {
         config.targets.lint.outputs = ['{options.outputFile}'];
         return config;
       });
@@ -241,7 +244,7 @@ describe('Extra Nx Misc Tests', () => {
           : `mkdir -p ${folder}`,
         `echo dummy > ${folder}/dummy.txt`,
       ];
-      updateProjectConfig(mylib, (config) => {
+      await updateProjectConfig(mylib, (config) => {
         delete config.targets.build.options.command;
         config.targets.build.options = {
           ...config.targets.build.options,
@@ -268,6 +271,53 @@ describe('Extra Nx Misc Tests', () => {
       });
       expect(output).not.toContain('CREATE');
       expect(output).not.toContain('Installed');
+    });
+  });
+
+  describe('Env File', () => {
+    it('should have the right env', () => {
+      const appName = uniq('app');
+      runCLI(
+        `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive`
+      );
+      updateFile(
+        '.env',
+        `FIRSTNAME="firstname"
+  LASTNAME="lastname"
+  NX_USERNAME=$FIRSTNAME $LASTNAME`
+      );
+      updateFile(
+        `apps/${appName}/src/app/app.tsx`,
+        `
+      import NxWelcome from './nx-welcome';
+  
+      export function App() {
+        return (
+          <>
+            <NxWelcome title={process.env.NX_USERNAME} />
+          </>
+        );
+      }
+  
+      export default App;
+    `
+      );
+      updateFile(
+        `apps/${appName}/src/app/app.spec.tsx`,
+        `import { render } from '@testing-library/react';
+  
+    import App from './app';
+    
+    describe('App', () => {
+      it('should have a greeting as the title', () => {
+        const { getByText } = render(<App />);
+        expect(getByText(/Welcome firstname lastname/gi)).toBeTruthy();
+      });
+    });
+  `
+      );
+      const unitTestsOutput = runCLI(`test ${appName}`);
+      expect(unitTestsOutput).toContain('Successfully ran target test');
     });
   });
 });

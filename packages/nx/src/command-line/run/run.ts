@@ -4,21 +4,9 @@ import {
   Schema,
 } from '../../utils/params';
 import { printHelp } from '../../utils/print-help';
-import { Workspaces } from '../../config/workspaces';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { readJsonFile } from '../../utils/fileutils';
-import { buildTargetFromScript, PackageJson } from '../../utils/package-json';
-import { join } from 'path';
-import { existsSync } from 'fs';
-import {
-  loadNxPlugins,
-  mergePluginTargetsWithNxTargets,
-} from '../../utils/nx-plugin';
-import {
-  ProjectConfiguration,
-  TargetConfiguration,
-  ProjectsConfigurations,
-} from '../../config/workspace-json-project-json';
+import { relative } from 'path';
+import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
 import { Executor, ExecutorContext } from '../../config/misc-interfaces';
 import { TaskGraph } from '../../config/task-graph';
 import { serializeOverridesIntoCommandLine } from '../../utils/serialize-overrides-into-command-line';
@@ -32,6 +20,7 @@ import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
 } from '../../utils/async-iterator';
+import { getExecutorInformation } from './executor-utils';
 
 export interface Target {
   project: string;
@@ -90,50 +79,24 @@ async function iteratorToProcessStatusCode(
   }
 }
 
-function createImplicitTargetConfig(
-  root: string,
-  proj: ProjectConfiguration,
-  targetName: string
-): TargetConfiguration | null {
-  const packageJsonPath = join(root, proj.root, 'package.json');
-  if (!existsSync(packageJsonPath)) {
-    return null;
-  }
-  const { scripts, nx } = readJsonFile<PackageJson>(packageJsonPath);
-  if (
-    !(targetName in (scripts || {})) ||
-    !(nx.includedScripts && nx.includedScripts.includes(targetName))
-  ) {
-    return null;
-  }
-  return buildTargetFromScript(targetName, nx);
-}
-
 async function parseExecutorAndTarget(
-  ws: Workspaces,
   { project, target, configuration }: Target,
   root: string,
   projectsConfigurations: ProjectsConfigurations,
   nxJsonConfiguration: NxJsonConfiguration
 ) {
   const proj = projectsConfigurations.projects[project];
-  const targetConfig =
-    proj.targets?.[target] ||
-    createImplicitTargetConfig(root, proj, target) ||
-    mergePluginTargetsWithNxTargets(
-      proj.root,
-      proj.targets,
-      await loadNxPlugins(nxJsonConfiguration.plugins, [root], root)
-    )[target];
+  const targetConfig = proj.targets?.[target];
 
   if (!targetConfig) {
     throw new Error(`Cannot find target '${target}' for project '${project}'`);
   }
 
   const [nodeModule, executor] = targetConfig.executor.split(':');
-  const { schema, implementationFactory } = ws.readExecutor(
+  const { schema, implementationFactory } = getExecutorInformation(
     nodeModule,
-    executor
+    executor,
+    root
   );
 
   return { executor, implementationFactory, nodeModule, schema, targetConfig };
@@ -145,9 +108,7 @@ async function printTargetRunHelpInternal(
   projectsConfigurations: ProjectsConfigurations,
   nxJsonConfiguration: NxJsonConfiguration
 ) {
-  const ws = new Workspaces(root);
   const { executor, nodeModule, schema } = await parseExecutorAndTarget(
-    ws,
     { project, target, configuration },
     root,
     projectsConfigurations,
@@ -174,10 +135,8 @@ async function runExecutorInternal<T extends { success: boolean }>(
 ): Promise<AsyncIterableIterator<T>> {
   validateProject(projectsConfigurations, project);
 
-  const ws = new Workspaces(root);
   const { executor, implementationFactory, nodeModule, schema, targetConfig } =
     await parseExecutorAndTarget(
-      ws,
       { project, target, configuration },
       root,
       projectsConfigurations,
@@ -191,11 +150,11 @@ async function runExecutorInternal<T extends { success: boolean }>(
     targetConfig,
     schema,
     project,
-    ws.relativeCwd(cwd),
+    relative(root, cwd),
     isVerbose
   );
 
-  if (ws.isNxExecutor(nodeModule, executor)) {
+  if (getExecutorInformation(nodeModule, executor, root).isNxExecutor) {
     const implementation = implementationFactory() as Executor<any>;
     const r = implementation(combinedOptions, {
       root,

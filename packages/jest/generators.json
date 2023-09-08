@@ -9,9 +9,9 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
-    "jest-project": {
-      "factory": "./src/generators/jest-project/jest-project#jestProjectSchematic",
-      "schema": "./src/generators/jest-project/schema.json",
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration#compat",
+      "schema": "./src/generators/configuration/schema.json",
       "description": "Add Jest configuration to a project.",
       "hidden": true
     }
@@ -24,9 +24,9 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
-    "jest-project": {
-      "factory": "./src/generators/jest-project/jest-project#jestProjectGenerator",
-      "schema": "./src/generators/jest-project/schema.json",
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
       "description": "Add Jest configuration to a project.",
       "hidden": true
     }

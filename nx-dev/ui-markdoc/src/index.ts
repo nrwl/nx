@@ -17,8 +17,8 @@ import { CustomLink } from './lib/nodes/link.component';
 import { link } from './lib/nodes/link.schema';
 import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
-import { Card, Cards, TitleCard } from './lib/tags/cards.component';
-import { card, cards, titleCard } from './lib/tags/cards.schema';
+import { Card, Cards, LinkCard } from './lib/tags/cards.component';
+import { card, cards, linkCard } from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
 import { StackblitzButton } from './lib/tags/stackblitz-button.component';
@@ -37,8 +37,15 @@ import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
-import { YouTube } from './lib/tags/youtube.components';
-import { youtube } from './lib/tags/youtube.schema';
+import { YouTube, youtube } from './lib/tags/youtube.component';
+import {
+  TerminalVideo,
+  terminalVideo,
+} from './lib/tags/terminal-video.component';
+import { VideoLink, videoLink } from './lib/tags/video-link.component';
+// import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
+import { Pill } from './lib/tags/pill.component';
+import { pill } from './lib/tags/pill.schema';
 
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
@@ -57,6 +64,7 @@ export const getMarkdocCustomConfig = (
       callout,
       card,
       cards,
+      'link-card': linkCard,
       'github-repository': githubRepository,
       'stackblitz-button': stackblitzButton,
       graph,
@@ -65,17 +73,21 @@ export const getMarkdocCustomConfig = (
       'nx-cloud-section': nxCloudSection,
       persona,
       personas,
+      pill,
       'side-by-side': sideBySide,
       tab,
       tabs,
-      'title-card': titleCard,
       youtube,
+      'terminal-video': terminalVideo,
+      'video-link': videoLink,
+      // 'svg-animation': svgAnimation,
     },
   },
   components: {
     Callout,
     Card,
     Cards,
+    LinkCard,
     CustomLink,
     Fence,
     GithubRepository,
@@ -87,11 +99,14 @@ export const getMarkdocCustomConfig = (
     NxCloudSection,
     Persona,
     Personas,
+    Pill,
     SideBySide,
     Tab,
     Tabs,
-    TitleCard,
     YouTube,
+    TerminalVideo,
+    VideoLink,
+    // SvgAnimation,
   },
 });
 

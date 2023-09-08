@@ -14,11 +14,9 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { splitTarget } from '../../utils/split-target';
 import { output } from '../../utils/output';
-import {
-  ProjectsConfigurations,
-  TargetDependencyConfig,
-} from '../../config/workspace-json-project-json';
+import { TargetDependencyConfig } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/configuration';
+import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { workspaceConfigurationCheck } from '../../utils/workspace-configuration-check';
 import { generateGraph } from '../graph/graph';
 
@@ -174,40 +172,4 @@ function parseRunOneOptions(
   delete parsedArgs['project'];
 
   return res;
-}
-
-export function calculateDefaultProjectName(
-  cwd: string,
-  root: string,
-  projectsConfigurations: ProjectsConfigurations,
-  nxJsonConfiguration: NxJsonConfiguration
-) {
-  if (cwd && /^[A-Z]:/.test(cwd)) {
-    cwd = cwd.charAt(0).toLowerCase() + cwd.slice(1);
-  }
-
-  if (root && /^[A-Z]:/.test(root)) {
-    root = root.charAt(0).toLowerCase() + root.slice(1);
-  }
-
-  let relativeCwd = cwd.replace(/\\/g, '/').split(root.replace(/\\/g, '/'))[1];
-
-  relativeCwd = relativeCwd.startsWith('/')
-    ? relativeCwd.substring(1)
-    : relativeCwd;
-  const matchingProject = Object.keys(projectsConfigurations.projects).find(
-    (p) => {
-      const projectRoot = projectsConfigurations.projects[p].root;
-      return (
-        relativeCwd == projectRoot ||
-        (relativeCwd == '' && projectRoot == '.') ||
-        relativeCwd.startsWith(`${projectRoot}/`)
-      );
-    }
-  );
-  if (matchingProject) return matchingProject;
-  return (
-    (nxJsonConfiguration.cli as { defaultProjectName: string })
-      ?.defaultProjectName || nxJsonConfiguration.defaultProject
-  );
 }

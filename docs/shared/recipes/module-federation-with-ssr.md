@@ -22,6 +22,10 @@ Run the following command with the options listed to create an empty workspace.
 
 ### Install your framework plugin
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/angular` or `@nx/react` versions that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 {% tabs %}
 
 {% tab label="Angular" %}
@@ -133,5 +137,5 @@ To serve the `store` application and watch for changes on the `checkout` applica
 
 To learn more about Module Federation, we have some resources you might find useful:
 
-- [Guide: Faster Builds with Module Federation](/recipes/module-federation/faster-builds)
+- [Guide: Faster Builds with Module Federation](/concepts/more-concepts/faster-builds-with-module-federation)
 - [Video: Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)

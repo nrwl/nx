@@ -114,7 +114,9 @@ export function addImportsToModule(
     );
   };
 
-  const dir = `./${names(options.directory).fileName}`;
+  const dir = `./${names(options.directory).fileName}${
+    options.subdirectory ? `/${options.subdirectory}` : ''
+  }`;
   const pathPrefix = `${dir}/${names(options.name).fileName}`;
   const reducerPath = `${pathPrefix}.reducer`;
   const effectsPath = `${pathPrefix}.effects`;

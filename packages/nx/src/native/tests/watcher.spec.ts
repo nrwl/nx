@@ -27,13 +27,13 @@ describe('watcher', () => {
   });
 
   it('should trigger the callback for files that are not ignored', (done) => {
-    watcher = new Watcher(realpathSync(temp.tempDir));
+    watcher = new Watcher(temp.tempDir);
     watcher.watch((error, paths) => {
       expect(paths).toMatchInlineSnapshot(`
         [
           {
             "path": "app1/main.html",
-            "type": "update",
+            "type": "create",
           },
         ]
       `);
@@ -48,7 +48,7 @@ describe('watcher', () => {
   });
 
   it('should trigger the callback when files are updated', (done) => {
-    watcher = new Watcher(realpathSync(temp.tempDir));
+    watcher = new Watcher(temp.tempDir);
 
     watcher.watch((err, paths) => {
       expect(paths).toMatchInlineSnapshot(`
@@ -62,7 +62,7 @@ describe('watcher', () => {
       done();
     });
 
-    wait().then(() => {
+    wait(1000).then(() => {
       // nxignored file should not trigger a callback
       temp.appendFile('app2/main.js', 'update');
       temp.appendFile('app1/main.js', 'update');
@@ -70,18 +70,22 @@ describe('watcher', () => {
   });
 
   it('should watch file renames', (done) => {
-    watcher = new Watcher(realpathSync(temp.tempDir));
+    watcher = new Watcher(temp.tempDir);
 
     watcher.watch((err, paths) => {
       expect(paths.length).toBe(2);
-      expect(paths.find((p) => p.type === 'update')).toMatchObject({
-        path: 'app1/rename.js',
-        type: 'update',
-      });
-      expect(paths.find((p) => p.type === 'delete')).toMatchObject({
-        path: 'app1/main.js',
-        type: 'delete',
-      });
+      expect(paths.find((p) => p.type === 'create')).toMatchInlineSnapshot(`
+        {
+          "path": "app1/rename.js",
+          "type": "create",
+        }
+      `);
+      expect(paths.find((p) => p.type === 'delete')).toMatchInlineSnapshot(`
+        {
+          "path": "app1/main.js",
+          "type": "delete",
+        }
+      `);
       done();
     });
 
@@ -91,7 +95,7 @@ describe('watcher', () => {
   });
 
   it('should trigger on deletes', (done) => {
-    watcher = new Watcher(realpathSync(temp.tempDir));
+    watcher = new Watcher(temp.tempDir);
 
     watcher.watch((err, paths) => {
       expect(paths).toMatchInlineSnapshot(`
@@ -111,14 +115,14 @@ describe('watcher', () => {
   });
 
   it('should ignore nested gitignores', (done) => {
-    watcher = new Watcher(realpathSync(temp.tempDir));
+    watcher = new Watcher(temp.tempDir);
 
     watcher.watch((err, paths) => {
       expect(paths).toMatchInlineSnapshot(`
         [
           {
             "path": "boo.txt",
-            "type": "update",
+            "type": "create",
           },
         ]
       `);
@@ -133,10 +137,10 @@ describe('watcher', () => {
   });
 });
 
-function wait() {
+function wait(timeout = 500) {
   return new Promise<void>((res) => {
     setTimeout(() => {
       res();
-    }, 500);
+    }, timeout);
   });
 }

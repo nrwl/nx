@@ -40,6 +40,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.4.1": {
+      "version": "16.4.1-beta.0",
+      "packages": {
+        "webpack": {
+          "version": "^5.80.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

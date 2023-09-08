@@ -18,7 +18,7 @@ export async function cypressComponentConfigGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
-  const { cypressComponentConfiguration: baseCyCtConfig } = ensurePackage<
+  const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
   const projectConfig = readProjectConfiguration(tree, options.project);

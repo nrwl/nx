@@ -14,7 +14,6 @@
         "main": "packages-legacy/js/index.ts",
         "tsConfig": "packages-legacy/js/tsconfig.json",
         "outputPath": "build/packages/js-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/js",

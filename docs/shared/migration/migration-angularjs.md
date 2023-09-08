@@ -53,8 +53,12 @@ Codebases with existing unit and e2e tests should continue to use whatever runne
 
 With the Angular capability added, generate your application:
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+{% /callout %}
+
 ```shell
-nx generate @nx/angular:application --name=realworld --unitTestRunner=karma --e2eTestRunner=protractor
+nx generate @nx/angular:application --name=realworld --directory=apps/realword --unitTestRunner=karma --e2eTestRunner=protractor
 ```
 
 Accept the default options for each prompt:
@@ -365,7 +369,7 @@ But migrating AngularJS code means we need to switch some of our tools to a more
 npm install -D @nx/web babel-plugin-angularjs-annotate
 ```
 
-Nx already has most of what you need for webpack added as a dependency. `@nx/web` contains the [executors](/plugin-features/use-task-executors) we need to use to build and serve the application with webpack and
+Nx already has most of what you need for webpack added as a dependency. `@nx/web` contains the [executors](/core-features/plugin-features/use-task-executors) we need to use to build and serve the application with webpack and
 `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
 
 Start with a `webpack.config.js` file in your application’s root directory:
@@ -682,7 +686,7 @@ nx test
 
 You should see green text as your test passes.
 
-![Unit tests passing](./migration-angularjs-unit-tests-passing.png)
+![Unit tests passing](/shared/migration/migration-angularjs-unit-tests-passing.png)
 
 ## End to End testing
 

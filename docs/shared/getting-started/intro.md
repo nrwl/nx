@@ -1,93 +1,117 @@
 # Intro to Nx
 
-Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. Learn more about [how Nx works](/getting-started/why-nx).
+Nx is a powerful open-source build system that provides tools and techniques for enhancing developer productivity, optimizing CI performance, and maintaining code quality. [Check out our video](/getting-started/why-nx) to learn more about what Nx is about.
 
-You can use Nx to quickly scaffold a new standalone project or even an entire monorepo. It can be incrementally adopted and will grow with your project as it scales.
+## Core Features
 
-{% cards cols="3" %}
+- **Run Tasks Efficiently**: Nx [runs tasks in parallel](/core-features/run-tasks) and orders the tasks based on the dependencies between them.
+- **Cache Locally & Remotely**: With [local](/core-features/cache-task-results) and [remote caching](/core-features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
+- **Automate Dependency Updates**: if you leverage Nx plugins you gain additional features such as [code generation](/core-features/plugin-features/use-code-generators) and tools to [automatically upgrade](core-features/automate-updating-dependencies) your codebase and dependencies.
+- **Make it Your Own**: Nx is highly customizable and extensible. Fine-tune it by [creating your own plugins](/extending-nx/intro/getting-started) and optionally [share them with the community](/extending-nx/tutorials/publish-plugin#publish-your-nx-plugin).
 
-{% title-card title="New Monorepo" url="#start-a-new-monorepo" /%}
-{% title-card title="New Standalone Project" url="#start-a-new-standalone-project" /%}
-{% title-card title="Add to an Existing Project or Monorepo" url="#adding-nx-to-an-existing-project-or-monorepo" /%}
+<!-- - **Monorepo and Single Projects**: Nx supports both, monorepos as well as single-project (standalone) workspaces. -->
 
-{% /cards %}
+Find out more about [why you should use Nx](/getting-started/why-nx) or browse our [core features](/core-features).
 
-## Start a New Monorepo
+## Try Nx Yourself!
 
-Its modular architecture lets you adopt Nx for package-based monorepos in combination with NPM, Yarn or PNPM, or create a fully integrated monorepo using Nx plugins. Learn more with the tutorials below.
+```shell
+npx create-nx-workspace@latest
+```
 
-{% personas %}
-{% persona type="javascript" title="New Package-Based Repo" url="/tutorials/package-based-repo-tutorial" %}
-Create a monorepo with Yarn, NPM or PNPM. Nx makes it fast, but lets you run things your way.
+## Learn Nx
 
-- [Get started with your package-based repo](/tutorials/package-based-repo-tutorial)
+{% cards cols="2" lgCols="6" mdCols="4" smCols="2" %}
 
-{% /persona %}
+{% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
 
-{% persona type="integrated" title="New Integrated Repo" url="/tutorials/integrated-repo-tutorial" %}
+{% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/NZF0ZJpgaJM" icon="nxcloud" /%}
 
-Get a pre-configured setup. Nx configures your favorite frameworks and lets you focus on shipping features.
+{% link-card title="PNPM Monorepos with Nx" type="video" url="https://youtu.be/ngdoUQBvAjo" icon="pnpm" /%}
 
-- [Get started with your integrated repo](/tutorials/integrated-repo-tutorial)
-
-{% /persona %}
-
-{% /personas %}
+{% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}
 
 {% /cards %}
 
-## Start a New Standalone Project
+{% cards cols="2" lgCols="6" mdCols="5" smCols="2" %}
 
-Nx works well not just for monorepos. Nx plugins help you scaffold new standalone projects with pre-configured tooling and modularize your codebase with local libraries.
+{% link-card title="Package Based Monorepos" type="tutorial" url="/getting-started/tutorials/package-based-repo-tutorial" icon="jsMono" /%}
 
-{% cards cols="3" %}
+{% link-card title="Integrated Monorepos" type="tutorial" url="/getting-started/tutorials/integrated-repo-tutorial" icon="nx" /%}
 
-{% persona type="react" title="Create a Standalone React app" url="/tutorials/react-standalone-tutorial" %}
+{% link-card title="Single React App" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="react" /%}
 
-A modern React setup with built-in support for Vite, ESLint, Cypress, and more. Think CRA but modern, always up-to-date and scalable.
+{% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
 
-- [Create a Standalone React app](/tutorials/react-standalone-tutorial)
+{% link-card title="Single Node App" type="tutorial" url="/getting-started/tutorials/node-server-tutorial" icon="node" /%}
 
-{% /persona %}
+<!-- {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="reactMono" /%}
 
-{% persona type="angular" title="Create a Standalone Angular app" url="/tutorials/angular-standalone-tutorial" %}
+{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angularMono" /%}
 
-A modern Angular development experience powered by advanced generators and integrations with modern tooling.
-
-- [Create a Standalone Angular app](/tutorials/angular-standalone-tutorial)
-
-{% /persona %}
-
-{% persona type="node" title="Create a Standalone Node server" url="/tutorials/node-server-tutorial" %}
-
-A modern Node server with scaffolding for Express, Fastify or Koa. There's also Docker support built-in.
-
-- [Create a Standalone Node server](/tutorials/node-server-tutorial)
-
-{% /persona %}
+{% link-card title="Node Monorepo" type="tutorial" url="/getting-started/tutorials/node-server-tutorial" icon="nodeMono" /%} -->
 
 {% /cards %}
 
-## Adding Nx to an Existing Project or Monorepo
+## Pick Your Stack!
 
-Coming from an existing project and want to adopt Nx? We have a few recipes to help you get started.
+{% cards cols="3" lgCols="8" mdCols="6" smCols="5" moreLink="/showcase/example-repos" %}
 
-{% cards cols="2" %}
+{% link-card title="Express" appearance="small" url="/packages/express" icon="express" /%}
+{% link-card title="Vue" appearance="small" url="/showcase/example-repos/add-vue" icon="vue" /%}
+{% link-card title="Next" appearance="small" url="/packages/next" icon="nextjs" /%}
+{% link-card title="Nuxt" appearance="small" url="/showcase/example-repos/add-nuxt" icon="nuxt" /%}
+{% link-card title="Nest" appearance="small" url="/packages/nest" icon="nestjs" /%}
+{% link-card title="Remix" appearance="small" url="/recipes/react/remix" icon="remix" /%}
+{% link-card title="Expo" appearance="small" url="/packages/expo" icon="expo" /%}
+{% link-card title="React Native" appearance="small" url="/packages/react-native" icon="react" /%}
+{% link-card title="Fastify" appearance="small" url="/showcase/example-repos/mongo-fastify" icon="fastify" /%}
+{% link-card title="Deno" appearance="small" url="https://github.com/nrwl/nx-labs/tree/main/packages/deno" icon="deno" /%}
+{% link-card title="Svelte" appearance="small" url="/showcase/example-repos/add-svelte" icon="svelte" /%}
+{% link-card title="Solid" appearance="small" url="/showcase/example-repos/add-solid" icon="solid" /%}
+{% link-card title="Lit" appearance="small" url="/showcase/example-repos/add-lit" icon="lit" /%}
+{% link-card title="Astro" appearance="small" url="/showcase/example-repos/add-astro" icon="astro" /%}
+{% link-card title="Qwik" appearance="small" url="/showcase/example-repos/add-qwik" icon="qwik" /%}
 
-{% persona type="extend" title="Add to Existing Monorepo" url="/recipes/adopting-nx/adding-to-monorepo" %}
-Add Nx to your existing NPM/YARN/PNPM workspace
-{% /persona %}
-
-{% persona title="Add to any Project" type="extend" url="/recipes/adopting-nx/adding-to-existing-project" %}
-Add Nx to a standalone project
-{% /persona %}
-
-{% persona title="Migrate from CRA" type="react" url="/recipes/adopting-nx/migration-cra" %}
-Migrate from a CRA setup and automatically switch to Vite
-{% /persona %}
-
-{% persona title="Migrate from Angular CLI" type="angular" url="/recipes/adopting-nx/migration-angular" %}
-Automatically migrate from the Angular CLI
-{% /persona %}
+{% link-card title="Rust" appearance="small" url="/showcase/example-repos/add-rust" icon="rust" /%}
+{% link-card title="Go" appearance="small" url="https://github.com/nrwl/nx-recipes/blob/main/go/README.md" icon="go" /%}
+{% link-card title=".NET" appearance="small" url="https://github.com/nrwl/nx-recipes/tree/main/dot-net-standalone" icon="dotnet" /%}
+{% link-card title="Cypress" appearance="small" url="/packages/cypress" icon="cypress" /%}
+{% link-card title="Playwright" appearance="small" url="/packages/playwright" icon="playwright" /%}
+{% link-card title="Vite" appearance="small" url="/packages/vite" icon="vite" /%}
+{% link-card title="Storybook" appearance="small" url="/packages/storybook" icon="storybook" /%}
+{% link-card title="Jest" appearance="small" url="/packages/jest" icon="jest" /%}
+{% link-card title="Rspack" appearance="small" url="/packages/rspack" icon="rspack" /%}
 
 {% /cards %}
+
+## Have an Existing Project? Add Nx to it!
+
+If you have an existing project and want to adopt Nx or migrate to Nx just run the following command which guides you through the migration process:
+
+```shell
+npx nx@latest init
+```
+
+Alternatively, here are some recipes that give you more details based on the technology stack you're using:
+
+{% cards cols="2" mdCols="4" smCols="2" moreLink="/recipes/adopting-nx" %}
+
+{% link-card title="Add to Existing Monorepo" appearance="small" url="/recipes/adopting-nx/adding-to-monorepo" icon="pnpm" /%}
+
+{% link-card title="Add to Any Project" appearance="small" url="/recipes/adopting-nx/adding-to-existing-project" icon="nx" /%}
+
+{% link-card title="Migrate from CRA" appearance="small" url="/recipes/react/migration-cra" icon="cra" /%}
+
+{% link-card title="Migrate from Angular CLI" appearance="small" url="/recipes/angular/migration/angular" icon="angular" /%}
+
+{% /cards %}
+
+## Connect With Us
+
+Connect on our channels and with the Nx Community to ask questions, get help and keep up to date with the latest news.
+
+- Join our [Discord Community](http://go.nx.dev/community)
+- Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
+- Follow us on [Twitter](https://twitter.com/nxdevtools)
+- Subscribe [to our tech newsletter](https://go.nrwl.io/nx-newsletter)

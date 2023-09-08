@@ -55,7 +55,8 @@
     },
     "output": {
       "type": "string",
-      "description": "Output path for local build"
+      "description": "Output path for local build",
+      "examples": ["../../dist/MyApp.tar.gz", "../../dist"]
     },
     "wait": {
       "type": "boolean",

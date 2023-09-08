@@ -33,7 +33,10 @@ export function addExportsToBarrel(
 
   // Public API for the feature interfaces, selectors, and facade
   const { className, fileName } = names(options.name);
-  const statePath = `./lib/${options.directory}/${fileName}`;
+  const fileNameWithSubdir = options.subdirectory
+    ? joinPathFragments(options.subdirectory, fileName)
+    : fileName;
+  const statePath = `./lib/${options.directory}/${fileNameWithSubdir}`;
 
   sourceFile = addGlobal(
     tree,

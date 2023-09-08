@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library#expoLibraryGenerator",
+  "factory": "./src/generators/library/library#expoLibraryGeneratorInternal",
   "schema": {
     "cli": "nx",
     "$id": "NxExpoLibrary",
@@ -19,12 +19,17 @@
         "description": "Library name",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the library?",
-        "pattern": "^[a-zA-Z].*$"
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
       },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed.",
         "x-priority": "important"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -101,7 +106,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a library",
-  "implementation": "/packages/expo/src/generators/library/library#expoLibraryGenerator.ts",
+  "implementation": "/packages/expo/src/generators/library/library#expoLibraryGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/expo/src/generators/library/schema.json",
   "type": "generator"

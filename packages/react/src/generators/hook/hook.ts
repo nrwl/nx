@@ -15,6 +15,7 @@ import {
 import { Schema } from './schema';
 import { addImport } from '../../utils/ast-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { join } from 'path';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: string;
@@ -38,7 +39,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
     options.directory
   );
 
-  generateFiles(host, joinPathFragments(__dirname, './files'), hookDir, {
+  generateFiles(host, join(__dirname, './files'), hookDir, {
     ...options,
     tmpl: '',
   });

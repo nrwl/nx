@@ -20,6 +20,8 @@ export interface ExpoStartOptions {
   tunnel?: boolean;
   offline?: boolean;
 
-  // nx options
+  /**
+   * @deprecated TODO(v17) Add sync-deps to dependsOn in project.json for this target instead
+   */
   sync?: boolean; // default is true
 }

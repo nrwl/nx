@@ -40,10 +40,16 @@ export function startLocalRegistry({
 
         const registry = `http://localhost:${port}`;
         process.env.npm_config_registry = registry;
-        process.env.YARN_REGISTRY = registry;
         execSync(
           `npm config set //localhost:${port}/:_authToken "secretVerdaccioToken"`
         );
+
+        // yarnv1
+        process.env.YARN_REGISTRY = registry;
+        // yarnv2
+        process.env.YARN_NPM_REGISTRY_SERVER = registry;
+        process.env.YARN_UNSAFE_HTTP_WHITELIST = 'localhost';
+
         console.log('Set npm and yarn config registry to ' + registry);
 
         resolve(() => {

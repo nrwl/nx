@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  getPackageManagerCommand,
   output,
   ProjectConfiguration,
   readProjectConfiguration,
@@ -73,28 +74,29 @@ describe('Helper functions for the Storybook 7 migration generator', () => {
     it('should onlyShowGuide and the correct instructions', () => {
       const outputSpy = jest.spyOn(output, 'log').mockImplementation();
       onlyShowGuide(allStorybookInfo);
+      const pm = getPackageManagerCommand();
       expect(outputSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           bodyLines: [
             'You can run the following commands manually to upgrade your Storybook projects to Storybook 7:',
             '',
             '1. Call the Storybook upgrade script:',
-            'npx storybook@latest upgrade',
+            `${pm.exec} storybook@latest upgrade`,
             '',
             '2. Call the Nx generator to prepare your files for migration:',
             'nx g @nx/storybook:migrate-7 --onlyPrepare',
             '',
             '3. Call the Storybook automigrate scripts:',
             'Run the following commands for each Storybook project:',
-            'npx storybook@latest automigrate --config-dir apps/nextapp/.storybook --renderer @storybook/react',
-            'npx storybook@latest automigrate --config-dir apps/nextapp-ts/.storybook --renderer @storybook/react',
-            'npx storybook@latest automigrate --config-dir apps/rv1/.storybook --renderer @storybook/react',
-            'npx storybook@latest automigrate --config-dir apps/rv2-ts/.storybook --renderer @storybook/react',
-            'npx storybook@latest automigrate --config-dir apps/rw1/.storybook --renderer @storybook/react',
-            'npx storybook@latest automigrate --config-dir apps/wv1/.storybook --renderer @storybook/web-components',
-            'npx storybook@latest automigrate --config-dir apps/ww1/.storybook --renderer @storybook/web-components',
-            'npx storybook@latest automigrate --config-dir apps/ngapp/.storybook --renderer @storybook/angular',
-            'npx storybook@latest automigrate --config-dir apps/ngapp-ts/.storybook --renderer @storybook/angular',
+            `${pm.exec} storybook@latest automigrate --config-dir apps/nextapp/.storybook --renderer @storybook/react`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/nextapp-ts/.storybook --renderer @storybook/react`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/rv1/.storybook --renderer @storybook/react`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/rv2-ts/.storybook --renderer @storybook/react`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/rw1/.storybook --renderer @storybook/react`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/wv1/.storybook --renderer @storybook/web-components`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/ww1/.storybook --renderer @storybook/web-components`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/ngapp/.storybook --renderer @storybook/angular`,
+            `${pm.exec} storybook@latest automigrate --config-dir apps/ngapp-ts/.storybook --renderer @storybook/angular`,
             '',
             '4. Call the Nx generator to finish the migration:',
             'nx g @nx/storybook:migrate-7 --afterMigration',

@@ -4,6 +4,7 @@ env:
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   NPM_CONFIG_PROVENANCE: true
 on:
+  workflow_dispatch:
   release:
     types: [published]
 jobs:
@@ -167,10 +168,9 @@ jobs:
          with:
            envs: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
            usesh: true
-           mem: 3000
+           mem: 4096
            prepare: |
-             pkg install -y -f curl node libnghttp2
-             curl -qL https://www.npmjs.com/install.sh | sh
+             pkg install -y -f curl node libnghttp2 npm
              npm install --location=global --ignore-scripts pnpm
              curl https://sh.rustup.rs -sSf --output rustup.sh
              sh rustup.sh -y --profile minimal --default-toolchain stable
@@ -193,6 +193,7 @@ jobs:
              pnpm install --frozen-lockfile --ignore-scripts
              pnpm nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
              rm -rf node_modules
+             rm -rf dist
        - name: Upload artifact
          uses: actions/upload-artifact@v3
          with:
@@ -200,7 +201,7 @@ jobs:
            path: packages/**/*.node
            if-no-files-found: error
   publish:
-    if: ${{ github.repository_owner == 'nrwl' }}
+    if: ${{ github.event_name == 'release' && github.repository_owner == 'nrwl' }}
     name: Publish
     runs-on: ubuntu-latest
     permissions:

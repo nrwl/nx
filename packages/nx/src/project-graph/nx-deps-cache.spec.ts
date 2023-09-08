@@ -4,7 +4,7 @@ import {
   ProjectFileMapCache,
   shouldRecomputeWholeGraph,
 } from './nx-deps-cache';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { nxVersion } from '../utils/versions';
 
@@ -299,11 +299,10 @@ describe('nx deps utils', () => {
     return { ...defaults, ...p };
   }
 
-  function createProjectsConfiguration(p: any): ProjectsConfigurations {
-    const defaults = {
-      projects: { mylib: {} },
-    } as any;
-    return { ...defaults, ...p };
+  function createProjectsConfiguration(
+    p: any
+  ): Record<string, ProjectConfiguration> {
+    return { mylib: {}, ...p };
   }
 
   function createNxJson(p: Partial<NxJsonConfiguration>): NxJsonConfiguration {

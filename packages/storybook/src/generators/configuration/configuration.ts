@@ -22,6 +22,8 @@ import {
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
+  createStorybookTsconfigFile,
+  editTsconfigBaseJson,
   getE2EProjectName,
   getViteConfigFilePath,
   projectIsRootProjectInStandaloneWorkspace,
@@ -34,11 +36,12 @@ import {
   storybookMajorVersion,
 } from '../../utils/utilities';
 import {
+  coreJsVersion,
   nxVersion,
-  storybookTestRunnerVersion,
   storybookVersion,
   tsNodeVersion,
 } from '../../utils/versions';
+import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -96,6 +99,9 @@ export async function configurationGenerator(
   });
   tasks.push(initTask);
 
+  const mainDir =
+    !!nextBuildTarget && projectType === 'application' ? 'components' : 'src';
+
   createProjectStorybookDir(
     tree,
     schema.name,
@@ -105,13 +111,25 @@ export async function configurationGenerator(
     root,
     projectType,
     projectIsRootProjectInStandaloneWorkspace(root),
+    schema.interactionTests,
+    mainDir,
     !!nextBuildTarget,
     compiler === 'swc',
     !!viteBuildTarget || schema.uiFramework.endsWith('-vite'),
     viteConfigFilePath
   );
 
+  if (schema.uiFramework !== '@storybook/angular') {
+    createStorybookTsconfigFile(
+      tree,
+      root,
+      schema.uiFramework,
+      projectIsRootProjectInStandaloneWorkspace(root),
+      mainDir
+    );
+  }
   configureTsProjectConfig(tree, schema);
+  editTsconfigBaseJson(tree);
   configureTsSolutionConfig(tree, schema);
   updateLintConfig(tree, schema);
 
@@ -119,13 +137,13 @@ export async function configurationGenerator(
   addStorybookToNamedInputs(tree);
 
   if (schema.uiFramework === '@storybook/angular') {
-    addAngularStorybookTask(tree, schema.name, schema.configureTestRunner);
+    addAngularStorybookTask(tree, schema.name, schema.interactionTests);
   } else {
     addStorybookTask(
       tree,
       schema.name,
       schema.uiFramework,
-      schema.configureTestRunner
+      schema.interactionTests
     );
   }
 
@@ -133,6 +151,7 @@ export async function configurationGenerator(
     addStaticTarget(tree, schema);
   }
 
+  // TODO(v18): remove Cypress
   if (schema.configureCypress) {
     const e2eProject = await getE2EProjectName(tree, schema.name);
     if (!e2eProject) {
@@ -155,18 +174,39 @@ export async function configurationGenerator(
     }
   }
 
-  const devDeps = {};
+  let devDeps = {};
 
   if (schema.tsConfiguration) {
-    devDeps['@storybook/core-common'] = storybookVersion;
     devDeps['ts-node'] = tsNodeVersion;
   }
 
-  if (schema.configureTestRunner === true) {
-    devDeps['@storybook/test-runner'] = storybookTestRunnerVersion;
+  if (schema.interactionTests) {
+    devDeps = {
+      ...devDeps,
+      ...interactionTestsDependencies(),
+    };
   }
+
   if (schema.configureStaticServe) {
     devDeps['@nx/web'] = nxVersion;
+  }
+
+  if (
+    projectType !== 'application' &&
+    schema.uiFramework === '@storybook/react-webpack5'
+  ) {
+    devDeps['core-js'] = coreJsVersion;
+  }
+
+  if (
+    schema.uiFramework.endsWith('-vite') &&
+    (!viteBuildTarget || !viteConfigFilePath)
+  ) {
+    // This means that the user has selected a Vite framework
+    // but the project does not have Vite configuration.
+    // We need to install the @nx/vite plugin in order to be able to use
+    // the nxViteTsPaths plugin to register the tsconfig paths in Vite.
+    devDeps['@nx/vite'] = nxVersion;
   }
 
   tasks.push(addDependenciesToPackageJson(tree, {}, devDeps));
@@ -182,9 +222,10 @@ function normalizeSchema(
   schema: StorybookConfigureSchema
 ): StorybookConfigureSchema {
   const defaults = {
-    configureCypress: true,
+    interactionTests: true,
     linter: Linter.EsLint,
     js: false,
+    tsConfiguration: true,
   };
   return {
     ...defaults,

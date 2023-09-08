@@ -29,12 +29,6 @@ Run tests in parallel:
  nx affected -t test --parallel=5
 ```
 
-Run the test target for all projects:
-
-```shell
- nx affected -t test --all
-```
-
 Run lint, test, and build targets for affected projects. Requires Nx v15.4+:
 
 ```shell
@@ -62,7 +56,7 @@ Run tests for all the projects affected by the last commit on main:
 Run build for only projects with the tag `dotnet`:
 
 ```shell
- nx affected -t build --exclude '*,!tag:dotnet'
+ nx affected -t=build --exclude='*,!tag:dotnet'
 ```
 
 Use the currently executing project name in your command.:

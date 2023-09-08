@@ -1,4 +1,4 @@
-Depending on your testing type, the Cypress executor is configured in different ways. The following are sample configurations that are created via the [cypress-project](/packages/cypress/generators/cypress-project) and [cypress-component-project](/packages/cypress/generators/cypress-component-project) generators.
+Depending on your testing type, the Cypress executor is configured in different ways. The following are sample configurations that are created via the [configuration](/packages/cypress/generators/configuration) and [cypress-component-configuration](/packages/cypress/generators/cypress-component-configuration) generators.
 
 {% tabs %}
 {% tab label="E2E Testing" %}
@@ -118,7 +118,7 @@ Using [executor configurations](recipes/executors/use-executor-configurations#us
       },
       "dev": {
         "env": {
-          "API_URL": "http://locahost:3333/api"
+          "API_URL": "http://localhost:3333/api"
         }
       }
     }

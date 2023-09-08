@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 
-import { runPodInstall } from '../../utils/pod-install-task';
 import { runSymlink } from '../../utils/symlink-task';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -24,7 +23,17 @@ export async function reactNativeApplicationGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
-  const options = normalizeOptions(host, schema);
+  return await reactNativeApplicationGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function reactNativeApplicationGeneratorInternal(
+  host: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
+  const options = await normalizeOptions(host, schema);
 
   createApplicationFiles(host, options);
   addProject(host, options);
@@ -48,10 +57,6 @@ export async function reactNativeApplicationGenerator(
   );
   const detoxTask = await addDetox(host, options);
   const symlinkTask = runSymlink(host.root, options.appProjectRoot);
-  const podInstallTask = runPodInstall(
-    joinPathFragments(host.root, options.iosProjectRoot),
-    options.install
-  );
   const chmodTaskGradlew = chmodAndroidGradlewFilesTask(
     joinPathFragments(host.root, options.androidProjectRoot)
   );
@@ -66,7 +71,6 @@ export async function reactNativeApplicationGenerator(
     jestTask,
     detoxTask,
     symlinkTask,
-    podInstallTask,
     chmodTaskGradlew
   );
 }

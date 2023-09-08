@@ -3,12 +3,16 @@ import { satisfies } from 'semver';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { reverse } from '../../../project-graph/operators';
 import { NormalizedPackageJson } from './utils/package-json';
-import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import {
+  ProjectGraphDependencyWithFile,
+  validateDependency,
+} from '../../../project-graph/project-graph-builder';
+import {
+  DependencyType,
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import { fileHasher, hashArray } from '../../../hasher/file-hasher';
+import { hashArray } from '../../../hasher/file-hasher';
 
 /**
  * NPM
@@ -50,21 +54,51 @@ type NpmLockFile = {
   dependencies?: Record<string, NpmDependencyV1>;
 };
 
-export function parseNpmLockfile(
-  lockFileContent: string,
-  builder: ProjectGraphBuilder
-) {
-  const data = JSON.parse(lockFileContent) as NpmLockFile;
+// we use key => node map to avoid duplicate work when parsing keys
+let keyMap = new Map<string, ProjectGraphExternalNode>();
+let currentLockFileHash: string;
 
-  // we use key => node map to avoid duplicate work when parsing keys
-  const keyMap = new Map<string, ProjectGraphExternalNode>();
-  addNodes(data, builder, keyMap);
-  addDependencies(data, builder, keyMap);
+let parsedLockFile: NpmLockFile;
+function parsePackageLockFile(lockFileContent: string, lockFileHash: string) {
+  if (lockFileHash === currentLockFileHash) {
+    return parsedLockFile;
+  }
+
+  keyMap.clear();
+  const results = JSON.parse(lockFileContent) as NpmLockFile;
+  parsedLockFile = results;
+  currentLockFileHash = lockFileHash;
+  return results;
 }
 
-function addNodes(
+export function getNpmLockfileNodes(
+  lockFileContent: string,
+  lockFileHash: string
+) {
+  const data = parsePackageLockFile(
+    lockFileContent,
+    lockFileHash
+  ) as NpmLockFile;
+
+  // we use key => node map to avoid duplicate work when parsing keys
+  return getNodes(data, keyMap);
+}
+
+export function getNpmLockfileDependencies(
+  lockFileContent: string,
+  lockFileHash: string,
+  projectGraph: ProjectGraph
+) {
+  const data = parsePackageLockFile(
+    lockFileContent,
+    lockFileHash
+  ) as NpmLockFile;
+
+  return getDependencies(data, keyMap, projectGraph);
+}
+
+function getNodes(
   data: NpmLockFile,
-  builder: ProjectGraphBuilder,
   keyMap: Map<string, ProjectGraphExternalNode>
 ) {
   const nodes: Map<string, Map<string, ProjectGraphExternalNode>> = new Map();
@@ -92,8 +126,7 @@ function addNodes(
                 depSnapshot,
                 `${snapshot.version.slice(5)}/node_modules/${depName}`,
                 nodes,
-                keyMap,
-                builder
+                keyMap
               );
             }
           );
@@ -104,12 +137,13 @@ function addNodes(
           snapshot,
           `node_modules/${packageName}`,
           nodes,
-          keyMap,
-          builder
+          keyMap
         );
       }
     });
   }
+
+  const results: Record<string, ProjectGraphExternalNode> = {};
 
   // some packages can be both hoisted and nested
   // so we need to run this check once we have all the nodes and paths
@@ -120,9 +154,10 @@ function addNodes(
     }
 
     versionMap.forEach((node) => {
-      builder.addExternalNode(node);
+      results[node.name] = node;
     });
   }
+  return results;
 }
 
 function addV1Node(
@@ -130,8 +165,7 @@ function addV1Node(
   snapshot: NpmDependencyV1,
   path: string,
   nodes: Map<string, Map<string, ProjectGraphExternalNode>>,
-  keyMap: Map<string, ProjectGraphExternalNode>,
-  builder: ProjectGraphBuilder
+  keyMap: Map<string, ProjectGraphExternalNode>
 ) {
   createNode(packageName, snapshot.version, path, nodes, keyMap, snapshot);
 
@@ -143,8 +177,7 @@ function addV1Node(
         depSnapshot,
         `${path}/node_modules/${depName}`,
         nodes,
-        keyMap,
-        builder
+        keyMap
       );
     });
   }
@@ -173,7 +206,11 @@ function createNode(
       hash:
         snapshot.integrity ||
         hashArray(
-          snapshot.resolved ? [snapshot.resolved] : [packageName, version]
+          snapshot.resolved
+            ? [snapshot.resolved]
+            : version
+            ? [packageName, version]
+            : [packageName]
         ),
     },
   };
@@ -206,11 +243,12 @@ function findV3Version(snapshot: NpmDependencyV3, packageName: string): string {
   return version;
 }
 
-function addDependencies(
+function getDependencies(
   data: NpmLockFile,
-  builder: ProjectGraphBuilder,
-  keyMap: Map<string, ProjectGraphExternalNode>
-) {
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  projectGraph: ProjectGraph
+): ProjectGraphDependencyWithFile[] {
+  const dependencies: ProjectGraphDependencyWithFile[] = [];
   if (data.lockfileVersion > 1) {
     Object.entries(data.packages).forEach(([path, snapshot]) => {
       // we are skipping workspaces packages
@@ -227,7 +265,13 @@ function addDependencies(
           Object.entries(section).forEach(([name, versionRange]) => {
             const target = findTarget(path, keyMap, name, versionRange);
             if (target) {
-              builder.addStaticDependency(sourceName, target.name);
+              const dep = {
+                source: sourceName,
+                target: target.name,
+                dependencyType: DependencyType.static,
+              };
+              validateDependency(projectGraph, dep);
+              dependencies.push(dep);
             }
           });
         }
@@ -238,11 +282,13 @@ function addDependencies(
       addV1NodeDependencies(
         `node_modules/${packageName}`,
         snapshot,
-        builder,
-        keyMap
+        dependencies,
+        keyMap,
+        projectGraph
       );
     });
   }
+  return dependencies;
 }
 
 function findTarget(
@@ -280,15 +326,22 @@ function findTarget(
 function addV1NodeDependencies(
   path: string,
   snapshot: NpmDependencyV1,
-  builder: ProjectGraphBuilder,
-  keyMap: Map<string, ProjectGraphExternalNode>
+  dependencies: ProjectGraphDependencyWithFile[],
+  keyMap: Map<string, ProjectGraphExternalNode>,
+  projectGraph: ProjectGraph
 ) {
   if (keyMap.has(path) && snapshot.requires) {
     const source = keyMap.get(path).name;
     Object.entries(snapshot.requires).forEach(([name, versionRange]) => {
       const target = findTarget(path, keyMap, name, versionRange);
       if (target) {
-        builder.addStaticDependency(source, target.name);
+        const dep = {
+          source: source,
+          target: target.name,
+          dependencyType: DependencyType.static,
+        };
+        validateDependency(projectGraph, dep);
+        dependencies.push(dep);
       }
     });
   }
@@ -298,8 +351,9 @@ function addV1NodeDependencies(
       addV1NodeDependencies(
         `${path}/node_modules/${depName}`,
         depSnapshot,
-        builder,
-        keyMap
+        dependencies,
+        keyMap,
+        projectGraph
       );
     });
   }
@@ -307,15 +361,15 @@ function addV1NodeDependencies(
   if (peerDependencies) {
     const node = keyMap.get(path);
     Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
-      if (
-        !builder.graph.dependencies[node.name]?.find(
-          (d) => d.target === depName
-        )
-      ) {
-        const target = findTarget(path, keyMap, depName, depSpec);
-        if (target) {
-          builder.addStaticDependency(node.name, target.name);
-        }
+      const target = findTarget(path, keyMap, depName, depSpec);
+      if (target) {
+        const dep = {
+          source: node.name,
+          target: target.name,
+          dependencyType: DependencyType.static,
+        };
+        validateDependency(projectGraph, dep);
+        dependencies.push(dep);
       }
     });
   }

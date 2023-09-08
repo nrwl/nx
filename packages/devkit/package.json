@@ -29,10 +29,11 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "ejs": "^3.1.7",
+    "enquirer": "~2.3.6",
     "ignore": "^5.0.4",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
-    "semver": "7.3.4"
+    "semver": "7.5.3"
   },
   "peerDependencies": {
     "nx": ">= 15 <= 17"

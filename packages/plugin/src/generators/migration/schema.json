@@ -8,7 +8,7 @@
   "examples": [
     {
       "command": "nx g migration my-migration --project=my-plugin --version=1.0.0",
-      "description": "Generate `libs/my-plugin/src/migrations/my-migration`"
+      "description": "Adds a new migration to the project `my-plugin`, which will be triggered when migrating to version 1.0.0 or above from a previous version."
     }
   ],
   "properties": {

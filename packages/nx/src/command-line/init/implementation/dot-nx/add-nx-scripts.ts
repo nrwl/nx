@@ -56,8 +56,13 @@ export function writeMinimalNxJson(host: Tree, version: string) {
         default: {
           runner: 'nx/tasks-runners/default',
           options: {
-            cacheableOperations: [],
+            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
           },
+        },
+      },
+      targetDefaults: {
+        build: {
+          dependsOn: ['^build'],
         },
       },
       installation: {

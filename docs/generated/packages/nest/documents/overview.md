@@ -21,6 +21,10 @@ Yarn users can use the following command instead:
 yarn create nx-workspace my-workspace --preset=nest
 ```
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/nest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 To add the Nest plugin to an existing workspace, run one the following commands:
 
 ```shell
@@ -67,7 +71,7 @@ To make the library `publishable`, use the following command:
 nx g @nx/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
-> Read more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).
+> Read more about [building and publishing libraries here](/concepts/more-concepts/buildable-and-publishable-libraries).
 
 ### Nest Generators
 

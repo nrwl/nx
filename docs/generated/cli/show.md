@@ -23,10 +23,10 @@ Show all projects in the workspace:
  nx show projects
 ```
 
-Show all projects with names starting with "api-". The pattern option is useful to see which projects would be selected by run-many.:
+Show all projects with names starting with "api-". The "projects" option is useful to see which projects would be selected by run-many.:
 
 ```shell
- nx show projects --pattern=api-*
+ nx show projects --projects api-*
 ```
 
 Show all projects with a serve target:
@@ -44,7 +44,7 @@ Show affected projects in the workspace:
 Show affected projects in the workspace, excluding end-to-end projects:
 
 ```shell
- nx show projects --affected --exclude *-e2e
+ nx show projects --affected --exclude=*-e2e
 ```
 
 Show detailed information about "my-app" in a json format.:
@@ -159,7 +159,7 @@ Show only projects that have a specific target
 
 ### project
 
-Show a list of targets in the workspace.
+Shows resolved project configuration for a given project.
 
 ```shell
 nx show project <projectName>
@@ -177,7 +177,7 @@ Show help
 
 Type: `string`
 
-Show targets for the given project
+Which project should be viewed?
 
 ##### version
 

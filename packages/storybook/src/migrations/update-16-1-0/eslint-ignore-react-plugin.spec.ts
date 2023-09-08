@@ -40,18 +40,37 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
     );
 
     if (!tree.exists('.eslintrc.json')) {
-      tree.write('.eslintrc.json', '{}');
+      tree.write('.eslintrc.json', `{}`);
     }
-    updateJson(tree, '.eslintrc.json', (json) => {
-      json.extends ??= [];
-      json.extends.push('plugin:storybook/recommended');
-      return json;
-    });
   });
 
   it('should not ignore the plugin if it is not used', async () => {
     await eslintIgnoreReactPlugin(tree);
     const eslintConfig = readJson(tree, '.eslintrc.json');
+    expect(eslintConfig).toEqual({});
+    expect(eslintConfig.rules).toBeUndefined();
+  });
+
+  it('should not ignore the plugin if "plugin:storybook/recommended" is not included', async () => {
+    tree.write('apps/main-webpack/tsconfig.json', `{}`);
+    tree.write(
+      `apps/main-webpack/.storybook/main.js`,
+      `
+      module.exports = {
+        stories: ['../src/lib/**/*.stories.@(mdx|js|jsx|ts|tsx)'],
+        addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+        framework: {
+          name: '@storybook/react-webpack5',
+          options: {},
+        },
+      };
+      `
+    );
+
+    await eslintIgnoreReactPlugin(tree);
+
+    const eslintConfig = readJson(tree, '.eslintrc.json');
+    expect(eslintConfig).toEqual({});
     expect(eslintConfig.rules).toBeUndefined();
   });
 
@@ -70,6 +89,12 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
       };
       `
     );
+
+    updateJson(tree, '.eslintrc.json', (json) => {
+      json.extends ??= [];
+      json.extends.push('plugin:storybook/recommended');
+      return json;
+    });
 
     await eslintIgnoreReactPlugin(tree);
 

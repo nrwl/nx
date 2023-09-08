@@ -8,7 +8,7 @@ import {
   SharedLibraryConfig,
   sharePackages,
   shareWorkspaceLibraries,
-} from '@nx/devkit/src/utils/module-federation';
+} from '@nx/webpack/src/utils/module-federation';
 
 import {
   createProjectGraphAsync,
@@ -58,7 +58,9 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
       );
     }
 
-    const host = serveTarget.options?.host ?? 'http://localhost';
+    const host =
+      serveTarget.options?.host ??
+      `http${serveTarget.options.ssl ? 's' : ''}://localhost`;
     const port = serveTarget.options?.port ?? 4201;
     return `${
       host.endsWith('/') ? host.slice(0, -1) : host

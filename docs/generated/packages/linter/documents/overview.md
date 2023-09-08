@@ -4,6 +4,10 @@ The Linter plugin contains executors, generator, plugin and utilities used for l
 
 ### Installation
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/linter` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 In any Nx workspace, you can install `@nx/linter` by running the following commands if `@nx/linter` package is not installed:
 
 ```shell
@@ -28,7 +32,8 @@ nx lint my-lib
 
 ## Utils
 
-- [convert-tslint-to-eslint](/packages/angular/generators/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)
+- [convert-to-flat-config](/packages/linter/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
+- **Deprecated** [convert-tslint-to-eslint](/packages/angular/generators/convert-tslint-to-eslint) - Converts a project linter from [TSLint](https://palantir.github.io/tslint/) to [ESLint](https://eslint.org/)
 
 ## ESLint plugin
 

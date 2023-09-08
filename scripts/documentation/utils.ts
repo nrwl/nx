@@ -2,6 +2,7 @@ import { outputFileSync } from 'fs-extra';
 import { bold, h, lines as mdLines, strikethrough } from 'markdown-factory';
 import { join } from 'path';
 import { format, resolveConfig } from 'prettier';
+import { MenuItem } from '@nx/nx-dev/models-menu';
 
 const stripAnsi = require('strip-ansi');
 const importFresh = require('import-fresh');
@@ -49,6 +50,59 @@ export async function generateJsonFile(
     await formatWithPrettier(filePath, JSON.stringify(json)),
     { encoding: 'utf8' }
   );
+}
+
+function menuItemToStrings(item: MenuItem, pathPrefix = '/'): string[] {
+  if (item.isExternal) {
+    return [];
+  }
+  const line = item.path ? `- [${item.name}](${item.path})` : `- ${item.name}`;
+  const padding = item.path
+    .replace(pathPrefix, '')
+    .split('/')
+    .map(() => '  ')
+    .join('');
+  const childLines = item.children.flatMap((child) =>
+    menuItemToStrings(child, pathPrefix)
+  );
+  return [padding + line, ...childLines];
+}
+
+function deduplicate<T>(array: T[]): T[] {
+  return Array.from(new Set(array));
+}
+
+export async function generateIndexMarkdownFile(
+  filePath: string,
+  json: { id: string; menu: MenuItem[] }[]
+): Promise<void> {
+  function capitalize(word: string) {
+    const [firstLetter, ...rest] = word;
+    return firstLetter.toLocaleUpperCase() + rest.join('');
+  }
+  const idToPathPrefix = {
+    nx: undefined,
+    recipes: `/recipes/`,
+    plugins: `/plugins/`,
+    packages: `/packages/`,
+    cloud: `/nx-cloud/`,
+  };
+  const content = json
+    .map(
+      ({ id, menu }) =>
+        deduplicate(
+          [
+            `- ${capitalize(id)}`,
+            ...menu.flatMap((item) =>
+              menuItemToStrings(item, idToPathPrefix[id])
+            ),
+          ].filter((line) => line.length > 0)
+        ).join('\n') + '\n'
+    )
+    .join(`\n`);
+  outputFileSync(filePath, await formatWithPrettier(filePath, content), {
+    encoding: 'utf8',
+  });
 }
 
 export async function formatWithPrettier(filePath: string, content: string) {

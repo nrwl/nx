@@ -2,9 +2,13 @@ jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   // need to mock so it doesn't resolve what the workspace has installed
   // and be able to test with different versions
-  ensurePackage: jest.fn(),
+  ensurePackage: jest.fn(() => ({
+    cypressInitGenerator: jest.fn(),
+    initGenerator: jest.fn(),
+  })),
 }));
 import {
+  ensurePackage,
   NxJsonConfiguration,
   readJson,
   readNxJson,
@@ -171,8 +175,41 @@ describe('init', () => {
   });
 
   describe('--e2e-test-runner', () => {
+    describe('playwright', () => {
+      it('should call @nx/playwright:init', async () => {
+        // ACT
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.None,
+          e2eTestRunner: E2eTestRunner.Playwright,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        expect(ensurePackage).toHaveBeenLastCalledWith(
+          '@nx/playwright',
+          '0.0.1'
+        );
+      });
+
+      it('should set defaults', async () => {
+        // ACT
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.None,
+          e2eTestRunner: E2eTestRunner.Playwright,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+
+        // ASSERT
+        expect(generators['@nx/angular:application'].e2eTestRunner).toEqual(
+          'playwright'
+        );
+      });
+    });
     describe('cypress', () => {
-      it('should add cypress dependencies', async () => {
+      it('should call @nx/cypress:init', async () => {
         // ACT
         await init(tree, {
           unitTestRunner: UnitTestRunner.None,
@@ -181,11 +218,7 @@ describe('init', () => {
           skipFormat: false,
         });
 
-        const { devDependencies } = readJson(tree, 'package.json');
-
-        // ASSERT
-        expect(devDependencies['@nx/cypress']).toBeDefined();
-        expect(devDependencies['cypress']).toBeDefined();
+        expect(ensurePackage).toHaveBeenLastCalledWith('@nx/cypress', '0.0.1');
       });
 
       it('should set defaults', async () => {
@@ -523,6 +556,38 @@ bar
     });
 
     describe('--e2e-test-runner', () => {
+      it('should call @nx/playwright:init', async () => {
+        // ACT
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.None,
+          e2eTestRunner: E2eTestRunner.Playwright,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        expect(ensurePackage).toHaveBeenLastCalledWith(
+          '@nx/playwright',
+          '0.0.1'
+        );
+      });
+
+      it('should set defaults', async () => {
+        // ACT
+        await init(tree, {
+          unitTestRunner: UnitTestRunner.None,
+          e2eTestRunner: E2eTestRunner.Playwright,
+          linter: Linter.EsLint,
+          skipFormat: false,
+        });
+
+        const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
+
+        // ASSERT
+        expect(generators['@nx/angular:application'].e2eTestRunner).toEqual(
+          'playwright'
+        );
+      });
+
       describe('cypress', () => {
         it('should add cypress dependencies', async () => {
           // ACT
@@ -532,12 +597,11 @@ bar
             linter: Linter.EsLint,
             skipFormat: false,
           });
-
-          const { devDependencies } = readJson(tree, 'package.json');
-
           // ASSERT
-          expect(devDependencies['@nx/cypress']).toBeDefined();
-          expect(devDependencies['cypress']).toBeDefined();
+          expect(ensurePackage).toHaveBeenLastCalledWith(
+            '@nx/cypress',
+            '0.0.1'
+          );
         });
 
         it('should set defaults', async () => {

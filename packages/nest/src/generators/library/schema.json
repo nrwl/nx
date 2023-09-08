@@ -19,12 +19,18 @@
         "$source": "argv",
         "index": 0
       },
-      "x-prompt": "What name would you like to use for the library?"
+      "x-prompt": "What name would you like to use for the library?",
+      "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
     },
     "directory": {
       "description": "A directory where the library is placed.",
       "type": "string",
       "alias": "dir"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -92,9 +98,9 @@
       "default": "node"
     },
     "target": {
-      "description": "The ES target, Nest suggest using es6 or higher.",
+      "description": "The ES target, Nest suggest using es2021 or higher.",
       "type": "string",
-      "default": "es6",
+      "default": "es2021",
       "enum": [
         "es5",
         "es6",
@@ -104,7 +110,8 @@
         "es2017",
         "es2018",
         "es2019",
-        "es2020"
+        "es2020",
+        "es2021"
       ]
     },
     "strict": {

@@ -35,9 +35,10 @@ export function updateModuleFederationProject(
   // `serve-static` for remotes that don't need to be in development mode
   projectConfig.targets['serve-static'] = {
     executor: '@nx/web:file-server',
-    defaultConfiguration: 'development',
+    defaultConfiguration: 'production',
     options: {
       buildTarget: `${options.projectName}:build`,
+      watch: false,
       port: options.devServerPort,
     },
     configurations: {

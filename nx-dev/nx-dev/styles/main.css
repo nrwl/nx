@@ -107,8 +107,33 @@ iframe[src*='youtube'] {
   z-index: 1;
   width: max-content;
 }
+[data-tooltip][data-tooltip-align-right]:before {
+  left: auto;
+  right: 0;
+}
 
 [data-tooltip]:hover:before {
   opacity: 1;
   visibility: visible;
 }
+
+/* Dark mode */
+html.dark .adaptive-icon {
+  /* fill: white; */
+  filter: invert(1);
+}
+
+.adaptive-icon {
+  fill: black;
+}
+
+/* [data-theme='light'] .adaptive-icon {
+  fill: white;
+} */
+
+/* Light mode */
+/* @media (prefers-color-scheme: light) {
+  .adaptive-icon {
+    fill: #000000;
+  }
+} */

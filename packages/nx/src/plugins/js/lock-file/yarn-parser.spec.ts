@@ -1,12 +1,22 @@
 import { joinPathFragments } from '../../../utils/path';
-import { parseYarnLockfile, stringifyYarnLockfile } from './yarn-parser';
+import {
+  getYarnLockfileNodes,
+  getYarnLockfileDependencies,
+  stringifyYarnLockfile,
+} from './yarn-parser';
 import { pruneProjectGraph } from './project-graph-pruning';
 import { vol } from 'memfs';
 import { ProjectGraph } from '../../../config/project-graph';
 import { PackageJson } from '../../../utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 
-jest.mock('fs', () => require('memfs').fs);
+jest.mock('fs', () => {
+  const memFs = require('memfs').fs;
+  return {
+    ...memFs,
+    existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),
+  };
+});
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
@@ -157,16 +167,38 @@ describe('yarn LockFile utility', () => {
     });
 
     let lockFile;
+    let packageJson;
 
     let graph: ProjectGraph;
 
     beforeEach(() => {
-      const builder = new ProjectGraphBuilder();
       lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/nextjs/yarn.lock'
       )).default;
-      parseYarnLockfile(lockFile, builder);
+      packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/nextjs/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       graph = builder.getUpdatedProjectGraph();
     });
 
@@ -219,10 +251,146 @@ describe('yarn LockFile utility', () => {
   describe('auxiliary packages', () => {
     beforeEach(() => {
       const fileSys = {
+        'node_modules/@eslint/eslintrc/package.json': '{"version": "1.3.3"}',
+        'node_modules/@humanwhocodes/config-array/package.json':
+          '{"version": "0.11.7"}',
+        'node_modules/@humanwhocodes/module-importer/package.json':
+          '{"version": "1.0.1"}',
+        'node_modules/@humanwhocodes/object-schema/package.json':
+          '{"version": "1.2.1"}',
+        'node_modules/@nodelib/fs.scandir/package.json': '{"version": "2.1.5"}',
+        'node_modules/@nodelib/fs.stat/package.json': '{"version": "2.0.5"}',
+        'node_modules/@nodelib/fs.walk/package.json': '{"version": "1.2.8"}',
+        'node_modules/@nrwl/devkit/package.json': '{"version": "15.0.13"}',
+        'node_modules/@phenomnomnominal/tsquery/package.json':
+          '{"version": "4.1.1"}',
+        'node_modules/acorn/package.json': '{"version": "8.8.1"}',
+        'node_modules/acorn-jsx/package.json': '{"version": "5.3.2"}',
+        'node_modules/ajv/package.json': '{"version": "6.12.6"}',
+        'node_modules/ansi-regex/package.json': '{"version": "5.0.1"}',
+        'node_modules/ansi-styles/package.json': '{"version": "4.3.0"}',
+        'node_modules/app-root-path/package.json': '{"version": "3.1.0"}',
+        'node_modules/argparse/package.json': '{"version": "2.0.1"}',
+        'node_modules/async/package.json': '{"version": "3.2.4"}',
+        'node_modules/balanced-match/package.json': '{"version": "1.0.2"}',
         'node_modules/brace-expansion/package.json': '{"version": "1.1.11"}',
+        'node_modules/callsites/package.json': '{"version": "3.1.0"}',
+        'node_modules/chalk/package.json': '{"version": "4.1.2"}',
+        'node_modules/cliui/package.json': '{"version": "8.0.1"}',
+        'node_modules/color-convert/package.json': '{"version": "2.0.1"}',
+        'node_modules/color-name/package.json': '{"version": "1.1.4"}',
+        'node_modules/concat-map/package.json': '{"version": "0.0.1"}',
+        'node_modules/cross-spawn/package.json': '{"version": "7.0.3"}',
+        'node_modules/debug/package.json': '{"version": "4.3.4"}',
+        'node_modules/deep-is/package.json': '{"version": "0.1.4"}',
+        'node_modules/doctrine/package.json': '{"version": "3.0.0"}',
+        'node_modules/ejs/package.json': '{"version": "3.1.8"}',
+        'node_modules/emoji-regex/package.json': '{"version": "8.0.0"}',
+        'node_modules/escalade/package.json': '{"version": "3.1.1"}',
+        'node_modules/escape-string-regexp/package.json':
+          '{"version": "4.0.0"}',
+        'node_modules/eslint/package.json': '{"version": "8.29.0"}',
+        'node_modules/eslint-plugin-disable-autofix/package.json':
+          '{"version": "3.0.0"}',
+        'node_modules/eslint-rule-composer/package.json':
+          '{"version": "0.3.0"}',
+        'node_modules/eslint-scope/package.json': '{"version": "7.1.1"}',
+        'node_modules/eslint-utils/package.json': '{"version": "3.0.0"}',
         'node_modules/eslint-visitor-keys/package.json': '{"version": "3.3.0"}',
-        'node_modules/ignore/package.json': '{"version": "5.2.4"}',
+        'node_modules/espree/package.json': '{"version": "9.4.1"}',
+        'node_modules/esquery/package.json': '{"version": "1.4.0"}',
+        'node_modules/esrecurse/package.json': '{"version": "4.3.0"}',
+        'node_modules/estraverse/package.json': '{"version": "5.3.0"}',
+        'node_modules/esutils/package.json': '{"version": "2.0.3"}',
+        'node_modules/fast-deep-equal/package.json': '{"version": "3.1.3"}',
+        'node_modules/fast-json-stable-stringify/package.json':
+          '{"version": "2.1.0"}',
+        'node_modules/fast-levenshtein/package.json': '{"version": "2.0.6"}',
+        'node_modules/fastq/package.json': '{"version": "1.14.0"}',
+        'node_modules/file-entry-cache/package.json': '{"version": "6.0.1"}',
+        'node_modules/filelist/package.json': '{"version": "1.0.4"}',
+        'node_modules/find-up/package.json': '{"version": "5.0.0"}',
+        'node_modules/flat-cache/package.json': '{"version": "3.0.4"}',
+        'node_modules/flatted/package.json': '{"version": "3.2.7"}',
+        'node_modules/fs.realpath/package.json': '{"version": "1.0.0"}',
+        'node_modules/get-caller-file/package.json': '{"version": "2.0.5"}',
+        'node_modules/glob/package.json': '{"version": "7.2.3"}',
+        'node_modules/glob-parent/package.json': '{"version": "6.0.2"}',
+        'node_modules/globals/package.json': '{"version": "13.18.0"}',
+        'node_modules/grapheme-splitter/package.json': '{"version": "1.0.4"}',
+        'node_modules/has-flag/package.json': '{"version": "4.0.0"}',
+        'node_modules/ignore/package.json': '{"version": "5.2.1"}',
+        'node_modules/import-fresh/package.json': '{"version": "3.3.0"}',
+        'node_modules/imurmurhash/package.json': '{"version": "0.1.4"}',
+        'node_modules/inflight/package.json': '{"version": "1.0.6"}',
+        'node_modules/inherits/package.json': '{"version": "2.0.4"}',
+        'node_modules/is-extglob/package.json': '{"version": "2.1.1"}',
+        'node_modules/is-fullwidth-code-point/package.json':
+          '{"version": "3.0.0"}',
+        'node_modules/is-glob/package.json': '{"version": "4.0.3"}',
+        'node_modules/is-path-inside/package.json': '{"version": "3.0.3"}',
+        'node_modules/isexe/package.json': '{"version": "2.0.0"}',
+        'node_modules/jake/package.json': '{"version": "10.8.5"}',
+        'node_modules/js-sdsl/package.json': '{"version": "4.2.0"}',
+        'node_modules/js-tokens/package.json': '{"version": "4.0.0"}',
+        'node_modules/js-yaml/package.json': '{"version": "4.1.0"}',
+        'node_modules/json-schema-traverse/package.json':
+          '{"version": "0.4.1"}',
+        'node_modules/json-stable-stringify-without-jsonify/package.json':
+          '{"version": "1.0.1"}',
+        'node_modules/levn/package.json': '{"version": "0.4.1"}',
+        'node_modules/locate-path/package.json': '{"version": "6.0.0"}',
+        'node_modules/lodash.merge/package.json': '{"version": "4.6.2"}',
+        'node_modules/loose-envify/package.json': '{"version": "1.4.0"}',
+        'node_modules/lru-cache/package.json': '{"version": "6.0.0"}',
         'node_modules/minimatch/package.json': '{"version": "3.1.2"}',
+        'node_modules/ms/package.json': '{"version": "2.1.2"}',
+        'node_modules/natural-compare/package.json': '{"version": "1.4.0"}',
+        'node_modules/once/package.json': '{"version": "1.4.0"}',
+        'node_modules/optionator/package.json': '{"version": "0.9.1"}',
+        'node_modules/p-limit/package.json': '{"version": "3.1.0"}',
+        'node_modules/p-locate/package.json': '{"version": "5.0.0"}',
+        'node_modules/parent-module/package.json': '{"version": "1.0.1"}',
+        'node_modules/path-exists/package.json': '{"version": "4.0.0"}',
+        'node_modules/path-is-absolute/package.json': '{"version": "1.0.1"}',
+        'node_modules/path-key/package.json': '{"version": "3.1.1"}',
+        'node_modules/postgres/package.json': '{"version": "3.2.4"}',
+        'node_modules/prelude-ls/package.json': '{"version": "1.2.1"}',
+        'node_modules/punycode/package.json': '{"version": "2.1.1"}',
+        'node_modules/queue-microtask/package.json': '{"version": "1.2.3"}',
+        'node_modules/react/package.json': '{"version": "18.2.0"}',
+        'node_modules/regexpp/package.json': '{"version": "3.2.0"}',
+        'node_modules/require-directory/package.json': '{"version": "2.1.1"}',
+        'node_modules/resolve-from/package.json': '{"version": "4.0.0"}',
+        'node_modules/reusify/package.json': '{"version": "1.0.4"}',
+        'node_modules/rimraf/package.json': '{"version": "3.0.2"}',
+        'node_modules/run-parallel/package.json': '{"version": "1.2.0"}',
+        'node_modules/semver/package.json': '{"version": "7.3.4"}',
+        'node_modules/shebang-command/package.json': '{"version": "2.0.0"}',
+        'node_modules/shebang-regex/package.json': '{"version": "3.0.0"}',
+        'node_modules/string-width/package.json': '{"version": "4.2.3"}',
+        'node_modules/strip-ansi/package.json': '{"version": "6.0.1"}',
+        'node_modules/strip-json-comments/package.json': '{"version": "3.1.1"}',
+        'node_modules/supports-color/package.json': '{"version": "7.2.0"}',
+        'node_modules/text-table/package.json': '{"version": "0.2.0"}',
+        'node_modules/tslib/package.json': '{"version": "2.4.1"}',
+        'node_modules/type-check/package.json': '{"version": "0.4.0"}',
+        'node_modules/type-fest/package.json': '{"version": "0.20.2"}',
+        'node_modules/uri-js/package.json': '{"version": "4.4.1"}',
+        'node_modules/which/package.json': '{"version": "2.0.2"}',
+        'node_modules/word-wrap/package.json': '{"version": "1.2.3"}',
+        'node_modules/wrap-ansi/package.json': '{"version": "7.0.0"}',
+        'node_modules/wrappy/package.json': '{"version": "1.0.2"}',
+        'node_modules/y18n/package.json': '{"version": "5.0.8"}',
+        'node_modules/yallist/package.json': '{"version": "4.0.0"}',
+        'node_modules/yargs/package.json': '{"version": "17.6.2"}',
+        'node_modules/yargs-parser/package.json': '{"version": "21.1.1"}',
+        'node_modules/yocto-queue/package.json': '{"version": "0.1.0"}',
+        'node_modules/@types/prop-types/package.json': '{"version": "15.7.5"}',
+        'node_modules/@docusaurus/core/package.json': '{"version": "2.4.1"}',
+        'node_modules/@docusaurus/react-loadable/package.json':
+          '{"version": "5.5.2"}',
+        'node_modules/react-loadable/package.json': '{"version": "5.5.2"}',
       };
       vol.fromJSON(fileSys, '/root');
     });
@@ -232,12 +400,21 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/yarn.lock'
       )).default;
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(classicLockFile, builder);
-      const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(127);
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
 
-      expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(
+        classicLockFile,
+        hash,
+        packageJson
+      );
+
+      expect(Object.keys(externalNodes).length).toEqual(127);
+
+      expect(externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         {
           "data": {
             "hash": "sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==",
@@ -248,7 +425,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
+      expect(externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
         {
           "data": {
             "hash": "sha512-362NP+zlprccbEt/SkxKfRMHnNY85V74mVnpUpNyr3F35covl09Kec7/sEFLt3RA4oXmewtoaanoIf67SE5Y5g==",
@@ -259,7 +436,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+      expect(externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         {
           "data": {
             "hash": "postgres|https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
@@ -270,7 +447,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
+      expect(externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
         {
           "data": {
@@ -289,6 +466,10 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/yarn.lock'
       )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
       const normalizedPackageJson = {
         name: 'test',
         version: '0.0.0',
@@ -310,9 +491,26 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn.lock.pruned'
       )).default;
 
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
+
       const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -348,9 +546,30 @@ describe('yarn LockFile utility', () => {
         '__fixtures__/auxiliary-packages/yarn.lock.pruned'
       )).default;
 
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(
+        lockFile,
+        hash,
+        normalizedPackageJson
+      );
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
+
       const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -370,12 +589,21 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/yarn-berry.lock'
       )).default;
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(berryLockFile, builder);
-      const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(129);
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
 
-      expect(graph.externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(
+        berryLockFile,
+        hash,
+        packageJson
+      );
+
+      expect(Object.keys(externalNodes).length).toEqual(129);
+
+      expect(externalNodes['npm:minimatch']).toMatchInlineSnapshot(`
         {
           "data": {
             "hash": "c154e566406683e7bcb746e000b84d74465b3a832c45d59912b9b55cd50dee66e5c4b1e5566dba26154040e51672f9aa450a9aef0c97cfc7336b78b7afb9540a",
@@ -386,7 +614,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(graph.externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
+      expect(externalNodes['npm:minimatch@5.1.1']).toMatchInlineSnapshot(`
         {
           "data": {
             "hash": "215edd0978320a3354188f84a537d45841f2449af4df4379f79b9b777e71aa4f5722cc9d1717eabd2a70d38ef76ab7b708d24d83ea6a6c909dfd8833de98b437",
@@ -397,7 +625,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(graph.externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+      expect(externalNodes['npm:postgres']).toMatchInlineSnapshot(`
         {
           "data": {
             "hash": "521660853e0c9f1c604cf43d32c75e2b4675e2d912eaec7bb6749716539dd53f1dfaf575a422087f6a53362f5162f9a4b8a88cc1dadf9d7580423fc05137767a",
@@ -408,7 +636,7 @@ describe('yarn LockFile utility', () => {
           "type": "npm",
         }
       `);
-      expect(graph.externalNodes['npm:eslint-plugin-disable-autofix'])
+      expect(externalNodes['npm:eslint-plugin-disable-autofix'])
         .toMatchInlineSnapshot(`
         {
           "data": {
@@ -448,10 +676,31 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/auxiliary-packages/yarn-berry.lock.pruned'
       )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
 
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
+
       const prunedGraph = pruneProjectGraph(graph, normalizedPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -461,6 +710,427 @@ describe('yarn LockFile utility', () => {
       expect(result.split('\n').slice(2)).toEqual(
         prunedLockFile.split('\n').slice(2)
       );
+    });
+
+    describe('alias duplicate', () => {
+      it('should parse yarn berry', async () => {
+        const lockFile = `# This file is generated by running "yarn install" inside your project.
+# Manual changes might be lost - proceed with caution!
+
+__metadata:
+  version: 6
+  cacheKey: 8
+
+"@docusaurus/core@npm:2.4.1":
+  version: 2.4.1
+  resolution: "@docusaurus/core@npm:2.4.1"
+  dependencies:
+    "@docusaurus/react-loadable": 5.5.2
+    react-loadable: "npm:@docusaurus/react-loadable@5.5.2"
+  bin:
+    docusaurus: bin/docusaurus.mjs
+  checksum: 40c887ef662f7679d803695d4193268c2c177c6d4e13b43b56cc519322522a1608b4bfc4999f6355be778ca7a0256f0d27ab18a19b352a9da1aed66e2644dc82
+  languageName: node
+  linkType: hard
+
+"@docusaurus/react-loadable@npm:5.5.2, react-loadable@npm:@docusaurus/react-loadable@5.5.2":
+  version: 5.5.2
+  resolution: "@docusaurus/react-loadable@npm:5.5.2"
+  checksum: 930fb9e2936412a12461f210acdc154a433283921ca43ac3fc3b84cb6c12eb738b3a3719373022bf68004efeb1a928dbe36c467d7a1f86454ed6241576d936e7
+  languageName: node
+  linkType: hard
+`;
+
+        const packageJson: PackageJson = {
+          name: '@my-ns/example',
+          version: '0.0.1',
+          type: 'commonjs',
+          dependencies: {
+            '@docusaurus/core': '2.4.1',
+          },
+        };
+
+        const hash = uniq('mock-hash');
+        const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+        const pg = {
+          nodes: {},
+          dependencies: {},
+          externalNodes,
+        };
+        const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+        const builder = new ProjectGraphBuilder(pg);
+        for (const dep of dependencies) {
+          builder.addDependency(
+            dep.source,
+            dep.target,
+            dep.dependencyType,
+            dep.sourceFile
+          );
+        }
+        const graph = builder.getUpdatedProjectGraph();
+
+        expect(graph.externalNodes).toMatchInlineSnapshot(`
+          {
+            "npm:@docusaurus/core": {
+              "data": {
+                "hash": "40c887ef662f7679d803695d4193268c2c177c6d4e13b43b56cc519322522a1608b4bfc4999f6355be778ca7a0256f0d27ab18a19b352a9da1aed66e2644dc82",
+                "packageName": "@docusaurus/core",
+                "version": "2.4.1",
+              },
+              "name": "npm:@docusaurus/core",
+              "type": "npm",
+            },
+            "npm:@docusaurus/react-loadable": {
+              "data": {
+                "hash": "930fb9e2936412a12461f210acdc154a433283921ca43ac3fc3b84cb6c12eb738b3a3719373022bf68004efeb1a928dbe36c467d7a1f86454ed6241576d936e7",
+                "packageName": "@docusaurus/react-loadable",
+                "version": "5.5.2",
+              },
+              "name": "npm:@docusaurus/react-loadable",
+              "type": "npm",
+            },
+            "npm:react-loadable": {
+              "data": {
+                "hash": "930fb9e2936412a12461f210acdc154a433283921ca43ac3fc3b84cb6c12eb738b3a3719373022bf68004efeb1a928dbe36c467d7a1f86454ed6241576d936e7",
+                "packageName": "react-loadable",
+                "version": "npm:@docusaurus/react-loadable@5.5.2",
+              },
+              "name": "npm:react-loadable",
+              "type": "npm",
+            },
+          }
+        `);
+      });
+
+      it('should parse yarn classic', async () => {
+        const lockFile = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
+# yarn lockfile v1
+
+
+"@docusaurus/core@2.4.1":
+  version "2.4.1"
+  resolved "https://registry.yarnpkg.com/@docusaurus/core/-/core-2.4.1.tgz#4b8ff5766131ce3fbccaad0b1daf2ad4dc76f62d"
+  integrity sha512-SNsY7PshK3Ri7vtsLXVeAJGS50nJN3RgF836zkyUfAD01Fq+sAk5EwWgLw+nnm5KVNGDu7PRR2kRGDsWvqpo0g==
+  dependencies:
+    "@docusaurus/react-loadable" "5.5.2"
+    react-loadable "npm:@docusaurus/react-loadable@5.5.2"
+
+"@docusaurus/react-loadable@5.5.2", "react-loadable@npm:@docusaurus/react-loadable@5.5.2":
+  version "5.5.2"
+  resolved "https://registry.yarnpkg.com/@docusaurus/react-loadable/-/react-loadable-5.5.2.tgz#81aae0db81ecafbdaee3651f12804580868fa6ce"
+  integrity sha512-A3dYjdBGuy0IGT+wyLIGIKLRE+sAk1iNk0f1HjNDysO7u8lhL4N3VEm+FAubmJbAztn94F7MxBTPmnixbiyFdQ==
+`;
+
+        const packageJson: PackageJson = {
+          name: '@my-ns/example',
+          version: '0.0.1',
+          type: 'commonjs',
+          dependencies: {
+            '@docusaurus/core': '2.4.1',
+          },
+        };
+
+        const hash = uniq('mock-hash');
+        const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+
+        expect(externalNodes).toMatchInlineSnapshot(`
+                  {
+                    "npm:@docusaurus/core": {
+                      "data": {
+                        "hash": "sha512-SNsY7PshK3Ri7vtsLXVeAJGS50nJN3RgF836zkyUfAD01Fq+sAk5EwWgLw+nnm5KVNGDu7PRR2kRGDsWvqpo0g==",
+                        "packageName": "@docusaurus/core",
+                        "version": "2.4.1",
+                      },
+                      "name": "npm:@docusaurus/core",
+                      "type": "npm",
+                    },
+                    "npm:@docusaurus/react-loadable": {
+                      "data": {
+                        "hash": "sha512-A3dYjdBGuy0IGT+wyLIGIKLRE+sAk1iNk0f1HjNDysO7u8lhL4N3VEm+FAubmJbAztn94F7MxBTPmnixbiyFdQ==",
+                        "packageName": "@docusaurus/react-loadable",
+                        "version": "5.5.2",
+                      },
+                      "name": "npm:@docusaurus/react-loadable",
+                      "type": "npm",
+                    },
+                    "npm:react-loadable": {
+                      "data": {
+                        "hash": "sha512-A3dYjdBGuy0IGT+wyLIGIKLRE+sAk1iNk0f1HjNDysO7u8lhL4N3VEm+FAubmJbAztn94F7MxBTPmnixbiyFdQ==",
+                        "packageName": "react-loadable",
+                        "version": "npm:@docusaurus/react-loadable@5.5.2",
+                      },
+                      "name": "npm:react-loadable",
+                      "type": "npm",
+                    },
+                  }
+              `);
+      });
+    });
+  });
+
+  describe('auxiliary tagged version ranges', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/@nrwl/nx-cloud/package.json': '{"version": "16.1.1"}',
+        'node_modules/nx-cloud/package.json': '{"version": "16.1.1"}',
+        'node_modules/postgres/package.json': '{"version": "3.2.4"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should parse tagged version range in combination with semver', () => {
+      const lockFile = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
+# yarn lockfile v1
+
+"@nrwl/nx-cloud@16.1.1":
+  version "16.1.1"
+  resolved "http://localhost:4873/@nrwl%2fnx-cloud/-/nx-cloud-16.1.1.tgz#9e1ed2acff11ab0ae8a4c0c045d412034ac26be7"
+  integrity sha512-iJIPP46+saFZK748FKU4u4YZH+Sv3ZvZPbMwGVMhwqhOYcrlO5aSa0lpilyoN8WuhooKNqcCfiqshx6V577fTg==
+  dependencies:
+    nx-cloud "16.1.1"
+
+nx-cloud@16.1.1, nx-cloud@latest:
+  version "16.1.1"
+  resolved "http://localhost:4873/nx-cloud/-/nx-cloud-16.1.1.tgz#103ae0f13f5eb05d6ddd6d9bfcafc56cf295a59a"
+  integrity sha512-Rq7ynvkYzAJ67N3pDqU6cMqwvWP7WXJGP4EFjLxgUrRHNCccqDPggeAqePodfk3nZEUrZB8F5QBKZuuw1DR3oA==
+  dependencies:
+    "@nrwl/nx-cloud" "16.1.1"
+
+postgres@charsleysa/postgres#fix-errors-compiled:
+  version "3.2.4"
+  resolved "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb"
+  `;
+      const packageJson: PackageJson = {
+        name: '@my-ns/example',
+        version: '0.0.1',
+        type: 'commonjs',
+        dependencies: {
+          'nx-cloud': 'latest',
+          postgres: 'charsleysa/postgres#fix-errors-compiled',
+        },
+      };
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+
+      expect(externalNodes['npm:@nrwl/nx-cloud']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "sha512-iJIPP46+saFZK748FKU4u4YZH+Sv3ZvZPbMwGVMhwqhOYcrlO5aSa0lpilyoN8WuhooKNqcCfiqshx6V577fTg==",
+            "packageName": "@nrwl/nx-cloud",
+            "version": "16.1.1",
+          },
+          "name": "npm:@nrwl/nx-cloud",
+          "type": "npm",
+        }
+      `);
+      expect(externalNodes['npm:nx-cloud']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "sha512-Rq7ynvkYzAJ67N3pDqU6cMqwvWP7WXJGP4EFjLxgUrRHNCccqDPggeAqePodfk3nZEUrZB8F5QBKZuuw1DR3oA==",
+            "packageName": "nx-cloud",
+            "version": "16.1.1",
+          },
+          "name": "npm:nx-cloud",
+          "type": "npm",
+        }
+      `);
+      expect(externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "postgres|https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+            "packageName": "postgres",
+            "version": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "npm:postgres",
+          "type": "npm",
+        }
+      `);
+    });
+
+    it('should parse tagged version range in combination with semver in reverse order', () => {
+      const lockFile = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
+# yarn lockfile v1
+
+"@nrwl/nx-cloud@16.1.1":
+  version "16.1.1"
+  resolved "http://localhost:4873/@nrwl%2fnx-cloud/-/nx-cloud-16.1.1.tgz#9e1ed2acff11ab0ae8a4c0c045d412034ac26be7"
+  integrity sha512-iJIPP46+saFZK748FKU4u4YZH+Sv3ZvZPbMwGVMhwqhOYcrlO5aSa0lpilyoN8WuhooKNqcCfiqshx6V577fTg==
+  dependencies:
+    nx-cloud "16.1.1"
+
+nx-cloud@latest, nx-cloud@16.1.1:
+  version "16.1.1"
+  resolved "http://localhost:4873/nx-cloud/-/nx-cloud-16.1.1.tgz#103ae0f13f5eb05d6ddd6d9bfcafc56cf295a59a"
+  integrity sha512-Rq7ynvkYzAJ67N3pDqU6cMqwvWP7WXJGP4EFjLxgUrRHNCccqDPggeAqePodfk3nZEUrZB8F5QBKZuuw1DR3oA==
+  dependencies:
+    "@nrwl/nx-cloud" "16.1.1"
+
+postgres@charsleysa/postgres#fix-errors-compiled:
+  version "3.2.4"
+  resolved "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb"
+    `;
+      const packageJson: PackageJson = {
+        name: '@my-ns/example',
+        version: '0.0.1',
+        type: 'commonjs',
+        dependencies: {
+          'nx-cloud': 'latest',
+          postgres: 'charsleysa/postgres#fix-errors-compiled',
+        },
+      };
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+
+      expect(externalNodes['npm:@nrwl/nx-cloud']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-iJIPP46+saFZK748FKU4u4YZH+Sv3ZvZPbMwGVMhwqhOYcrlO5aSa0lpilyoN8WuhooKNqcCfiqshx6V577fTg==",
+              "packageName": "@nrwl/nx-cloud",
+              "version": "16.1.1",
+            },
+            "name": "npm:@nrwl/nx-cloud",
+            "type": "npm",
+          }
+        `);
+      expect(externalNodes['npm:nx-cloud']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-Rq7ynvkYzAJ67N3pDqU6cMqwvWP7WXJGP4EFjLxgUrRHNCccqDPggeAqePodfk3nZEUrZB8F5QBKZuuw1DR3oA==",
+              "packageName": "nx-cloud",
+              "version": "16.1.1",
+            },
+            "name": "npm:nx-cloud",
+            "type": "npm",
+          }
+        `);
+      expect(externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "postgres|https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+              "packageName": "postgres",
+              "version": "https://codeload.github.com/charsleysa/postgres/tar.gz/3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+            },
+            "name": "npm:postgres",
+            "type": "npm",
+          }
+        `);
+    });
+
+    it('should parse tagged version range', () => {
+      const lockFile = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
+# yarn lockfile v1
+
+nx-cloud@latest:
+  version "16.1.1"
+  resolved "http://localhost:4873/nx-cloud/-/nx-cloud-16.1.1.tgz#103ae0f13f5eb05d6ddd6d9bfcafc56cf295a59a"
+  integrity sha512-Rq7ynvkYzAJ67N3pDqU6cMqwvWP7WXJGP4EFjLxgUrRHNCccqDPggeAqePodfk3nZEUrZB8F5QBKZuuw1DR3oA==
+    `;
+      const packageJson: PackageJson = {
+        name: '@my-ns/example',
+        version: '0.0.1',
+        type: 'commonjs',
+        dependencies: {
+          'nx-cloud': 'latest',
+        },
+      };
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+
+      expect(externalNodes['npm:nx-cloud']).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "hash": "sha512-Rq7ynvkYzAJ67N3pDqU6cMqwvWP7WXJGP4EFjLxgUrRHNCccqDPggeAqePodfk3nZEUrZB8F5QBKZuuw1DR3oA==",
+              "packageName": "nx-cloud",
+              "version": "16.1.1",
+            },
+            "name": "npm:nx-cloud",
+            "type": "npm",
+          }
+        `);
+    });
+  });
+
+  describe('auxiliary packages PnP', () => {
+    it('should parse yarn berry pnp', () => {
+      const berryLockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/yarn-berry.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/auxiliary-packages/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(
+        berryLockFile,
+        hash,
+        packageJson
+      );
+
+      expect(Object.keys(externalNodes).length).toEqual(129);
+
+      expect(externalNodes['npm:react']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "88e38092da8839b830cda6feef2e8505dec8ace60579e46aa5490fc3dc9bba0bd50336507dc166f43e3afc1c42939c09fe33b25fae889d6f402721dcd78fca1b",
+            "packageName": "react",
+            "version": "18.2.0",
+          },
+          "name": "npm:react",
+          "type": "npm",
+        }
+      `);
+
+      expect(externalNodes['npm:typescript']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "ee000bc26848147ad423b581bd250075662a354d84f0e06eb76d3b892328d8d4440b7487b5a83e851b12b255f55d71835b008a66cbf8f255a11e4400159237db",
+            "packageName": "typescript",
+            "version": "4.8.4",
+          },
+          "name": "npm:typescript",
+          "type": "npm",
+        }
+      `);
+      expect(externalNodes['npm:@nrwl/devkit']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "7dcc3600998448c496228e062d7edd8ecf959fa1ddb9721e91bb1f60f1a2284fd0e12e09edc022170988e2fb54acf101c79dc09fe9c54a21c9941e682eb73b92",
+            "packageName": "@nrwl/devkit",
+            "version": "15.0.13",
+          },
+          "name": "npm:@nrwl/devkit",
+          "type": "npm",
+        }
+      `);
+      expect(externalNodes['npm:postgres']).toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "521660853e0c9f1c604cf43d32c75e2b4675e2d912eaec7bb6749716539dd53f1dfaf575a422087f6a53362f5162f9a4b8a88cc1dadf9d7580423fc05137767a",
+            "packageName": "postgres",
+            "version": "https://github.com/charsleysa/postgres.git#commit=3b1a01b2da3e2fafb1a79006f838eff11a8de3cb",
+          },
+          "name": "npm:postgres",
+          "type": "npm",
+        }
+      `);
+      expect(externalNodes['npm:eslint-plugin-disable-autofix'])
+        .toMatchInlineSnapshot(`
+        {
+          "data": {
+            "hash": "fb7272c37e5701df14a79d0f8a9d6a0cb521972011ba91d70290eefc33fca589307908a6fb63e2985257b1c7cc3839c076d1c8def0caabddf21a91f13d7c8fc1",
+            "packageName": "eslint-plugin-disable-autofix",
+            "version": "npm:@mattlewis92/eslint-plugin-disable-autofix@3.0.0",
+          },
+          "name": "npm:eslint-plugin-disable-autofix",
+          "type": "npm",
+        }
+      `);
     });
   });
 
@@ -507,10 +1177,18 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/duplicate-package/yarn.lock'
       )).default;
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(classicLockFile, builder);
-      const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(371);
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/duplicate-package/package.json'
+      ));
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(
+        classicLockFile,
+        hash,
+        packageJson
+      );
+
+      expect(Object.keys(externalNodes).length).toEqual(371);
     });
   });
 
@@ -537,9 +1215,27 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/optional/package.json'
       ));
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
+
       expect(Object.keys(graph.externalNodes).length).toEqual(103);
 
       const prunedGraph = pruneProjectGraph(graph, packageJson);
@@ -716,9 +1412,31 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/pruning/typescript/package.json'
       ));
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
+
       const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -743,9 +1461,31 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/pruning/devkit-yargs/package.json'
       ));
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
+
       const prunedGraph = pruneProjectGraph(graph, multiPackageJson);
       const result = stringifyYarnLockfile(
         prunedGraph,
@@ -776,10 +1516,14 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/workspaces/yarn.lock'
       )).default;
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
-      const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(5);
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/package.json'
+      ));
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+
+      expect(Object.keys(externalNodes).length).toEqual(5);
     });
 
     it('should parse berry lock file', async () => {
@@ -787,10 +1531,14 @@ describe('yarn LockFile utility', () => {
         __dirname,
         '__fixtures__/workspaces/yarn.lock.berry'
       )).default;
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
-      const graph = builder.getUpdatedProjectGraph();
-      expect(Object.keys(graph.externalNodes).length).toEqual(5);
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/workspaces/package.json'
+      ));
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+
+      expect(Object.keys(externalNodes).length).toEqual(5);
     });
   });
 
@@ -808,6 +1556,17 @@ describe('yarn LockFile utility', () => {
       main: './src/index.js',
       types: './src/index.d.ts',
     };
+
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/@gitlab-examples/semantic-release-npm/package.json':
+          '{"version": "2.0.1"}',
+        'node_modules/tslib/package.json': '{"version": "2.5.0"}',
+        'node_modules/type-fest/package.json': '{"version": "0.20.2"}',
+        'node_modules/@gar/promisify/package.json': '{"version": "1.1.3"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
 
     it('should parse and prune classic', () => {
       const lockFile = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
@@ -830,8 +1589,36 @@ type-fest@^0.20.2:
   integrity sha512-Ne+eE4r0/iWnpAxD852z3A+N0Bt5RN//NjJwRd2VFHEmrywxf5vsZlh4R6lixl6B+wz/8d+maTSAkN1FIkI3LQ==
 `;
 
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+      const packageJson: PackageJson = {
+        name: '@my-ns/example',
+        version: '0.0.1',
+        type: 'commonjs',
+        dependencies: {
+          '@gitlab-examples/semantic-release-npm': '^2.0.1',
+          'type-fest': '^0.20.2',
+        },
+        peerDependencies: {
+          tslib: '^2.4.0',
+        },
+      };
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
       expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
         {
@@ -905,9 +1692,40 @@ __metadata:
   languageName: node
   linkType: hard
 `;
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+
+      const packageJson: PackageJson = {
+        name: '@my-ns/example',
+        version: '0.0.1',
+        type: 'commonjs',
+        dependencies: {
+          '@gitlab-examples/semantic-release-npm': '^2.0.1',
+          '@gar/promisify': '^1.1.3',
+        },
+        peerDependencies: {
+          tslib: '^2.4.0',
+        },
+      };
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
+
       expect(graph.externalNodes['npm:tslib']).toMatchInlineSnapshot(`
         {
           "data": {
@@ -973,13 +1791,27 @@ __metadata:
   describe('mixed keys', () => {
     beforeEach(() => {
       const fileSys = {
-        'node_modules/wrap-ansi/package.json': '{"version": "7.0.0"}',
+        'node_modules/@isaacs/cliui/package.json': '{"version": "8.0.2"}',
+        'node_modules/ansi-regex/package.json': '{"version": "5.0.1"}',
+        'node_modules/ansi-styles/package.json': '{"version": "4.3.0"}',
+        'node_modules/cliui/package.json': '{"version": "8.0.1"}',
+        'node_modules/color-convert/package.json': '{"version": "2.0.1"}',
+        'node_modules/color-name/package.json': '{"version": "1.1.4"}',
+        'node_modules/eastasianwidth/package.json': '{"version": "0.2.0"}',
+        'node_modules/emoji-regex/package.json': '{"version": "8.0.0"}',
+        'node_modules/is-fullwidth-code-point/package.json':
+          '{"version": "3.0.0"}',
+        'node_modules/string-width/package.json': '{"version": "5.1.2"}',
+        'node_modules/string-width-cjs/package.json': '{"version": "4.2.3"}',
+        'node_modules/strip-ansi/package.json': '{"version": "7.0.1"}',
+        'node_modules/strip-ansi-cjs/package.json': '{"version": "6.0.1"}',
+        'node_modules/wrap-ansi/package.json': '{"version": "8.1.0"}',
         'node_modules/wrap-ansi-cjs/package.json': '{"version": "7.0.0"}',
       };
       vol.fromJSON(fileSys, '/root');
     });
 
-    it('should parse and prune packages with mixed keys', () => {
+    it('should parse classic and prune packages with mixed keys', () => {
       const lockFile = require(joinPathFragments(
         __dirname,
         '__fixtures__/mixed-keys/yarn.lock'
@@ -989,9 +1821,26 @@ __metadata:
         '__fixtures__/mixed-keys/package.json'
       ));
 
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
       const graph = builder.getUpdatedProjectGraph();
+
       expect(graph.externalNodes).toMatchInlineSnapshot(`
         {
           "npm:@isaacs/cliui": {
@@ -1003,13 +1852,13 @@ __metadata:
             "name": "npm:@isaacs/cliui",
             "type": "npm",
           },
-          "npm:ansi-regex@5.0.1": {
+          "npm:ansi-regex": {
             "data": {
               "hash": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
               "packageName": "ansi-regex",
               "version": "5.0.1",
             },
-            "name": "npm:ansi-regex@5.0.1",
+            "name": "npm:ansi-regex",
             "type": "npm",
           },
           "npm:ansi-regex@6.0.1": {
@@ -1021,13 +1870,13 @@ __metadata:
             "name": "npm:ansi-regex@6.0.1",
             "type": "npm",
           },
-          "npm:ansi-styles@4.3.0": {
+          "npm:ansi-styles": {
             "data": {
               "hash": "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==",
               "packageName": "ansi-styles",
               "version": "4.3.0",
             },
-            "name": "npm:ansi-styles@4.3.0",
+            "name": "npm:ansi-styles",
             "type": "npm",
           },
           "npm:ansi-styles@6.2.1": {
@@ -1075,13 +1924,13 @@ __metadata:
             "name": "npm:eastasianwidth",
             "type": "npm",
           },
-          "npm:emoji-regex@8.0.0": {
+          "npm:emoji-regex": {
             "data": {
               "hash": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
               "packageName": "emoji-regex",
               "version": "8.0.0",
             },
-            "name": "npm:emoji-regex@8.0.0",
+            "name": "npm:emoji-regex",
             "type": "npm",
           },
           "npm:emoji-regex@9.2.2": {
@@ -1102,6 +1951,15 @@ __metadata:
             "name": "npm:is-fullwidth-code-point",
             "type": "npm",
           },
+          "npm:string-width": {
+            "data": {
+              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
+              "packageName": "string-width",
+              "version": "5.1.2",
+            },
+            "name": "npm:string-width",
+            "type": "npm",
+          },
           "npm:string-width-cjs": {
             "data": {
               "hash": "sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==",
@@ -1120,13 +1978,13 @@ __metadata:
             "name": "npm:string-width@4.2.3",
             "type": "npm",
           },
-          "npm:string-width@5.1.2": {
+          "npm:strip-ansi": {
             "data": {
-              "hash": "sha512-HnLOCR3vjcY8beoNLtcjZ5/nxn2afmME6lhrDrebokqMap+XbeW8n9TXpPDOqdGK5qcI3oT0GKTW6wC7EMiVqA==",
-              "packageName": "string-width",
-              "version": "5.1.2",
+              "hash": "sha512-cXNxvT8dFNRVfhVME3JAe98mkXDYN2O1l7jmcwMnOslDeESg1rF/OZMtK0nRAhiari1unG5cD4jG3rapUAkLbw==",
+              "packageName": "strip-ansi",
+              "version": "7.0.1",
             },
-            "name": "npm:string-width@5.1.2",
+            "name": "npm:strip-ansi",
             "type": "npm",
           },
           "npm:strip-ansi-cjs": {
@@ -1147,20 +2005,11 @@ __metadata:
             "name": "npm:strip-ansi@6.0.1",
             "type": "npm",
           },
-          "npm:strip-ansi@7.0.1": {
-            "data": {
-              "hash": "sha512-cXNxvT8dFNRVfhVME3JAe98mkXDYN2O1l7jmcwMnOslDeESg1rF/OZMtK0nRAhiari1unG5cD4jG3rapUAkLbw==",
-              "packageName": "strip-ansi",
-              "version": "7.0.1",
-            },
-            "name": "npm:strip-ansi@7.0.1",
-            "type": "npm",
-          },
           "npm:wrap-ansi": {
             "data": {
-              "hash": "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==",
+              "hash": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
               "packageName": "wrap-ansi",
-              "version": "7.0.0",
+              "version": "8.1.0",
             },
             "name": "npm:wrap-ansi",
             "type": "npm",
@@ -1174,13 +2023,242 @@ __metadata:
             "name": "npm:wrap-ansi-cjs",
             "type": "npm",
           },
-          "npm:wrap-ansi@8.1.0": {
+          "npm:wrap-ansi@7.0.0": {
             "data": {
-              "hash": "sha512-si7QWI6zUMq56bESFvagtmzMdGOtoxfR+Sez11Mobfc7tm+VkUckk9bW2UeffTGVUbOksxmSw0AA2gs8g71NCQ==",
+              "hash": "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==",
+              "packageName": "wrap-ansi",
+              "version": "7.0.0",
+            },
+            "name": "npm:wrap-ansi@7.0.0",
+            "type": "npm",
+          },
+        }
+      `);
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyYarnLockfile(prunedGraph, lockFile, packageJson);
+      expect(result).toEqual(lockFile);
+    });
+
+    it('should parse berry and prune packages with mixed keys', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/mixed-keys/yarn-berry.lock'
+      )).default;
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/mixed-keys/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      expect(graph.externalNodes).toMatchInlineSnapshot(`
+        {
+          "npm:@isaacs/cliui": {
+            "data": {
+              "hash": "4a473b9b32a7d4d3cfb7a614226e555091ff0c5a29a1734c28c72a182c2f6699b26fc6b5c2131dfd841e86b185aea714c72201d7c98c2fba5f17709333a67aeb",
+              "packageName": "@isaacs/cliui",
+              "version": "8.0.2",
+            },
+            "name": "npm:@isaacs/cliui",
+            "type": "npm",
+          },
+          "npm:ansi-regex": {
+            "data": {
+              "hash": "2aa4bb54caf2d622f1afdad09441695af2a83aa3fe8b8afa581d205e57ed4261c183c4d3877cee25794443fde5876417d859c108078ab788d6af7e4fe52eb66b",
+              "packageName": "ansi-regex",
+              "version": "5.0.1",
+            },
+            "name": "npm:ansi-regex",
+            "type": "npm",
+          },
+          "npm:ansi-regex@6.0.1": {
+            "data": {
+              "hash": "1ff8b7667cded1de4fa2c9ae283e979fc87036864317da86a2e546725f96406746411d0d85e87a2d12fa5abd715d90006de7fa4fa0477c92321ad3b4c7d4e169",
+              "packageName": "ansi-regex",
+              "version": "6.0.1",
+            },
+            "name": "npm:ansi-regex@6.0.1",
+            "type": "npm",
+          },
+          "npm:ansi-styles": {
+            "data": {
+              "hash": "513b44c3b2105dd14cc42a19271e80f386466c4be574bccf60b627432f9198571ebf4ab1e4c3ba17347658f4ee1711c163d574248c0c1cdc2d5917a0ad582ec4",
+              "packageName": "ansi-styles",
+              "version": "4.3.0",
+            },
+            "name": "npm:ansi-styles",
+            "type": "npm",
+          },
+          "npm:ansi-styles@6.2.1": {
+            "data": {
+              "hash": "ef940f2f0ced1a6347398da88a91da7930c33ecac3c77b72c5905f8b8fe402c52e6fde304ff5347f616e27a742da3f1dc76de98f6866c69251ad0b07a66776d9",
+              "packageName": "ansi-styles",
+              "version": "6.2.1",
+            },
+            "name": "npm:ansi-styles@6.2.1",
+            "type": "npm",
+          },
+          "npm:cliui": {
+            "data": {
+              "hash": "79648b3b0045f2e285b76fb2e24e207c6db44323581e421c3acbd0e86454cba1b37aea976ab50195a49e7384b871e6dfb2247ad7dec53c02454ac6497394cb56",
+              "packageName": "cliui",
+              "version": "8.0.1",
+            },
+            "name": "npm:cliui",
+            "type": "npm",
+          },
+          "npm:color-convert": {
+            "data": {
+              "hash": "79e6bdb9fd479a205c71d89574fccfb22bd9053bd98c6c4d870d65c132e5e904e6034978e55b43d69fcaa7433af2016ee203ce76eeba9cfa554b373e7f7db336",
+              "packageName": "color-convert",
+              "version": "2.0.1",
+            },
+            "name": "npm:color-convert",
+            "type": "npm",
+          },
+          "npm:color-name": {
+            "data": {
+              "hash": "b0445859521eb4021cd0fb0cc1a75cecf67fceecae89b63f62b201cca8d345baf8b952c966862a9d9a2632987d4f6581f0ec8d957dfacece86f0a7919316f610",
+              "packageName": "color-name",
+              "version": "1.1.4",
+            },
+            "name": "npm:color-name",
+            "type": "npm",
+          },
+          "npm:eastasianwidth": {
+            "data": {
+              "hash": "7d00d7cd8e49b9afa762a813faac332dee781932d6f2c848dc348939c4253f1d4564341b7af1d041853bc3f32c2ef141b58e0a4d9862c17a7f08f68df1e0f1ed",
+              "packageName": "eastasianwidth",
+              "version": "0.2.0",
+            },
+            "name": "npm:eastasianwidth",
+            "type": "npm",
+          },
+          "npm:emoji-regex": {
+            "data": {
+              "hash": "d4c5c39d5a9868b5fa152f00cada8a936868fd3367f33f71be515ecee4c803132d11b31a6222b2571b1e5f7e13890156a94880345594d0ce7e3c9895f560f192",
+              "packageName": "emoji-regex",
+              "version": "8.0.0",
+            },
+            "name": "npm:emoji-regex",
+            "type": "npm",
+          },
+          "npm:emoji-regex@9.2.2": {
+            "data": {
+              "hash": "8487182da74aabd810ac6d6f1994111dfc0e331b01271ae01ec1eb0ad7b5ecc2bbbbd2f053c05cb55a1ac30449527d819bbfbf0e3de1023db308cbcb47f86601",
+              "packageName": "emoji-regex",
+              "version": "9.2.2",
+            },
+            "name": "npm:emoji-regex@9.2.2",
+            "type": "npm",
+          },
+          "npm:is-fullwidth-code-point": {
+            "data": {
+              "hash": "44a30c29457c7fb8f00297bce733f0a64cd22eca270f83e58c105e0d015e45c019491a4ab2faef91ab51d4738c670daff901c799f6a700e27f7314029e99e348",
+              "packageName": "is-fullwidth-code-point",
+              "version": "3.0.0",
+            },
+            "name": "npm:is-fullwidth-code-point",
+            "type": "npm",
+          },
+          "npm:string-width": {
+            "data": {
+              "hash": "7369deaa29f21dda9a438686154b62c2c5f661f8dda60449088f9f980196f7908fc39fdd1803e3e01541970287cf5deae336798337e9319a7055af89dafa7193",
+              "packageName": "string-width",
+              "version": "5.1.2",
+            },
+            "name": "npm:string-width",
+            "type": "npm",
+          },
+          "npm:string-width-cjs": {
+            "data": {
+              "hash": "e52c10dc3fbfcd6c3a15f159f54a90024241d0f149cf8aed2982a2d801d2e64df0bf1dc351cf8e95c3319323f9f220c16e740b06faecd53e2462df1d2b5443fb",
+              "packageName": "string-width-cjs",
+              "version": "npm:string-width@^4.2.0",
+            },
+            "name": "npm:string-width-cjs",
+            "type": "npm",
+          },
+          "npm:string-width@4.2.3": {
+            "data": {
+              "hash": "e52c10dc3fbfcd6c3a15f159f54a90024241d0f149cf8aed2982a2d801d2e64df0bf1dc351cf8e95c3319323f9f220c16e740b06faecd53e2462df1d2b5443fb",
+              "packageName": "string-width",
+              "version": "4.2.3",
+            },
+            "name": "npm:string-width@4.2.3",
+            "type": "npm",
+          },
+          "npm:strip-ansi-cjs": {
+            "data": {
+              "hash": "f3cd25890aef3ba6e1a74e20896c21a46f482e93df4a06567cebf2b57edabb15133f1f94e57434e0a958d61186087b1008e89c94875d019910a213181a14fc8c",
+              "packageName": "strip-ansi-cjs",
+              "version": "npm:strip-ansi@^6.0.1",
+            },
+            "name": "npm:strip-ansi-cjs",
+            "type": "npm",
+          },
+          "npm:strip-ansi@6.0.1": {
+            "data": {
+              "hash": "f3cd25890aef3ba6e1a74e20896c21a46f482e93df4a06567cebf2b57edabb15133f1f94e57434e0a958d61186087b1008e89c94875d019910a213181a14fc8c",
+              "packageName": "strip-ansi",
+              "version": "6.0.1",
+            },
+            "name": "npm:strip-ansi@6.0.1",
+            "type": "npm",
+          },
+          "npm:strip-ansi@7.1.0": {
+            "data": {
+              "hash": "859c73fcf27869c22a4e4d8c6acfe690064659e84bef9458aa6d13719d09ca88dcfd40cbf31fd0be63518ea1a643fe070b4827d353e09533a5b0b9fd4553d64d",
+              "packageName": "strip-ansi",
+              "version": "7.1.0",
+            },
+            "name": "npm:strip-ansi@7.1.0",
+            "type": "npm",
+          },
+          "npm:wrap-ansi": {
+            "data": {
+              "hash": "371733296dc2d616900ce15a0049dca0ef67597d6394c57347ba334393599e800bab03c41d4d45221b6bc967b8c453ec3ae4749eff3894202d16800fdfe0e238",
               "packageName": "wrap-ansi",
               "version": "8.1.0",
             },
-            "name": "npm:wrap-ansi@8.1.0",
+            "name": "npm:wrap-ansi",
+            "type": "npm",
+          },
+          "npm:wrap-ansi-cjs": {
+            "data": {
+              "hash": "a790b846fd4505de962ba728a21aaeda189b8ee1c7568ca5e817d85930e06ef8d1689d49dbf0e881e8ef84436af3a88bc49115c2e2788d841ff1b8b5b51a608b",
+              "packageName": "wrap-ansi-cjs",
+              "version": "npm:wrap-ansi@^7.0.0",
+            },
+            "name": "npm:wrap-ansi-cjs",
+            "type": "npm",
+          },
+          "npm:wrap-ansi@7.0.0": {
+            "data": {
+              "hash": "a790b846fd4505de962ba728a21aaeda189b8ee1c7568ca5e817d85930e06ef8d1689d49dbf0e881e8ef84436af3a88bc49115c2e2788d841ff1b8b5b51a608b",
+              "packageName": "wrap-ansi",
+              "version": "7.0.0",
+            },
+            "name": "npm:wrap-ansi@7.0.0",
             "type": "npm",
           },
         }
@@ -1193,6 +2271,18 @@ __metadata:
   });
 
   describe('invalid resolved', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/@octokit/request-error/package.json':
+          '{"version": "3.0.3"}',
+        'node_modules/@octokit/types/package.json': '{"version": "9.2.0"}',
+        'node_modules/@octokit/webhooks-types/package.json':
+          '{"version": "5.8.0"}',
+        'node_modules/@octokit/webhooks/package.json': '{"version": "9.26.0"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
     it('should parse yarn.lock with invalid resolved field', () => {
       const lockFile = `# THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
 # yarn lockfile v1
@@ -1228,10 +2318,23 @@ __metadata:
     "@octokit/webhooks-types" "5.8.0"
     aggregate-error "^3.1.0"
       `;
-      const builder = new ProjectGraphBuilder();
-      parseYarnLockfile(lockFile, builder);
-      const graph = builder.getUpdatedProjectGraph();
-      expect(graph.externalNodes).toMatchInlineSnapshot(`
+
+      const packageJson: PackageJson = {
+        name: '@my-ns/example',
+        version: '0.0.1',
+        type: 'commonjs',
+        dependencies: {
+          '@octokit/request-error': '^3',
+          '@octokit/types': '^9',
+          '@octokit/webhooks-types': '5.8.0',
+          '@octokit/webhooks': '^9.8.4',
+        },
+      };
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+
+      expect(externalNodes).toMatchInlineSnapshot(`
         {
           "npm:@octokit/request-error": {
             "data": {
@@ -1273,4 +2376,128 @@ __metadata:
       `);
     });
   });
+
+  describe('patches', () => {
+    beforeEach(() => {
+      const fileSys = {
+        'node_modules/resolve/package.json': '{"version": "1.22.3"}',
+      };
+      vol.fromJSON(fileSys, '/root');
+    });
+
+    it('should keep the builtin patch', () => {
+      const lockFile = `# This file is generated by running "yarn install" inside your project.
+# Manual changes might be lost - proceed with caution!
+
+__metadata:
+  version: 6
+  cacheKey: 8
+
+"resolve@npm:^1.12.0, resolve@npm:^1.14.2, resolve@npm:^1.20.0, resolve@npm:^1.22.1":
+  version: 1.22.3
+  resolution: "resolve@npm:1.22.3"
+  dependencies:
+    is-core-module: ^2.12.0
+    path-parse: ^1.0.7
+    supports-preserve-symlinks-flag: ^1.0.0
+  bin:
+    resolve: bin/resolve
+  checksum: fb834b81348428cb545ff1b828a72ea28feb5a97c026a1cf40aa1008352c72811ff4d4e71f2035273dc536dcfcae20c13604ba6283c612d70fa0b6e44519c374
+  languageName: node
+  linkType: hard
+
+"resolve@patch:resolve@^1.12.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.14.2#~builtin<compat/resolve>, resolve@patch:resolve@^1.20.0#~builtin<compat/resolve>, resolve@patch:resolve@^1.22.1#~builtin<compat/resolve>":
+  version: 1.22.3
+  resolution: "resolve@patch:resolve@npm%3A1.22.3#~builtin<compat/resolve>::version=1.22.3&hash=c3c19d"
+  dependencies:
+    is-core-module: ^2.12.0
+    path-parse: ^1.0.7
+    supports-preserve-symlinks-flag: ^1.0.0
+  bin:
+    resolve: bin/resolve
+  checksum: ad59734723b596d0891321c951592ed9015a77ce84907f89c9d9307dd0c06e11a67906a3e628c4cae143d3e44898603478af0ddeb2bba3f229a9373efe342665
+  languageName: node
+  linkType: hard
+        `;
+
+      const packageJson: PackageJson = {
+        name: '@my-ns/example',
+        version: '0.0.1',
+        type: 'commonjs',
+        dependencies: {
+          resolve: '^1.12.0',
+        },
+      };
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.dependencyType,
+          dep.sourceFile
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyYarnLockfile(prunedGraph, lockFile, packageJson);
+      expect(result).toMatchInlineSnapshot(`
+        "# This file is generated by running "yarn install" inside your project.
+        # Manual changes might be lost - proceed with caution!
+
+        __metadata:
+          version: 6
+          cacheKey: 8
+
+        "@my-ns/example@workspace:.":
+          version: 0.0.0-use.local
+          resolution: "@my-ns/example@workspace:."
+          dependencies:
+            resolve: ^1.12.0
+          languageName: unknown
+          linkType: soft
+
+        "resolve@npm:^1.12.0":
+          version: 1.22.3
+          resolution: "resolve@npm:1.22.3"
+          dependencies:
+            is-core-module: ^2.12.0
+            path-parse: ^1.0.7
+            supports-preserve-symlinks-flag: ^1.0.0
+          bin:
+            resolve: bin/resolve
+          checksum: fb834b81348428cb545ff1b828a72ea28feb5a97c026a1cf40aa1008352c72811ff4d4e71f2035273dc536dcfcae20c13604ba6283c612d70fa0b6e44519c374
+          languageName: node
+          linkType: hard
+
+        "resolve@patch:resolve@^1.12.0#~builtin<compat/resolve>":
+          version: 1.22.3
+          resolution: "resolve@patch:resolve@npm%3A1.22.3#~builtin<compat/resolve>::version=1.22.3&hash=c3c19d"
+          dependencies:
+            is-core-module: ^2.12.0
+            path-parse: ^1.0.7
+            supports-preserve-symlinks-flag: ^1.0.0
+          bin:
+            resolve: bin/resolve
+          checksum: ad59734723b596d0891321c951592ed9015a77ce84907f89c9d9307dd0c06e11a67906a3e628c4cae143d3e44898603478af0ddeb2bba3f229a9373efe342665
+          languageName: node
+          linkType: hard
+        "
+      `);
+    });
+  });
 });
+
+function uniq(str: string) {
+  return `str-${(Math.random() * 10000).toFixed(0)}`;
+}

@@ -2,6 +2,7 @@ import {
   applyChangesToString,
   ChangeType,
   generateFiles,
+  getPackageManagerCommand,
   joinPathFragments,
   output,
   readProjectConfiguration,
@@ -24,13 +25,15 @@ export function onlyShowGuide(storybookProjects: {
     viteConfigFilePath?: string;
   };
 }) {
+  const pm = getPackageManagerCommand();
+
   output.log({
     title: 'Storybook 7 Migration Guide',
     bodyLines: [
       `You can run the following commands manually to upgrade your Storybook projects to Storybook 7:`,
       ``,
       `1. Call the Storybook upgrade script:`,
-      `npx storybook@latest upgrade`,
+      `${pm.exec} storybook@latest upgrade`,
       ``,
       `2. Call the Nx generator to prepare your files for migration:`,
       `nx g @nx/storybook:migrate-7 --onlyPrepare`,
@@ -39,7 +42,7 @@ export function onlyShowGuide(storybookProjects: {
       `Run the following commands for each Storybook project:`,
       ...Object.entries(storybookProjects).map(
         ([_projectName, storybookProjectInfo]) => {
-          return `npx storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
+          return `${pm.exec} storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
         }
       ),
       ``,
@@ -683,7 +686,7 @@ export function logResult(
     color: 'green',
   });
 
-  generateFiles(tree, joinPathFragments(__dirname, 'files'), '.', {
+  generateFiles(tree, join(__dirname, 'files'), '.', {
     tmpl: '',
     successfulProjects: Object.entries(
       migrationSummary?.successfulProjects

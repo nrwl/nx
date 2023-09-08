@@ -4,6 +4,7 @@ exports[`new --preset should generate necessary npm dependencies for empty prese
 {
   "dependencies": {},
   "devDependencies": {
+    "@nx/js": "0.0.1",
     "@nx/workspace": "0.0.1",
     "nx": "0.0.1",
   },
@@ -51,6 +52,9 @@ exports[`new should generate an empty nx.json 1`] = `
       },
       "runner": "nx/tasks-runners/default",
     },
+  },
+  "workspaceLayout": {
+    "projectNameAndRootFormat": "as-provided",
   },
 }
 `;

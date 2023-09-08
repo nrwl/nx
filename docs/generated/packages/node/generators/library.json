@@ -1,6 +1,6 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library",
+  "factory": "./src/generators/library/library#libraryGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -19,12 +19,18 @@
         "type": "string",
         "description": "Library name",
         "$default": { "$source": "argv", "index": 0 },
-        "x-prompt": "What name would you like to use for the library?"
+        "x-prompt": "What name would you like to use for the library?",
+        "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
       },
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed",
         "alias": "dir"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "simpleModuleName": {
         "description": "Keep the module name simple (when using `--directory`).",
@@ -131,7 +137,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a node library.",
-  "implementation": "/packages/node/src/generators/library/library.ts",
+  "implementation": "/packages/node/src/generators/library/library#libraryGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/node/src/generators/library/schema.json",
   "type": "generator"

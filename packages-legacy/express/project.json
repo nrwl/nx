@@ -14,7 +14,6 @@
         "main": "packages-legacy/express/index.ts",
         "tsConfig": "packages-legacy/express/tsconfig.json",
         "outputPath": "build/packages/express-legacy",
-        "updateBuildableProjectDepsInPackageJson": false,
         "assets": [
           {
             "input": "packages-legacy/express",

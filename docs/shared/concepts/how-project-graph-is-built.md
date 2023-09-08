@@ -28,7 +28,7 @@ Nx creates a graph of all the dependencies between projects in your workspace us
 
    Then `my-app` depends on `awesome-library`
 
-   This can be [turned on or off with the `analyzeSourceFiles` flag](../../recipes/other/analyze-source-files).
+   This can be [turned on or off with the `analyzeSourceFiles` flag](../../recipes/tips-n-tricks/analyze-source-files).
 
 3. Manually created `implicitDependencies` in the project configuration file.
 
