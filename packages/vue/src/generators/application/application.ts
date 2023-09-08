@@ -15,9 +15,10 @@ import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
 import { nxVersion } from '../../utils/versions';
-import { viteConfigurationGenerator, vitestGenerator } from '@nx/vite';
+import { createOrEditViteConfig, viteConfigurationGenerator } from '@nx/vite';
 import { createTsConfig } from '../../utils/create-ts-config';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { addLinting } from '../../utils/add-linting';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -58,17 +59,49 @@ export async function applicationGenerator(
     getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );
 
+  // TODO: to be fixed
+  const lintTask = await addLinting(
+    tree,
+    {
+      js: options.js,
+      name: options.projectName,
+      projectRoot: options.appProjectRoot,
+      linter: options.linter ?? 'eslint',
+      unitTestRunner: options.unitTestRunner as any,
+      setParserOptionsProject: options.setParserOptionsProject,
+    } as any,
+    'app'
+  );
+  tasks.push(lintTask);
+
   // Set up build target (and test target if using vitest)
   const viteTask = await viteConfigurationGenerator(tree, {
-    uiFramework: 'vue',
+    uiFramework: 'none',
     project: options.name,
     newProject: true,
     inSourceTests: options.inSourceTests,
     includeVitest: options.unitTestRunner === 'vitest',
     skipFormat: true,
     testEnvironment: 'jsdom',
+    skipViteConfig: true,
   });
   tasks.push(viteTask);
+
+  const viteConfigCreation = createOrEditViteConfig(
+    tree,
+    {
+      project: options.name,
+      includeLib: false,
+      includeVitest: options.unitTestRunner === 'vitest',
+      inSourceTests: options.inSourceTests,
+      importLines: [`import vue from '@vitejs/plugin-vue'`],
+      plugins: ['vue()'],
+    },
+    false
+  );
+  tasks.push((): void => {
+    viteConfigCreation;
+  });
 
   // Set up test target
   if (options.unitTestRunner === 'jest') {

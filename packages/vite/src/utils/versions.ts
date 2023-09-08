@@ -4,7 +4,6 @@ export const vitestVersion = '~0.32.0';
 export const vitestUiVersion = '~0.32.0';
 export const vitePluginReactVersion = '~4.0.0';
 export const vitePluginReactSwcVersion = '~3.3.2';
-export const vitePluginVueVersion = '^4.3.1';
 export const jsdomVersion = '~22.1.0';
 export const vitePluginDtsVersion = '~2.3.0';
 export const happyDomVersion = '~9.20.3';

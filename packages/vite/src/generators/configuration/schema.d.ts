@@ -1,5 +1,5 @@
 export interface ViteConfigurationGeneratorSchema {
-  uiFramework: 'react' | 'vue' | 'none';
+  uiFramework: 'react' | 'none';
   compiler?: 'babel' | 'swc';
   project: string;
   newProject?: boolean;

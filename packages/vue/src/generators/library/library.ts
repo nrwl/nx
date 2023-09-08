@@ -14,7 +14,7 @@ import { nxVersion } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
-import { addLinting } from './lib/add-linting';
+import { addLinting } from '../../utils/add-linting';
 import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import componentGenerator from '../component/component';
@@ -44,7 +44,7 @@ export async function libraryGenerator(host: Tree, schema: Schema) {
     targets: {},
   });
 
-  const lintTask = await addLinting(host, options);
+  const lintTask = await addLinting(host, options, 'lib');
   tasks.push(lintTask);
 
   createFiles(host, options);

@@ -2,20 +2,24 @@ import { Tree } from 'nx/src/generators/tree';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import { joinPathFragments } from 'nx/src/utils/path';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
-import { NormalizedSchema } from '../schema';
-import { extraEslintDependencies } from '../../../utils/lint';
+import { NormalizedSchema } from '../generators/library/schema';
+import { extraEslintDependencies } from './lint';
 import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
 } from '@nx/linter/src/generators/utils/eslint-file';
 
-export async function addLinting(host: Tree, options: NormalizedSchema) {
+export async function addLinting(
+  host: Tree,
+  options: NormalizedSchema,
+  projectType: 'lib' | 'app'
+) {
   if (options.linter === Linter.EsLint) {
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.name,
       tsConfigPaths: [
-        joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
+        joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],
       unitTestRunner: options.unitTestRunner,
       eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx,vue}`],
