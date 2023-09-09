@@ -683,7 +683,7 @@ async function parseTargetPackageAndVersion(
 ): Promise<{ targetPackage: string; targetVersion: string }> {
   if (!args) {
     throw new Error(
-      `Provide the correct package name and version. E.g., my-package@9.0.0.`
+      `You must provide the version to migrate to. E.g.: \`nx migrate latest\``
     );
   }
 
@@ -698,7 +698,7 @@ async function parseTargetPackageAndVersion(
       const maybeVersion = args.substring(i + 1);
       if (!targetPackage || !maybeVersion) {
         throw new Error(
-          `Provide the correct package name and version. E.g., my-package@9.0.0.`
+          `You must provide the version to migrate to. E.g.: \`nx migrate latest\``
         );
       }
       const targetVersion = await normalizeVersionWithTagCheck(
