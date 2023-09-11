@@ -33,7 +33,7 @@ jobs:
       - uses: pnpm/action-setup@v2
         name: Install pnpm
         with:
-          version: 8.3.1
+          version: 8.7.4
           run_install: false
 
       - name: Set node
@@ -252,7 +252,7 @@ jobs:
       - uses: pnpm/action-setup@v2
         name: Install pnpm
         with:
-          version: 8.3.1
+          version: 8.7.4
           run_install: false
 
       - name: Use Node.js ${{ matrix.node_version }}
