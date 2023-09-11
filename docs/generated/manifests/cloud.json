@@ -309,6 +309,16 @@
         "tags": []
       },
       {
+        "id": "auth-saml-managed",
+        "name": "Authenticate via SAML on Managed Version",
+        "description": "",
+        "file": "nx-cloud/private/auth-saml-managed",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/private-cloud/auth-saml-managed",
+        "tags": []
+      },
+      {
         "id": "advanced-config",
         "name": "Advanced Configuration",
         "description": "",
@@ -391,6 +401,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/private-cloud/auth-saml",
+    "tags": []
+  },
+  "/nx-cloud/private-cloud/auth-saml-managed": {
+    "id": "auth-saml-managed",
+    "name": "Authenticate via SAML on Managed Version",
+    "description": "",
+    "file": "nx-cloud/private/auth-saml-managed",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/private-cloud/auth-saml-managed",
     "tags": []
   },
   "/nx-cloud/private-cloud/advanced-config": {
