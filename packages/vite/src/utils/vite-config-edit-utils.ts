@@ -1,16 +1,20 @@
 import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
 import { findNodes } from '@nx/js';
 import { TargetFlags } from './generator-utils';
-import type { Node, ReturnStatement } from 'typescript';
+import type {
+  ArrayLiteralExpression,
+  Node,
+  PropertyAssignment,
+  ReturnStatement,
+} from 'typescript';
 
 export function ensureViteConfigIsCorrect(
   tree: Tree,
   path: string,
   buildConfigString: string,
   buildConfigObject: {},
-  dtsPlugin: string,
-  dtsImportLine: string,
-  pluginOption: string,
+  imports: string[],
+  plugins: string[],
   testConfigString: string,
   testConfigObject: {},
   cacheDir: string,
@@ -30,13 +34,6 @@ export function ensureViteConfigIsCorrect(
   }
 
   if (!projectAlreadyHasViteTargets?.build && buildConfigString?.length) {
-    updatedContent = handlePluginNode(
-      updatedContent ?? fileContent,
-      dtsPlugin,
-      dtsImportLine,
-      pluginOption
-    );
-
     updatedContent = handleBuildOrTestNode(
       updatedContent ?? fileContent,
       buildConfigString,
@@ -45,12 +42,17 @@ export function ensureViteConfigIsCorrect(
     );
   }
 
+  updatedContent =
+    handlePluginNode(updatedContent ?? fileContent, imports, plugins) ??
+    updatedContent;
+
   if (cacheDir?.length) {
     updatedContent = handleCacheDirNode(
       updatedContent ?? fileContent,
       cacheDir
     );
   }
+
   if (updatedContent) {
     tree.write(path, updatedContent);
     return true;
@@ -75,12 +77,28 @@ function handleBuildOrTestNode(
     return tsquery.replace(
       updatedFileContent,
       `PropertyAssignment:has(Identifier[name="${name}"])`,
-      (node: Node) => {
-        const found = tsquery.query(node, 'ObjectLiteralExpression');
+      (node: PropertyAssignment) => {
+        const existingProperties = tsquery.query(
+          node.initializer,
+          'PropertyAssignment'
+        ) as PropertyAssignment[];
+        let updatedPropsString = '';
+        for (const prop of existingProperties) {
+          const propName = prop.name.getText();
+          if (!configContentObject[propName]) {
+            updatedPropsString += `'${propName}': ${prop.initializer.getText()},\n`;
+          }
+        }
+        for (const [propName, propValue] of Object.entries(
+          configContentObject
+        )) {
+          updatedPropsString += `'${propName}': ${JSON.stringify(
+            propValue
+          )},\n`;
+        }
         return `${name}: {
-                  ...${found?.[0].getText()},
-                  ...${JSON.stringify(configContentObject)}
-               }`;
+          ${updatedPropsString}
+        }`;
       }
     );
   } else {
@@ -173,7 +191,6 @@ function transformCurrentBuildObject(
 
   const currentBuildObjectStart = returnStatements[index].getStart();
   const currentBuildObjectEnd = returnStatements[index].getEnd();
-
   const newReturnObject = tsquery.replace(
     returnStatements[index].getText(),
     'ObjectLiteralExpression',
@@ -181,7 +198,7 @@ function transformCurrentBuildObject(
       return `{
         ...${currentBuildObject},
         ...${JSON.stringify(buildConfigObject)}
-     }`;
+      }`;
     }
   );
 
@@ -209,7 +226,6 @@ function transformConditionalConfig(
   const { tsquery } = require('@phenomnomnominal/tsquery');
   const { SyntaxKind } = require('typescript');
   const functionBlock = tsquery.query(conditionalConfig[0], 'Block');
-
   const ifStatement = tsquery.query(functionBlock?.[0], 'IfStatement');
 
   const binaryExpressions = tsquery.query(ifStatement?.[0], 'BinaryExpression');
@@ -235,7 +251,6 @@ function transformConditionalConfig(
   if (!buildExists) {
     if (serveExists && elseKeywordExists) {
       // build options live inside the else block
-
       return (
         transformCurrentBuildObject(
           returnStatements?.length - 1,
@@ -278,12 +293,10 @@ function transformConditionalConfig(
 
 function handlePluginNode(
   appFileContent: string,
-  dtsPlugin: string,
-  dtsImportLine: string,
-  pluginOption: string
+  imports: string[],
+  plugins: string[]
 ): string | undefined {
   const { tsquery } = require('@phenomnomnominal/tsquery');
-
   const file = tsquery.ast(appFileContent);
   const pluginsNode = tsquery.query(
     file,
@@ -297,11 +310,29 @@ function handlePluginNode(
       file.getText(),
       'PropertyAssignment:has(Identifier[name="plugins"])',
       (node: Node) => {
-        const found = tsquery.query(node, 'ArrayLiteralExpression');
-        return `plugins: [
-                    ...${found?.[0].getText()},
-                    ${dtsPlugin}
-                ]`;
+        const found = tsquery.query(
+          node,
+          'ArrayLiteralExpression'
+        ) as ArrayLiteralExpression[];
+        let updatedPluginsString = '';
+
+        const existingPluginNodes = found?.[0].elements ?? [];
+
+        for (const plugin of existingPluginNodes) {
+          updatedPluginsString += `${plugin.getText()},\n`;
+        }
+
+        for (const plugin of plugins) {
+          if (
+            !existingPluginNodes?.some((node) =>
+              node.getText().includes(plugin)
+            )
+          ) {
+            updatedPluginsString += `${plugin},\n`;
+          }
+        }
+
+        return `plugins: [${updatedPluginsString}]`;
       }
     );
     writeFile = true;
@@ -335,7 +366,7 @@ function handlePluginNode(
             {
               type: ChangeType.Insert,
               index: propertyAssignments[0].getStart(),
-              text: pluginOption,
+              text: `plugins: [${plugins.join(',\n')}],`,
             },
           ]);
           writeFile = true;
@@ -344,7 +375,7 @@ function handlePluginNode(
             {
               type: ChangeType.Insert,
               index: foundDefineConfig[0].getStart() + 14,
-              text: pluginOption,
+              text: `plugins: [${plugins.join(',\n')}],`,
             },
           ]);
           writeFile = true;
@@ -364,7 +395,7 @@ function handlePluginNode(
           {
             type: ChangeType.Insert,
             index: startOfObject + 1,
-            text: pluginOption,
+            text: `plugins: [${plugins.join(',\n')}],`,
           },
         ]);
         writeFile = true;
@@ -373,14 +404,27 @@ function handlePluginNode(
       }
     }
   }
-
   if (writeFile) {
-    if (!appFileContent.includes(`import dts from 'vite-plugin-dts'`)) {
-      return dtsImportLine + '\n' + appFileContent;
-    }
-    return appFileContent;
+    const filteredImports = filterImport(appFileContent, imports);
+    return filteredImports.join(';') + '\n' + appFileContent;
   }
-  return appFileContent;
+}
+
+function filterImport(appFileContent: string, imports: string[]): string[] {
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const file = tsquery.ast(appFileContent);
+  const importNodes = tsquery.query(
+    file,
+    ':matches(ImportDeclaration, VariableStatement)'
+  );
+
+  const importsArrayExisting = importNodes?.map((node) => {
+    return node.getText().slice(0, -1);
+  });
+
+  return imports.filter((importString) => {
+    return !importsArrayExisting?.includes(importString);
+  });
 }
 
 function handleCacheDirNode(appFileContent: string, cacheDir: string): string {

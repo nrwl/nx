@@ -63,6 +63,7 @@ describe('app', () => {
         'vitest/importMeta',
         'vite/client',
         'node',
+        'vitest',
       ]);
     });
 

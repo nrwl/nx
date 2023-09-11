@@ -39,6 +39,7 @@ import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
 } from '@nx/linter/src/generators/utils/eslint-file';
+import { createOrEditViteConfig } from '@nx/vite';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -138,6 +139,28 @@ export async function applicationGeneratorInternal(
       skipFormat: true,
     });
     tasks.push(viteTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: options.unitTestRunner === 'vitest',
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          `'react'`,
+          `'react-dom'`,
+          `'react/jsx-runtime'`,
+        ],
+        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+        imports: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      false
+    );
   } else if (options.bundler === 'webpack') {
     const { webpackInitGenerator } = ensurePackage<
       typeof import('@nx/webpack')
@@ -180,6 +203,28 @@ export async function applicationGeneratorInternal(
       skipFormat: true,
     });
     tasks.push(vitestTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: true,
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          `'react'`,
+          `'react-dom'`,
+          `'react/jsx-runtime'`,
+        ],
+        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+        imports: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      true
+    );
   }
 
   if (

@@ -1,8 +1,7 @@
-import { Tree } from 'nx/src/generators/tree';
-import { getProjects } from '@nx/devkit';
+import { getProjects, Tree } from '@nx/devkit';
 
-export function findFreePort(host: Tree) {
-  const projects = getProjects(host);
+export function findFreePort(tree: Tree) {
+  const projects = getProjects(tree);
   let port = -Infinity;
   for (const [, p] of projects.entries()) {
     const curr = p.targets?.serve?.options?.port;
