@@ -18,6 +18,8 @@ import {
   vueRouterVersion,
   vitePluginVueVersion,
   vueTestUtilsVersion,
+  sassVersion,
+  lessVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
 
@@ -59,10 +61,13 @@ function updateDependencies(host: Tree, schema: InitSchema) {
   }
 
   if (schema.routing) {
-    dependencies = {
-      ...dependencies,
-      'vue-router': vueRouterVersion,
-    };
+    dependencies['vue-router'] = vueRouterVersion;
+  }
+
+  if (schema.style === 'scss') {
+    devDependencies['sass'] = sassVersion;
+  } else if (schema.style === 'less') {
+    devDependencies['less'] = lessVersion;
   }
 
   return addDependenciesToPackageJson(host, dependencies, devDependencies);

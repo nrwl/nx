@@ -1,7 +1,21 @@
 <script setup lang="ts">
-import NxWelcome from './NxWelcome.vue'
+<% if (routing) { %>
+import { RouterLink, RouterView } from 'vue-router';
+<% } %>
+import NxWelcome from './components/NxWelcome.vue';
 </script>
 
 <template>
-  <NxWelcome title="<%= title %>" />
+  <% if (routing) { %>
+    <header>
+      <nav>
+        <RouterLink to="/">Home</RouterLink>
+        <RouterLink to="/about">About</RouterLink>
+      </nav>
+    </header>
+
+    <RouterView />
+  <% } else { %>
+    <NxWelcome title="<%= title %>" />
+  <% } %>
 </template>

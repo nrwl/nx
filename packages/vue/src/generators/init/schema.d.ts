@@ -5,4 +5,5 @@ export interface InitSchema {
   js?: boolean;
   rootProject?: boolean;
   routing?: boolean;
+  style?: 'css' | 'scss' | 'less' | 'none';
 }

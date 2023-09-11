@@ -3,7 +3,7 @@ import type { Linter } from '@nx/linter';
 
 export interface Schema {
   name: string;
-  style: 'none' | 'css' | 'scss';
+  style: 'none' | 'css' | 'scss' | 'less';
   skipFormat?: boolean;
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;

@@ -1,6 +1,8 @@
-import './styles.css'
+<% if (style !== 'none') { %>
+import './styles.<%= style %>';
+<% } %>
 
-import { createApp } from 'vue'
-import App from './App.vue'
+import { createApp } from 'vue';
+import App from './App.vue';
 
-createApp(App).mount('#root')
+createApp(App).mount('#root');

@@ -54,6 +54,23 @@ export async function applicationGenerator(
     }
   );
 
+  if (options.style === 'none') {
+    tree.delete(`${options.appProjectRoot}/src/styles.${options.style}`);
+  }
+
+  if (options.routing) {
+    generateFiles(
+      tree,
+      path.join(__dirname, 'files/routing'),
+      options.appProjectRoot,
+      {
+        ...options,
+        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+        title: options.projectName,
+      }
+    );
+  }
+
   createTsConfig(
     tree,
     options.appProjectRoot,

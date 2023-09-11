@@ -48,6 +48,7 @@ export async function normalizeOptions(
     parsedTags,
   } as NormalizedSchema;
 
+  normalized.style = options.style ?? 'css';
   normalized.routing = normalized.routing ?? false;
   normalized.unitTestRunner ??= 'vitest';
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'cypress';

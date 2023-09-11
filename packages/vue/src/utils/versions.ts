@@ -11,3 +11,5 @@ export const eslintVersion = '^8.46.0';
 export const eslintPluginVueVersion = '^9.16.1';
 export const vitePluginVueVersion = '^4.3.1';
 export const vueJest3Version = '^29.2.6';
+export const sassVersion = '1.62.1';
+export const lessVersion = '3.12.2';

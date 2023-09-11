@@ -28,6 +28,13 @@ describe('application generator', () => {
     ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
   });
+
+  it('should not use stylesheet if --style=none', async () => {
+    await applicationGenerator(tree, { ...options, style: 'none' });
+
+    expect(tree.exists('test/src/style.none')).toBeFalsy();
+    expect(tree.read('test/src/main.ts', 'utf-8')).not.toContain('styles.none');
+  });
 });
 
 function listFiles(tree: Tree): string[] {
