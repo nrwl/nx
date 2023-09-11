@@ -1,12 +1,12 @@
-# Type alias: CandidateStaticDependency
+# Type alias: StaticDependency
 
-Ƭ **CandidateStaticDependency**: `Object`
+Ƭ **StaticDependency**: `Object`
 
-A [ProjectGraph](../../devkit/documents/ProjectGraph) dependency between 2 projects
+A static [ProjectGraph](../../devkit/documents/ProjectGraph) dependency between 2 projects
 
-NOTE: CandidateStaticDependency#sourceFile is required if the dependency is
-between 2 project nodes. It is only optional if the dependency references an external
-node as its source.
+This type of dependency indicates the source project ALWAYS load the target project.
+
+NOTE: StaticDependency#sourceFile MUST be present unless the source is the name of a [ProjectGraphExternalNode](../../devkit/documents/ProjectGraphExternalNode)
 
 #### Type declaration
 

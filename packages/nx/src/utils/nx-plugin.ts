@@ -36,7 +36,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import type * as ts from 'typescript';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 import { NxPluginV1 } from './nx-plugin.deprecated';
-import { CandidateDependency } from '../project-graph/project-graph-builder';
+import { RawProjectGraphDependency } from '../project-graph/project-graph-builder';
 import { combineGlobPatterns } from './globs';
 import {
   NxAngularJsonPlugin,
@@ -111,7 +111,7 @@ export interface CreateDependenciesContext {
  */
 export type CreateDependencies = (
   context: CreateDependenciesContext
-) => CandidateDependency[] | Promise<CandidateDependency[]>;
+) => RawProjectGraphDependency[] | Promise<RawProjectGraphDependency[]>;
 
 /**
  * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}

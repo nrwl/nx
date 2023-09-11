@@ -15,7 +15,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import { CandidateDependency } from '../../../project-graph/project-graph-builder';
+import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
 import { PackageJson } from '../../../utils/package-json';
 import { output } from '../../../utils/output';
 
@@ -87,7 +87,7 @@ export function getLockFileDependencies(
   contents: string,
   lockFileHash: string,
   context: CreateDependenciesContext
-): CandidateDependency[] {
+): RawProjectGraphDependency[] {
   try {
     if (packageManager === 'yarn') {
       return getYarnLockfileDependencies(contents, lockFileHash, context);

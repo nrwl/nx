@@ -1,6 +1,10 @@
-# Type alias: CandidateImplicitDependency
+# Type alias: ImplicitDependency
 
-Ƭ **CandidateImplicitDependency**: `Object`
+Ƭ **ImplicitDependency**: `Object`
+
+An implicit [ProjectGraph](../../devkit/documents/ProjectGraph) dependency between 2 projects
+
+This type of dependency indicates a connection without an explicit reference in code
 
 #### Type declaration
 

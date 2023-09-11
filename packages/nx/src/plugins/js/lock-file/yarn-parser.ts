@@ -3,7 +3,7 @@ import {
   NormalizedPackageJson,
 } from './utils/package-json';
 import {
-  CandidateDependency,
+  RawProjectGraphDependency,
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
 import { gt, Range, satisfies } from 'semver';
@@ -292,7 +292,7 @@ function getDependencies(
   keyMap: Map<string, ProjectGraphExternalNode>,
   ctx: CreateDependenciesContext
 ) {
-  const projectGraphDependencies: CandidateDependency[] = [];
+  const projectGraphDependencies: RawProjectGraphDependency[] = [];
   Object.keys(dependencies).forEach((keys) => {
     const snapshot = dependencies[keys];
     keys.split(', ').forEach((key) => {
@@ -306,7 +306,7 @@ function getDependencies(
                   keyMap.get(`${name}@npm:${versionRange}`) ||
                   keyMap.get(`${name}@${versionRange}`);
                 if (target) {
-                  const dep: CandidateDependency = {
+                  const dep: RawProjectGraphDependency = {
                     source: node.name,
                     target: target.name,
                     type: DependencyType.static,

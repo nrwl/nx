@@ -12,7 +12,7 @@ If the dependency is invalid.
 
 | Name         | Type                                                                            |
 | :----------- | :------------------------------------------------------------------------------ |
-| `dependency` | [`CandidateDependency`](../../devkit/documents/CandidateDependency)             |
+| `dependency` | [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency) |
 | `ctx`        | [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext) |
 
 #### Returns

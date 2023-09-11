@@ -16,7 +16,7 @@ import {
 } from './utils/package-json';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 import {
-  CandidateDependency,
+  RawProjectGraphDependency,
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
 import {
@@ -159,8 +159,8 @@ function getDependencies(
   keyMap: Map<string, ProjectGraphExternalNode>,
   isV6: boolean,
   ctx: CreateDependenciesContext
-): CandidateDependency[] {
-  const results: CandidateDependency[] = [];
+): RawProjectGraphDependency[] {
+  const results: RawProjectGraphDependency[] = [];
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const node = keyMap.get(key);
     [snapshot.dependencies, snapshot.optionalDependencies].forEach(
@@ -175,7 +175,7 @@ function getDependencies(
               ctx.externalNodes[`npm:${name}@${version}`] ||
               ctx.externalNodes[`npm:${name}`];
             if (target) {
-              const dep: CandidateDependency = {
+              const dep: RawProjectGraphDependency = {
                 source: node.name,
                 target: target.name,
                 type: DependencyType.static,

@@ -4,7 +4,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { reverse } from '../../../project-graph/operators';
 import { NormalizedPackageJson } from './utils/package-json';
 import {
-  CandidateDependency,
+  RawProjectGraphDependency,
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
 import {
@@ -248,8 +248,8 @@ function getDependencies(
   data: NpmLockFile,
   keyMap: Map<string, ProjectGraphExternalNode>,
   ctx: CreateDependenciesContext
-): CandidateDependency[] {
-  const dependencies: CandidateDependency[] = [];
+): RawProjectGraphDependency[] {
+  const dependencies: RawProjectGraphDependency[] = [];
   if (data.lockfileVersion > 1) {
     Object.entries(data.packages).forEach(([path, snapshot]) => {
       // we are skipping workspaces packages
@@ -266,7 +266,7 @@ function getDependencies(
           Object.entries(section).forEach(([name, versionRange]) => {
             const target = findTarget(path, keyMap, name, versionRange);
             if (target) {
-              const dep: CandidateDependency = {
+              const dep: RawProjectGraphDependency = {
                 source: sourceName,
                 target: target.name,
                 type: DependencyType.static,
@@ -327,7 +327,7 @@ function findTarget(
 function addV1NodeDependencies(
   path: string,
   snapshot: NpmDependencyV1,
-  dependencies: CandidateDependency[],
+  dependencies: RawProjectGraphDependency[],
   keyMap: Map<string, ProjectGraphExternalNode>,
   ctx: CreateDependenciesContext
 ) {
@@ -336,7 +336,7 @@ function addV1NodeDependencies(
     Object.entries(snapshot.requires).forEach(([name, versionRange]) => {
       const target = findTarget(path, keyMap, name, versionRange);
       if (target) {
-        const dep: CandidateDependency = {
+        const dep: RawProjectGraphDependency = {
           source: source,
           target: target.name,
           type: DependencyType.static,
@@ -364,7 +364,7 @@ function addV1NodeDependencies(
     Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
       const target = findTarget(path, keyMap, depName, depSpec);
       if (target) {
-        const dep: CandidateDependency = {
+        const dep: RawProjectGraphDependency = {
           source: node.name,
           target: target.name,
           type: DependencyType.static,

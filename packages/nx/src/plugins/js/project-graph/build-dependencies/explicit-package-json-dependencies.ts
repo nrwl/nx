@@ -11,14 +11,14 @@ import { NxJsonConfiguration } from '../../../../config/nx-json';
 import { PackageJson } from '../../../../utils/package-json';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
 import {
-  CandidateDependency,
+  RawProjectGraphDependency,
   validateDependency,
 } from '../../../../project-graph/project-graph-builder';
 
 export function buildExplicitPackageJsonDependencies(
   ctx: CreateDependenciesContext
-): CandidateDependency[] {
-  const res: CandidateDependency[] = [];
+): RawProjectGraphDependency[] {
+  const res: RawProjectGraphDependency[] = [];
   let packageNameMap = undefined;
   const nodes = Object.values(ctx.projects);
   Object.keys(ctx.filesToProcess).forEach((source) => {
@@ -75,7 +75,7 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   ctx: CreateDependenciesContext,
-  collectedDeps: CandidateDependency[],
+  collectedDeps: RawProjectGraphDependency[],
   packageNameMap: { [packageName: string]: string }
 ) {
   try {
@@ -84,7 +84,7 @@ function processPackageJson(
     deps.forEach((d) => {
       // package.json refers to another project in the monorepo
       if (packageNameMap[d]) {
-        const dependency: CandidateDependency = {
+        const dependency: RawProjectGraphDependency = {
           source: sourceProject,
           target: packageNameMap[d],
           sourceFile: fileName,
@@ -93,7 +93,7 @@ function processPackageJson(
         validateDependency(dependency, ctx);
         collectedDeps.push(dependency);
       } else if (ctx.externalNodes[`npm:${d}`]) {
-        const dependency: CandidateDependency = {
+        const dependency: RawProjectGraphDependency = {
           source: sourceProject,
           target: `npm:${d}`,
           sourceFile: fileName,

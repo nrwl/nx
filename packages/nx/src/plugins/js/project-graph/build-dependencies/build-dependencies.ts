@@ -1,7 +1,7 @@
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
-import { CandidateDependency } from '../../../../project-graph/project-graph-builder';
+import { RawProjectGraphDependency } from '../../../../project-graph/project-graph-builder';
 
 export function buildExplicitDependencies(
   jsPluginConfig: {
@@ -9,10 +9,10 @@ export function buildExplicitDependencies(
     analyzePackageJson?: boolean;
   },
   ctx: CreateDependenciesContext
-): CandidateDependency[] {
+): RawProjectGraphDependency[] {
   if (totalNumberOfFilesToProcess(ctx) === 0) return [];
 
-  let dependencies: CandidateDependency[] = [];
+  let dependencies: RawProjectGraphDependency[] = [];
 
   if (
     jsPluginConfig.analyzeSourceFiles === undefined ||

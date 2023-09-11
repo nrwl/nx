@@ -9,7 +9,7 @@ import { vol } from 'memfs';
 import { pruneProjectGraph } from './project-graph-pruning';
 import {
   ProjectGraphBuilder,
-  CandidateDependency,
+  RawProjectGraphDependency,
 } from '../../../project-graph/project-graph-builder';
 import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
@@ -128,7 +128,7 @@ describe('pnpm LockFile utility', () => {
     });
 
     let externalNodes: ProjectGraph['externalNodes'];
-    let dependencies: CandidateDependency[];
+    let dependencies: RawProjectGraphDependency[];
     let graph: ProjectGraph;
 
     let lockFile: string;

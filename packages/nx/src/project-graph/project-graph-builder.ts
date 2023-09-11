@@ -374,13 +374,13 @@ export class ProjectGraphBuilder {
 }
 
 /**
- * A {@link ProjectGraph} dependency between 2 projects
+ * A static {@link ProjectGraph} dependency between 2 projects
  *
- * NOTE: {@link CandidateStaticDependency#sourceFile} is required if the dependency is
- * between 2 project nodes. It is only optional if the dependency references an external
- * node as its source.
+ * This type of dependency indicates the source project ALWAYS load the target project.
+ *
+ * NOTE: {@link StaticDependency#sourceFile} MUST be present unless the source is the name of a {@link ProjectGraphExternalNode}
  */
-export type CandidateStaticDependency = {
+export type StaticDependency = {
   /**
    * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} depending on the target project
    */
@@ -399,7 +399,12 @@ export type CandidateStaticDependency = {
   type: typeof DependencyType.static;
 };
 
-export type CandidateDynamicDependency = {
+/**
+ * A dynamic {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates the source project MAY OR MAY NOT load the target project.
+ */
+export type DynamicDependency = {
   /**
    * The name of a {@link ProjectGraphProjectNode} depending on the target project
    */
@@ -418,7 +423,12 @@ export type CandidateDynamicDependency = {
   type: typeof DependencyType.dynamic;
 };
 
-export type CandidateImplicitDependency = {
+/**
+ * An implicit {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates a connection without an explicit reference in code
+ */
+export type ImplicitDependency = {
   /**
    * The name of a {@link ProjectGraphProjectNode} depending on the target project
    */
@@ -434,19 +444,19 @@ export type CandidateImplicitDependency = {
 /**
  * A {@link ProjectGraph} dependency between 2 projects
  *
- * See {@link CandidateDynamicDependency}, {@link CandidateImplicitDependency}, or {@link CandidateStaticDependency}
+ * See {@link DynamicDependency}, {@link ImplicitDependency}, or {@link StaticDependency}
  */
-export type CandidateDependency =
-  | CandidateImplicitDependency
-  | CandidateStaticDependency
-  | CandidateDynamicDependency;
+export type RawProjectGraphDependency =
+  | ImplicitDependency
+  | StaticDependency
+  | DynamicDependency;
 
 /**
  * A function to validate dependencies in a {@link CreateDependencies} function
  * @throws If the dependency is invalid.
  */
 export function validateDependency(
-  dependency: CandidateDependency,
+  dependency: RawProjectGraphDependency,
   ctx: CreateDependenciesContext
 ): void {
   if (dependency.type === DependencyType.implicit) {
@@ -461,7 +471,7 @@ export function validateDependency(
 }
 
 function validateCommonDependencyRules(
-  d: CandidateDependency,
+  d: RawProjectGraphDependency,
   { externalNodes, projects, fileMap }: CreateDependenciesContext
 ) {
   if (!projects[d.source] && !externalNodes[d.source]) {
@@ -484,7 +494,7 @@ function validateCommonDependencyRules(
 }
 
 function validateImplicitDependency(
-  d: CandidateImplicitDependency,
+  d: ImplicitDependency,
   { externalNodes }: CreateDependenciesContext
 ) {
   if (externalNodes[d.source]) {
@@ -493,7 +503,7 @@ function validateImplicitDependency(
 }
 
 function validateDynamicDependency(
-  d: CandidateDynamicDependency,
+  d: DynamicDependency,
   { externalNodes }: CreateDependenciesContext
 ) {
   if (externalNodes[d.source]) {
@@ -508,7 +518,7 @@ function validateDynamicDependency(
 }
 
 function validateStaticDependency(
-  d: CandidateStaticDependency,
+  d: StaticDependency,
   { projects }: CreateDependenciesContext
 ) {
   // internal nodes must provide sourceProjectFile when creating static dependency

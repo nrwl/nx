@@ -1,6 +1,10 @@
-# Type alias: CandidateDynamicDependency
+# Type alias: DynamicDependency
 
-Ƭ **CandidateDynamicDependency**: `Object`
+Ƭ **DynamicDependency**: `Object`
+
+A dynamic [ProjectGraph](../../devkit/documents/ProjectGraph) dependency between 2 projects
+
+This type of dependency indicates the source project MAY OR MAY NOT load the target project.
 
 #### Type declaration
 

@@ -8,7 +8,7 @@ import { workspaceRoot } from '../../../../utils/workspace-root';
 import { normalizePath } from '../../../../utils/path';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
 import {
-  CandidateDependency,
+  RawProjectGraphDependency,
   validateDependency,
 } from '../../../../project-graph/project-graph-builder';
 import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
@@ -24,9 +24,9 @@ function convertImportToDependency(
   importExpr: string,
   sourceFile: string,
   source: string,
-  type: CandidateDependency['type'],
+  type: RawProjectGraphDependency['type'],
   targetProjectLocator: TargetProjectLocator
-): CandidateDependency {
+): RawProjectGraphDependency {
   const target =
     targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
     `npm:${importExpr}`;
@@ -41,7 +41,7 @@ function convertImportToDependency(
 
 export function buildExplicitTypeScriptDependencies(
   ctx: CreateDependenciesContext
-): CandidateDependency[] {
+): RawProjectGraphDependency[] {
   // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
   // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
   // don't have to reshape the CreateDependenciesContext here.
@@ -59,7 +59,7 @@ export function buildExplicitTypeScriptDependencies(
     nodes,
     ctx.externalNodes
   );
-  const res: CandidateDependency[] = [];
+  const res: RawProjectGraphDependency[] = [];
 
   const filesToProcess: Record<string, string[]> = {};
 
