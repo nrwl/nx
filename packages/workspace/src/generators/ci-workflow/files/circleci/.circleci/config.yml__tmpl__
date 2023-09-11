@@ -14,6 +14,12 @@ jobs:
           name: Install PNPM
           command: npm install --prefix=$HOME/.local -g pnpm@8
       <% } %>
+      <% if(packageManager == 'bun'){ %>
+      - run:
+          name: Install Bun
+          command: npm install --prefix=$HOME/.local -g bun
+      <% } %>
+
 
       # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
       # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested

@@ -374,7 +374,7 @@ describe('create-nx-workspace', () => {
   });
 
   describe('Use detected package manager', () => {
-    function setupProject(envPm: 'npm' | 'yarn' | 'pnpm') {
+    function setupProject(envPm: 'npm' | 'yarn' | 'pnpm' | 'bun') {
       process.env.SELECTED_PM = envPm;
       runCreateWorkspace(uniq('pm'), {
         preset: 'apps',
@@ -389,7 +389,8 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['npm']);
         checkFilesDoNotExist(
           packageManagerLockFile['yarn'],
-          packageManagerLockFile['pnpm']
+          packageManagerLockFile['pnpm'],
+          packageManagerLockFile['bun']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -401,7 +402,21 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['pnpm']);
         checkFilesDoNotExist(
           packageManagerLockFile['yarn'],
-          packageManagerLockFile['npm']
+          packageManagerLockFile['npm'],
+          packageManagerLockFile['bun']
+        );
+        process.env.SELECTED_PM = packageManager;
+      }, 90000);
+    }
+
+    if (packageManager === 'bun') {
+      it('should use bun when invoked with bunx', () => {
+        setupProject('bun');
+        checkFilesExist(packageManagerLockFile['bun']);
+        checkFilesDoNotExist(
+          packageManagerLockFile['yarn'],
+          packageManagerLockFile['npm'],
+          packageManagerLockFile['pnpm']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);
@@ -414,7 +429,8 @@ describe('create-nx-workspace', () => {
         checkFilesExist(packageManagerLockFile['yarn']);
         checkFilesDoNotExist(
           packageManagerLockFile['pnpm'],
-          packageManagerLockFile['npm']
+          packageManagerLockFile['npm'],
+          packageManagerLockFile['bun']
         );
         process.env.SELECTED_PM = packageManager;
       }, 90000);

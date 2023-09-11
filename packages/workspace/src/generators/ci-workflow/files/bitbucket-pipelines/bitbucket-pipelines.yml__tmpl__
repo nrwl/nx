@@ -15,6 +15,10 @@ pipelines:
             - npm install --prefix=$HOME/.local -g pnpm@8
 
             <% } %>
+            <% if(packageManager == 'bun'){ %>
+            - npm install --prefix=$HOME/.local -g bun
+
+            <% } %>
             # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
             # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
             # - <%= packageManagerPreInstallPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
@@ -37,6 +41,9 @@ pipelines:
 
             <% if(packageManager == 'pnpm'){ %>
             - npm install --prefix=$HOME/.local -g pnpm@8
+            <% } %>
+            <% if(packageManager == 'bun'){ %>
+            - npm install --prefix=$HOME/.local -g bun
             <% } %>
             - <%= packageManagerInstall %>
 
