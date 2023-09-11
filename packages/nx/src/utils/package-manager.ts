@@ -12,7 +12,7 @@ import { readNxJson } from '../config/configuration';
 
 const execAsync = promisify(exec);
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
   preInstall?: string;
@@ -37,6 +37,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
       ? 'yarn'
       : existsSync(join(dir, 'pnpm-lock.yaml'))
       ? 'pnpm'
+      : existsSync(join(dir, 'bun.lockb'))
+      ? 'bun'
       : 'npm')
   );
 }
@@ -111,6 +113,18 @@ export function getPackageManagerCommand(
         exec: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
+      };
+    },
+    bun: () => {
+      return {
+        install: 'bun install',
+        ciInstall: 'bun install --frozen-lockfile',
+        add: 'bun add',
+        addDev: 'bun add -D',
+        rm: 'bun remove',
+        exec: 'bunx',
+        run: (script: string, args: string) => `bun ${script} ${args}`,
+        list: 'bun pm ls',
       };
     },
   };
@@ -314,12 +328,16 @@ export async function packageRegistryView(
   args: string
 ): Promise<string> {
   let pm = detectPackageManager();
-  if (pm === 'yarn') {
+  if (pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
      * which makes it's usage unreliable
      *
      * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+     *
+     * Bun has a pm ls function but it only relates to it's lockfile
+     * and acts differently from all other package managers
+     * from Jarred"it probably would be bun pm view <package-name>"
      */
     pm = 'npm';
   }
@@ -334,13 +352,15 @@ export async function packageRegistryPack(
   version: string
 ): Promise<{ tarballPath: string }> {
   let pm = detectPackageManager();
-  if (pm === 'yarn') {
+  if (pm === 'yarn' || pm === 'bun') {
     /**
      * `(p)npm pack` will download a tarball of the specified version,
      * whereas `yarn` pack creates a tarball of the active workspace, so it
      * does not work for getting the content of a library.
      *
      * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
+     *
+     * bun doesn't current support pack
      */
     pm = 'npm';
   }

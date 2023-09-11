@@ -42,11 +42,18 @@ import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
 const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
-export const LOCKFILES = [YARN_LOCK_FILE, NPM_LOCK_FILE, PNPM_LOCK_FILE];
+const BUN_LOCK_FILE = 'bun.lockb';
+export const LOCKFILES = [
+  YARN_LOCK_FILE,
+  NPM_LOCK_FILE,
+  PNPM_LOCK_FILE,
+  BUN_LOCK_FILE,
+];
 
 const YARN_LOCK_PATH = join(workspaceRoot, YARN_LOCK_FILE);
 const NPM_LOCK_PATH = join(workspaceRoot, NPM_LOCK_FILE);
 const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
+const BUN_LOCK_PATH = join(workspaceRoot, BUN_LOCK_FILE);
 
 /**
  * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
@@ -66,6 +73,11 @@ export function getLockFileNodes(
     }
     if (packageManager === 'npm') {
       return getNpmLockfileNodes(contents, lockFileHash);
+    }
+    if (packageManager === 'bun') {
+      // bun uses yarn v1 for the file format
+      const packageJson = readJsonFile('package.json');
+      return getYarnLockfileNodes(contents, lockFileHash, packageJson);
     }
   } catch (e) {
     if (!isPostInstallProcess()) {
@@ -98,6 +110,10 @@ export function getLockFileDependencies(
     if (packageManager === 'npm') {
       return getNpmLockfileDependencies(contents, lockFileHash, context);
     }
+    if (packageManager === 'bun') {
+      // bun uses yarn v1 for the file format
+      return getYarnLockfileDependencies(contents, lockFileHash, context);
+    }
   } catch (e) {
     if (!isPostInstallProcess()) {
       output.error({
@@ -120,6 +136,9 @@ export function lockFileExists(packageManager: PackageManager): boolean {
   if (packageManager === 'npm') {
     return existsSync(NPM_LOCK_PATH);
   }
+  if (packageManager === 'bun') {
+    return existsSync(BUN_LOCK_PATH);
+  }
   throw new Error(
     `Unknown package manager ${packageManager} or lock file missing`
   );
@@ -139,6 +158,9 @@ export function getLockFileName(packageManager: PackageManager): string {
   }
   if (packageManager === 'npm') {
     return NPM_LOCK_FILE;
+  }
+  if (packageManager === 'bun') {
+    return BUN_LOCK_FILE;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
 }
@@ -171,6 +193,12 @@ export function createLockFile(
     if (packageManager === 'npm') {
       const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
+    }
+    if (packageManager === 'bun') {
+      output.log({
+        title:
+          "Unable to create bun lock files. Run bun install it's just as quick",
+      });
     }
   } catch (e) {
     if (!isPostInstallProcess()) {

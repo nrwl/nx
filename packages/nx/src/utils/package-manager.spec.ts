@@ -66,13 +66,15 @@ describe('package-manager', () => {
             return false;
           case 'package-lock.json':
             return false;
+          case 'bun.lockb':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(5);
+      expect(fs.existsSync).toHaveBeenCalledTimes(6);
     });
   });
 
