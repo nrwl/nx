@@ -2,7 +2,7 @@ import { TempFs } from '../../utils/testing/temp-fs';
 import { Watcher } from '../index';
 import { realpathSync } from 'fs-extra';
 
-xdescribe('watcher', () => {
+describe('watcher', () => {
   let temp: TempFs;
   let watcher: Watcher;
   beforeEach(() => {
