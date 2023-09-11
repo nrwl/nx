@@ -4,12 +4,13 @@ import {
   cleanupProject,
   killProcessAndPorts,
   newProject,
-  readProjectConfig,
+  readJson,
   runCLI,
   runCommandUntil,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Angular Module Federation', () => {
   let proj: string;
@@ -183,10 +184,10 @@ describe('Angular Module Federation', () => {
 
     // ports
     const hostPort = 4500;
-    const remote1Port = (await readProjectConfig(remote1)).targets.serve.options
-      .port;
-    const remote2Port = (await readProjectConfig(remote2)).targets.serve.options
-      .port;
+    const remote1Port = readJson(join(remote1, 'project.json')).targets.serve
+      .options.port;
+    const remote2Port = readJson(join(remote2, 'project.json')).targets.serve
+      .options.port;
 
     const process = await runCommandUntil(
       `serve-ssr ${host} --port=${hostPort}`,

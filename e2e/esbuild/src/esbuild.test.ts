@@ -14,9 +14,10 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
   waitUntil,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('EsBuild Plugin', () => {
   let proj: string;
@@ -29,7 +30,7 @@ describe('EsBuild Plugin', () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
-    await updateProjectConfig(myPkg, (json) => {
+    updateJson(join('libs', myPkg, 'project.json'), (json) => {
       json.targets.build.options.assets = [`libs/${myPkg}/assets/*`];
       return json;
     });
@@ -188,7 +189,7 @@ describe('EsBuild Plugin', () => {
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('main');\n`);
     updateFile(`libs/${myPkg}/src/extra.ts`, `console.log('extra');\n`);
-    await updateProjectConfig(myPkg, (json) => {
+    updateJson(join('libs', myPkg, 'project.json'), (json) => {
       json.targets.build.options.additionalEntryPoints = [
         `libs/${myPkg}/src/extra.ts`,
       ];
@@ -216,7 +217,7 @@ describe('EsBuild Plugin', () => {
       `libs/${myPkg}/esbuild.config.js`,
       `console.log('custom config loaded');\nmodule.exports = {};\n`
     );
-    await updateProjectConfig(myPkg, (json) => {
+    updateJson(join('libs', myPkg, 'project.json'), (json) => {
       delete json.targets.build.options.esbuildOptions;
       json.targets.build.options.esbuildConfig = `libs/${myPkg}/esbuild.config.js`;
       return json;

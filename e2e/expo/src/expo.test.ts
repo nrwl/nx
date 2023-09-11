@@ -7,7 +7,6 @@ import {
   newProject,
   promisifiedTreeKill,
   readJson,
-  readResolvedConfiguration,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -85,8 +84,7 @@ describe('expo', () => {
   it('should prebuild', async () => {
     // run prebuild command with git check disable
     // set a mock package name for ios and android in expo's app.json
-    const projects = await readResolvedConfiguration();
-    const root = projects[appName].root;
+    const root = `apps/${appName}`;
     const appJsonPath = join(root, `app.json`);
     const appJson = await readJson(appJsonPath);
     if (appJson.expo.ios) {

@@ -728,7 +728,7 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`
       );
-      await setMaxWorkers();
+      setMaxWorkers('project.json');
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');

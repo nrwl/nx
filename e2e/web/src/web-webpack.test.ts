@@ -6,6 +6,7 @@ import {
   setMaxWorkers,
   uniq,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Web Components Applications with bundler set as webpack', () => {
   beforeEach(() => newProject());
@@ -16,7 +17,7 @@ describe('Web Components Applications with bundler set as webpack', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     await runCommandUntil(`serve ${appName} --port=5000 --ssl`, (output) => {
       return output.includes('listening at https://localhost:5000');

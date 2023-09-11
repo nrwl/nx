@@ -13,7 +13,6 @@ import {
   uniq,
   updateFile,
   updateJson,
-  updateProjectConfig,
 } from '@nx/e2e/utils';
 import { readFileSync } from 'fs-extra';
 import { join } from 'path';
@@ -289,7 +288,7 @@ describe('React Applications', () => {
       );
 
       // make sure stylePreprocessorOptions works
-      await updateProjectConfig(appName, (config) => {
+      updateJson(join('apps', appName, 'project.json'), (config) => {
         config.targets.build.options.stylePreprocessorOptions = {
           includePaths: ['libs/shared/lib'],
         };

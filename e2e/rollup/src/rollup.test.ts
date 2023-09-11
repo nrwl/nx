@@ -8,8 +8,9 @@ import {
   runCommand,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Rollup Plugin', () => {
   beforeAll(() => newProject());
@@ -38,7 +39,7 @@ describe('Rollup Plugin', () => {
     let output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
-    await updateProjectConfig(myPkg, (config) => {
+    updateJson(join('libs', myPkg, 'project.json'), (config) => {
       delete config.targets.build;
       return config;
     });
@@ -52,7 +53,7 @@ describe('Rollup Plugin', () => {
     output = runCommand(`node dist/libs/${myPkg}/index.cjs.js`);
     expect(output).toMatch(/Hello/);
 
-    await updateProjectConfig(myPkg, (config) => {
+    updateJson(join('libs', myPkg, 'project.json'), (config) => {
       delete config.targets.build;
       return config;
     });
@@ -73,7 +74,7 @@ describe('Rollup Plugin', () => {
     runCLI(
       `generate @nx/rollup:configuration ${myPkg} --target=node --tsConfig=libs/${myPkg}/tsconfig.lib.json --main=libs/${myPkg}/src/index.ts --compiler=tsc`
     );
-    await updateProjectConfig(myPkg, (config) => {
+    updateJson(join('libs', myPkg, 'project.json'), (config) => {
       config.targets.build.options.format = ['cjs', 'esm'];
       config.targets.build.options.generateExportsField = true;
       config.targets.build.options.additionalEntryPoints = [
