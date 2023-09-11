@@ -2,6 +2,10 @@ import type { ExecutorContext } from '@nx/devkit';
 import { parseTargetString } from '@nx/devkit';
 import { join, relative } from 'path';
 import { CopyAssetsHandler } from '../../../../utils/assets/copy-assets-handler';
+import {
+  getHelperDependency,
+  HelperDependency,
+} from '../../../../utils/compiler-helper-dependency';
 import { calculateProjectBuildableDependencies } from '../../../../utils/buildable-libs-utils';
 import type { NormalizedExecutorOptions } from '../../../../utils/schema';
 import { getTaskOptions } from '../get-task-options';
@@ -104,6 +108,17 @@ function createTaskInfo(
     context.taskGraph.tasks[taskName].target.target,
     context.taskGraph.tasks[taskName].target.configuration
   );
+
+  const tsLibDependency = getHelperDependency(
+    HelperDependency.tsc,
+    taskOptions.tsConfig,
+    buildableProjectNodeDependencies,
+    context.projectGraph
+  );
+
+  if (tsLibDependency) {
+    buildableProjectNodeDependencies.push(tsLibDependency);
+  }
 
   return {
     task: taskName,

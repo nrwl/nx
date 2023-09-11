@@ -14,10 +14,11 @@ Executing tasks in batch mode is an experimental feature.
 Building a project with the `@nx/js:tsc` executor in batch mode requires all dependent projects to be buildable and built using the `@nx/js:tsc` executor.
 {% /callout %}
 
-To run your builds using the batch implementation, set the `NX_BATCH_MODE` environment variable to `true`:
+The batch implementation is turned on by default when running the `nx build` command.
+To run your builds without batch mode, set the `NX_BATCH_MODE` environment variable to `false`:
 
 ```shell
-NX_BATCH_MODE=true nx build my-project
+NX_BATCH_MODE=false nx build my-project
 ```
 
 For optimal performance, you could set the `clean` option to `false`. Otherwise, the executor cleans the output folder before running the build, which results in the loss of the [`.tsbuildinfo` file](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile) and, consequently, the loss of important optimizations performed by TypeScript. This is not a requirement. Even if the `clean` option is not set to `false` there are other important optimizations that are performed by the batch implementation.

@@ -160,8 +160,10 @@ export async function batchJest(
   let configPaths: string[] = [];
   let selectedProjects: string[] = [];
   let projectsWithNoName: [string, string][] = [];
+  let computedInputs = {};
   for (const task of taskGraph.roots) {
     let configPath = path.resolve(context.root, inputs[task].jestConfig);
+    computedInputs = { ...computedInputs, ...inputs[task] };
     configPaths.push(configPath);
 
     /* The display name in the jest.config.js is the correct project name jest
@@ -194,7 +196,11 @@ export async function batchJest(
       You can learn more about this requirement from Jest here: https://jestjs.io/docs/cli#--selectprojects-project1--projectn`
     );
   }
-  const parsedConfigs = await jestConfigParser(overrides, context, true);
+  const parsedConfigs = await jestConfigParser(
+    { ...computedInputs, ...overrides },
+    context,
+    true
+  );
 
   const { globalConfig, results } = await runCLI(
     {

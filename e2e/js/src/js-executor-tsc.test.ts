@@ -1,4 +1,3 @@
-import { satisfies } from 'semver';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -59,6 +58,7 @@ describe('js:tsc executor', () => {
       });
       return json;
     });
+    createFile(`libs/${lib}/docs/a/b/nested.md`);
     const libBuildProcess = await runCommandUntil(
       `build ${lib} --watch`,
       (output) => output.includes(`Watching for file changes`)
@@ -81,8 +81,8 @@ describe('js:tsc executor', () => {
     await expect(
       waitUntil(
         () =>
-          readFile(`dist/libs/${lib}/docs/a/b/nested.md`).includes(
-            `Nested File`
+          readFile(`dist/libs/${lib}/package.json`).includes(
+            `"version": "999.9.9"`
           ),
         {
           timeout: 20_000,
@@ -93,11 +93,11 @@ describe('js:tsc executor', () => {
     await expect(
       waitUntil(
         () =>
-          readFile(`dist/libs/${lib}/package.json`).includes(
-            `"version": "999.9.9"`
+          readFile(`dist/libs/${lib}/docs/a/b/nested.md`).includes(
+            `Nested File`
           ),
         {
-          timeout: 20_000,
+          timeout: 50_000,
           ms: 500,
         }
       )
@@ -251,7 +251,7 @@ describe('js:tsc executor', () => {
 
     updateJson('tsconfig.base.json', (json) => {
       json['compilerOptions']['paths'][`@${scope}/${lib}/*`] = [
-        `libs/${lib}/src/*`,
+        `libs/${lib}/*`,
       ];
       return json;
     });

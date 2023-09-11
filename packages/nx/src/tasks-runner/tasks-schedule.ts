@@ -73,7 +73,7 @@ export class TasksSchedule {
   }
 
   private async scheduleTasks() {
-    if (process.env.NX_BATCH_MODE === 'true') {
+    if (process.env.NX_BATCH_MODE !== 'false') {
       await this.scheduleBatches();
     }
     for (let root of this.notScheduledTaskGraph.roots) {

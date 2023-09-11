@@ -194,7 +194,7 @@ export async function runCommand(
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
-  if (nxArgs.outputStyle == 'stream' || process.env.NX_BATCH_MODE === 'true') {
+  if (nxArgs.outputStyle == 'stream') {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
   }
@@ -380,7 +380,6 @@ function shouldUseDynamicLifeCycle(
   outputStyle: string
 ) {
   if (
-    process.env.NX_BATCH_MODE === 'true' ||
     process.env.NX_VERBOSE_LOGGING === 'true' ||
     process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT === 'false'
   ) {

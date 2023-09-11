@@ -57,7 +57,11 @@ describe('inlining', () => {
 
       // 1. external is set to all
       execSync(`rm -rf dist`);
-      runCLI(`build ${parent} --external=all`);
+      runCLI(`build ${parent} --external=all`, {
+        env: {
+          NX_BATCH_MODE: 'false',
+        },
+      });
       checkFilesExist(
         `dist/libs/${buildable}/src/index.js`, // buildable
         `dist/libs/${buildableTwo}/src/index.js`, // buildable two
@@ -70,7 +74,11 @@ describe('inlining', () => {
 
       // 2. external is set to none
       execSync(`rm -rf dist`);
-      runCLI(`build ${parent} --external=none`);
+      runCLI(`build ${parent} --external=none`, {
+        env: {
+          NX_BATCH_MODE: 'false',
+        },
+      });
       checkFilesExist(
         `dist/libs/${parent}/src/index.js`, // parent
         `dist/libs/${parent}/${buildable}/src/index.js`, // inlined buildable
@@ -84,7 +92,11 @@ describe('inlining', () => {
 
       // 3. external is set to an array of libs
       execSync(`rm -rf dist`);
-      runCLI(`build ${parent} --external=${buildable}`);
+      runCLI(`build ${parent} --external=${buildable}`, {
+        env: {
+          NX_BATCH_MODE: 'false',
+        },
+      });
       checkFilesExist(
         `dist/libs/${buildable}/src/index.js`, // buildable
         `dist/libs/${buildableTwo}/src/index.js`, // buildable two original output should be persisted
@@ -130,7 +142,11 @@ describe('inlining', () => {
         `;
     });
 
-    runCLI(`build ${parent} --external=all`);
+    runCLI(`build ${parent} --external=all`, {
+      env: {
+        NX_BATCH_MODE: 'false',
+      },
+    });
     checkFilesExist(
       `dist/libs/${parent}/src/index.js`, // parent
       `dist/libs/${parent}/${child}/src/index.js`, // inlined child

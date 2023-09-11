@@ -37,6 +37,24 @@ describe('Jest root projects', () => {
         'Test Suites: 1 passed, 1 total'
       );
     }, 300_000);
+
+    it('should test without batch mode', async () => {
+      const libProjectTestResults = await runCLIAsync(`test ${mylib}`, {
+        env: { ...process.env, NX_BATCH_MODE: 'false' },
+      });
+
+      expect(libProjectTestResults.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+
+      const rootProjectTestResults = await runCLIAsync(`test ${myapp}`, {
+        env: { ...process.env, NX_BATCH_MODE: 'false' },
+      });
+
+      expect(rootProjectTestResults.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+    });
   });
 
   describe('react', () => {
@@ -69,5 +87,23 @@ describe('Jest root projects', () => {
         'Test Suites: 1 passed, 1 total'
       );
     }, 300_000);
+
+    it('should test without batch mode', async () => {
+      const libProjectTestResults = await runCLIAsync(`test ${mylib}`, {
+        env: { ...process.env, NX_BATCH_MODE: 'false' },
+      });
+
+      expect(libProjectTestResults.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+
+      const rootProjectTestResults = await runCLIAsync(`test ${myapp}`, {
+        env: { ...process.env, NX_BATCH_MODE: 'false' },
+      });
+
+      expect(rootProjectTestResults.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+    });
   });
 });
