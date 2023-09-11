@@ -33,7 +33,8 @@
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
-    "@nx/vite": "file:../vite"
+    "@nx/vite": "file:../vite",
+    "@nx/web": "file:../web"
   },
   "publishConfig": {
     "access": "public"

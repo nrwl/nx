@@ -22,6 +22,7 @@ import { createTsConfig } from '../../utils/create-ts-config';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { addLinting } from '../../utils/add-linting';
 import { setupJestProject } from '../../utils/setup-jest';
+import { addE2e } from './lib/add-e2e';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -140,6 +141,11 @@ export async function applicationGenerator(
         }
       )
     );
+  }
+
+  if (options.e2eTestRunner !== 'none') {
+    const e2eTask = await addE2e(tree, options);
+    tasks.push(e2eTask);
   }
 
   // Update build to skip type checking since tsc won't work on .vue files.
