@@ -25,7 +25,7 @@ describe('EsBuild Plugin', () => {
 
   afterEach(() => cleanupProject());
 
-  xit('should setup and build projects using build', async () => {
+  it('should setup and build projects using build', async () => {
     const myPkg = uniq('my-pkg');
     runCLI(`generate @nx/js:lib ${myPkg} --bundler=esbuild`);
     updateFile(`libs/${myPkg}/src/index.ts`, `console.log('Hello');\n`);
