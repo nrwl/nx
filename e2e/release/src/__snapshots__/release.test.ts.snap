@@ -1,0 +1,76 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`nx release should version and publish multiple related npm packages with zero config 1`] = `
+
+>  NX   Running target release-publish for 3 projects:
+
+- {project-name}
+- {project-name}
+- {project-name}
+
+
+
+> nx run {project-name}:release-publish
+
+{project-name}: 📦  @proj/{project-name}@999.9.9
+{project-name}: === Tarball Contents ===
+{project-name}: XXB  index.js
+{project-name}: XXXB package.json
+{project-name}: XXB  project.json
+{project-name}: === Tarball Details ===
+{project-name}: name:          @proj/{project-name}
+{project-name}: version:       999.9.9
+{project-name}: filename:      proj-{project-name}-999.9.9.tgz
+{project-name}: package size: XXXB
+{project-name}: unpacked size: XXXB
+{project-name}: shasum:        {SHASUM}
+{project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+{project-name}: total files:   3
+{project-name}:
+{project-name}: Published to http://localhost:4875 with tag "latest"
+
+> nx run {project-name}:release-publish
+
+{project-name}: 📦  @proj/{project-name}@999.9.9
+{project-name}: === Tarball Contents ===
+{project-name}: XXB  index.js
+{project-name}: XXXB package.json
+{project-name}: XXB  project.json
+{project-name}: === Tarball Details ===
+{project-name}: name:          @proj/{project-name}
+{project-name}: version:       999.9.9
+{project-name}: filename:      proj-{project-name}-999.9.9.tgz
+{project-name}: package size: XXXB
+{project-name}: unpacked size: XXXB
+{project-name}: shasum:        {SHASUM}
+{project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+{project-name}: total files:   3
+{project-name}:
+{project-name}: Published to http://localhost:4875 with tag "latest"
+
+> nx run {project-name}:release-publish
+
+{project-name}: 📦  @proj/{project-name}@999.9.9
+{project-name}: === Tarball Contents ===
+{project-name}: XXB  index.js
+{project-name}: XXXB package.json
+{project-name}: XXB  project.json
+{project-name}: === Tarball Details ===
+{project-name}: name:          @proj/{project-name}
+{project-name}: version:       999.9.9
+{project-name}: filename:      proj-{project-name}-999.9.9.tgz
+{project-name}: package size: XXXB
+{project-name}: unpacked size: XXXB
+{project-name}: shasum:        {SHASUM}
+{project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+{project-name}: total files:   3
+{project-name}:
+{project-name}: Published to http://localhost:4875 with tag "latest"
+
+
+
+>  NX   Successfully ran target release-publish for 3 projects
+
+
+
+`;

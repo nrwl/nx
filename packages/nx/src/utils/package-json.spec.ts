@@ -70,6 +70,10 @@ describe('readTargetsFromPackageJson', () => {
           script: 'build',
         },
       },
+      'release-publish': {
+        executor: '@nx/js:release-publish',
+        options: {},
+      },
     });
   });
 
@@ -90,6 +94,10 @@ describe('readTargetsFromPackageJson', () => {
     });
     expect(result).toEqual({
       build: { ...packageJsonBuildTarget, outputs: ['custom'] },
+      'release-publish': {
+        executor: '@nx/js:release-publish',
+        options: {},
+      },
     });
   });
 
@@ -110,6 +118,10 @@ describe('readTargetsFromPackageJson', () => {
       test: {
         executor: 'nx:run-script',
         options: { script: 'test' },
+      },
+      'release-publish': {
+        executor: '@nx/js:release-publish',
+        options: {},
       },
     });
   });

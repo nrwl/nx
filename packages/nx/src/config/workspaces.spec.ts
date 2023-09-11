@@ -9,7 +9,12 @@ const libConfig = (root, name?: string) => ({
   projectType: 'library',
   root: `libs/${root}`,
   sourceRoot: `libs/${root}/src`,
-  targets: {},
+  targets: {
+    'release-publish': {
+      executor: '@nx/js:release-publish',
+      options: {},
+    },
+  },
 });
 
 const packageLibConfig = (root, name?: string) => ({
@@ -17,7 +22,12 @@ const packageLibConfig = (root, name?: string) => ({
   root,
   sourceRoot: root,
   projectType: 'library',
-  targets: {},
+  targets: {
+    'release-publish': {
+      executor: '@nx/js:release-publish',
+      options: {},
+    },
+  },
 });
 
 describe('Workspaces', () => {
@@ -86,7 +96,12 @@ describe('Workspaces', () => {
         root: 'libs/lib1',
         sourceRoot: 'libs/lib1/src',
         projectType: 'library',
-        targets: {},
+        targets: {
+          'release-publish': {
+            executor: '@nx/js:release-publish',
+            options: {},
+          },
+        },
       });
       expect(projects.lib2).toEqual(lib2Config);
       expect(projects['domain-lib3']).toEqual(domainPackageConfig);
@@ -127,7 +142,12 @@ describe('Workspaces', () => {
             root: 'packages/my-package',
             sourceRoot: 'packages/my-package',
             projectType: 'library',
-            targets: {},
+            targets: {
+              'release-publish': {
+                executor: '@nx/js:release-publish',
+                options: {},
+              },
+            },
           });
         }
       );

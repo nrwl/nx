@@ -11,6 +11,13 @@ import {
 import { CreateNodesContext } from '../../../utils/nx-plugin';
 const { createNodes } = CreateProjectJsonProjectsPlugin;
 
+const defaultReleasePublishTarget = {
+  'release-publish': {
+    executor: '@nx/js:release-publish',
+    options: {},
+  },
+};
+
 describe('nx project.json plugin', () => {
   let context: CreateNodesContext;
   beforeEach(() => {
@@ -72,6 +79,10 @@ describe('nx project.json plugin', () => {
                 "executor": "nx:run-commands",
                 "options": {},
               },
+              "release-publish": {
+                "executor": "@nx/js:release-publish",
+                "options": {},
+              },
               "test": {
                 "executor": "nx:run-script",
                 "options": {
@@ -115,7 +126,10 @@ describe('nx project.json plugin', () => {
         packageJson,
         projectJsonTargets
       );
-      expect(result).toEqual(projectJsonTargets);
+      expect(result).toEqual({
+        ...projectJsonTargets,
+        ...defaultReleasePublishTarget,
+      });
     });
 
     it('should provide targets from project.json and package.json', () => {
@@ -135,6 +149,7 @@ describe('nx project.json plugin', () => {
       expect(result).toEqual({
         ...projectJsonTargets,
         build: packageJsonBuildTarget,
+        ...defaultReleasePublishTarget,
       });
     });
 
@@ -158,6 +173,7 @@ describe('nx project.json plugin', () => {
       );
       expect(result).toEqual({
         build: { ...packageJsonBuildTarget, outputs: ['custom'] },
+        ...defaultReleasePublishTarget,
       });
     });
 
@@ -171,6 +187,7 @@ describe('nx project.json plugin', () => {
             script: 'build',
           },
         },
+        ...defaultReleasePublishTarget,
       });
     });
 
@@ -200,6 +217,7 @@ describe('nx project.json plugin', () => {
           executor: 'nx:run-script',
           options: { script: 'test' },
         },
+        ...defaultReleasePublishTarget,
       });
     });
 
@@ -233,6 +251,7 @@ describe('nx project.json plugin', () => {
           executor: 'nx:run-script',
           options: { script: 'test' },
         },
+        ...defaultReleasePublishTarget,
       });
     });
   });

@@ -184,7 +184,7 @@ async function promptForCollection(
   }
 }
 
-function parseGeneratorString(value: string): {
+export function parseGeneratorString(value: string): {
   collection?: string;
   generator: string;
 } {

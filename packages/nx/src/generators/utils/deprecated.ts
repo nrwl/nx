@@ -56,6 +56,7 @@ export function updateWorkspaceConfiguration(
     defaultProject,
     extends: ext,
     installation,
+    release: {},
   };
 
   updateNxJson(tree, nxJson);

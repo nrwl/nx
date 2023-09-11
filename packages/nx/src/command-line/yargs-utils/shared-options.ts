@@ -279,9 +279,9 @@ export function withRunOneOptions(yargs: Argv) {
   }
 }
 
-export function parseCSV(args: string[] | string) {
+export function parseCSV(args: string[] | string): string[] {
   if (!args) {
-    return args;
+    return [];
   }
   if (Array.isArray(args)) {
     return args;
