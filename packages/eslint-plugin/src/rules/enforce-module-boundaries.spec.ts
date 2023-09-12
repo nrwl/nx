@@ -1,4 +1,4 @@
-import 'nx/src/utils/testing/mock-fs';
+import 'nx/src/internal-testing-utils/mock-fs';
 
 import type { FileData, ProjectFileMap, ProjectGraph } from '@nx/devkit';
 import { DependencyType } from '@nx/devkit';

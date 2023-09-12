@@ -1,7 +1,4 @@
-import {
-  MigrationsJson,
-  MigrationsJsonEntry,
-} from '../src/config/misc-interfaces';
+import { MigrationsJson, MigrationsJsonEntry } from '../config/misc-interfaces';
 import * as path from 'path';
 
 export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
