@@ -245,15 +245,21 @@ async function updateProjectGraphWithPlugins(
       if (isNxPluginV2(plugin) && plugin.createDependencies) {
         const builder = new ProjectGraphBuilder(graph, context.fileMap);
         const newDependencies = await plugin.createDependencies({
-          ...context,
-          graph,
+          externalNodes: graph.externalNodes,
+          fileMap: context.fileMap,
+          filesToProcess: context.filesToProcess,
+          nxJsonConfiguration: context.nxJsonConfiguration,
+          projects: context.projectsConfigurations.projects,
+          workspaceRoot: workspaceRoot,
         });
         for (const targetProjectDependency of newDependencies) {
           builder.addDependency(
             targetProjectDependency.source,
             targetProjectDependency.target,
-            targetProjectDependency.dependencyType,
-            targetProjectDependency.sourceFile
+            targetProjectDependency.type,
+            'sourceFile' in targetProjectDependency
+              ? targetProjectDependency.sourceFile
+              : null
           );
         }
         graph = builder.getUpdatedProjectGraph();

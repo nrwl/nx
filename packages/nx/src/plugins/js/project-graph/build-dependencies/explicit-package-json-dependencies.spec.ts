@@ -93,10 +93,11 @@ describe('explicit package json dependencies', () => {
 
     ctx = {
       fileMap: projectFileMap,
-      graph: builder.getUpdatedProjectGraph(),
-      projectsConfigurations: projectsConfigurations as any,
+      externalNodes: builder.getUpdatedProjectGraph().externalNodes,
+      projects: projectsConfigurations.projects,
       nxJsonConfiguration,
       filesToProcess: projectFileMap,
+      workspaceRoot: tempFs.tempDir,
     };
   });
 
@@ -112,19 +113,19 @@ describe('explicit package json dependencies', () => {
         source: 'proj',
         target: 'proj2',
         sourceFile: 'libs/proj/package.json',
-        dependencyType: 'static',
+        type: 'static',
       },
       {
         sourceFile: 'libs/proj/package.json',
         source: 'proj',
         target: 'npm:external',
-        dependencyType: 'static',
+        type: 'static',
       },
       {
         source: 'proj',
         target: 'proj3',
         sourceFile: 'libs/proj/package.json',
-        dependencyType: 'static',
+        type: 'static',
       },
     ]);
   });

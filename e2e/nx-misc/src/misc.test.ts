@@ -23,10 +23,10 @@ import { renameSync, writeFileSync } from 'fs';
 import { ensureDirSync } from 'fs-extra';
 import * as path from 'path';
 import { major } from 'semver';
+import { join } from 'path';
 
 describe('Nx Commands', () => {
-  let proj: string;
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => newProject());
 
   afterAll(() => cleanupProject());
 
@@ -40,7 +40,7 @@ describe('Nx Commands', () => {
 
       runCLI(`generate @nx/web:app ${app1} --tags e2etag`);
       runCLI(`generate @nx/web:app ${app2}`);
-      await setMaxWorkers();
+      setMaxWorkers(join('apps', app1, 'project.json'));
 
       const s = runCLI('show projects').split('\n');
 
@@ -150,8 +150,8 @@ describe('Nx Commands', () => {
 
     beforeAll(async () => {
       runCLI(`generate @nx/web:app ${myapp}`);
+      setMaxWorkers(join('apps', myapp, 'project.json'));
       runCLI(`generate @nx/js:lib ${mylib}`);
-      await setMaxWorkers();
     });
 
     beforeEach(() => {

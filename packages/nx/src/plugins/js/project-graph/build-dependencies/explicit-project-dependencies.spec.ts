@@ -43,25 +43,25 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj2',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'npm:npm-package',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj3a',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
       ]);
     });
@@ -89,19 +89,19 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj2',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj3a',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
       ]);
     });
@@ -128,19 +128,19 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/index.mts',
           target: 'proj2',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.mts',
           target: 'proj3a',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.mts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
       ]);
     });
@@ -168,19 +168,19 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj2',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj3a',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
       ]);
     });
@@ -229,19 +229,19 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/component.tsx',
           target: 'proj2',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
         {
           source,
           sourceFile: 'libs/proj/nested-dynamic-import.ts',
           target: 'proj3a',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
         {
           source,
           sourceFile: 'libs/proj/nested-require.ts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
       ]);
     });
@@ -273,13 +273,13 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/absolute-path.ts',
           target: 'proj3a',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
         {
           source,
           sourceFile: 'libs/proj/relative-path.ts',
           target: 'proj4ab',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
       ]);
     });
@@ -563,10 +563,11 @@ async function createContext(
     await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
 
   return {
-    graph: builder.getUpdatedProjectGraph(),
-    projectsConfigurations: projectConfigurations,
+    externalNodes: builder.getUpdatedProjectGraph().externalNodes,
+    projects: projectConfigurations.projects,
     nxJsonConfiguration: nxJson,
     filesToProcess: projectFileMap,
     fileMap: projectFileMap,
+    workspaceRoot: tempFs.tempDir,
   };
 }

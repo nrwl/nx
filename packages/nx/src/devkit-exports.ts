@@ -156,7 +156,10 @@ export { DependencyType } from './config/project-graph';
  */
 export {
   ProjectGraphBuilder,
-  ProjectGraphDependencyWithFile,
+  RawProjectGraphDependency,
+  DynamicDependency,
+  ImplicitDependency,
+  StaticDependency,
   validateDependency,
 } from './project-graph/project-graph-builder';
 

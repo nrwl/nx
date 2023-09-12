@@ -41,7 +41,7 @@ jobs:
 
       - name: Install PNPM
         run: |
-          npm install -g @pnpm/exe@8.3.1
+          npm install -g @pnpm/exe@8.7.4
 
       - name: Set node
         uses: actions/setup-node@v3
@@ -327,7 +327,7 @@ jobs:
 
       - name: Install PNPM
         run: |
-          npm install -g @pnpm/exe@8.3.1
+          npm install -g @pnpm/exe@8.7.4
 
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v3

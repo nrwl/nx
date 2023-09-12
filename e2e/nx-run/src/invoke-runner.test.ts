@@ -5,8 +5,9 @@ import {
   runCommand,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Invoke Runner', () => {
   let proj: string;
@@ -16,7 +17,7 @@ describe('Invoke Runner', () => {
   it('should invoke runner imperatively ', async () => {
     const mylib = uniq('mylib');
     runCLI(`generate @nx/js:lib ${mylib}`);
-    await updateProjectConfig(mylib, (c) => {
+    updateJson(join('libs', mylib, 'project.json'), (c) => {
       c.targets['prebuild'] = {
         command: 'echo prebuild',
       };

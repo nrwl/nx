@@ -295,6 +295,7 @@
     - [Authenticate with GitLab](/nx-cloud/private-cloud/auth-gitlab)
     - [Authenticate with BitBucket](/nx-cloud/private-cloud/auth-bitbucket)
     - [Authenticate via SAML](/nx-cloud/private-cloud/auth-saml)
+    - [Authenticate via SAML on Managed Version](/nx-cloud/private-cloud/auth-saml-managed)
     - [Advanced Configuration](/nx-cloud/private-cloud/advanced-config)
   - [Reference](/nx-cloud/reference)
     - [Configuration Options](/nx-cloud/reference/config)

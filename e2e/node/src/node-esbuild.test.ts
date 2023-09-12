@@ -14,6 +14,7 @@ import {
   updateFile,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
+import { join } from 'path';
 
 describe('Node Applications + esbuild', () => {
   beforeEach(() => newProject());
@@ -24,7 +25,7 @@ describe('Node Applications + esbuild', () => {
     const app = uniq('nodeapp');
 
     runCLI(`generate @nx/node:app ${app} --bundler=esbuild --no-interactive`);
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', app, 'project.json'));
 
     checkFilesDoNotExist(`apps/${app}/webpack.config.js`);
 

@@ -1782,6 +1782,11 @@
               "file": "nx-cloud/private/auth-saml"
             },
             {
+              "name": "Authenticate via SAML on Managed Version",
+              "id": "auth-saml-managed",
+              "file": "nx-cloud/private/auth-saml-managed"
+            },
+            {
               "name": "Advanced Configuration",
               "id": "advanced-config",
               "file": "nx-cloud/private/advanced-config"
