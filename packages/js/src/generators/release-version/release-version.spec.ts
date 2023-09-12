@@ -124,4 +124,25 @@ describe('release-version', () => {
       }
     `);
   });
+
+  describe('not all given projects have package.json files', () => {
+    beforeEach(() => {
+      tree.delete('libs/my-lib/package.json');
+    });
+
+    it(`should error with guidance when not all of the given projects are appropriate for JS versioning`, async () => {
+      await expect(
+        releaseVersionGenerator(tree, {
+          projects: Object.values(projectGraph.nodes), // version all projects
+          projectGraph,
+          specifier: 'major',
+          currentVersionResolver: 'disk',
+        })
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`
+        "The project "my-lib" does not have a package.json available at libs/my-lib/package.json.
+                
+        To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "my-lib" from the current release group, or amend the packageRoot configuration to point to where the package.json should be."
+      `);
+    });
+  });
 });

@@ -36,10 +36,11 @@ export function resolveLocalPackageDependencies(
     if (!packageRoot) {
       continue;
     }
-    const packageJson = readJson(
-      tree,
-      joinPathFragments(packageRoot, 'package.json')
-    ) as PackageJson;
+    const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
+    if (!tree.exists(packageJsonPath)) {
+      continue;
+    }
+    const packageJson = readJson(tree, packageJsonPath) as PackageJson;
     const pkg = new Package(packageJson, workspaceRoot, packageRoot);
     projectNodeToPackageMap.set(projectNode, pkg);
   }
