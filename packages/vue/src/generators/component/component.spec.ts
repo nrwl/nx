@@ -1,25 +1,15 @@
-import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { logger, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from './component';
 import { createLib } from '../../utils/test-utils';
 
-// need to mock cypress otherwise it'll use the nx installed version from package.json
-//  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/cypress-version');
-
 describe('component', () => {
   let appTree: Tree;
   let projectName: string;
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
 
   beforeEach(async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
     projectName = 'my-lib';
     appTree = createTreeWithEmptyWorkspace();
-    // await createApp(appTree, 'my-app');
     await createLib(appTree, projectName);
     jest.spyOn(logger, 'warn').mockImplementation(() => {});
     jest.spyOn(logger, 'debug').mockImplementation(() => {});

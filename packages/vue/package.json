@@ -29,12 +29,15 @@
   },
   "dependencies": {
     "tslib": "^2.3.0",
+    "@nx/cypress": "file:../cypress",
     "@nx/devkit": "file:../devkit",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
+    "@nx/playwright": "file:../playwright",
     "@nx/vite": "file:../vite",
-    "@nx/web": "file:../web"
+    "@nx/web": "file:../web",
+    "@phenomnomnominal/tsquery": "~5.0.1"
   },
   "publishConfig": {
     "access": "public"

@@ -18,6 +18,7 @@ export async function addLinting(
     unitTestRunner?: 'jest' | 'vitest' | 'none';
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
+    rootProject?: boolean;
   },
   projectType: 'lib' | 'app'
 ) {
@@ -32,6 +33,7 @@ export async function addLinting(
       eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx,vue}`],
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
+      rootProject: options.rootProject,
     });
 
     if (isEslintConfigSupported(host)) {

@@ -88,6 +88,7 @@ export async function applicationGenerator(
       linter: options.linter ?? Linter.EsLint,
       unitTestRunner: options.unitTestRunner,
       setParserOptionsProject: options.setParserOptionsProject,
+      rootProject: options.rootProject,
     },
     'app'
   );

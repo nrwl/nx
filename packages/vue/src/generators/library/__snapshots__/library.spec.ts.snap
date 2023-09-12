@@ -148,7 +148,6 @@ export default defineConfig({
   },
 
   test: {
-    dir: '../node_modules/.vitest',
     globals: true,
     cache: { dir: '../node_modules/.vitest' },
     environment: 'jsdom',

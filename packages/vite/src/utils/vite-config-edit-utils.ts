@@ -68,12 +68,12 @@ function handleBuildOrTestNode(
   name: 'build' | 'test'
 ): string | undefined {
   const { tsquery } = require('@phenomnomnominal/tsquery');
-  const buildNode = tsquery.query(
+  const buildOrTestNode = tsquery.query(
     updatedFileContent,
     `PropertyAssignment:has(Identifier[name="${name}"])`
   );
 
-  if (buildNode.length) {
+  if (buildOrTestNode.length) {
     return tsquery.replace(
       updatedFileContent,
       `PropertyAssignment:has(Identifier[name="${name}"])`,
@@ -85,7 +85,7 @@ function handleBuildOrTestNode(
         let updatedPropsString = '';
         for (const prop of existingProperties) {
           const propName = prop.name.getText();
-          if (!configContentObject[propName]) {
+          if (!configContentObject[propName] && propName !== 'dir') {
             updatedPropsString += `'${propName}': ${prop.initializer.getText()},\n`;
           }
         }
