@@ -79,6 +79,26 @@ describe('new', () => {
       });
     });
 
+    it('should generate necessary npm dependencies for vue preset', async () => {
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        e2eTestRunner: 'cypress',
+        preset: Preset.VueMonorepo,
+      });
+
+      const { devDependencies } = readJson(tree, 'my-workspace/package.json');
+      expect(devDependencies).toStrictEqual({
+        '@nx/vue': nxVersion,
+        '@nx/cypress': nxVersion,
+        '@nx/vite': nxVersion,
+        '@nx/workspace': nxVersion,
+        nx: nxVersion,
+      });
+    });
+
     it('should generate necessary npm dependencies for angular preset', async () => {
       await newGenerator(tree, {
         ...defaultOptions,

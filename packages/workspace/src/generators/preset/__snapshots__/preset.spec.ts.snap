@@ -75,3 +75,23 @@ exports[`preset should create files (preset = react-standalone bundler = webpack
   },
 }
 `;
+
+exports[`preset should create files (preset = vue-standalone) 1`] = `
+{
+  "configurations": {
+    "development": {
+      "buildTarget": "proj:build:development",
+      "hmr": true,
+    },
+    "production": {
+      "buildTarget": "proj:build:production",
+      "hmr": false,
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nx/vite:dev-server",
+  "options": {
+    "buildTarget": "proj:build",
+  },
+}
+`;

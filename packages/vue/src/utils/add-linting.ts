@@ -2,7 +2,6 @@ import { Tree } from 'nx/src/generators/tree';
 import { Linter, lintProjectGenerator } from '@nx/linter';
 import { joinPathFragments } from 'nx/src/utils/path';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
-import { NormalizedSchema } from '../generators/library/schema';
 import { extraEslintDependencies } from './lint';
 import {
   addExtendsToLintConfig,
