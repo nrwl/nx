@@ -10,12 +10,6 @@ import {
 } from './task-hasher';
 import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
-jest.mock('../utils/workspace-root', () => {
-  return {
-    workspaceRoot: tempFs.tempDir,
-  };
-});
-
 describe('TaskHasher', () => {
   const packageJson = {
     name: 'nrwl',

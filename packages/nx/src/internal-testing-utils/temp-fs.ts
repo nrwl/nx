@@ -21,17 +21,13 @@ type NestedFiles = {
 export class TempFs {
   readonly tempDir: string;
 
-  private previousEnvWorkspaceRootPath: string;
   private previousWorkspaceRoot: string;
 
   constructor(private dirname: string, overrideWorkspaceRoot = true) {
     this.tempDir = realpathSync(mkdtempSync(join(tmpdir(), this.dirname)));
-
-    this.previousEnvWorkspaceRootPath = process.env.NX_WORKSPACE_ROOT_PATH;
     this.previousWorkspaceRoot = workspaceRoot;
 
     if (overrideWorkspaceRoot) {
-      process.env.NX_WORKSPACE_ROOT_PATH = this.tempDir;
       setWorkspaceRoot(this.tempDir);
     }
   }
@@ -86,7 +82,6 @@ export class TempFs {
 
   cleanup() {
     rmSync(this.tempDir, { recursive: true });
-    process.env.NX_WORKSPACE_ROOT_PATH = this.previousEnvWorkspaceRootPath;
     setWorkspaceRoot(this.previousWorkspaceRoot);
   }
 

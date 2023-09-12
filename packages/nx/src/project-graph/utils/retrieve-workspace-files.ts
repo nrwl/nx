@@ -207,10 +207,7 @@ export async function retrieveProjectConfigurationPaths(
 export function retrieveProjectConfigurationPathsWithoutPluginInference(
   root: string
 ): string[] {
-  return globWithWorkspaceContext(
-    root,
-    configurationGlobsWithoutPlugins(root)
-  );
+  return globWithWorkspaceContext(root, configurationGlobsWithoutPlugins(root));
 }
 
 const projectsWithoutPluginCache = new Map<

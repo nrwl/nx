@@ -21,11 +21,9 @@ describe('glob', () => {
     fs.writeFile('3.txt', '3');
     fs.writeFile('4.md', '4');
 
-    const withTree = (await glob(tree, ['*.txt'])).sort();
-    const withoutTree = (await glob(['*.txt'])).sort();
+    const results = glob(tree, ['*.txt']).sort();
 
-    expect(withTree).toEqual(withoutTree);
-    expect(withTree).toMatchInlineSnapshot(`
+    expect(results).toMatchInlineSnapshot(`
       [
         "1.txt",
         "2.txt",
@@ -40,7 +38,7 @@ describe('glob', () => {
     tree.write('3.txt', '3');
     fs.writeFile('4.md', '4');
 
-    const withTree = (await glob(tree, ['*.txt'])).sort();
+    const withTree = glob(tree, ['*.txt']).sort();
 
     expect(withTree).toMatchInlineSnapshot(`
       [
@@ -58,7 +56,7 @@ describe('glob', () => {
     tree.delete('3.txt');
     fs.writeFile('4.md', '4');
 
-    const withTree = (await glob(tree, ['*.txt'])).sort();
+    const withTree = glob(tree, ['*.txt']).sort();
 
     expect(withTree).toMatchInlineSnapshot(`
       [
