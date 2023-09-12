@@ -36,7 +36,7 @@ The starting point of any non-trivial monorepo management tool is to be able to 
 
 #### 3. Project graph visualization
 
-Being able to visually explore a monorepo workspace can be a deal breaker when it comes to debug and troubleshoot large monorepo workspaces.
+Being able to visually explore a monorepo workspace can be a deal breaker when you need to debug and troubleshoot large monorepo workspaces.
 
 - Nx has a rich, interactive visualiser (watch a video [here](https://www.youtube.com/watch?v=UTB5dOJF43o))
 - Turborepo has a basic graphviz image export.
@@ -99,7 +99,7 @@ Learn more [by watching this Egghead lesson](https://egghead.io/lessons/javascri
 Nx has grown over the last 5 years, providing curated presets for common setups, but at the same time focusing on remaining flexible and extensible.
 
 - When it comes to Nx core, **the amount of the configuration Nx and Turborepo generate is the same**. Nx and Turborepo both generate a json file at the root of your workspace.
-- Turborepo requires you to keep all of your caching configuration in the root `turbo.json` file. This means that if you change a caching setting for a particular project, it will break the cache for every project in the repo. Nx did the same thing 2 years ago, but now you can break out project specific configuration into separate `project.json` files, which makes for less cache misses on large repos.
+- Both Nx and Turborepo allow you to define project specific configuration in separate files to ensure that changing those settings does not break the cache for the whole repository and to keep the configuration settings close to the related code.
 
 Getting started quickly is very easy. Check out some of the examples below:
 
@@ -141,7 +141,7 @@ Nx doesn’t replace any of your tools, and it’s not “all in”. You can sta
 
 ## Tech and Performance
 
-Turborepo is mostly written in Golang. Nx is mostly written in TypeScript, but most of the heavy computation in Nx is done by core Node.js capabilities and node modules written in C++, so performance isn’t affected by this.
+Turborepo is mostly written in Golang and Rust. Nx is mostly written in TypeScript, but most of the heavy computation in Nx is done by core Node.js capabilities and node modules written in C++, so performance isn’t affected by this.
 
 Benchmarking is hard because a lot depends on what you are trying to run, in what environment, etc. This is one benchmark we use when measuring Nx perf: [Nx and Turbo benchmark](https://github.com/vsavkin/large-monorepo/). It is a repo with 5 Next.js apps. We are measuring how quickly Nx and Turbo can figure out what needs to be restored from cache, and how quickly they can do it.
 
@@ -175,3 +175,7 @@ Nx was released in 2016. Turborepo was open sourced in December of 2021. Turbore
 - There is a rich ecosystem of [third-party plugins.](https://nx.dev/community)
 
 From day 1 Nx has always been an **MIT-licensed open source project**, and we did everything to make sure companies using Nx won’t end up in the vendor lock-in. We clearly separated Nx the open source project and Nx Cloud the SAAS product. For instance, Nx Cloud is built using the public APIs Nx provides (you can build your own and some companies do). Nx Cloud docs are on a separate domain etc.
+
+## Switch to Nx
+
+If you're ready to switch from Turborepo to Nx, the [migration process is fully documented](/recipes/adopting-nx/from-turborepo).
