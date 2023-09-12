@@ -63,7 +63,16 @@ export function buildExplicitTypeScriptDependencies(
 
   const filesToProcess: Record<string, string[]> = {};
 
-  const moduleExtensions = ['.ts', '.js', '.tsx', '.jsx', '.mts', '.mjs'];
+  const moduleExtensions = [
+    '.ts',
+    '.js',
+    '.tsx',
+    '.jsx',
+    '.mts',
+    '.mjs',
+    '.cjs',
+    '.cts',
+  ];
 
   // TODO: This can be removed when vue is stable
   if (isVuePluginInstalled()) {
