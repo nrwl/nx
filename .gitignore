@@ -11,6 +11,7 @@ tmp
 *.log
 jest.debug.config.js
 .tool-versions
+/.nx
 /.nx-cache
 /.verdaccio/build/local-registry
 /graph/client/src/assets/environment.js
@@ -19,7 +20,6 @@ jest.debug.config.js
 /graph/client/src/assets/generated-task-graphs
 /nx-dev/nx-dev/public/documentation
 /nx-dev/nx-dev/public/images/open-graph
-
 # Issues scraper creates these files, stored by github's cache
 /scripts/issues-scraper/cached
 

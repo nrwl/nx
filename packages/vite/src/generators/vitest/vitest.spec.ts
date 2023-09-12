@@ -96,6 +96,7 @@ describe('vitest generator', () => {
               "vitest/importMeta",
               "vite/client",
               "node",
+              "vitest",
             ],
           },
           "extends": "./tsconfig.json",

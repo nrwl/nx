@@ -5,7 +5,7 @@ import { findFreePort } from './find-free-port';
 
 describe('findFreePort', () => {
   it('should return the largest port + 1', () => {
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProject(tree, 'app1', 4200);
     addProject(tree, 'app2', 4201);
     addProject(tree, 'no-serve');
@@ -16,7 +16,7 @@ describe('findFreePort', () => {
   });
 
   it('should default to port 4200', () => {
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    const tree = createTreeWithEmptyWorkspace();
     addProject(tree, 'no-serve');
 
     const port = findFreePort(tree);
