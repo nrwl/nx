@@ -4,6 +4,7 @@ import { statSync } from 'fs';
 import { ExecutorContext, normalizePath } from '@nx/devkit';
 
 import type { AssetGlobPattern, RollupExecutorOptions } from '../schema';
+import { createEntryPoints } from '@nx/js';
 
 export interface NormalizedRollupExecutorOptions extends RollupExecutorOptions {
   entryRoot: string;
@@ -47,7 +48,10 @@ export function normalizeRollupExecutorOptions(
     projectRoot,
     outputPath,
     skipTypeCheck: options.skipTypeCheck || false,
-    additionalEntryPoints: createEntryPoints(options, context),
+    additionalEntryPoints: createEntryPoints(
+      options.additionalEntryPoints,
+      context.root
+    ),
   };
 }
 
@@ -106,15 +110,5 @@ export function normalizeAssets(
         output: asset.output.replace(/^\//, ''),
       };
     }
-  });
-}
-
-function createEntryPoints(
-  options: { additionalEntryPoints?: string[] },
-  context: ExecutorContext
-): string[] {
-  if (!options.additionalEntryPoints?.length) return [];
-  return globSync(options.additionalEntryPoints, {
-    cwd: context.root,
   });
 }

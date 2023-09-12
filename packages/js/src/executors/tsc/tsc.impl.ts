@@ -1,5 +1,4 @@
 import * as ts from 'typescript';
-import { sync as globSync } from 'fast-glob';
 import { ExecutorContext } from '@nx/devkit';
 import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
 import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
@@ -19,6 +18,7 @@ import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescrip
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
 import { getCustomTrasformersFactory, normalizeOptions } from './lib';
 import { readTsConfig } from '../../utils/typescript/ts-config';
+import { createEntryPoints } from '../../utils/package-json/create-entry-points';
 
 export function determineModuleFormatFromTsConfig(
   absolutePathToTsConfig: string
@@ -112,7 +112,10 @@ export async function* tscExecutor(
       updatePackageJson(
         {
           ...options,
-          additionalEntryPoints: createEntryPoints(options, context),
+          additionalEntryPoints: createEntryPoints(
+            options.additionalEntryPoints,
+            context.root
+          ),
           format: [determineModuleFormatFromTsConfig(options.tsConfig)],
           // As long as d.ts files match their .js counterparts, we don't need to emit them.
           // TSC can match them correctly based on file names.
@@ -141,7 +144,10 @@ export async function* tscExecutor(
         updatePackageJson(
           {
             ...options,
-            additionalEntryPoints: createEntryPoints(options, context),
+            additionalEntryPoints: createEntryPoints(
+              options.additionalEntryPoints,
+              context.root
+            ),
             // As long as d.ts files match their .js counterparts, we don't need to emit them.
             // TSC can match them correctly based on file names.
             skipTypings: true,
@@ -163,16 +169,6 @@ export async function* tscExecutor(
   }
 
   return yield* typescriptCompilation.iterator;
-}
-
-export function createEntryPoints(
-  options: { additionalEntryPoints?: string[] },
-  context: ExecutorContext
-): string[] {
-  if (!options.additionalEntryPoints?.length) return [];
-  return globSync(options.additionalEntryPoints, {
-    cwd: context.root,
-  });
 }
 
 export default tscExecutor;
