@@ -116,6 +116,7 @@ It only uses language primitives and immutable objects
 - [getProjects](../../devkit/documents/getProjects)
 - [getWorkspaceLayout](../../devkit/documents/getWorkspaceLayout)
 - [getWorkspacePath](../../devkit/documents/getWorkspacePath)
+- [glob](../../devkit/documents/glob)
 - [hashArray](../../devkit/documents/hashArray)
 - [installPackagesTask](../../devkit/documents/installPackagesTask)
 - [isStandaloneProject](../../devkit/documents/isStandaloneProject)
