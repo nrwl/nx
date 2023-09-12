@@ -27,7 +27,7 @@ exports[`nx release should version and publish multiple related npm packages wit
 {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 {project-name}: total files:   3
 {project-name}:
-{project-name}: Published to http://localhost:4875 with tag "latest"
+{project-name}: Published to http://localhost:{port-number} with tag "latest"
 
 > nx run {project-name}:release-publish
 
@@ -46,7 +46,7 @@ exports[`nx release should version and publish multiple related npm packages wit
 {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 {project-name}: total files:   3
 {project-name}:
-{project-name}: Published to http://localhost:4875 with tag "latest"
+{project-name}: Published to http://localhost:{port-number} with tag "latest"
 
 > nx run {project-name}:release-publish
 
@@ -65,7 +65,7 @@ exports[`nx release should version and publish multiple related npm packages wit
 {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 {project-name}: total files:   3
 {project-name}:
-{project-name}: Published to http://localhost:4875 with tag "latest"
+{project-name}: Published to http://localhost:{port-number} with tag "latest"
 
 
 

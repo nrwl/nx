@@ -22,6 +22,8 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+        // Anonymize localhost port because it can be different between local and CI
+        .replaceAll(/http:\/\/localhost:\d+/g, 'http://localhost:{port-number}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
