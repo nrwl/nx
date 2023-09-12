@@ -110,9 +110,6 @@ Creating the equivalent configuration with Nx yields the following files:
         "accessToken": "..."
       }
     }
-  },
-  "affected": {
-    "defaultBase": "main"
   }
 }
 ```
@@ -124,7 +121,6 @@ Creating the equivalent configuration with Nx yields the following files:
   "nx": {
     "targets": {
       "build": {
-        "dependsOn": ["^build"],
         "outputs": ["www/**"]
       }
     }
@@ -136,12 +132,12 @@ Creating the equivalent configuration with Nx yields the following files:
 
 For each `turbo.json` configuration property, the equivalent Nx property is listed.
 
-| **Global Configuration:** |                                                                                             |
-| ------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs)       |
-| `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs) as an | [`env` input](/reference/project-configuration#env-variables) |
-| `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/                           | define-environment-variables)                                 |
-| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs)       |
+| **Global Configuration:** |                                                                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs)                                                                     |
+| `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs) as an [`env` input](/reference/project-configuration#env-variables) |
+| `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                            |
+| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs)                                                                     |
 
 | **Task Configuration:**         |                                                                                                   |
 | ------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -159,7 +155,7 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 ## Command Equivalents
 
 |                             |                                                                                                                                                                                         |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `turbo run test lint build` | [`nx run-many -t test lint build`](/packages/nx/documents/run-many)                                                                                                                     |
 | `--cache-dir`               | Set in [`nx.json` under `tasksRunnerOptions.default.options.cacheDirectory`](/reference/nx-json#tasks-runner-options)                                                                   |
 | `--concurrency`             | [`--parallel`](/packages/nx/documents/run-many#parallel)                                                                                                                                |
@@ -167,7 +163,7 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `--cwd`                     | Available when using the [`run-commands` executor](/packages/nx/executors/run-commands#cwd)                                                                                             |
 | `--dry-run`                 | Same syntax                                                                                                                                                                             |
 | `--env-mode`                | N/A                                                                                                                                                                                     |
-| `--filter`                  | Use [`-p admin-*` or `-p tag:api-*`](/packages/nx/documents/run-many#projects). Also see [`nx                                                                                           | affected`](/packages/nx/documents/affected). |
+| `--filter`                  | Use [`-p admin-*` or `-p tag:api-*`](/packages/nx/documents/run-many#projects). Also see [`nx affected`](/packages/nx/documents/affected).                                              |
 | `--graph`                   | [Same syntax](/packages/nx/documents/run-many#graph) or [`nx graph`](/packages/nx/documents/dep-graph) for the entire graph                                                             |
 | `--force`                   | [`nx reset`](/packages/nx/documents/reset) and then run the command again                                                                                                               |
 | `--global-deps`             | Use [`inputs` in the `nx.json`](/concepts/more-concepts/customizing-inputs) or project configuration                                                                                    |

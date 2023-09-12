@@ -141,7 +141,7 @@ Nx doesn’t replace any of your tools, and it’s not “all in”. You can sta
 
 ## Tech and Performance
 
-Turborepo is mostly written in Golang and Rust. Nx is mostly written in TypeScript, but most of the heavy computation in Nx is done by core Node.js capabilities and node modules written in C++, so performance isn’t affected by this.
+Turborepo is mostly written in Golang and Rust. Nx is mostly written in TypeScript, but most of the heavy computation in Nx is done by core Node.js capabilities and Rust modules, so performance isn’t affected by this.
 
 Benchmarking is hard because a lot depends on what you are trying to run, in what environment, etc. This is one benchmark we use when measuring Nx perf: [Nx and Turbo benchmark](https://github.com/vsavkin/large-monorepo/). It is a repo with 5 Next.js apps. We are measuring how quickly Nx and Turbo can figure out what needs to be restored from cache, and how quickly they can do it.
 
