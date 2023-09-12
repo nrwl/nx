@@ -6,8 +6,8 @@ import { buildExplicitPackageJsonDependencies } from './explicit-package-json-de
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
-import { fileHasher } from '../../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { getAllFileDataInContext } from '../../../../utils/workspace-context';
 
 describe('explicit package json dependencies', () => {
   let ctx: CreateDependenciesContext;
@@ -51,8 +51,6 @@ describe('explicit package json dependencies', () => {
       }),
     });
 
-    await fileHasher.init();
-
     projects = {
       proj: {
         name: 'proj',
@@ -75,7 +73,7 @@ describe('explicit package json dependencies', () => {
 
     const projectFileMap = createProjectFileMap(
       projectsConfigurations as any,
-      fileHasher.allFileData()
+      getAllFileDataInContext(tempFs.tempDir)
     ).projectFileMap;
 
     const builder = new ProjectGraphBuilder(undefined, projectFileMap);

@@ -1,11 +1,13 @@
 use crate::native::logger::enable_logger;
 use std::collections::HashMap;
 
+use crate::native::types::FileData;
+use crate::native::utils::path::Normalize;
 use parking_lot::lock_api::MutexGuard;
 use parking_lot::{Condvar, Mutex, RawMutex};
 use rayon::prelude::*;
 use std::ops::Deref;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 use tracing::{trace, warn};
@@ -21,20 +23,15 @@ use crate::native::workspace::types::ConfigurationParserResult;
 #[napi]
 pub struct WorkspaceContext {
     pub workspace_root: String,
+    workspace_root_path: PathBuf,
     files_worker: FilesWorker,
 }
 
 type Files = Vec<(PathBuf, String)>;
-enum FileUpdateType {
-    Add,
-    Update,
-    Remove,
-}
 struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 
 impl FilesWorker {
-    fn gather_files(workspace_root: &str) -> Self {
-        let workspace_root: PathBuf = workspace_root.into();
+    fn gather_files(workspace_root: &Path) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -45,6 +42,7 @@ impl FilesWorker {
 
         let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
         let files_lock_clone = Arc::clone(&files_lock);
+        let workspace_root = workspace_root.to_owned();
 
         thread::spawn(move || {
             trace!("locking files");
@@ -87,9 +85,15 @@ impl FilesWorker {
         Some(files)
     }
 
-    pub fn update_files(&self, updated_files: HashMap<String, String>, deleted_files: Vec<String>) {
+    pub fn update_files(
+        &self,
+        workspace_root_path: &Path,
+        updated_files: Vec<&str>,
+        deleted_files: Vec<&str>,
+    ) -> HashMap<String, String> {
         let Some(files_sync) = &self.0 else {
-           return
+            trace!("there were no files because the workspace root did not exist");
+           return HashMap::new();
         };
 
         let (files_lock, _) = &files_sync.deref();
@@ -100,14 +104,28 @@ impl FilesWorker {
             map.remove(&PathBuf::from(deleted_file));
         }
 
-        for (path, content) in updated_files {
-            map.entry(path.into())
-                .and_modify(|e| *e = content.clone())
-                .or_insert(content);
+        let updated_files_hashes: HashMap<String, String> = updated_files
+            .par_iter()
+            .filter_map(|path| {
+                let full_path = workspace_root_path.join(path);
+                let Ok( content ) = std::fs::read(full_path) else {
+                    trace!( "could not read file: ?full_path");
+                    return None;
+                };
+                Some((path.to_string(), xxh3::xxh3_64(&content).to_string()))
+            })
+            .collect();
+
+        for (file, hash) in &updated_files_hashes {
+            map.entry(file.into())
+                .and_modify(|e| *e = hash.clone())
+                .or_insert(hash.clone());
         }
 
         *files = map.into_iter().collect();
         files.par_sort();
+
+        updated_files_hashes
     }
 }
 
@@ -119,9 +137,12 @@ impl WorkspaceContext {
 
         trace!(?workspace_root);
 
+        let workspace_root_path = PathBuf::from(&workspace_root);
+
         WorkspaceContext {
-            files_worker: FilesWorker::gather_files(&workspace_root),
+            files_worker: FilesWorker::gather_files(&workspace_root_path),
             workspace_root,
+            workspace_root_path,
         }
     }
 
@@ -180,9 +201,25 @@ impl WorkspaceContext {
     #[napi]
     pub fn incremental_update(
         &self,
-        updated_files: HashMap<String, String>,
-        deleted_files: Vec<String>,
-    ) {
-        self.files_worker.update_files(updated_files, deleted_files);
+        updated_files: Vec<&str>,
+        deleted_files: Vec<&str>,
+    ) -> HashMap<String, String> {
+        self.files_worker
+            .update_files(&self.workspace_root_path, updated_files, deleted_files)
+    }
+
+    #[napi]
+    pub fn all_file_data(&self) -> Vec<FileData> {
+        self.files_worker
+            .get_files()
+            .map_or_else(Vec::new, |files| {
+                files
+                    .iter()
+                    .map(|(path, content)| FileData {
+                        file: path.to_normalized_string(),
+                        hash: content.clone(),
+                    })
+                    .collect()
+            })
     }
 }

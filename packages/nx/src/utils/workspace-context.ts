@@ -43,13 +43,15 @@ export function getProjectConfigurationsFromContext(
 }
 
 export function updateFilesInContext(
-  updatedFiles: Map<string, string>,
+  updatedFiles: string[],
   deletedFiles: string[]
 ) {
-  workspaceContext?.incrementalUpdate(
-    Object.fromEntries(updatedFiles),
-    deletedFiles
-  );
+  return workspaceContext?.incrementalUpdate(updatedFiles, deletedFiles);
+}
+
+export function getAllFileDataInContext(workspaceRoot: string) {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.allFileData();
 }
 
 function ensureContextAvailable(workspaceRoot: string) {

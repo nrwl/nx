@@ -1,4 +1,3 @@
-use crate::native::types::FileData;
 use crate::native::utils::path::Normalize;
 use crate::native::walker::nx_walker;
 use std::collections::HashMap;
@@ -12,14 +11,12 @@ pub fn hash_array(input: Vec<String>) -> String {
 }
 
 #[napi]
-pub fn hash_file(file: String) -> Option<FileData> {
-    let Ok(content) = std::fs::read(&file) else {
+pub fn hash_file(file: String) -> Option<String> {
+    let Ok(content) = std::fs::read(file) else {
         return None;
     };
 
-    let hash = xxh3::xxh3_64(&content).to_string();
-
-    Some(FileData { hash, file })
+    Some(xxh3::xxh3_64(&content).to_string())
 }
 
 #[napi]
@@ -72,6 +69,6 @@ mod tests {
         let test_file_path = temp_dir.display().to_string() + "/test.txt";
         let content = hash_file(test_file_path);
 
-        assert_eq!(content.unwrap().hash, "6193209363630369380");
+        assert_eq!(content.unwrap(), "6193209363630369380");
     }
 }

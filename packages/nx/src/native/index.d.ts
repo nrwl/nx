@@ -16,7 +16,7 @@ export function getFilesForOutputs(directory: string, entries: Array<string>): A
 export function remove(src: string): void
 export function copy(src: string, dest: string): void
 export function hashArray(input: Array<string>): string
-export function hashFile(file: string): FileData | null
+export function hashFile(file: string): string | null
 export function hashFiles(workspaceRoot: string): Record<string, string>
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 export interface ExternalNodeData {
@@ -115,5 +115,6 @@ export class WorkspaceContext {
   getWorkspaceFiles(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): NxWorkspaceFiles
   getProjectConfigurationFiles(globs: Array<string>): Array<string>
   getProjectConfigurations(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): ConfigurationParserResult
-  incrementalUpdate(updatedFiles: Record<string, string>, deletedFiles: Array<string>): void
+  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
+  allFileData(): Array<FileData>
 }

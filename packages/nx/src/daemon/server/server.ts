@@ -56,9 +56,10 @@ import { readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
 import { handleHashTasks } from './handle-hash-tasks';
-import { fileHasher, hashArray } from '../../hasher/file-hasher';
+import { hashArray } from '../../hasher/file-hasher';
 import { handleRequestFileData } from './handle-request-file-data';
 import { setupWorkspaceContext } from '../../utils/workspace-context';
+import { hashFile } from '../../native';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -284,7 +285,7 @@ function lockFileHashChanged(): boolean {
     join(workspaceRoot, 'pnpm-lock.yaml'),
   ]
     .filter((file) => existsSync(file))
-    .map((file) => fileHasher.hashFile(file));
+    .map((file) => hashFile(file));
   const newHash = hashArray(lockHashes);
   if (existingLockHash && newHash != existingLockHash) {
     existingLockHash = newHash;
@@ -412,7 +413,6 @@ export async function startServer(): Promise<Server> {
 
   return new Promise(async (resolve, reject) => {
     try {
-      await fileHasher.ensureInitialized();
       server.listen(FULL_OS_SOCKET_PATH, async () => {
         try {
           serverLogger.log(`Started listening on: ${FULL_OS_SOCKET_PATH}`);

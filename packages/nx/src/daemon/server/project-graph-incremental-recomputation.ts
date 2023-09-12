@@ -17,7 +17,7 @@ import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { execSync } from 'child_process';
-import { fileHasher, hashArray } from '../../hasher/file-hasher';
+import { hashArray } from '../../hasher/file-hasher';
 import {
   retrieveWorkspaceFiles,
   retrieveProjectConfigurations,
@@ -27,7 +27,10 @@ import {
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import { readNxJson } from '../../config/nx-json';
-import { updateFilesInContext } from '../../utils/workspace-context';
+import {
+  resetWorkspaceContext,
+  updateFilesInContext,
+} from '../../utils/workspace-context';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -164,19 +167,17 @@ function filterUpdatedFiles(files: string[]) {
 async function processCollectedUpdatedAndDeletedFiles() {
   try {
     performance.mark('hash-watched-changes-start');
-    const updatedFiles = await fileHasher.hashFiles(
-      filterUpdatedFiles([...collectedUpdatedFiles.values()])
-    );
+    const updatedFiles = filterUpdatedFiles([
+      ...collectedUpdatedFiles.values(),
+    ]);
     const deletedFiles = [...collectedDeletedFiles.values()];
+    let updatedFileHashes = updateFilesInContext(updatedFiles, deletedFiles);
     performance.mark('hash-watched-changes-end');
     performance.measure(
       'hash changed files from watcher',
       'hash-watched-changes-start',
       'hash-watched-changes-end'
     );
-    fileHasher.incrementalUpdate(updatedFiles, deletedFiles);
-
-    updateFilesInContext(updatedFiles, deletedFiles);
 
     const nxJson = readNxJson(workspaceRoot);
 
@@ -204,7 +205,7 @@ async function processCollectedUpdatedAndDeletedFiles() {
           projectNodes,
           projectFileMapWithFiles.projectFileMap,
           projectFileMapWithFiles.allWorkspaceFiles,
-          updatedFiles,
+          new Map(Object.entries(updatedFileHashes)),
           deletedFiles
         );
       } else {
@@ -333,8 +334,7 @@ async function resetInternalState() {
   currentProjectGraph = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
-  fileHasher.clear();
-  await fileHasher.ensureInitialized();
+  resetWorkspaceContext();
   waitPeriod = 100;
 }
 
