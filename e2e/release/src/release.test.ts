@@ -5,6 +5,7 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
+import { execSync } from 'child_process';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -22,8 +23,6 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
-        // Anonymize localhost port because it can be different between local and CI
-        .replaceAll(/http:\/\/localhost:\d+/g, 'http://localhost:{port-number}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -96,8 +95,83 @@ describe('nx release', () => {
       ).length
     ).toEqual(1);
 
+    const registryUrl = execSync('npm config get registry').toString().trim();
+
     // Thanks to the custom serializer above, the publish output should be deterministic
     const publishOutput = runCLI(`release publish`);
-    expect(publishOutput).toMatchSnapshot();
+    expect(publishOutput).toMatchInlineSnapshot(`
+
+      >  NX   Running target release-publish for 3 projects:
+
+      - {project-name}
+      - {project-name}
+      - {project-name}
+
+
+
+      > nx run {project-name}:release-publish
+
+      {project-name}: 📦  @proj/{project-name}@999.9.9
+      {project-name}: === Tarball Contents ===
+      {project-name}: XXB  index.js
+      {project-name}: XXXB package.json
+      {project-name}: XXB  project.json
+      {project-name}: === Tarball Details ===
+      {project-name}: name:          @proj/{project-name}
+      {project-name}: version:       999.9.9
+      {project-name}: filename:      proj-{project-name}-999.9.9.tgz
+      {project-name}: package size: XXXB
+      {project-name}: unpacked size: XXXB
+      {project-name}: shasum:        {SHASUM}
+      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      {project-name}: total files:   3
+      {project-name}:
+      {project-name}: Published to ${registryUrl} with tag "latest"
+
+      > nx run {project-name}:release-publish
+
+      {project-name}: 📦  @proj/{project-name}@999.9.9
+      {project-name}: === Tarball Contents ===
+      {project-name}: XXB  index.js
+      {project-name}: XXXB package.json
+      {project-name}: XXB  project.json
+      {project-name}: === Tarball Details ===
+      {project-name}: name:          @proj/{project-name}
+      {project-name}: version:       999.9.9
+      {project-name}: filename:      proj-{project-name}-999.9.9.tgz
+      {project-name}: package size: XXXB
+      {project-name}: unpacked size: XXXB
+      {project-name}: shasum:        {SHASUM}
+      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      {project-name}: total files:   3
+      {project-name}:
+      {project-name}: Published to ${registryUrl} with tag "latest"
+
+      > nx run {project-name}:release-publish
+
+      {project-name}: 📦  @proj/{project-name}@999.9.9
+      {project-name}: === Tarball Contents ===
+      {project-name}: XXB  index.js
+      {project-name}: XXXB package.json
+      {project-name}: XXB  project.json
+      {project-name}: === Tarball Details ===
+      {project-name}: name:          @proj/{project-name}
+      {project-name}: version:       999.9.9
+      {project-name}: filename:      proj-{project-name}-999.9.9.tgz
+      {project-name}: package size: XXXB
+      {project-name}: unpacked size: XXXB
+      {project-name}: shasum:        {SHASUM}
+      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      {project-name}: total files:   3
+      {project-name}:
+      {project-name}: Published to ${registryUrl} with tag "latest"
+
+
+
+      >  NX   Successfully ran target release-publish for 3 projects
+
+
+
+    `);
   }, 500000);
 });
