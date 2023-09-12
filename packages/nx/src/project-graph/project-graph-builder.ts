@@ -11,6 +11,8 @@ import {
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { CreateDependenciesContext } from '../utils/nx-plugin';
 import { getProjectFileMap } from './build-project-graph';
 
 /**
@@ -245,12 +247,23 @@ export class ProjectGraphBuilder {
       return;
     }
 
-    validateDependency(this.graph, {
-      source,
-      target,
-      dependencyType: type,
-      sourceFile,
-    });
+    validateDependency(
+      {
+        source,
+        target,
+        type,
+        sourceFile,
+      },
+      {
+        externalNodes: this.graph.externalNodes,
+        fileMap: this.fileMap,
+        // the validators only really care about the keys on this.
+        projects: this.graph.nodes as any,
+        filesToProcess: null,
+        nxJsonConfiguration: null,
+        workspaceRoot: null,
+      }
+    );
 
     if (!this.graph.dependencies[source]) {
       this.graph.dependencies[source] = [];
@@ -260,20 +273,12 @@ export class ProjectGraphBuilder {
     );
 
     if (sourceFile) {
-      const sourceProject = this.graph.nodes[source];
-      if (!sourceProject) {
-        throw new Error(
-          `Source project is not a project node: ${sourceProject}`
-        );
-      }
-      const fileData = (this.fileMap[source] || []).find(
-        (f) => f.file === sourceFile
+      const fileData = getFileData(
+        source,
+        sourceFile,
+        this.graph.nodes,
+        this.fileMap
       );
-      if (!fileData) {
-        throw new Error(
-          `Source project ${source} does not have a file: ${sourceFile}`
-        );
-      }
 
       if (!fileData.deps) {
         fileData.deps = [];
@@ -369,80 +374,139 @@ export class ProjectGraphBuilder {
 }
 
 /**
- * A {@link ProjectGraph} dependency between 2 projects
- * Optional: Specifies a file from where the dependency is made
+ * A static {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates the source project ALWAYS load the target project.
+ *
+ * NOTE: {@link StaticDependency#sourceFile} MUST be present unless the source is the name of a {@link ProjectGraphExternalNode}
  */
-export interface ProjectGraphDependencyWithFile {
+export type StaticDependency = {
   /**
    * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} depending on the target project
    */
   source: string;
+
   /**
    * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} that the source project depends on
    */
   target: string;
+
   /**
    * The path of a file (relative from the workspace root) where the dependency is made
    */
   sourceFile?: string;
+
+  type: typeof DependencyType.static;
+};
+
+/**
+ * A dynamic {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates the source project MAY OR MAY NOT load the target project.
+ */
+export type DynamicDependency = {
   /**
-   * The type of dependency
+   * The name of a {@link ProjectGraphProjectNode} depending on the target project
    */
-  dependencyType: DependencyType;
-}
+  source: string;
+
+  /**
+   * The name of a {@link ProjectGraphProjectNode}  that the source project depends on
+   */
+  target: string;
+
+  /**
+   * The path of a file (relative from the workspace root) where the dependency is made
+   */
+  sourceFile: string;
+
+  type: typeof DependencyType.dynamic;
+};
+
+/**
+ * An implicit {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates a connection without an explicit reference in code
+ */
+export type ImplicitDependency = {
+  /**
+   * The name of a {@link ProjectGraphProjectNode} depending on the target project
+   */
+  source: string;
+  /**
+   * The name of a {@link ProjectGraphProjectNode} that the source project depends on
+   */
+  target: string;
+
+  type: typeof DependencyType.implicit;
+};
+
+/**
+ * A {@link ProjectGraph} dependency between 2 projects
+ *
+ * See {@link DynamicDependency}, {@link ImplicitDependency}, or {@link StaticDependency}
+ */
+export type RawProjectGraphDependency =
+  | ImplicitDependency
+  | StaticDependency
+  | DynamicDependency;
 
 /**
  * A function to validate dependencies in a {@link CreateDependencies} function
  * @throws If the dependency is invalid.
  */
 export function validateDependency(
-  graph: ProjectGraph,
-  dependency: ProjectGraphDependencyWithFile
+  dependency: RawProjectGraphDependency,
+  ctx: CreateDependenciesContext
 ): void {
-  if (dependency.dependencyType === DependencyType.implicit) {
-    validateImplicitDependency(graph, dependency);
-  } else if (dependency.dependencyType === DependencyType.dynamic) {
-    validateDynamicDependency(graph, dependency);
-  } else if (dependency.dependencyType === DependencyType.static) {
-    validateStaticDependency(graph, dependency);
+  if (dependency.type === DependencyType.implicit) {
+    validateImplicitDependency(dependency, ctx);
+  } else if (dependency.type === DependencyType.dynamic) {
+    validateDynamicDependency(dependency, ctx);
+  } else if (dependency.type === DependencyType.static) {
+    validateStaticDependency(dependency, ctx);
   }
 
-  validateCommonDependencyRules(graph, dependency);
+  validateCommonDependencyRules(dependency, ctx);
 }
 
 function validateCommonDependencyRules(
-  graph: ProjectGraph,
-  d: ProjectGraphDependencyWithFile
+  d: RawProjectGraphDependency,
+  { externalNodes, projects, fileMap }: CreateDependenciesContext
 ) {
-  if (!graph.nodes[d.source] && !graph.externalNodes[d.source]) {
+  if (!projects[d.source] && !externalNodes[d.source]) {
     throw new Error(`Source project does not exist: ${d.source}`);
   }
   if (
-    !graph.nodes[d.target] &&
-    !graph.externalNodes[d.target] &&
-    !d.sourceFile
+    !projects[d.target] &&
+    !externalNodes[d.target] &&
+    !('sourceFile' in d && d.sourceFile)
   ) {
     throw new Error(`Target project does not exist: ${d.target}`);
   }
-  if (graph.externalNodes[d.source] && graph.nodes[d.target]) {
+  if (externalNodes[d.source] && projects[d.target]) {
     throw new Error(`External projects can't depend on internal projects`);
+  }
+  if ('sourceFile' in d && d.sourceFile) {
+    // Throws if source file is not a valid file within the source project.
+    getFileData(d.source, d.sourceFile, projects, fileMap);
   }
 }
 
 function validateImplicitDependency(
-  graph: ProjectGraph,
-  d: ProjectGraphDependencyWithFile
+  d: ImplicitDependency,
+  { externalNodes }: CreateDependenciesContext
 ) {
-  if (graph.externalNodes[d.source]) {
+  if (externalNodes[d.source]) {
     throw new Error(`External projects can't have "implicit" dependencies`);
   }
 }
 
 function validateDynamicDependency(
-  graph: ProjectGraph,
-  d: ProjectGraphDependencyWithFile
+  d: DynamicDependency,
+  { externalNodes }: CreateDependenciesContext
 ) {
-  if (graph.externalNodes[d.source]) {
+  if (externalNodes[d.source]) {
     throw new Error(`External projects can't have "dynamic" dependencies`);
   }
   // dynamic dependency is always bound to a file
@@ -454,12 +518,31 @@ function validateDynamicDependency(
 }
 
 function validateStaticDependency(
-  graph: ProjectGraph,
-  d: ProjectGraphDependencyWithFile
+  d: StaticDependency,
+  { projects }: CreateDependenciesContext
 ) {
   // internal nodes must provide sourceProjectFile when creating static dependency
   // externalNodes do not have sourceProjectFile
-  if (graph.nodes[d.source] && !d.sourceFile) {
+  if (projects[d.source] && !d.sourceFile) {
     throw new Error(`Source project file is required`);
   }
+}
+
+function getFileData(
+  source: string,
+  sourceFile: string,
+  projects: Record<string, ProjectGraphProjectNode | ProjectConfiguration>,
+  fileMap: ProjectFileMap
+) {
+  const sourceProject = projects[source];
+  if (!sourceProject) {
+    throw new Error(`Source project is not a project node: ${sourceProject}`);
+  }
+  const fileData = (fileMap[source] || []).find((f) => f.file === sourceFile);
+  if (!fileData) {
+    throw new Error(
+      `Source project ${source} does not have a file: ${sourceFile}`
+    );
+  }
+  return fileData;
 }

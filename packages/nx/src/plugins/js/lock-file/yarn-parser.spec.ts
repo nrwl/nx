@@ -9,6 +9,7 @@ import { vol } from 'memfs';
 import { ProjectGraph } from '../../../config/project-graph';
 import { PackageJson } from '../../../utils/package-json';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 jest.mock('fs', () => {
   const memFs = require('memfs').fs;
@@ -188,15 +189,23 @@ describe('yarn LockFile utility', () => {
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       graph = builder.getUpdatedProjectGraph();
@@ -498,15 +507,23 @@ describe('yarn LockFile utility', () => {
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -557,15 +574,23 @@ describe('yarn LockFile utility', () => {
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -688,15 +713,23 @@ describe('yarn LockFile utility', () => {
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -757,15 +790,23 @@ __metadata:
           dependencies: {},
           externalNodes,
         };
-        const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+        const ctx: CreateDependenciesContext = {
+          projects: {},
+          externalNodes,
+          fileMap: {},
+          filesToProcess: {},
+          nxJsonConfiguration: null,
+          workspaceRoot: '/virtual',
+        };
+        const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
         const builder = new ProjectGraphBuilder(pg);
         for (const dep of dependencies) {
           builder.addDependency(
             dep.source,
             dep.target,
-            dep.dependencyType,
-            dep.sourceFile
+            dep.type,
+            'sourceFile' in dep ? dep.sourceFile : null
           );
         }
         const graph = builder.getUpdatedProjectGraph();
@@ -1223,15 +1264,23 @@ nx-cloud@latest:
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -1424,15 +1473,23 @@ nx-cloud@latest:
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -1473,15 +1530,23 @@ nx-cloud@latest:
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -1608,15 +1673,23 @@ type-fest@^0.20.2:
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -1713,15 +1786,23 @@ __metadata:
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -1828,15 +1909,23 @@ __metadata:
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -2057,15 +2146,23 @@ __metadata:
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -2436,15 +2533,23 @@ __metadata:
         dependencies: {},
         externalNodes,
       };
-      const dependencies = getYarnLockfileDependencies(lockFile, hash, pg);
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
 
       const builder = new ProjectGraphBuilder(pg);
       for (const dep of dependencies) {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
