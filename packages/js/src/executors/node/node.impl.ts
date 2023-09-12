@@ -45,10 +45,7 @@ export async function* nodeExecutor(
 ) {
   process.env.NODE_ENV ??= context?.configurationName ?? 'development';
   const project = context.projectGraph.nodes[context.projectName];
-  const buildTarget = parseTargetString(
-    options.buildTarget,
-    context.projectGraph
-  );
+  const buildTarget = parseTargetString(options.buildTarget, context);
 
   if (!project.data.targets[buildTarget.target]) {
     throw new Error(
@@ -313,7 +310,7 @@ function calculateResolveMappings(
   context: ExecutorContext,
   options: NodeExecutorOptions
 ) {
-  const parsed = parseTargetString(options.buildTarget, context.projectGraph);
+  const parsed = parseTargetString(options.buildTarget, context);
   const { dependencies } = calculateProjectBuildableDependencies(
     context.taskGraph,
     context.projectGraph,
@@ -336,7 +333,7 @@ function runWaitUntilTargets(
 ): Promise<{ success: boolean }[]> {
   return Promise.all(
     options.waitUntilTargets.map(async (waitUntilTarget) => {
-      const target = parseTargetString(waitUntilTarget, context.projectGraph);
+      const target = parseTargetString(waitUntilTarget, context);
       const output = await runExecutor(target, {}, context);
       return new Promise<{ success: boolean }>(async (resolve) => {
         let event = await output.next();
