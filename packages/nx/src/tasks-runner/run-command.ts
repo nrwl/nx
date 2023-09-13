@@ -32,7 +32,6 @@ import {
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { fileHasher } from '../hasher/file-hasher';
 import { getProjectFileMap } from '../project-graph/build-project-graph';
 import { performance } from 'perf_hooks';
 
@@ -241,8 +240,7 @@ export async function invokeTasksRunner({
       allWorkspaceFiles,
       projectGraph,
       nxJson,
-      runnerOptions,
-      fileHasher
+      runnerOptions
     );
   }
 

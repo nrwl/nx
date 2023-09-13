@@ -8,7 +8,6 @@ import {
   Hash,
   InProcessTaskHasher,
 } from './task-hasher';
-import { fileHasher } from './file-hasher';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 
 jest.mock('../utils/workspace-root', () => {
@@ -114,8 +113,7 @@ describe('TaskHasher', () => {
         {} as any,
         {
           runtimeCacheInputs: ['echo runtime456'],
-        },
-        fileHasher
+        }
       );
 
       const hash = await hasher.hashTask(
@@ -178,8 +176,7 @@ describe('TaskHasher', () => {
         },
       },
       {} as any,
-      {},
-      fileHasher
+      {}
     );
 
     const hash = await hasher.hashTask(
@@ -261,8 +258,7 @@ describe('TaskHasher', () => {
           prod: ['!{projectRoot}/**/*.spec.ts'],
         },
       } as any,
-      {},
-      fileHasher
+      {}
     );
 
     const hash = await hasher.hashTask(
@@ -334,8 +330,7 @@ describe('TaskHasher', () => {
           prod: ['!{projectRoot}/**/*.spec.ts'],
         },
       } as any,
-      {},
-      fileHasher
+      {}
     );
 
     const taskGraph = {
@@ -437,8 +432,7 @@ describe('TaskHasher', () => {
               prod: ['!{projectRoot}/**/*.spec.ts'],
             },
           } as any,
-          {},
-          fileHasher
+          {}
         );
 
         const taskGraph = {
@@ -535,8 +529,7 @@ describe('TaskHasher', () => {
           },
         },
       } as any,
-      {},
-      fileHasher
+      {}
     );
 
     const hash = await hasher.hashTask(
@@ -594,8 +587,7 @@ describe('TaskHasher', () => {
       {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
         selectivelyHashTsConfig: true,
-      },
-      fileHasher
+      }
     );
 
     const hash = await hasher.hashTask(
@@ -654,8 +646,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
-      {},
-      fileHasher
+      {}
     );
 
     const taskGraph = {
@@ -725,8 +716,7 @@ describe('TaskHasher', () => {
       {} as any,
       {
         runtimeCacheInputs: ['boom'],
-      },
-      fileHasher
+      }
     );
 
     try {
@@ -794,8 +784,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
-      {},
-      fileHasher
+      {}
     );
 
     const hash = await hasher.hashTask(
@@ -859,8 +848,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
-      {},
-      fileHasher
+      {}
     );
 
     const hash = await hasher.hashTask(
@@ -915,8 +903,7 @@ describe('TaskHasher', () => {
           dependencies: {},
         },
         {} as any,
-        {},
-        fileHasher
+        {}
       );
 
       const hash = await hasher.hashTask(
@@ -999,8 +986,7 @@ describe('TaskHasher', () => {
           },
 
           {} as any,
-          {},
-          fileHasher
+          {}
         );
       }
 
@@ -1142,8 +1128,7 @@ describe('TaskHasher', () => {
           },
         },
         {} as any,
-        {},
-        fileHasher
+        {}
       );
 
       const hash = await hasher.hashTask(
@@ -1285,8 +1270,7 @@ describe('TaskHasher', () => {
           },
 
           {} as any,
-          {},
-          fileHasher
+          {}
         );
 
       const computeTaskHash = async (hasher, appName) => {
@@ -1356,8 +1340,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
-        {},
-        fileHasher
+        {}
       );
 
       const hash = await hasher.hashTask(
@@ -1437,8 +1420,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
-        {},
-        fileHasher
+        {}
       );
 
       const hash = await hasher.hashTask(
@@ -1516,8 +1498,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
-        {},
-        fileHasher
+        {}
       );
 
       const hash = await hasher.hashTask(
@@ -1634,8 +1615,7 @@ describe('TaskHasher', () => {
             },
           },
         } as any,
-        {},
-        fileHasher
+        {}
       );
 
       await tempFs.createFiles({
@@ -1769,8 +1749,7 @@ describe('TaskHasher', () => {
             },
           },
         } as any,
-        {},
-        fileHasher
+        {}
       );
 
       await tempFs.createFiles({
