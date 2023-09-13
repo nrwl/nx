@@ -70,7 +70,7 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
 
   let buildOptions;
   try {
-    const target = parseTargetString(options.buildTarget, context.projectGraph);
+    const target = parseTargetString(options.buildTarget, context);
     buildOptions = readTargetOptions(target, context);
   } catch (e) {
     throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
