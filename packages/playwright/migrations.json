@@ -1,0 +1,18 @@
+{
+  "generators": {},
+  "packageJsonUpdates": {
+    "16.8.2": {
+      "version": "16.8.2-beta.0",
+      "packages": {
+        "playwright": {
+          "version": "^1.38.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-plugin-playwright": {
+          "version": "^0.16.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

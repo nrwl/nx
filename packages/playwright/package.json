@@ -46,6 +46,9 @@
   },
   "executors": "./executors.json",
   "generators": "./generators.json",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
   "exports": {
     ".": "./index.js",
     "./package.json": "./package.json",
