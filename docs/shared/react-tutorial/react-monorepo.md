@@ -625,6 +625,28 @@ More conveniently, we can also run tasks in parallel using the following syntax:
 nx run-many -t test
 ```
 
+### Caching
+
+One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
+
+Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
+
+```{% command="nx run-many -t test lint e2e" path="react-monorepo" %}
+
+    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+    ✔  nx run react-store:lint  [existing outputs match the cache, left as is]
+    ✔  nx run react-store:test  [existing outputs match the cache, left as is]
+    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
+
+ ——————————————————————————————————————————————————————
+
+ >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+
+   Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
+```
+
+Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+
 ### Testing Affected Projects
 
 Commit your changes to git.
@@ -804,28 +826,6 @@ With the `deploy` tasks defined, you can deploy a single application with `nx de
 ```shell
 nx affected -t deploy
 ```
-
-### Caching
-
-One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
-
-Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
-
-```{% command="nx run-many -t test lint e2e" path="react-monorepo" %}
-
-    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run react-store:lint  [existing outputs match the cache, left as is]
-    ✔  nx run react-store:test  [existing outputs match the cache, left as is]
-    ✔  nx run e2e:e2e  [existing outputs match the cache, left as is]
-
- ——————————————————————————————————————————————————————
-
- >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
-
-   Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
-```
-
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
 
 ## Imposing Constraints with Module Boundary Rules
 
@@ -1027,8 +1027,8 @@ Here's some more things you can dive into next:
 - Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
 - [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
-- [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)]
-- [Speed up CI: Share your cache](/core-features/remote-cache)]
+- [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
+- [Speed up CI: Share your cache](/core-features/remote-cache)
 - [Speed up CI: Distribute your tasks across machines](/core-features/distribute-task-execution)
 
 Also, make sure you
