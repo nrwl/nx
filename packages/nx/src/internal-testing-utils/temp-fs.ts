@@ -10,8 +10,9 @@ import {
   rmSync,
   unlinkSync,
 } from 'fs-extra';
-import { joinPathFragments } from '../path';
+import { joinPathFragments } from '../utils/path';
 import { appendFileSync, existsSync, renameSync, writeFileSync } from 'fs';
+import { setWorkspaceRoot, workspaceRoot } from '../utils/workspace-root';
 
 type NestedFiles = {
   [fileName: string]: string;
@@ -19,10 +20,15 @@ type NestedFiles = {
 
 export class TempFs {
   readonly tempDir: string;
+
+  private previousWorkspaceRoot: string;
+
   constructor(private dirname: string, overrideWorkspaceRoot = true) {
     this.tempDir = realpathSync(mkdtempSync(join(tmpdir(), this.dirname)));
+    this.previousWorkspaceRoot = workspaceRoot;
+
     if (overrideWorkspaceRoot) {
-      process.env.NX_WORKSPACE_ROOT_PATH = this.tempDir;
+      setWorkspaceRoot(this.tempDir);
     }
   }
 
@@ -76,6 +82,7 @@ export class TempFs {
 
   cleanup() {
     rmSync(this.tempDir, { recursive: true });
+    setWorkspaceRoot(this.previousWorkspaceRoot);
   }
 
   reset() {

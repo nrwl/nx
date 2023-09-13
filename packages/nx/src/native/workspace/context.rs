@@ -166,11 +166,11 @@ impl WorkspaceContext {
     }
 
     #[napi]
-    pub fn get_project_configuration_files(
+    pub fn glob(
         &self,
         globs: Vec<String>,
     ) -> napi::Result<Vec<String>, WorkspaceErrors> {
-        config_files::get_project_configuration_files(
+        config_files::glob_files(
             globs,
             self.files_worker
                 .get_files()

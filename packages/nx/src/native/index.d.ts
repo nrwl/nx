@@ -113,7 +113,7 @@ export class WorkspaceContext {
   workspaceRoot: string
   constructor(workspaceRoot: string)
   getWorkspaceFiles(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): NxWorkspaceFiles
-  getProjectConfigurationFiles(globs: Array<string>): Array<string>
+  glob(globs: Array<string>): Array<string>
   getProjectConfigurations(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): ConfigurationParserResult
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   allFileData(): Array<FileData>

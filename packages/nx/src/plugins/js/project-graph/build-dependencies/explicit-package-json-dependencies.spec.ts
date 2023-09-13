@@ -1,4 +1,4 @@
-import { TempFs } from '../../../../utils/testing/temp-fs';
+import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 const tempFs = new TempFs('explicit-package-json');
 
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';

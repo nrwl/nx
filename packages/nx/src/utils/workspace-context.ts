@@ -25,12 +25,12 @@ export function getNxWorkspaceFilesFromContext(
   return workspaceContext.getWorkspaceFiles(globs, parseConfigurations);
 }
 
-export function getProjectConfigurationFilesFromContext(
+export function globWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[]
 ) {
   ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getProjectConfigurationFiles(globs);
+  return workspaceContext.glob(globs);
 }
 
 export function getProjectConfigurationsFromContext(

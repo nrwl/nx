@@ -1,6 +1,6 @@
 import * as memfs from 'memfs';
 
-import '../../../utils/testing/mock-fs';
+import '../../../internal-testing-utils/mock-fs';
 
 import { PackageJson } from '../../../utils/package-json';
 

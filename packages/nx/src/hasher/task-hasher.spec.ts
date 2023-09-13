@@ -1,20 +1,14 @@
 // This must come before the Hasher import
-import { TempFs } from '../utils/testing/temp-fs';
+import { TempFs } from '../internal-testing-utils/temp-fs';
 let tempFs = new TempFs('TaskHasher');
+
 import { DependencyType } from '../config/project-graph';
 import {
   expandNamedInput,
   filterUsingGlobPatterns,
-  Hash,
   InProcessTaskHasher,
 } from './task-hasher';
-import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
-
-jest.mock('../utils/workspace-root', () => {
-  return {
-    workspaceRoot: tempFs.tempDir,
-  };
-});
+import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('TaskHasher', () => {
   const packageJson = {
@@ -51,6 +45,10 @@ describe('TaskHasher', () => {
 
   afterEach(() => {
     tempFs.reset();
+  });
+
+  afterAll(() => {
+    tempFs.cleanup();
   });
 
   it('should create task hash', () =>

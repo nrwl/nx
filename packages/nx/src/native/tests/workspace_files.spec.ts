@@ -1,5 +1,5 @@
 import { WorkspaceContext } from '../index';
-import { TempFs } from '../../utils/testing/temp-fs';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { dirname, join } from 'path';
 import { readJsonFile } from '../../utils/fileutils';

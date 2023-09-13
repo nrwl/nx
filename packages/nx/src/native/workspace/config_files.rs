@@ -7,7 +7,7 @@ use rayon::prelude::*;
 use std::path::PathBuf;
 
 /// Get workspace config files based on provided globs
-pub(super) fn get_project_configuration_files(
+pub(super) fn glob_files(
     globs: Vec<String>,
     files: Option<&[(PathBuf, String)]>,
 ) -> napi::Result<Vec<String>, WorkspaceErrors> {
@@ -34,7 +34,7 @@ where
     ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
 {
     let config_paths =
-        get_project_configuration_files(globs, files).map_err(anyhow::Error::from)?;
+        glob_files(globs, files).map_err(anyhow::Error::from)?;
 
     parse_configurations(config_paths)
 }

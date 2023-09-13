@@ -119,6 +119,11 @@ export {
 /**
  * @category Generators
  */
+export { glob } from './generators/utils/glob';
+
+/**
+ * @category Generators
+ */
 export {
   readWorkspaceConfiguration,
   updateWorkspaceConfiguration,
@@ -127,6 +132,9 @@ export {
   getWorkspacePath,
 } from './generators/utils/deprecated';
 
+/**
+ * @category Generators
+ */
 export {
   readNxJson,
   updateNxJson,
@@ -164,7 +172,7 @@ export {
 } from './project-graph/project-graph-builder';
 
 /**
- * @category Utils
+ * @category Generators
  */
 export { readJson, writeJson, updateJson } from './generators/utils/json';
 

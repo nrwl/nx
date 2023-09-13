@@ -1,5 +1,5 @@
 import { splitArgsIntoNxArgsAndOverrides } from './command-line-utils';
-import { withEnvironmentVariables as withEnvironment } from '../../internal-testing-utils/with-environment';
+import { withEnvironmentVariables as withEnvironment } from '../internal-testing-utils/with-environment';
 
 jest.mock('../project-graph/file-utils');
 

@@ -28,7 +28,7 @@ import {
 } from '../../utils/nx-plugin';
 import { CreateProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
 import {
-  getProjectConfigurationFilesFromContext,
+  globWithWorkspaceContext,
   getProjectConfigurationsFromContext,
   getNxWorkspaceFilesFromContext,
 } from '../../utils/workspace-context';
@@ -201,16 +201,13 @@ export async function retrieveProjectConfigurationPaths(
     root,
     await loadNxPlugins(nxJson?.plugins ?? [], getNxRequirePaths(root), root)
   );
-  return getProjectConfigurationFilesFromContext(root, projectGlobPatterns);
+  return globWithWorkspaceContext(root, projectGlobPatterns);
 }
 
 export function retrieveProjectConfigurationPathsWithoutPluginInference(
   root: string
 ): string[] {
-  return getProjectConfigurationFilesFromContext(
-    root,
-    configurationGlobsWithoutPlugins(root)
-  );
+  return globWithWorkspaceContext(root, configurationGlobsWithoutPlugins(root));
 }
 
 const projectsWithoutPluginCache = new Map<
