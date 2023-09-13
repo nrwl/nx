@@ -6,7 +6,12 @@ import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
+import type {
+  ExecutorContext,
+  ProjectGraph,
+  ProjectGraphProjectNode,
+  Target,
+} from '@nx/devkit';
 
 const baseNXEnvironmentVariables = [
   'NX_BASE',
@@ -83,7 +88,7 @@ function getNxContext(
   targetName: string;
   configurationName?: string;
 } {
-  const { parseTargetString } = require('@nx/devkit');
+  const { parseTargetString, workspaceRoot } = require('@nx/devkit');
   const projectNode = graph.nodes[target.project];
   const targetConfig = projectNode.data.targets[target.target];
   const targetOptions = targetConfig.options;
@@ -94,17 +99,25 @@ function getNxContext(
     );
   }
 
+  const partialExecutorContext: Partial<ExecutorContext> = {
+    projectName: target.project,
+    targetName: target.target,
+    projectGraph: graph,
+    configurationName: target.configuration,
+    root: workspaceRoot,
+  };
+
   if (targetOptions.devServerTarget) {
     // Executors such as @nx/cypress:cypress define the devServerTarget option.
     return getNxContext(
       graph,
-      parseTargetString(targetOptions.devServerTarget, graph)
+      parseTargetString(targetOptions.devServerTarget, partialExecutorContext)
     );
   } else if (targetOptions.buildTarget) {
     // Executors such as @nx/next:server or @nx/next:export define the buildTarget option.
     return getNxContext(
       graph,
-      parseTargetString(targetOptions.buildTarget, graph)
+      parseTargetString(targetOptions.buildTarget, partialExecutorContext)
     );
   }
 

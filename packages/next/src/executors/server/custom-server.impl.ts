@@ -33,7 +33,7 @@ async function* runCustomServer(
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
 
   const customServerBuild = await runExecutor(
-    parseTargetString(options.customServerTarget, context.projectGraph),
+    parseTargetString(options.customServerTarget, context),
     {
       watch: options.dev ? true : false,
     },
