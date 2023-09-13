@@ -62,6 +62,16 @@ interface AngularArguments extends BaseArguments {
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
+interface VueArguments extends BaseArguments {
+  stack: 'vue';
+  workspaceType: 'standalone' | 'integrated';
+  appName: string;
+  // framework: 'none' | 'nuxt';
+  style: string;
+  // nextAppDir: boolean;
+  e2eTestRunner: 'none' | 'cypress' | 'playwright';
+}
+
 interface NodeArguments extends BaseArguments {
   stack: 'node';
   workspaceType: 'standalone' | 'integrated';
@@ -78,6 +88,7 @@ type Arguments =
   | NoneArguments
   | ReactArguments
   | AngularArguments
+  | VueArguments
   | NodeArguments
   | UnknownStackArguments;
 
@@ -347,7 +358,7 @@ async function determineFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'none' | 'react' | 'angular' | 'node' | 'unknown'> {
+): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -360,7 +371,10 @@ async function determineStack(
       case Preset.NextJs:
       case Preset.NextJsStandalone:
         return 'react';
-
+      case Preset.Vue:
+      case Preset.VueStandalone:
+      case Preset.VueMonorepo:
+        return 'vue';
       case Preset.Nest:
       case Preset.NodeStandalone:
       case Preset.Express:
@@ -379,7 +393,7 @@ async function determineStack(
   }
 
   const { stack } = await enquirer.prompt<{
-    stack: 'none' | 'react' | 'angular' | 'node';
+    stack: 'none' | 'react' | 'angular' | 'node' | 'vue';
   }>([
     {
       name: 'stack',
@@ -393,6 +407,10 @@ async function determineStack(
         {
           name: `react`,
           message: `React:         Configures a React application with your framework of choice.`,
+        },
+        {
+          name: `vue`,
+          message: `Vue:           Configures a Vue application with modern tooling.`,
         },
         {
           name: `angular`,
@@ -419,6 +437,8 @@ async function determinePresetOptions(
       return determineReactOptions(parsedArgs);
     case 'angular':
       return determineAngularOptions(parsedArgs);
+    case 'vue':
+      return determineVueOptions(parsedArgs);
     case 'node':
       return determineNodeOptions(parsedArgs);
     default:
@@ -587,6 +607,74 @@ async function determineReactOptions(
   }
 
   return { preset, style, appName, bundler, nextAppDir, e2eTestRunner };
+}
+
+async function determineVueOptions(
+  parsedArgs: yargs.Arguments<VueArguments>
+): Promise<Partial<Arguments>> {
+  let preset: Preset;
+  let style: undefined | string = undefined;
+  let appName: string;
+  let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
+    preset = parsedArgs.preset;
+    if (preset === Preset.VueStandalone || preset === Preset.VueMonorepo) {
+      appName = parsedArgs.appName ?? parsedArgs.name;
+    } else {
+      appName = await determineAppName(parsedArgs);
+    }
+  } else {
+    const workspaceType = await determineStandaloneOrMonorepo();
+
+    if (workspaceType === 'standalone') {
+      appName = parsedArgs.name;
+    } else {
+      appName = await determineAppName(parsedArgs);
+    }
+
+    if (workspaceType === 'standalone') {
+      preset = Preset.VueStandalone;
+    } else {
+      preset = Preset.VueMonorepo;
+    }
+  }
+
+  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+
+  if (parsedArgs.style) {
+    style = parsedArgs.style;
+  } else if (preset === Preset.VueMonorepo || preset === Preset.VueStandalone) {
+    const reply = await enquirer.prompt<{ style: string }>([
+      {
+        name: 'style',
+        message: `Default stylesheet format`,
+        initial: 'css' as any,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'css',
+            message: 'CSS',
+          },
+          {
+            name: 'scss',
+            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+          },
+          {
+            name: 'less',
+            message: 'LESS              [ http://lesscss.org     ]',
+          },
+          {
+            name: 'none',
+            message: 'None',
+          },
+        ],
+      },
+    ]);
+    style = reply.style;
+  }
+
+  return { preset, style, appName, e2eTestRunner };
 }
 
 async function determineAngularOptions(
@@ -847,7 +935,9 @@ async function determineStandaloneOrMonorepo(): Promise<
 }
 
 async function determineAppName(
-  parsedArgs: yargs.Arguments<ReactArguments | AngularArguments | NodeArguments>
+  parsedArgs: yargs.Arguments<
+    ReactArguments | AngularArguments | NodeArguments | VueArguments
+  >
 ): Promise<string> {
   if (parsedArgs.appName) return parsedArgs.appName;
 
