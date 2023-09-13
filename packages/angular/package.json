@@ -50,7 +50,7 @@
     "ignore": "^5.0.4",
     "magic-string": "~0.26.2",
     "minimatch": "3.0.5",
-    "semver": "7.3.4",
+    "semver": "7.5.4",
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
     "webpack": "^5.75.0",

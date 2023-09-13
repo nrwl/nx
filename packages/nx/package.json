@@ -55,7 +55,7 @@
     "minimatch": "3.0.5",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
-    "semver": "7.3.4",
+    "semver": "7.5.4",
     "string-width": "^4.2.3",
     "strong-log-transformer": "^2.1.0",
     "tar-stream": "~2.2.0",

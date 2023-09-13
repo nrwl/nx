@@ -40,7 +40,7 @@
     "@nrwl/workspace": "file:../workspace",
     "@phenomnomnominal/tsquery": "4.1.1",
     "dotenv": "~10.0.0",
-    "semver": "7.3.4",
+    "semver": "7.5.4",
     "detect-port": "^1.5.1"
   },
   "peerDependencies": {
