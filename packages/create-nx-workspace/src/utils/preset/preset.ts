@@ -19,7 +19,6 @@ export enum Preset {
   Express = 'express',
   React = 'react',
   Angular = 'angular',
-  Vue = 'vue',
   NodeStandalone = 'node-standalone',
   NodeMonorepo = 'node-monorepo',
   TsStandalone = 'ts-standalone',

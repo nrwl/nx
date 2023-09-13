@@ -370,7 +370,6 @@ async function determineStack(
       case Preset.NextJs:
       case Preset.NextJsStandalone:
         return 'react';
-      case Preset.Vue:
       case Preset.VueStandalone:
       case Preset.VueMonorepo:
         return 'vue';
@@ -616,21 +615,10 @@ async function determineVueOptions(
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
 
-  if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
+  if (parsedArgs.preset) {
     preset = parsedArgs.preset;
-    if (preset === Preset.VueStandalone || preset === Preset.VueMonorepo) {
-      appName = parsedArgs.appName ?? parsedArgs.name;
-    } else {
-      appName = await determineAppName(parsedArgs);
-    }
   } else {
     const workspaceType = await determineStandaloneOrMonorepo();
-
-    if (workspaceType === 'standalone') {
-      appName = parsedArgs.name;
-    } else {
-      appName = await determineAppName(parsedArgs);
-    }
 
     if (workspaceType === 'standalone') {
       preset = Preset.VueStandalone;
@@ -639,11 +627,17 @@ async function determineVueOptions(
     }
   }
 
+  if (preset === Preset.VueStandalone) {
+    appName = parsedArgs.appName ?? parsedArgs.name;
+  } else {
+    appName = await determineAppName(parsedArgs);
+  }
+
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   if (parsedArgs.style) {
     style = parsedArgs.style;
-  } else if (preset === Preset.VueMonorepo || preset === Preset.VueStandalone) {
+  } else {
     const reply = await enquirer.prompt<{ style: string }>([
       {
         name: 'style',
