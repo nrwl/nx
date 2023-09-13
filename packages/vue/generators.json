@@ -28,6 +28,11 @@
       "aliases": ["c"],
       "x-type": "component",
       "description": "Create a Vue component."
+    },
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/setup-tailwind",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Set up Tailwind configuration for a project."
     }
   }
 }
