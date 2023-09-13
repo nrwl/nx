@@ -8,6 +8,8 @@ export default function AiDocs(): JSX.Element {
   return (
     <>
       <NextSeo
+        title="Nx AI Chat (Alpha)"
+        description="AI chat powered by Nx docs."
         noindex={true}
         robotsProps={{
           nosnippet: true,
