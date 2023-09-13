@@ -350,7 +350,6 @@ describe('@nx/vite:configuration', () => {
       const { Confirm } = require('enquirer');
       const confirmSpy = jest.spyOn(Confirm.prototype, 'run');
       confirmSpy.mockResolvedValue(true);
-      expect.assertions(2);
 
       mockReactLibNonBuildableVitestRunnerGenerator(tree);
 
