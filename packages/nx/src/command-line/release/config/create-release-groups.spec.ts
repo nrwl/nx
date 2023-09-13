@@ -1,4 +1,4 @@
-import { ProjectGraph } from '../../../devkit-exports';
+import { ProjectGraph } from '../../../config/project-graph';
 import { createReleaseGroups } from './create-release-groups';
 
 describe('create-release-groups', () => {

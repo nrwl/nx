@@ -1,4 +1,4 @@
-import { NxJsonConfiguration } from '../../../devkit-exports';
+import { NxJsonConfiguration } from '../../../config/nx-json';
 
 // Apply default configuration to any optional user configuration
 export function createNxReleaseConfig(

@@ -40,6 +40,9 @@ import {
 } from './config/create-release-groups';
 import { printDiff } from './utils/print-diff';
 
+// Reexport for use in plugin release-version generator implementations
+export { deriveNewSemverVersion } from './utils/semver';
+
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
   projects: ProjectGraphProjectNode[];

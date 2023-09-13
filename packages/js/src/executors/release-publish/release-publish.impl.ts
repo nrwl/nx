@@ -54,7 +54,10 @@ export default async function runExecutor(
     });
 
     const stdoutData = JSON.parse(output.toString());
-    logTar(stdoutData);
+
+    // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
+    const normalizedStdoutData = stdoutData[context.projectName!] ?? stdoutData;
+    logTar(normalizedStdoutData);
 
     console.log(`Published to ${registry} with tag "${tag}"`);
 
@@ -70,7 +73,13 @@ export default async function runExecutor(
       const currentVersion = projectPackageJson.version;
 
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
-      if (stdoutData.error?.code === 'EPUBLISHCONFLICT') {
+      if (
+        stdoutData.error?.code === 'EPUBLISHCONFLICT' ||
+        (stdoutData.error?.code === 'E403' &&
+          stdoutData.error?.body?.error?.includes(
+            'You cannot publish over the previously published versions'
+          ))
+      ) {
         // If package and project name match, make it terser
         let packageTxt =
           name === context.projectName

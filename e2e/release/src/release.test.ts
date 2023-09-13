@@ -1,7 +1,10 @@
+import { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
+  killProcessAndPorts,
   newProject,
   runCLI,
+  runCommandUntil,
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
@@ -40,7 +43,9 @@ describe('nx release', () => {
   let pkg3: string;
 
   beforeAll(() => {
-    newProject();
+    newProject({
+      unsetProjectNameAndRootFormat: false,
+    });
 
     pkg1 = uniq('my-pkg-1');
     runCLI(`generate @nx/workspace:npm-package ${pkg1}`);
@@ -52,7 +57,7 @@ describe('nx release', () => {
     runCLI(`generate @nx/workspace:npm-package ${pkg3}`);
 
     // Update pkg2 to depend on pkg1
-    updateJson(`libs/${pkg2}/package.json`, (json) => {
+    updateJson(`${pkg2}/package.json`, (json) => {
       json.dependencies ??= {};
       json.dependencies[`@proj/${pkg1}`] = '0.0.0';
       return json;
@@ -74,17 +79,17 @@ describe('nx release', () => {
     ).toEqual(3);
     expect(
       versionOutput.match(
-        /Reading data for package "@proj\/my-pkg-\d*" from libs\/my-pkg-\d*\/package.json/g
+        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
     expect(
       versionOutput.match(
-        /Resolved the current version as 0.0.0 from libs\/my-pkg-\d*\/package.json/g
+        /Resolved the current version as 0.0.0 from my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
     expect(
       versionOutput.match(
-        /New version 999.9.9 written to libs\/my-pkg-\d*\/package.json/g
+        /New version 999.9.9 written to my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
 
@@ -95,7 +100,10 @@ describe('nx release', () => {
       ).length
     ).toEqual(1);
 
-    const registryUrl = execSync('npm config get registry').toString().trim();
+    // This is the verdaccio instance that the e2e tests themselves are working from
+    const e2eRegistryUrl = execSync('npm config get registry')
+      .toString()
+      .trim();
 
     // Thanks to the custom serializer above, the publish output should be deterministic
     const publishOutput = runCLI(`release publish`);
@@ -126,7 +134,7 @@ describe('nx release', () => {
       {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       {project-name}: total files:   3
       {project-name}:
-      {project-name}: Published to ${registryUrl} with tag "latest"
+      {project-name}: Published to ${e2eRegistryUrl} with tag "latest"
 
       > nx run {project-name}:release-publish
 
@@ -145,7 +153,7 @@ describe('nx release', () => {
       {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       {project-name}: total files:   3
       {project-name}:
-      {project-name}: Published to ${registryUrl} with tag "latest"
+      {project-name}: Published to ${e2eRegistryUrl} with tag "latest"
 
       > nx run {project-name}:release-publish
 
@@ -164,7 +172,7 @@ describe('nx release', () => {
       {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       {project-name}: total files:   3
       {project-name}:
-      {project-name}: Published to ${registryUrl} with tag "latest"
+      {project-name}: Published to ${e2eRegistryUrl} with tag "latest"
 
 
 
@@ -173,5 +181,201 @@ describe('nx release', () => {
 
 
     `);
+
+    expect(
+      execSync(`npm view @proj/${pkg1} version`).toString().trim()
+    ).toEqual('999.9.9');
+    expect(
+      execSync(`npm view @proj/${pkg2} version`).toString().trim()
+    ).toEqual('999.9.9');
+    expect(
+      execSync(`npm view @proj/${pkg3} version`).toString().trim()
+    ).toEqual('999.9.9');
+
+    // Add custom nx release config to control version resolution
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          default: {
+            // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
+            projects: ['*', '!@proj/source'],
+            version: {
+              generator: '@nx/js:release-version',
+              generatorOptions: {
+                // Resolve the latest version from the custom registry instance, therefore finding the previously published versions
+                currentVersionResolver: 'registry',
+                currentVersionResolverMetadata: {
+                  registry: e2eRegistryUrl,
+                  tag: 'latest',
+                },
+              },
+            },
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    // Run additional custom verdaccio instance to publish the packages to
+    runCLI(`generate setup-verdaccio`);
+
+    const verdaccioPort = 7190;
+    const customRegistryUrl = `http://localhost:${verdaccioPort}`;
+    const process = await runCommandUntil(
+      `local-registry @proj/source --port=${verdaccioPort}`,
+      (output) => output.includes(`warn --- http address`)
+    );
+
+    const versionOutput2 = runCLI(`release version major`); // version using semver keyword this time
+
+    expect(
+      versionOutput2.match(/Running release version for project: my-pkg-\d*/g)
+        .length
+    ).toEqual(3);
+    expect(
+      versionOutput2.match(
+        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
+      ).length
+    ).toEqual(3);
+
+    // It should resolve the current version from the registry once...
+    expect(
+      versionOutput2.match(
+        new RegExp(
+          `Resolved the current version as 999.9.9 for tag "latest" from registry ${e2eRegistryUrl}`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    // ...and then reuse it twice
+    expect(
+      versionOutput2.match(
+        new RegExp(
+          `Using the current version 999.9.9 already resolved from the registry ${e2eRegistryUrl}`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
+    expect(
+      versionOutput2.match(
+        /New version 1000.0.0 written to my-pkg-\d*\/package.json/g
+      ).length
+    ).toEqual(3);
+
+    // Only one dependency relationship exists, so this log should only match once
+    expect(
+      versionOutput2.match(
+        /Applying new version 1000.0.0 to 1 package which depends on my-pkg-\d*/g
+      ).length
+    ).toEqual(1);
+
+    // publish to custom registry (not e2e registry), and a custom dist tag of "next"
+    const publishOutput2 = runCLI(
+      `release publish --registry=${customRegistryUrl} --tag=next`
+    );
+    expect(publishOutput2).toMatchInlineSnapshot(`
+
+      >  NX   Running target release-publish for 3 projects:
+
+      - {project-name}
+      - {project-name}
+      - {project-name}
+
+      With additional flags:
+      --registry=http://localhost:7190
+      --tag=next
+
+
+
+      > nx run {project-name}:release-publish
+
+      {project-name}: 📦  @proj/{project-name}@1000.0.0
+      {project-name}: === Tarball Contents ===
+      {project-name}: XXB  index.js
+      {project-name}: XXXB package.json
+      {project-name}: XXB  project.json
+      {project-name}: === Tarball Details ===
+      {project-name}: name:          @proj/{project-name}
+      {project-name}: version:       1000.0.0
+      {project-name}: filename:      proj-{project-name}-1000.0.0.tgz
+      {project-name}: package size: XXXB
+      {project-name}: unpacked size: XXXB
+      {project-name}: shasum:        {SHASUM}
+      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      {project-name}: total files:   3
+      {project-name}:
+      {project-name}: Published to ${customRegistryUrl} with tag "next"
+
+      > nx run {project-name}:release-publish
+
+      {project-name}: 📦  @proj/{project-name}@1000.0.0
+      {project-name}: === Tarball Contents ===
+      {project-name}: XXB  index.js
+      {project-name}: XXXB package.json
+      {project-name}: XXB  project.json
+      {project-name}: === Tarball Details ===
+      {project-name}: name:          @proj/{project-name}
+      {project-name}: version:       1000.0.0
+      {project-name}: filename:      proj-{project-name}-1000.0.0.tgz
+      {project-name}: package size: XXXB
+      {project-name}: unpacked size: XXXB
+      {project-name}: shasum:        {SHASUM}
+      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      {project-name}: total files:   3
+      {project-name}:
+      {project-name}: Published to ${customRegistryUrl} with tag "next"
+
+      > nx run {project-name}:release-publish
+
+      {project-name}: 📦  @proj/{project-name}@1000.0.0
+      {project-name}: === Tarball Contents ===
+      {project-name}: XXB  index.js
+      {project-name}: XXXB package.json
+      {project-name}: XXB  project.json
+      {project-name}: === Tarball Details ===
+      {project-name}: name:          @proj/{project-name}
+      {project-name}: version:       1000.0.0
+      {project-name}: filename:      proj-{project-name}-1000.0.0.tgz
+      {project-name}: package size: XXXB
+      {project-name}: unpacked size: XXXB
+      {project-name}: shasum:        {SHASUM}
+      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      {project-name}: total files:   3
+      {project-name}:
+      {project-name}: Published to ${customRegistryUrl} with tag "next"
+
+
+
+      >  NX   Successfully ran target release-publish for 3 projects
+
+
+
+    `);
+
+    expect(
+      execSync(
+        `npm view @proj/${pkg1}@next version --registry=${customRegistryUrl}`
+      )
+        .toString()
+        .trim()
+    ).toEqual('1000.0.0');
+    expect(
+      execSync(
+        `npm view @proj/${pkg2}@next version --registry=${customRegistryUrl}`
+      )
+        .toString()
+        .trim()
+    ).toEqual('1000.0.0');
+    expect(
+      execSync(
+        `npm view @proj/${pkg3}@next version --registry=${customRegistryUrl}`
+      )
+        .toString()
+        .trim()
+    ).toEqual('1000.0.0');
+
+    // port and process cleanup
+    await killProcessAndPorts(process.pid, verdaccioPort);
   }, 500000);
 });

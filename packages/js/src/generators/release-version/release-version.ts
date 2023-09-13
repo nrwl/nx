@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
-import { deriveNewSemverVersion } from 'nx/src/command-line/release/release';
+import { deriveNewSemverVersion } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { relative } from 'path';
@@ -54,19 +54,19 @@ export async function releaseVersionGenerator(
       console.log(color.instance.bold(projectName) + ' ' + msg);
     };
 
-    output.logSingleLine(
-      `Running release version for project: ${color.instance.bold(
-        project.name
-      )}`
-    );
-
-    if (!tree.read(packageJsonPath)) {
+    if (!tree.exists(packageJsonPath)) {
       throw new Error(
         `The project "${projectName}" does not have a package.json available at ${workspaceRelativePackageJsonPath}.
         
 To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "${projectName}" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`
       );
     }
+
+    output.logSingleLine(
+      `Running release version for project: ${color.instance.bold(
+        project.name
+      )}`
+    );
 
     const projectPackageJson = readJson(tree, packageJsonPath);
     log(
@@ -147,7 +147,7 @@ To fix this you will either need to add a package.json file at that location, or
     );
 
     writeJson(tree, packageJsonPath, {
-      ...readJson(tree, packageJsonPath),
+      ...projectPackageJson,
       version: newVersion,
     });
 
