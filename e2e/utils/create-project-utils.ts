@@ -90,6 +90,7 @@ export function newProject({
         `@nx/rollup`,
         `@nx/react`,
         `@nx/storybook`,
+        `@nx/vue`,
         `@nx/vite`,
         `@nx/web`,
         `@nx/webpack`,

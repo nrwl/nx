@@ -67,6 +67,7 @@ function createAppsAndLibsFolders(tree: Tree, options: NormalizedSchema) {
   } else if (
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.VueStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
     options.preset === Preset.TsStandalone ||
@@ -127,6 +128,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
   const filesDirName =
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.VueStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
     options.preset === Preset.TsStandalone
@@ -181,6 +183,7 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
   if (
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
+    options.preset === Preset.VueStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone
   ) {
