@@ -25,7 +25,7 @@ type ModuleFederationDevServerOptions = WebDevServerOptions & {
 };
 
 function getBuildOptions(buildTarget: string, context: ExecutorContext) {
-  const target = parseTargetString(buildTarget, context.projectGraph);
+  const target = parseTargetString(buildTarget, context);
 
   const buildOptions = readTargetOptions(target, context);
 
