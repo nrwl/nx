@@ -68,7 +68,6 @@ interface VueArguments extends BaseArguments {
   appName: string;
   // framework: 'none' | 'nuxt';
   style: string;
-  // nextAppDir: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 

@@ -87,6 +87,7 @@ describe('lib', () => {
   it('should add correct jest.config.ts and dependencies to package.json', async () => {
     await libraryGenerator(tree, { ...defaultSchema, unitTestRunner: 'jest' });
     expect(readJson(tree, '/package.json')).toMatchSnapshot();
+    expect(readJson(tree, '.eslintrc.json')).toMatchSnapshot();
     expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('my-lib/.babelrc', 'utf-8')).toMatchSnapshot();
   });
@@ -399,10 +400,10 @@ describe('lib', () => {
       });
 
       const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
-
       expect(eslintConfig.overrides[0].parserOptions.project).toEqual([
         'my-lib/tsconfig.*?.json',
       ]);
+      expect(eslintConfig.overrides[0].files).toContain('*.vue');
     });
   });
 });

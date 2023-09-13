@@ -69,6 +69,78 @@ exports[`lib should add correct jest.config.ts and dependencies to package.json 
 `;
 
 exports[`lib should add correct jest.config.ts and dependencies to package.json 2`] = `
+{
+  "ignorePatterns": [
+    "**/*",
+  ],
+  "overrides": [
+    {
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+        "*.vue",
+      ],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "allow": [],
+            "depConstraints": [
+              {
+                "onlyDependOnLibsWithTags": [
+                  "*",
+                ],
+                "sourceTag": "*",
+              },
+            ],
+            "enforceBuildableLibDependency": true,
+          },
+        ],
+      },
+    },
+    {
+      "extends": [
+        "plugin:@nx/typescript",
+      ],
+      "files": [
+        "*.ts",
+        "*.tsx",
+      ],
+      "rules": {},
+    },
+    {
+      "extends": [
+        "plugin:@nx/javascript",
+      ],
+      "files": [
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": {},
+    },
+    {
+      "env": {
+        "jest": true,
+      },
+      "files": [
+        "*.spec.ts",
+        "*.spec.tsx",
+        "*.spec.js",
+        "*.spec.jsx",
+      ],
+      "rules": {},
+    },
+  ],
+  "plugins": [
+    "@nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`lib should add correct jest.config.ts and dependencies to package.json 3`] = `
 "/* eslint-disable */
 export default {
   displayName: 'my-lib',
@@ -91,7 +163,7 @@ export default {
 "
 `;
 
-exports[`lib should add correct jest.config.ts and dependencies to package.json 3`] = `
+exports[`lib should add correct jest.config.ts and dependencies to package.json 4`] = `
 "{
   "presets": ["@nx/js/babel"]
 }
@@ -205,20 +277,7 @@ exports[`lib should generate files 1`] = `
         "*.tsx",
         "*.js",
         "*.jsx",
-      ],
-      "rules": {},
-    },
-    {
-      "files": [
-        "*.ts",
-        "*.tsx",
-      ],
-      "rules": {},
-    },
-    {
-      "files": [
-        "*.js",
-        "*.jsx",
+        "*.vue",
       ],
       "rules": {},
     },

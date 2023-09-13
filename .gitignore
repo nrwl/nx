@@ -12,7 +12,6 @@ tmp
 jest.debug.config.js
 .tool-versions
 /.nx-cache
-/.nx
 /.verdaccio/build/local-registry
 /graph/client/src/assets/environment.js
 /graph/client/src/assets/dev/environment.js

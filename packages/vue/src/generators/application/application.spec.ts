@@ -20,6 +20,7 @@ describe('application generator', () => {
 
   it('should set up project correctly with given options', async () => {
     await applicationGenerator(tree, { ...options, unitTestRunner: 'vitest' });
+    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/project.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
