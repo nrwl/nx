@@ -171,7 +171,7 @@ export function withRunManyOptions(yargs: Argv) {
 export function withOverrides<T extends { _: Array<string | number> }>(
   args: T,
   commandLevel: number = 1
-): T & { __unparsed_overrides__: string[] } {
+): T & { __overrides_unparsed__: string[] } {
   const unparsedArgs: string[] = (args['--'] ?? args._.slice(commandLevel)).map(
     (v) => v.toString()
   );
@@ -179,7 +179,7 @@ export function withOverrides<T extends { _: Array<string | number> }>(
   delete args._;
   return {
     ...args,
-    __unparsed_overrides__: unparsedArgs,
+    __overrides_unparsed__: unparsedArgs,
   };
 }
 

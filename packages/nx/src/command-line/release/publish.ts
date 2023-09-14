@@ -18,7 +18,7 @@ import {
 } from './config/create-release-groups';
 
 export async function publishHandler(
-  args: PublishOptions & { __unparsed_overrides__: string[] }
+  args: PublishOptions & { __overrides_unparsed__: string[] }
 ): Promise<void> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
@@ -151,7 +151,7 @@ export async function publishHandler(
 }
 
 async function runPublishOnProjects(
-  args: PublishOptions & { __unparsed_overrides__: string[] },
+  args: PublishOptions & { __overrides_unparsed__: string[] },
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   projectNames: string[]
@@ -160,7 +160,7 @@ async function runPublishOnProjects(
     (projectName) => projectGraph.nodes[projectName]
   );
 
-  const overrides = createOverrides(args.__unparsed_overrides__);
+  const overrides = createOverrides(args.__overrides_unparsed__);
 
   if (args.registry) {
     overrides.registry = args.registry;
