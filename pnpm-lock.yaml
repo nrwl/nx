@@ -303,7 +303,7 @@ devDependencies:
     version: 16.8.0-rc.0(@babel/core@7.22.9)(@swc-node/register@1.5.4)(@swc/core@1.3.51)(@types/node@18.16.9)(eslint@8.46.0)(file-loader@6.2.0)(next@13.3.4)(nx@16.8.0-rc.0)(typescript@5.1.3)(verdaccio@5.15.4)(webpack@5.88.0)
   '@nx/playwright':
     specifier: 16.8.0-rc.0
-    version: 16.8.0-rc.0(@playwright/test@1.36.1)(@swc-node/register@1.5.4)(@swc/core@1.3.51)(@types/node@18.16.9)(eslint@8.46.0)(nx@16.8.0-rc.0)(verdaccio@5.15.4)
+    version: 16.8.0-rc.0(@playwright/test@1.38.0)(@swc-node/register@1.5.4)(@swc/core@1.3.51)(@types/node@18.16.9)(eslint@8.46.0)(nx@16.8.0-rc.0)(verdaccio@5.15.4)
   '@nx/react':
     specifier: 16.8.0-rc.0
     version: 16.8.0-rc.0(@swc-node/register@1.5.4)(@swc/core@1.3.51)(@types/node@18.16.9)(eslint@8.46.0)(nx@16.8.0-rc.0)(typescript@5.1.3)(verdaccio@5.15.4)(webpack@5.88.0)
@@ -323,8 +323,8 @@ devDependencies:
     specifier: ~5.0.1
     version: 5.0.1(typescript@5.1.3)
   '@playwright/test':
-    specifier: ^1.36.1
-    version: 1.36.1
+    specifier: ^1.38.0
+    version: 1.38.0
   '@pmmmwh/react-refresh-webpack-plugin':
     specifier: ^0.5.7
     version: 0.5.8(react-refresh@0.10.0)(webpack-dev-server@4.11.1)(webpack@5.88.0)
@@ -581,8 +581,8 @@ devDependencies:
     specifier: 6.6.1
     version: 6.6.1(eslint@8.46.0)
   eslint-plugin-playwright:
-    specifier: ^0.15.3
-    version: 0.15.3(eslint@8.46.0)
+    specifier: ^0.16.0
+    version: 0.16.0(eslint@8.46.0)
   eslint-plugin-react:
     specifier: 7.31.11
     version: 7.31.11(eslint@8.46.0)
@@ -6817,7 +6817,7 @@ packages:
     dev: true
     optional: true
 
-  /@nx/playwright@16.8.0-rc.0(@playwright/test@1.36.1)(@swc-node/register@1.5.4)(@swc/core@1.3.51)(@types/node@18.16.9)(eslint@8.46.0)(nx@16.8.0-rc.0)(verdaccio@5.15.4):
+  /@nx/playwright@16.8.0-rc.0(@playwright/test@1.38.0)(@swc-node/register@1.5.4)(@swc/core@1.3.51)(@types/node@18.16.9)(eslint@8.46.0)(nx@16.8.0-rc.0)(verdaccio@5.15.4):
     resolution: {integrity: sha512-dmzkbg6KWUbB6gZdr5IkeUJ9lD4qnPYCUKiGQyXs0jGHWBrTWxNWdXL1uL+8X1zlEKazLpC0deF0VM+uYSZc0w==}
     peerDependencies:
       '@playwright/test': ^1.36.0
@@ -6827,7 +6827,7 @@ packages:
     dependencies:
       '@nx/devkit': 16.8.0-rc.0(nx@16.8.0-rc.0)
       '@nx/linter': 16.8.0-rc.0(@swc-node/register@1.5.4)(@swc/core@1.3.51)(@types/node@18.16.9)(eslint@8.46.0)(nx@16.8.0-rc.0)(verdaccio@5.15.4)
-      '@playwright/test': 1.36.1
+      '@playwright/test': 1.38.0
       tslib: 2.6.1
     transitivePeerDependencies:
       - '@babel/traverse'
@@ -7380,15 +7380,12 @@ packages:
       tslib: 2.6.1
     dev: true
 
-  /@playwright/test@1.36.1:
-    resolution: {integrity: sha512-YK7yGWK0N3C2QInPU6iaf/L3N95dlGdbsezLya4n0ZCh3IL7VgPGxC6Gnznh9ApWdOmkJeleT2kMTcWPRZvzqg==}
+  /@playwright/test@1.38.0:
+    resolution: {integrity: sha512-xis/RXXsLxwThKnlIXouxmIvvT3zvQj1JE39GsNieMUrMpb3/GySHDh2j8itCG22qKVD4MYLBp7xB73cUW/UUw==}
     engines: {node: '>=16'}
     hasBin: true
     dependencies:
-      '@types/node': 18.16.9
-      playwright-core: 1.36.1
-    optionalDependencies:
-      fsevents: 2.3.2
+      playwright: 1.38.0
     dev: true
 
   /@pmmmwh/react-refresh-webpack-plugin@0.5.10(react-refresh@0.11.0)(webpack-dev-server@4.11.1)(webpack@5.88.0):
@@ -8563,7 +8560,7 @@ packages:
       '@storybook/store': 7.2.2
       '@storybook/theming': 7.2.2(react-dom@18.2.0)(react@18.2.0)
       '@swc/core': 1.3.51(@swc/helpers@0.5.0)
-      '@types/node': 16.18.36
+      '@types/node': 16.18.47
       '@types/semver': 7.5.0
       babel-loader: 9.1.3(@babel/core@7.22.9)(webpack@5.88.0)
       babel-plugin-named-exports-order: 0.0.2
@@ -8720,7 +8717,7 @@ packages:
       '@storybook/node-logger': 7.2.2
       '@storybook/types': 7.2.2
       '@types/find-cache-dir': 3.2.1
-      '@types/node': 16.18.36
+      '@types/node': 16.18.47
       '@types/node-fetch': 2.6.4
       '@types/pretty-hrtime': 1.0.1
       chalk: 4.1.2
@@ -8984,7 +8981,7 @@ packages:
       '@storybook/node-logger': 7.2.2
       '@storybook/react': 7.2.2(react-dom@18.2.0)(react@18.2.0)(typescript@5.1.3)
       '@storybook/react-docgen-typescript-plugin': 1.0.6--canary.9.0c3f3b7.0(typescript@5.1.3)(webpack@5.88.0)
-      '@types/node': 16.18.36
+      '@types/node': 16.18.47
       '@types/semver': 7.5.0
       babel-plugin-add-react-displayname: 0.0.5
       babel-plugin-react-docgen: 4.2.1
@@ -15411,8 +15408,8 @@ packages:
       semver: 6.3.0
     dev: true
 
-  /eslint-plugin-playwright@0.15.3(eslint@8.46.0):
-    resolution: {integrity: sha512-LQMW5y0DLK5Fnpya7JR1oAYL2/7Y9wDiYw6VZqlKqcRGSgjbVKNqxraphk7ra1U3Bb5EK444xMgUlQPbMg2M1g==}
+  /eslint-plugin-playwright@0.16.0(eslint@8.46.0):
+    resolution: {integrity: sha512-DcHpF0SLbNeh9MT4pMzUGuUSnJ7q5MWbP8sSEFIMS6j7Ggnduq8ghNlfhURgty4c1YFny7Ge9xYTO1FSAoV2Vw==}
     peerDependencies:
       eslint: '>=7'
       eslint-plugin-jest: '>=25'
@@ -22368,10 +22365,20 @@ packages:
     engines: {node: '>= 0.4.0'}
     dev: true
 
-  /playwright-core@1.36.1:
-    resolution: {integrity: sha512-7+tmPuMcEW4xeCL9cp9KxmYpQYHKkyjwoXRnoeTowaeNat8PoBMk/HwCYhqkH2fRkshfKEOiVus/IhID2Pg8kg==}
+  /playwright-core@1.38.0:
+    resolution: {integrity: sha512-f8z1y8J9zvmHoEhKgspmCvOExF2XdcxMW8jNRuX4vkQFrzV4MlZ55iwb5QeyiFQgOFCUolXiRHgpjSEnqvO48g==}
     engines: {node: '>=16'}
     hasBin: true
+    dev: true
+
+  /playwright@1.38.0:
+    resolution: {integrity: sha512-fJGw+HO0YY+fU/F1N57DMO+TmXHTrmr905J05zwAQE9xkuwP/QLDk63rVhmyxh03dYnEhnRbsdbH9B0UVVRB3A==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dependencies:
+      playwright-core: 1.38.0
+    optionalDependencies:
+      fsevents: 2.3.2
     dev: true
 
   /pluralize@8.0.0:
