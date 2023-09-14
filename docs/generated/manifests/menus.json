@@ -1678,6 +1678,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Migrate From Turborepo",
+                "path": "/recipes/adopting-nx/from-turborepo",
+                "id": "from-turborepo",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Add to any Project",
                 "path": "/recipes/adopting-nx/adding-to-existing-project",
                 "id": "adding-to-existing-project",
@@ -2570,6 +2578,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Migrate From Turborepo",
+            "path": "/recipes/adopting-nx/from-turborepo",
+            "id": "from-turborepo",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Add to any Project",
             "path": "/recipes/adopting-nx/adding-to-existing-project",
             "id": "adding-to-existing-project",
@@ -2608,6 +2624,14 @@
         "name": "NPM/Yarn/PNPM workspaces",
         "path": "/recipes/adopting-nx/adding-to-monorepo",
         "id": "adding-to-monorepo",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate From Turborepo",
+        "path": "/recipes/adopting-nx/from-turborepo",
+        "id": "from-turborepo",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

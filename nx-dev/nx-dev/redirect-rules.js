@@ -867,6 +867,13 @@ const coreFeatureRefactoring = {
   '/core-features/share-your-cache': '/core-features/remote-cache',
 };
 
+/*
+ * For AI Chat to make sure old URLs are not broken (added 2023-09-14)
+ */
+const aiChat = {
+  '/ai': '/ai-chat',
+};
+
 /**
  * Public export API
  */
@@ -892,4 +899,5 @@ module.exports = {
   pluginsToExtendNx,
   latestRecipesRefactoring,
   coreFeatureRefactoring,
+  aiChat,
 };

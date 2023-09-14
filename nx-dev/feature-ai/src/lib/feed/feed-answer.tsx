@@ -66,7 +66,7 @@ export function FeedAnswer({
           <ReactMarkdown children={content} />
         </div>
         {!isFirst && (
-          <div className="group text-xs flex-1 md:flex md:justify-end gap-4 md:items-center text-slate-400 hover:text-slate-500 transition">
+          <div className="group text-md flex-1 md:flex md:justify-end gap-4 md:items-center text-slate-400 hover:text-slate-500 transition">
             {feedbackStatement ? (
               <p className="italic group-hover:flex">
                 {feedbackStatement === 'good'
@@ -89,7 +89,7 @@ export function FeedAnswer({
                 title="Bad"
               >
                 <span className="sr-only">Bad answer</span>
-                <HandThumbDownIcon className="h-5 w-5" aria-hidden="true" />
+                <HandThumbDownIcon className="h-6 w-6" aria-hidden="true" />
               </button>
               <button
                 className={cx(
@@ -101,7 +101,7 @@ export function FeedAnswer({
                 title="Good"
               >
                 <span className="sr-only">Good answer</span>
-                <HandThumbUpIcon className="h-5 w-5" aria-hidden="true" />
+                <HandThumbUpIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
           </div>

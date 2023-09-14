@@ -13,6 +13,7 @@ type AllowedSizes = 'large' | 'default' | 'small';
 interface ButtonProps {
   variant?: AllowedVariants;
   size?: AllowedSizes;
+  rounded?: 'full' | 'default';
   children: ReactNode | ReactNode[];
 }
 
@@ -45,12 +46,15 @@ function ButtonInner({
   children,
   variant = 'primary',
   size = 'default',
+  rounded = 'default',
 }: ButtonProps): JSX.Element {
   return (
     <>
       <span
         className={cx(
-          'flex h-full w-full items-center justify-center whitespace-nowrap rounded-md border border-transparent font-medium shadow-sm transition',
+          'flex h-full w-full items-center justify-center whitespace-nowrap',
+          rounded === 'full' ? 'rounded-full' : 'rounded-md',
+          'border border-transparent font-medium shadow-sm transition',
           variantStyles[variant],
           sizes[size]
         )}
@@ -69,11 +73,12 @@ export function Button({
   className = '',
   variant = 'primary',
   size = 'large',
+  rounded = 'default',
   ...props
 }: ButtonProps & JSX.IntrinsicElements['button']): JSX.Element {
   return (
     <button {...props} className={getLayoutClassName(className)}>
-      <ButtonInner variant={variant} size={size}>
+      <ButtonInner variant={variant} size={size} rounded={rounded}>
         {children}
       </ButtonInner>
     </button>
