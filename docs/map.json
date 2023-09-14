@@ -59,6 +59,11 @@
                   "file": "shared/angular-standalone-tutorial/angular-standalone"
                 },
                 {
+                  "name": "Angular Monorepo",
+                  "id": "angular-monorepo-tutorial",
+                  "file": "shared/angular-tutorial/angular-monorepo"
+                },
+                {
                   "name": "Node Standalone",
                   "id": "node-server-tutorial",
                   "file": "shared/node-server-tutorial/1-code-generation"

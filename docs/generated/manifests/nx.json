@@ -92,6 +92,16 @@
             "tags": []
           },
           {
+            "id": "angular-monorepo-tutorial",
+            "name": "Angular Monorepo",
+            "description": "",
+            "file": "shared/angular-tutorial/angular-monorepo",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+            "tags": []
+          },
+          {
             "id": "node-server-tutorial",
             "name": "Node Standalone",
             "description": "",
@@ -198,6 +208,16 @@
         "tags": []
       },
       {
+        "id": "angular-monorepo-tutorial",
+        "name": "Angular Monorepo",
+        "description": "",
+        "file": "shared/angular-tutorial/angular-monorepo",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+        "tags": []
+      },
+      {
         "id": "node-server-tutorial",
         "name": "Node Standalone",
         "description": "",
@@ -260,6 +280,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/angular-standalone-tutorial",
+    "tags": []
+  },
+  "/getting-started/tutorials/angular-monorepo-tutorial": {
+    "id": "angular-monorepo-tutorial",
+    "name": "Angular Monorepo",
+    "description": "",
+    "file": "shared/angular-tutorial/angular-monorepo",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/tutorials/angular-monorepo-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/node-server-tutorial": {
