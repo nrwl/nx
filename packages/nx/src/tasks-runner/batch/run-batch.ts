@@ -11,6 +11,7 @@ import { TaskGraph } from '../../config/task-graph';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import {
   createProjectGraphAsync,
+  readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
 import { readNxJson } from '../../config/configuration';
@@ -28,7 +29,7 @@ async function runTasks(
   fullTaskGraph: TaskGraph
 ) {
   const input: Record<string, any> = {};
-  const projectGraph = await createProjectGraphAsync();
+  const projectGraph = readCachedProjectGraph();
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJsonConfiguration = readNxJson();
