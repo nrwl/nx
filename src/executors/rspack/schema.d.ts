@@ -3,6 +3,7 @@ export interface RspackExecutorSchema {
   target: 'web' | 'node';
   main: string;
   tsConfig: string;
+  typeCheck?: boolean;
   outputPath: string;
   indexHtml?: string;
   mode?: Mode;
