@@ -3,6 +3,7 @@
  */
 
 interface NxReactBabelOptions {
+  development?: boolean;
   runtime?: string;
   importSource?: string;
   useBuiltIns?: boolean | string;
@@ -51,10 +52,16 @@ module.exports = function (api: any, options: NxReactBabelOptions) {
   };
 };
 
-function getReactPresetOptions({ presetOptions, env }) {
+function getReactPresetOptions({
+  presetOptions,
+  env,
+}: {
+  env: string;
+  presetOptions: NxReactBabelOptions;
+}) {
   const reactPresetOptions: Record<string, string | boolean> = {
     runtime: presetOptions.runtime ?? 'automatic',
-    development: env !== 'production',
+    development: presetOptions.development ?? env !== 'production',
   };
 
   // JSX spread is transformed into object spread in `@babel/plugin-transform-react-jsx`

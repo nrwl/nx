@@ -8,14 +8,12 @@ import {
   updateFile,
   readFile,
   exists,
-  updateProjectConfig,
-  readProjectConfig,
   tmpProjPath,
-  readResolvedConfiguration,
   getPackageManagerCommand,
   getSelectedPackageManager,
   runCommand,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 let proj: string;
 
@@ -119,9 +117,10 @@ describe('Workspace Tests', () => {
       runCLI(
         `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
       );
-      await updateProjectConfig(lib3, (config) => {
-        config.implicitDependencies = [`${lib1}-data-access`];
-        return config;
+      updateFile(join(lib3, 'project.json'), (content) => {
+        const data = JSON.parse(content);
+        data.implicitDependencies = [`${lib1}-data-access`];
+        return JSON.stringify(data, null, 2);
       });
 
       /**
@@ -178,13 +177,13 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
       checkFilesExist(rootClassPath);
 
-      let projects = await readResolvedConfiguration();
-      expect(projects[`${lib1}-data-access`]).toBeUndefined();
-      const newConfig = await readProjectConfig(newName);
+      let projects = runCLI('show projects').split('\n');
+      expect(projects).not.toContain(`${lib1}-data-access`);
+      const newConfig = readJson(join(newPath, 'project.json'));
       expect(newConfig).toMatchObject({
         tags: [],
       });
-      const lib3Config = await readProjectConfig(lib3);
+      const lib3Config = readJson(join(lib3, 'project.json'));
       expect(lib3Config.implicitDependencies).toEqual([
         `shared-${lib1}-data-access`,
       ]);
@@ -200,9 +199,9 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
 
-      projects = await readResolvedConfiguration();
-      expect(projects[`${lib1}-data-access`]).toBeUndefined();
-      const project = await readProjectConfig(newName);
+      projects = runCLI('show projects').split('\n');
+      expect(projects).not.toContain(`${lib1}-data-access`);
+      const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
@@ -261,9 +260,10 @@ describe('Workspace Tests', () => {
       runCLI(
         `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
       );
-      await updateProjectConfig(lib3, (config) => {
-        config.implicitDependencies = [`${lib1}-data-access`];
-        return config;
+      updateFile(join(lib3, 'project.json'), (content) => {
+        const data = JSON.parse(content);
+        data.implicitDependencies = [`${lib1}-data-access`];
+        return JSON.stringify(data, null, 2);
       });
 
       /**
@@ -331,13 +331,13 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
 
-      const projects = await readResolvedConfiguration();
-      expect(projects[`${lib1}-data-access`]).toBeUndefined();
-      const project = await readProjectConfig(newName);
+      const projects = runCLI('show projects').split('\n');
+      expect(projects).not.toContain(`${lib1}-data-access`);
+      const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.tags).toEqual([]);
-      const lib3Config = await readProjectConfig(lib3);
+      const lib3Config = readJson(join(lib3, 'project.json'));
       expect(lib3Config.implicitDependencies).toEqual([newName]);
 
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
@@ -400,9 +400,10 @@ describe('Workspace Tests', () => {
       runCLI(
         `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=derived`
       );
-      await updateProjectConfig(lib3, (config) => {
-        config.implicitDependencies = [`${lib1}-data-access`];
-        return config;
+      updateFile(join('packages', lib3, 'project.json'), (content) => {
+        const data = JSON.parse(content);
+        data.implicitDependencies = [`${lib1}-data-access`];
+        return JSON.stringify(data, null, 2);
       });
 
       /**
@@ -470,9 +471,9 @@ describe('Workspace Tests', () => {
         ]
       ).toEqual([`packages/shared/${lib1}/data-access/src/index.ts`]);
 
-      const projects = await readResolvedConfiguration();
-      expect(projects[`${lib1}-data-access`]).toBeUndefined();
-      const project = await readProjectConfig(newName);
+      const projects = runCLI('show projects').split('\n');
+      expect(projects).not.toContain(`${lib1}-data-access`);
+      const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
@@ -532,9 +533,10 @@ describe('Workspace Tests', () => {
       runCLI(
         `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
       );
-      await updateProjectConfig(lib3, (config) => {
-        config.implicitDependencies = [lib1];
-        return config;
+      updateFile(join(lib3, 'project.json'), (content) => {
+        const data = JSON.parse(content);
+        data.implicitDependencies = [lib1];
+        return JSON.stringify(data, null, 2);
       });
 
       /**
@@ -587,13 +589,13 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
       checkFilesExist(rootClassPath);
 
-      let projects = await readResolvedConfiguration();
-      expect(projects[lib1]).toBeUndefined();
-      const newConfig = await readProjectConfig(newName);
+      let projects = runCLI('show projects').split('\n');
+      expect(projects).not.toContain(lib1);
+      const newConfig = readJson(join(newPath, 'project.json'));
       expect(newConfig).toMatchObject({
         tags: [],
       });
-      const lib3Config = await readProjectConfig(lib3);
+      const lib3Config = readJson(join(lib3, 'project.json'));
       expect(lib3Config.implicitDependencies).toEqual([`${lib1}-data-access`]);
 
       expect(moveOutput).toContain('UPDATE tsconfig.base.json');
@@ -605,9 +607,9 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[`@${proj}/${lib1}-data-access`]
       ).toEqual([`${lib1}/data-access/src/index.ts`]);
 
-      projects = await readResolvedConfiguration();
-      expect(projects[lib1]).toBeUndefined();
-      const project = await readProjectConfig(newName);
+      projects = runCLI('show projects').split('\n');
+      expect(projects).not.toContain(lib1);
+      const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
@@ -676,9 +678,10 @@ describe('Workspace Tests', () => {
       runCLI(
         `generate @nx/js:lib ${lib3} --unitTestRunner=jest --project-name-and-root-format=as-provided`
       );
-      await updateProjectConfig(lib3, (config) => {
-        config.implicitDependencies = [`${lib1}-data-access`];
-        return config;
+      updateFile(join(lib3, 'project.json'), (content) => {
+        const data = JSON.parse(content);
+        data.implicitDependencies = [`${lib1}-data-access`];
+        return JSON.stringify(data, null, 2);
       });
 
       /**
@@ -707,11 +710,11 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${rootClassPath}`);
       checkFilesExist(rootClassPath);
 
-      const newConfig = await readProjectConfig(newName);
+      const newConfig = readJson(join(newPath, 'project.json'));
       expect(newConfig).toMatchObject({
         tags: [],
       });
-      const lib3Config = await readProjectConfig(lib3);
+      const lib3Config = readJson(join(lib3, 'project.json'));
       expect(lib3Config.implicitDependencies).toEqual([
         `shared-${lib1}-data-access`,
       ]);
@@ -725,9 +728,9 @@ describe('Workspace Tests', () => {
         rootTsConfig.compilerOptions.paths[`shared-${lib1}-data-access`]
       ).toEqual([`shared/${lib1}/data-access/src/index.ts`]);
 
-      const projects = await readResolvedConfiguration();
-      expect(projects[`${lib1}-data-access`]).toBeUndefined();
-      const project = await readProjectConfig(newName);
+      const projects = runCLI('show projects').split('\n');
+      expect(projects).not.toContain(`${lib1}-data-access`);
+      const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
       expect(project.targets.lint.options.lintFilePatterns).toEqual([
@@ -762,9 +765,10 @@ describe('Workspace Tests', () => {
        */
 
       runCLI(`generate @nx/js:lib ${lib2} --unitTestRunner=jest`);
-      await updateProjectConfig(lib2, (config) => {
-        config.implicitDependencies = [lib1];
-        return config;
+      updateFile(join('libs', lib2, 'project.json'), (content) => {
+        const data = JSON.parse(content);
+        data.implicitDependencies = [lib1];
+        return JSON.stringify(data, null, 2);
       });
 
       /**
@@ -796,9 +800,9 @@ describe('Workspace Tests', () => {
       expect(exists(tmpProjPath(`libs/${lib1}`))).toBeFalsy();
 
       expect(removeOutputForced).not.toContain(`UPDATE nx.json`);
-      const projects = await readResolvedConfiguration();
-      expect(projects[`${lib1}`]).toBeUndefined();
-      const lib2Config = await readProjectConfig(lib2);
+      const projects = runCLI('show projects').split('\n');
+      expect(projects).not.toContain(lib1);
+      const lib2Config = readJson(join('libs', lib2, 'project.json'));
       expect(lib2Config.implicitDependencies).toEqual([]);
 
       expect(projects[`${lib1}`]).toBeUndefined();

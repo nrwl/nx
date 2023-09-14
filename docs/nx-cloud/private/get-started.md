@@ -63,4 +63,5 @@ We do offer, however, a multi-node Kubernetes setup, that is deployed via Helm. 
 - [GitLab Auth](/nx-cloud/private-cloud/auth-gitlab)
 - [BitBucket Auth](/nx-cloud/private-cloud/auth-bitbucket)
 - [SAML Auth](/nx-cloud/private-cloud/auth-saml)
+- [SAML Auth Managed Cloud](/nx-cloud/private-cloud/auth-saml-managed)
 - [Advanced Configuration](/nx-cloud/private-cloud/advanced-config)

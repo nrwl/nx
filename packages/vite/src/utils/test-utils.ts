@@ -537,15 +537,13 @@ export function mockReactLibNonBuildableVitestRunnerGenerator(
     `/// <reference types="vitest" />
     import { defineConfig } from 'vite';
     import react from '@vitejs/plugin-react';
-    import viteTsConfigPaths from 'vite-tsconfig-paths';
+    import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
     export default defineConfig({
 
       plugins: [
+        nxViteTsPaths(),
         react(),
-        viteTsConfigPaths({
-          root: '../../',
-        }),
       ],
 
       test: {

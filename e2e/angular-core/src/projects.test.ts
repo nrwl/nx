@@ -14,9 +14,9 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
-import { normalize } from 'path';
+import { join, normalize } from 'path';
 
 describe('Angular Projects', () => {
   let proj: string;
@@ -269,8 +269,8 @@ describe('Angular Projects', () => {
       `
     );
 
-    // update the angular.json
-    await updateProjectConfig(app1, (config) => {
+    // update the project.json
+    updateJson(join(app1, 'project.json'), (config) => {
       config.targets.build.executor = '@nx/angular:webpack-browser';
       config.targets.build.options = {
         ...config.targets.build.options,
@@ -278,7 +278,7 @@ describe('Angular Projects', () => {
       };
       return config;
     });
-    await updateProjectConfig(esbuildApp, (config) => {
+    updateJson(join(esbuildApp, 'project.json'), (config) => {
       config.targets.build.executor = '@nx/angular:browser-esbuild';
       config.targets.build.options = {
         ...config.targets.build.options,

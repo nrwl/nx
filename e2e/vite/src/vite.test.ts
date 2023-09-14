@@ -19,8 +19,9 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 const myApp = uniq('my-app');
 
@@ -100,7 +101,7 @@ describe('Vite Plugin', () => {
           `
         );
 
-        await updateProjectConfig(myApp, (config) => {
+        updateJson(join('apps', myApp, 'project.json'), (config) => {
           config.targets.build.options.fileReplacements = [
             {
               replace: `apps/${myApp}/src/environments/environment.ts`,
@@ -434,7 +435,7 @@ export default defineConfig({
 });
 `;
       });
-      await updateProjectConfig(lib, (config) => {
+      updateJson(join('libs', lib, 'project.json'), (config) => {
         delete config.targets.test.options.reportsDirectory;
         return config;
       });

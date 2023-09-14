@@ -1354,6 +1354,7 @@ dependencies = [
  "napi-derive",
  "once_cell",
  "os_type",
+ "parking_lot",
  "rayon",
  "regex",
  "swc_common",

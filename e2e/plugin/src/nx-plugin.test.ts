@@ -7,7 +7,6 @@ import {
   getPackageManagerCommand,
   newProject,
   readJson,
-  readProjectConfig,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -18,6 +17,7 @@ import {
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
+import { join } from 'path';
 
 describe('Nx Plugin', () => {
   let npmScope: string;
@@ -387,19 +387,23 @@ describe('Nx Plugin', () => {
         `generate @nx/plugin:plugin ${plugin} --linter=eslint --directory subdir --e2eTestRunner=jest`
       );
       checkFilesExist(`libs/subdir/${plugin}/package.json`);
-      const pluginProject = await readProjectConfig(`subdir-${plugin}`);
-      const pluginE2EProject = await readProjectConfig(`subdir-${plugin}-e2e`);
+      const pluginProject = readJson(
+        join('libs', 'subdir', plugin, 'project.json')
+      );
+      const pluginE2EProject = readJson(
+        join('apps', 'subdir', `${plugin}-e2e`, 'project.json')
+      );
       expect(pluginProject.targets).toBeDefined();
       expect(pluginE2EProject).toBeTruthy();
     }, 90000);
   });
   describe('--tags', () => {
-    it('should add tags to project configuration', async () => {
+    it('should add tags to project configuration', () => {
       const plugin = uniq('plugin');
       runCLI(
         `generate @nx/plugin:plugin ${plugin} --linter=eslint --tags=e2etag,e2ePackage `
       );
-      const pluginProject = await readProjectConfig(plugin);
+      const pluginProject = readJson(join('libs', plugin, 'project.json'));
       expect(pluginProject.tags).toEqual(['e2etag', 'e2ePackage']);
     }, 90000);
   });

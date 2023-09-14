@@ -50,7 +50,7 @@ describe('MF Share Utils', () => {
       expect(sharedLibraries.getAliases()['@myorg/shared']).toContain(
         'libs/shared/src/index.ts'
       );
-      expect(sharedLibraries.getLibraries()).toEqual({
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
         '@myorg/shared': {
           eager: undefined,
           requiredVersion: false,
@@ -60,9 +60,7 @@ describe('MF Share Utils', () => {
 
     it('should handle path mappings with wildcards correctly in non-buildable libraries', () => {
       // ARRANGE
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation((file: string) => !file?.endsWith('package.json'));
+      jest.spyOn(fs, 'existsSync').mockImplementation((file: string) => true);
       jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
         '@myorg/shared': ['/libs/shared/src/index.ts'],
         '@myorg/shared/*': ['/libs/shared/src/lib/*'],
@@ -78,7 +76,7 @@ describe('MF Share Utils', () => {
       expect(sharedLibraries.getAliases()['@myorg/shared']).toContain(
         'libs/shared/src/index.ts'
       );
-      expect(sharedLibraries.getLibraries()).toEqual({
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
         '@myorg/shared': {
           eager: undefined,
           requiredVersion: false,
@@ -98,7 +96,7 @@ describe('MF Share Utils', () => {
 
       // ASSERT
       expect(sharedLibraries.getAliases()).toEqual({});
-      expect(sharedLibraries.getLibraries()).toEqual({});
+      expect(sharedLibraries.getLibraries('libs/shared')).toEqual({});
     });
   });
 
@@ -369,6 +367,78 @@ describe('MF Share Utils', () => {
       expect(() =>
         sharePackages(['non-existent-top-level-package'])
       ).not.toThrow();
+    });
+  });
+
+  it('should using shared library version from root package.json if available', () => {
+    // ARRANGE
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    jest
+      .spyOn(nxFileutils, 'readJsonFile')
+      .mockImplementation((file: string) => {
+        if (file.endsWith('package.json')) {
+          return {
+            dependencies: {
+              '@myorg/shared': '1.0.0',
+            },
+          };
+        }
+      });
+
+    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+      '@myorg/shared': ['/libs/shared/src/index.ts'],
+      '@myorg/shared/*': ['/libs/shared/src/lib/*'],
+    });
+
+    // ACT
+    const sharedLibraries = shareWorkspaceLibraries(
+      [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
+      '/'
+    );
+
+    // ASSERT
+    expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+      '@myorg/shared': {
+        eager: undefined,
+        requiredVersion: '1.0.0',
+        singleton: true,
+      },
+    });
+  });
+
+  it('should use shared library version from library package.json if project package.json does not have it', () => {
+    // ARRANGE
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    jest
+      .spyOn(nxFileutils, 'readJsonFile')
+      .mockImplementation((file: string) => {
+        if (file.endsWith('libs/shared/package.json')) {
+          return {
+            version: '1.0.0',
+          };
+        } else {
+          return {};
+        }
+      });
+
+    jest.spyOn(tsUtils, 'readTsPathMappings').mockReturnValue({
+      '@myorg/shared': ['/libs/shared/src/index.ts'],
+      '@myorg/shared/*': ['/libs/shared/src/lib/*'],
+    });
+
+    // ACT
+    const sharedLibraries = shareWorkspaceLibraries(
+      [{ name: 'shared', root: 'libs/shared', importKey: '@myorg/shared' }],
+      null
+    );
+
+    // ASSERT
+    expect(sharedLibraries.getLibraries('libs/shared')).toEqual({
+      '@myorg/shared': {
+        eager: undefined,
+        requiredVersion: '1.0.0',
+        singleton: true,
+      },
     });
   });
 });

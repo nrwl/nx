@@ -119,6 +119,19 @@ function getPresetDependencies({
     case Preset.NextJsStandalone:
       return { dependencies: { '@nx/next': nxVersion }, dev: {} };
 
+    case Preset.VueMonorepo:
+    case Preset.VueStandalone:
+      return {
+        dependencies: {},
+        dev: {
+          '@nx/vue': nxVersion,
+          '@nx/cypress': e2eTestRunner === 'cypress' ? nxVersion : undefined,
+          '@nx/playwright':
+            e2eTestRunner === 'playwright' ? nxVersion : undefined,
+          '@nx/vite': nxVersion,
+        },
+      };
+
     case Preset.ReactMonorepo:
     case Preset.ReactStandalone:
       return {

@@ -11,13 +11,12 @@ import {
   runCommand,
   uniq,
   updateFile,
-  updateProjectConfig,
   checkFilesExist,
   isWindows,
   fileExists,
   removeFile,
-  readResolvedConfiguration,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Nx Affected and Graph Tests', () => {
   let proj: string;
@@ -218,10 +217,11 @@ describe('Nx Affected and Graph Tests', () => {
       // TODO: investigate why affected gives different results on windows
       if (isNotWindows()) {
         generateAll();
-        await updateProjectConfig(myapp, (config) => ({
-          ...config,
-          tags: ['tag'],
-        }));
+        updateFile(join('apps', myapp, 'project.json'), (content) => {
+          const data = JSON.parse(content);
+          data.tags = ['tag'];
+          return JSON.stringify(data, null, 2);
+        });
         const output = runCLI('print-affected --select projects');
         expect(output).toContain(myapp);
         expect(output).not.toContain(myapp2);
@@ -231,7 +231,7 @@ describe('Nx Affected and Graph Tests', () => {
 
     it('should affect all projects by removing projects', async () => {
       generateAll();
-      const root = (await readResolvedConfiguration())[mylib].root;
+      const root = `libs/${mylib}`;
       removeFile(root);
       const output = runCLI('print-affected --select projects');
       expect(output).toContain(myapp);
@@ -241,10 +241,11 @@ describe('Nx Affected and Graph Tests', () => {
 
     it('should detect changes to implicitly dependant projects', async () => {
       generateAll();
-      await updateProjectConfig(myapp, (config) => ({
-        ...config,
-        implicitDependencies: ['*', `!${myapp2}`],
-      }));
+      updateFile(join('apps', myapp, 'project.json'), (content) => {
+        const data = JSON.parse(content);
+        data.implicitDependencies = ['*', `!${myapp2}`];
+        return JSON.stringify(data, null, 2);
+      });
 
       runCommand('git commit -m "setup test"');
       updateFile(`libs/${mylib}/index.html`, '<html></html>');
@@ -256,10 +257,12 @@ describe('Nx Affected and Graph Tests', () => {
       expect(output).toContain(mylib);
 
       // Clear implicit deps to not interfere with other tests.
-      await updateProjectConfig(myapp, (config) => ({
-        ...config,
-        implicitDependencies: [],
-      }));
+
+      updateFile(join('apps', myapp, 'project.json'), (content) => {
+        const data = JSON.parse(content);
+        data.implicitDependencies = [];
+        return JSON.stringify(data, null, 2);
+      });
     });
 
     it('should handle file renames', () => {
