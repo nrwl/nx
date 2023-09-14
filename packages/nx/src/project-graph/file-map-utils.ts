@@ -13,7 +13,8 @@ import {
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
 import { readProjectsConfigurationFromProjectGraph } from './project-graph';
-import { fileHasher } from '../hasher/file-hasher';
+import { getAllFileDataInContext } from '../utils/workspace-context';
+import { workspaceRoot } from '../utils/workspace-root';
 
 export async function createProjectFileMapUsingProjectGraph(
   graph: ProjectGraph
@@ -24,8 +25,7 @@ export async function createProjectFileMapUsingProjectGraph(
   if (daemonClient.enabled()) {
     files = await daemonClient.getAllFileData();
   } else {
-    await fileHasher.ensureInitialized();
-    files = fileHasher.allFileData();
+    files = getAllFileDataInContext(workspaceRoot);
   }
 
   return createProjectFileMap(configs, files).projectFileMap;

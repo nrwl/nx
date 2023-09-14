@@ -11,20 +11,29 @@ import {
   collectPackageSecondaryEntryPoints,
   collectWorkspaceLibrarySecondaryEntryPoints,
 } from './secondary-entry-points';
-import { type ProjectGraph, workspaceRoot, logger } from '@nx/devkit';
+import {
+  type ProjectGraph,
+  workspaceRoot,
+  logger,
+  readJsonFile,
+  ProjectGraphProjectNode,
+  joinPathFragments,
+} from '@nx/devkit';
+import { existsSync } from 'fs';
+import type { PackageJson } from 'nx/src/utils/package-json';
 
 /**
  * Build an object of functions to be used with the ModuleFederationPlugin to
  * share Nx Workspace Libraries between Hosts and Remotes.
  *
- * @param libraries - The Nx Workspace Libraries to share
+ * @param workspaceLibs - The Nx Workspace Libraries to share
  * @param tsConfigPath - The path to TS Config File that contains the Path Mappings for the Libraries
  */
 export function shareWorkspaceLibraries(
-  libraries: WorkspaceLibrary[],
+  workspaceLibs: WorkspaceLibrary[],
   tsConfigPath = process.env.NX_TSCONFIG_PATH ?? getRootTsConfigPath()
 ): SharedWorkspaceLibraryConfig {
-  if (!libraries) {
+  if (!workspaceLibs) {
     return getEmptySharedLibrariesConfig();
   }
 
@@ -35,7 +44,7 @@ export function shareWorkspaceLibraries(
 
   const pathMappings: { name: string; path: string }[] = [];
   for (const [key, paths] of Object.entries(tsconfigPathAliases)) {
-    const library = libraries.find((lib) => lib.importKey === key);
+    const library = workspaceLibs.find((lib) => lib.importKey === key);
     if (!library) {
       continue;
     }
@@ -66,14 +75,55 @@ export function shareWorkspaceLibraries(
         (aliases, library) => ({ ...aliases, [library.name]: library.path }),
         {}
       ),
-    getLibraries: (eager?: boolean): Record<string, SharedLibraryConfig> =>
-      pathMappings.reduce(
-        (libraries, library) => ({
+    getLibraries: (
+      projectRoot: string,
+      eager?: boolean
+    ): Record<string, SharedLibraryConfig> => {
+      let pkgJson: PackageJson = null;
+      if (
+        projectRoot &&
+        existsSync(
+          joinPathFragments(workspaceRoot, projectRoot, 'package.json')
+        )
+      ) {
+        pkgJson = readJsonFile(
+          joinPathFragments(workspaceRoot, projectRoot, 'package.json')
+        );
+      }
+      return pathMappings.reduce((libraries, library) => {
+        // Check to see if the library version is declared in the app's package.json
+        let version = pkgJson?.dependencies?.[library.name];
+        if (!version && workspaceLibs.length > 0) {
+          const workspaceLib = workspaceLibs.find(
+            (lib) => lib.importKey === library.name
+          );
+
+          const libPackageJsonPath = workspaceLib
+            ? join(workspaceLib.root, 'package.json')
+            : null;
+          if (libPackageJsonPath && existsSync(libPackageJsonPath)) {
+            pkgJson = readJsonFile(libPackageJsonPath);
+
+            if (pkgJson) {
+              version = pkgJson.version;
+            }
+          }
+        }
+
+        return {
           ...libraries,
-          [library.name]: { requiredVersion: false, eager },
-        }),
-        {} as Record<string, SharedLibraryConfig>
-      ),
+          [library.name]: {
+            ...(version
+              ? {
+                  requiredVersion: version,
+                  singleton: true,
+                }
+              : { requiredVersion: false }),
+            eager,
+          },
+        };
+      }, {} as Record<string, SharedLibraryConfig>);
+    },
     getReplacementPlugin: () =>
       new webpack.NormalModuleReplacementPlugin(/./, (req) => {
         if (!req.request.startsWith('.')) {

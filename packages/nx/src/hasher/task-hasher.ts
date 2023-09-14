@@ -14,13 +14,14 @@ import { hashTsConfig } from '../plugins/js/hasher/hasher';
 import { DaemonClient } from '../daemon/client/client';
 import { createProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 import { findMatchingProjects } from '../utils/find-matching-projects';
-import { FileHasher, hashArray, hashObject } from './file-hasher';
+import { hashArray, hashObject } from './file-hasher';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import { getHashEnv } from './set-hash-env';
 import { workspaceRoot } from '../utils/workspace-root';
 import { join, relative } from 'path';
 import { normalizePath } from '../utils/path';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
+import { hashFile } from '../native';
 
 type ExpandedSelfInput =
   | { fileset: string }
@@ -102,8 +103,7 @@ export class InProcessTaskHasher implements TaskHasher {
     private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
     private readonly nxJson: NxJsonConfiguration,
-    private readonly options: any,
-    private readonly fileHasher: FileHasher
+    private readonly options: any
   ) {
     const legacyRuntimeInputs = (
       this.options && this.options.runtimeCacheInputs
@@ -130,7 +130,6 @@ export class InProcessTaskHasher implements TaskHasher {
       this.projectFileMap,
       this.allWorkspaceFiles,
       this.projectGraph,
-      this.fileHasher,
       { selectivelyHashTsConfig: this.options.selectivelyHashTsConfig ?? false }
     );
   }
@@ -205,7 +204,6 @@ class TaskHasherImpl {
     private readonly projectFileMap: ProjectFileMap,
     private readonly allWorkspaceFiles: FileData[],
     private readonly projectGraph: ProjectGraph,
-    private readonly fileHasher: FileHasher,
     private readonly options: { selectivelyHashTsConfig: boolean }
   ) {
     // External Dependencies are all calculated up front in a deterministic order
@@ -412,7 +410,7 @@ class TaskHasherImpl {
       );
       const hashDetails = {};
       const hashes: string[] = [];
-      for (const [file, hash] of await this.fileHasher.hashFiles(
+      for (const [file, hash] of this.hashFiles(
         filteredFiles.map((p) => join(workspaceRoot, p))
       )) {
         hashes.push(hash);
@@ -435,6 +433,14 @@ class TaskHasherImpl {
       }
     }
     return partialHashes;
+  }
+
+  private hashFiles(files: string[]): Map<string, string> {
+    const r = new Map<string, string>();
+    for (let f of files) {
+      r.set(f, hashFile(f));
+    }
+    return r;
   }
 
   private getExternalDependencyHash(externalNodeName: string) {

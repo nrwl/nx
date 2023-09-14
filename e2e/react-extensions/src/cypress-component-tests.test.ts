@@ -8,8 +8,8 @@ import {
   uniq,
   updateFile,
   updateJson,
-  updateProjectConfig,
 } from '../../utils';
+import { join } from 'path';
 
 describe('React Cypress Component Tests', () => {
   let projectName;
@@ -131,7 +131,7 @@ export default Input;
 `
     );
     createFile('libs/assets/data.json', JSON.stringify({ data: 'data' }));
-    await updateProjectConfig(appName, (config) => {
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets['build'].options.assets.push({
         glob: '**/*',
         input: 'libs/assets',
@@ -252,7 +252,7 @@ ${content}`;
         );
       `
     );
-    await updateProjectConfig(appName, (config) => {
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets[
         'build'
       ].options.webpackConfig = `apps/${appName}/webpack.config.js`;

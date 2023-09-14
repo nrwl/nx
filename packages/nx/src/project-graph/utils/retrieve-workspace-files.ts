@@ -27,6 +27,11 @@ import {
   NxPluginV2,
 } from '../../utils/nx-plugin';
 import { CreateProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
+import {
+  globWithWorkspaceContext,
+  getProjectConfigurationsFromContext,
+  getNxWorkspaceFilesFromContext,
+} from '../../utils/workspace-context';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -38,9 +43,6 @@ export async function retrieveWorkspaceFiles(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration
 ) {
-  const { getWorkspaceFilesNative } =
-    require('../../native') as typeof import('../../native');
-
   performance.mark('native-file-deps:start');
   const plugins = await loadNxPlugins(
     nxJson?.plugins ?? [],
@@ -58,19 +60,23 @@ export async function retrieveWorkspaceFiles(
   performance.mark('get-workspace-files:start');
 
   const { projectConfigurations, projectFileMap, globalFiles, externalNodes } =
-    getWorkspaceFilesNative(workspaceRoot, globs, (configs: string[]) => {
-      const projectConfigurations = createProjectConfigurations(
-        workspaceRoot,
-        nxJson,
-        configs,
-        plugins
-      );
+    getNxWorkspaceFilesFromContext(
+      workspaceRoot,
+      globs,
+      (configs: string[]) => {
+        const projectConfigurations = createProjectConfigurations(
+          workspaceRoot,
+          nxJson,
+          configs,
+          plugins
+        );
 
-      return {
-        projectNodes: projectConfigurations.projects,
-        externalNodes: projectConfigurations.externalNodes,
-      };
-    }) as NxWorkspaceFiles;
+        return {
+          projectNodes: projectConfigurations.projects,
+          externalNodes: projectConfigurations.externalNodes,
+        };
+      }
+    ) as NxWorkspaceFiles;
   performance.mark('get-workspace-files:end');
   performance.measure(
     'get-workspace-files',
@@ -165,21 +171,23 @@ function _retrieveProjectConfigurations(
   externalNodes: Record<string, ProjectGraphExternalNode>;
   projectNodes: Record<string, ProjectConfiguration>;
 } {
-  const { getProjectConfigurations } =
-    require('../../native') as typeof import('../../native');
-  return getProjectConfigurations(workspaceRoot, globs, (configs: string[]) => {
-    const projectConfigurations = createProjectConfigurations(
-      workspaceRoot,
-      nxJson,
-      configs,
-      plugins
-    );
+  return getProjectConfigurationsFromContext(
+    workspaceRoot,
+    globs,
+    (configs: string[]) => {
+      const projectConfigurations = createProjectConfigurations(
+        workspaceRoot,
+        nxJson,
+        configs,
+        plugins
+      );
 
-    return {
-      projectNodes: projectConfigurations.projects,
-      externalNodes: projectConfigurations.externalNodes,
-    };
-  }) as {
+      return {
+        projectNodes: projectConfigurations.projects,
+        externalNodes: projectConfigurations.externalNodes,
+      };
+    }
+  ) as {
     externalNodes: Record<string, ProjectGraphExternalNode>;
     projectNodes: Record<string, ProjectConfiguration>;
   };
@@ -193,20 +201,13 @@ export async function retrieveProjectConfigurationPaths(
     root,
     await loadNxPlugins(nxJson?.plugins ?? [], getNxRequirePaths(root), root)
   );
-  const { getProjectConfigurationFiles } =
-    require('../../native') as typeof import('../../native');
-  return getProjectConfigurationFiles(root, projectGlobPatterns);
+  return globWithWorkspaceContext(root, projectGlobPatterns);
 }
 
 export function retrieveProjectConfigurationPathsWithoutPluginInference(
   root: string
 ): string[] {
-  const { getProjectConfigurationFiles } =
-    require('../../native') as typeof import('../../native');
-  return getProjectConfigurationFiles(
-    root,
-    configurationGlobsWithoutPlugins(root)
-  );
+  return globWithWorkspaceContext(root, configurationGlobsWithoutPlugins(root));
 }
 
 const projectsWithoutPluginCache = new Map<
@@ -226,9 +227,7 @@ export function retrieveProjectConfigurationsWithoutPluginInference(
     return projectsWithoutPluginCache.get(cacheKey);
   }
 
-  const { getProjectConfigurations } =
-    require('../../native') as typeof import('../../native');
-  const projectConfigurations = getProjectConfigurations(
+  const projectConfigurations = getProjectConfigurationsFromContext(
     root,
     projectGlobPatterns,
     (configs: string[]) => {
@@ -266,7 +265,7 @@ function buildAllWorkspaceFiles(
   return fileData;
 }
 
-function createProjectConfigurations(
+export function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[],

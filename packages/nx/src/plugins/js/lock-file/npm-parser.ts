@@ -4,7 +4,7 @@ import { workspaceRoot } from '../../../utils/workspace-root';
 import { reverse } from '../../../project-graph/operators';
 import { NormalizedPackageJson } from './utils/package-json';
 import {
-  ProjectGraphDependencyWithFile,
+  RawProjectGraphDependency,
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
 import {
@@ -13,6 +13,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 /**
  * NPM
@@ -87,14 +88,14 @@ export function getNpmLockfileNodes(
 export function getNpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  projectGraph: ProjectGraph
+  ctx: CreateDependenciesContext
 ) {
   const data = parsePackageLockFile(
     lockFileContent,
     lockFileHash
   ) as NpmLockFile;
 
-  return getDependencies(data, keyMap, projectGraph);
+  return getDependencies(data, keyMap, ctx);
 }
 
 function getNodes(
@@ -246,9 +247,9 @@ function findV3Version(snapshot: NpmDependencyV3, packageName: string): string {
 function getDependencies(
   data: NpmLockFile,
   keyMap: Map<string, ProjectGraphExternalNode>,
-  projectGraph: ProjectGraph
-): ProjectGraphDependencyWithFile[] {
-  const dependencies: ProjectGraphDependencyWithFile[] = [];
+  ctx: CreateDependenciesContext
+): RawProjectGraphDependency[] {
+  const dependencies: RawProjectGraphDependency[] = [];
   if (data.lockfileVersion > 1) {
     Object.entries(data.packages).forEach(([path, snapshot]) => {
       // we are skipping workspaces packages
@@ -265,12 +266,12 @@ function getDependencies(
           Object.entries(section).forEach(([name, versionRange]) => {
             const target = findTarget(path, keyMap, name, versionRange);
             if (target) {
-              const dep = {
+              const dep: RawProjectGraphDependency = {
                 source: sourceName,
                 target: target.name,
-                dependencyType: DependencyType.static,
+                type: DependencyType.static,
               };
-              validateDependency(projectGraph, dep);
+              validateDependency(dep, ctx);
               dependencies.push(dep);
             }
           });
@@ -284,7 +285,7 @@ function getDependencies(
         snapshot,
         dependencies,
         keyMap,
-        projectGraph
+        ctx
       );
     });
   }
@@ -326,21 +327,21 @@ function findTarget(
 function addV1NodeDependencies(
   path: string,
   snapshot: NpmDependencyV1,
-  dependencies: ProjectGraphDependencyWithFile[],
+  dependencies: RawProjectGraphDependency[],
   keyMap: Map<string, ProjectGraphExternalNode>,
-  projectGraph: ProjectGraph
+  ctx: CreateDependenciesContext
 ) {
   if (keyMap.has(path) && snapshot.requires) {
     const source = keyMap.get(path).name;
     Object.entries(snapshot.requires).forEach(([name, versionRange]) => {
       const target = findTarget(path, keyMap, name, versionRange);
       if (target) {
-        const dep = {
+        const dep: RawProjectGraphDependency = {
           source: source,
           target: target.name,
-          dependencyType: DependencyType.static,
+          type: DependencyType.static,
         };
-        validateDependency(projectGraph, dep);
+        validateDependency(dep, ctx);
         dependencies.push(dep);
       }
     });
@@ -353,7 +354,7 @@ function addV1NodeDependencies(
         depSnapshot,
         dependencies,
         keyMap,
-        projectGraph
+        ctx
       );
     });
   }
@@ -363,12 +364,12 @@ function addV1NodeDependencies(
     Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
       const target = findTarget(path, keyMap, depName, depSpec);
       if (target) {
-        const dep = {
+        const dep: RawProjectGraphDependency = {
           source: node.name,
           target: target.name,
-          dependencyType: DependencyType.static,
+          type: DependencyType.static,
         };
-        validateDependency(projectGraph, dep);
+        validateDependency(dep, ctx);
         dependencies.push(dep);
       }
     });

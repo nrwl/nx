@@ -1,4 +1,4 @@
-import { TempFs } from '../../../../utils/testing/temp-fs';
+import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 const tempFs = new TempFs('explicit-package-json');
 
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
@@ -6,8 +6,8 @@ import { buildExplicitPackageJsonDependencies } from './explicit-package-json-de
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
-import { fileHasher } from '../../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { getAllFileDataInContext } from '../../../../utils/workspace-context';
 
 describe('explicit package json dependencies', () => {
   let ctx: CreateDependenciesContext;
@@ -51,8 +51,6 @@ describe('explicit package json dependencies', () => {
       }),
     });
 
-    await fileHasher.init();
-
     projects = {
       proj: {
         name: 'proj',
@@ -75,7 +73,7 @@ describe('explicit package json dependencies', () => {
 
     const projectFileMap = createProjectFileMap(
       projectsConfigurations as any,
-      fileHasher.allFileData()
+      getAllFileDataInContext(tempFs.tempDir)
     ).projectFileMap;
 
     const builder = new ProjectGraphBuilder(undefined, projectFileMap);
@@ -93,10 +91,11 @@ describe('explicit package json dependencies', () => {
 
     ctx = {
       fileMap: projectFileMap,
-      graph: builder.getUpdatedProjectGraph(),
-      projectsConfigurations: projectsConfigurations as any,
+      externalNodes: builder.getUpdatedProjectGraph().externalNodes,
+      projects: projectsConfigurations.projects,
       nxJsonConfiguration,
       filesToProcess: projectFileMap,
+      workspaceRoot: tempFs.tempDir,
     };
   });
 
@@ -112,19 +111,19 @@ describe('explicit package json dependencies', () => {
         source: 'proj',
         target: 'proj2',
         sourceFile: 'libs/proj/package.json',
-        dependencyType: 'static',
+        type: 'static',
       },
       {
         sourceFile: 'libs/proj/package.json',
         source: 'proj',
         target: 'npm:external',
-        dependencyType: 'static',
+        type: 'static',
       },
       {
         source: 'proj',
         target: 'proj3',
         sourceFile: 'libs/proj/package.json',
-        dependencyType: 'static',
+        type: 'static',
       },
     ]);
   });

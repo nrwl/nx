@@ -22,12 +22,10 @@ import {
   createTaskGraph,
   mapTargetDefaultsToDependencies,
 } from '../../tasks-runner/create-task-graph';
-import { TargetDefaults, TargetDependencies } from '../../config/nx-json';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
 import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
-import { fileHasher } from '../../hasher/file-hasher';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 
@@ -574,7 +572,6 @@ async function createDepGraphClientResponse(
   affected: string[] = []
 ): Promise<ProjectGraphClientResponse> {
   performance.mark('project graph watch calculation:start');
-  await fileHasher.init();
 
   let graph = pruneExternalNodes(
     await createProjectGraphAsync({ exitOnError: true })

@@ -8,8 +8,6 @@ use crate::native::watch::utils::transform_event;
 
 #[napi(string_enum)]
 #[derive(Debug)]
-/// Newly created files will have the `update` EventType as well.
-/// This simplifies logic between OS's, IDEs and git operations
 pub enum EventType {
     #[allow(non_camel_case_types)]
     delete,

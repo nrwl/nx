@@ -1,4 +1,4 @@
-import { assertRunsAgainstNxRepo } from 'nx/internal-testing-utils/run-migration-against-this-workspace';
+import { assertRunsAgainstNxRepo } from 'nx/src/internal-testing-utils/run-migration-against-this-workspace';
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import { Tree } from 'nx/src/generators/tree';
 import { readJson, updateJson } from 'nx/src/generators/utils/json';

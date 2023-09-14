@@ -15,10 +15,7 @@ import {
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
-import {
-  ProjectGraphBuilder,
-  ProjectGraphDependencyWithFile,
-} from '../../../project-graph/project-graph-builder';
+import { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
 import { PackageJson } from '../../../utils/package-json';
 import { output } from '../../../utils/output';
 
@@ -40,6 +37,7 @@ import {
 import { pruneProjectGraph } from './project-graph-pruning';
 import { normalizePackageJson } from './utils/package-json';
 import { readJsonFile } from '../../../utils/fileutils';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
@@ -88,17 +86,17 @@ export function getLockFileDependencies(
   packageManager: PackageManager,
   contents: string,
   lockFileHash: string,
-  projectGraph: ProjectGraph
-): ProjectGraphDependencyWithFile[] {
+  context: CreateDependenciesContext
+): RawProjectGraphDependency[] {
   try {
     if (packageManager === 'yarn') {
-      return getYarnLockfileDependencies(contents, lockFileHash, projectGraph);
+      return getYarnLockfileDependencies(contents, lockFileHash, context);
     }
     if (packageManager === 'pnpm') {
-      return getPnpmLockfileDependencies(contents, lockFileHash, projectGraph);
+      return getPnpmLockfileDependencies(contents, lockFileHash, context);
     }
     if (packageManager === 'npm') {
-      return getNpmLockfileDependencies(contents, lockFileHash, projectGraph);
+      return getNpmLockfileDependencies(contents, lockFileHash, context);
     }
   } catch (e) {
     if (!isPostInstallProcess()) {
