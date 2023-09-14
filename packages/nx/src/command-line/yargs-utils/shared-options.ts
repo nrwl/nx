@@ -168,13 +168,19 @@ export function withRunManyOptions(yargs: Argv) {
     });
 }
 
-export function withOverrides(args: any): any {
-  args.__overrides_unparsed__ = (args['--'] ?? args._.slice(1)).map((v) =>
-    v.toString()
+export function withOverrides<T extends { _: Array<string | number> }>(
+  args: T,
+  commandLevel: number = 1
+): T & { __unparsed_overrides__: string[] } {
+  const unparsedArgs: string[] = (args['--'] ?? args._.slice(commandLevel)).map(
+    (v) => v.toString()
   );
   delete args['--'];
   delete args._;
-  return args;
+  return {
+    ...args,
+    __unparsed_overrides__: unparsedArgs,
+  };
 }
 
 export function withOutputStyleOption(

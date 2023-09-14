@@ -37,9 +37,25 @@ export interface NxArgs {
   type?: string;
 }
 
+export function createOverrides(__overrides_unparsed__: string[]) {
+  let overrides = yargsParser(__overrides_unparsed__ as string[], {
+    configuration: {
+      'camel-case-expansion': false,
+      'dot-notation': true,
+    },
+  });
+
+  if (!overrides._ || overrides._.length === 0) {
+    delete overrides._;
+  }
+
+  overrides.__overrides_unparsed__ = __overrides_unparsed__;
+  return overrides;
+}
+
 export function splitArgsIntoNxArgsAndOverrides(
   args: { [k: string]: any },
-  mode: 'run-one' | 'run-many' | 'affected' | 'print-affected' | 'release',
+  mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
   options = { printWarnings: true },
   nxJson: NxJsonConfiguration
 ): {
@@ -66,53 +82,10 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   const nxArgs: RawNxArgs = args;
-  let overrides = yargsParser(args.__overrides_unparsed__ as string[], {
-    configuration: {
-      'camel-case-expansion': false,
-      'dot-notation': true,
-    },
-  });
 
-  if (!overrides._ || overrides._.length === 0) {
-    delete overrides._;
-  }
-
-  overrides.__overrides_unparsed__ = args.__overrides_unparsed__;
+  let overrides = createOverrides(args.__overrides_unparsed__);
   delete (nxArgs as any).$0;
   delete (nxArgs as any).__overrides_unparsed__;
-
-  if (mode === 'release') {
-    if (overrides._[0] === 'release') {
-      overrides._.shift();
-    }
-    if (
-      overrides._[0] === 'version' ||
-      overrides._[0] === 'v' ||
-      overrides._[0] === 'changelog' ||
-      overrides._[0] === 'c' ||
-      overrides._[0] === 'publish' ||
-      overrides._[0] === 'p'
-    ) {
-      overrides._.shift();
-    }
-    if (overrides.__overrides_unparsed__[0] === 'release') {
-      overrides.__overrides_unparsed__.shift();
-    }
-    if (
-      overrides.__overrides_unparsed__[0] === 'version' ||
-      overrides.__overrides_unparsed__[0] === 'v' ||
-      overrides.__overrides_unparsed__[0] === 'changelog' ||
-      overrides.__overrides_unparsed__[0] === 'c' ||
-      overrides.__overrides_unparsed__[0] === 'publish' ||
-      overrides.__overrides_unparsed__[0] === 'p'
-    ) {
-      overrides.__overrides_unparsed__.shift();
-    }
-    if (overrides._.length === 0) {
-      delete overrides._;
-    }
-    return { nxArgs, overrides } as any;
-  }
 
   if (mode === 'run-many') {
     const args = nxArgs as any;

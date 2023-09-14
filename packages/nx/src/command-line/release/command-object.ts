@@ -1,11 +1,12 @@
 import { CommandModule, showHelp } from 'yargs';
 import { readNxJson } from '../../project-graph/file-utils';
-import { parseCSV } from '../yargs-utils/shared-options';
+import { parseCSV, withOverrides } from '../yargs-utils/shared-options';
 
 export interface NxReleaseArgs {
   groups?: string[];
   projects?: string[];
   dryRun?: boolean;
+  verbose?: boolean;
 }
 
 export type VersionOptions = NxReleaseArgs & {
@@ -59,6 +60,11 @@ export const yargsReleaseCommand: CommandModule<
         alias: 'd',
         type: 'boolean',
         default: false,
+      })
+      .option('verbose', {
+        type: 'boolean',
+        describe:
+          'Prints additional information about the commands (e.g., stack traces)',
       })
       .check((argv) => {
         if (argv.groups && argv.projects) {
@@ -161,5 +167,6 @@ const publishCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
         type: 'string',
         description: 'The distribution tag to apply to the published package',
       }),
-  handler: (args) => import('./publish').then((m) => m.publishHandler(args)),
+  handler: (args) =>
+    import('./publish').then((m) => m.publishHandler(withOverrides(args, 2))),
 };

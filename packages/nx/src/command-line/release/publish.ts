@@ -6,10 +6,7 @@ import {
 import { NxJsonConfiguration, output } from '../../devkit-exports';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { runCommand } from '../../tasks-runner/run-command';
-import {
-  NxArgs,
-  splitArgsIntoNxArgsAndOverrides,
-} from '../../utils/command-line-utils';
+import { createOverrides } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { PublishOptions } from './command-object';
 import { createNxReleaseConfig } from './config/config';
@@ -20,36 +17,11 @@ import {
   handleCreateReleaseGroupsError,
 } from './config/create-release-groups';
 
-export async function publishHandler(args: PublishOptions): Promise<void> {
+export async function publishHandler(
+  args: PublishOptions & { __unparsed_overrides__: string[] }
+): Promise<void> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
-
-  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
-    args,
-    'release',
-    { printWarnings: false },
-    nxJson
-  );
-  nxArgs.targets = ['release-publish'];
-  // We are not prioritizing raw speed for publishing execution, we are prioritizing clear useful output
-  nxArgs.parallel = 1;
-  nxArgs.outputStyle = 'stream';
-  if (nxArgs.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
-  /**
-   * TODO: We seem to need to explicitly add the possible CLI flags to the overrides in order for runCommand to work correctly.
-   * We can't leave this out, otherwise the options will not be set on the executor, nor can we generically spread the args,
-   * because then a ton of excess properties will be passed to the executor... This makes this code brittle as we could forget
-   * to update this when we make schema changes and it should be looked into in more detail in a follow up.
-   */
-  if (args.registry) {
-    overrides.registry = args.registry;
-  }
-  if (args.tag) {
-    overrides.tag = args.tag;
-  }
 
   // Apply default configuration to any optional user configuration
   const nxReleaseConfig = createNxReleaseConfig(nxJson.release);
@@ -138,10 +110,9 @@ export async function publishHandler(args: PublishOptions): Promise<void> {
      */
     for (const releaseGroup of releaseGroups) {
       await runPublishOnProjects(
+        args,
         projectGraph,
         nxJson,
-        nxArgs,
-        overrides,
         Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
       );
     }
@@ -169,10 +140,9 @@ export async function publishHandler(args: PublishOptions): Promise<void> {
    */
   for (const releaseGroup of releaseGroups) {
     await runPublishOnProjects(
+      args,
       projectGraph,
       nxJson,
-      nxArgs,
-      overrides,
       releaseGroup.projects
     );
   }
@@ -181,15 +151,24 @@ export async function publishHandler(args: PublishOptions): Promise<void> {
 }
 
 async function runPublishOnProjects(
+  args: PublishOptions & { __unparsed_overrides__: string[] },
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
-  nxArgs: NxArgs,
-  overrides: Record<string, unknown>,
   projectNames: string[]
 ) {
   const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
     (projectName) => projectGraph.nodes[projectName]
   );
+
+  const overrides = {
+    registry: args.registry,
+    tag: args.tag,
+    ...createOverrides(args.__unparsed_overrides__),
+  };
+
+  if (args.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
 
   /**
    * Run the relevant release-publish executor on each of the selected projects.
@@ -198,7 +177,11 @@ async function runPublishOnProjects(
     projectsToRun,
     projectGraph,
     { nxJson },
-    nxArgs,
+    {
+      targets: ['release-publish'],
+      parallel: 1,
+      outputStyle: 'stream',
+    },
     overrides,
     null,
     {},
