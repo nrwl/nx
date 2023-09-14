@@ -16,6 +16,7 @@ import { PackageManager } from 'nx/src/utils/package-manager';
 
 describe('convert Angular CLI workspace to an Nx workspace', () => {
   let project: string;
+  console.log('Hello Katerina');
   let packageManager: PackageManager;
 
   // utility to manually add protractor since it's not generated

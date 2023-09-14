@@ -15,6 +15,7 @@ import { join } from 'path';
 describe('Angular Module Federation', () => {
   let proj: string;
   let oldVerboseLoggingValue: string;
+  console.log('Hello Katerina');
 
   beforeAll(() => {
     proj = newProject();

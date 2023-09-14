@@ -52,6 +52,7 @@ describe('Next.js Applications', () => {
       `Successfully ran target test for project ${appName}`
     );
 
+    console.log('Hello Katerina');
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(

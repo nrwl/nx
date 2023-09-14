@@ -19,6 +19,7 @@ import {
 import { join, normalize } from 'path';
 
 describe('Angular Projects', () => {
+  console.log('Hello Katerina');
   let proj: string;
   const app1 = uniq('app1');
   const lib1 = uniq('lib1');

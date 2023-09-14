@@ -10,6 +10,7 @@ import {
 
 describe('angular.json v1 config', () => {
   const app1 = uniq('app1');
+  console.log('Hello Katerina');
 
   beforeAll(() => {
     newProject();
