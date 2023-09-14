@@ -10,10 +10,11 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateProjectConfig,
   setMaxWorkers,
+  updateJson,
 } from '@nx/e2e/utils';
 import { execSync } from 'child_process';
+import { join } from 'path';
 
 describe('Node Applications + webpack', () => {
   beforeEach(() => newProject());
@@ -24,7 +25,7 @@ describe('Node Applications + webpack', () => {
     const app = uniq('nodeapp');
 
     runCLI(`generate @nx/node:app ${app} --bundler=webpack --no-interactive`);
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', app, 'project.json'));
 
     checkFilesExist(`apps/${app}/webpack.config.js`);
 
@@ -57,7 +58,7 @@ describe('Node Applications + webpack', () => {
     const lib = uniq('nodelib');
     runCLI(`generate @nx/js:lib ${lib} --bundler=esbuild --no-interactive`);
 
-    await updateProjectConfig(app, (config) => {
+    updateJson(join('apps', app, 'project.json'), (config) => {
       // Since we read from lib from dist, we should re-build it when lib changes.
       config.targets.build.options.buildLibsFromSource = false;
       config.targets.serve.options.runBuildTargetDependencies = true;

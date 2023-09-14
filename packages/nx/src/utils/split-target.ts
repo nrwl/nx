@@ -1,5 +1,4 @@
 import { ProjectGraph } from '../config/project-graph';
-import { ProjectConfiguration } from '../config/workspace-json-project-json';
 
 export function splitTarget(
   s: string,

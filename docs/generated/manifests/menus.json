@@ -63,6 +63,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "React Monorepo",
+                "path": "/getting-started/tutorials/react-monorepo-tutorial",
+                "id": "react-monorepo-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Angular Standalone",
                 "path": "/getting-started/tutorials/angular-standalone-tutorial",
                 "id": "angular-standalone-tutorial",
@@ -139,6 +147,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "React Monorepo",
+            "path": "/getting-started/tutorials/react-monorepo-tutorial",
+            "id": "react-monorepo-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Angular Standalone",
             "path": "/getting-started/tutorials/angular-standalone-tutorial",
             "id": "angular-standalone-tutorial",
@@ -177,6 +193,14 @@
         "name": "React Standalone",
         "path": "/getting-started/tutorials/react-standalone-tutorial",
         "id": "react-standalone-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "React Monorepo",
+        "path": "/getting-started/tutorials/react-monorepo-tutorial",
+        "id": "react-monorepo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

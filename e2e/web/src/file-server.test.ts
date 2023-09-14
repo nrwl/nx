@@ -7,8 +7,9 @@ import {
   runCommandUntil,
   setMaxWorkers,
   uniq,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('file-server', () => {
   beforeAll(() => {
@@ -21,8 +22,8 @@ describe('file-server', () => {
     const port = 4301;
 
     runCLI(`generate @nx/web:app ${appName} --no-interactive`);
-    await setMaxWorkers();
-    await updateProjectConfig(appName, (config) => {
+    setMaxWorkers(join('apps', appName, 'project.json'));
+    updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets['serve'].executor = '@nx/web:file-server';
       return config;
     });
@@ -58,7 +59,7 @@ describe('file-server', () => {
     runCLI(
       `generate @nx/web:static-config --buildTarget=${reactAppName}:build --targetName=custom-serve-static --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', reactAppName, 'project.json'));
 
     const port = 6200;
 

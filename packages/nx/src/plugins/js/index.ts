@@ -19,7 +19,7 @@ import {
 } from './lock-file/lock-file';
 import { buildExplicitDependencies } from './project-graph/build-dependencies/build-dependencies';
 import { jsPluginConfig } from './utils/config';
-import { ProjectGraphDependencyWithFile } from '../../project-graph/project-graph-builder';
+import { RawProjectGraphDependency } from '../../project-graph/project-graph-builder';
 import { hashArray } from '../../hasher/file-hasher';
 import { detectPackageManager } from '../../utils/package-manager';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -29,7 +29,7 @@ export const name = 'nx-js-graph-plugin';
 
 interface ParsedLockFile {
   externalNodes?: ProjectGraph['externalNodes'];
-  dependencies?: ProjectGraphDependencyWithFile[];
+  dependencies?: RawProjectGraphDependency[];
 }
 let parsedLockFile: ParsedLockFile = {};
 
@@ -80,7 +80,7 @@ export const createDependencies: CreateDependencies = (
 
   const packageManager = detectPackageManager(workspaceRoot);
 
-  let lockfileDependencies: ProjectGraphDependencyWithFile[] = [];
+  let lockfileDependencies: RawProjectGraphDependency[] = [];
   // lockfile may not exist yet
   if (
     pluginConfig.analyzeLockfile &&
@@ -98,7 +98,7 @@ export const createDependencies: CreateDependencies = (
         packageManager,
         lockFileContents,
         lockFileHash,
-        ctx.graph
+        ctx
       );
 
       parsedLockFile.dependencies = lockfileDependencies;

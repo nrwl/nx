@@ -11,8 +11,8 @@ import {
   uniq,
   updateFile,
   updateJson,
-  updateProjectConfig,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('cache', () => {
   beforeEach(() => newProject());
@@ -23,8 +23,9 @@ describe('cache', () => {
     const myapp1 = uniq('myapp1');
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nx/web:app ${myapp1}`);
+    setMaxWorkers(join('apps', myapp1, 'project.json'));
     runCLI(`generate @nx/web:app ${myapp2}`);
-    await setMaxWorkers();
+    setMaxWorkers(join('apps', myapp2, 'project.json'));
 
     // run build with caching
     // --------------------------------------------
@@ -153,7 +154,7 @@ describe('cache', () => {
   it('should support using globs as outputs', async () => {
     const mylib = uniq('mylib');
     runCLI(`generate @nx/js:library ${mylib}`);
-    await updateProjectConfig(mylib, (c) => {
+    updateJson(join('libs', mylib, 'project.json'), (c) => {
       c.targets.build = {
         executor: 'nx:run-commands',
         outputs: ['{workspaceRoot}/dist/!(.next)/**/!(z|x).(txt|md)'],

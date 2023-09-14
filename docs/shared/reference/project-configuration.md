@@ -144,19 +144,41 @@ The `inputs` and `namedInputs` are parsed with the following rules:
 
 #### Runtime Inputs
 
-Examples:
+Nx will execute the command specified by `runtime` inputs and use the result when calculating hashes.
 
-- `{runtime: "node -v"}`
+Example:
 
-Note the result value is hashed, so it is never displayed.
+```
+{
+  "targets": {
+    "build": {
+      "executor" : "@nx/js:tsc",
+      "inputs" : [{"runtime": "node -v"}]
+    }
+  }
+}
+```
+
+Note: the result is hashed, so it is never displayed.
 
 #### Env Variables
 
-Examples:
+Nx will read the environment variable specified by `env` inputs and use it when calculating hashes.
 
-- `{env: "MY_ENV_VAR"}`
+Example:
 
-Note the result value is hashed, so it is never displayed.
+```
+{
+  "targets": {
+    "build": {
+      "executor" : "@nx/js:tsc",
+      "inputs" : [{"env": "DEMO_VAR"}]
+    }
+  }
+}
+```
+
+Note: the value is hashed, so it is never displayed.
 
 #### External Dependencies
 

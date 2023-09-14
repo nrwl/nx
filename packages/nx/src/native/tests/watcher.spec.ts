@@ -1,6 +1,5 @@
-import { TempFs } from '../../utils/testing/temp-fs';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { Watcher } from '../index';
-import { realpathSync } from 'fs-extra';
 
 describe('watcher', () => {
   let temp: TempFs;

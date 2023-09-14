@@ -80,6 +80,7 @@ describe('lib', () => {
       'vitest/importMeta',
       'vite/client',
       'node',
+      'vitest',
     ]);
   });
 

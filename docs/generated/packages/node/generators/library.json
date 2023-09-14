@@ -25,7 +25,8 @@
       "directory": {
         "type": "string",
         "description": "A directory where the lib is placed",
-        "alias": "dir"
+        "alias": "dir",
+        "x-priority": "important"
       },
       "projectNameAndRootFormat": {
         "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",

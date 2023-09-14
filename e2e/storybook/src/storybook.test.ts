@@ -11,6 +11,7 @@ import {
 } from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
+import { join } from 'path';
 
 describe('Storybook generators and executors for monorepos', () => {
   const reactStorybookApp = uniq('react-app');
@@ -20,7 +21,7 @@ describe('Storybook generators and executors for monorepos', () => {
     runCLI(
       `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
-    await setMaxWorkers();
+    setMaxWorkers(join(reactStorybookApp, 'project.json'));
     runCLI(
       `generate @nx/react:storybook-configuration ${reactStorybookApp} --generateStories --no-interactive --bundler=webpack`
     );

@@ -14,11 +14,9 @@ import { TargetConfiguration } from '@nx/devkit';
 import { ChildProcess, exec, execSync, ExecSyncOptions } from 'child_process';
 import { join } from 'path';
 import * as isCI from 'is-ci';
-import { fileExists, readJson, updateFile } from './file-utils';
+import { fileExists, readJson, updateJson } from './file-utils';
 import { logError, stripConsoleColors } from './log-utils';
 import { existsSync } from 'fs-extra';
-import { retrieveProjectConfigurations } from '../../packages/nx/src/project-graph/utils/retrieve-workspace-files';
-import { readNxJson } from '../../packages/nx/src/config/nx-json';
 
 export interface RunCmdOpts {
   silenceError?: boolean;
@@ -35,15 +33,9 @@ export interface RunCmdOpts {
  *
  * maxWorkers required for: node, web, jest
  */
-export async function setMaxWorkers() {
+export function setMaxWorkers(projectJsonPath: string) {
   if (isCI) {
-    const root = tmpProjPath();
-    const projects: Record<string, ProjectConfiguration> = (
-      await retrieveProjectConfigurations(root, readNxJson(root))
-    ).projectNodes;
-
-    Object.keys(projects).forEach((appName) => {
-      let project = projects[appName];
+    updateJson<ProjectConfiguration>(projectJsonPath, (project) => {
       const { build } = project.targets as {
         [targetName: string]: TargetConfiguration<any>;
       };
@@ -61,10 +53,7 @@ export async function setMaxWorkers() {
         build.options.maxWorkers = 4;
       }
 
-      updateFile(
-        join(project.root, 'project.json'),
-        JSON.stringify(project, null, 2)
-      );
+      return project;
     });
   }
 }

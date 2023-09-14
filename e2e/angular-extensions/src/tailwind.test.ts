@@ -7,8 +7,9 @@ import {
   runCLI,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Tailwind support', () => {
   let project: string;
@@ -358,7 +359,7 @@ describe('Tailwind support', () => {
       runCLI(
         `generate @nx/angular:app ${appWithTailwind} --add-tailwind --project-name-and-root-format=as-provided --no-interactive`
       );
-      await updateProjectConfig(appWithTailwind, (config) => {
+      updateJson(join(appWithTailwind, 'project.json'), (config) => {
         config.targets.build.executor = '@nx/angular:webpack-browser';
         config.targets.build.options = {
           ...config.targets.build.options,

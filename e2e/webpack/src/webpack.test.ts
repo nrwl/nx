@@ -6,8 +6,9 @@ import {
   runCommand,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Webpack Plugin', () => {
   beforeEach(() => newProject());
@@ -45,7 +46,7 @@ module.exports = composePlugins(withNx(), (config) => {
     expect(output).not.toMatch(/Conflicting/);
     expect(output).not.toMatch(/process.env.NODE_ENV/);
 
-    await updateProjectConfig(myPkg, (config) => {
+    updateJson(join('libs', myPkg, 'project.json'), (config) => {
       delete config.targets.build;
       return config;
     });
@@ -59,7 +60,7 @@ module.exports = composePlugins(withNx(), (config) => {
     output = runCommand(`node dist/libs/${myPkg}/main.js`);
     expect(output).toMatch(/Hello/);
 
-    await updateProjectConfig(myPkg, (config) => {
+    updateJson(join('libs', myPkg, 'project.json'), (config) => {
       delete config.targets.build;
       return config;
     });

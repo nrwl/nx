@@ -20,6 +20,10 @@ export const presetOptions: { name: Preset; message: string }[] = [
     message: 'angular           [a monorepo with a single Angular application]',
   },
   {
+    name: Preset.VueMonorepo,
+    message: 'vue               [a monorepo with a single Vue application]',
+  },
+  {
     name: Preset.NextJs,
     message: 'next.js           [a monorepo with a single Next.js application]',
   },
