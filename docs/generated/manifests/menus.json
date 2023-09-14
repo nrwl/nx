@@ -79,6 +79,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Angular Monorepo",
+                "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+                "id": "angular-monorepo-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Node Standalone",
                 "path": "/getting-started/tutorials/node-server-tutorial",
                 "id": "node-server-tutorial",
@@ -163,6 +171,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Angular Monorepo",
+            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+            "id": "angular-monorepo-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Node Standalone",
             "path": "/getting-started/tutorials/node-server-tutorial",
             "id": "node-server-tutorial",
@@ -209,6 +225,14 @@
         "name": "Angular Standalone",
         "path": "/getting-started/tutorials/angular-standalone-tutorial",
         "id": "angular-standalone-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular Monorepo",
+        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+        "id": "angular-monorepo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -10,6 +10,7 @@
       - [React Standalone](/getting-started/tutorials/react-standalone-tutorial)
       - [React Monorepo](/getting-started/tutorials/react-monorepo-tutorial)
       - [Angular Standalone](/getting-started/tutorials/angular-standalone-tutorial)
+      - [Angular Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)
       - [Node Standalone](/getting-started/tutorials/node-server-tutorial)
   - [Core Tutorial](/core-tutorial)
     - [1 - Create Blog](/core-tutorial/01-create-blog)
