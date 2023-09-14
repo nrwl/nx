@@ -2092,6 +2092,16 @@
             "tags": []
           },
           {
+            "id": "from-turborepo",
+            "name": "Migrate From Turborepo",
+            "description": "",
+            "file": "shared/migration/from-turborepo",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/from-turborepo",
+            "tags": []
+          },
+          {
             "id": "adding-to-existing-project",
             "name": "Add to any Project",
             "description": "",
@@ -3204,6 +3214,16 @@
         "tags": []
       },
       {
+        "id": "from-turborepo",
+        "name": "Migrate From Turborepo",
+        "description": "",
+        "file": "shared/migration/from-turborepo",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/from-turborepo",
+        "tags": []
+      },
+      {
         "id": "adding-to-existing-project",
         "name": "Add to any Project",
         "description": "",
@@ -3256,6 +3276,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-monorepo",
+    "tags": []
+  },
+  "/recipes/adopting-nx/from-turborepo": {
+    "id": "from-turborepo",
+    "name": "Migrate From Turborepo",
+    "description": "",
+    "file": "shared/migration/from-turborepo",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/from-turborepo",
     "tags": []
   },
   "/recipes/adopting-nx/adding-to-existing-project": {
