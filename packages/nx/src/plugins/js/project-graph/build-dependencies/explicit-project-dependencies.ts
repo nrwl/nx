@@ -1,25 +1,32 @@
 import { TargetProjectLocator } from './target-project-locator';
-import { DependencyType, ProjectGraph } from '../../../../config/project-graph';
+import {
+  DependencyType,
+  ProjectGraphProjectNode,
+} from '../../../../config/project-graph';
 import { join, relative } from 'path';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { normalizePath } from '../../../../utils/path';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
 import {
-  ProjectGraphDependencyWithFile,
+  RawProjectGraphDependency,
   validateDependency,
 } from '../../../../project-graph/project-graph-builder';
+import { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 
-function isRoot(graph: ProjectGraph, projectName: string): boolean {
-  return graph.nodes[projectName]?.data?.root === '.';
+function isRoot(
+  projects: Record<string, ProjectConfiguration>,
+  projectName: string
+): boolean {
+  return projects[projectName]?.root === '.';
 }
 
 function convertImportToDependency(
   importExpr: string,
   sourceFile: string,
   source: string,
-  dependencyType: ProjectGraphDependencyWithFile['dependencyType'],
+  type: RawProjectGraphDependency['type'],
   targetProjectLocator: TargetProjectLocator
-): ProjectGraphDependencyWithFile {
+): RawProjectGraphDependency {
   const target =
     targetProjectLocator.findProjectWithImport(importExpr, sourceFile) ??
     `npm:${importExpr}`;
@@ -28,30 +35,51 @@ function convertImportToDependency(
     source,
     target,
     sourceFile,
-    dependencyType,
+    type,
   };
 }
 
-export function buildExplicitTypeScriptDependencies({
-  fileMap,
-  graph,
-}: CreateDependenciesContext): ProjectGraphDependencyWithFile[] {
-  const targetProjectLocator = new TargetProjectLocator(
-    graph.nodes as any,
-    graph.externalNodes
+export function buildExplicitTypeScriptDependencies(
+  ctx: CreateDependenciesContext
+): RawProjectGraphDependency[] {
+  // TODO: TargetProjectLocator is a public API, so we can't change the shape of it
+  // We should eventually let it accept Record<string, ProjectConfiguration> s.t. we
+  // don't have to reshape the CreateDependenciesContext here.
+  const nodes: Record<string, ProjectGraphProjectNode> = Object.fromEntries(
+    Object.entries(ctx.projects).map(([key, config]) => [
+      key,
+      {
+        name: key,
+        type: null,
+        data: config,
+      },
+    ])
   );
-  const res: ProjectGraphDependencyWithFile[] = [];
+  const targetProjectLocator = new TargetProjectLocator(
+    nodes,
+    ctx.externalNodes
+  );
+  const res: RawProjectGraphDependency[] = [];
 
   const filesToProcess: Record<string, string[]> = {};
 
-  const moduleExtensions = ['.ts', '.js', '.tsx', '.jsx', '.mts', '.mjs'];
+  const moduleExtensions = [
+    '.ts',
+    '.js',
+    '.tsx',
+    '.jsx',
+    '.mts',
+    '.mjs',
+    '.cjs',
+    '.cts',
+  ];
 
   // TODO: This can be removed when vue is stable
   if (isVuePluginInstalled()) {
     moduleExtensions.push('.vue');
   }
 
-  for (const [project, fileData] of Object.entries(fileMap)) {
+  for (const [project, fileData] of Object.entries(ctx.fileMap)) {
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {
       if (moduleExtensions.some((ext) => file.endsWith(ext))) {
@@ -81,8 +109,8 @@ export function buildExplicitTypeScriptDependencies({
       );
       // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
       if (
-        isRoot(graph, dependency.source) ||
-        !isRoot(graph, dependency.target)
+        isRoot(ctx.projects, dependency.source) ||
+        !isRoot(ctx.projects, dependency.target)
       ) {
         res.push(dependency);
       }
@@ -97,10 +125,10 @@ export function buildExplicitTypeScriptDependencies({
       );
       // TODO: These edges technically should be allowed but we need to figure out how to separate config files out from root
       if (
-        isRoot(graph, dependency.source) ||
-        !isRoot(graph, dependency.target)
+        isRoot(ctx.projects, dependency.source) ||
+        !isRoot(ctx.projects, dependency.target)
       ) {
-        validateDependency(graph, dependency);
+        validateDependency(dependency, ctx);
         res.push(dependency);
       }
     }

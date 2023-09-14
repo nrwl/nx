@@ -8,6 +8,7 @@ import { pruneProjectGraph } from './project-graph-pruning';
 import { vol } from 'memfs';
 import { ProjectGraph } from '../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 jest.mock('fs', () => {
   const memFs = require('memfs').fs;
@@ -36,15 +37,23 @@ describe('NPM lock file utility', () => {
         JSON.stringify(rootLockFile),
         hash
       );
-      const pg = {
-        nodes: {},
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const pg: ProjectGraph = {
         dependencies: {},
+        nodes: {},
         externalNodes,
       };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -52,8 +61,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       graph = builder.getUpdatedProjectGraph();
@@ -84,10 +93,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(appLockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -95,8 +112,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const appGraph = builder.getUpdatedProjectGraph();
@@ -155,10 +172,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -166,8 +191,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -237,10 +262,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootV2LockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -248,8 +281,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -359,10 +392,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootV2LockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -370,8 +411,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -470,10 +511,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -481,8 +530,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -505,10 +554,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -516,8 +573,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -544,10 +601,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(lockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -555,8 +620,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -594,10 +659,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -605,8 +678,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();
@@ -646,10 +719,18 @@ describe('NPM lock file utility', () => {
         dependencies: {},
         externalNodes,
       };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {},
+        filesToProcess: {},
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
       const dependencies = getNpmLockfileDependencies(
         JSON.stringify(rootLockFile),
         hash,
-        pg
+        ctx
       );
 
       const builder = new ProjectGraphBuilder(pg);
@@ -657,8 +738,8 @@ describe('NPM lock file utility', () => {
         builder.addDependency(
           dep.source,
           dep.target,
-          dep.dependencyType,
-          dep.sourceFile
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
         );
       }
       const graph = builder.getUpdatedProjectGraph();

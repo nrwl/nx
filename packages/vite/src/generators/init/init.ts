@@ -45,7 +45,7 @@ function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
     devDependencies['happy-dom'] = happyDomVersion;
   } else if (schema.testEnvironment === 'edge-runtime') {
     devDependencies['@edge-runtime/vm'] = edgeRuntimeVmVersion;
-  } else if (schema.testEnvironment !== 'node') {
+  } else if (schema.testEnvironment !== 'node' && schema.testEnvironment) {
     logger.info(
       `A custom environment was provided: ${schema.testEnvironment}. You need to install it manually.`
     );

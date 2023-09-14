@@ -7,9 +7,9 @@ import {
   runE2ETests,
   uniq,
   updateFile,
-  updateProjectConfig,
   removeFile,
   checkFilesExist,
+  updateJson,
 } from '../../utils';
 import { names } from '@nx/devkit';
 import { join } from 'path';
@@ -283,7 +283,7 @@ async function useWorkspaceAssetsInApp(appName: string) {
   }
   `
   );
-  await updateProjectConfig(appName, (config) => {
+  updateJson(join(appName, 'project.json'), (config) => {
     config.targets['build'].options.stylePreprocessorOptions = {
       includePaths: ['assets/styles'],
     };

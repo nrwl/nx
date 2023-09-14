@@ -49,6 +49,11 @@
                   "file": "shared/react-standalone-tutorial/react-standalone"
                 },
                 {
+                  "name": "React Monorepo",
+                  "id": "react-monorepo-tutorial",
+                  "file": "shared/react-tutorial/react-monorepo"
+                },
+                {
                   "name": "Angular Standalone",
                   "id": "angular-standalone-tutorial",
                   "file": "shared/angular-standalone-tutorial/angular-standalone"
@@ -1782,6 +1787,11 @@
               "file": "nx-cloud/private/auth-saml"
             },
             {
+              "name": "Authenticate via SAML on Managed Version",
+              "id": "auth-saml-managed",
+              "file": "nx-cloud/private/auth-saml-managed"
+            },
+            {
               "name": "Advanced Configuration",
               "id": "advanced-config",
               "file": "nx-cloud/private/advanced-config"
@@ -2071,6 +2081,20 @@
               "name": "Overview of the Nx Vite Plugin",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
+            }
+          ]
+        },
+        {
+          "name": "vue",
+          "id": "vue",
+          "description": "Vue package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "path": "/packages/vue",
+              "name": "Overview of the Nx Vue Plugin",
+              "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
+              "file": "shared/packages/vue/vue-plugin"
             }
           ]
         },

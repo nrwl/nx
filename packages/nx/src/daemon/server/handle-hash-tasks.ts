@@ -2,7 +2,6 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { getCachedSerializedProjectGraphPromise } from './project-graph-incremental-recomputation';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { readNxJson } from '../../config/configuration';
-import { fileHasher } from '../../hasher/file-hasher';
 import { setHashEnv } from '../../hasher/set-hash-env';
 
 /**
@@ -31,8 +30,7 @@ export async function handleHashTasks(payload: {
       allWorkspaceFiles,
       projectGraph,
       nxJson,
-      payload.runnerOptions,
-      fileHasher
+      payload.runnerOptions
     );
   }
   const response = JSON.stringify(

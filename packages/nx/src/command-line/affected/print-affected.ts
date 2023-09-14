@@ -13,7 +13,6 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
 import { getPackageManagerCommand } from '../../utils/package-manager';
-import { fileHasher } from '../../hasher/file-hasher';
 import { printAffectedDeprecationMessage } from './command-object';
 import { logger, NX_PREFIX } from '../../utils/logger';
 
@@ -72,14 +71,7 @@ async function createTasks(
     nxArgs.configuration,
     overrides
   );
-  const hasher = new InProcessTaskHasher(
-    {},
-    [],
-    projectGraph,
-    nxJson,
-    {},
-    fileHasher
-  );
+  const hasher = new InProcessTaskHasher({}, [], projectGraph, nxJson, {});
   const execCommand = getPackageManagerCommand().exec;
   const tasks = Object.values(taskGraph.tasks);
 

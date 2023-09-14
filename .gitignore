@@ -12,6 +12,7 @@ tmp
 jest.debug.config.js
 .tool-versions
 /.nx-cache
+/.nx
 /.verdaccio/build/local-registry
 /graph/client/src/assets/environment.js
 /graph/client/src/assets/dev/environment.js
@@ -35,19 +36,8 @@ CHANGELOG.md
 # Local dev files
 .env
 .bashrc
-.nx
 
 *.node
 
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
-.nx/cache
-
-.cargo/.package-cache
-.cargo/bin/
-.cargo/env
-.cargo/registry/
-.local/
-.npm/
-.profile
-.rustup/

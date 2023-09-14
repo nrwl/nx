@@ -52,15 +52,36 @@ export async function vitestGenerator(
   tasks.push(initTask);
 
   if (!schema.skipViteConfig) {
-    createOrEditViteConfig(
-      tree,
-      {
-        ...schema,
-        includeVitest: true,
-        includeLib: projectType === 'library',
-      },
-      true
-    );
+    if (schema.uiFramework === 'react') {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: schema.project,
+          includeLib: projectType === 'library',
+          includeVitest: true,
+          inSourceTests: schema.inSourceTests,
+          rollupOptionsExternal: [
+            `'react'`,
+            `'react-dom'`,
+            `'react/jsx-runtime'`,
+          ],
+          rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+          imports: [`import react from '@vitejs/plugin-react'`],
+          plugins: ['react()'],
+        },
+        true
+      );
+    } else {
+      createOrEditViteConfig(
+        tree,
+        {
+          ...schema,
+          includeVitest: true,
+          includeLib: projectType === 'library',
+        },
+        true
+      );
+    }
   }
 
   createFiles(tree, schema, root);
@@ -89,26 +110,55 @@ function updateTsConfig(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
-  updateJson(tree, joinPathFragments(projectRoot, 'tsconfig.json'), (json) => {
-    if (
-      json.references &&
-      !json.references.some((r) => r.path === './tsconfig.spec.json')
-    ) {
-      json.references.push({
-        path: './tsconfig.spec.json',
-      });
-    }
-
-    if (!json.compilerOptions?.types?.includes('vitest')) {
-      if (json.compilerOptions?.types) {
-        json.compilerOptions.types.push('vitest');
-      } else {
-        json.compilerOptions ??= {};
-        json.compilerOptions.types = ['vitest'];
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.spec.json'))) {
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.spec.json'),
+      (json) => {
+        if (!json.compilerOptions?.types?.includes('vitest')) {
+          if (json.compilerOptions?.types) {
+            json.compilerOptions.types.push('vitest');
+          } else {
+            json.compilerOptions ??= {};
+            json.compilerOptions.types = ['vitest'];
+          }
+        }
+        return json;
       }
-    }
-    return json;
-  });
+    );
+
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.json'),
+      (json) => {
+        if (
+          json.references &&
+          !json.references.some((r) => r.path === './tsconfig.spec.json')
+        ) {
+          json.references.push({
+            path: './tsconfig.spec.json',
+          });
+        }
+        return json;
+      }
+    );
+  } else {
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.json'),
+      (json) => {
+        if (!json.compilerOptions?.types?.includes('vitest')) {
+          if (json.compilerOptions?.types) {
+            json.compilerOptions.types.push('vitest');
+          } else {
+            json.compilerOptions ??= {};
+            json.compilerOptions.types = ['vitest'];
+          }
+        }
+        return json;
+      }
+    );
+  }
 
   if (options.inSourceTests) {
     const tsconfigLibPath = joinPathFragments(projectRoot, 'tsconfig.lib.json');

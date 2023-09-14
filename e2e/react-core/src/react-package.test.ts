@@ -14,9 +14,9 @@ import {
   uniq,
   updateFile,
   updateJson,
-  updateProjectConfig,
 } from '@nx/e2e/utils';
 import { names } from '@nx/devkit';
+import { join } from 'path';
 
 describe('Build React libraries and apps', () => {
   /**
@@ -99,7 +99,7 @@ describe('Build React libraries and apps', () => {
     );
 
     // Add assets to child lib
-    await updateProjectConfig(childLib, (json) => {
+    updateJson(join('libs', childLib, 'project.json'), (json) => {
       json.targets.build.options.assets = [`libs/${childLib}/src/assets`];
       return json;
     });

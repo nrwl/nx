@@ -1,10 +1,11 @@
-import { TempFs } from '../../../../utils/testing/temp-fs';
+import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 const tempFs = new TempFs('explicit-project-deps');
 
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
 import { retrieveWorkspaceFiles } from '../../../../project-graph/utils/retrieve-workspace-files';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { setupWorkspaceContext } from '../../../../utils/workspace-context';
 
 // projectName => tsconfig import path
 const dependencyProjectNamesToImportPaths = {
@@ -43,25 +44,25 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj2',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'npm:npm-package',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj3a',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
       ]);
     });
@@ -89,19 +90,19 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj2',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj3a',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
       ]);
     });
@@ -128,19 +129,19 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/index.mts',
           target: 'proj2',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.mts',
           target: 'proj3a',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.mts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
       ]);
     });
@@ -168,19 +169,19 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj2',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj3a',
-          dependencyType: 'static',
+          type: 'static',
         },
         {
           source,
           sourceFile: 'libs/proj/index.ts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
       ]);
     });
@@ -229,19 +230,19 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/component.tsx',
           target: 'proj2',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
         {
           source,
           sourceFile: 'libs/proj/nested-dynamic-import.ts',
           target: 'proj3a',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
         {
           source,
           sourceFile: 'libs/proj/nested-require.ts',
           target: 'proj4ab',
-          dependencyType: 'static',
+          type: 'static',
         },
       ]);
     });
@@ -273,13 +274,13 @@ describe('explicit project dependencies', () => {
           source,
           sourceFile: 'libs/proj/absolute-path.ts',
           target: 'proj3a',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
         {
           source,
           sourceFile: 'libs/proj/relative-path.ts',
           target: 'proj4ab',
-          dependencyType: 'dynamic',
+          type: 'dynamic',
         },
       ]);
     });
@@ -559,14 +560,17 @@ async function createContext(
     ...projectsFs,
   });
 
+  setupWorkspaceContext(tempFs.tempDir);
+
   const { projectFileMap, projectConfigurations } =
     await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
 
   return {
-    graph: builder.getUpdatedProjectGraph(),
-    projectsConfigurations: projectConfigurations,
+    externalNodes: builder.getUpdatedProjectGraph().externalNodes,
+    projects: projectConfigurations.projects,
     nxJsonConfiguration: nxJson,
     filesToProcess: projectFileMap,
     fileMap: projectFileMap,
+    workspaceRoot: tempFs.tempDir,
   };
 }

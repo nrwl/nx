@@ -8,8 +8,9 @@ import {
   setMaxWorkers,
   uniq,
   updateFile,
-  updateProjectConfig,
+  updateJson,
 } from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Extra Nx Misc Tests', () => {
   beforeAll(() => newProject());
@@ -19,9 +20,9 @@ describe('Extra Nx Misc Tests', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
       runCLI(`generate @nx/web:app ${myapp}`);
-      await setMaxWorkers();
+      setMaxWorkers(join('apps', myapp, 'project.json'));
 
-      await updateProjectConfig(myapp, (c) => {
+      updateJson(join('apps', myapp, 'project.json'), (c) => {
         c.targets['inner'] = {
           command: 'echo inner',
         };
@@ -125,7 +126,7 @@ describe('Extra Nx Misc Tests', () => {
         process.platform === 'win32'
           ? `%SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%` // Windows
           : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
-      await updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.echoEnvVariables.options.command += ` ${command}`;
         return config;
       });
@@ -138,7 +139,7 @@ describe('Extra Nx Misc Tests', () => {
     }, 120000);
 
     it('should pass options', async () => {
-      await updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.echo = {
           command: 'echo --var1={args.var1}',
           options: {
@@ -154,7 +155,7 @@ describe('Extra Nx Misc Tests', () => {
 
     it('should interpolate provided arguments', async () => {
       const echoTarget = uniq('echo');
-      await updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets[echoTarget] = {
           executor: 'nx:run-commands',
           options: {
@@ -189,7 +190,7 @@ describe('Extra Nx Misc Tests', () => {
     }, 120000);
 
     it('should fail when a process exits non-zero', async () => {
-      await updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.error = {
           executor: 'nx:run-commands',
           options: {
@@ -210,7 +211,7 @@ describe('Extra Nx Misc Tests', () => {
     });
 
     it('run command should not break if output property is missing in options and arguments', async () => {
-      await updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.lint.outputs = ['{options.outputFile}'];
         return config;
       });
@@ -244,7 +245,7 @@ describe('Extra Nx Misc Tests', () => {
           : `mkdir -p ${folder}`,
         `echo dummy > ${folder}/dummy.txt`,
       ];
-      await updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         delete config.targets.build.options.command;
         config.targets.build.options = {
           ...config.targets.build.options,

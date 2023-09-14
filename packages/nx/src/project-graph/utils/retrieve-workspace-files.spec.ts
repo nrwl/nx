@@ -1,4 +1,4 @@
-import { TempFs } from '../../utils/testing/temp-fs';
+import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { retrieveProjectConfigurationPaths } from './retrieve-workspace-files';
 
 describe('retrieveProjectConfigurationPaths', () => {

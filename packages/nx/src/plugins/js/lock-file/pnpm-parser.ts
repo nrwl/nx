@@ -16,7 +16,7 @@ import {
 } from './utils/package-json';
 import { sortObjectByKeys } from '../../../utils/object-sort';
 import {
-  ProjectGraphDependencyWithFile,
+  RawProjectGraphDependency,
   validateDependency,
 } from '../../../project-graph/project-graph-builder';
 import {
@@ -25,6 +25,7 @@ import {
   ProjectGraphExternalNode,
 } from '../../../config/project-graph';
 import { hashArray } from '../../../hasher/file-hasher';
+import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 // we use key => node map to avoid duplicate work when parsing keys
 let keyMap = new Map<string, ProjectGraphExternalNode>();
@@ -56,12 +57,12 @@ export function getPnpmLockfileNodes(
 export function getPnpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
-  projectGraph: ProjectGraph
+  ctx: CreateDependenciesContext
 ) {
   const data = parsePnpmLockFile(lockFileContent, lockFileHash);
   const isV6 = isV6Lockfile(data);
 
-  return getDependencies(data, keyMap, isV6, projectGraph);
+  return getDependencies(data, keyMap, isV6, ctx);
 }
 
 function getNodes(
@@ -157,9 +158,9 @@ function getDependencies(
   data: Lockfile,
   keyMap: Map<string, ProjectGraphExternalNode>,
   isV6: boolean,
-  projectGraph: ProjectGraph
-): ProjectGraphDependencyWithFile[] {
-  const results: ProjectGraphDependencyWithFile[] = [];
+  ctx: CreateDependenciesContext
+): RawProjectGraphDependency[] {
+  const results: RawProjectGraphDependency[] = [];
   Object.entries(data.packages).forEach(([key, snapshot]) => {
     const node = keyMap.get(key);
     [snapshot.dependencies, snapshot.optionalDependencies].forEach(
@@ -171,15 +172,15 @@ function getDependencies(
               isV6
             );
             const target =
-              projectGraph.externalNodes[`npm:${name}@${version}`] ||
-              projectGraph.externalNodes[`npm:${name}`];
+              ctx.externalNodes[`npm:${name}@${version}`] ||
+              ctx.externalNodes[`npm:${name}`];
             if (target) {
-              const dep = {
+              const dep: RawProjectGraphDependency = {
                 source: node.name,
                 target: target.name,
-                dependencyType: DependencyType.static,
+                type: DependencyType.static,
               };
-              validateDependency(projectGraph, dep);
+              validateDependency(dep, ctx);
               results.push(dep);
             }
           });

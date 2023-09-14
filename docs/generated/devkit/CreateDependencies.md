@@ -1,10 +1,10 @@
 # Type alias: CreateDependencies
 
-Ƭ **CreateDependencies**: (`context`: [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext)) => [`ProjectGraphDependencyWithFile`](../../devkit/documents/ProjectGraphDependencyWithFile)[] \| `Promise`<[`ProjectGraphDependencyWithFile`](../../devkit/documents/ProjectGraphDependencyWithFile)[]\>
+Ƭ **CreateDependencies**: (`context`: [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext)) => [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
 
 #### Type declaration
 
-▸ (`context`): [`ProjectGraphDependencyWithFile`](../../devkit/documents/ProjectGraphDependencyWithFile)[] \| `Promise`<[`ProjectGraphDependencyWithFile`](../../devkit/documents/ProjectGraphDependencyWithFile)[]\>
+▸ (`context`): [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
 
 A function which parses files in the workspace to create dependencies in the [ProjectGraph](../../devkit/documents/ProjectGraph)
 Use [validateDependency](../../devkit/documents/validateDependency) to validate dependencies
@@ -17,4 +17,4 @@ Use [validateDependency](../../devkit/documents/validateDependency) to validate 
 
 ##### Returns
 
-[`ProjectGraphDependencyWithFile`](../../devkit/documents/ProjectGraphDependencyWithFile)[] \| `Promise`<[`ProjectGraphDependencyWithFile`](../../devkit/documents/ProjectGraphDependencyWithFile)[]\>
+[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
