@@ -65,10 +65,15 @@ export function getListOfSources(
       return false;
     })
     .map((section) => {
-      const url = new URL('https://nx.dev');
-      url.pathname = section.url_partial as string;
-      if (section.slug) {
-        url.hash = section.slug;
+      let url: URL;
+      if (section.url_partial?.startsWith('https://')) {
+        url = new URL(section.url_partial);
+      } else {
+        url = new URL('https://nx.dev');
+        url.pathname = section.url_partial as string;
+        if (section.slug) {
+          url.hash = section.slug;
+        }
       }
       return {
         heading: section.heading,
