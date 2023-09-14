@@ -1019,8 +1019,8 @@ This will create a default CI configuration that sets up Nx Cloud to [use distri
 Here's some more things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- Learn how to [migrate your CRA app to Nx](/recipes/angular/migration-cra)
-- [Learn how to setup Tailwind](/recipes/angular/using-tailwind-css-in-angular)
+- Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects)
+- Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-angular)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
 - [Speed up CI: Share your cache](/core-features/remote-cache)
