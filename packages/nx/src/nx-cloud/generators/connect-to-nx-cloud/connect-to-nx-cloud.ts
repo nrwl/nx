@@ -1,76 +1,32 @@
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
-import { printCloudConnectionDisabledMessage } from '../../utilities/print-cloud-connection-disabled-message';
+import { URL } from 'node:url';
+import { output } from '../../../utils/output';
+import { Tree } from '../../../generators/tree';
+import { readJson } from '../../../generators/utils/json';
+import { NxJsonConfiguration } from '../../../config/nx-json';
+import { readNxJson, updateNxJson } from '../../../generators/utils/nx-json';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
-function updateNxJson(json, token: string) {
-  const alreadySetOptions = json.tasksRunnerOptions?.default?.options ?? {};
-
-  const options = {
-    ...alreadySetOptions,
-    accessToken: token,
-  };
-
-  if (process.env.NX_CLOUD_API) {
-    options.url = process.env.NX_CLOUD_API;
-  }
-
-  json.tasksRunnerOptions = {
-    default: {
-      runner: isNxVersion16OrHigher() ? 'nx-cloud' : '@nrwl/nx-cloud',
-      options,
-    },
-  };
+function printCloudConnectionDisabledMessage() {
+  output.error({
+    title: `Connections to Nx Cloud are disabled for this workspace`,
+    bodyLines: [
+      `This was an intentional decision by someone on your team.`,
+      `Nx Cloud cannot and will not be enabled.`,
+      ``,
+      `To allow connections to Nx Cloud again, remove the 'neverConnectToCloud'`,
+      `property in nx.json.`,
+    ],
+  });
 }
 
-function readNxJsonUsingNx(host: any): any {
-  try {
-    const jsonUtils = require('nx/src/utils/json');
-    return jsonUtils.parseJson(host.read('nx.json', 'utf-8'));
-  } catch (ee) {
-    return JSON.parse(host.read('nx.json', 'utf-8'));
-  }
-}
-
-function writeNxJsonUsingNx(host: any, json: any, token: string) {
-  updateNxJson(json, token);
-  try {
-    const jsonUtils = require('nx/src/utils/json');
-    host.write('nx.json', jsonUtils.serializeJson(json));
-  } catch (ee) {
-    host.write('nx.json', JSON.stringify(json, null, 2));
-  }
-}
-
-function getRootPackageName(): string {
+function getRootPackageName(tree: Tree): string {
   let packageJson;
   try {
-    packageJson = JSON.parse(readFileSync('package.json').toString());
+    packageJson = readJson(tree, 'package.json');
   } catch (e) {}
   return packageJson?.name ?? 'my-workspace';
 }
-
-function isNxVersion16OrHigher(): boolean {
-  try {
-    const packageJson = JSON.parse(readFileSync('package.json').toString());
-    const deps = {
-      ...(packageJson.dependencies || {}),
-      ...(packageJson.devDependencies || {}),
-    };
-    if (
-      deps['nx'].startsWith('15.') ||
-      deps['nx'].startsWith('14.') ||
-      deps['nx'].startsWith('13.') ||
-      deps['nx'].startsWith('12.')
-    ) {
-      return false;
-    } else {
-      return true;
-    }
-  } catch (e) {
-    return true;
-  }
-}
-
 function removeTrailingSlash(apiUrl: string) {
   return apiUrl[apiUrl.length - 1] === '/'
     ? apiUrl.substr(0, apiUrl.length - 1)
@@ -117,11 +73,9 @@ async function createNxCloudWorkspace(
 }
 
 function printSuccessMessage(url: string) {
-  const { output } = require('../../utilities/nx-imports-light');
-
   let host = 'nx.app';
   try {
-    host = new (require('url').URL)(url).host;
+    host = new URL(url).host;
   } catch (e) {}
 
   output.note({
@@ -138,22 +92,48 @@ function printSuccessMessage(url: string) {
   });
 }
 
-export async function generator(host, schema) {
-  const nxJson = readNxJsonUsingNx(host);
+interface ConnectToNxCloudOptions {
+  analytics: boolean;
+  installationSource: string;
+}
 
-  if (nxJson.neverConnectToCloud) {
+function addNxCloudOptionsToNxJson(
+  tree: Tree,
+  nxJson: NxJsonConfiguration,
+  token: string
+) {
+  nxJson.nxCloudAccessToken = token;
+  const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
+  if (overrideUrl) {
+    (nxJson as any).nxCloudUrl = overrideUrl;
+  }
+  updateNxJson(tree, nxJson);
+}
+
+export async function connectToNxCloud(
+  tree: Tree,
+  schema: ConnectToNxCloudOptions
+) {
+  const nxJson = readNxJson(tree);
+
+  if ((nxJson as any).neverConnectToCloud) {
     return () => {
       printCloudConnectionDisabledMessage();
     };
   } else {
     // TODO: Change to using loading light client when that is enabled by default
     const r = await createNxCloudWorkspace(
-      getRootPackageName(),
+      getRootPackageName(tree),
       schema.installationSource,
       getNxInitDate()
     );
 
-    writeNxJsonUsingNx(host, nxJson, r.token);
+    addNxCloudOptionsToNxJson(tree, nxJson, r.token);
+
+    await formatChangedFilesWithPrettierIfAvailable(tree);
+
     return () => printSuccessMessage(r.url);
   }
 }
+
+export default connectToNxCloud;

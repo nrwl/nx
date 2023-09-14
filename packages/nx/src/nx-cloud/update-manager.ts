@@ -1,18 +1,23 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { createHash } from 'crypto';
 import {
+  createWriteStream,
   existsSync,
   mkdirSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   rmSync,
   statSync,
   writeFileSync,
 } from 'fs';
-import { dirname, isAbsolute, join, resolve } from 'path';
-import { CloudTaskRunnerOptions } from '../core/models/cloud-task-runner-options';
-import { createApiAxiosInstance } from '../utilities/axios';
+import { createGunzip } from 'zlib';
+import { join } from 'path';
+import { createApiAxiosInstance } from './utilities/axios';
 import { debugLog } from './debug-logger';
+import type { CloudTaskRunnerOptions } from './nx-cloud-tasks-runner-shell';
+import * as tar from 'tar-stream';
+import { cacheDir } from '../utils/cache-directory';
+import { createHash } from 'crypto';
+import { TasksRunner } from '../tasks-runner/tasks-runner';
 
 interface CloudBundleInstall {
   version: string;
@@ -35,20 +40,29 @@ type VerifyClientBundleResponse =
   | ValidVerifyClientBundleResponse
   | InvalidVerifyClientBundleResponse;
 
-export async function verifyOrUpdateCloudBundle(
-  options: CloudTaskRunnerOptions
-): Promise<CloudBundleInstall | null> {
-  const runnerBundleInstallDirectory = getRunnerBundleInstallDirectory(options);
-  const currentBundle = getLatestInstalledRunnerBundle(
-    runnerBundleInstallDirectory
-  );
+export class NxCloudEnterpriseOutdatedError extends Error {
+  constructor(url: string) {
+    super(`Nx Cloud instance hosted at ${url} is outdated`);
+  }
+}
+export class NxCloudClientUnavailableError extends Error {
+  constructor() {
+    super('No existing Nx Cloud client and failed to download new version');
+  }
+}
 
-  if (
-    shouldVerifyInstalledRunnerBundle(
-      runnerBundleInstallDirectory,
-      currentBundle
-    )
-  ) {
+export interface NxCloudClient {
+  configureLightClientRequire: () => (paths: string[]) => void;
+  commands: Record<string, () => Promise<void>>;
+  nxCloudTasksRunner: TasksRunner<CloudTaskRunnerOptions>;
+}
+export async function verifyOrUpdateNxCloudClient(
+  options: CloudTaskRunnerOptions
+): Promise<{ nxCloudClient: NxCloudClient; version: string } | null> {
+  debugLog('Verifying current cloud bundle');
+  const currentBundle = getLatestInstalledRunnerBundle();
+
+  if (shouldVerifyInstalledRunnerBundle(currentBundle)) {
     const axios = createApiAxiosInstance(options);
 
     let verifyBundleResponse: AxiosResponse<VerifyClientBundleResponse>;
@@ -57,46 +71,41 @@ export async function verifyOrUpdateCloudBundle(
     } catch (e: any) {
       // Enterprise image compatibility, to be removed
       if (e.message === 'Request failed with status code 404' && options.url) {
-        console.warn(
-          '[WARNING] Nx Cloud was unable to fetch or verify its bundle from the instance hosted at: ',
-          options.url
-        );
-        console.warn(
-          '[WARNING] Nx Cloud will continue to function as expected, but your installation should be updated'
-        );
-        console.warn('[WARNING] soon for the best experience.');
-        console.warn('[WARNING] ');
-        console.warn(
-          '[WARNING] If you are an Nx Enterprise customer, please reach out to your assigned Developer Productivity Engineer.'
-        );
-        console.warn('[WARNING] ');
-        console.warn(
-          '[WARNING] If you are NOT an Nx Enterprise customer but are seeing this message, please reach out to cloud-support@nrwl.io.'
-        );
-        console.warn('[WARNING] ');
-        console.warn(
-          '[WARNING] To prevent this check on startup, set `useLightClient: false` in your task runner options found in `nx.json`.'
-        );
-
-        return {
-          version: 'NX_ENTERPRISE_OUTDATED_IMAGE',
-          fullPath: '',
-        };
+        throw new NxCloudEnterpriseOutdatedError(options.url);
       }
 
       debugLog(
         'Could not verify bundle. Resetting validation timer and using previously installed or default runner. Error: ',
         e
       );
-      writeBundleVerificationLock(runnerBundleInstallDirectory);
+      writeBundleVerificationLock();
 
-      return currentBundle;
+      if (currentBundle === null) {
+        throw new NxCloudClientUnavailableError();
+      }
+
+      if (currentBundle.version === 'NX_ENTERPRISE_OUTDATED_IMAGE') {
+        throw new NxCloudEnterpriseOutdatedError(options.url);
+      }
+
+      const nxCloudClient = require(currentBundle.fullPath);
+      if (nxCloudClient.commands === undefined) {
+        throw new NxCloudEnterpriseOutdatedError(options.url);
+      }
+
+      return {
+        version: currentBundle.version,
+        nxCloudClient,
+      };
     }
 
     if (verifyBundleResponse.data.valid) {
       debugLog('Currently installed bundle is valid');
-      writeBundleVerificationLock(runnerBundleInstallDirectory);
-      return currentBundle!!;
+      writeBundleVerificationLock();
+      return {
+        version: currentBundle.version,
+        nxCloudClient: require(currentBundle.fullPath),
+      };
     }
 
     const { version, url } = verifyBundleResponse.data;
@@ -106,53 +115,42 @@ export async function verifyOrUpdateCloudBundle(
       ' from ',
       url
     );
-    return {
-      version,
-      fullPath: await downloadAndExtractClientBundle(
-        axios,
-        runnerBundleInstallDirectory,
-        version,
-        url
-      ),
-    };
-  }
 
-  return currentBundle!!;
-}
-
-function findWorkspaceRoot(startPath) {
-  let currentPath = isAbsolute(startPath) ? startPath : resolve(startPath);
-
-  while (currentPath !== dirname(currentPath)) {
-    const potentialFile = join(currentPath, 'nx.json');
-    if (existsSync(potentialFile)) {
-      return currentPath;
+    if (version === 'NX_ENTERPRISE_OUTDATED_IMAGE') {
+      throw new NxCloudEnterpriseOutdatedError(options.url);
     }
-    currentPath = dirname(currentPath);
+
+    const fullPath = await downloadAndExtractClientBundle(
+      axios,
+      runnerBundleInstallDirectory,
+      version,
+      url
+    );
+
+    debugLog('Done: ', fullPath);
+
+    const nxCloudClient = require(fullPath);
+
+    if (nxCloudClient.commands === undefined) {
+      throw new NxCloudEnterpriseOutdatedError(options.url);
+    }
+    return { version, nxCloudClient };
   }
 
-  return null;
-}
-
-function getRunnerBundleInstallDirectory(
-  options: CloudTaskRunnerOptions
-): string {
-  const cacheDirectory =
-    (process.env.NX_CACHE_DIRECTORY || options.cacheDirectory) ??
-    join('node_modules', '.cache', 'nx');
-  const runnerBundlePath = join(cacheDirectory, 'cloud');
-
-  if (isAbsolute(runnerBundlePath)) {
-    return runnerBundlePath;
-  } else {
-    const workspaceRoot = findWorkspaceRoot(process.cwd());
-    return join(workspaceRoot, runnerBundlePath);
+  if (currentBundle === null) {
+    throw new NxCloudClientUnavailableError();
   }
-}
 
-function getLatestInstalledRunnerBundle(
-  runnerBundleInstallDirectory: string
-): CloudBundleInstall | null {
+  debugLog('Done: ', currentBundle.fullPath);
+
+  return {
+    version: currentBundle.version,
+    nxCloudClient: require(currentBundle.fullPath),
+  };
+}
+const runnerBundleInstallDirectory = join(cacheDir, 'cloud');
+
+function getLatestInstalledRunnerBundle(): CloudBundleInstall | null {
   if (!existsSync(runnerBundleInstallDirectory)) {
     mkdirSync(runnerBundleInstallDirectory, { recursive: true });
   }
@@ -184,7 +182,6 @@ function getLatestInstalledRunnerBundle(
 }
 
 function shouldVerifyInstalledRunnerBundle(
-  runnerBundleInstallDirectory: string,
   currentBundle: CloudBundleInstall | null
 ): boolean {
   if (process.env.NX_CLOUD_FORCE_REVALIDATE === 'true') {
@@ -194,9 +191,7 @@ function shouldVerifyInstalledRunnerBundle(
   // No bundle, need to download anyway
   if (currentBundle != null) {
     debugLog('A local bundle currently exists: ', currentBundle);
-    const lastVerification = getLatestBundleVerificationTimestamp(
-      runnerBundleInstallDirectory
-    );
+    const lastVerification = getLatestBundleVerificationTimestamp();
     // Never been verified, need to verify
     if (lastVerification != null) {
       // If last verification was less than 30 minutes ago, return the current installed bundle
@@ -230,9 +225,7 @@ async function verifyCurrentBundle(
   return axios.get('/nx-cloud/client/verify' + queryParams);
 }
 
-function getLatestBundleVerificationTimestamp(
-  runnerBundleInstallDirectory: string
-): number | null {
+function getLatestBundleVerificationTimestamp(): number | null {
   const lockfilePath = join(runnerBundleInstallDirectory, 'verify.lock');
 
   if (existsSync(lockfilePath)) {
@@ -249,7 +242,7 @@ function getLatestBundleVerificationTimestamp(
   return null;
 }
 
-function writeBundleVerificationLock(runnerBundleInstallDirectory: string) {
+function writeBundleVerificationLock() {
   const lockfilePath = join(runnerBundleInstallDirectory, 'verify.lock');
 
   writeFileSync(lockfilePath, new Date().getTime().toString(), 'utf-8');
@@ -265,7 +258,7 @@ function getBundleContentHash(
   return hashDirectory(bundle.fullPath);
 }
 
-function hashDirectory(dir) {
+function hashDirectory(dir: string): string {
   const files = readdirSync(dir).sort();
   const hashes = files.map((file) => {
     const filePath = join(dir, file);
@@ -307,29 +300,45 @@ async function downloadAndExtractClientBundle(
   if (!existsSync(bundleExtractLocation)) {
     mkdirSync(bundleExtractLocation);
   }
-
-  const tar = require('tar');
-  const extractStream = resp.data.pipe(
-    tar.x({
-      cwd: bundleExtractLocation,
-    })
-  );
   return new Promise((res, rej) => {
-    extractStream.on('error', (e) => {
+    const extract = tar.extract();
+    extract.on('entry', function (headers, stream, next) {
+      if (headers.type === 'directory') {
+        const directoryPath = join(bundleExtractLocation, headers.name);
+        if (!existsSync(directoryPath)) {
+          mkdirSync(directoryPath, { recursive: true });
+        }
+        next();
+
+        stream.resume();
+      } else if (headers.type === 'file') {
+        const outputFilePath = join(bundleExtractLocation, headers.name);
+        const writeStream = createWriteStream(outputFilePath);
+        stream.pipe(writeStream);
+
+        stream.on('end', function () {
+          next();
+        });
+
+        stream.resume();
+      }
+    });
+
+    extract.on('error', (e) => {
       rej(e);
     });
-    extractStream.on('close', () => {
-      removeOldClientBundles(runnerBundleInstallDirectory, version);
-      writeBundleVerificationLock(runnerBundleInstallDirectory);
+
+    extract.on('finish', function () {
+      removeOldClientBundles(version);
+      writeBundleVerificationLock();
       res(bundleExtractLocation);
     });
+
+    resp.data.pipe(createGunzip()).pipe(extract);
   });
 }
 
-function removeOldClientBundles(
-  runnerBundleInstallDirectory: string,
-  currentInstallVersion: string
-) {
+function removeOldClientBundles(currentInstallVersion: string) {
   const filesAndFolders = readdirSync(runnerBundleInstallDirectory);
 
   for (let fileOrFolder of filesAndFolders) {

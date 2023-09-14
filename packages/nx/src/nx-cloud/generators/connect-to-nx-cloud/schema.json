@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "id": "NxCloudInit",
   "title": "Add Nx Cloud Configuration to the workspace",
+  "description": "Connect a workspace to Nx Cloud.",
   "type": "object",
   "cli": "nx",
   "properties": {

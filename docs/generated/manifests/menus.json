@@ -7714,6 +7714,23 @@
             ],
             "isExternal": false,
             "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/nx/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "connect-to-nx-cloud",
+                "path": "/nx-api/nx/generators/connect-to-nx-cloud",
+                "name": "connect-to-nx-cloud",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
           }
         ],
         "isExternal": false,
