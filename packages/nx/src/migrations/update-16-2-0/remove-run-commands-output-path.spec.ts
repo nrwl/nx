@@ -5,7 +5,7 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
 } from '../../generators/utils/project-configuration';
-import { assertRunsAgainstNxRepo } from '../../../internal-testing-utils/run-migration-against-this-workspace';
+import { assertRunsAgainstNxRepo } from '../../internal-testing-utils/run-migration-against-this-workspace';
 import removeRunCommandsOutputPath from './remove-run-commands-output-path';
 
 describe('removeRunCommandsOutputPath', () => {

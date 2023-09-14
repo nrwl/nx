@@ -27,6 +27,11 @@ export function readTargetOptions<T = any>(
   const projectConfiguration = (
     context.workspace || context.projectsConfigurations
   ).projects[project];
+
+  if (!projectConfiguration) {
+    throw new Error(`Unable to find project ${project}`);
+  }
+
   const targetConfiguration = projectConfiguration.targets[target];
 
   // TODO(v18): remove Workspaces.

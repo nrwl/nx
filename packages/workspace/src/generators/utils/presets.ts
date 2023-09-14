@@ -16,6 +16,8 @@ export enum Preset {
   ReactStandalone = 'react-standalone',
   NextJsStandalone = 'nextjs-standalone',
   ReactNative = 'react-native',
+  VueMonorepo = 'vue-monorepo',
+  VueStandalone = 'vue-standalone',
   Expo = 'expo',
   NextJs = 'next',
   Nest = 'nest',

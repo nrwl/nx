@@ -124,7 +124,9 @@ export async function getModuleFederationConfig(
   });
 
   const sharedDependencies = {
-    ...sharedLibraries.getLibraries(),
+    ...sharedLibraries.getLibraries(
+      projectGraph.nodes[mfConfig.name].data.root
+    ),
     ...npmPackages,
   };
 
