@@ -58,7 +58,8 @@
     "frontendProject": {
       "type": "string",
       "description": "Frontend project that needs to access this application. This sets up proxy configuration.",
-      "x-priority": "important"
+      "x-priority": "important",
+      "x-dropdown": "projects"
     },
     "swcJest": {
       "type": "boolean",
