@@ -1,12 +1,6 @@
-import {
-  // @ts-ignore the RELEASE_TYPES export is missing from @types/semver
-  RELEASE_TYPES,
-  ReleaseType,
-  inc,
-  valid,
-} from 'semver';
+import { RELEASE_TYPES, ReleaseType, inc, valid } from 'semver';
 
-function isRelativeVersionKeyword(val: string): val is ReleaseType {
+export function isRelativeVersionKeyword(val: string): val is ReleaseType {
   return RELEASE_TYPES.includes(val as ReleaseType);
 }
 

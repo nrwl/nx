@@ -2,11 +2,7 @@ import * as chalk from 'chalk';
 import * as enquirer from 'enquirer';
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import {
-  // @ts-ignore missing from @types/semver
-  RELEASE_TYPES,
-  valid,
-} from 'semver';
+import { RELEASE_TYPES, valid } from 'semver';
 import { Generator } from '../../config/misc-interfaces';
 import { readNxJson } from '../../config/nx-json';
 import {
@@ -39,6 +35,7 @@ import {
   handleCreateReleaseGroupsError,
 } from './config/create-release-groups';
 import { printDiff } from './utils/print-diff';
+import { isRelativeVersionKeyword } from './utils/semver';
 
 // Reexport for use in plugin release-version generator implementations
 export { deriveNewSemverVersion } from './utils/semver';
@@ -262,7 +259,7 @@ async function runVersionOnProjects(
   // Specifier could be user provided so we need to validate it
   if (
     !valid(newVersionSpecifier) &&
-    !RELEASE_TYPES.includes(newVersionSpecifier)
+    !isRelativeVersionKeyword(newVersionSpecifier)
   ) {
     output.error({
       title: `The given version specifier "${newVersionSpecifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`,
@@ -350,7 +347,7 @@ async function resolveSemverSpecifier(
           message: selectionMessage,
           type: 'select',
           choices: [
-            ...RELEASE_TYPES,
+            ...RELEASE_TYPES.map((t) => ({ name: t, message: t })),
             {
               name: 'custom',
               message: 'Custom exact version',

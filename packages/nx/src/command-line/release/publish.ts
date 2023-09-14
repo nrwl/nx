@@ -160,11 +160,14 @@ async function runPublishOnProjects(
     (projectName) => projectGraph.nodes[projectName]
   );
 
-  const overrides = {
-    registry: args.registry,
-    tag: args.tag,
-    ...createOverrides(args.__unparsed_overrides__),
-  };
+  const overrides = createOverrides(args.__unparsed_overrides__);
+
+  if (args.registry) {
+    overrides.registry = args.registry;
+  }
+  if (args.tag) {
+    overrides.registry = args.registry;
+  }
 
   if (args.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';

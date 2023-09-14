@@ -37,13 +37,14 @@ export interface NxArgs {
   type?: string;
 }
 
-export function createOverrides(__overrides_unparsed__: string[]) {
-  let overrides = yargsParser(__overrides_unparsed__ as string[], {
-    configuration: {
-      'camel-case-expansion': false,
-      'dot-notation': true,
-    },
-  });
+export function createOverrides(__overrides_unparsed__: string[] = []) {
+  let overrides =
+    yargsParser(__overrides_unparsed__, {
+      configuration: {
+        'camel-case-expansion': false,
+        'dot-notation': true,
+      },
+    }) || {};
 
   if (!overrides._ || overrides._.length === 0) {
     delete overrides._;
