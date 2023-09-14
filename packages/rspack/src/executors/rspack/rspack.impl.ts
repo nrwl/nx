@@ -6,6 +6,7 @@ import * as path from 'path';
 import { createCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { RspackExecutorSchema } from './schema';
+import { printDiagnostics, runTypeCheck } from '@nx/js';
 
 export default async function* runExecutor(
   options: RspackExecutorSchema,
@@ -16,12 +17,17 @@ export default async function* runExecutor(
   if (isMode(process.env.NODE_ENV)) {
     options.mode = process.env.NODE_ENV;
   }
+
+  if (options.typeCheck) {
+    await executeTypeCheck(options, context);
+  }
+
   // Mimic --clean from webpack.
   rmSync(path.join(context.root, options.outputPath), {
     force: true,
     recursive: true,
   });
-
+  
   const compiler = await createCompiler(options, context);
 
   const iterable = createAsyncIterable<{
@@ -110,4 +116,24 @@ function registerCleanupCallback(callback: () => void) {
   process.on('SIGINT', wrapped);
   process.on('SIGTERM', wrapped);
   process.on('exit', wrapped);
+}
+
+
+async function executeTypeCheck(
+  options: RspackExecutorSchema,
+  context: ExecutorContext
+) {
+  const projectConfiguration =
+  context.projectsConfigurations!.projects[context.projectName!];
+  const result = await runTypeCheck({
+    workspaceRoot: path.resolve(projectConfiguration.root),
+    tsConfigPath: options.tsConfig,
+    mode: 'noEmit',
+  });
+
+  await printDiagnostics(result.errors, result.warnings);
+
+  if (result.errors.length > 0) {
+    throw new Error('Found type errors. See above.');
+  }
 }

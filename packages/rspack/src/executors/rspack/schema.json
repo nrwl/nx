@@ -22,6 +22,10 @@
       "type": "string",
       "description": "The tsconfig file to build the project."
     },
+    "typeCheck": {
+      "type": "boolean",
+      "description": "Skip the type checking."
+    },
     "indexHtml": {
       "type": "string",
       "description": "The path to the index.html file."
