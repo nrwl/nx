@@ -166,7 +166,7 @@ async function runPublishOnProjects(
     overrides.registry = args.registry;
   }
   if (args.tag) {
-    overrides.registry = args.registry;
+    overrides.tag = args.tag;
   }
 
   if (args.verbose) {
