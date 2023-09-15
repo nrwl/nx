@@ -119,60 +119,66 @@ describe('nx release', () => {
 
       > nx run {project-name}:release-publish
 
-      {project-name}: 📦  @proj/{project-name}@999.9.9
-      {project-name}: === Tarball Contents ===
-      {project-name}: XXB  index.js
-      {project-name}: XXXB package.json
-      {project-name}: XXB  project.json
-      {project-name}: === Tarball Details ===
-      {project-name}: name:          @proj/{project-name}
-      {project-name}: version:       999.9.9
-      {project-name}: filename:      proj-{project-name}-999.9.9.tgz
-      {project-name}: package size: XXXB
-      {project-name}: unpacked size: XXXB
-      {project-name}: shasum:        {SHASUM}
-      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      {project-name}: total files:   3
-      {project-name}:
-      {project-name}: Published to ${e2eRegistryUrl} with tag "latest"
+
+      📦  @proj/{project-name}@999.9.9
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       999.9.9
+      filename:      proj-{project-name}-999.9.9.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Published to http://localhost:4874 with tag "latest"
 
       > nx run {project-name}:release-publish
 
-      {project-name}: 📦  @proj/{project-name}@999.9.9
-      {project-name}: === Tarball Contents ===
-      {project-name}: XXB  index.js
-      {project-name}: XXXB package.json
-      {project-name}: XXB  project.json
-      {project-name}: === Tarball Details ===
-      {project-name}: name:          @proj/{project-name}
-      {project-name}: version:       999.9.9
-      {project-name}: filename:      proj-{project-name}-999.9.9.tgz
-      {project-name}: package size: XXXB
-      {project-name}: unpacked size: XXXB
-      {project-name}: shasum:        {SHASUM}
-      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      {project-name}: total files:   3
-      {project-name}:
-      {project-name}: Published to ${e2eRegistryUrl} with tag "latest"
+
+      📦  @proj/{project-name}@999.9.9
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       999.9.9
+      filename:      proj-{project-name}-999.9.9.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Published to http://localhost:4874 with tag "latest"
 
       > nx run {project-name}:release-publish
 
-      {project-name}: 📦  @proj/{project-name}@999.9.9
-      {project-name}: === Tarball Contents ===
-      {project-name}: XXB  index.js
-      {project-name}: XXXB package.json
-      {project-name}: XXB  project.json
-      {project-name}: === Tarball Details ===
-      {project-name}: name:          @proj/{project-name}
-      {project-name}: version:       999.9.9
-      {project-name}: filename:      proj-{project-name}-999.9.9.tgz
-      {project-name}: package size: XXXB
-      {project-name}: unpacked size: XXXB
-      {project-name}: shasum:        {SHASUM}
-      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      {project-name}: total files:   3
-      {project-name}:
-      {project-name}: Published to ${e2eRegistryUrl} with tag "latest"
+
+      📦  @proj/{project-name}@999.9.9
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       999.9.9
+      filename:      proj-{project-name}-999.9.9.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Published to http://localhost:4874 with tag "latest"
 
 
 
@@ -290,60 +296,66 @@ describe('nx release', () => {
 
       > nx run {project-name}:release-publish
 
-      {project-name}: 📦  @proj/{project-name}@1000.0.0
-      {project-name}: === Tarball Contents ===
-      {project-name}: XXB  index.js
-      {project-name}: XXXB package.json
-      {project-name}: XXB  project.json
-      {project-name}: === Tarball Details ===
-      {project-name}: name:          @proj/{project-name}
-      {project-name}: version:       1000.0.0
-      {project-name}: filename:      proj-{project-name}-1000.0.0.tgz
-      {project-name}: package size: XXXB
-      {project-name}: unpacked size: XXXB
-      {project-name}: shasum:        {SHASUM}
-      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      {project-name}: total files:   3
-      {project-name}:
-      {project-name}: Published to ${customRegistryUrl} with tag "next"
+
+      📦  @proj/{project-name}@1000.0.0
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       1000.0.0
+      filename:      proj-{project-name}-1000.0.0.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Published to http://localhost:7190 with tag "next"
 
       > nx run {project-name}:release-publish
 
-      {project-name}: 📦  @proj/{project-name}@1000.0.0
-      {project-name}: === Tarball Contents ===
-      {project-name}: XXB  index.js
-      {project-name}: XXXB package.json
-      {project-name}: XXB  project.json
-      {project-name}: === Tarball Details ===
-      {project-name}: name:          @proj/{project-name}
-      {project-name}: version:       1000.0.0
-      {project-name}: filename:      proj-{project-name}-1000.0.0.tgz
-      {project-name}: package size: XXXB
-      {project-name}: unpacked size: XXXB
-      {project-name}: shasum:        {SHASUM}
-      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      {project-name}: total files:   3
-      {project-name}:
-      {project-name}: Published to ${customRegistryUrl} with tag "next"
+
+      📦  @proj/{project-name}@1000.0.0
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       1000.0.0
+      filename:      proj-{project-name}-1000.0.0.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Published to http://localhost:7190 with tag "next"
 
       > nx run {project-name}:release-publish
 
-      {project-name}: 📦  @proj/{project-name}@1000.0.0
-      {project-name}: === Tarball Contents ===
-      {project-name}: XXB  index.js
-      {project-name}: XXXB package.json
-      {project-name}: XXB  project.json
-      {project-name}: === Tarball Details ===
-      {project-name}: name:          @proj/{project-name}
-      {project-name}: version:       1000.0.0
-      {project-name}: filename:      proj-{project-name}-1000.0.0.tgz
-      {project-name}: package size: XXXB
-      {project-name}: unpacked size: XXXB
-      {project-name}: shasum:        {SHASUM}
-      {project-name}: integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-      {project-name}: total files:   3
-      {project-name}:
-      {project-name}: Published to ${customRegistryUrl} with tag "next"
+
+      📦  @proj/{project-name}@1000.0.0
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       1000.0.0
+      filename:      proj-{project-name}-1000.0.0.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Published to http://localhost:7190 with tag "next"
 
 
 
