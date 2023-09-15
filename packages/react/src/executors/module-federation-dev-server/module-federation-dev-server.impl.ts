@@ -14,14 +14,18 @@ import {
 } from '@nx/devkit/src/utils/async-iterable';
 import * as chalk from 'chalk';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { fork } from 'child_process';
 import { existsSync } from 'fs';
+import { checkPortIsActive } from '@nx/js/src/utils/check-port-is-active';
 import { registerTsProject } from '@nx/js/src/internal';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
   skipRemotes?: string[];
+  static?: boolean;
+  isInitialHost?: boolean;
 };
 
 function getBuildOptions(buildTarget: string, context: ExecutorContext) {
@@ -80,7 +84,18 @@ export default async function* moduleFederationDevServer(
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
   const nxBin = require.resolve('nx');
-  const currIter = devServerExecutor(options, context);
+  const currIter = options.static
+    ? fileServerExecutor(
+        {
+          ...options,
+          parallel: false,
+          withDeps: false,
+          spa: false,
+          cors: true,
+        },
+        context
+      )
+    : devServerExecutor(options, context);
   const p = context.projectsConfigurations.projects[context.projectName];
   const buildOptions = getBuildOptions(options.buildTarget, context);
 
@@ -145,16 +160,45 @@ export default async function* moduleFederationDevServer(
 
   for (const app of knownRemotes) {
     const appName = Array.isArray(app) ? app[0] : app;
+    const target = devServeApps.includes(appName) ? 'serve' : 'serve-static';
+
+    const remoteProjectServeTarget =
+      context.projectGraph.nodes[appName].data.targets[target];
+
+    if (!options.isInitialHost) {
+      try {
+        const portIsActive = await checkPortIsActive({
+          port: remoteProjectServeTarget.options.port,
+          host: remoteProjectServeTarget.options.host,
+        });
+
+        // Skip trying to serve remote if it is already served
+        if (portIsActive) {
+          continue;
+        }
+      } catch {
+        // Intentionally do nothing, allow this executor to try start the remote
+      }
+    }
+
+    const isUsingModuleFederationDevServerExecutor =
+      remoteProjectServeTarget.executor.includes(
+        'module-federation-dev-server'
+      );
+
     if (devServeApps.includes(appName)) {
       devRemoteIters.push(
         await runExecutor(
           {
             project: appName,
-            target: 'serve',
+            target,
             configuration: context.configurationName,
           },
           {
             watch: true,
+            ...(isUsingModuleFederationDevServerExecutor
+              ? { isInitialHost: false }
+              : {}),
           },
           context
         )
@@ -165,9 +209,12 @@ export default async function* moduleFederationDevServer(
         nxBin,
         [
           'run',
-          `${appName}:serve-static${
+          `${appName}:${target}${
             context.configurationName ? `:${context.configurationName}` : ''
           }`,
+          ...(isUsingModuleFederationDevServerExecutor
+            ? [`--isInitialHost=false`]
+            : []),
         ],
         {
           cwd: context.root,

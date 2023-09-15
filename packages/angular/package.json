@@ -63,6 +63,7 @@
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/linter": "file:../linter",
+    "@nx/web": "file:../web",
     "@nx/webpack": "file:../webpack",
     "@nx/workspace": "file:../workspace"
   },
