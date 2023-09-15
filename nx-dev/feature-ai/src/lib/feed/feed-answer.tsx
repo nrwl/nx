@@ -19,6 +19,7 @@ interface RehypeNode {
   children?: RehypeNode[];
   value?: string;
 }
+
 function openLinksInNewTab() {
   function walk(node: RehypeNode, callback: (node: RehypeNode) => void): void {
     callback(node);
@@ -30,7 +31,6 @@ function openLinksInNewTab() {
   return (tree: RehypeNode) => {
     walk(tree, (node) => {
       if (node.type === 'element' && node.tagName === 'a') {
-        console.log(node);
         const props = node.properties ?? {};
         const href = props?.['href'] as string;
         props.target = '_blank';
