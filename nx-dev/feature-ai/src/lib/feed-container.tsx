@@ -1,11 +1,20 @@
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { RefObject, useEffect, useRef, useState } from 'react';
+import {
+  type FormEvent,
+  type JSX,
+  RefObject,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { ErrorMessage } from './error-message';
 import { Feed } from './feed/feed';
 import { LoadingState } from './loading-state';
 import { Prompt } from './prompt';
 import { getQueryFromUid, storeQueryForUid } from '@nx/nx-dev/util-ai';
 import { Message, useChat } from 'ai/react';
+import { cx } from '@nx/nx-dev/ui-primitives';
 
 const assistantWelcome: Message = {
   id: 'first-custom-message',
@@ -17,26 +26,38 @@ const assistantWelcome: Message = {
 export function FeedContainer(): JSX.Element {
   const [error, setError] = useState<Error | null>(null);
   const [startedReply, setStartedReply] = useState(false);
+  const [isStopped, setStopped] = useState(false);
 
   const feedContainer: RefObject<HTMLDivElement> | undefined = useRef(null);
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
-      api: '/api/query-ai-handler',
-      onError: (error) => {
-        setError(error);
-      },
-      onResponse: (_response) => {
-        setStartedReply(true);
-        sendCustomEvent('ai_query', 'ai', 'query', undefined, {
-          query: input,
-        });
-        setError(null);
-      },
-      onFinish: (response: Message) => {
-        setStartedReply(false);
-        storeQueryForUid(response.id, input);
-      },
-    });
+
+  const {
+    messages,
+    setMessages,
+    input,
+    handleInputChange,
+    handleSubmit: _handleSubmit,
+    stop,
+    reload,
+    isLoading,
+  } = useChat({
+    api: '/api/query-ai-handler',
+    onError: (error) => {
+      setError(error);
+    },
+    onResponse: (_response) => {
+      setStartedReply(true);
+      sendCustomEvent('ai_query', 'ai', 'query', undefined, {
+        query: input,
+      });
+      setError(null);
+    },
+    onFinish: (response: Message) => {
+      setStartedReply(false);
+      storeQueryForUid(response.id, input);
+    },
+  });
+
+  const hasReply = useMemo(() => messages.length > 0, [messages]);
 
   useEffect(() => {
     if (feedContainer.current) {
@@ -46,11 +67,33 @@ export function FeedContainer(): JSX.Element {
     }
   }, [messages, isLoading]);
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    setStopped(false);
+    _handleSubmit(event);
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setError(null);
+    setStartedReply(false);
+    setStopped(false);
+  };
+
   const handleFeedback = (statement: 'good' | 'bad', chatItemUid: string) => {
     const query = getQueryFromUid(chatItemUid);
     sendCustomEvent('ai_feedback', 'ai', statement, undefined, {
       query: query ?? 'Could not retrieve the question',
     });
+  };
+
+  const handleStopGenerating = () => {
+    setStopped(true);
+    stop();
+  };
+
+  const handleRegenerate = () => {
+    setStopped(false);
+    reload();
   };
 
   return (
@@ -71,25 +114,33 @@ export function FeedContainer(): JSX.Element {
               <div
                 ref={feedContainer}
                 data-document="main"
-                className="relative"
+                className="relative pb-36"
               >
                 <Feed
                   activity={!!messages.length ? messages : [assistantWelcome]}
-                  handleFeedback={(statement, chatItemUid) =>
-                    handleFeedback(statement, chatItemUid)
-                  }
+                  onFeedback={handleFeedback}
                 />
 
                 {/* Change this message if it's loading but it's writing as well  */}
                 {isLoading && !startedReply && <LoadingState />}
                 {error && <ErrorMessage error={error} />}
 
-                <div className="sticky bottom-0 left-0 right-0 w-full pt-6 pb-4 bg-gradient-to-t from-white via-white dark:from-slate-900 dark:via-slate-900">
+                <div
+                  className={cx(
+                    'fixed bottom-0 left0 right-0 w-full py-4 px-4 lg:py-6 lg:px-0',
+                    'bg-gradient-to-t from-white via-white/75 dark:from-slate-900 dark:via-slate-900/75'
+                  )}
+                >
                   <Prompt
-                    handleSubmit={handleSubmit}
-                    handleInputChange={handleInputChange}
+                    onSubmit={handleSubmit}
+                    onInputChange={handleInputChange}
+                    onNewChat={handleNewChat}
+                    onStopGenerating={handleStopGenerating}
+                    onRegenerate={handleRegenerate}
                     input={input}
-                    isDisabled={isLoading}
+                    isGenerating={isLoading}
+                    showNewChatCta={!isLoading && hasReply}
+                    showRegenerateCta={isStopped}
                   />
                 </div>
               </div>

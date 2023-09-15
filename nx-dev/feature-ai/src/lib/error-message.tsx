@@ -1,9 +1,10 @@
+import { type JSX, memo } from 'react';
 import {
-  XCircleIcon,
   ExclamationTriangleIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 
-export function ErrorMessage({ error }: { error: any }): JSX.Element {
+function ErrorMessage({ error }: { error: any }): JSX.Element {
   try {
     if (error.message) {
       error = JSON.parse(error.message);
@@ -57,3 +58,6 @@ export function ErrorMessage({ error }: { error: any }): JSX.Element {
     );
   }
 }
+
+const MemoErrorMessage = memo(ErrorMessage);
+export { MemoErrorMessage as ErrorMessage };

@@ -4,10 +4,10 @@ import { Message } from 'ai/react';
 
 export function Feed({
   activity,
-  handleFeedback,
+  onFeedback,
 }: {
   activity: Message[];
-  handleFeedback: (statement: 'bad' | 'good', chatItemUid: string) => void;
+  onFeedback: (statement: 'bad' | 'good', chatItemUid: string) => void;
 }) {
   return (
     <div className="flow-root my-12">
@@ -21,7 +21,7 @@ export function Feed({
               <FeedAnswer
                 content={activityItem.content}
                 feedbackButtonCallback={(statement) =>
-                  handleFeedback(statement, activityItem.id)
+                  onFeedback(statement, activityItem.id)
                 }
                 isFirst={activityItemIdx === 0}
               />
