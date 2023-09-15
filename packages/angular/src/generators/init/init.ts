@@ -247,7 +247,7 @@ function addPrettierIgnoreEntry(tree: Tree, entry: string): void {
   }
 
   let content = tree.read('.prettierignore', 'utf-8');
-  if (/^\.angular$/gm.test(content)) {
+  if (/^\.angular(\/cache)?$/gm.test(content)) {
     return;
   }
 
