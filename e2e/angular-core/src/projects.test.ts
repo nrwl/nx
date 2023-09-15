@@ -125,8 +125,7 @@ describe('Angular Projects', () => {
     await killProcessAndPorts(esbProcess.pid, appPort);
   }, 1000000);
 
-  // TODO: enable this when tests are passing again.
-  xit('should successfully work with playwright for e2e tests', async () => {
+  it('should successfully work with playwright for e2e tests', async () => {
     const app = uniq('app');
 
     runCLI(
