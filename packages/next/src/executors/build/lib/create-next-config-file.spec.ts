@@ -5,7 +5,7 @@ import {
   getRelativeImports,
   getWithNxContent,
 } from './create-next-config-file';
-import { stripIndents } from '@nx/devkit';
+import { stripIndents, workspaceLayout } from '@nx/devkit';
 import { join } from 'path';
 
 describe('Next.js config: getWithNxContent', () => {
@@ -60,8 +60,8 @@ describe('Next.js config: getWithNxContent', () => {
     expect(result).not.toContain(
       `const { workspaceRoot, workspaceLayout } = require('@nx/devkit');`
     );
-    expect(result).toContain(`libsDir: ''`);
-    expect(result).not.toContain(`libsDir: workspaceLayout.libsDir()`);
+    expect(result).toContain(`libsDir: '${workspaceLayout().libsDir}'`);
+    expect(result).not.toContain(`libsDir: workspaceLayout().libsDir`);
   });
 
   it('should return relative module paths used in next.config.js when calling getRelativeFilesToCopy', () => {
