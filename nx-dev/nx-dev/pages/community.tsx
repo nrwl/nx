@@ -25,7 +25,7 @@ export default function Community(): JSX.Element {
             'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and Twitter',
           images: [
             {
-              url: 'https://nx.dev/images/nx-media.webp',
+              url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
               alt: 'Nx: Smart, Fast and Extensible Build System',
