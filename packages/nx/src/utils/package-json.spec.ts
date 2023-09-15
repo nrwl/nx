@@ -71,6 +71,7 @@ describe('readTargetsFromPackageJson', () => {
         },
       },
       'release-publish': {
+        dependsOn: ['^release-publish'],
         executor: '@nx/js:release-publish',
         options: {},
       },
@@ -95,6 +96,7 @@ describe('readTargetsFromPackageJson', () => {
     expect(result).toEqual({
       build: { ...packageJsonBuildTarget, outputs: ['custom'] },
       'release-publish': {
+        dependsOn: ['^release-publish'],
         executor: '@nx/js:release-publish',
         options: {},
       },
@@ -120,6 +122,7 @@ describe('readTargetsFromPackageJson', () => {
         options: { script: 'test' },
       },
       'release-publish': {
+        dependsOn: ['^release-publish'],
         executor: '@nx/js:release-publish',
         options: {},
       },

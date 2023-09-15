@@ -329,7 +329,7 @@ export function getProjectRoots(
   return projectNames.map((name) => nodes[name].data.root);
 }
 
-export function readGraphFileFromGraphArg({ graph }: NxArgs) {
+export function readGraphFileFromGraphArg({ graph }: Pick<NxArgs, 'graph'>) {
   return typeof graph === 'string' && graph !== 'true' && graph !== ''
     ? graph
     : undefined;

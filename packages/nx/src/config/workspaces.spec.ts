@@ -11,6 +11,7 @@ const libConfig = (root, name?: string) => ({
   sourceRoot: `libs/${root}/src`,
   targets: {
     'release-publish': {
+      dependsOn: ['^release-publish'],
       executor: '@nx/js:release-publish',
       options: {},
     },
@@ -24,6 +25,7 @@ const packageLibConfig = (root, name?: string) => ({
   projectType: 'library',
   targets: {
     'release-publish': {
+      dependsOn: ['^release-publish'],
       executor: '@nx/js:release-publish',
       options: {},
     },
@@ -98,6 +100,7 @@ describe('Workspaces', () => {
         projectType: 'library',
         targets: {
           'release-publish': {
+            dependsOn: ['^release-publish'],
             executor: '@nx/js:release-publish',
             options: {},
           },
@@ -144,6 +147,7 @@ describe('Workspaces', () => {
             projectType: 'library',
             targets: {
               'release-publish': {
+                dependsOn: ['^release-publish'],
                 executor: '@nx/js:release-publish',
                 options: {},
               },

@@ -35,7 +35,7 @@ Type: `string`
 
 Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
 
-### nx-bail
+### nxBail
 
 Type: `boolean`
 
@@ -43,7 +43,7 @@ Default: `false`
 
 Stop command execution after the first failed task
 
-### nx-ignore-cycles
+### nxIgnoreCycles
 
 Type: `boolean`
 
@@ -77,7 +77,7 @@ Type: `string`
 
 This is the name of the tasks runner configured in nx.json
 
-### skip-nx-cache
+### skipNxCache
 
 Type: `boolean`
 

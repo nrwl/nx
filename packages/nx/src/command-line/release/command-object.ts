@@ -1,6 +1,11 @@
 import { CommandModule, showHelp } from 'yargs';
 import { readNxJson } from '../../project-graph/file-utils';
-import { parseCSV, withOverrides } from '../yargs-utils/shared-options';
+import {
+  parseCSV,
+  RunManyOptions,
+  withOverrides,
+  withRunManyOptions,
+} from '../yargs-utils/shared-options';
 
 export interface NxReleaseArgs {
   groups?: string[];
@@ -22,10 +27,11 @@ export type ChangelogOptions = NxReleaseArgs & {
   tagVersionPrefix?: string;
 };
 
-export type PublishOptions = NxReleaseArgs & {
-  registry?: string;
-  tag?: string;
-};
+export type PublishOptions = NxReleaseArgs &
+  RunManyOptions & {
+    registry?: string;
+    tag?: string;
+  };
 
 export const yargsReleaseCommand: CommandModule<
   Record<string, unknown>,
@@ -153,12 +159,12 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
     import('./changelog').then((m) => m.changelogHandler(args)),
 };
 
-const publishCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
+const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
   command: 'publish',
   aliases: ['p'],
   describe: 'Publish a versioned project to a registry',
   builder: (yargs) =>
-    yargs
+    withRunManyOptions(yargs)
       .option('registry', {
         type: 'string',
         description: 'The registry to publish to',

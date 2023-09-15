@@ -6,7 +6,10 @@ import {
 import { NxJsonConfiguration, output } from '../../devkit-exports';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { runCommand } from '../../tasks-runner/run-command';
-import { createOverrides } from '../../utils/command-line-utils';
+import {
+  createOverrides,
+  readGraphFileFromGraphArg,
+} from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { PublishOptions } from './command-object';
 import { createNxReleaseConfig } from './config/config';
@@ -16,6 +19,7 @@ import {
   createReleaseGroups,
   handleCreateReleaseGroupsError,
 } from './config/create-release-groups';
+import { generateGraph } from '../graph/graph';
 
 export async function publishHandler(
   args: PublishOptions & { __overrides_unparsed__: string[] }
@@ -173,27 +177,44 @@ async function runPublishOnProjects(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  /**
-   * Run the relevant release-publish executor on each of the selected projects.
-   */
-  const status = await runCommand(
-    projectsToRun,
-    projectGraph,
-    { nxJson },
-    {
-      targets: ['release-publish'],
-      parallel: 1,
-      outputStyle: 'stream',
-    },
-    overrides,
-    null,
-    {},
-    { excludeTaskDependencies: false, loadDotEnvFiles: true }
-  );
+  if (args.graph) {
+    const file = readGraphFileFromGraphArg(args);
+    const projectNames = projectsToRun.map((t) => t.name);
+    return await generateGraph(
+      {
+        watch: false,
+        all: false,
+        open: true,
+        view: 'tasks',
+        targets: ['release-publish'],
+        projects: projectNames,
+        file,
+      },
+      projectNames
+    );
+  } else {
+    /**
+     * Run the relevant release-publish executor on each of the selected projects.
+     */
+    const status = await runCommand(
+      projectsToRun,
+      projectGraph,
+      { nxJson },
+      {
+        targets: ['release-publish'],
+        outputStyle: 'static',
+        ...(args as any),
+      },
+      overrides,
+      null,
+      {},
+      { excludeTaskDependencies: false, loadDotEnvFiles: true }
+    );
 
-  if (status !== 0) {
-    // fix for https://github.com/nrwl/nx/issues/1666
-    if (process.stdin['unref']) (process.stdin as any).unref();
-    process.exit(status);
+    if (status !== 0) {
+      // fix for https://github.com/nrwl/nx/issues/1666
+      if (process.stdin['unref']) (process.stdin as any).unref();
+      process.exit(status);
+    }
   }
 }

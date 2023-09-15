@@ -13,6 +13,7 @@ const { createNodes } = CreateProjectJsonProjectsPlugin;
 
 const defaultReleasePublishTarget = {
   'release-publish': {
+    dependsOn: ['^release-publish'],
     executor: '@nx/js:release-publish',
     options: {},
   },
@@ -80,6 +81,9 @@ describe('nx project.json plugin', () => {
                 "options": {},
               },
               "release-publish": {
+                "dependsOn": [
+                  "^release-publish",
+                ],
                 "executor": "@nx/js:release-publish",
                 "options": {},
               },
