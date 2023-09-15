@@ -134,7 +134,7 @@ jobs:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>
       SELECTED_PM: << parameters.pm >>
       NX_E2E_RUN_E2E: 'true'
-      NX_VERBOSE_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
       NX_NATIVE_LOGGING: 'false'
       NX_PERF_LOGGING: 'false'
     steps:
@@ -161,7 +161,7 @@ jobs:
     executor: linux
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
@@ -170,6 +170,7 @@ jobs:
           name: Set dynamic nx run variable
           command: |
             echo "export NX_CI_EXECUTION_ENV=\"linux\";" >> $BASH_ENV
+      - run: echo $NX_CLOUD_ACCESS_TOKEN
       - setup:
           os: linux
       - nx/set-shas:
@@ -237,20 +238,40 @@ workflows:
     jobs:
       - agent:
           name: 'agent1'
+          context:
+            - 'cloud'
       - agent:
           name: 'agent2'
+          context:
+            - 'cloud'
       - agent:
           name: 'agent3'
+          context:
+            - 'cloud'
       - agent:
           name: 'agent4'
+          context:
+            - 'cloud'
       - agent:
           name: 'agent5'
+          context:
+            - 'cloud'
       - agent:
           name: 'agent6'
+          context:
+            - 'cloud'
       - agent:
           name: 'agent7'
+          context:
+            - 'cloud'
       - agent:
           name: 'agent8'
-      - main-linux
+          context:
+            - 'cloud'
+      - main-linux:
+          context:
+            - 'cloud'
       - mainmacos:
           name: main-macos-e2e
+          context:
+            - 'cloud'

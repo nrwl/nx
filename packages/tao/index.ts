@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 // this is to support older workspaces
+// Test
 if (process.argv[2] === 'migrate') {
   process.argv[2] = '_migrate';
 }
