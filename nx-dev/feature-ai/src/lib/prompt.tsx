@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, useEffect, useRef } from 'react';
 import {
   ArrowPathIcon,
   PaperAirplaneIcon,
+  XMarkIcon,
   PlusIcon,
   StopIcon,
 } from '@heroicons/react/24/outline';
@@ -87,8 +88,8 @@ export function Prompt({
             className={cx('bg-white dark:bg-slate-900')}
             onClick={handleNewChat}
           >
-            <PlusIcon aria-hidden="true" className="h-5 w-5" />
-            <span className="text-base">New Chat</span>
+            <XMarkIcon aria-hidden="true" className="h-5 w-5" />
+            <span className="text-base">Clear chat</span>
           </Button>
         )}
         {showRegenerateCta && (
