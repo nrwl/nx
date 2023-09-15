@@ -14,6 +14,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
 import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
+import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -75,7 +76,7 @@ export async function buildProjectGraphWithoutDaemon() {
     await retrieveWorkspaceFiles(workspaceRoot, nxJson);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
-  return (
+  const projectGraph = (
     await buildProjectGraphUsingProjectFileMap(
       projectConfigurations.projects,
       externalNodes,
@@ -85,6 +86,10 @@ export async function buildProjectGraphWithoutDaemon() {
       cacheEnabled
     )
   ).projectGraph;
+
+  unregisterPluginTSTranspiler();
+
+  return projectGraph;
 }
 
 function handleProjectGraphError(opts: { exitOnError: boolean }, e) {

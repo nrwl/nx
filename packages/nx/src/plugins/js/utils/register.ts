@@ -73,7 +73,9 @@ export function getTsNodeTranspiler(
     warnTsNodeUsage();
   }
 
-  return () => {};
+  return () => {
+    service.enabled(false);
+  };
 }
 
 export function getTranspiler(compilerOptions: CompilerOptions) {
