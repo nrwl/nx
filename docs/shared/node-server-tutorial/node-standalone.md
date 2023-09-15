@@ -15,7 +15,7 @@ What are you going to learn?
 - how to modularize your codebase and impose architectural constraints for better maintainability
 
 <!-- {% callout type="info" title="Looking for Node monorepos?" %}
-Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a Node monorepo setup then check out our [Node monorepo tutorial](/node-tutorial/1-code-generation).
+Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a Node monorepo setup then check out our [Node monorepo tutorial]().
 
 {% /callout %} -->
 
