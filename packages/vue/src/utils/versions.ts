@@ -18,6 +18,11 @@ export const vueEslintConfigPrettierVersion = '^8.0.0';
 export const vueEslintConfigTypescriptVersion = '^11.0.3';
 export const eslintPluginVueVersion = '^9.16.1';
 
+// tailwindcss
+export const postcssVersion = '8.4.21';
+export const tailwindcssVersion = '3.2.7';
+export const autoprefixerVersion = '10.4.13';
+
 // other deps
 export const sassVersion = '1.62.1';
 export const lessVersion = '3.12.2';

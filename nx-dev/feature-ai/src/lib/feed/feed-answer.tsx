@@ -11,6 +11,38 @@ import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 const callout: string =
   '{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n';
 
+// Rehype plugin to always open links in a new tab so we don't lose chat history.
+interface RehypeNode {
+  type: string;
+  tagName?: string;
+  properties?: Record<string, unknown>;
+  children?: RehypeNode[];
+  value?: string;
+}
+
+function openLinksInNewTab() {
+  function walk(node: RehypeNode, callback: (node: RehypeNode) => void): void {
+    callback(node);
+    if (node.children?.length) {
+      node.children.forEach((child) => walk(child, callback));
+    }
+  }
+
+  return (tree: RehypeNode) => {
+    walk(tree, (node) => {
+      if (node.type === 'element' && node.tagName === 'a') {
+        const props = node.properties ?? {};
+        const href = props?.['href'] as string;
+        props.target = '_blank';
+        if (href && !href.startsWith('https://nx.dev')) {
+          // For external links, prevent window.opener attacks.
+          props.rel = 'noopener noreferrer';
+        }
+      }
+    });
+  };
+}
+
 export function FeedAnswer({
   content,
   feedbackButtonCallback,
@@ -63,7 +95,10 @@ export function FeedAnswer({
         </div>
         <div className="mt-2 prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl">
           {!isFirst && renderMarkdown(callout, { filePath: '' }).node}
-          <ReactMarkdown children={content} />
+          <ReactMarkdown
+            children={content}
+            rehypePlugins={[openLinksInNewTab]}
+          />
         </div>
         {!isFirst && (
           <div className="group text-md flex-1 md:flex md:justify-end gap-4 md:items-center text-slate-400 hover:text-slate-500 transition">

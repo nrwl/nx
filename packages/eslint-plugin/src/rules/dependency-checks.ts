@@ -20,7 +20,6 @@ export type Options = [
     checkMissingDependencies?: boolean;
     checkObsoleteDependencies?: boolean;
     checkVersionMismatches?: boolean;
-    checkMissingPackageJson?: boolean;
     ignoredDependencies?: string[];
     ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;

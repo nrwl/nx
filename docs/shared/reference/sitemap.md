@@ -95,6 +95,7 @@
   - [Recipes](/recipes)
     - [Adopting Nx](/recipes/adopting-nx)
       - [NPM/Yarn/PNPM workspaces](/recipes/adopting-nx/adding-to-monorepo)
+      - [Migrate From Turborepo](/recipes/adopting-nx/from-turborepo)
       - [Add to any Project](/recipes/adopting-nx/adding-to-existing-project)
       - [Nx and Lerna](/recipes/adopting-nx/lerna-and-nx)
       - [Preserving Git Histories](/recipes/adopting-nx/preserving-git-histories)
