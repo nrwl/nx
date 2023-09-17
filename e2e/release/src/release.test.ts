@@ -136,7 +136,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:4874 with tag "latest"
+      Published to ${e2eRegistryUrl} with tag "latest"
 
       > nx run {project-name}:release-publish
 
@@ -157,7 +157,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:4874 with tag "latest"
+      Published to ${e2eRegistryUrl} with tag "latest"
 
       > nx run {project-name}:release-publish
 
@@ -178,7 +178,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:4874 with tag "latest"
+      Published to ${e2eRegistryUrl} with tag "latest"
 
 
 
@@ -289,7 +289,7 @@ describe('nx release', () => {
       - {project-name}
 
       With additional flags:
-      --registry=http://localhost:7190
+      --registry=${customRegistryUrl}
       --tag=next
 
 
@@ -313,7 +313,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:7190 with tag "next"
+      Published to ${customRegistryUrl} with tag "next"
 
       > nx run {project-name}:release-publish
 
@@ -334,7 +334,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:7190 with tag "next"
+      Published to ${customRegistryUrl} with tag "next"
 
       > nx run {project-name}:release-publish
 
@@ -355,7 +355,7 @@ describe('nx release', () => {
       integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       total files:   3
 
-      Published to http://localhost:7190 with tag "next"
+      Published to ${customRegistryUrl} with tag "next"
 
 
 
