@@ -18,6 +18,11 @@
         "outputPath": "build/packages/vue",
         "tsConfig": "packages/vue/tsconfig.lib.json",
         "main": "packages/vue/index.ts",
+        "generateExportsField": true,
+        "additionalEntryPoints": [
+          "{projectRoot}/{executors,generators,migrations}.json",
+          "{projectRoot}/src/tailwind.ts"
+        ],
         "assets": [
           {
             "input": "packages/vue",

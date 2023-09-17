@@ -2,12 +2,16 @@ import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  killProcessAndPorts,
   newProject,
   readJson,
   runCLI,
   runCLIAsync,
+  runCommandUntil,
+  runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -137,6 +141,145 @@ describe('React Module Federation', () => {
     // check default generated host is built successfully
     const buildOutput = runCLI(`run ${shell}:build:development`);
     expect(buildOutput).toContain('Successfully ran target build');
+  }, 500_000);
+
+  it('should support different versions workspace libs for host and remote', async () => {
+    const shell = uniq('shell');
+    const remote = uniq('remote');
+    const lib = uniq('lib');
+
+    runCLI(
+      `generate @nx/react:host ${shell} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+    );
+
+    runCLI(
+      `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --projectNameAndRootFormat=as-provided`
+    );
+
+    updateFile(
+      `${lib}/src/lib/${lib}.ts`,
+      stripIndents`
+      export const version = '0.0.1';
+      `
+    );
+
+    updateJson(`${lib}/package.json`, (json) => {
+      return {
+        ...json,
+        version: '0.0.1',
+      };
+    });
+
+    // Update host to use the lib
+    updateFile(
+      `${shell}/src/app/app.tsx`,
+      `
+    import * as React from 'react';
+
+    import NxWelcome from './nx-welcome';
+    import { version } from '@acme/${lib}';
+    import { Link, Route, Routes } from 'react-router-dom';
+
+    const About = React.lazy(() => import('${remote}/Module'));
+
+    export function App() {
+      return (
+        <React.Suspense fallback={null}>
+          <div className="home">
+            Lib version: { version }
+          </div>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+
+            <li>
+              <Link to="/About">About</Link>
+            </li>
+          </ul>
+          <Routes>
+            <Route path="/" element={<NxWelcome title="home" />} />
+
+            <Route path="/About" element={<About />} />
+          </Routes>
+        </React.Suspense>
+      );
+    }
+
+    export default App;`
+    );
+
+    // Update remote to use the lib
+    updateFile(
+      `${remote}/src/app/app.tsx`,
+      `// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
+    import styles from './app.module.css';
+    import { version } from '@acme/${lib}';
+
+    import NxWelcome from './nx-welcome';
+
+    export function App() {
+      return (
+        
+        <div className='remote'>
+          Lib version: { version }
+          <NxWelcome title="${remote}" />
+        </div>
+      );
+    }
+
+    export default App;`
+    );
+
+    // update remote e2e test to check the version
+    updateFile(
+      `${remote}-e2e/src/e2e/app.cy.ts`,
+      `describe('${remote}', () => {
+          beforeEach(() => cy.visit('/'));
+        
+          it('should check the lib version', () => {
+            cy.get('div.remote').contains('Lib version: 0.0.1');
+          });
+        });        
+        `
+    );
+
+    // update shell e2e test to check the version
+    updateFile(
+      `${shell}-e2e/src/e2e/app.cy.ts`,
+      `
+      describe('${shell}', () => {
+        beforeEach(() => cy.visit('/'));
+
+        it('should check the lib version', () => {
+          cy.get('div.home').contains('Lib version: 0.0.1');
+        });
+      });
+      `
+    );
+
+    if (runE2ETests()) {
+      // test remote e2e
+      const remoteE2eResults = runCLI(`e2e ${remote}-e2e --no-watch --verbose`);
+      expect(remoteE2eResults).toContain('All specs passed!');
+
+      // test shell e2e
+      // serve remote first
+      const remotePort = 4201;
+      const remoteProcess = await runCommandUntil(
+        `serve ${remote} --no-watch --verbose`,
+        (output) => {
+          return output.includes(
+            `Web Development Server is listening at http://localhost:${remotePort}/`
+          );
+        }
+      );
+      const shellE2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
+      expect(shellE2eResults).toContain('All specs passed!');
+
+      await killProcessAndPorts(remoteProcess.pid, remotePort);
+    }
   }, 500_000);
 
   function readPort(appName: string): number {

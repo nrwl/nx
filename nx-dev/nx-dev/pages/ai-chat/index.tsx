@@ -2,12 +2,15 @@ import { FeedContainer } from '@nx/nx-dev/feature-ai';
 import { DocumentationHeader } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
+import { cx } from '@nx/nx-dev/ui-primitives';
 
 export default function AiDocs(): JSX.Element {
   const { toggleNav, navIsOpen } = useNavToggle();
   return (
     <>
       <NextSeo
+        title="Nx AI Chat (Alpha)"
+        description="AI chat powered by Nx docs."
         noindex={true}
         robotsProps={{
           nosnippet: true,
@@ -19,7 +22,14 @@ export default function AiDocs(): JSX.Element {
           maxVideoPreview: -1,
         }}
       />
-      <div id="shell" className="flex h-full flex-col">
+      <div
+        id="shell"
+        className={cx(
+          'flex flex-col',
+          // Adjust dynamically to mobile viewport height (e.g. when navigational tabs are open).
+          'h-[calc(100dvh)]'
+        )}
+      >
         <div className="w-full flex-shrink-0">
           <DocumentationHeader isNavOpen={navIsOpen} toggleNav={toggleNav} />
         </div>

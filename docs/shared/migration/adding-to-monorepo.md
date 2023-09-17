@@ -69,7 +69,7 @@ It also creates a `nx.json` based on the answers given during the setup process.
 
 ## Incrementally Adopting Nx
 
-In a package-based monorepo, Nx only manages the scheduling and caching of your npm scripts. Hence, it can easily be adopt incrementally by initially using Nx just for a subset of your scripts and then gradually adding more.
+In a package-based monorepo, Nx only manages the scheduling and caching of your npm scripts. Hence, it can easily be adopted incrementally by initially using Nx just for a subset of your scripts and then gradually adding more.
 
 For example, use Nx to run your builds:
 

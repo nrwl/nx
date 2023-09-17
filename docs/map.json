@@ -549,6 +549,11 @@
                   "file": "shared/migration/adding-to-monorepo"
                 },
                 {
+                  "name": "Migrate From Turborepo",
+                  "id": "from-turborepo",
+                  "file": "shared/migration/from-turborepo"
+                },
+                {
                   "name": "Add to any Project",
                   "id": "adding-to-existing-project",
                   "file": "shared/migration/adding-to-existing-project"
