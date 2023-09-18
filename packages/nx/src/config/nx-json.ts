@@ -117,7 +117,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   workspaceLayout?: {
     libsDir?: string;
     appsDir?: string;
-    projectNameAndRootFormat?: 'as-provided' | 'derived';
   };
   /**
    * Available Task Runners

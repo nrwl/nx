@@ -77,17 +77,9 @@ export async function determineProjectNameAndRootOptions(
 > {
   validateName(options.name, options.projectNameAndRootFormat);
   const formats = getProjectNameAndRootFormats(tree, options);
-  const configuredDefault = getDefaultProjectNameAndRootFormat(tree);
-
-  if (configuredDefault === 'derived') {
-    logger.warn(
-      deprecationWarning + '\n' + getExample(options.callingGenerator, formats)
-    );
-  }
 
   const format =
     options.projectNameAndRootFormat ??
-    configuredDefault ??
     (await determineFormat(tree, formats, options.callingGenerator));
 
   return {
@@ -179,38 +171,13 @@ async function determineFormat(
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
 
-  if (result === 'as-provided' && callingGenerator) {
-    const { saveDefault } = await prompt<{ saveDefault: boolean }>({
-      type: 'confirm',
-      message: `Would you like to configure Nx to always take project name and root as provided for ${callingGenerator}?`,
-      name: 'saveDefault',
-      initial: true,
-    });
-    if (saveDefault) {
-      setProjectNameAndRootFormatDefault(tree);
-    } else {
-      logger.warn(deprecationWarning);
-    }
-  } else {
+  if (result === 'derived' && callingGenerator) {
     const example = getExample(callingGenerator, formats);
     logger.warn(deprecationWarning + '\n' + example);
   }
 
   return result;
 }
-
-function setProjectNameAndRootFormatDefault(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.workspaceLayout ??= {};
-  nxJson.workspaceLayout.projectNameAndRootFormat = 'as-provided';
-  updateNxJson(tree, nxJson);
-}
-
-function getDefaultProjectNameAndRootFormat(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  return nxJson.workspaceLayout?.projectNameAndRootFormat;
-}
-
 function getProjectNameAndRootFormats(
   tree: Tree,
   options: ProjectGenerationOptions
