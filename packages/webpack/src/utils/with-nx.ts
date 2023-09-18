@@ -271,6 +271,7 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
                 minify: TerserPlugin.swcMinify,
                 // `terserOptions` options will be passed to `swc`
                 terserOptions: {
+                  module: true,
                   mangle: false,
                 },
               }),
