@@ -247,7 +247,7 @@ async function processFilesAndCreateAndSerializeProjectGraph() {
   }
 }
 
-function copyFileData(d: FileData[]) {
+function copyFileData<T extends FileData>(d: T[]) {
   return d.map((t) => ({ ...t }));
 }
 
@@ -257,7 +257,7 @@ function copyFileMap(m: FileMap) {
     projectFileMap: {},
   };
   for (let p of Object.keys(m.projectFileMap)) {
-    c[p] = copyFileData(m.projectFileMap[p]);
+    c.projectFileMap[p] = copyFileData(m.projectFileMap[p]);
   }
   return c;
 }

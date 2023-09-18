@@ -4,6 +4,7 @@ import { performance } from 'perf_hooks';
 import { assertWorkspaceValidity } from '../utils/assert-workspace-validity';
 import { FileData } from './file-utils';
 import {
+  CachedFileData,
   createProjectFileMapCache,
   extractCachedFileData,
   FileMapCache,
@@ -78,10 +79,10 @@ export async function buildProjectGraphUsingProjectFileMap(
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
-  let filesToProcess;
-  let cachedFileData;
+  let filesToProcess: FileMap;
+  let cachedFileData: CachedFileData;
   const useCacheData =
-    fileMap &&
+    fileMapCache &&
     !shouldRecomputeWholeGraph(
       fileMapCache,
       packageJsonDeps,
@@ -95,7 +96,10 @@ export async function buildProjectGraphUsingProjectFileMap(
     cachedFileData = fromCache.cachedFileData;
   } else {
     filesToProcess = fileMap;
-    cachedFileData = {};
+    cachedFileData = {
+      nonProjectFiles: {},
+      projectFileMap: {},
+    };
   }
 
   const context = createContext(
@@ -155,7 +159,7 @@ async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   knownExternalNodes: Record<string, ProjectGraphExternalNode>,
   ctx: CreateDependenciesContext,
-  cachedFileData: { [project: string]: { [file: string]: FileData } },
+  cachedFileData: CachedFileData,
   projectGraphVersion: string
 ) {
   performance.mark('build project graph:start');
@@ -172,12 +176,18 @@ async function buildProjectGraphUsingContext(
   const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
 
   const updatedBuilder = new ProjectGraphBuilder(r, ctx.fileMap.projectFileMap);
-  for (const proj of Object.keys(cachedFileData)) {
-    for (const f of ctx.fileMap[proj] || []) {
-      const cached = cachedFileData[proj][f.file];
+  for (const proj of Object.keys(cachedFileData.projectFileMap)) {
+    for (const f of ctx.fileMap.projectFileMap[proj] || []) {
+      const cached = cachedFileData.projectFileMap[proj][f.file];
       if (cached && cached.deps) {
         f.deps = [...cached.deps];
       }
+    }
+  }
+  for (const file of ctx.fileMap.nonProjectFiles) {
+    const cached = cachedFileData.nonProjectFiles[file.file];
+    if (cached?.deps) {
+      file.deps = [...cached.deps];
     }
   }
 
@@ -267,7 +277,8 @@ async function updateProjectGraphWithPlugins(
       if (isNxPluginV2(plugin) && plugin.createDependencies) {
         const builder = new ProjectGraphBuilder(
           graph,
-          context.fileMap.projectFileMap
+          context.fileMap.projectFileMap,
+          context.fileMap.nonProjectFiles
         );
         const newDependencies = await plugin.createDependencies(context);
         for (const targetProjectDependency of newDependencies) {

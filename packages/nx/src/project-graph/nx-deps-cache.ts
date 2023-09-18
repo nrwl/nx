@@ -231,7 +231,7 @@ export function shouldRecomputeWholeGraph(
   return false;
 }
 
-type CachedFileData = {
+export type CachedFileData = {
   nonProjectFiles: Record<string, FileData>;
   projectFileMap: { [project: string]: Record<string, FileData> };
 };
@@ -291,11 +291,11 @@ function processNonProjectFiles(
 ) {
   const cachedHashMap = new Map(cachedFiles.map((f) => [f.file, f]));
   for (const f of nonProjectFiles) {
-    const cachedHash = cachedHashMap.get(f.file)?.hash;
-    if (!cachedHash || cachedHash !== f.hash) {
+    const cachedFile = cachedHashMap.get(f.file);
+    if (!cachedFile || cachedFile.hash !== f.hash) {
       filesToProcess.push(f);
     } else {
-      cachedFileData[f.file] = f;
+      cachedFileData[f.file] = cachedFile;
     }
   }
 }
