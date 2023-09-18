@@ -142,10 +142,10 @@ export function readTargetsFromPackageJson({ scripts, nx }: PackageJson) {
     }
   });
 
-  // Add implicit release-publish target for all package.json files to allow for lightweight configuration for package based repos
-  if (!res['release-publish']) {
-    res['release-publish'] = {
-      dependsOn: ['^release-publish'],
+  // Add implicit nx-release-publish target for all package.json files to allow for lightweight configuration for package based repos
+  if (!res['nx-release-publish']) {
+    res['nx-release-publish'] = {
+      dependsOn: ['^nx-release-publish'],
       executor: '@nx/js:release-publish',
       options: {},
     };

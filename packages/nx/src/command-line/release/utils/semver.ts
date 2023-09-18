@@ -6,7 +6,8 @@ export function isRelativeVersionKeyword(val: string): val is ReleaseType {
 
 export function deriveNewSemverVersion(
   currentSemverVersion: string,
-  semverSpecifier: string
+  semverSpecifier: string,
+  preid?: string
 ) {
   if (!valid(currentSemverVersion)) {
     throw new Error(
@@ -17,7 +18,7 @@ export function deriveNewSemverVersion(
   let newVersion = semverSpecifier;
   if (isRelativeVersionKeyword(semverSpecifier)) {
     // Derive the new version from the current version combined with the new version specifier.
-    const derivedVersion = inc(currentSemverVersion, semverSpecifier);
+    const derivedVersion = inc(currentSemverVersion, semverSpecifier, preid);
     if (!derivedVersion) {
       throw new Error(
         `Unable to derive new version from current version "${currentSemverVersion}" and version specifier "${semverSpecifier}"`

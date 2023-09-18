@@ -31,7 +31,7 @@ export const CATCH_ALL_RELEASE_GROUP = '__default__';
 export async function createReleaseGroups(
   projectGraph: ProjectGraph,
   userSpecifiedGroups: NxJsonConfiguration['release']['groups'] = {},
-  requiredTargetName?: 'release-publish'
+  requiredTargetName?: 'nx-release-publish'
 ): Promise<{
   error: null | CreateReleaseGroupsError;
   releaseGroups: ReleaseGroup[];

@@ -13,7 +13,7 @@ describe('create-release-groups', () => {
           data: {
             root: 'libs/lib-a',
             targets: {
-              'release-publish': {},
+              'nx-release-publish': {},
             },
           } as any,
         },
@@ -23,7 +23,7 @@ describe('create-release-groups', () => {
           data: {
             root: 'libs/lib-b',
             targets: {
-              'release-publish': {},
+              'nx-release-publish': {},
             },
           } as any,
         },
@@ -195,7 +195,7 @@ describe('create-release-groups', () => {
             projects: '*', // using string form to ensure that is supported in addition to array form
           },
         },
-        'release-publish'
+        'nx-release-publish'
       );
       expect(res).toMatchInlineSnapshot(`
         {
@@ -205,7 +205,7 @@ describe('create-release-groups', () => {
               "projects": [
                 "project-without-target",
               ],
-              "targetName": "release-publish",
+              "targetName": "nx-release-publish",
             },
           },
           "releaseGroups": [],
@@ -228,7 +228,7 @@ describe('create-release-groups', () => {
           },
         },
         {},
-        'release-publish'
+        'nx-release-publish'
       );
       expect(res2).toMatchInlineSnapshot(`
         {
@@ -238,7 +238,7 @@ describe('create-release-groups', () => {
               "projects": [
                 "another-project-without-target",
               ],
-              "targetName": "release-publish",
+              "targetName": "nx-release-publish",
             },
           },
           "releaseGroups": [],

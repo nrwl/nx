@@ -177,6 +177,8 @@ async function runPublishOnProjects(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
+  const targets = ['nx-release-publish'];
+
   if (args.graph) {
     const file = readGraphFileFromGraphArg(args);
     const projectNames = projectsToRun.map((t) => t.name);
@@ -186,7 +188,7 @@ async function runPublishOnProjects(
         all: false,
         open: true,
         view: 'tasks',
-        targets: ['release-publish'],
+        targets,
         projects: projectNames,
         file,
       },
@@ -194,14 +196,14 @@ async function runPublishOnProjects(
     );
   } else {
     /**
-     * Run the relevant release-publish executor on each of the selected projects.
+     * Run the relevant nx-release-publish executor on each of the selected projects.
      */
     const status = await runCommand(
       projectsToRun,
       projectGraph,
       { nxJson },
       {
-        targets: ['release-publish'],
+        targets,
         outputStyle: 'static',
         ...(args as any),
       },

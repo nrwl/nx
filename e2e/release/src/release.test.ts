@@ -109,7 +109,7 @@ describe('nx release', () => {
     const publishOutput = runCLI(`release publish`);
     expect(publishOutput).toMatchInlineSnapshot(`
 
-      >  NX   Running target release-publish for 3 projects:
+      >  NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -117,7 +117,7 @@ describe('nx release', () => {
 
 
 
-      > nx run {project-name}:release-publish
+      > nx run {project-name}:nx-release-publish
 
 
       📦  @proj/{project-name}@999.9.9
@@ -138,7 +138,7 @@ describe('nx release', () => {
 
       Published to ${e2eRegistryUrl} with tag "latest"
 
-      > nx run {project-name}:release-publish
+      > nx run {project-name}:nx-release-publish
 
 
       📦  @proj/{project-name}@999.9.9
@@ -159,7 +159,7 @@ describe('nx release', () => {
 
       Published to ${e2eRegistryUrl} with tag "latest"
 
-      > nx run {project-name}:release-publish
+      > nx run {project-name}:nx-release-publish
 
 
       📦  @proj/{project-name}@999.9.9
@@ -182,7 +182,7 @@ describe('nx release', () => {
 
 
 
-      >  NX   Successfully ran target release-publish for 3 projects
+      >  NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -232,7 +232,7 @@ describe('nx release', () => {
       (output) => output.includes(`warn --- http address`)
     );
 
-    const versionOutput2 = runCLI(`release version major`); // version using semver keyword this time
+    const versionOutput2 = runCLI(`release version premajor --preid next`); // version using semver keyword this time (and custom preid)
 
     expect(
       versionOutput2.match(/Running release version for project: my-pkg-\d*/g)
@@ -265,14 +265,14 @@ describe('nx release', () => {
 
     expect(
       versionOutput2.match(
-        /New version 1000.0.0 written to my-pkg-\d*\/package.json/g
+        /New version 1000.0.0-next.0 written to my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
 
     // Only one dependency relationship exists, so this log should only match once
     expect(
       versionOutput2.match(
-        /Applying new version 1000.0.0 to 1 package which depends on my-pkg-\d*/g
+        /Applying new version 1000.0.0-next.0 to 1 package which depends on my-pkg-\d*/g
       ).length
     ).toEqual(1);
 
@@ -282,7 +282,7 @@ describe('nx release', () => {
     );
     expect(publishOutput2).toMatchInlineSnapshot(`
 
-      >  NX   Running target release-publish for 3 projects:
+      >  NX   Running target nx-release-publish for 3 projects:
 
       - {project-name}
       - {project-name}
@@ -294,10 +294,10 @@ describe('nx release', () => {
 
 
 
-      > nx run {project-name}:release-publish
+      > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0
+      📦  @proj/{project-name}@1000.0.0-next.0
       === Tarball Contents ===
 
       XXB  index.js
@@ -305,8 +305,8 @@ describe('nx release', () => {
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0
-      filename:      proj-{project-name}-1000.0.0.tgz
+      version:       1000.0.0-next.0
+      filename:      proj-{project-name}-1000.0.0-next.0.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}
@@ -315,10 +315,10 @@ describe('nx release', () => {
 
       Published to ${customRegistryUrl} with tag "next"
 
-      > nx run {project-name}:release-publish
+      > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0
+      📦  @proj/{project-name}@1000.0.0-next.0
       === Tarball Contents ===
 
       XXB  index.js
@@ -326,8 +326,8 @@ describe('nx release', () => {
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0
-      filename:      proj-{project-name}-1000.0.0.tgz
+      version:       1000.0.0-next.0
+      filename:      proj-{project-name}-1000.0.0-next.0.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}
@@ -336,10 +336,10 @@ describe('nx release', () => {
 
       Published to ${customRegistryUrl} with tag "next"
 
-      > nx run {project-name}:release-publish
+      > nx run {project-name}:nx-release-publish
 
 
-      📦  @proj/{project-name}@1000.0.0
+      📦  @proj/{project-name}@1000.0.0-next.0
       === Tarball Contents ===
 
       XXB  index.js
@@ -347,8 +347,8 @@ describe('nx release', () => {
       XXB  project.json
       === Tarball Details ===
       name:          @proj/{project-name}
-      version:       1000.0.0
-      filename:      proj-{project-name}-1000.0.0.tgz
+      version:       1000.0.0-next.0
+      filename:      proj-{project-name}-1000.0.0-next.0.tgz
       package size: XXXB
       unpacked size: XXXB
       shasum:        {SHASUM}
@@ -359,7 +359,7 @@ describe('nx release', () => {
 
 
 
-      >  NX   Successfully ran target release-publish for 3 projects
+      >  NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -371,21 +371,21 @@ describe('nx release', () => {
       )
         .toString()
         .trim()
-    ).toEqual('1000.0.0');
+    ).toEqual('1000.0.0-next.0');
     expect(
       execSync(
         `npm view @proj/${pkg2}@next version --registry=${customRegistryUrl}`
       )
         .toString()
         .trim()
-    ).toEqual('1000.0.0');
+    ).toEqual('1000.0.0-next.0');
     expect(
       execSync(
         `npm view @proj/${pkg3}@next version --registry=${customRegistryUrl}`
       )
         .toString()
         .trim()
-    ).toEqual('1000.0.0');
+    ).toEqual('1000.0.0-next.0');
 
     // port and process cleanup
     await killProcessAndPorts(process.pid, verdaccioPort);

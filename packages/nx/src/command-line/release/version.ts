@@ -21,7 +21,6 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import { NxArgs } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { combineOptionsForGenerator } from '../../utils/params';
 import { parseGeneratorString } from '../generate/generate';
@@ -45,6 +44,7 @@ export interface ReleaseVersionGeneratorSchema {
   projects: ProjectGraphProjectNode[];
   projectGraph: ProjectGraph;
   specifier: string;
+  preid?: string;
   packageRoot?: string;
   currentVersionResolver?: 'registry' | 'disk';
   currentVersionResolverMetadata?: Record<string, unknown>;
@@ -54,8 +54,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
 
-  const nxArgs = args as NxArgs;
-  if (nxArgs.verbose) {
+  if (args.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
@@ -69,7 +68,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
     return await handleCreateReleaseGroupsError(releaseGroupsData.error);
   }
 
-  const tree = new FsTree(workspaceRoot, nxArgs.verbose);
+  const tree = new FsTree(workspaceRoot, args.verbose);
 
   let { releaseGroups } = releaseGroupsData;
 
@@ -171,7 +170,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
       await runVersionOnProjects(
         projectGraph,
         nxJson,
-        nxArgs,
+        args,
         tree,
         generatorData,
         Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
@@ -227,7 +226,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
     await runVersionOnProjects(
       projectGraph,
       nxJson,
-      nxArgs,
+      args,
       tree,
       generatorData,
       releaseGroup.projects,
@@ -243,7 +242,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
 async function runVersionOnProjects(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
-  nxArgs: NxArgs,
+  args: VersionOptions,
   tree: Tree,
   generatorData: GeneratorData,
   projectNames: string[],
@@ -271,6 +270,7 @@ async function runVersionOnProjects(
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
     specifier: newVersionSpecifier,
+    preid: args.preid,
     ...generatorData.configGeneratorOptions,
   };
 
@@ -285,7 +285,7 @@ async function runVersionOnProjects(
     false,
     null,
     relative(process.cwd(), workspaceRoot),
-    nxArgs.verbose
+    args.verbose
   );
 
   const releaseVersionGenerator = generatorData.implementationFactory();

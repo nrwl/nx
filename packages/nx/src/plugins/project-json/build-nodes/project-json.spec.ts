@@ -12,8 +12,8 @@ import { CreateNodesContext } from '../../../utils/nx-plugin';
 const { createNodes } = CreateProjectJsonProjectsPlugin;
 
 const defaultReleasePublishTarget = {
-  'release-publish': {
-    dependsOn: ['^release-publish'],
+  'nx-release-publish': {
+    dependsOn: ['^nx-release-publish'],
     executor: '@nx/js:release-publish',
     options: {},
   },
@@ -80,9 +80,9 @@ describe('nx project.json plugin', () => {
                 "executor": "nx:run-commands",
                 "options": {},
               },
-              "release-publish": {
+              "nx-release-publish": {
                 "dependsOn": [
-                  "^release-publish",
+                  "^nx-release-publish",
                 ],
                 "executor": "@nx/js:release-publish",
                 "options": {},

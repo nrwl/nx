@@ -73,6 +73,12 @@ Type: `boolean`
 
 Show help
 
+##### preid
+
+Type: `string`
+
+The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.
+
 ##### specifier
 
 Type: `string`

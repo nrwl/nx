@@ -143,7 +143,8 @@ To fix this you will either need to add a package.json file at that location, or
 
     const newVersion = deriveNewSemverVersion(
       currentVersion,
-      options.specifier
+      options.specifier,
+      options.preid
     );
 
     writeJson(tree, packageJsonPath, {

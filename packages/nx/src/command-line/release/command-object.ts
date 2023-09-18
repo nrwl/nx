@@ -16,6 +16,7 @@ export interface NxReleaseArgs {
 
 export type VersionOptions = NxReleaseArgs & {
   specifier?: string;
+  preid?: string;
 };
 
 export type ChangelogOptions = NxReleaseArgs & {
@@ -102,11 +103,18 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
   describe:
     'Create a version and release for one or more applications and libraries',
   builder: (yargs) =>
-    yargs.positional('specifier', {
-      type: 'string',
-      describe:
-        'Exact version or semver keyword to apply to the selected release group.',
-    }),
+    yargs
+      .positional('specifier', {
+        type: 'string',
+        describe:
+          'Exact version or semver keyword to apply to the selected release group.',
+      })
+      .option('preid', {
+        type: 'string',
+        describe:
+          'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
+        default: '',
+      }),
   handler: (args) => import('./version').then((m) => m.versionHandler(args)),
 };
 

@@ -21,6 +21,10 @@
       "type": "string",
       "description": "Exact version or semver keyword to apply to the selected release group. NOTE: This should be set on the release group level, not the project level."
     },
+    "preid": {
+      "type": "string",
+      "description": "The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease."
+    },
     "packageRoot": {
       "type": "string",
       "description": "The root directory of the directory (containing a manifest file at its root) to publish. Defaults to the project root"

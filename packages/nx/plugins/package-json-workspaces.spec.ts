@@ -52,9 +52,9 @@ describe('nx package.json workspaces plugin', () => {
                   "script": "echo",
                 },
               },
-              "release-publish": {
+              "nx-release-publish": {
                 "dependsOn": [
-                  "^release-publish",
+                  "^nx-release-publish",
                 ],
                 "executor": "@nx/js:release-publish",
                 "options": {},
@@ -74,9 +74,9 @@ describe('nx package.json workspaces plugin', () => {
             "root": "packages/lib-a",
             "sourceRoot": "packages/lib-a",
             "targets": {
-              "release-publish": {
+              "nx-release-publish": {
                 "dependsOn": [
-                  "^release-publish",
+                  "^nx-release-publish",
                 ],
                 "executor": "@nx/js:release-publish",
                 "options": {},
@@ -118,9 +118,9 @@ describe('nx package.json workspaces plugin', () => {
                   "{projectRoot}/dist",
                 ],
               },
-              "release-publish": {
+              "nx-release-publish": {
                 "dependsOn": [
-                  "^release-publish",
+                  "^nx-release-publish",
                 ],
                 "executor": "@nx/js:release-publish",
                 "options": {},
