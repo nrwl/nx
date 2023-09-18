@@ -158,6 +158,31 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.9.0": {
+      "version": "16.9.0-beta.2",
+      "packages": {
+        "vite": {
+          "version": "~4.4.9",
+          "alwaysAddToPackageJson": false
+        },
+        "vitest": {
+          "version": "~0.34.4",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-plugin-react": {
+          "version": "~4.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-plugin-dts": {
+          "version": "~3.5.3",
+          "alwaysAddToPackageJson": false
+        },
+        "happy-dom": {
+          "version": "~12.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
