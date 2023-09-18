@@ -10,7 +10,7 @@ export const yargsExecCommand: CommandModule = {
   builder: (yargs) => withRunOneOptions(yargs),
   handler: async (args) => {
     try {
-      await (await import('./exec')).nxExecCommand(withOverrides(args));
+      await (await import('./exec')).nxExecCommand(withOverrides(args) as any);
       process.exit(0);
     } catch (e) {
       process.exit(1);

@@ -144,7 +144,7 @@ export async function runCommand(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-) {
+): Promise<NodeJS.Process['exitCode']> {
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
@@ -189,9 +189,8 @@ export async function runCommand(
       return status;
     }
   );
-  // fix for https://github.com/nrwl/nx/issues/1666
-  if (process.stdin['unref']) (process.stdin as any).unref();
-  process.exit(status);
+
+  return status;
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {

@@ -105,7 +105,7 @@ Type: `boolean`
 
 Show help
 
-### nx-bail
+### nxBail
 
 Type: `boolean`
 
@@ -113,7 +113,7 @@ Default: `false`
 
 Stop command execution after the first failed task
 
-### nx-ignore-cycles
+### nxIgnoreCycles
 
 Type: `boolean`
 
@@ -147,7 +147,7 @@ Type: `string`
 
 This is the name of the tasks runner configured in nx.json
 
-### skip-nx-cache
+### skipNxCache
 
 Type: `boolean`
 

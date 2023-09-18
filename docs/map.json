@@ -1985,6 +1985,11 @@
               "name": "view-logs",
               "id": "view-logs",
               "file": "generated/cli/view-logs"
+            },
+            {
+              "name": "release",
+              "id": "release",
+              "file": "generated/cli/release"
             }
           ]
         },

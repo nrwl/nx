@@ -28,6 +28,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [plugins](../../devkit/documents/Workspace#plugins): string[]
 - [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, unknown&gt;
 - [projects](../../devkit/documents/Workspace#projects): Record&lt;string, ProjectConfiguration&gt;
+- [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
 - [version](../../devkit/documents/Workspace#version): number
@@ -216,6 +217,18 @@ Projects' projects
 #### Overrides
 
 [ProjectsConfigurations](../../devkit/documents/ProjectsConfigurations).[projects](../../devkit/documents/ProjectsConfigurations#projects)
+
+---
+
+### release
+
+• `Optional` **release**: `NxReleaseConfiguration`
+
+**ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[release](../../devkit/documents/NxJsonConfiguration#release)
 
 ---
 
