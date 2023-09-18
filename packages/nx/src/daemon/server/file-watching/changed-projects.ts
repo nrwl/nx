@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks';
-import { projectFileMapWithFiles } from '../project-graph-incremental-recomputation';
+import { fileMapWithFiles } from '../project-graph-incremental-recomputation';
 
 export type ChangedFile = {
   path: string;
@@ -38,7 +38,7 @@ export function getProjectsAndGlobalChanges(
 
   const fileToProjectMap: Record<string, string> = {};
   for (const [projectName, projectFiles] of Object.entries(
-    projectFileMapWithFiles?.projectFileMap ?? {}
+    fileMapWithFiles?.fileMap?.projectFileMap ?? {}
   )) {
     for (const projectFile of projectFiles) {
       fileToProjectMap[projectFile.file] = projectName;

@@ -21,8 +21,8 @@ export function buildExplicitPackageJsonDependencies(
   const res: RawProjectGraphDependency[] = [];
   let packageNameMap = undefined;
   const nodes = Object.values(ctx.projects);
-  Object.keys(ctx.filesToProcess).forEach((source) => {
-    Object.values(ctx.filesToProcess[source]).forEach((f) => {
+  Object.keys(ctx.filesToProcess.projectFileMap).forEach((source) => {
+    Object.values(ctx.filesToProcess.projectFileMap[source]).forEach((f) => {
       if (isPackageJsonAtProjectRoot(nodes, f.file)) {
         // we only create the package name map once and only if a package.json file changes
         packageNameMap =

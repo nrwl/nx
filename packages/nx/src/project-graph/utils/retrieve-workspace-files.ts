@@ -86,7 +86,10 @@ export async function retrieveWorkspaceFiles(
 
   return {
     allWorkspaceFiles: buildAllWorkspaceFiles(projectFileMap, globalFiles),
-    projectFileMap,
+    fileMap: {
+      projectFileMap,
+      nonProjectFiles: globalFiles,
+    },
     projectConfigurations: {
       version: 2,
       projects: projectConfigurations,

@@ -1,16 +1,17 @@
 import { performance } from 'perf_hooks';
 import {
   FileData,
+  FileMap,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
-import { buildProjectGraphUsingProjectFileMap } from '../../project-graph/build-project-graph';
-import { updateProjectFileMap } from '../../project-graph/file-map-utils';
+import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
+import { updateFileMap } from '../../project-graph/file-map-utils';
 import {
   nxProjectGraph,
-  ProjectFileMapCache,
-  readProjectFileMapCache,
+  FileMapCache,
+  readFileMapCache,
 } from '../../project-graph/nx-deps-cache';
 import { fileExists } from '../../utils/fileutils';
 import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
@@ -35,14 +36,14 @@ import {
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
   projectGraph: ProjectGraph | null;
-  projectFileMap: ProjectFileMap | null;
+  fileMap: FileMap | null;
   allWorkspaceFiles: FileData[] | null;
   serializedProjectGraph: string | null;
 }>;
-export let projectFileMapWithFiles:
-  | { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] }
+export let fileMapWithFiles:
+  | { fileMap: FileMap; allWorkspaceFiles: FileData[] }
   | undefined;
-export let currentProjectFileMapCache: ProjectFileMapCache | undefined;
+export let currentProjectFileMapCache: FileMapCache | undefined;
 export let currentProjectGraph: ProjectGraph | undefined;
 
 const collectedUpdatedFiles = new Set<string>();
@@ -78,7 +79,7 @@ export async function getCachedSerializedProjectGraphPromise() {
       error: e,
       serializedProjectGraph: null,
       projectGraph: null,
-      projectFileMap: null,
+      fileMap: null,
       allWorkspaceFiles: null,
     };
   }
@@ -197,22 +198,19 @@ async function processCollectedUpdatedAndDeletedFiles() {
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
       storedWorkspaceConfigHash = workspaceConfigHash;
 
-      ({ externalNodes: knownExternalNodes, ...projectFileMapWithFiles } =
+      ({ externalNodes: knownExternalNodes, ...fileMapWithFiles } =
         await retrieveWorkspaceFiles(workspaceRoot, nxJson));
     } else {
-      if (projectFileMapWithFiles) {
-        projectFileMapWithFiles = updateProjectFileMap(
+      if (fileMapWithFiles) {
+        fileMapWithFiles = updateFileMap(
           projectNodes,
-          projectFileMapWithFiles.projectFileMap,
-          projectFileMapWithFiles.allWorkspaceFiles,
+          fileMapWithFiles.fileMap,
+          fileMapWithFiles.allWorkspaceFiles,
           new Map(Object.entries(updatedFileHashes)),
           deletedFiles
         );
       } else {
-        projectFileMapWithFiles = await retrieveWorkspaceFiles(
-          workspaceRoot,
-          nxJson
-        );
+        fileMapWithFiles = await retrieveWorkspaceFiles(workspaceRoot, nxJson);
       }
     }
 
@@ -240,7 +238,7 @@ async function processFilesAndCreateAndSerializeProjectGraph() {
     return Promise.resolve({
       error: err,
       projectGraph: null,
-      projectFileMap: null,
+      fileMap: null,
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
     });
@@ -253,10 +251,13 @@ function copyFileData(d: FileData[]) {
   return d.map((t) => ({ ...t }));
 }
 
-function copyFileMap(m: ProjectFileMap) {
-  const c = {};
-  for (let p of Object.keys(m)) {
-    c[p] = copyFileData(m[p]);
+function copyFileMap(m: FileMap) {
+  const c: FileMap = {
+    nonProjectFiles: copyFileData(m.nonProjectFiles),
+    projectFileMap: {},
+  };
+  for (let p of Object.keys(m.projectFileMap)) {
+    c[p] = copyFileData(m.projectFileMap[p]);
   }
   return c;
 }
@@ -264,7 +265,7 @@ function copyFileMap(m: ProjectFileMap) {
 async function createAndSerializeProjectGraph(): Promise<{
   error: string | null;
   projectGraph: ProjectGraph | null;
-  projectFileMap: ProjectFileMap | null;
+  fileMap: FileMap | null;
   allWorkspaceFiles: FileData[] | null;
   serializedProjectGraph: string | null;
 }> {
@@ -274,17 +275,15 @@ async function createAndSerializeProjectGraph(): Promise<{
       workspaceRoot,
       readNxJson(workspaceRoot)
     );
-    const projectFileMap = copyFileMap(projectFileMapWithFiles.projectFileMap);
-    const allWorkspaceFiles = copyFileData(
-      projectFileMapWithFiles.allWorkspaceFiles
-    );
+    const fileMap = copyFileMap(fileMapWithFiles.fileMap);
+    const allWorkspaceFiles = copyFileData(fileMapWithFiles.allWorkspaceFiles);
     const { projectGraph, projectFileMapCache } =
-      await buildProjectGraphUsingProjectFileMap(
+      await buildProjectGraphUsingFileMap(
         projectConfigurations.projectNodes,
         knownExternalNodes,
-        projectFileMap,
+        fileMap,
         allWorkspaceFiles,
-        currentProjectFileMapCache || readProjectFileMapCache(),
+        currentProjectFileMapCache || readFileMapCache(),
         true
       );
     currentProjectFileMapCache = projectFileMapCache;
@@ -309,7 +308,7 @@ async function createAndSerializeProjectGraph(): Promise<{
     return {
       error: null,
       projectGraph,
-      projectFileMap,
+      fileMap,
       allWorkspaceFiles,
       serializedProjectGraph,
     };
@@ -320,7 +319,7 @@ async function createAndSerializeProjectGraph(): Promise<{
     return {
       error: e,
       projectGraph: null,
-      projectFileMap: null,
+      fileMap: null,
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
     };
@@ -329,7 +328,7 @@ async function createAndSerializeProjectGraph(): Promise<{
 
 async function resetInternalState() {
   cachedSerializedProjectGraphPromise = undefined;
-  projectFileMapWithFiles = undefined;
+  fileMapWithFiles = undefined;
   currentProjectFileMapCache = undefined;
   currentProjectGraph = undefined;
   collectedUpdatedFiles.clear();

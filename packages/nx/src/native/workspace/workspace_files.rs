@@ -20,6 +20,11 @@ pub struct NxWorkspaceFiles {
     pub external_nodes: HashMap<String, JsObject>,
 }
 
+pub struct FileMap {
+    pub project_file_map: HashMap<String, Vec<FileData>>,
+    pub non_project_files: Vec<FileData>
+}
+
 pub(super) fn get_files<ConfigurationParser>(
     globs: Vec<String>,
     parse_configurations: ConfigurationParser,

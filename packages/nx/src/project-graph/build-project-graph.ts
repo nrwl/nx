@@ -6,15 +6,22 @@ import { FileData } from './file-utils';
 import {
   createProjectFileMapCache,
   extractCachedFileData,
-  ProjectFileMapCache,
+  FileMapCache,
   shouldRecomputeWholeGraph,
   writeCache,
 } from './nx-deps-cache';
 import { applyImplicitDependencies } from './utils/implicit-project-dependencies';
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
-import { isNxPluginV1, isNxPluginV2, loadNxPlugins } from '../utils/nx-plugin';
+import {
+  CreateDependenciesContext,
+  CreateNodesContext,
+  isNxPluginV1,
+  isNxPluginV2,
+  loadNxPlugins,
+} from '../utils/nx-plugin';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
+  FileMap,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -28,35 +35,41 @@ import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 
-let storedProjectFileMap: ProjectFileMap | null = null;
+let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
 
-export function getProjectFileMap(): {
-  projectFileMap: ProjectFileMap;
+export function getFileMap(): {
+  fileMap: FileMap;
   allWorkspaceFiles: FileData[];
 } {
-  if (!!storedProjectFileMap) {
+  if (!!storedFileMap) {
     return {
-      projectFileMap: storedProjectFileMap,
+      fileMap: storedFileMap,
       allWorkspaceFiles: storedAllWorkspaceFiles,
     };
   } else {
-    return { projectFileMap: {}, allWorkspaceFiles: [] };
+    return {
+      fileMap: {
+        nonProjectFiles: [],
+        projectFileMap: {},
+      },
+      allWorkspaceFiles: [],
+    };
   }
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
   projects: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
-  projectFileMap: ProjectFileMap,
+  fileMap: FileMap,
   allWorkspaceFiles: FileData[],
-  fileMap: ProjectFileMapCache | null,
+  fileMapCache: FileMapCache | null,
   shouldWriteCache: boolean
 ): Promise<{
   projectGraph: ProjectGraph;
-  projectFileMapCache: ProjectFileMapCache;
+  projectFileMapCache: FileMapCache;
 }> {
-  storedProjectFileMap = projectFileMap;
+  storedFileMap = fileMap;
   storedAllWorkspaceFiles = allWorkspaceFiles;
 
   const nxJson = readNxJson();
@@ -70,25 +83,26 @@ export async function buildProjectGraphUsingProjectFileMap(
   const useCacheData =
     fileMap &&
     !shouldRecomputeWholeGraph(
-      fileMap,
+      fileMapCache,
       packageJsonDeps,
       projects,
       nxJson,
       rootTsConfig
     );
   if (useCacheData) {
-    const fromCache = extractCachedFileData(projectFileMap, fileMap);
+    const fromCache = extractCachedFileData(fileMap, fileMapCache);
     filesToProcess = fromCache.filesToProcess;
     cachedFileData = fromCache.cachedFileData;
   } else {
-    filesToProcess = projectFileMap;
+    filesToProcess = fileMap;
     cachedFileData = {};
   }
 
   const context = createContext(
     projects,
     nxJson,
-    projectFileMap,
+    externalNodes,
+    fileMap,
     filesToProcess
   );
   let projectGraph = await buildProjectGraphUsingContext(
@@ -101,7 +115,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   const projectFileMapCache = createProjectFileMapCache(
     nxJson,
     packageJsonDeps,
-    projectFileMap,
+    fileMap,
     rootTsConfig
   );
   if (shouldWriteCache) {
@@ -140,13 +154,13 @@ function readCombinedDeps() {
 async function buildProjectGraphUsingContext(
   nxJson: NxJsonConfiguration,
   knownExternalNodes: Record<string, ProjectGraphExternalNode>,
-  ctx: ProjectGraphProcessorContext,
+  ctx: CreateDependenciesContext,
   cachedFileData: { [project: string]: { [file: string]: FileData } },
   projectGraphVersion: string
 ) {
   performance.mark('build project graph:start');
 
-  const builder = new ProjectGraphBuilder(null, ctx.fileMap);
+  const builder = new ProjectGraphBuilder(null, ctx.fileMap.projectFileMap);
   builder.setVersion(projectGraphVersion);
   for (const node in knownExternalNodes) {
     builder.addExternalNode(knownExternalNodes[node]);
@@ -157,7 +171,7 @@ async function buildProjectGraphUsingContext(
 
   const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
 
-  const updatedBuilder = new ProjectGraphBuilder(r, ctx.fileMap);
+  const updatedBuilder = new ProjectGraphBuilder(r, ctx.fileMap.projectFileMap);
   for (const proj of Object.keys(cachedFileData)) {
     for (const f of ctx.fileMap[proj] || []) {
       const cached = cachedFileData[proj][f.file];
@@ -167,7 +181,7 @@ async function buildProjectGraphUsingContext(
     }
   }
 
-  applyImplicitDependencies(ctx.projectsConfigurations, updatedBuilder);
+  applyImplicitDependencies(ctx.projects, updatedBuilder);
 
   const finalGraph = updatedBuilder.getUpdatedProjectGraph();
 
@@ -184,9 +198,10 @@ async function buildProjectGraphUsingContext(
 function createContext(
   projects: Record<string, ProjectConfiguration>,
   nxJson: NxJsonConfiguration,
-  fileMap: ProjectFileMap,
-  filesToProcess: ProjectFileMap
-): ProjectGraphProcessorContext {
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  fileMap: FileMap,
+  filesToProcess: FileMap
+): CreateDependenciesContext {
   const clonedProjects = Object.keys(projects).reduce((map, projectName) => {
     map[projectName] = {
       ...projects[projectName],
@@ -195,22 +210,16 @@ function createContext(
   }, {} as Record<string, ProjectConfiguration>);
   return {
     nxJsonConfiguration: nxJson,
-    workspace: {
-      version: 2,
-      projects: clonedProjects,
-      ...nxJson,
-    },
-    projectsConfigurations: {
-      version: 2,
-      projects: clonedProjects,
-    },
+    projects: clonedProjects,
+    externalNodes,
+    workspaceRoot,
     fileMap,
     filesToProcess,
   };
 }
 
 async function updateProjectGraphWithPlugins(
-  context: ProjectGraphProcessorContext,
+  context: CreateDependenciesContext,
   initProjectGraph: ProjectGraph
 ) {
   const plugins = await loadNxPlugins(context.nxJsonConfiguration?.plugins);
@@ -229,7 +238,20 @@ async function updateProjectGraphWithPlugins(
         //     'Nx has recently released a v2 model for project graph plugins. The `processProjectGraph` method is deprecated. Plugins should use some combination of `createNodes` and `createDependencies` instead.',
         //   ],
         // });
-        graph = await plugin.processProjectGraph(graph, context);
+        graph = await plugin.processProjectGraph(graph, {
+          ...context,
+          projectsConfigurations: {
+            projects: context.projects,
+            version: 2,
+          },
+          fileMap: context.fileMap.projectFileMap,
+          filesToProcess: context.filesToProcess.projectFileMap,
+          workspace: {
+            version: 2,
+            projects: context.projects,
+            ...context.nxJsonConfiguration,
+          },
+        });
       }
     } catch (e) {
       let message = `Failed to process the project graph with "${plugin.name}".`;
@@ -243,15 +265,11 @@ async function updateProjectGraphWithPlugins(
   for (const plugin of plugins) {
     try {
       if (isNxPluginV2(plugin) && plugin.createDependencies) {
-        const builder = new ProjectGraphBuilder(graph, context.fileMap);
-        const newDependencies = await plugin.createDependencies({
-          externalNodes: graph.externalNodes,
-          fileMap: context.fileMap,
-          filesToProcess: context.filesToProcess,
-          nxJsonConfiguration: context.nxJsonConfiguration,
-          projects: context.projectsConfigurations.projects,
-          workspaceRoot: workspaceRoot,
-        });
+        const builder = new ProjectGraphBuilder(
+          graph,
+          context.fileMap.projectFileMap
+        );
+        const newDependencies = await plugin.createDependencies(context);
         for (const targetProjectDependency of newDependencies) {
           builder.addDependency(
             targetProjectDependency.source,

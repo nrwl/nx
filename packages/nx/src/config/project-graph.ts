@@ -22,6 +22,11 @@ export function fileDataDepType(dep: string | [string, string]) {
   return typeof dep === 'string' ? 'static' : dep[1];
 }
 
+export interface FileMap {
+  nonProjectFiles: FileData[];
+  projectFileMap: ProjectFileMap;
+}
+
 /**
  * A list of files separated by the project they belong to
  */

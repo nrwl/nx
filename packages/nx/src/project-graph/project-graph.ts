@@ -1,7 +1,4 @@
-import {
-  readProjectFileMapCache,
-  readProjectGraphCache,
-} from './nx-deps-cache';
+import { readFileMapCache, readProjectGraphCache } from './nx-deps-cache';
 import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
 import { output } from '../utils/output';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
@@ -74,21 +71,17 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   const nxJson = readNxJson();
 
-  const {
-    allWorkspaceFiles,
-    projectFileMap,
-    projectConfigurations,
-    externalNodes,
-  } = await retrieveWorkspaceFiles(workspaceRoot, nxJson);
+  const { allWorkspaceFiles, fileMap, projectConfigurations, externalNodes } =
+    await retrieveWorkspaceFiles(workspaceRoot, nxJson);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   return (
     await buildProjectGraphUsingProjectFileMap(
       projectConfigurations.projects,
       externalNodes,
-      projectFileMap,
+      fileMap,
       allWorkspaceFiles,
-      cacheEnabled ? readProjectFileMapCache() : null,
+      cacheEnabled ? readFileMapCache() : null,
       cacheEnabled
     )
   ).projectGraph;

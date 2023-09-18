@@ -25,7 +25,7 @@ import {
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
 import { Server } from 'net';
-import { readProjectFileMapCache } from '../../project-graph/nx-deps-cache';
+import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 
@@ -576,7 +576,7 @@ async function createDepGraphClientResponse(
   let graph = pruneExternalNodes(
     await createProjectGraphAsync({ exitOnError: true })
   );
-  let fileMap = readProjectFileMapCache().projectFileMap;
+  let fileMap = readFileMapCache().fileMap.projectFileMap;
   performance.mark('project graph watch calculation:end');
   performance.mark('project graph response generation:start');
 

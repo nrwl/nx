@@ -7,8 +7,8 @@ Context for [CreateDependencies](../../devkit/documents/CreateDependencies)
 ### Properties
 
 - [externalNodes](../../devkit/documents/CreateDependenciesContext#externalnodes): Record&lt;string, ProjectGraphExternalNode&gt;
-- [fileMap](../../devkit/documents/CreateDependenciesContext#filemap): ProjectFileMap
-- [filesToProcess](../../devkit/documents/CreateDependenciesContext#filestoprocess): ProjectFileMap
+- [fileMap](../../devkit/documents/CreateDependenciesContext#filemap): FileMap
+- [filesToProcess](../../devkit/documents/CreateDependenciesContext#filestoprocess): FileMap
 - [nxJsonConfiguration](../../devkit/documents/CreateDependenciesContext#nxjsonconfiguration): NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
 - [projects](../../devkit/documents/CreateDependenciesContext#projects): Record&lt;string, ProjectConfiguration&gt;
 - [workspaceRoot](../../devkit/documents/CreateDependenciesContext#workspaceroot): string
@@ -25,7 +25,7 @@ The external nodes that have been added to the graph.
 
 ### fileMap
 
-• `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
+• `Readonly` **fileMap**: `FileMap`
 
 All files in the workspace
 
@@ -33,7 +33,7 @@ All files in the workspace
 
 ### filesToProcess
 
-• `Readonly` **filesToProcess**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
+• `Readonly` **filesToProcess**: `FileMap`
 
 Files changes since last invocation
 

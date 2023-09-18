@@ -13,7 +13,7 @@ import {
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { CreateDependenciesContext } from '../utils/nx-plugin';
-import { getProjectFileMap } from './build-project-graph';
+import { getFileMap } from './build-project-graph';
 
 /**
  * A class which builds up a project graph
@@ -22,19 +22,19 @@ import { getProjectFileMap } from './build-project-graph';
 export class ProjectGraphBuilder {
   // TODO(FrozenPandaz): make this private
   readonly graph: ProjectGraph;
-  private readonly fileMap: ProjectFileMap;
+  private readonly projectFileMap: ProjectFileMap;
   readonly removedEdges: { [source: string]: Set<string> } = {};
   constructor(graph?: ProjectGraph, fileMap?: ProjectFileMap) {
     if (graph) {
       this.graph = graph;
-      this.fileMap = fileMap || getProjectFileMap().projectFileMap;
+      this.projectFileMap = fileMap || getFileMap().fileMap?.projectFileMap;
     } else {
       this.graph = {
         nodes: {},
         externalNodes: {},
         dependencies: {},
       };
-      this.fileMap = fileMap || {};
+      this.projectFileMap = fileMap || {};
     }
   }
 
@@ -256,7 +256,10 @@ export class ProjectGraphBuilder {
       },
       {
         externalNodes: this.graph.externalNodes,
-        fileMap: this.fileMap,
+        fileMap: {
+          projectFileMap: { ...this.projectFileMap },
+          nonProjectFiles: [],
+        },
         // the validators only really care about the keys on this.
         projects: this.graph.nodes as any,
         filesToProcess: null,
@@ -277,7 +280,7 @@ export class ProjectGraphBuilder {
         source,
         sourceFile,
         this.graph.nodes,
-        this.fileMap
+        this.projectFileMap
       );
 
       if (!fileData.deps) {
@@ -328,7 +331,7 @@ export class ProjectGraphBuilder {
     sourceProject: string
   ): Map<string, Set<DependencyType | string>> {
     const fileDeps = new Map<string, Set<DependencyType | string>>();
-    const files = this.fileMap[sourceProject] || [];
+    const files = this.projectFileMap[sourceProject] || [];
     if (!files) {
       return fileDeps;
     }
@@ -489,7 +492,7 @@ function validateCommonDependencyRules(
   }
   if ('sourceFile' in d && d.sourceFile) {
     // Throws if source file is not a valid file within the source project.
-    getFileData(d.source, d.sourceFile, projects, fileMap);
+    getFileData(d.source, d.sourceFile, projects, fileMap.projectFileMap);
   }
 }
 

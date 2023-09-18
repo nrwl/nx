@@ -14,8 +14,8 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### Properties
 
-- [fileMap](../../devkit/documents/ProjectGraphBuilder#filemap): ProjectFileMap
 - [graph](../../devkit/documents/ProjectGraphBuilder#graph): ProjectGraph
+- [projectFileMap](../../devkit/documents/ProjectGraphBuilder#projectfilemap): ProjectFileMap
 - [removedEdges](../../devkit/documents/ProjectGraphBuilder#removededges): Object
 
 ### Methods
@@ -51,15 +51,15 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ## Properties
 
-### fileMap
-
-• `Private` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
-
----
-
 ### graph
 
 • `Readonly` **graph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+
+---
+
+### projectFileMap
+
+• `Private` `Readonly` **projectFileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
 
 ---
 

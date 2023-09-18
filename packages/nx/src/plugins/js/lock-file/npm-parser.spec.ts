@@ -40,8 +40,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -96,8 +102,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -175,8 +187,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -265,8 +283,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -395,8 +419,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -514,8 +544,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -557,8 +593,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -604,8 +646,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -662,8 +710,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -722,8 +776,14 @@ describe('NPM lock file utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
