@@ -15,10 +15,11 @@ caption="Demoes how to use Nx generators in a PNPM workspace to automate the cre
 If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
-# replace `latest` with the version that matches your Nx version
 npm install @nx/plugin@latest
 nx g @nx/plugin:plugin my-plugin
 ```
+
+Note that `latest` should match the version of the `nx` plugins installed in your workspace.
 
 Use the Nx CLI to generate the initial files needed for your generator.
 
