@@ -1,29 +1,17 @@
 #!/usr/bin/env node
-import * as yargs from 'yargs';
-import { execSync } from 'child_process';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
+import { execSync } from 'node:child_process';
+import { rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { URL } from 'node:url';
-import { join } from 'path';
-
-import { parse } from 'semver';
-
-const version = require('lerna/commands/version');
-const publish = require('lerna/commands/publish');
-
-const lernaJsonPath = join(__dirname, '../lerna.json');
-const originalLernaJson = readFileSync(lernaJsonPath);
-
-function hideFromGitIndex(uncommittedFiles: string[]) {
-  execSync(`git update-index --assume-unchanged ${uncommittedFiles.join(' ')}`);
-
-  return () =>
-    execSync(
-      `git update-index --no-assume-unchanged ${uncommittedFiles.join(' ')}`
-    );
-}
+import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
+import { ReleaseType, parse } from 'semver';
+import * as yargs from 'yargs';
 
 (async () => {
   const options = parseArgs();
+  // Perform minimal logging by default
+  let isVerboseLogging = process.env.NX_VERBOSE_LOGGING === 'true';
 
   if (options.clearLocalRegistry) {
     rmSync(join(__dirname, '../build/local-registry/storage'), {
@@ -32,48 +20,18 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
     });
   }
 
-  const currentLatestVersion = execSync('npm view nx version')
-    .toString()
-    .trim();
-
-  const parsedVersion = parse(options.version);
-  const parsedCurrentLatestVersion = parse(currentLatestVersion);
-
-  const distTag =
-    parsedVersion?.prerelease.length > 0
-      ? 'next'
-      : parsedVersion?.major < parsedCurrentLatestVersion.major
-      ? 'previous'
-      : 'latest';
-
   const buildCommand = 'pnpm build';
   console.log(`> ${buildCommand}`);
   execSync(buildCommand, {
     stdio: [0, 1, 2],
   });
 
-  if (options.local) {
-    updateLernaJsonVersion(currentLatestVersion);
-  }
+  // Ensure all the native-packages directories are available at the top level of the build directory, enabling consistent packageRoot structure
+  execSync(`pnpm nx copy-native-package-directories nx`, {
+    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+  });
 
-  if (options.local) {
-    // Force all projects to be not private
-    const projects = JSON.parse(
-      execSync('npx lerna list --json --all').toString()
-    );
-    for (const proj of projects) {
-      if (proj.private) {
-        console.log('Publishing private package locally:', proj.name);
-        const packageJsonPath = join(proj.location, 'package.json');
-        const original = JSON.parse(readFileSync(packageJsonPath, 'utf-8'));
-        writeFileSync(
-          packageJsonPath,
-          JSON.stringify({ ...original, private: false })
-        );
-      }
-    }
-  }
-
+  // Expected to run as part of the Github `publish` workflow
   if (!options.local && process.env.NPM_TOKEN) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
@@ -81,74 +39,109 @@ function hideFromGitIndex(uncommittedFiles: string[]) {
       stdio: [0, 1, 2],
     });
 
-    execSync('npx nx run-many --target=artifacts', {
+    execSync('pnpm nx run-many --target=artifacts', {
       stdio: [0, 1, 2],
     });
   }
 
-  const versionOptions = {
-    bump: options.version ? options.version : undefined,
-    conventionalCommits: true,
-    conventionalPrerelease: options.tag === 'next',
-    preid: options.preid,
-    forcePublish: true,
-    createRelease: 'github',
-    tagVersionPrefix: '',
-    exact: true,
-    gitRemote: options.gitRemote,
-    gitTagVersion: !process.env.NPM_TOKEN,
-    message: 'chore(misc): publish %v',
-    loglevel: options.loglevel ?? 'info',
-    yes: !!process.env.NPM_TOKEN,
+  const runNxReleaseVersion = () => {
+    let versionCommand = `pnpm nx release version${
+      options.version ? ` --specifier ${options.version}` : ''
+    }`;
+    if (options.dryRun) {
+      versionCommand += ' --dry-run';
+    }
+    console.log(`> ${versionCommand}`);
+    execSync(versionCommand, {
+      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+    });
   };
 
-  if (options.local) {
-    versionOptions.conventionalCommits = false;
-    delete versionOptions.createRelease;
-    versionOptions.gitTagVersion = false;
-    versionOptions.loglevel = options.loglevel ?? 'error';
-    versionOptions.yes = true;
-    versionOptions.bump = options.version ? options.version : 'minor';
-  }
-
-  if (options.local) {
-    /**
-     * Hide changes from Lerna
-     */
-    const uncommittedFiles = execSync('git diff --name-only --relative HEAD .')
-      .toString()
-      .split('\n')
-      .filter((i) => i.length > 0)
-      .filter((f) => existsSync(f));
-    const unhideFromGitIndex = hideFromGitIndex(uncommittedFiles);
-
-    process.on('exit', unhideFromGitIndex);
-    process.on('SIGTERM', unhideFromGitIndex);
-    process.on('SIGINT', unhideFromGitIndex);
-  }
-
-  const publishOptions: Record<string, boolean | string | undefined> = {
-    gitReset: false,
-    distTag: distTag,
-  };
-
+  // Intended for creating a github release which triggers the publishing workflow
   if (!options.local && !process.env.NPM_TOKEN) {
+    // For this important use-case it makes sense to always have full logs
+    isVerboseLogging = true;
+
     execSync('git status --ahead-behind');
 
-    await version(versionOptions);
+    if (isRelativeVersionKeyword(options.version)) {
+      throw new Error(
+        'When creating actual releases, you must use an exact semver version'
+      );
+    }
+
+    runNxReleaseVersion();
+
+    let changelogCommand = `pnpm nx release changelog ${options.version} --interactive`;
+    if (options.from) {
+      changelogCommand += ` --from ${options.from}`;
+    }
+    if (options.gitRemote) {
+      changelogCommand += ` --git-remote ${options.gitRemote}`;
+    }
+    if (options.dryRun) {
+      changelogCommand += ' --dry-run';
+    }
+    console.log(`> ${changelogCommand}`);
+    execSync(changelogCommand, {
+      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+    });
+
     console.log(
       'Check github: https://github.com/nrwl/nx/actions/workflows/publish.yml'
     );
-  } else if (!options.skipPublish) {
-    await publish({ ...versionOptions, ...publishOptions });
-  } else {
-    await version(versionOptions);
-    console.warn('Not Publishing because --dryRun was passed');
+    process.exit(0);
   }
 
-  if (options.local) {
-    restoreOriginalLernaJson();
+  runNxReleaseVersion();
+
+  if (options.dryRun) {
+    console.warn('Not Publishing because --dryRun was passed');
+  } else {
+    // If publishing locally, force all projects to not be private first
+    if (options.local) {
+      console.log(
+        '\nPublishing locally, so setting all resolved packages to not be private'
+      );
+      const projectGraph = await createProjectGraphAsync();
+      for (const proj of Object.values(projectGraph.nodes)) {
+        if (proj.data.targets?.['nx-release-publish']) {
+          const packageJsonPath = join(
+            workspaceRoot,
+            proj.data.targets?.['nx-release-publish']?.options.packageRoot,
+            'package.json'
+          );
+          try {
+            const packageJson = require(packageJsonPath);
+            if (packageJson.private) {
+              console.log(
+                '- Publishing private package locally:',
+                packageJson.name
+              );
+              writeFileSync(
+                packageJsonPath,
+                JSON.stringify({ ...packageJson, private: false })
+              );
+            }
+          } catch {}
+        }
+      }
+    }
+
+    const distTag = determineDistTag(options.version);
+
+    // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
+    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
+    if (options.dryRun) {
+      publishCommand += ' --dry-run';
+    }
+    console.log(`\n> ${publishCommand}`);
+    execSync(publishCommand, {
+      stdio: [0, 1, 2],
+    });
   }
+
+  process.exit(0);
 })();
 
 function parseArgs() {
@@ -161,9 +154,9 @@ function parseArgs() {
       '$0 [version]',
       'This script is for publishing Nx both locally and publically'
     )
-    .option('skipPublish', {
+    .option('dryRun', {
       type: 'boolean',
-      description: 'Skips the actual publishing for testing out versioning',
+      description: 'Dry-run flag to be passed to all `nx release` commands',
     })
     .option('clearLocalRegistry', {
       type: 'boolean',
@@ -182,6 +175,11 @@ function parseArgs() {
       description: "Don't use this unless you really know what it does",
       hidden: true,
     })
+    .option('from', {
+      type: 'string',
+      description:
+        'Git ref to pass to `nx release changelog`. Not applicable for local publishing or e2e tests.',
+    })
     .positional('version', {
       type: 'string',
       description:
@@ -192,11 +190,6 @@ function parseArgs() {
       description:
         'Alternate git remote name to publish tags to (useful for testing changelog)',
       default: 'origin',
-    })
-    .option('loglevel', {
-      type: 'string',
-      description: 'Log Level',
-      choices: ['error', 'info', 'debug'],
     })
     .example(
       '$0',
@@ -222,6 +215,7 @@ function parseArgs() {
       ['gitRemote', 'force'],
       'Real Publishing Options for actually publishing to NPM'
     )
+    .demandOption('version')
     .check((args) => {
       const registry = getRegistry();
       const registryIsLocalhost = registry.hostname === 'localhost';
@@ -244,23 +238,48 @@ function parseArgs() {
     })
     .parseSync();
 
-  parsedArgs.tag ??= parsedArgs.local ? 'latest' : 'next';
-
   return parsedArgs;
-}
-
-function updateLernaJsonVersion(version: string) {
-  const json = JSON.parse(readFileSync(lernaJsonPath).toString());
-
-  json.version = version;
-
-  writeFileSync(lernaJsonPath, JSON.stringify(json));
-}
-
-function restoreOriginalLernaJson() {
-  writeFileSync(lernaJsonPath, originalLernaJson);
 }
 
 function getRegistry() {
   return new URL(execSync('npm config get registry').toString().trim());
+}
+
+function determineDistTag(newVersion: string): 'latest' | 'next' | 'previous' {
+  // For a relative version keyword, it cannot be previous
+  if (isRelativeVersionKeyword(newVersion)) {
+    const prereleaseKeywords: ReleaseType[] = [
+      'premajor',
+      'preminor',
+      'prepatch',
+      'prerelease',
+    ];
+    return prereleaseKeywords.includes(newVersion) ? 'next' : 'latest';
+  }
+
+  const parsedGivenVersion = parse(newVersion);
+  if (!parsedGivenVersion) {
+    throw new Error(
+      `Unable to parse the given version: "${newVersion}". Is it valid semver?`
+    );
+  }
+
+  const currentLatestVersion = execSync('npm view nx version')
+    .toString()
+    .trim();
+  const parsedCurrentLatestVersion = parse(currentLatestVersion);
+  if (!parsedCurrentLatestVersion) {
+    throw new Error(
+      `The current version resolved from the npm registry could not be parsed (resolved "${currentLatestVersion}")`
+    );
+  }
+
+  const distTag =
+    parsedGivenVersion.prerelease.length > 0
+      ? 'next'
+      : parsedGivenVersion.major < parsedCurrentLatestVersion.major
+      ? 'previous'
+      : 'latest';
+
+  return distTag;
 }
