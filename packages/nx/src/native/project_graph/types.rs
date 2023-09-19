@@ -1,5 +1,4 @@
-use napi::bindgen_prelude::Either8;
-use napi::Either;
+use crate::native::types::JsInputs;
 use std::collections::HashMap;
 
 #[napi(object)]
@@ -15,82 +14,16 @@ pub struct ExternalNode {
 }
 
 #[napi(object)]
-pub struct InputsInput {
-    pub input: String,
-    pub dependencies: Option<bool>,
-}
-
-#[napi(object)]
-pub struct FileSetInput {
-    pub fileset: String,
-}
-
-#[napi(object)]
-pub struct RuntimeInput {
-    pub runtime: String,
-}
-
-#[napi(object)]
-pub struct EnvironmentInput {
-    pub env: String,
-}
-
-#[napi(object)]
-pub struct ExternalDependenciesInput {
-    pub external_dependencies: Vec<String>,
-}
-
-#[napi(object)]
-pub struct DepsOutputsInput {
-    pub dependent_tasks_output_files: String,
-    pub transitive: Option<bool>,
-}
-
-#[napi(object)]
-pub struct ProjectsInput {
-    pub projects: Either<String, Vec<String>>,
-}
-
-#[napi(object)]
 pub struct Target {
-    pub executor: String,
-    pub inputs: Option<
-        Vec<
-            Either8<
-                InputsInput,
-                String,
-                FileSetInput,
-                RuntimeInput,
-                EnvironmentInput,
-                ExternalDependenciesInput,
-                DepsOutputsInput,
-                ProjectsInput,
-            >,
-        >,
-    >,
+    pub executor: Option<String>,
+    pub inputs: Option<Vec<JsInputs>>,
     pub outputs: Option<Vec<String>>,
 }
 
 #[napi(object)]
 pub struct Project {
     pub root: String,
-    pub named_inputs: Option<
-        HashMap<
-            String,
-            Vec<
-                Either8<
-                    InputsInput,
-                    String,
-                    FileSetInput,
-                    RuntimeInput,
-                    EnvironmentInput,
-                    ExternalDependenciesInput,
-                    DepsOutputsInput,
-                    ProjectsInput,
-                >,
-            >,
-        >,
-    >,
+    pub named_inputs: Option<HashMap<String, Vec<JsInputs>>>,
     pub targets: HashMap<String, Target>,
 }
 

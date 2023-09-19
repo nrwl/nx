@@ -25,6 +25,7 @@ export function transformProjectGraphForRust(
     }
     nodes[projectName] = {
       root: projectNode.data.root,
+      namedInputs: projectNode.data.namedInputs,
       targets,
     };
     if (graph.dependencies[projectName]) {

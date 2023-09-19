@@ -1,0 +1,209 @@
+use crate::native::project_graph::types::{Project, ProjectGraph};
+use crate::native::tasks::errors::InternalTaskErrors;
+use crate::native::tasks::types::Task;
+use crate::native::types::{Input, NxJson};
+use once_cell::sync::Lazy;
+use rayon::prelude::*;
+use std::collections::HashMap;
+
+#[derive(Debug)]
+pub(super) struct SplitInputs<'a> {
+    pub deps_inputs: Vec<Input<'a>>,
+    pub project_inputs: Vec<Input<'a>>,
+    pub self_inputs: Vec<Input<'a>>,
+    pub deps_outputs: Vec<Input<'a>>,
+}
+
+pub(super) fn get_inputs<'a>(
+    task: &Task,
+    project_graph: &'a ProjectGraph,
+    nx_json: &'a NxJson,
+) -> anyhow::Result<SplitInputs<'a>> {
+    let project_node = project_graph
+        .nodes
+        .get(&task.target.project)
+        .expect("Task target should always have a project");
+    let named_inputs = get_named_inputs(nx_json, project_node);
+    let target_data = project_node
+        .targets
+        .get(&task.target.target)
+        .expect("Task target should always have a target");
+    let target_defaults = nx_json
+        .target_defaults
+        .as_ref()
+        .map(|td| &td[&task.target.target]);
+
+    let inputs: Option<Vec<Input>> = target_data
+        .inputs
+        .as_ref()
+        .or_else(|| target_defaults.and_then(|td| td.inputs.as_ref()))
+        .map(|i| i.iter().map(|v| v.into()).collect());
+
+    split_inputs_into_self_and_deps(inputs, named_inputs)
+}
+
+fn split_inputs_into_self_and_deps<'a>(
+    inputs: Option<Vec<Input<'a>>>,
+    named_inputs: HashMap<&str, Vec<Input<'a>>>,
+) -> anyhow::Result<SplitInputs<'a>> {
+    let inputs = inputs.unwrap_or_else(|| {
+        vec![
+            Input::FileSet("{projectRoot}/**/*"),
+            Input::Inputs {
+                input: "default",
+                dependencies: true,
+            },
+        ]
+    });
+
+    let (deps_inputs, self_inputs, project_inputs) = inputs.into_iter().fold(
+        // || {
+        (
+            // deps_inputs
+            Vec::new(),
+            // self_inputs,
+            Vec::new(),
+            // project_inputs
+            Vec::new(),
+        ),
+        // },
+        |mut acc, input| {
+            match input {
+                Input::Inputs {
+                    dependencies: true, ..
+                } => acc.0.push(input),
+                Input::Inputs {
+                    dependencies: false,
+                    ..
+                }
+                | Input::String(_)
+                | Input::FileSet(_)
+                | Input::Runtime(_)
+                | Input::Environment(_)
+                | Input::DepsOutputs { .. }
+                | Input::ExternalDependency(_) => {
+                    acc.1.push(input);
+                }
+                Input::Projects(_) => {
+                    acc.2.push(input);
+                }
+            }
+
+            acc
+        },
+    );
+    // .reduce(
+    //     || (Vec::new(), Vec::new(), Vec::new()),
+    //     |mut acc, input| {
+    //         acc.0.extend(input.0);
+    //         acc.1.extend(input.1);
+    //         acc.2.extend(input.2);
+    //
+    //         acc
+    //     },
+    // );
+
+    let expanded_inputs = expand_single_project_inputs(&self_inputs, &named_inputs)?;
+
+    let (self_inputs, deps_outputs): (Vec<_>, Vec<_>) = expanded_inputs
+        .into_iter()
+        .partition(|i| !(matches!(i, Input::DepsOutputs { .. })));
+
+    Ok(SplitInputs {
+        deps_inputs,
+        project_inputs,
+        self_inputs,
+        deps_outputs,
+    })
+}
+
+fn expand_single_project_inputs<'a>(
+    inputs: &Vec<Input<'a>>,
+    named_inputs: &HashMap<&str, Vec<Input<'a>>>,
+) -> anyhow::Result<Vec<Input<'a>>> {
+    let mut expanded = vec![];
+
+    for i in inputs {
+        match i {
+            Input::String(s) => {
+                if s.starts_with('^') {
+                    anyhow::bail!("namedInputs definitions cannot start with ^");
+                }
+
+                if named_inputs.get(s).is_some() {
+                    expanded.extend(expand_named_input(s, named_inputs)?);
+                } else {
+                    expanded.push(Input::FileSet(s));
+                }
+            }
+            Input::Inputs {
+                input,
+                dependencies: false,
+            } => expanded.extend(expand_named_input(&input, named_inputs)?),
+            Input::FileSet(fileset) => expanded.push(Input::FileSet(fileset)),
+            Input::Runtime(runtime) => expanded.push(Input::Runtime(runtime)),
+            Input::Environment(env) => expanded.push(Input::Environment(env)),
+            Input::ExternalDependency(external) => {
+                expanded.push(Input::ExternalDependency(external))
+            }
+            Input::DepsOutputs {
+                transitive,
+                dependent_tasks_output_files,
+            } => expanded.push(Input::DepsOutputs {
+                transitive: *transitive,
+                dependent_tasks_output_files,
+            }),
+            Input::Projects(_)
+            | Input::Inputs {
+                dependencies: true, ..
+            } => {
+                anyhow::bail!(
+                    "namedInputs definitions can only refer to other namedInputs definitions within the same project."
+                );
+            }
+        }
+    }
+
+    Ok(expanded)
+}
+
+fn expand_named_input<'a>(
+    input: &str,
+    named_inputs: &HashMap<&str, Vec<Input<'a>>>,
+) -> anyhow::Result<Vec<Input<'a>>> {
+    if named_inputs.get(input).is_none() {
+        anyhow::bail!(
+            "Input '{}' is not defined",
+            input
+        )
+    } else {
+        expand_single_project_inputs(&named_inputs[input], named_inputs)
+    }
+}
+
+static DEFAULT_NAMED_INPUT: Lazy<(&str, Vec<&str>)> =
+    Lazy::new(|| ("default", vec!["{projectRoot}/**/*"]));
+fn get_named_inputs<'a>(
+    nx_json: &'a NxJson,
+    project: &'a Project,
+) -> HashMap<&'a str, Vec<Input<'a>>> {
+    let mut collected_named_inputs: HashMap<&str, Vec<Input>> = HashMap::new();
+
+    collected_named_inputs.insert(
+        DEFAULT_NAMED_INPUT.0,
+        DEFAULT_NAMED_INPUT
+            .1
+            .iter()
+            .map(|v| Input::String(v))
+            .collect(),
+    );
+
+    let iterable_structs = [&nx_json.named_inputs, &project.named_inputs];
+    for named_inputs in iterable_structs.into_iter().flatten() {
+        for (key, val) in named_inputs.iter() {
+            collected_named_inputs.insert(key.as_ref(), val.iter().map(|v| v.into()).collect());
+        }
+    }
+
+    collected_named_inputs
+}
