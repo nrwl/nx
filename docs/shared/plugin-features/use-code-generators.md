@@ -21,6 +21,16 @@ nx generate @nx/react:component mycmp --project=myapp
 
 It is important to have a clean git working directory before invoking a generator so that you can easily revert changes and re-invoke the generator with different inputs.
 
+## Build your own Generator
+
+Nx comes with a Devkit that allows you to build your own generator for your Nx workspace. Learn more about it on [our docs page](/extending-nx/recipes/local-generators) or have a look at the video below:
+
+{% youtube
+src="https://www.youtube.com/embed/myqfGDWC2go"
+title="Scaffold new Pkgs in a PNPM Workspaces Monorepo"
+caption="Demoes how to use Nx generators in a PNPM workspace to automate the creation of libraries"
+/%}
+
 ## See Also
 
 - [nx.json generator defaults](/reference/nx-json#generators)
