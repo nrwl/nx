@@ -128,7 +128,7 @@ fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
         globs.push(format!(
             "!{}",
             SINGLE_PATTERN_REGEX
-                .replace(&glob, |caps: &regex::Captures| { caps[1].to_string() })
+                .replace(&glob, |caps: &regex::Captures| { format!("{}*", &caps[1]) })
                 .replace('!', "")
         ));
     } else {
@@ -197,7 +197,7 @@ mod test {
     #[test]
     fn convert_globs_single_negative() {
         let negative_single_dir = convert_glob("packages/!(package-a)*").unwrap();
-        assert_eq!(negative_single_dir, ["packages/*", "!packages/package-a"]);
+        assert_eq!(negative_single_dir, ["packages/*", "!packages/package-a*"]);
     }
 
     #[test]
@@ -318,6 +318,8 @@ mod test {
         assert!(glob_set.is_match("packages/package-c"));
         // no matches
         assert!(!glob_set.is_match("packages/package-a"));
+        assert!(!glob_set.is_match("packages/package-a-b"));
+        assert!(!glob_set.is_match("packages/package-a-b/nested"));
         assert!(!glob_set.is_match("packages/package-b/nested"));
     }
 }
