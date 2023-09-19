@@ -18,22 +18,17 @@ What are you going to learn?
 Note, this tutorial sets up a repo with applications and libraries in their own subfolders. If you are looking for an Angular standalone app setup then check out our [Angular standalone app tutorial](/getting-started/tutorials/angular-standalone-tutorial).
 {% /callout %}
 
-## Why Use an Integrated Monorepo?
+## Nx CLI vs. Angular CLI
 
-An integrated monorepo is a repository configured with a set of features that work together toward the goal of allowing developers to focus on building features rather than the configuration, coordination and maintenance of the tooling in the repo.
+Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/getting-started/why-nx#how-does-nx-work). As a result, adopting Nx as an Angular user is relatively straightforward. Your existing code, including builders and schematics, will still work as before, but you'll also have access to all the benefits Nx offers.
 
-You'll notice that instead of using npm/yarn/pnpm workspaces, projects within the repository are linked using typescript path aliases that are defined in the `tsconfig.base.json` file. Also, since we're creating projects using Nx plugin generators, all new projects come preconfigured with useful tools like Prettier, ESLint and Jest.
+Advantages of Nx over the Angular CLI:
 
-Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to Angular (e.g., `@nx/angular`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
+- [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
+- [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
+- [Controllable update process](/concepts/more-concepts/nx-and-angular#ng-update-vs-nx-migrate)
 
-Features of an integrated monorepo:
-
-- [Install dependencies at the root by default](/concepts/more-concepts/dependency-management#single-version-policy)
-- [Scaffold new code with generators](/core-features/plugin-features/use-code-generators)
-- [Run tasks with executors](/core-features/plugin-features/use-task-executors)
-- [Updates dependencies with automated migrations](/core-features/automate-updating-dependencies)
-
-Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
+Visit our ["Nx and the Angular CLI" page](/concepts/more-concepts/nx-and-angular) for more details.
 
 ## Warm Up
 
@@ -403,9 +398,18 @@ Make sure the `ProductListComponent` is exported via the `index.ts` file of our 
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductListComponent } from './product-list/product-list.component';
+import { RouterModule } from '@angular/router';
 
 @NgModule({
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    RouterModule.forChild([
+      {
+        path: '',
+        component: ProductListComponent,
+      },
+    ]),
+  ],
   declarations: [ProductListComponent],
   exports: [ProductListComponent],
 })
@@ -453,15 +457,15 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'products',
-    loadComponent: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductListComponent),
+    loadChildren: () =>
+      import('@angular-monorepo/products').then((m) => m.ProductsModule),
   },
 ];
 ```
 
 Serving your app (`nx serve angular-store`) and then navigating to `/products` should give you the following result:
 
-![products route](/shared/images/tutorial-angular-standalone/app-products-route.png)
+![products route](/shared/angular-tutorial/app-products-route.png)
 
 Let's apply the same for our `orders` library.
 
@@ -482,13 +486,13 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'products',
-    loadComponent: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductListComponent),
+    loadChildren: () =>
+      import('@angular-monorepo/products').then((m) => m.ProductsModule),
   },
   {
     path: 'orders',
-    loadComponent: () =>
-      import('@angular-monorepo/orders').then((m) => m.OrderListComponent),
+    loadChildren: () =>
+      import('@angular-monorepo/orders').then((m) => m.OrdersModule),
   },
 ];
 ```
@@ -635,7 +639,7 @@ nx e2e angular-store-e2e # runs e2e tests for the angular-store
 More conveniently, we can also run tasks in parallel using the following syntax:
 
 ```shell
-nx run-many -t test
+nx run-many -t test lint e2e
 ```
 
 ### Caching
@@ -937,12 +941,21 @@ To test it, go to your `libs/products/src/lib/products.module.ts` file and impor
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ProductListComponent } from './product-list/product-list.component';
+import { RouterModule } from '@angular/router';
 
 // This import is not allowed 👇
 import { OrderListComponent } from '@angular-monorepo/orders';
 
 @NgModule({
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    RouterModule.forChild([
+      {
+        path: '',
+        component: ProductListComponent,
+      },
+    ]),
+  ],
   declarations: [ProductListComponent],
   exports: [ProductListComponent],
 })
@@ -986,7 +999,7 @@ If you lint your workspace you'll get an error now:
 
 If you have the ESLint plugin installed in your IDE you should immediately see an error:
 
-![ESLint module boundary error](/shared/images/tutorial-angular-standalone/angular-standalone-module-boundaries.png)
+![ESLint module boundary error](/shared/angular-tutorial/module-boundary-lint-rule.png)
 
 Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
 
@@ -1018,6 +1031,7 @@ This will create a default CI configuration that sets up Nx Cloud to [use distri
 
 Here's some more things you can dive into next:
 
+- Read more about [how Nx compares to the Angular CLI](/concepts/more-concepts/nx-and-angular)
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects)
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
@@ -1028,7 +1042,7 @@ Here's some more things you can dive into next:
 
 Also, make sure you
 
-- [Join the Nx community Slack](https://go.nrwl.io/join-slack) to ask questions and find out the latest news about Nx.
+- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](https://blog.nrwl.io/)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

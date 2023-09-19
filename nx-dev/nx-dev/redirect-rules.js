@@ -680,6 +680,17 @@ const nested5minuteTutorialUrls = {
     '/getting-started/tutorials/angular-standalone-tutorial',
   '/tutorials/node-server-tutorial':
     '/getting-started/tutorials/node-server-tutorial',
+  '/angular-tutorial': '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/1-code-generation':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/2-project-graph':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/3-task-running':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/4-workspace-optimization':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/5-summary':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
 };
 
 const pluginUrls = {
