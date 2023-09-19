@@ -282,11 +282,7 @@ export class TaskOrchestrator {
     try {
       // obtain metadata
       const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-      const streamOutput = shouldStreamOutput(
-        task,
-        this.initiatingProject,
-        this.options
-      );
+      const streamOutput = shouldStreamOutput(task, this.initiatingProject);
 
       const pipeOutput = await this.pipeOutputCapture(task);
 

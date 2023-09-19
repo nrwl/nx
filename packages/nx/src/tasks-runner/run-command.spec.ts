@@ -1,6 +1,7 @@
 import { TasksRunner } from './tasks-runner';
 import { getRunner } from './run-command';
 import { NxJsonConfiguration } from '../config/nx-json';
+import { join } from 'path';
 
 describe('getRunner', () => {
   let nxJson: NxJsonConfiguration;
@@ -72,5 +73,55 @@ describe('getRunner', () => {
     const { tasksRunner } = getRunner({}, nxJson);
 
     expect(tasksRunner).toEqual(mockRunner);
+  });
+
+  it('uses default runner when no tasksRunnerOptions are present', () => {
+    jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
+
+    const { tasksRunner } = getRunner({}, {});
+
+    expect(tasksRunner).toEqual(mockRunner);
+  });
+
+  it('uses nx-cloud when no tasksRunnerOptions are present and accessToken is specified', () => {
+    jest.mock('nx-cloud', () => mockRunner);
+
+    const { tasksRunner } = getRunner(
+      {},
+      {
+        accessToken: 'XXXX-XXX-XXXX',
+      }
+    );
+
+    expect(tasksRunner).toEqual(mockRunner);
+  });
+
+  it('reads options from base properties if no runner options provided', () => {
+    jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
+
+    const { runnerOptions } = getRunner(
+      {},
+      {
+        cacheDirectory: '.nx/cache',
+        parallel: 3,
+        useDaemonProcess: false,
+        targetDefaults: {
+          build: {
+            cache: true,
+          },
+        },
+      }
+    );
+
+    expect(runnerOptions).toMatchInlineSnapshot(`
+      {
+        "cacheDirectory": ".nx/cache",
+        "cacheableOperations": [
+          "build",
+        ],
+        "parallel": 3,
+        "useDaemonProcess": false,
+      }
+    `);
   });
 });

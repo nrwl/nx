@@ -7,7 +7,10 @@ import { workspaceRoot } from './workspace-root';
 function readCacheDirectoryProperty(root: string): string | undefined {
   try {
     const nxJson = readJsonFile<NxJsonConfiguration>(join(root, 'nx.json'));
-    return nxJson.tasksRunnerOptions.default.options.cacheDirectory;
+    return (
+      nxJson.cacheDirectory ??
+      nxJson.tasksRunnerOptions.default.options.cacheDirectory
+    );
   } catch {
     return undefined;
   }

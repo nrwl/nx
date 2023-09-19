@@ -191,6 +191,27 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * **ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
    */
   release?: NxReleaseConfiguration;
+
+  /**
+   * If specified Nx will use nx-cloud by default with the given token.
+   * To use a different runner that accepts an access token, define it in {@link tasksRunnerOptions}
+   */
+  accessToken?: string;
+
+  /**
+   * Specifies how many tasks are ran in parallel by Nx for the default tasks runner.
+   */
+  parallel?: number;
+
+  /**
+   * Changes the default location of the cache directory.
+   */
+  cacheDirectory?: string;
+
+  /**
+   * Allows turning the daemon off if set to false explicitly.
+   */
+  useDaemonProcess?: boolean;
 }
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {

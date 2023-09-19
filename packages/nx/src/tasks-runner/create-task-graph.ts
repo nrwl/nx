@@ -334,6 +334,7 @@ export class ProcessTasks {
       target: qualifiedTarget,
       projectRoot: project.data.root,
       overrides: interpolateOverrides(overrides, project.name, project.data),
+      cache: project.data.targets[target].cache,
     };
   }
 

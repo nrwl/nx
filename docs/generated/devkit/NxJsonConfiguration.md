@@ -18,7 +18,9 @@ Nx.json configuration
 
 ### Properties
 
+- [accessToken](../../devkit/documents/NxJsonConfiguration#accesstoken): string
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
+- [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
 - [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
 - [extends](../../devkit/documents/NxJsonConfiguration#extends): string
@@ -27,20 +29,39 @@ Nx.json configuration
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
 - [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope): string
+- [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): string[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record&lt;string, unknown&gt;
 - [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
+- [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
+
+### accessToken
+
+• `Optional` **accessToken**: `string`
+
+If specified Nx will use nx-cloud by default with the given token.
+To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
+
+---
 
 ### affected
 
 • `Optional` **affected**: [`NxAffectedConfig`](../../devkit/documents/NxAffectedConfig)
 
 Default options for `nx affected`
+
+---
+
+### cacheDirectory
+
+• `Optional` **cacheDirectory**: `string`
+
+Changes the default location of the cache directory.
 
 ---
 
@@ -148,6 +169,14 @@ NPM Scope that the workspace uses
 
 ---
 
+### parallel
+
+• `Optional` **parallel**: `number`
+
+Specifies how many tasks are ran in parallel by Nx for the default tasks runner.
+
+---
+
 ### plugins
 
 • `Optional` **plugins**: `string`[]
@@ -189,6 +218,14 @@ Available Task Runners
 #### Index signature
 
 ▪ [tasksRunnerName: `string`]: { `options?`: `any` ; `runner`: `string` }
+
+---
+
+### useDaemonProcess
+
+• `Optional` **useDaemonProcess**: `boolean`
+
+Allows turning the daemon off if set to false explicitly.
 
 ---
 

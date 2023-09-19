@@ -65,6 +65,7 @@ export class DaemonClient {
   enabled() {
     if (this._enabled === undefined) {
       const useDaemonProcessOption =
+        this.nxJson.useDaemonProcess ??
         this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
       const env = process.env.NX_DAEMON;
 

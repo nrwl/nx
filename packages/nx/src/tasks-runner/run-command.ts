@@ -390,7 +390,7 @@ function shouldUseDynamicLifeCycle(
   if (isCI()) return false;
   if (outputStyle === 'static' || outputStyle === 'stream') return false;
 
-  return !tasks.find((t) => shouldStreamOutput(t, null, options));
+  return !tasks.find((t) => shouldStreamOutput(t, null));
 }
 
 export function getRunner(
@@ -402,35 +402,82 @@ export function getRunner(
 } {
   let runner = nxArgs.runner;
   runner = runner || 'default';
-  if (!nxJson.tasksRunnerOptions) {
-    throw new Error(`Could not find any runner configurations in nx.json`);
-  }
-  if (nxJson.tasksRunnerOptions[runner]) {
-    let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
 
-    let tasksRunner;
-    if (modulePath) {
-      if (isRelativePath(modulePath)) {
-        modulePath = join(workspaceRoot, modulePath);
-      }
-
-      tasksRunner = require(modulePath);
-      // to support both babel and ts formats
-      if (tasksRunner.default) {
-        tasksRunner = tasksRunner.default;
-      }
-    } else {
-      tasksRunner = require('./default-tasks-runner').defaultTasksRunner;
-    }
-
-    return {
-      tasksRunner,
-      runnerOptions: {
-        ...nxJson.tasksRunnerOptions[runner].options,
-        ...nxArgs,
-      },
-    };
-  } else {
+  if (runner !== 'default' && !nxJson.tasksRunnerOptions[runner]) {
     throw new Error(`Could not find runner configuration for ${runner}`);
   }
+
+  const modulePath: string = getTasksRunnerPath(runner, nxJson);
+
+  let tasksRunner = require(modulePath);
+  // to support both babel and ts formats
+  if (tasksRunner.default) {
+    tasksRunner = tasksRunner.default;
+  }
+
+  return {
+    tasksRunner,
+    runnerOptions: getRunnerOptions(runner, nxJson, nxArgs),
+  };
+}
+function getTasksRunnerPath(
+  runner: string,
+  nxJson: NxJsonConfiguration<string[] | '*'>
+) {
+  let modulePath: string = nxJson.tasksRunnerOptions?.[runner]?.runner;
+
+  if (modulePath) {
+    if (isRelativePath(modulePath)) {
+      return join(workspaceRoot, modulePath);
+    }
+    return modulePath;
+  }
+
+  // No runner prop in tasks runner options, check if access token is set.
+  const isCloudRunner =
+    nxJson.accessToken ||
+    nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken;
+
+  return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
+}
+
+function getRunnerOptions(
+  runner: string,
+  nxJson: NxJsonConfiguration<string[] | '*'>,
+  nxArgs: NxArgs
+): any {
+  const defaultCacheableOperations = [];
+
+  for (const key in nxJson.targetDefaults) {
+    if (nxJson.targetDefaults[key].cache) {
+      defaultCacheableOperations.push(key);
+    }
+  }
+
+  const result = {
+    ...nxJson.tasksRunnerOptions?.[runner]?.options,
+    ...nxArgs,
+  };
+
+  if (nxJson.accessToken) {
+    result.accessToken ??= nxJson.accessToken;
+  }
+
+  if (nxJson.parallel) {
+    result.parallel ??= nxJson.parallel;
+  }
+
+  if (nxJson.cacheDirectory) {
+    result.cacheDirectory ??= nxJson.cacheDirectory;
+  }
+
+  if (defaultCacheableOperations.length) {
+    result.cacheableOperations ??= defaultCacheableOperations;
+  }
+
+  if (nxJson.useDaemonProcess !== undefined) {
+    result.useDaemonProcess ??= nxJson.useDaemonProcess;
+  }
+
+  return result;
 }
