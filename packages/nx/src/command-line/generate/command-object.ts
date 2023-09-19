@@ -1,4 +1,5 @@
 import { CommandModule, Argv } from 'yargs';
+import { getCwd } from '../../utils/path';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 
 export const yargsGenerateCommand: CommandModule = {
@@ -11,9 +12,7 @@ export const yargsGenerateCommand: CommandModule = {
     // Remove the command from the args
     args._ = args._.slice(1);
 
-    process.exit(
-      await (await import('./generate')).generate(process.cwd(), args)
-    );
+    process.exit(await (await import('./generate')).generate(getCwd(), args));
   },
 };
 
