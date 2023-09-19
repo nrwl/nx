@@ -17,6 +17,11 @@ export async function withModuleFederation(
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
 
+    if (options.library?.type === 'var') {
+      config.output.scriptType = 'text/javascript';
+      config.experiments.outputModule = false;
+    }
+
     config.optimization = {
       runtimeChunk: false,
     };
@@ -36,6 +41,13 @@ export async function withModuleFederation(
         shared: {
           ...sharedDependencies,
         },
+        /**
+         * remoteType: 'script' is required for the remote to be loaded as a script tag.
+         * remotes will need to be defined as:
+         *  { appX: 'appX@http://localhost:3001/remoteEntry.js' }
+         *  { appY: 'appY@http://localhost:3002/remoteEntry.js' }
+         */
+        ...(options.library?.type === 'var' ? { remoteType: 'script' } : {}),
       }),
       sharedLibraries.getReplacementPlugin()
     );
