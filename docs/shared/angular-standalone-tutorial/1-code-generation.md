@@ -4,7 +4,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 ---
 
 {% callout type="check" title="Looking for Angular monorepos?" %}
-This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a Angular monorepo setup then check out our [Angular monorepo tutorial](/angular-tutorial/1-code-generation).
+This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a Angular monorepo setup then check out our [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial).
 {% /callout %}
 
 {% youtube
