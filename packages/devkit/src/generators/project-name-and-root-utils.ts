@@ -155,6 +155,10 @@ async function determineFormat(
     Root: ${formats['derived'].projectRoot}`;
   const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot}`;
 
+  if (asProvidedSelectedValue === derivedSelectedValue) {
+    return 'as-provided';
+  }
+
   const result = await prompt<{ format: ProjectNameAndRootFormat }>({
     type: 'select',
     name: 'format',
