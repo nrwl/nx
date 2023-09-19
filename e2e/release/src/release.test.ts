@@ -276,11 +276,115 @@ describe('nx release', () => {
       ).length
     ).toEqual(1);
 
-    // publish to custom registry (not e2e registry), and a custom dist tag of "next"
-    const publishOutput2 = runCLI(
-      `release publish --registry=${customRegistryUrl} --tag=next`
-    );
+    // Perform an initial dry-run of the publish to the custom registry (not e2e registry), and a custom dist tag of "next"
+    const publishToNext = `release publish --registry=${customRegistryUrl} --tag=next`;
+    const publishOutput2 = runCLI(`${publishToNext} --dry-run`);
     expect(publishOutput2).toMatchInlineSnapshot(`
+
+      >  NX   Running target nx-release-publish for 3 projects:
+
+      - {project-name}
+      - {project-name}
+      - {project-name}
+
+      With additional flags:
+      --registry=${customRegistryUrl}
+      --tag=next
+      --dryRun=true
+
+
+
+      > nx run {project-name}:nx-release-publish
+
+
+      📦  @proj/{project-name}@1000.0.0-next.0
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       1000.0.0-next.0
+      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Would publish to ${customRegistryUrl} with tag "next", but [dry-run] was set
+
+      > nx run {project-name}:nx-release-publish
+
+
+      📦  @proj/{project-name}@1000.0.0-next.0
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       1000.0.0-next.0
+      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Would publish to ${customRegistryUrl} with tag "next", but [dry-run] was set
+
+      > nx run {project-name}:nx-release-publish
+
+
+      📦  @proj/{project-name}@1000.0.0-next.0
+      === Tarball Contents ===
+
+      XXB  index.js
+      XXXB package.json
+      XXB  project.json
+      === Tarball Details ===
+      name:          @proj/{project-name}
+      version:       1000.0.0-next.0
+      filename:      proj-{project-name}-1000.0.0-next.0.tgz
+      package size: XXXB
+      unpacked size: XXXB
+      shasum:        {SHASUM}
+      integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      total files:   3
+
+      Would publish to ${customRegistryUrl} with tag "next", but [dry-run] was set
+
+
+
+      >  NX   Successfully ran target nx-release-publish for 3 projects
+
+
+
+  `);
+
+    // Versions are still unpublished on the next tag in the custom registry, because it was only a dry-run
+    expect(() =>
+      execSync(
+        `npm view @proj/${pkg1}@next version --registry=${customRegistryUrl}`
+      )
+    ).toThrowError(/npm ERR! code E404/);
+    expect(() =>
+      execSync(
+        `npm view @proj/${pkg2}@next version --registry=${customRegistryUrl}`
+      )
+    ).toThrowError(/npm ERR! code E404/);
+    expect(() =>
+      execSync(
+        `npm view @proj/${pkg3}@next version --registry=${customRegistryUrl}`
+      )
+    ).toThrowError(/npm ERR! code E404/);
+
+    // Actually publish to the custom registry (not e2e registry), and a custom dist tag of "next"
+    const publishOutput3 = runCLI(publishToNext);
+    expect(publishOutput3).toMatchInlineSnapshot(`
 
       >  NX   Running target nx-release-publish for 3 projects:
 
@@ -365,6 +469,7 @@ describe('nx release', () => {
 
     `);
 
+    // The versions now exist on the next tag in the custom registry
     expect(
       execSync(
         `npm view @proj/${pkg1}@next version --registry=${customRegistryUrl}`

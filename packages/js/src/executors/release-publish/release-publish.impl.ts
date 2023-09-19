@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
+import chalk = require('chalk');
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -40,6 +41,10 @@ export default async function runExecutor(
     npmPublishCommandSegments.push(`--tag=${options.tag}`);
   }
 
+  if (options.dryRun) {
+    npmPublishCommandSegments.push(`--dry-run`);
+  }
+
   // Resolve values using the `npm config` command so that things like environment variables and `publishConfig`s are accounted for
   const registry =
     options.registry ?? execSync(`npm config get registry`).toString().trim();
@@ -59,7 +64,15 @@ export default async function runExecutor(
     const normalizedStdoutData = stdoutData[context.projectName!] ?? stdoutData;
     logTar(normalizedStdoutData);
 
-    console.log(`Published to ${registry} with tag "${tag}"`);
+    if (options.dryRun) {
+      console.log(
+        `Would publish to ${registry} with tag "${tag}", but ${chalk.keyword(
+          'orange'
+        )('[dry-run]')} was set`
+      );
+    } else {
+      console.log(`Published to ${registry} with tag "${tag}"`);
+    }
 
     return {
       success: true,
