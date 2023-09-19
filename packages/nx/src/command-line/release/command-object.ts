@@ -1,8 +1,9 @@
 import { CommandModule, showHelp } from 'yargs';
 import { readNxJson } from '../../project-graph/file-utils';
 import {
-  parseCSV,
   RunManyOptions,
+  parseCSV,
+  withOutputStyleOption,
   withOverrides,
   withRunManyOptions,
 } from '../yargs-utils/shared-options';
@@ -172,7 +173,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
   aliases: ['p'],
   describe: 'Publish a versioned project to a registry',
   builder: (yargs) =>
-    withRunManyOptions(yargs)
+    withRunManyOptions(withOutputStyleOption(yargs))
       .option('registry', {
         type: 'string',
         description: 'The registry to publish to',
@@ -182,5 +183,30 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
         description: 'The distribution tag to apply to the published package',
       }),
   handler: (args) =>
-    import('./publish').then((m) => m.publishHandler(withOverrides(args, 2))),
+    import('./publish').then((m) =>
+      m.publishHandler(coerceParallelOption(withOverrides(args, 2)))
+    ),
 };
+
+function coerceParallelOption(args: any) {
+  if (args['parallel'] === 'false' || args['parallel'] === false) {
+    return {
+      ...args,
+      parallel: 1,
+    };
+  } else if (
+    args['parallel'] === 'true' ||
+    args['parallel'] === true ||
+    args['parallel'] === ''
+  ) {
+    return {
+      ...args,
+      parallel: Number(args['maxParallel'] || args['max-parallel'] || 3),
+    };
+  } else if (args['parallel'] !== undefined) {
+    return {
+      ...args,
+      parallel: Number(args['parallel']),
+    };
+  }
+}
