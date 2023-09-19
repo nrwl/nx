@@ -80,10 +80,12 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     NxGlobSetBuilder::new(&result)?.build()
 }
 
-// path/!(cache)/**
+// path/!{cache}/**
 static NEGATIVE_DIR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"!\{(.*?)}").unwrap());
 // path/**/(subdir1|subdir2)/*.(js|ts)
-static MULTI_PATTERNS_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\((.*?)\)").unwrap());
+static GROUP_PATTERNS_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\((.*?)\)").unwrap());
+// path/{cache}*
+static SINGLE_PATTERN_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\{(.*)}\*").unwrap());
 
 /// Converts a glob string to a list of globs
 /// e.g. `path/!(cache)/**` -> `path/**`, `!path/cache/**`
@@ -93,19 +95,44 @@ fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
         return Ok(vec![glob.to_string()]);
     }
 
-    let glob = MULTI_PATTERNS_REGEX.replace_all(glob, |caps: &regex::Captures| {
+    let glob = GROUP_PATTERNS_REGEX.replace_all(glob, |caps: &regex::Captures| {
         format!("{{{}}}", &caps[1].replace('|', ","))
     });
 
     let mut globs: Vec<String> = Vec::new();
 
-    globs.push(NEGATIVE_DIR_REGEX.replace_all(&glob, "*").into());
+    // push a glob directory glob that is either "path/*" or "path/**"
+    globs.push(
+        NEGATIVE_DIR_REGEX
+            .replace_all(&glob, |caps: &regex::Captures| {
+                let capture = caps.get(0);
+                match capture {
+                    Some(capture) => {
+                        let char = glob.as_bytes()[capture.end()] as char;
+                        if char == '*' {
+                            "".to_string()
+                        } else {
+                            "*".to_string()
+                        }
+                    }
+                    None => "".to_string(),
+                }
+            })
+            .into(),
+    );
 
     let matches: Vec<_> = NEGATIVE_DIR_REGEX.find_iter(&glob).collect();
 
+    // convert negative captures to globs (e.g. "path/!{cache,dir}/**" -> "!path/{cache,dir}/**")
     if matches.len() == 1 {
-        globs.push(format!("!{}", glob.replace('!', "")));
+        globs.push(format!(
+            "!{}",
+            SINGLE_PATTERN_REGEX
+                .replace(&glob, |caps: &regex::Captures| { caps[1].to_string() })
+                .replace('!', "")
+        ));
     } else {
+        // if there is more than one negative capture, convert each capture to a *, and negate the whole glob
         for matched in matches {
             let a = glob.replace(matched.as_str(), "*");
             globs.push(format!("!{}", a.replace('!', "")));
@@ -121,7 +148,7 @@ mod test {
     use std::assert_eq;
 
     #[test]
-    fn should_convert_globs() {
+    fn convert_globs_full_convert() {
         let full_convert =
             convert_glob("dist/!(cache|cache2)/**/!(README|LICENSE).(js|ts)").unwrap();
         assert_eq!(
@@ -132,27 +159,45 @@ mod test {
                 "!dist/{cache,cache2}/**/*.{js,ts}",
             ]
         );
+    }
 
+    #[test]
+    fn convert_globs_no_dirs() {
         let no_dirs = convert_glob("dist/**/!(README|LICENSE).(js|ts)").unwrap();
         assert_eq!(
             no_dirs,
             ["dist/**/*.{js,ts}", "!dist/**/{README,LICENSE}.{js,ts}"]
         );
+    }
 
+    #[test]
+    fn convert_globs_no_files() {
         let no_files = convert_glob("dist/!(cache|cache2)/**/*.(js|ts)").unwrap();
         assert_eq!(
             no_files,
             ["dist/*/**/*.{js,ts}", "!dist/{cache,cache2}/**/*.{js,ts}"]
         );
+    }
 
+    #[test]
+    fn convert_globs_no_extensions() {
         let no_extensions = convert_glob("dist/!(cache|cache2)/**/*.js").unwrap();
         assert_eq!(
             no_extensions,
             ["dist/*/**/*.js", "!dist/{cache,cache2}/**/*.js"]
         );
+    }
 
+    #[test]
+    fn convert_globs_no_patterns() {
         let no_patterns = convert_glob("dist/**/*.js").unwrap();
         assert_eq!(no_patterns, ["dist/**/*.js",]);
+    }
+
+    #[test]
+    fn convert_globs_single_negative() {
+        let negative_single_dir = convert_glob("packages/!(package-a)*").unwrap();
+        assert_eq!(negative_single_dir, ["packages/*", "!packages/package-a"]);
     }
 
     #[test]
@@ -262,5 +307,17 @@ mod test {
         assert!(!glob_set.is_match("dist/file.js"));
         assert!(!glob_set.is_match("dist/cache/"));
         assert!(!glob_set.is_match("dist/main/"));
+    }
+
+    #[test]
+    fn should_handle_negative_globs_with_one_directory() {
+        let glob_set = build_glob_set(&["packages/!(package-a)*"]).unwrap();
+
+        // matches
+        assert!(glob_set.is_match("packages/package-b"));
+        assert!(glob_set.is_match("packages/package-c"));
+        // no matches
+        assert!(!glob_set.is_match("packages/package-a"));
+        assert!(!glob_set.is_match("packages/package-b/nested"));
     }
 }
