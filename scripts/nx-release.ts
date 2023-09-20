@@ -8,6 +8,8 @@ import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semv
 import { ReleaseType, parse } from 'semver';
 import * as yargs from 'yargs';
 
+const LARGE_BUFFER = 1024 * 1000000;
+
 (async () => {
   const options = parseArgs();
   // Perform minimal logging by default
@@ -24,11 +26,13 @@ import * as yargs from 'yargs';
   console.log(`> ${buildCommand}`);
   execSync(buildCommand, {
     stdio: [0, 1, 2],
+    maxBuffer: LARGE_BUFFER,
   });
 
   // Ensure all the native-packages directories are available at the top level of the build directory, enabling consistent packageRoot structure
   execSync(`pnpm nx copy-native-package-directories nx`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+    maxBuffer: LARGE_BUFFER,
   });
 
   // Expected to run as part of the Github `publish` workflow
@@ -37,10 +41,12 @@ import * as yargs from 'yargs';
     // Always run before the artifacts step because we still need the .node files for native-packages
     execSync('find ./build -name "*.node" -delete', {
       stdio: [0, 1, 2],
+      maxBuffer: LARGE_BUFFER,
     });
 
     execSync('pnpm nx run-many --target=artifacts', {
       stdio: [0, 1, 2],
+      maxBuffer: LARGE_BUFFER,
     });
   }
 
@@ -54,6 +60,7 @@ import * as yargs from 'yargs';
     console.log(`> ${versionCommand}`);
     execSync(versionCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+      maxBuffer: LARGE_BUFFER,
     });
   };
 
@@ -85,6 +92,7 @@ import * as yargs from 'yargs';
     console.log(`> ${changelogCommand}`);
     execSync(changelogCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+      maxBuffer: LARGE_BUFFER,
     });
 
     console.log(
@@ -138,6 +146,7 @@ import * as yargs from 'yargs';
     console.log(`\n> ${publishCommand}`);
     execSync(publishCommand, {
       stdio: [0, 1, 2],
+      maxBuffer: LARGE_BUFFER,
     });
   }
 
