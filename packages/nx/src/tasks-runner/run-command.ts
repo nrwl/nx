@@ -32,7 +32,7 @@ import {
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { getProjectFileMap } from '../project-graph/build-project-graph';
+import { getFileMap } from '../project-graph/build-project-graph';
 import { performance } from 'perf_hooks';
 
 async function getTerminalOutputLifeCycle(
@@ -233,9 +233,9 @@ export async function invokeTasksRunner({
   if (daemonClient.enabled()) {
     hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
   } else {
-    const { projectFileMap, allWorkspaceFiles } = getProjectFileMap();
+    const { fileMap, allWorkspaceFiles } = getFileMap();
     hasher = new InProcessTaskHasher(
-      projectFileMap,
+      fileMap?.projectFileMap,
       allWorkspaceFiles,
       projectGraph,
       nxJson,

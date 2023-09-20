@@ -1,12 +1,12 @@
-import { ProjectsConfigurations } from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 
 export function applyImplicitDependencies(
-  projectsConfigurations: ProjectsConfigurations,
+  projects: Record<string, ProjectConfiguration>,
   builder: ProjectGraphBuilder
 ) {
-  Object.keys(projectsConfigurations.projects).forEach((source) => {
-    const p = projectsConfigurations.projects[source];
+  Object.keys(projects).forEach((source) => {
+    const p = projects[source];
     if (p.implicitDependencies && p.implicitDependencies.length > 0) {
       p.implicitDependencies.forEach((target) => {
         if (target.startsWith('!')) {
