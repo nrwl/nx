@@ -23,6 +23,7 @@ const baseNXEnvironmentVariables = [
   'NX_PERF_LOGGING',
   'NX_PROFILE',
   'NX_PROJECT_GRAPH_CACHE_DIRECTORY',
+  'NX_INVOKED_BY_RUNNER', // This is from nx cloud runner
   'NX_PROJECT_GRAPH_MAX_WORKERS',
   'NX_RUNNER',
   'NX_SKIP_NX_CACHE',
@@ -421,6 +422,9 @@ function getNxEnvironmentVariables() {
       return env;
     }, {});
 }
+
+let hasWarnedAboutDeprecatedEnvVariables = false;
+
 /**
  * TODO(v18)
  * @deprecated Use Next.js 9.4+ built-in support for environment variables. Reference https://nextjs.org/docs/pages/api-reference/next-config-js/env
@@ -441,7 +445,8 @@ function addNxEnvVariables(config: any) {
       );
 
     const vars = getNonBaseVariables(env);
-    if (vars.length > 0) {
+    if (vars.length > 0 && !hasWarnedAboutDeprecatedEnvVariables) {
+      hasWarnedAboutDeprecatedEnvVariables = true;
       console.warn(
         `Warning, in Nx 18 environment variables starting with NX_ will not be available in the browser, and currently will not work with @nx/next:server executor.\nPlease rename the following environment variables: ${vars.join(
           ', '
