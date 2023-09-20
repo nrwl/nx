@@ -394,6 +394,33 @@ describe('determineProjectNameAndRootOptions', () => {
       // restore original interactive mode
       restoreOriginalInteractiveMode();
     });
+
+    it('should not prompt when the resulting name and root are the same for both formats', async () => {
+      // simulate interactive mode
+      ensureInteractiveMode();
+      const promptSpy = jest.spyOn(enquirer, 'prompt');
+
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'libName',
+        projectType: 'library',
+        callingGenerator: '',
+      });
+
+      expect(promptSpy).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@proj/lib-name',
+        projectRoot: 'lib-name',
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
+    });
   });
 
   describe('with layout', () => {
