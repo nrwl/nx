@@ -192,16 +192,25 @@ function getProjectNameAndRootFormats(
   const asProvidedProjectName = name;
 
   let asProvidedProjectDirectory: string;
+  const relativeCwd = normalizePath(relative(workspaceRoot, getCwd())).replace(
+    /\/$/,
+    ''
+  );
   if (directory) {
-    asProvidedProjectDirectory = names(directory).fileName;
+    // append the directory to the current working directory if it doesn't start with it
+    if (directory === relativeCwd || directory.startsWith(`${relativeCwd}/`)) {
+      asProvidedProjectDirectory = names(directory).fileName;
+    } else {
+      asProvidedProjectDirectory = joinPathFragments(
+        relativeCwd,
+        names(directory).fileName
+      );
+    }
   } else if (options.rootProject) {
     asProvidedProjectDirectory = '.';
   } else {
-    // TODO(v18): move this logic to a smart provider once we stop supporting the "derived" format
-    const relativeCwd = normalizePath(
-      relative(workspaceRoot, getCwd())
-    ).replace(/\/$/, '');
     asProvidedProjectDirectory = relativeCwd;
+    // append the project name to the current working directory if it doesn't end with it
     if (
       !relativeCwd.endsWith(asProvidedProjectName) &&
       !relativeCwd.endsWith(options.name)
