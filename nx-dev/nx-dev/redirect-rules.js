@@ -680,6 +680,19 @@ const nested5minuteTutorialUrls = {
     '/getting-started/tutorials/angular-standalone-tutorial',
   '/tutorials/node-server-tutorial':
     '/getting-started/tutorials/node-server-tutorial',
+  '/node-server-tutorial': '/getting-started/tutorials/node-server-tutorial',
+  '/node-server-tutorial/1-code-generation':
+    '/getting-started/tutorials/node-server-tutorial',
+  '/node-server-tutorial/2-project-graph':
+    '/getting-started/tutorials/node-server-tutorial',
+  '/node-server-tutorial/3-task-running':
+    '/getting-started/tutorials/node-server-tutorial',
+  '/node-server-tutorial/4-task-pipelines':
+    '/getting-started/tutorials/node-server-tutorial',
+  '/node-server-tutorial/5-docker-target':
+    '/getting-started/tutorials/node-server-tutorial',
+  '/node-server-tutorial/6-summary':
+    '/getting-started/tutorials/node-server-tutorial',
 };
 
 const pluginUrls = {
