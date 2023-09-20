@@ -79,7 +79,7 @@ const LARGE_BUFFER = 1024 * 1000000;
 
     runNxReleaseVersion();
 
-    let changelogCommand = `pnpm nx release changelog ${options.version} --interactive`;
+    let changelogCommand = `pnpm nx release changelog ${options.version} --tagVersionPrefix="" --interactive`;
     if (options.from) {
       changelogCommand += ` --from ${options.from}`;
     }
