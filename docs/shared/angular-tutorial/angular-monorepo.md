@@ -333,7 +333,7 @@ Running the above commands should lead to the following directory structure:
    │  │  │  ├─ index.ts
    │  │  │  ├─ test-setup.ts
    │  │  │  └─ lib
-   │  │  │     └─ products.module.ts
+   │  │  │     └─ products
    │  │  ├─ tsconfig.json
    │  │  ├─ tsconfig.lib.json
    │  │  └─ tsconfig.spec.json
@@ -919,31 +919,23 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `libs/products/src/lib/products.module.ts` file and import the `OrderListComponent` from the `orders` project:
+To test it, go to your `libs/products/src/lib/product-list/product-list.component.ts` file and import the `OrderListComponent` from the `orders` project:
 
-```ts {% fileName="libs/products/src/lib/products.module.ts" %}
-import { NgModule } from '@angular/core';
+```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" %}
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProductListComponent } from './product-list/product-list.component';
-import { RouterModule } from '@angular/router';
 
 // This import is not allowed 👇
 import { OrderListComponent } from '@angular-monorepo/orders';
 
-@NgModule({
-  imports: [
-    CommonModule,
-    RouterModule.forChild([
-      {
-        path: '',
-        component: ProductListComponent,
-      },
-    ]),
-  ],
-  declarations: [ProductListComponent],
-  exports: [ProductListComponent],
+@Component({
+  selector: 'angular-monorepo-product-list',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './product-list.component.html',
+  styleUrls: ['./product-list.component.css'],
 })
-export class ProductsModule {}
+export class ProductListComponent {}
 ```
 
 If you lint your workspace you'll get an error now:
@@ -953,9 +945,9 @@ If you lint your workspace you'll get an error now:
     ✖  nx run products:lint
        Linting "products"...
 
-       /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/products.module.ts
-         4:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
-         4:10  warning  'OrderListComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
+       /Users/isaac/Documents/code/nx-recipes/angular-monorepo/libs/products/src/lib/product-list/product-list.component.ts
+         5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+         5:10  warning  'OrderListComponent' is defined but never used                                                               @typescript-eslint/no-unused-vars
 
        ✖ 2 problems (1 error, 1 warning)
 
