@@ -53,10 +53,7 @@ export default async function exportExecutor(
     dependencies = result.dependencies;
   }
 
-  const buildTarget = parseTargetString(
-    options.buildTarget,
-    context.projectGraph
-  );
+  const buildTarget = parseTargetString(options.buildTarget, context);
 
   try {
     const args = getBuildTargetCommand(options);
