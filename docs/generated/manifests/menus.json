@@ -2315,6 +2315,22 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Define Secondary Entrypoints for Typescript Packages",
+                "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+                "id": "define-secondary-entrypoints",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Compile Typescript Packages to Multiple Formats",
+                "path": "/recipes/tips-n-tricks/compile-multiple-formats",
+                "id": "compile-multiple-formats",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Keep Nx Versions in Sync",
                 "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
                 "id": "keep-nx-versions-in-sync",
@@ -3744,6 +3760,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Define Secondary Entrypoints for Typescript Packages",
+            "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+            "id": "define-secondary-entrypoints",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Compile Typescript Packages to Multiple Formats",
+            "path": "/recipes/tips-n-tricks/compile-multiple-formats",
+            "id": "compile-multiple-formats",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Keep Nx Versions in Sync",
             "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
             "id": "keep-nx-versions-in-sync",
@@ -3902,6 +3934,22 @@
         "name": "Enable Typescript Batch Mode",
         "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
         "id": "enable-tsc-batch-mode",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Define Secondary Entrypoints for Typescript Packages",
+        "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+        "id": "define-secondary-entrypoints",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Compile Typescript Packages to Multiple Formats",
+        "path": "/recipes/tips-n-tricks/compile-multiple-formats",
+        "id": "compile-multiple-formats",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

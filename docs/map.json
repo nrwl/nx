@@ -1022,6 +1022,16 @@
                   "file": "shared/recipes/enable-tsc-batch-mode"
                 },
                 {
+                  "name": "Define Secondary Entrypoints for Typescript Packages",
+                  "id": "define-secondary-entrypoints",
+                  "file": "shared/recipes/tips-n-tricks/define-secondary-entrypoints"
+                },
+                {
+                  "name": "Compile Typescript Packages to Multiple Formats",
+                  "id": "compile-multiple-formats",
+                  "file": "shared/recipes/tips-n-tricks/compile-multiple-formats"
+                },
+                {
                   "name": "Keep Nx Versions in Sync",
                   "id": "keep-nx-versions-in-sync",
                   "tags": ["automate-updating-dependencies"],
