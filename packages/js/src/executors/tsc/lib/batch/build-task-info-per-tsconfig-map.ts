@@ -75,7 +75,7 @@ function createTaskInfo(
   context: ExecutorContext,
   tsConfig: TypescriptInMemoryTsConfig
 ): TaskInfo {
-  const target = parseTargetString(taskName, context.projectGraph);
+  const target = parseTargetString(taskName, context);
 
   const taskContext = {
     ...context,

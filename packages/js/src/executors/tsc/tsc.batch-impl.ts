@@ -265,7 +265,7 @@ function createTypescriptCompilationContext(
   Object.entries(taskInMemoryTsConfigMap).forEach(([task, tsConfig]) => {
     if (!tsCompilationContext[tsConfig.path]) {
       tsCompilationContext[tsConfig.path] = {
-        project: parseTargetString(task, context.projectGraph).project,
+        project: parseTargetString(task, context).project,
         transformers: [],
         tsConfig: tsConfig,
       };
