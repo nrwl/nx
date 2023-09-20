@@ -52,7 +52,7 @@
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
       {
-        "runtime": "node -p 'process.platform'"
+        "runtime": "node -p '`${process.platform}_${process.arch}`'"
       }
     ]
   },
