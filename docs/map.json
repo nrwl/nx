@@ -1211,9 +1211,9 @@
           "description": "Discover our selection of examples and benchmarks.",
           "itemList": [
             {
-              "name": "Example Repos",
+              "name": "Nx with your favorite tech",
               "id": "example-repos",
-              "description": "Examples of different ways to use Nx",
+              "description": "Examples of different ways to use Nx with your favorite tech",
               "itemList": [
                 {
                   "name": "Add an Express Project",

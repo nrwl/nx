@@ -204,7 +204,7 @@
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)
-    - [Example Repos](/showcase/example-repos)
+    - [Nx with your favorite tech](/showcase/example-repos)
       - [Add an Express Project](/showcase/example-repos/add-express)
       - [Add a Lit Project](/showcase/example-repos/add-lit)
       - [Add a Solid Project](/showcase/example-repos/add-solid)

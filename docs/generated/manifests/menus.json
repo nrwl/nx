@@ -4252,7 +4252,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Example Repos",
+            "name": "Nx with your favorite tech",
             "path": "/showcase/example-repos",
             "id": "example-repos",
             "isExternal": false,
@@ -4449,7 +4449,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Example Repos",
+        "name": "Nx with your favorite tech",
         "path": "/showcase/example-repos",
         "id": "example-repos",
         "isExternal": false,
