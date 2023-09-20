@@ -24,6 +24,8 @@ Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI
 
 Advantages of Nx over the Angular CLI:
 
+- [Cache any target](/core-features/cache-task-results)
+- [Run only tasks affected by a code change](/concepts/affected)
 - [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
 - [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
 - [Controllable update process](/concepts/more-concepts/nx-and-angular#ng-update-vs-nx-migrate)
@@ -55,7 +57,7 @@ Create a new Angular monorepo with the following command:
 ✔ Application name · angular-store
 ✔ Default stylesheet format · css
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Would you like to use Standalone Components in your application? · No
+✔ Would you like to use Standalone Components in your application? · Yes
 ✔ Would you like to add routing? · Yes
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
@@ -73,7 +75,7 @@ Let's name the initial application `angular-store`. In this tutorial we're going
    │  │  │  │  ├─ app.component.html
    │  │  │  │  ├─ app.component.spec.ts
    │  │  │  │  ├─ app.component.ts
-   │  │  │  │  ├─ app.module.ts
+   │  │  │  │  ├─ app.config.ts
    │  │  │  │  ├─ app.routes.ts
    │  │  │  │  └─ nx-welcome.component.ts
    │  │  │  ├─ assets
@@ -229,7 +231,7 @@ Run the following command to generate a new `inventory` application. Note how we
 >  NX  Generating @nx/angular:application
 
 ✔ Would you like to configure routing for this application? (y/N) · false
-✔ Would you like to use Standalone Components? (y/N) · false
+✔ Would you like to use Standalone Components? (y/N) · true
 CREATE apps/inventory/project.json
 CREATE apps/inventory/src/assets/.gitkeep
 CREATE apps/inventory/src/favicon.ico
@@ -242,7 +244,7 @@ CREATE apps/inventory/src/app/app.component.css
 CREATE apps/inventory/src/app/app.component.html
 CREATE apps/inventory/src/app/app.component.spec.ts
 CREATE apps/inventory/src/app/app.component.ts
-CREATE apps/inventory/src/app/app.module.ts
+CREATE apps/inventory/src/app/app.config.ts
 CREATE apps/inventory/src/app/nx-welcome.component.ts
 CREATE apps/inventory/src/main.ts
 CREATE apps/inventory/.eslintrc.json
@@ -310,9 +312,9 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the Angular library generator:
 
 ```
-nx g @nx/angular:library products --directory=libs/products
-nx g @nx/angular:library orders --directory=libs/orders
-nx g @nx/angular:library shared-ui --directory=libs/shared/ui
+nx g @nx/angular:library products --directory=libs/products --standalone
+nx g @nx/angular:library orders --directory=libs/orders --standalone
+nx g @nx/angular:library shared-ui --directory=libs/shared/ui --standalone
 ```
 
 Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/packages/workspace/generators/move) to move a project to a different folder.
@@ -383,7 +385,7 @@ All libraries that we generate automatically have aliases created in the root-le
 Hence we can easily import them into other libraries and our Angular application. As an example, let's create and expose a `ProductListComponent` component from our `libs/products` library. Either create it by hand or run
 
 ```shell
-nx g @nx/angular:component product-list --project=products --export
+nx g @nx/angular:component product-list --project=products --standalone --export
 ```
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main Angular application.
@@ -394,53 +396,31 @@ We don't need to implement anything fancy as we just want to learn how to import
 
 Make sure the `ProductListComponent` is exported via the `index.ts` file of our `products` library and is listed in the `exports` of the `ProductsModule`. This is our public API with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
-```ts {% fileName="angular-monorepo/libs/products/src/lib/products.module.ts" %}
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ProductListComponent } from './product-list/product-list.component';
-import { RouterModule } from '@angular/router';
-
-@NgModule({
-  imports: [
-    CommonModule,
-    RouterModule.forChild([
-      {
-        path: '',
-        component: ProductListComponent,
-      },
-    ]),
-  ],
-  declarations: [ProductListComponent],
-  exports: [ProductListComponent],
-})
-export class ProductsModule {}
-```
-
 ```ts {% fileName="libs/products/src/index.ts" %}
-export * from './lib/products.module';
+export * from './lib/products/products.component';
+
 export * from './lib/product-list/product-list.component';
 ```
 
-We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Configure it in the `app.module.ts`.
+We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Configure it in the `app.config.ts`.
 
-```ts {% fileName="apps/angular-store/src/app/app.module.ts" %}
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
+```ts {% fileName="apps/angular-store/src/app/app.config.ts" %}
+import { ApplicationConfig } from '@angular/core';
+import {
+  provideRouter,
+  withEnabledBlockingInitialNavigation,
+} from '@angular/router';
 import { appRoutes } from './app.routes';
-import { NxWelcomeComponent } from './nx-welcome.component';
 
-@NgModule({
-  declarations: [AppComponent, NxWelcomeComponent],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-  ],
-  providers: [],
-  bootstrap: [AppComponent],
-})
-export class AppModule {}
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+};
+```
+
+And in `app.component.html`:
+
+```ts {% fileName="apps/angular-store/src/app/app.component.html" %}
+<router-outlet></router-outlet>
 ```
 
 Then we can add the `ProductListComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
@@ -457,8 +437,8 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'products',
-    loadChildren: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductsModule),
+    loadComponent: () =>
+      import('@angular-monorepo/products').then((m) => m.ProductListComponent),
   },
 ];
 ```
@@ -486,33 +466,33 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'products',
-    loadChildren: () =>
-      import('@angular-monorepo/products').then((m) => m.ProductsModule),
+    loadComponent: () =>
+      import('@angular-monorepo/products').then((m) => m.ProductListComponent),
   },
   {
     path: 'orders',
-    loadChildren: () =>
-      import('@angular-monorepo/orders').then((m) => m.OrdersModule),
+    loadComponent: () =>
+      import('@angular-monorepo/orders').then((m) => m.OrderListComponent),
   },
 ];
 ```
 
 Let's also show products in the `inventory` app.
 
-```ts {% fileName="apps/inventory/src/app/app.module.ts" %}
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { ProductsModule } from '@angular-monorepo/products';
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
+```ts {% fileName="apps/inventory/src/app/app.component.ts" %}
+import { Component } from '@angular/core';
+import { ProductListComponent } from '@angular-monorepo/products';
 
-@NgModule({
-  declarations: [AppComponent, NxWelcomeComponent],
-  imports: [BrowserModule, ProductsModule],
-  providers: [],
-  bootstrap: [AppComponent],
+@Component({
+  standalone: true,
+  imports: [ProductListComponent],
+  selector: 'angular-monorepo-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css'],
 })
-export class AppModule {}
+export class AppComponent {
+  title = 'inventory';
+}
 ```
 
 ```ts {% fileName="apps/inventory/src/app/app.component.html" %}
@@ -793,17 +773,21 @@ nx graph --affected
 If you're ready and want to ship your applications, you can build them using
 
 ```{% command="npx nx run-many -t build" path="angular-monorepo" %}
-// todo
-vite v4.3.5 building for production...
-✓ 33 libs transformed.
-dist/angular-store/index.html                   0.48 kB │ gzip:  0.30 kB
-dist/angular-store/assets/index-e3b0c442.css    0.00 kB │ gzip:  0.02 kB
-dist/angular-store/assets/index-378e8124.js   165.64 kB │ gzip: 51.63 kB
-✓ built in 496ms
+>  NX  Generating @nx/angular:component
 
- ——————————————————————————————————————————————————————————————————————————————————————————————————————————
+CREATE libs/orders/src/lib/order-list/order-list.component.css
+CREATE libs/orders/src/lib/order-list/order-list.component.html
+CREATE libs/orders/src/lib/order-list/order-list.component.spec.ts
+CREATE libs/orders/src/lib/order-list/order-list.component.ts
+UPDATE libs/orders/src/index.ts
+❯ nx run-many -t build
 
- >  NX   Successfully ran target build for project angularutorial (1s)
+    ✔  nx run inventory:build:production (7s)
+    ✔  nx run angular-store:build:production (7s)
+
+ ———————————————————————————————————————————————————————————————————————
+
+ >  NX   Successfully ran target build for 2 projects (7s)
 ```
 
 All the required files will be placed in `dist/apps/angular-store` and `dist/apps/inventory` and can be deployed to your favorite hosting provider.
