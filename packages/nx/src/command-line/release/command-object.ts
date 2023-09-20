@@ -209,4 +209,5 @@ function coerceParallelOption(args: any) {
       parallel: Number(args['parallel']),
     };
   }
+  return args;
 }
