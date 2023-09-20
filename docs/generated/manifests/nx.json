@@ -5303,8 +5303,8 @@
     "itemList": [
       {
         "id": "example-repos",
-        "name": "Example Repos",
-        "description": "Examples of different ways to use Nx",
+        "name": "Nx with your favorite tech",
+        "description": "Examples of different ways to use Nx with your favorite tech",
         "file": "",
         "itemList": [
           {
@@ -5550,8 +5550,8 @@
   },
   "/showcase/example-repos": {
     "id": "example-repos",
-    "name": "Example Repos",
-    "description": "Examples of different ways to use Nx",
+    "name": "Nx with your favorite tech",
+    "description": "Examples of different ways to use Nx with your favorite tech",
     "file": "",
     "itemList": [
       {
