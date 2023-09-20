@@ -13,6 +13,7 @@ env:
   SELECTED_PM: 'pnpm'
   NX_E2E_RUN_E2E: 'true'
   NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
+  NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
 steps:
   - name: Git Clone
     script: |
