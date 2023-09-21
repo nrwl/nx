@@ -2,7 +2,10 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { exit } from 'process';
 import * as yargs from 'yargs-parser';
+import { Arguments } from 'yargs';
+import { existsSync } from 'fs';
 
+import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { readNxJson } from '../../config/configuration';
 import {
   ProjectGraph,
@@ -12,7 +15,10 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
+import {
+  NxArgs,
+  splitArgsIntoNxArgsAndOverrides,
+} from '../../utils/command-line-utils';
 import { readJsonFile } from '../../utils/fileutils';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
@@ -21,9 +27,20 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 
 export async function nxExecCommand(
-  args: Record<string, string[]>
+  args: Record<string, string | string[] | boolean>
 ): Promise<unknown> {
-  const scriptArgV: string[] = readScriptArgV(args);
+  const nxJson = readNxJson();
+  const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
+    args,
+    'run-many',
+    { printWarnings: args.graph !== 'stdout' },
+    nxJson
+  );
+  if (nxArgs.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
+  const scriptArgV: string[] = readScriptArgV(overrides);
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
 
   // NX is already running
   if (process.env.NX_TASK_TARGET_PROJECT) {
@@ -32,23 +49,63 @@ export async function nxExecCommand(
       .trim();
     execSync(command, {
       stdio: 'inherit',
-      env: process.env,
+      env: {
+        ...process.env,
+        NX_PROJECT_NAME: process.env.NX_TASK_TARGET_PROJECT,
+        NX_PROJECT_ROOT_PATH:
+          projectGraph.nodes?.[process.env.NX_TASK_TARGET_PROJECT]?.data?.root,
+      },
     });
   } else {
     // nx exec is being ran inside of Nx's context
-    return runScriptAsNxTarget(scriptArgV);
+    return runScriptAsNxTarget(projectGraph, scriptArgV, nxArgs);
   }
 }
 
-async function runScriptAsNxTarget(argv: string[]) {
-  const projectGraph = await createProjectGraphAsync();
-
-  const { projectName, project } = getProject(projectGraph);
-
+async function runScriptAsNxTarget(
+  projectGraph: ProjectGraph,
+  argv: string[],
+  nxArgs: NxArgs
+) {
   // NPM, Yarn, and PNPM set this to the name of the currently executing script. Lets use it if we can.
   const targetName = process.env.npm_lifecycle_event;
-  const scriptDefinition = getScriptDefinition(project, targetName);
+  if (targetName) {
+    const defaultPorject = getDefaultProject(projectGraph);
+    const scriptDefinition = getScriptDefinition(targetName, defaultPorject);
+    if (scriptDefinition) {
+      runTargetOnProject(
+        scriptDefinition,
+        targetName,
+        defaultPorject,
+        defaultPorject.name,
+        argv
+      );
+      return;
+    }
+  }
 
+  const projects = getProjects(projectGraph, nxArgs);
+  projects.forEach((project) => {
+    const command = argv.reduce((cmd, arg) => cmd + `"${arg}" `, '').trim();
+    execSync(command, {
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        NX_PROJECT_NAME: project.name,
+        NX_PROJECT_ROOT_PATH: project.data.root,
+      },
+      cwd: project.data.root,
+    });
+  });
+}
+
+function runTargetOnProject(
+  scriptDefinition: string,
+  targetName: string,
+  project: ProjectGraphProjectNode,
+  projectName: string,
+  argv: string[]
+) {
   ensureNxTarget(project, targetName);
 
   // Get ArgV that is provided in npm script definition
@@ -58,20 +115,15 @@ async function runScriptAsNxTarget(argv: string[]) {
 
   const pm = getPackageManagerCommand();
   // `targetName` might be an npm script with `:` like: `start:dev`, `start:debug`.
-  let command = `${
+  const command = `${
     pm.exec
   } nx run ${projectName}:\\\"${targetName}\\\" ${extraArgs.join(' ')}`;
-  return execSync(command, { stdio: 'inherit' });
+  execSync(command, { stdio: 'inherit' });
 }
 
-function readScriptArgV(args: Record<string, string[]>) {
-  const { overrides } = splitArgsIntoNxArgsAndOverrides(
-    args,
-    'run-one',
-    { printWarnings: false },
-    readNxJson()
-  );
-
+function readScriptArgV(
+  overrides: Arguments & { __overrides_unparsed__: string[] }
+) {
   const scriptSeparatorIdx = process.argv.findIndex((el) => el === '--');
   if (scriptSeparatorIdx === -1) {
     output.error({
@@ -84,25 +136,22 @@ function readScriptArgV(args: Record<string, string[]>) {
 }
 
 function getScriptDefinition(
-  project: ProjectGraphProjectNode,
-  targetName: string
+  targetName: string,
+  project?: ProjectGraphProjectNode
 ): PackageJson['scripts'][string] {
-  const scriptDefinition = readJsonFile<PackageJson>(
-    join(workspaceRoot, project.data.root, 'package.json')
-  ).scripts[targetName];
-
-  if (!scriptDefinition) {
-    output.error({
-      title:
-        "`nx exec` is meant to be used in a project's package.json scripts",
-      bodyLines: [
-        `Nx was unable to find a npm script matching ${targetName} for ${project.name}`,
-      ],
-    });
-    process.exit(1);
+  if (!project) {
+    return;
   }
-
-  return scriptDefinition;
+  const packageJsonPath = join(
+    workspaceRoot,
+    project.data.root,
+    'package.json'
+  );
+  if (existsSync(packageJsonPath)) {
+    const scriptDefinition =
+      readJsonFile<PackageJson>(packageJsonPath).scripts?.[targetName];
+    return scriptDefinition;
+  }
 }
 
 function ensureNxTarget(project: ProjectGraphProjectNode, targetName: string) {
@@ -117,26 +166,47 @@ function ensureNxTarget(project: ProjectGraphProjectNode, targetName: string) {
   }
 }
 
-function getProject(projectGraph: ProjectGraph) {
-  const projectName = calculateDefaultProjectName(
+function getDefaultProject(
+  projectGraph: ProjectGraph
+): ProjectGraphProjectNode | undefined {
+  const defaultProjectName = calculateDefaultProjectName(
     process.cwd(),
     workspaceRoot,
     readProjectsConfigurationFromProjectGraph(projectGraph),
     readNxJson()
   );
+  if (defaultProjectName && projectGraph.nodes[defaultProjectName]) {
+    return projectGraph.nodes[defaultProjectName];
+  }
+}
 
-  if (!projectName) {
-    output.error({
-      title: 'Unable to determine project name for `nx exec`',
-      bodyLines: [
-        "`nx exec` should be ran from within an Nx project's root directory.",
-        'Does this package.json belong to an Nx project?',
-      ],
-    });
-    process.exit(1);
+function getProjects(
+  projectGraph: ProjectGraph,
+  nxArgs: NxArgs
+): ProjectGraphProjectNode[] {
+  let selectedProjects = {};
+
+  // get projects matched
+  if (nxArgs.projects?.length) {
+    const matchingProjects = findMatchingProjects(
+      nxArgs.projects,
+      projectGraph.nodes
+    );
+    for (const project of matchingProjects) {
+      selectedProjects[project] = projectGraph.nodes[project];
+    }
+  } else {
+    // if no project specified, return all projects
+    selectedProjects = { ...projectGraph.nodes };
   }
 
-  const project: ProjectGraphProjectNode = projectGraph.nodes[projectName];
+  const excludedProjects = findMatchingProjects(
+    nxArgs.exclude,
+    selectedProjects
+  );
+  for (const excludedProject of excludedProjects) {
+    delete selectedProjects[excludedProject];
+  }
 
-  return { projectName, project };
+  return Object.values(selectedProjects);
 }

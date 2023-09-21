@@ -631,13 +631,21 @@ describe('Nx Running Tests', () => {
 
   describe('exec', () => {
     let pkg: string;
+    let pkg2: string;
     let pkgRoot: string;
+    let pkg2Root: string;
     let originalRootPackageJson: PackageJson;
 
     beforeAll(() => {
       originalRootPackageJson = readJson<PackageJson>('package.json');
       pkg = uniq('package');
+      pkg2 = uniq('package');
       pkgRoot = tmpProjPath(path.join('libs', pkg));
+      pkg2Root = tmpProjPath(path.join('libs', pkg2));
+      runCLI(`generate @nx/js:lib ${pkg} --bundler=none --unitTestRunner=none`);
+      runCLI(
+        `generate @nx/js:lib ${pkg2} --bundler=none --unitTestRunner=none`
+      );
 
       updateJson<PackageJson>('package.json', (v) => {
         v.workspaces = ['libs/*'];
@@ -655,6 +663,17 @@ describe('Nx Running Tests', () => {
           },
         })
       );
+
+      updateFile(
+        `libs/${pkg2}/package.json`,
+        JSON.stringify(<PackageJson>{
+          name: pkg2,
+          version: '0.0.1',
+          scripts: {
+            build: "nx exec -- echo '$NX_PROJECT_NAME'",
+          },
+        })
+      );
     });
 
     afterAll(() => {
@@ -667,6 +686,36 @@ describe('Nx Running Tests', () => {
       });
       expect(output).toContain('HELLO');
       expect(output).toContain(`nx run ${pkg}:build`);
+    });
+
+    it('should run adhoc tasks', () => {
+      let output = runCLI('exec -- echo HELLO');
+      expect(output).toContain('HELLO');
+
+      output = runCLI(`build ${pkg2}`);
+      expect(output).toContain(pkg2);
+      expect(output).not.toContain(pkg);
+
+      output = runCommand('npm run build', {
+        cwd: pkg2Root,
+      });
+      expect(output).toContain(pkg2);
+      expect(output).not.toContain(pkg);
+
+      output = runCLI(`exec -- echo '$NX_PROJECT_NAME'`);
+      expect(output).toContain(pkg);
+      expect(output).toContain(pkg2);
+
+      output = runCLI(`exec --projects ${pkg} -- echo WORLD`);
+      expect(output).toContain('WORLD');
+
+      output = runCLI("exec -- echo '$NX_PROJECT_ROOT_PATH'");
+      expect(output).toContain(path.join('libs', pkg));
+      expect(output).toContain(path.join('libs', pkg2));
+
+      output = runCLI(`exec --projects ${pkg} -- echo '$NX_PROJECT_NAME'`);
+      expect(output).toContain(pkg);
+      expect(output).not.toContain(pkg2);
     });
 
     it('should work for npm scripts with delimiter', () => {
@@ -694,7 +743,6 @@ describe('Nx Running Tests', () => {
       });
 
       it('should read outputs', () => {
-        console.log(pkgRoot);
         const nodeCommands = [
           "const fs = require('fs')",
           "fs.mkdirSync('../../tmp/exec-outputs-test', {recursive: true})",
@@ -717,10 +765,9 @@ describe('Nx Running Tests', () => {
             },
           })
         );
-        const out = runCommand('npm run build', {
+        runCommand('npm run build', {
           cwd: pkgRoot,
         });
-        console.log(out);
         expect(
           fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
         ).toBeTruthy();
