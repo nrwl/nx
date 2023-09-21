@@ -10,8 +10,8 @@
         "accessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
         "cacheableOperations": [
           "build",
-          "lint",
           "lint-base",
+          "lint",
           "build-ng",
           "build-base",
           "build-native",
@@ -59,7 +59,7 @@
   "release": {
     "groups": {
       "npm": {
-        "projects": ["packages/*", "packages-legacy/*"],
+        "projects": ["packages/*", "packages/nx/native-packages/*", "packages-legacy/*"],
         "version": {
           "generatorOptions": {
             "packageRoot": "build/packages/{projectName}",

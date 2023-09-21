@@ -226,7 +226,7 @@ export function runCreateWorkspace(
   try {
     const create = execSync(`${command}${isVerbose() ? ' --verbose' : ''}`, {
       cwd,
-      stdio: 'pipe',
+      stdio: 'inherit',
       env: {
         CI: 'true',
         NX_VERBOSE_LOGGING: isCI ? 'true' : 'false',

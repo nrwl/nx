@@ -6,7 +6,7 @@ env:
   GIT_COMMITTER_EMAIL: test@test.com
   GIT_COMMITTER_NAME: Test
   NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-  NX_VERBOSE_LOGGING: 'false'
+  NX_VERBOSE_LOGGING: 'true'
   NX_DAEMON: 'true'
   NX_PERF_LOGGING: 'false'
   NX_NATIVE_LOGGING: 'false'
@@ -21,12 +21,6 @@ steps:
       git remote add origin $GIT_REPOSITORY_URL
       git fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +{{nxCommitSha}}:{{nxCommitRef}}
       git checkout --progress --force -B {{nxBranch}} {{nxCommitRef}}
-
-  - name: Restore cache
-    script: |
-      nxw cache restore {{nxBranch}}-node_modules node_modules
-      nxw cache restore {{nxBranch}}-cypress ~/.cache/Cypress
-      nxw cache restore {{nxBranch}}-pnpm-store ~/.pnpm-store
 
   - name: Install Pnpm
     script: |
@@ -51,9 +45,3 @@ steps:
     script: |
       source "$HOME/.cargo/env"
       npx nx-cloud start-agent
-
-  - name: Store to cache
-    script: |
-      nxw cache store {{nxBranch}}-node_modules node_modules
-      nxw cache store {{nxBranch}}-cypress ~/.cache/Cypress
-      nxw cache store {{nxBranch}}-pnpm-store ~/.pnpm-store

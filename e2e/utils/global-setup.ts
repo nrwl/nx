@@ -52,6 +52,7 @@ export default async function (globalConfig: Config.ConfigGlobals) {
           }
           rej(code);
         }
+        console.log('Published Successfully');
         res();
       });
     });

@@ -19,10 +19,6 @@ import { mapErrorToBodyLines } from './utils/error-utils';
  * @returns directory where Nx is installed
  */
 export async function createSandbox(packageManager: PackageManager) {
-  const installSpinner = ora(
-    `Installing dependencies with ${packageManager}`
-  ).start();
-
   const { install, preInstall } = getPackageManagerCommand(packageManager);
 
   const tmpDir = dirSync().name;
@@ -44,10 +40,7 @@ export async function createSandbox(packageManager: PackageManager) {
     }
 
     await execAndWait(install, tmpDir);
-
-    installSpinner.succeed();
   } catch (e) {
-    installSpinner.fail();
     if (e instanceof Error) {
       output.error({
         title: `Failed to install dependencies`,
@@ -58,7 +51,6 @@ export async function createSandbox(packageManager: PackageManager) {
     }
     process.exit(1);
   } finally {
-    installSpinner.stop();
   }
 
   return tmpDir;
