@@ -150,4 +150,4 @@ If you have any questions or suggestions, please feel free to reach out to us on
 
 ### Nx & Storybook documentation
 
-You can find all Storybook-related Nx documentation in the [packages page](/packages#storybook).
+You can find all Storybook-related Nx documentation in the [packages page](/nx-api/storybook).

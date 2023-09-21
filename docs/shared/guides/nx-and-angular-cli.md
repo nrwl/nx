@@ -295,7 +295,7 @@ Learn more about the [graph features here](/core-features/explore-graph).
 
 ## Extensible and Customizable: Make it fit your own needs
 
-Nx is [built to be extensible](/getting-started/why-nx#how-does-nx-work). Just like the [packages published by the Nx core team](/packages) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started).
+Nx is [built to be extensible](/getting-started/why-nx#how-does-nx-work). Just like the [packages published by the Nx core team](/nx-api) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started).
 
 This can be as simple as using [run-commands](/nx-api/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
 
