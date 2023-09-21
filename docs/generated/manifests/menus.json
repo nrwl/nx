@@ -8701,6 +8701,81 @@
         "disableCollapsible": false
       },
       {
+        "id": "vue",
+        "path": "/packages/vue",
+        "name": "vue",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/packages/vue/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview of the Nx Vue Plugin",
+                "path": "/packages/vue/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/packages/vue/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/packages/vue/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/packages/vue/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "library",
+                "path": "/packages/vue/generators/library",
+                "name": "library",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "component",
+                "path": "/packages/vue/generators/component",
+                "name": "component",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-tailwind",
+                "path": "/packages/vue/generators/setup-tailwind",
+                "name": "setup-tailwind",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "web",
         "path": "/packages/web",
         "name": "web",

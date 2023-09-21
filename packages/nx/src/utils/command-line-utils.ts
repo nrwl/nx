@@ -175,6 +175,9 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   normalizeNxArgsRunner(nxArgs, nxJson, options);
 
+  // allow overriding default parallelization with an environment variable
+  // const defaultParallel = Number(process.env.NX_PARALLEL) || 3;
+  const defaultParallel = 3;
   if (args['parallel'] === 'false' || args['parallel'] === false) {
     nxArgs['parallel'] = 1;
   } else if (
@@ -183,7 +186,7 @@ export function splitArgsIntoNxArgsAndOverrides(
     args['parallel'] === ''
   ) {
     nxArgs['parallel'] = Number(
-      nxArgs['maxParallel'] || nxArgs['max-parallel'] || 3
+      nxArgs['maxParallel'] || nxArgs['max-parallel'] || defaultParallel
     );
   } else if (args['parallel'] !== undefined) {
     nxArgs['parallel'] = Number(args['parallel']);

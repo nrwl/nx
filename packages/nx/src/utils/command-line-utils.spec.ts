@@ -396,6 +396,23 @@ describe('splitArgs', () => {
       expect(parallel).toEqual(3);
     });
 
+    it('should default to environment provided value when used with no value specified', () => {
+      withEnvironment({ NX_PARALLEL: '5' }, () => {
+        const parallel = splitArgsIntoNxArgsAndOverrides(
+          {
+            $0: '',
+            __overrides_unparsed__: [],
+            parallel: '',
+          },
+          'affected',
+          {} as any,
+          {} as any
+        ).nxArgs.parallel;
+
+        expect(parallel).toEqual(5);
+      });
+    });
+
     it('should be 3 when set to true', () => {
       const parallel = splitArgsIntoNxArgsAndOverrides(
         {
@@ -409,6 +426,23 @@ describe('splitArgs', () => {
       ).nxArgs.parallel;
 
       expect(parallel).toEqual(3);
+    });
+
+    it('should be set by environment when set to true', () => {
+      withEnvironment({ NX_PARALLEL: '5' }, () => {
+        const parallel = splitArgsIntoNxArgsAndOverrides(
+          {
+            $0: '',
+            __overrides_unparsed__: [],
+            parallel: 'true',
+          },
+          'affected',
+          {} as any,
+          {} as any
+        ).nxArgs.parallel;
+
+        expect(parallel).toEqual(5);
+      });
     });
 
     it('should be 1 when set to false', () => {
