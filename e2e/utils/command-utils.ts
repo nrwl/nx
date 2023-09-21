@@ -348,7 +348,7 @@ export function runCLI(
       env: {
         CI: 'true',
         ...getStrippedEnvironmentVariables(),
-        INIT_CWD: opts.cwd || tmpProjPath(),
+        INIT_CWD: undefined,
         ...opts.env,
       },
       encoding: 'utf-8',
