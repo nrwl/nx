@@ -433,228 +433,6 @@
     "path": "/core-tutorial/06-summary",
     "tags": []
   },
-  "/react-tutorial": {
-    "id": "react-tutorial",
-    "name": "React Monorepo Tutorial",
-    "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "1-code-generation",
-        "name": "1 - Code Generation",
-        "description": "",
-        "file": "shared/react-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/1-code-generation",
-        "tags": []
-      },
-      {
-        "id": "2-project-graph",
-        "name": "2 - Project Graph",
-        "description": "",
-        "file": "shared/react-tutorial/2-project-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/2-project-graph",
-        "tags": []
-      },
-      {
-        "id": "3-task-running",
-        "name": "3 - Task Running",
-        "description": "",
-        "file": "shared/react-tutorial/3-task-running",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/3-task-running",
-        "tags": []
-      },
-      {
-        "id": "4-workspace-optimization",
-        "name": "4 - Workspace Optimization",
-        "description": "",
-        "file": "shared/react-tutorial/4-workspace-optimization",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/4-workspace-optimization",
-        "tags": []
-      },
-      {
-        "id": "5-summary",
-        "name": "5 - Summary",
-        "description": "",
-        "file": "shared/react-tutorial/5-summary",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/5-summary",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/react-tutorial",
-    "tags": []
-  },
-  "/react-tutorial/1-code-generation": {
-    "id": "1-code-generation",
-    "name": "1 - Code Generation",
-    "description": "",
-    "file": "shared/react-tutorial/1-code-generation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/1-code-generation",
-    "tags": []
-  },
-  "/react-tutorial/2-project-graph": {
-    "id": "2-project-graph",
-    "name": "2 - Project Graph",
-    "description": "",
-    "file": "shared/react-tutorial/2-project-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/2-project-graph",
-    "tags": []
-  },
-  "/react-tutorial/3-task-running": {
-    "id": "3-task-running",
-    "name": "3 - Task Running",
-    "description": "",
-    "file": "shared/react-tutorial/3-task-running",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/3-task-running",
-    "tags": []
-  },
-  "/react-tutorial/4-workspace-optimization": {
-    "id": "4-workspace-optimization",
-    "name": "4 - Workspace Optimization",
-    "description": "",
-    "file": "shared/react-tutorial/4-workspace-optimization",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/4-workspace-optimization",
-    "tags": []
-  },
-  "/react-tutorial/5-summary": {
-    "id": "5-summary",
-    "name": "5 - Summary",
-    "description": "",
-    "file": "shared/react-tutorial/5-summary",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/5-summary",
-    "tags": []
-  },
-  "/react-standalone-tutorial": {
-    "id": "react-standalone-tutorial",
-    "name": "React Standalone Tutorial",
-    "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "1-code-generation",
-        "name": "1 - Code Generation",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/1-code-generation",
-        "tags": []
-      },
-      {
-        "id": "2-project-graph",
-        "name": "2 - Project Graph",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/2-project-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/2-project-graph",
-        "tags": []
-      },
-      {
-        "id": "3-task-running",
-        "name": "3 - Task Running",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/3-task-running",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/3-task-running",
-        "tags": []
-      },
-      {
-        "id": "4-task-pipelines",
-        "name": "4 - Task Pipelines",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/4-task-pipelines",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/4-task-pipelines",
-        "tags": []
-      },
-      {
-        "id": "5-summary",
-        "name": "5 - Summary",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/5-summary",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/5-summary",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial",
-    "tags": []
-  },
-  "/react-standalone-tutorial/1-code-generation": {
-    "id": "1-code-generation",
-    "name": "1 - Code Generation",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/1-code-generation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/1-code-generation",
-    "tags": []
-  },
-  "/react-standalone-tutorial/2-project-graph": {
-    "id": "2-project-graph",
-    "name": "2 - Project Graph",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/2-project-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/2-project-graph",
-    "tags": []
-  },
-  "/react-standalone-tutorial/3-task-running": {
-    "id": "3-task-running",
-    "name": "3 - Task Running",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/3-task-running",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/3-task-running",
-    "tags": []
-  },
-  "/react-standalone-tutorial/4-task-pipelines": {
-    "id": "4-task-pipelines",
-    "name": "4 - Task Pipelines",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/4-task-pipelines",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/4-task-pipelines",
-    "tags": []
-  },
-  "/react-standalone-tutorial/5-summary": {
-    "id": "5-summary",
-    "name": "5 - Summary",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/5-summary",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/5-summary",
-    "tags": []
-  },
   "/angular-standalone-tutorial": {
     "id": "angular-standalone-tutorial",
     "name": "Angular Standalone Tutorial",
@@ -5397,16 +5175,6 @@
             "tags": []
           },
           {
-            "id": "react-nx",
-            "name": "Powering Up React Development With Nx",
-            "description": "",
-            "file": "shared/examples/react-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/react-nx",
-            "tags": []
-          },
-          {
             "id": "apollo-react",
             "name": "Using Apollo GraphQL",
             "description": "",
@@ -5644,16 +5412,6 @@
         "tags": []
       },
       {
-        "id": "react-nx",
-        "name": "Powering Up React Development With Nx",
-        "description": "",
-        "file": "shared/examples/react-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/react-nx",
-        "tags": []
-      },
-      {
         "id": "apollo-react",
         "name": "Using Apollo GraphQL",
         "description": "",
@@ -5836,16 +5594,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-fastify",
-    "tags": []
-  },
-  "/showcase/example-repos/react-nx": {
-    "id": "react-nx",
-    "name": "Powering Up React Development With Nx",
-    "description": "",
-    "file": "shared/examples/react-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/react-nx",
     "tags": []
   },
   "/showcase/example-repos/apollo-react": {
