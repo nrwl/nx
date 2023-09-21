@@ -32,7 +32,7 @@ export function generateDevkitDocumentation() {
   );
 
   execSync(
-    `rm -rf docs/generated/devkit && pnpm typedoc build/packages/devkit/index.d.ts --tsconfig build/packages/devkit/tsconfig.lib.json --out ./docs/generated/devkit --plugin typedoc-plugin-markdown --plugin @nx/typedoc-theme --hideBreadcrumbs true --disableSources --allReflectionsHaveOwnDocument --publicPath ../../devkit/ --theme nx-markdown-theme --readme none`,
+    `rm -rf docs/generated/devkit && pnpm typedoc build/packages/devkit/index.d.ts --tsconfig build/packages/devkit/tsconfig.lib.json --out ./docs/generated/devkit --plugin typedoc-plugin-markdown --plugin @nx/typedoc-theme --hideBreadcrumbs true --disableSources --allReflectionsHaveOwnDocument --publicPath ../../devkit/ --theme nx-markdown-theme --excludePrivate --readme none`,
     execSyncOptions
   );
   execSync(
