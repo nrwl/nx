@@ -64,6 +64,12 @@ export function podInstall(
   }
 ) {
   try {
+    if (existsSync(join(iosDirectory, '.xcode.env'))) {
+      execSync('touch .xcode.env', {
+        cwd: iosDirectory,
+        stdio: 'inherit',
+      });
+    }
     execSync(
       `pod install ${options.repoUpdate ? '--repo-update' : ''} ${
         options.deployment ? '--deployment' : ''

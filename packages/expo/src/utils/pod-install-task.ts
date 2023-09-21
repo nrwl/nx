@@ -24,7 +24,15 @@ ${chalk.bold('sudo xcode-select --switch /Applications/Xcode.app')}
 export function runPodInstall(
   iosDirectory: string,
   install: boolean = true,
-  buildFolder?: string
+  options: {
+    buildFolder?: string;
+    repoUpdate?: boolean;
+    deployment?: boolean;
+  } = {
+    buildFolder: './build',
+    repoUpdate: false,
+    deployment: false,
+  }
 ): GeneratorCallback {
   return () => {
     if (platform() !== 'darwin') {
@@ -39,16 +47,38 @@ export function runPodInstall(
 
     logger.info(`Running \`pod install\` from "${iosDirectory}"`);
 
-    return podInstall(iosDirectory, buildFolder);
+    return podInstall(iosDirectory, options);
   };
 }
 
-export function podInstall(iosDirectory: string, buildFolder?: string) {
+export function podInstall(
+  iosDirectory: string,
+  options: {
+    buildFolder?: string;
+    repoUpdate?: boolean;
+    deployment?: boolean;
+  } = {
+    buildFolder: './build',
+    repoUpdate: false,
+    deployment: false,
+  }
+) {
   try {
-    execSync('pod install', {
-      cwd: iosDirectory,
-      stdio: 'inherit',
-    });
+    if (existsSync(join(iosDirectory, '.xcode.env'))) {
+      execSync('touch .xcode.env', {
+        cwd: iosDirectory,
+        stdio: 'inherit',
+      });
+    }
+    execSync(
+      `pod install ${options.repoUpdate ? '--repo-update' : ''} ${
+        options.deployment ? '--deployment' : ''
+      }`,
+      {
+        cwd: iosDirectory,
+        stdio: 'inherit',
+      }
+    );
   } catch (e) {
     logger.error(podInstallErrorMessage);
     throw e;
