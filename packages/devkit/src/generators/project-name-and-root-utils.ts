@@ -229,6 +229,11 @@ function getProjectNameAndRootFormats(
     /\/$/,
     ''
   );
+
+  console.log('*************************');
+  console.log('project name and root helper, relativeCwd: ', relativeCwd);
+  console.log('*************************');
+
   if (directory) {
     // append the directory to the current working directory if it doesn't start with it
     if (directory === relativeCwd || directory.startsWith(`${relativeCwd}/`)) {

@@ -49,7 +49,7 @@ describe('Angular Projects', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should successfully generate apps and libs and work correctly', async () => {
+  it('hhhhhhshould successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
       `generate @nx/angular:app ${standaloneApp} --directory=myDir/${standaloneApp} --standalone=true --project-name-and-root-format=as-provided --no-interactive`
