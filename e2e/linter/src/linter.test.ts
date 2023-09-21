@@ -546,7 +546,7 @@ describe('Linter', () => {
 
     afterEach(() => cleanupProject());
 
-    it('should convert integrated to flat config', () => {
+    it('hhhhhhshould convert integrated to flat config', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
 

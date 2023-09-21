@@ -196,6 +196,15 @@ function getProjectNameAndRootFormats(
     /\/$/,
     ''
   );
+
+  console.log('*******************');
+  console.log('process.env.INIT_CWD', process.env.INIT_CWD);
+  console.log('process.cwd()', process.cwd());
+  console.log('getCwd()', getCwd());
+  console.log('workspaceRoot', workspaceRoot);
+  console.log('relativeCwd', relativeCwd);
+  console.log('*******************');
+
   if (directory) {
     // append the directory to the current working directory if it doesn't start with it
     if (directory === relativeCwd || directory.startsWith(`${relativeCwd}/`)) {
