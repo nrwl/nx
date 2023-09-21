@@ -2,6 +2,7 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import {
   FileData,
+  FileMap,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
@@ -95,12 +96,12 @@ export interface CreateDependenciesContext {
   /**
    * All files in the workspace
    */
-  readonly fileMap: ProjectFileMap;
+  readonly fileMap: FileMap;
 
   /**
    * Files changes since last invocation
    */
-  readonly filesToProcess: ProjectFileMap;
+  readonly filesToProcess: FileMap;
 
   readonly workspaceRoot: string;
 }

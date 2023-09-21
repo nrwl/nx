@@ -86,7 +86,10 @@ export async function retrieveWorkspaceFiles(
 
   return {
     allWorkspaceFiles: buildAllWorkspaceFiles(projectFileMap, globalFiles),
-    projectFileMap,
+    fileMap: {
+      projectFileMap,
+      nonProjectFiles: globalFiles,
+    },
     projectConfigurations: {
       version: 2,
       projects: projectConfigurations,
@@ -252,7 +255,7 @@ function buildAllWorkspaceFiles(
   globalFiles: FileData[]
 ): FileData[] {
   performance.mark('get-all-workspace-files:start');
-  let fileData = Object.values(projectFileMap).flat();
+  let fileData: FileData[] = Object.values(projectFileMap).flat();
 
   fileData = fileData.concat(globalFiles);
   performance.mark('get-all-workspace-files:end');

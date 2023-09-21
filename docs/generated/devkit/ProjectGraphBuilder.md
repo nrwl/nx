@@ -14,8 +14,9 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### Properties
 
-- [fileMap](../../devkit/documents/ProjectGraphBuilder#filemap): ProjectFileMap
 - [graph](../../devkit/documents/ProjectGraphBuilder#graph): ProjectGraph
+- [nonProjectFiles](../../devkit/documents/ProjectGraphBuilder#nonprojectfiles): FileData[]
+- [projectFileMap](../../devkit/documents/ProjectGraphBuilder#projectfilemap): ProjectFileMap
 - [removedEdges](../../devkit/documents/ProjectGraphBuilder#removededges): Object
 
 ### Methods
@@ -40,26 +41,33 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### constructor
 
-• **new ProjectGraphBuilder**(`graph?`, `fileMap?`)
+• **new ProjectGraphBuilder**(`graph?`, `projectFileMap?`, `nonProjectFiles?`)
 
 #### Parameters
 
-| Name       | Type                                                      |
-| :--------- | :-------------------------------------------------------- |
-| `graph?`   | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
-| `fileMap?` | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
+| Name               | Type                                                      |
+| :----------------- | :-------------------------------------------------------- |
+| `graph?`           | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
+| `projectFileMap?`  | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
+| `nonProjectFiles?` | [`FileData`](../../devkit/documents/FileData)[]           |
 
 ## Properties
-
-### fileMap
-
-• `Private` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
-
----
 
 ### graph
 
 • `Readonly` **graph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+
+---
+
+### nonProjectFiles
+
+• `Private` `Readonly` **nonProjectFiles**: [`FileData`](../../devkit/documents/FileData)[]
+
+---
+
+### projectFileMap
+
+• `Private` `Readonly` **projectFileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
 
 ---
 

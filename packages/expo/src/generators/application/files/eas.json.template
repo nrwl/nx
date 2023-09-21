@@ -23,6 +23,6 @@
     "production": {}
   },
   "cli": {
-    "version": "<%= easCliVersion %>"
+    "version": ">= <%= easCliVersion.replace('~', '') %>"
   }
 }

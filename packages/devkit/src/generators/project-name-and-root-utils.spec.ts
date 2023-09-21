@@ -2,7 +2,6 @@ import * as enquirer from 'enquirer';
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from 'nx/src/generators/tree';
 import { updateJson } from 'nx/src/generators/utils/json';
-import { readNxJson } from 'nx/src/generators/utils/nx-json';
 import { determineProjectNameAndRootOptions } from './project-name-and-root-utils';
 
 describe('determineProjectNameAndRootOptions', () => {
@@ -330,43 +329,6 @@ describe('determineProjectNameAndRootOptions', () => {
       restoreOriginalInteractiveMode();
     });
 
-    it('should prompt to save default when as-provided is choosen', async () => {
-      // simulate interactive mode
-      ensureInteractiveMode();
-      const promptSpy = jest
-        .spyOn(enquirer, 'prompt')
-        .mockImplementation(() =>
-          Promise.resolve({ format: 'lib-name @ shared', saveDefault: true })
-        );
-
-      await determineProjectNameAndRootOptions(tree, {
-        name: 'libName',
-        projectType: 'library',
-        directory: 'shared',
-        callingGenerator: '@nx/some-plugin:app',
-      });
-
-      expect(promptSpy).toHaveBeenCalledTimes(2);
-
-      expect(readNxJson(tree).workspaceLayout).toEqual({
-        projectNameAndRootFormat: 'as-provided',
-      });
-
-      promptSpy.mockReset();
-
-      await determineProjectNameAndRootOptions(tree, {
-        name: 'libName',
-        projectType: 'library',
-        directory: 'shared',
-        callingGenerator: '@nx/some-plugin:app',
-      });
-
-      expect(promptSpy).not.toHaveBeenCalled();
-
-      // restore original interactive mode
-      restoreOriginalInteractiveMode();
-    });
-
     it('should directly use format as-provided and not prompt when the name is a scoped package name', async () => {
       // simulate interactive mode
       ensureInteractiveMode();
@@ -388,6 +350,33 @@ describe('determineProjectNameAndRootOptions', () => {
         },
         importPath: '@scope/lib-name',
         projectRoot: 'shared',
+        projectNameAndRootFormat: 'as-provided',
+      });
+
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
+    });
+
+    it('should not prompt when the resulting name and root are the same for both formats', async () => {
+      // simulate interactive mode
+      ensureInteractiveMode();
+      const promptSpy = jest.spyOn(enquirer, 'prompt');
+
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'libName',
+        projectType: 'library',
+        callingGenerator: '',
+      });
+
+      expect(promptSpy).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        projectName: 'lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'lib-name',
+        },
+        importPath: '@proj/lib-name',
+        projectRoot: 'lib-name',
         projectNameAndRootFormat: 'as-provided',
       });
 

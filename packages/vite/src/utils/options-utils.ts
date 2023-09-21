@@ -197,6 +197,6 @@ export function getVitePreviewOptions(
 }
 
 export function getNxTargetOptions(target: string, context: ExecutorContext) {
-  const targetObj = parseTargetString(target, context.projectGraph);
+  const targetObj = parseTargetString(target, context);
   return readTargetOptions(targetObj, context);
 }

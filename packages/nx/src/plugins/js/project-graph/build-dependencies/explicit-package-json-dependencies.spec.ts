@@ -5,7 +5,7 @@ import { buildExplicitPackageJsonDependencies } from './explicit-package-json-de
 
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
-import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
+import { createFileMap } from '../../../../project-graph/file-map-utils';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
 import { getAllFileDataInContext } from '../../../../utils/workspace-context';
 
@@ -71,12 +71,12 @@ describe('explicit package json dependencies', () => {
       },
     };
 
-    const projectFileMap = createProjectFileMap(
+    const fileMap = createFileMap(
       projectsConfigurations as any,
       getAllFileDataInContext(tempFs.tempDir)
-    ).projectFileMap;
+    ).fileMap;
 
-    const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    const builder = new ProjectGraphBuilder(undefined, fileMap.projectFileMap);
     Object.values(projects).forEach((p) => {
       builder.addNode(p);
     });
@@ -90,11 +90,11 @@ describe('explicit package json dependencies', () => {
     });
 
     ctx = {
-      fileMap: projectFileMap,
+      fileMap: fileMap,
       externalNodes: builder.getUpdatedProjectGraph().externalNodes,
       projects: projectsConfigurations.projects,
       nxJsonConfiguration,
-      filesToProcess: projectFileMap,
+      filesToProcess: fileMap,
       workspaceRoot: tempFs.tempDir,
     };
   });

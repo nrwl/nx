@@ -6,7 +6,12 @@ import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import type { ProjectGraph, ProjectGraphProjectNode, Target } from '@nx/devkit';
+import type {
+  ExecutorContext,
+  ProjectGraph,
+  ProjectGraphProjectNode,
+  Target,
+} from '@nx/devkit';
 
 const baseNXEnvironmentVariables = [
   'NX_BASE',
@@ -18,6 +23,7 @@ const baseNXEnvironmentVariables = [
   'NX_PERF_LOGGING',
   'NX_PROFILE',
   'NX_PROJECT_GRAPH_CACHE_DIRECTORY',
+  'NX_INVOKED_BY_RUNNER', // This is from nx cloud runner
   'NX_PROJECT_GRAPH_MAX_WORKERS',
   'NX_RUNNER',
   'NX_SKIP_NX_CACHE',
@@ -83,7 +89,7 @@ function getNxContext(
   targetName: string;
   configurationName?: string;
 } {
-  const { parseTargetString } = require('@nx/devkit');
+  const { parseTargetString, workspaceRoot } = require('@nx/devkit');
   const projectNode = graph.nodes[target.project];
   const targetConfig = projectNode.data.targets[target.target];
   const targetOptions = targetConfig.options;
@@ -94,17 +100,25 @@ function getNxContext(
     );
   }
 
+  const partialExecutorContext: Partial<ExecutorContext> = {
+    projectName: target.project,
+    targetName: target.target,
+    projectGraph: graph,
+    configurationName: target.configuration,
+    root: workspaceRoot,
+  };
+
   if (targetOptions.devServerTarget) {
     // Executors such as @nx/cypress:cypress define the devServerTarget option.
     return getNxContext(
       graph,
-      parseTargetString(targetOptions.devServerTarget, graph)
+      parseTargetString(targetOptions.devServerTarget, partialExecutorContext)
     );
   } else if (targetOptions.buildTarget) {
     // Executors such as @nx/next:server or @nx/next:export define the buildTarget option.
     return getNxContext(
       graph,
-      parseTargetString(targetOptions.buildTarget, graph)
+      parseTargetString(targetOptions.buildTarget, partialExecutorContext)
     );
   }
 
@@ -408,6 +422,9 @@ function getNxEnvironmentVariables() {
       return env;
     }, {});
 }
+
+let hasWarnedAboutDeprecatedEnvVariables = false;
+
 /**
  * TODO(v18)
  * @deprecated Use Next.js 9.4+ built-in support for environment variables. Reference https://nextjs.org/docs/pages/api-reference/next-config-js/env
@@ -428,7 +445,8 @@ function addNxEnvVariables(config: any) {
       );
 
     const vars = getNonBaseVariables(env);
-    if (vars.length > 0) {
+    if (vars.length > 0 && !hasWarnedAboutDeprecatedEnvVariables) {
+      hasWarnedAboutDeprecatedEnvVariables = true;
       console.warn(
         `Warning, in Nx 18 environment variables starting with NX_ will not be available in the browser, and currently will not work with @nx/next:server executor.\nPlease rename the following environment variables: ${vars.join(
           ', '

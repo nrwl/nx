@@ -562,15 +562,17 @@ async function createContext(
 
   setupWorkspaceContext(tempFs.tempDir);
 
-  const { projectFileMap, projectConfigurations } =
-    await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+  const { fileMap, projectConfigurations } = await retrieveWorkspaceFiles(
+    tempFs.tempDir,
+    nxJson
+  );
 
   return {
     externalNodes: builder.getUpdatedProjectGraph().externalNodes,
     projects: projectConfigurations.projects,
     nxJsonConfiguration: nxJson,
-    filesToProcess: projectFileMap,
-    fileMap: projectFileMap,
+    filesToProcess: fileMap,
+    fileMap: fileMap,
     workspaceRoot: tempFs.tempDir,
   };
 }

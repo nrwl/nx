@@ -199,6 +199,14 @@ Default: `false`
 
 Ignore cycles in the task graph
 
+##### output-style
+
+Type: `string`
+
+Choices: [dynamic, static, stream, stream-without-prefixes]
+
+Defines how Nx emits outputs tasks logs
+
 ##### parallel
 
 Type: `string`
