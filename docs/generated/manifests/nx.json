@@ -6254,7 +6254,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/packages/nx/documents/affected#skip-nx-cache",
+        "path": "/nx-api/nx/documents/affected#skip-nx-cache",
         "tags": ["cache-task-results"]
       },
       {
@@ -6332,14 +6332,14 @@
     "path": "/nx-cloud/intro/what-is-nx-cloud",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
-  "/packages/nx/documents/affected#skip-nx-cache": {
+  "/nx-api/nx/documents/affected#skip-nx-cache": {
     "id": "skip-nx-cache-flag",
     "name": "--skip-nx-cache flag",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/packages/nx/documents/affected#skip-nx-cache",
+    "path": "/nx-api/nx/documents/affected#skip-nx-cache",
     "tags": ["cache-task-results"]
   },
   "/reference/nx-json#tasks-runner-options": {

@@ -114,10 +114,10 @@ function getData(
     pkg: nxPackagesApi.getPackage([packageName]),
     schema: nxPackagesApi.getSchemaMetadata(
       nxPackagesApi.getPackageFileMetadatas(packageName, 'generators')[
-        '/' + ['packages', packageName, 'generators', ...segments].join('/')
+        '/' + ['nx-api', packageName, 'generators', ...segments].join('/')
       ]
     ),
-    menu: menusApi.getMenu('packages', 'packages'),
+    menu: menusApi.getMenu('nx-api', 'nx-api'),
   };
 }
 export async function getStaticProps({

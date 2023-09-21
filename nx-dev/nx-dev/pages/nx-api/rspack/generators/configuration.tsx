@@ -1,24 +1,27 @@
-import { PackageSchemaList } from '@nx/nx-dev/feature-package-schema-viewer';
+import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
-import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import {
+  ProcessedPackageMetadata,
+  SchemaMetadata,
+} from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { menusApi } from '../../../lib/menus.api';
-import { useNavToggle } from '../../../lib/navigation-toggle.effect';
-import { content } from '../../../lib/rspack/content/overview';
-import { pkg } from '../../../lib/rspack/pkg';
+import { menusApi } from '../../../../lib/menus.api';
+import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
+import { schema } from '../../../../lib/rspack/schema/generators/configuration';
+import { pkg } from '../../../../lib/rspack/pkg';
 
-export default function RspackIndex({
-  overview,
+export default function ConfigurationGenerator({
   menu,
   pkg,
+  schema,
 }: {
   menu: MenuItem[];
-  overview: string;
   pkg: ProcessedPackageMetadata;
+  schema: SchemaMetadata;
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -40,7 +43,11 @@ export default function RspackIndex({
     return () => router.events.off('routeChangeComplete', handleRouteChange);
   }, [router, wrapperElement]);
 
-  const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
+  const vm: {
+    menu: Menu;
+    package: ProcessedPackageMetadata;
+    schema: SchemaMetadata;
+  } = {
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
@@ -48,6 +55,7 @@ export default function RspackIndex({
       ),
     },
     package: pkg,
+    schema: schema,
   };
 
   /**
@@ -73,7 +81,7 @@ export default function RspackIndex({
           data-testid="wrapper"
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
-          <PackageSchemaList pkg={vm.package} overview={overview} />
+          <PackageSchemaViewer pkg={vm.package} schema={vm.schema} />
         </div>
       </main>
     </div>
@@ -83,9 +91,9 @@ export default function RspackIndex({
 export async function getStaticProps() {
   return {
     props: {
-      menu: menusApi.getMenu('packages', 'packages'),
-      overview: content,
       pkg,
+      schema,
+      menu: menusApi.getMenu('nx-api', 'nx-api'),
     },
   };
 }

@@ -209,6 +209,6 @@ Now when you serve your application, you'll see the content from the library bei
 
 ## More Documentation
 
-- [@nx/esbuild](/packages/esbuild)
-- [@nx/js](/packages/js)
+- [@nx/esbuild](/nx-api/esbuild)
+- [@nx/js](/nx-api/js)
 - [Lit](https://lit.dev/)

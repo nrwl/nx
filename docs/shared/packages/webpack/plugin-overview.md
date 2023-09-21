@@ -27,7 +27,7 @@ npx create-nx-workspace@latest --preset=react-monorepo --bundler=webpack
 
 ## Generate a new project using Webpack
 
-You can generate a [React](/packages/react) application or a [Web](/packages/web) application that uses Webpack in an existing Nx workspace. The [`@nx/react:app`](/packages/react/generators/application), [`@nx/node:app`](/packages/node/generators/application) and [`@nx/web:app`](/packages/web/generators/application) generators accept the `bundler` option, where you can pass `webpack`. This will generate a new application configured to use Webpack, and it will also install all the necessary dependencies, including the `@nx/webpack` plugin.
+You can generate a [React](/nx-api/react) application or a [Web](/nx-api/web) application that uses Webpack in an existing Nx workspace. The [`@nx/react:app`](/nx-api/react/generators/application), [`@nx/node:app`](/nx-api/node/generators/application) and [`@nx/web:app`](/nx-api/web/generators/application) generators accept the `bundler` option, where you can pass `webpack`. This will generate a new application configured to use Webpack, and it will also install all the necessary dependencies, including the `@nx/webpack` plugin.
 
 To generate a React application using Webpack, run the following:
 

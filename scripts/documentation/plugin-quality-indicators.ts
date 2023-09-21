@@ -75,7 +75,7 @@ async function main() {
     });
 
     writeFileSync(
-      './nx-dev/nx-dev/pages/extending-nx/quality-indicators.json',
+      './nx-dev/nx-dev/pages/quality-indicators.json',
       JSON.stringify(qualityIndicators, null, 2)
     );
   } catch (ex) {

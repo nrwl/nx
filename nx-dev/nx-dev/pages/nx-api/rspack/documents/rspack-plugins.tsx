@@ -1,21 +1,29 @@
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
+import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
+import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
 import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
+import { content } from '../../../../lib/rspack/content/rspack-plugin';
 import { pkg } from '../../../../lib/rspack/pkg';
+import { fetchGithubStarCount } from '../../../../lib/githubStars.api';
 
-export default function DocumentsIndex({
+export default function RspackPlugins({
+  document,
   menu,
-  pkg,
+  relatedDocuments,
+  widgetData,
 }: {
+  document: ProcessedDocument;
   menu: MenuItem[];
   pkg: ProcessedPackageMetadata;
+  relatedDocuments: RelatedDocument[];
+  widgetData: { githubStarsCount: number };
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -37,21 +45,20 @@ export default function DocumentsIndex({
     return () => router.events.off('routeChangeComplete', handleRouteChange);
   }, [router, wrapperElement]);
 
-  const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
+  const vm: {
+    document: ProcessedDocument;
+    menu: Menu;
+    relatedDocuments: RelatedDocument[];
+  } = {
+    document,
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
         'id'
       ),
     },
-    package: pkg,
+    relatedDocuments,
   };
-
-  /**
-   * Show either the docviewer or the package view depending on:
-   * - docviewer: it is a documentation document
-   * - packageviewer: it is package generated documentation
-   */
 
   return (
     <div id="shell" className="flex h-full flex-col">
@@ -70,23 +77,37 @@ export default function DocumentsIndex({
           data-testid="wrapper"
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
-          <PackageSchemaSubList pkg={vm.package} type={'document'} />
+          <DocViewer
+            document={vm.document}
+            relatedDocuments={vm.relatedDocuments}
+            widgetData={widgetData}
+          />
         </div>
       </main>
     </div>
   );
 }
 
-export async function getStaticProps(): Promise<{
-  props: {
-    menu: MenuItem[];
-    pkg: ProcessedPackageMetadata;
+export async function getStaticProps() {
+  const document = {
+    content: content,
+    description: 'Rspack plugins',
+    filePath: '',
+    id: 'rspack-plugins',
+    name: 'Rspack plugins',
+    relatedDocuments: {},
+    tags: [],
   };
-}> {
+
   return {
     props: {
-      menu: menusApi.getMenu('packages', 'packages'),
       pkg,
+      document,
+      widgetData: {
+        githubStarsCount: await fetchGithubStarCount(),
+      },
+      relatedDocuments: [],
+      menu: menusApi.getMenu('nx-api', ''),
     },
   };
 }

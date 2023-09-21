@@ -14,16 +14,6 @@
         "isExternal": false,
         "path": "/extending-nx/intro/getting-started",
         "tags": []
-      },
-      {
-        "id": "registry",
-        "name": "Plugin Registry",
-        "description": "Browse official and community plugins",
-        "file": "",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/extending-nx/registry",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -38,16 +28,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/intro/getting-started",
-    "tags": []
-  },
-  "/extending-nx/registry": {
-    "id": "registry",
-    "name": "Plugin Registry",
-    "description": "Browse official and community plugins",
-    "file": "",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/extending-nx/registry",
     "tags": []
   },
   "/extending-nx/tutorials": {

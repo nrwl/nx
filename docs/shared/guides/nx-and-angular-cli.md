@@ -65,7 +65,7 @@ More details: Nx [project configuration](/reference/project-configuration).
 
 Nx comes with slightly different terminology than the Angular CLI for some features.
 
-**Angular Builders** are called [Executors](/core-features/plugin-features/use-task-executors) in Nx but work very much similarly. You use them in your project configuration to define how to build, test, lint, and serve your project. You can use both Nx executors from [Nx Plugins](/extending-nx/registry) or Angular Builders from the Angular Devkit.
+**Angular Builders** are called [Executors](/core-features/plugin-features/use-task-executors) in Nx but work very much similarly. You use them in your project configuration to define how to build, test, lint, and serve your project. You can use both Nx executors from [Nx Plugins](/plugin-registry) or Angular Builders from the Angular Devkit.
 
 ```json
 {
@@ -132,7 +132,7 @@ What's the difference?
 - Fix migrations that "almost work".
 - Commit a partially migrated state.
 - Change versions of packages to match org requirements.
-- [Opt out of Angular updates when updating Nx versions](/recipes/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/packages/angular/documents/angular-nx-version-matrix)
+- [Opt out of Angular updates when updating Nx versions](/recipes/tips-n-tricks/advanced-update#choosing-optional-package-updates-to-apply) as long as [the Angular version is still supported](/nx-api/angular/documents/angular-nx-version-matrix)
 
 `nx migrate` does this by splitting the process into two steps. `nx migrate latest` creates a `migrations.json` file with a list of all the migrations needed by Nx, Angular, and other packages. You can then modify that file before running `nx migrate --run-migrations` to execute those migrations.
 
@@ -162,7 +162,7 @@ Features like
 - offering [remote caching abilities](/core-features/remote-cache) on CI
 - offering [task distribution across machines (DTE)](/core-features/distribute-task-execution)
 
-And, Nx already uses fast, modern tooling like [ESBuild](/packages/esbuild), [Vite](/packages/vite), Vitest and [Rspack](/packages/rspack) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
+And, Nx already uses fast, modern tooling like [ESBuild](/nx-api/esbuild), [Vite](/nx-api/vite), Vitest and [Rspack](/nx-api/rspack) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
 
 ## Editor Integration
 
@@ -297,7 +297,7 @@ Learn more about the [graph features here](/core-features/explore-graph).
 
 Nx is [built to be extensible](/getting-started/why-nx#how-does-nx-work). Just like the [packages published by the Nx core team](/packages) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started).
 
-This can be as simple as using [run-commands](/packages/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
+This can be as simple as using [run-commands](/nx-api/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
 
 ## Diversification
 

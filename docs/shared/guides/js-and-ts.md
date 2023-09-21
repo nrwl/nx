@@ -15,4 +15,4 @@ Regardless whether you use JavaScript or TypeScript, you will have a `tsconfig.b
 
 ## Interested in building and distributing TypeScript packages?
 
-You might want to check out the `@nx/js` package which comes with advanced TypeScript support, including [SWC](https://swc.rs/) and more. Find out more in the [plugin documentation](/packages/js).
+You might want to check out the `@nx/js` package which comes with advanced TypeScript support, including [SWC](https://swc.rs/) and more. Find out more in the [plugin documentation](/nx-api/js).

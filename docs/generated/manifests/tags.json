@@ -33,21 +33,21 @@
       "file": "generated/packages/generated/packages/nx/documents/run",
       "id": "run",
       "name": "run",
-      "path": "/packages/nx/documents/run"
+      "path": "/nx-api/nx/documents/run"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/run-many",
       "id": "run-many",
       "name": "run-many",
-      "path": "/packages/nx/documents/run-many"
+      "path": "/nx-api/nx/documents/run-many"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/affected",
       "id": "affected",
       "name": "affected",
-      "path": "/packages/nx/documents/affected"
+      "path": "/nx-api/nx/documents/affected"
     }
   ],
   "cache-task-results": [
@@ -98,7 +98,7 @@
       "file": "",
       "id": "skip-nx-cache-flag",
       "name": "--skip-nx-cache flag",
-      "path": "/packages/nx/documents/affected#skip-nx-cache"
+      "path": "/nx-api/nx/documents/affected#skip-nx-cache"
     },
     {
       "description": "",
@@ -126,14 +126,14 @@
       "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
-      "path": "/packages/nx/documents/connect-to-nx-cloud"
+      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/reset",
       "id": "reset",
       "name": "reset",
-      "path": "/packages/nx/documents/reset"
+      "path": "/nx-api/nx/documents/reset"
     }
   ],
   "remote-cache": [
@@ -186,7 +186,7 @@
       "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
-      "path": "/packages/nx/documents/connect-to-nx-cloud"
+      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
     }
   ],
   "explore-graph": [
@@ -230,7 +230,7 @@
       "file": "generated/packages/generated/packages/nx/documents/dep-graph",
       "id": "dep-graph",
       "name": "graph",
-      "path": "/packages/nx/documents/dep-graph"
+      "path": "/nx-api/nx/documents/dep-graph"
     }
   ],
   "automate-updating-dependencies": [
@@ -260,7 +260,7 @@
       "file": "generated/packages/generated/packages/nx/documents/migrate",
       "id": "migrate",
       "name": "migrate",
-      "path": "/packages/nx/documents/migrate"
+      "path": "/nx-api/nx/documents/migrate"
     }
   ],
   "enforce-module-boundaries": [
@@ -353,21 +353,21 @@
       "file": "generated/packages/generated/packages/nx/documents/format-check",
       "id": "format-check",
       "name": "format:check",
-      "path": "/packages/nx/documents/format-check"
+      "path": "/nx-api/nx/documents/format-check"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/format-write",
       "id": "format-write",
       "name": "format:write",
-      "path": "/packages/nx/documents/format-write"
+      "path": "/nx-api/nx/documents/format-write"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/workspace-lint",
       "id": "workspace-lint",
       "name": "workspace-lint",
-      "path": "/packages/nx/documents/workspace-lint"
+      "path": "/nx-api/nx/documents/workspace-lint"
     }
   ],
   "integrate-with-editors": [
@@ -511,21 +511,21 @@
       "file": "generated/packages/generated/packages/nx/documents/run",
       "id": "run",
       "name": "run",
-      "path": "/packages/nx/documents/run"
+      "path": "/nx-api/nx/documents/run"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/run-many",
       "id": "run-many",
       "name": "run-many",
-      "path": "/packages/nx/documents/run-many"
+      "path": "/nx-api/nx/documents/run-many"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/affected",
       "id": "affected",
       "name": "affected",
-      "path": "/packages/nx/documents/affected"
+      "path": "/nx-api/nx/documents/affected"
     }
   ],
   "use-code-generators": [
@@ -590,7 +590,7 @@
       "file": "generated/packages/generated/packages/nx/documents/generate",
       "id": "generate",
       "name": "generate",
-      "path": "/packages/nx/documents/generate"
+      "path": "/nx-api/nx/documents/generate"
     }
   ],
   "intro": [
@@ -1017,7 +1017,7 @@
       "file": "generated/packages/generated/packages/nx/documents/watch",
       "id": "watch",
       "name": "watch",
-      "path": "/packages/nx/documents/watch"
+      "path": "/nx-api/nx/documents/watch"
     }
   ],
   "yarn": [

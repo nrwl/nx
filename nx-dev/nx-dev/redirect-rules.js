@@ -741,6 +741,7 @@ const pluginUrls = {
     '/extending-nx/recipes/local-generators',
   '/recipes/generators/modifying-files':
     '/extending-nx/recipes/modifying-files',
+  '/extending-nx/registry': '/plugin-registry',
 };
 
 const referenceUrls = {
@@ -761,6 +762,7 @@ const missingAndCatchAllRedirects = {
     '/storybook/executors-storybook',
   // Nx Console
   '/nx-console': '/using-nx/console',
+  '/packages/:path*': '/nx-api/:path*',
 };
 
 const movePluginFeaturesToCore = {

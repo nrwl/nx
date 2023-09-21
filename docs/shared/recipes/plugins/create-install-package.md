@@ -111,7 +111,7 @@ Because your `create-my-plugin` package will install your plugin package at runt
 }
 ```
 
-_(If you don't have such a `local-registry` target, refer to the following [docs page to generate one](/packages/js/generators/setup-verdaccio))_
+_(If you don't have such a `local-registry` target, refer to the following [docs page to generate one](/nx-api/js/generators/setup-verdaccio))_
 
 By running
 
