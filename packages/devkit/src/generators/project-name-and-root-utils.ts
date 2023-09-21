@@ -231,7 +231,12 @@ function getProjectNameAndRootFormats(
   );
 
   console.log('*************************');
-  console.log('project name and root helper, relativeCwd: ', relativeCwd);
+  console.log('project name and root helper');
+  console.log('process.env.INIT_CWD:', process.env.INIT_CWD);
+  console.log('process.cwd():', process.cwd());
+  console.log('cwd:', getCwd());
+  console.log('workspaceRoot:', workspaceRoot);
+  console.log('relativeCwd:', relativeCwd);
   console.log('*************************');
 
   if (directory) {
