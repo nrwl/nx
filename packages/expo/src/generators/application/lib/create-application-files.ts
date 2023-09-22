@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import { easCliVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
@@ -23,7 +22,6 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     offsetFromRoot: offsetFromRoot(options.appProjectRoot),
     packageManager,
     packageLockFile,
-    easCliVersion,
   });
   if (options.unitTestRunner === 'none') {
     host.delete(join(options.appProjectRoot, `App.spec.tsx`));

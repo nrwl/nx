@@ -29,6 +29,7 @@
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^11.1.0",
+    "global-dirs": "^3.0.1",
     "metro-config": "0.76.7",
     "metro-resolver": "0.76.7",
     "tslib": "^2.3.0",
@@ -44,8 +45,7 @@
   },
   "peerDependencies": {
     "expo": ">= 49.0.0",
-    "@expo/cli": ">= 0.10.0",
-    "eas-cli": ">= 3.15.0"
+    "@expo/cli": ">= 0.10.0"
   },
   "executors": "./executors.json",
   "ng-update": {

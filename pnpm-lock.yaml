@@ -635,6 +635,9 @@ devDependencies:
   github-slugger:
     specifier: ^2.0.0
     version: 2.0.0
+  global-dirs:
+    specifier: ^3.0.1
+    version: 3.0.1
   gpt3-tokenizer:
     specifier: ^1.1.5
     version: 1.1.5
@@ -16492,8 +16495,8 @@ packages:
       once: 1.4.0
     dev: true
 
-  /global-dirs@3.0.0:
-    resolution: {integrity: sha512-v8ho2DS5RiCjftj1nD9NmnfaOzTdud7RRnVd9kFNOjqZbISlx5DQ+OrTkywgd0dIt7oFCvKetZSHoHcP3sDdiA==}
+  /global-dirs@3.0.1:
+    resolution: {integrity: sha512-NBcGGFbBA9s1VzD41QXDG+3++t9Mn5t1FpLdhESY6oKY4gYTFpX4wO3sqGUa0Srjtbfj3szX0RnemmrVRUdULA==}
     engines: {node: '>=10'}
     dependencies:
       ini: 2.0.0
@@ -17498,7 +17501,7 @@ packages:
     resolution: {integrity: sha512-iwGqO3J21aaSkC7jWnHP/difazwS7SFeIqxv6wEtLU8Y5KlzFTjyqcSIT0d8s4+dDhKytsk9PJZ2BkS5eZwQRQ==}
     engines: {node: '>=10'}
     dependencies:
-      global-dirs: 3.0.0
+      global-dirs: 3.0.1
       is-path-inside: 3.0.3
     dev: true
 

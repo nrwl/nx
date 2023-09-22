@@ -21,8 +21,5 @@
   },
   "submit": {
     "production": {}
-  },
-  "cli": {
-    "version": ">= <%= easCliVersion.replace('~', '') %>"
   }
 }

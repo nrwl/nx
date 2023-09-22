@@ -5,7 +5,6 @@ export const expoMetroConfigVersion = '~0.10.7';
 export const expoSplashScreenVersion = '~0.20.5';
 export const expoStatusBarVersion = '~1.6.0';
 export const expoCliVersion = '~0.10.12'; // @expo/cli
-export const easCliVersion = '~5.2.0';
 export const babelPresetExpoVersion = '~9.5.2';
 
 export const reactVersion = '18.2.0';
