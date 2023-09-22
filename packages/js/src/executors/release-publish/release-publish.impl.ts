@@ -31,6 +31,25 @@ export default async function runExecutor(
     options.packageRoot ?? projectConfig.root
   );
 
+  const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
+  const projectPackageJson = readJsonFile(packageJsonPath);
+  const name = projectPackageJson.name;
+
+  // If package and project name match, we can make log messages terser
+  let packageTxt =
+    name === context.projectName
+      ? `package "${name}"`
+      : `package "${name}" from project "${context.projectName}"`;
+
+  if (projectPackageJson.private === true) {
+    console.warn(
+      `Skipping ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
+    );
+    return {
+      success: true,
+    };
+  }
+
   const npmPublishCommandSegments = [`npm publish --json`];
 
   if (options.registry) {
@@ -79,10 +98,6 @@ export default async function runExecutor(
     };
   } catch (err) {
     try {
-      const projectPackageJson = readJsonFile(
-        joinPathFragments(packageRoot, 'package.json')
-      );
-      const name = projectPackageJson.name;
       const currentVersion = projectPackageJson.version;
 
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
@@ -93,12 +108,6 @@ export default async function runExecutor(
             'You cannot publish over the previously published versions'
           ))
       ) {
-        // If package and project name match, make it terser
-        let packageTxt =
-          name === context.projectName
-            ? `package "${name}"`
-            : `package "${name}" from project "${context.projectName}"`;
-
         console.warn(
           `Skipping ${packageTxt}, as v${currentVersion} has already been published to ${registry} with tag "${tag}"`
         );
