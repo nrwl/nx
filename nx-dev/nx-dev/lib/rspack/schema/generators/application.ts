@@ -108,6 +108,6 @@ export const schema = {
   hidden: false,
   implementation:
     '/packages/rspack/src/generators/application/application#applicationGenerator.ts',
-  path: '/packages/rspack/src/generators/application/schema.json',
+  path: '/api/rspack/src/generators/application/schema.json',
   type: 'generator',
 };

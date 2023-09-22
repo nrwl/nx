@@ -1,7 +1,7 @@
 # Migrating an Angular application manually
 
 {% callout type="note" title="Older Angular Versions" %}
-If you are using older versions of Angular (version 13 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/packages/angular/documents/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
+If you are using older versions of Angular (version 13 or lower), make sure to use the appropriate version of Nx that matches your version of Angular. See the [Nx and Angular Version Compatibility Matrix](/nx-api/angular/documents/angular-nx-version-matrix) to find the correct version. The generated files will also be slightly different.
 {% /callout %}
 
 If you are unable to automatically transform your Angular CLI workspace to an [Nx workspace](/recipes/angular/migration/angular), there are some manual steps you can take to move your project(s) into an Nx workspace.
@@ -69,7 +69,7 @@ A new Nx workspace with your `org name` as the folder name, and your `applicatio
 
 ### Review Angular installed packages versions
 
-Creating an Nx workspace with the latest version will install the Angular packages on their latest versions. If you're using a [lower version that's supported by the latest Nx](/packages/angular/documents/angular-nx-version-matrix), make sure to adjust the newly generated `package.json` file with your versions.
+Creating an Nx workspace with the latest version will install the Angular packages on their latest versions. If you're using a [lower version that's supported by the latest Nx](/nx-api/angular/documents/angular-nx-version-matrix), make sure to adjust the newly generated `package.json` file with your versions.
 
 ### Copying over application files
 
@@ -191,6 +191,6 @@ yarn lint
 
 Learn more about the advantages of Nx in the following guides:
 
-[Using Cypress for e2e tests](/packages/cypress) \
-[Using Jest for unit tests](/packages/jest) \
+[Using Cypress for e2e tests](/nx-api/cypress) \
+[Using Jest for unit tests](/nx-api/jest) \
 [Rebuilding and Retesting What is Affected](/concepts/affected)

@@ -42,6 +42,9 @@ const baseNXEnvironmentVariables = [
   'NX_WORKSPACE_ROOT',
   'NX_TASK_HASH',
   'NX_NEXT_DIR',
+  'NX_NEXT_OUTPUT_PATH',
+  'NX_E2E_RUN_E2E',
+  'NX_E2E_CI_CACHE_KEY',
 ];
 
 export interface WithNxOptions extends NextConfig {

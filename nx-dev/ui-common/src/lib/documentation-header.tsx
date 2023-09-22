@@ -38,11 +38,14 @@ export function DocumentationHeader({
   toggleNav: (value: boolean) => void;
 }): JSX.Element {
   const router = useRouter();
-  const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
-  const isPackages: boolean = router.asPath.startsWith('/packages');
-  const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
-  const isChangelog: boolean = router.asPath.startsWith('/changelog');
-  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isChangelog;
+  let routerPath = router.asPath;
+  const isNxCloud: boolean = routerPath.startsWith('/nx-cloud');
+  const isAPI: boolean = routerPath.startsWith('/nx-api');
+  const isExtendingNx: boolean = routerPath.startsWith('/extending-nx');
+  const isPlugins: boolean = routerPath.startsWith('/plugin-registry');
+  const isChangelog: boolean = routerPath.startsWith('/changelog');
+  const isNx: boolean =
+    !isNxCloud && !isAPI && !isExtendingNx && !isPlugins && !isChangelog;
 
   const sections = [
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
@@ -54,12 +57,17 @@ export function DocumentationHeader({
     {
       name: 'Extending Nx',
       href: '/extending-nx/intro/getting-started',
+      current: isExtendingNx,
+    },
+    {
+      name: 'Plugins',
+      href: '/plugin-registry',
       current: isPlugins,
     },
     {
-      name: 'Packages',
-      href: '/packages',
-      current: isPackages,
+      name: 'API',
+      href: '/nx-api',
+      current: isAPI,
     },
     {
       name: 'Changelog',

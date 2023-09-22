@@ -69,7 +69,7 @@ export class DocumentsApi {
 
     if (!document) {
       if (
-        path[0] === 'packages' &&
+        path[0] === 'nx-api' &&
         path[1] === 'devkit' &&
         path[2] === 'documents'
       ) {

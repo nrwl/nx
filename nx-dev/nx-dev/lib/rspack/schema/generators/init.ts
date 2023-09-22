@@ -31,6 +31,6 @@ export const schema = {
   hidden: false,
   implementation:
     '/packages/rspack/src/generators/init/init#rspackInitGenerator.ts',
-  path: '/packages/rspack/src/generators/init/schema.json',
+  path: '/nx-api/rspack/src/generators/init/schema.json',
   type: 'generator',
 };

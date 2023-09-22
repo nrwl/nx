@@ -6,7 +6,7 @@ configuration object and returns an updated configuration object. Plugins are us
 functionality to the Rspack build.
 
 This guide contains information on the plugins provided by Nx. For more information on customizing Rspack configuration, refer to the
-[Nx Rspack configuration guide](/packages/rspack/documents/rspack-config-setup).
+[Nx Rspack configuration guide](/nx-api/rspack/documents/rspack-config-setup).
 
 ## withNx
 

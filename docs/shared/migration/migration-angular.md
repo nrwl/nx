@@ -114,8 +114,8 @@ Your workspace is now powered by Nx! You can verify that your application still 
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/packages/cypress)
-- [Using Jest for unit tests](/packages/jest)
+- [Using Cypress for e2e tests](/nx-api/cypress)
+- [Using Jest for unit tests](/nx-api/jest)
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/concepts/affected)
 - [Integrate with Editors](/core-features/integrate-with-editors)

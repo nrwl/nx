@@ -54,8 +54,8 @@ nx generate @nx/react:application my-application
 
 There are a lot of options when creating your application. If you want to follow Nx recommendations, you can accept the defaults. If you have a well-established codebase, you can configure those options at the time of application generation. You can find documentation for these options for the different frameworks here:
 
-- [Angular](/packages/angular/generators/application)
-- [React](/packages/react/generators/application)
+- [Angular](/nx-api/angular/generators/application)
+- [React](/nx-api/react/generators/application)
 
 You may also find it useful to use the [Nx Console](/core-features/integrate-with-editors) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
 
@@ -151,7 +151,7 @@ Nx uses Prettier to ensure standard formatting across your codebase. Prettier co
 nx format:write
 ```
 
-[Learn more about formatting](/packages/nx/documents/format-write)
+[Learn more about formatting](/nx-api/nx/documents/format-write)
 
 ### Adding tasks
 
@@ -161,7 +161,7 @@ You should consider implementing them as Nx tasks which should be a quick transi
 
 Your use-case may also be covered by one of our community plugins. Plugin authors are able to extend the functionality of Nx through our plugin API.
 
-[Learn more about the `run-commands` executor](/packages/nx/executors/run-commands)
+[Learn more about the `run-commands` executor](/nx-api/nx/executors/run-commands)
 
 [Learn more about caching](/concepts/how-caching-works)
 

@@ -6,7 +6,7 @@ description: This guide explains how Storybook is configured on your Nx workspac
 # Configuring Storybook on Nx
 
 {% callout type="info" title="Best practices" %}
-Read our [Using Storybook in a Nx workspace - Best practices](/packages/storybook/documents/best-practices) guide!
+Read our [Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide!
 {% /callout %}
 
 Starting with version 15.7, Nx is no longer generating a root Storybook directory and shared root Storybook configurations. Instead, it is only generating a Storybook configuration for each project in your workspace. You may still manually create a root Storybook configuration file, if it is needed for your use case.
@@ -44,6 +44,6 @@ In all the other cases, Nx will not interfere with your Storybook setup.
 
 ## Read our guides for Configuring Storybook
 
-You can read all our guides for configuring Storybook in our [Storybook documents page](/packages/storybook/documents).
+You can read all our guides for configuring Storybook in our [Storybook documents page](/nx-api/storybook/documents).
 
-Please also make sure to read our [Using Storybook in a Nx workspace - Best practices](/packages/storybook/documents/best-practices) guide, where you can find some best practices for using Storybook in a Nx workspace.
+Please also make sure to read our [Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide, where you can find some best practices for using Storybook in a Nx workspace.

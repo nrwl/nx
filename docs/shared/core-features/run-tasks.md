@@ -90,7 +90,7 @@ npx nx run-many -t build lint test -p header footer
 
 Note that Nx parallelizes all these tasks making also sure they are run in the right order based on their dependencies and the [task pipeline configuration](/concepts/task-pipeline-configuration).
 
-Learn more about the [run-many](/packages/nx/documents/run-many) command.
+Learn more about the [run-many](/nx-api/nx/documents/run-many) command.
 
 ### Run Tasks on Projects Affected by a PR
 
@@ -124,7 +124,7 @@ To invoke it, use:
 npx nx docs
 ```
 
-If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/packages/nx/documents/exec) command:
+If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run the script (i.e. `npm run docs`) you can use the [nx exec](/nx-api/nx/documents/exec) command:
 
 ```json {% fileName="package.json" %}
 {
