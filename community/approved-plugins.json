@@ -413,5 +413,10 @@
     "name": "@jnxplus/nx-maven",
     "description": "Nx plugin to add Maven multi-module project support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-maven"
+  },
+  {
+    "name": "@ziacik/azure-func",
+    "description": "Generating, serving and publishing Azure Functions 4 apps.",
+    "url": "https://github.com/ziacik/nx-tools/tree/master/packages/azure-func"
   }
 ]
