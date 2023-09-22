@@ -30,6 +30,7 @@ It only uses language primitives and immutable objects
 - [ExecutorsJson](../../devkit/documents/ExecutorsJson)
 - [FileChange](../../devkit/documents/FileChange)
 - [FileData](../../devkit/documents/FileData)
+- [FileMap](../../devkit/documents/FileMap)
 - [GeneratorsJson](../../devkit/documents/GeneratorsJson)
 - [Hash](../../devkit/documents/Hash)
 - [HasherContext](../../devkit/documents/HasherContext)
