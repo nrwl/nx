@@ -59,7 +59,11 @@
   "release": {
     "groups": {
       "npm": {
-        "projects": ["packages/*", "packages-legacy/*"],
+        "projects": [
+          "packages/*",
+          "packages/nx/native-packages/*",
+          "packages-legacy/*"
+        ],
         "version": {
           "generatorOptions": {
             "packageRoot": "build/packages/{projectName}",

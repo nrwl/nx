@@ -21,14 +21,15 @@ import { readNxJson } from '../config/nx-json';
  */
 export function readCachedProjectGraph(): ProjectGraph {
   const projectGraphCache: ProjectGraph = readProjectGraphCache();
-  const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
-    ? stripIndents`
+  if (!projectGraphCache) {
+    const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
+      ? stripIndents`
       Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script.
       The decorated CLI will compute the project graph.
       'ng --help' should say 'Smart, Fast and Extensible Build System'.
       `
-    : '';
-  if (!projectGraphCache) {
+      : '';
+
     throw new Error(stripIndents`
       [readCachedProjectGraph] ERROR: No cached ProjectGraph is available.
 

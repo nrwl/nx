@@ -272,37 +272,42 @@ async function updateProjectGraphWithPlugins(
       throw new Error(message);
     }
   }
-  for (const plugin of plugins) {
-    try {
-      if (isNxPluginV2(plugin) && plugin.createDependencies) {
-        const builder = new ProjectGraphBuilder(
-          graph,
-          context.fileMap.projectFileMap,
-          context.fileMap.nonProjectFiles
-        );
-        const newDependencies = await plugin.createDependencies(context);
-        for (const targetProjectDependency of newDependencies) {
+
+  const builder = new ProjectGraphBuilder(
+    graph,
+    context.fileMap.projectFileMap,
+    context.fileMap.nonProjectFiles
+  );
+
+  const createDependencyPlugins = plugins.filter(
+    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
+  );
+  await Promise.all(
+    createDependencyPlugins.map(async (plugin) => {
+      try {
+        const dependencies = await plugin.createDependencies({
+          ...context,
+        });
+
+        for (const dep of dependencies) {
           builder.addDependency(
-            targetProjectDependency.source,
-            targetProjectDependency.target,
-            targetProjectDependency.type,
-            'sourceFile' in targetProjectDependency
-              ? targetProjectDependency.sourceFile
-              : null
+            dep.source,
+            dep.target,
+            dep.type,
+            'sourceFile' in dep ? dep.sourceFile : null
           );
         }
-        graph = builder.getUpdatedProjectGraph();
+      } catch (e) {
+        let message = `Failed to process project dependencies with "${plugin.name}".`;
+        if (e instanceof Error) {
+          e.message = message + '\n' + e.message;
+          throw e;
+        }
+        throw new Error(message);
       }
-    } catch (e) {
-      let message = `Failed to process project dependencies with "${plugin.name}".`;
-      if (e instanceof Error) {
-        e.message = message + '\n' + e.message;
-        throw e;
-      }
-      throw new Error(message);
-    }
-  }
-  return graph;
+    })
+  );
+  return builder.getUpdatedProjectGraph();
 }
 
 function readRootTsConfig() {
