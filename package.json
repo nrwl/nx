@@ -182,6 +182,7 @@
     "fork-ts-checker-webpack-plugin": "7.2.13",
     "fs-extra": "^11.1.0",
     "github-slugger": "^2.0.0",
+    "global-dirs": "^3.0.1",
     "gpt3-tokenizer": "^1.1.5",
     "handlebars": "4.7.7",
     "html-webpack-plugin": "5.5.0",
@@ -371,4 +372,3 @@
     ]
   }
 }
-

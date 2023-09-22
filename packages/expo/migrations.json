@@ -89,6 +89,12 @@
       "version": "16.9.0-beta.1",
       "description": "Update eas.json cli version",
       "implementation": "./src/migrations/update-16-9-0/update-eas-cli-version"
+    },
+    "update-16-9-1-remove-eas-cli": {
+      "cli": "nx",
+      "version": "16.9.1-beta.0",
+      "description": "Remove eas-cli from package.json",
+      "implementation": "./src/migrations/update-16-9-1/remove-eas-cli"
     }
   },
   "packageJsonUpdates": {

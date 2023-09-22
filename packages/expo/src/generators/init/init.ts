@@ -10,7 +10,6 @@ import {
 import { Schema } from './schema';
 import {
   babelPresetExpoVersion,
-  easCliVersion,
   expoCliVersion,
   expoMetroConfigVersion,
   expoSplashScreenVersion,
@@ -101,7 +100,6 @@ export function updateDependencies(host: Tree) {
       '@testing-library/jest-native': testingLibraryJestNativeVersion,
       'jest-expo': jestExpoVersion,
       '@expo/cli': expoCliVersion,
-      'eas-cli': easCliVersion,
       'babel-preset-expo': babelPresetExpoVersion,
     }
   );

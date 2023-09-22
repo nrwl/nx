@@ -1,12 +1,12 @@
-import { ExecutorContext, names, output } from '@nx/devkit';
-import { normalize, sep, resolve as pathResolve, dirname } from 'path';
+import { ExecutorContext, names } from '@nx/devkit';
+import { resolve as pathResolve, dirname } from 'path';
 import { ChildProcess, fork } from 'child_process';
+import { removeSync } from 'fs-extra';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { unzipBuild } from '../download/download.impl';
+import { resolveEas } from '../../utils/resolve-eas';
 
 import { ExpoEasBuildOptions } from './schema';
-import { removeSync } from 'fs-extra';
 
 export interface ReactNativeBuildOutput {
   success: boolean;
@@ -53,7 +53,7 @@ function runCliBuild(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('eas-cli/bin/run'),
+      resolveEas(),
       ['build', ...createBuildOptions(options)],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),
