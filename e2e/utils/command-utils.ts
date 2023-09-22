@@ -71,7 +71,6 @@ export function runCommand(
         ...getStrippedEnvironmentVariables(),
         ...childProcessOptions?.env,
         FORCE_COLOR: 'false',
-        INIT_CWD: undefined,
       },
       encoding: 'utf-8',
       ...childProcessOptions,
@@ -349,7 +348,6 @@ export function runCLI(
       env: {
         CI: 'true',
         ...getStrippedEnvironmentVariables(),
-        INIT_CWD: undefined,
         ...opts.env,
       },
       encoding: 'utf-8',

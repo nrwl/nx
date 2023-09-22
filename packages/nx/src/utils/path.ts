@@ -1,4 +1,5 @@
 import * as path from 'path';
+import { workspaceRoot } from './workspace-root';
 
 function removeWindowsDriveLetter(osSpecificPath: string): string {
   return osSpecificPath.replace(/^[A-Z]:/, '');
@@ -29,5 +30,7 @@ export function joinPathFragments(...fragments: string[]): string {
  * @returns The path to the current working directory.
  */
 export function getCwd(): string {
-  return process.env.INIT_CWD ?? process.cwd();
+  return process.env.INIT_CWD?.startsWith(workspaceRoot)
+    ? process.env.INIT_CWD
+    : process.cwd();
 }

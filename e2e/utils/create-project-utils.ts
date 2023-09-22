@@ -231,7 +231,6 @@ export function runCreateWorkspace(
         CI: 'true',
         NX_VERBOSE_LOGGING: isCI ? 'true' : 'false',
         ...process.env,
-        INIT_CWD: undefined,
       },
       encoding: 'utf-8',
     });

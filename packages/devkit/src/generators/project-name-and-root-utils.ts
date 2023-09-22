@@ -357,5 +357,7 @@ function isTTY(): boolean {
  * environment variable (see here: https://docs.npmjs.com/cli/v9/commands/npm-run-script#description).
  */
 function getCwd(): string {
-  return process.env.INIT_CWD ?? process.cwd();
+  return process.env.INIT_CWD?.startsWith(workspaceRoot)
+    ? process.env.INIT_CWD
+    : process.cwd();
 }
