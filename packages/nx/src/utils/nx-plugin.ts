@@ -178,7 +178,7 @@ function getPluginPathAndName(
 
   // Register the ts-transpiler if we are pointing to a
   // plain ts file that's not part of a plugin project
-  if (extension === '.ts' && !tsNodeAndPathsRegistered) {
+  if (extension === '.ts' && !tsNodeAndPathsUnregisterCallback) {
     registerPluginTSTranspiler();
   }
 
@@ -369,14 +369,14 @@ export function resolveLocalNxPlugin(
   return localPluginCache[importPath];
 }
 
-let tsNodeAndPathsRegistered = false;
+let tsNodeAndPathsUnregisterCallback = undefined;
 
 /**
  * Register swc-node or ts-node if they are not currently registered
  * with some default settings which work well for Nx plugins.
  */
 export function registerPluginTSTranspiler() {
-  if (!tsNodeAndPathsRegistered) {
+  if (!tsNodeAndPathsUnregisterCallback) {
     // nx-ignore-next-line
     const ts: typeof import('typescript') = require('typescript');
 
@@ -390,8 +390,8 @@ export function registerPluginTSTranspiler() {
       ? readTsConfig(tsConfigName)
       : {};
 
-    registerTsConfigPaths(tsConfigName);
-    registerTranspiler({
+    const unregisterTsConfigPaths = registerTsConfigPaths(tsConfigName);
+    const unregisterTranspiler = registerTranspiler({
       experimentalDecorators: true,
       emitDecoratorMetadata: true,
       ...tsConfig.options,
@@ -401,8 +401,21 @@ export function registerPluginTSTranspiler() {
       inlineSourceMap: true,
       skipLibCheck: true,
     });
+    tsNodeAndPathsUnregisterCallback = () => {
+      unregisterTsConfigPaths();
+      unregisterTranspiler();
+    };
   }
-  tsNodeAndPathsRegistered = true;
+}
+
+/**
+ * Unregister the ts-node transpiler if it is registered
+ */
+export function unregisterPluginTSTranspiler() {
+  if (tsNodeAndPathsUnregisterCallback) {
+    tsNodeAndPathsUnregisterCallback();
+    tsNodeAndPathsUnregisterCallback = undefined;
+  }
 }
 
 function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
@@ -412,7 +425,7 @@ function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
     return null;
   }
 
-  if (!tsNodeAndPathsRegistered) {
+  if (!tsNodeAndPathsUnregisterCallback) {
     registerPluginTSTranspiler();
   }
 
@@ -452,6 +465,7 @@ function findNxProjectForImportPath(
 }
 
 let tsconfigPaths: Record<string, string[]>;
+
 function readTsConfigPaths(root: string = workspaceRoot) {
   if (!tsconfigPaths) {
     const tsconfigPath: string | null = ['tsconfig.base.json', 'tsconfig.json']

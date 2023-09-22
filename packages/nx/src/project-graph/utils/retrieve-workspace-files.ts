@@ -25,6 +25,7 @@ import {
   loadNxPlugins,
   loadNxPluginsSync,
   NxPluginV2,
+  unregisterPluginTSTranspiler,
 } from '../../utils/nx-plugin';
 import { CreateProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
 import {
