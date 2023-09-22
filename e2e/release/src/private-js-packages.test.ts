@@ -146,7 +146,7 @@ describe('nx release - private JS packages', () => {
 
       > nx run {private-project-name}:nx-release-publish
 
-      Skipping package "@proj/{private-project-name}" from project "{private-project-name}", because it has \`"private": true\` in /private/{private-project-name}/package.json
+      Skipping package "@proj/{private-project-name}" from project "{private-project-name}", because it has \`"private": true\` in /{private-project-name}/package.json
 
       > nx run {public-project-name}:nx-release-publish
 
