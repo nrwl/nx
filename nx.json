@@ -56,7 +56,29 @@
       }
     ]
   },
+  "release": {
+    "groups": {
+      "npm": {
+        "projects": [
+          "packages/*",
+          "packages/nx/native-packages/*",
+          "packages-legacy/*"
+        ],
+        "version": {
+          "generatorOptions": {
+            "packageRoot": "build/packages/{projectName}",
+            "currentVersionResolver": "registry"
+          }
+        }
+      }
+    }
+  },
   "targetDefaults": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "build/packages/{projectName}"
+      }
+    },
     "build": {
       "dependsOn": ["build-base", "build-native"],
       "inputs": [
