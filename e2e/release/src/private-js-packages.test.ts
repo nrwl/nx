@@ -14,6 +14,7 @@ expect.addSnapshotSerializer({
       str
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replace(tmpProjPath(), '')
+        .replace('/private', '')
         .replaceAll(/public-pkg-\d+/g, '{public-project-name}')
         .replaceAll(/private-pkg\d+/g, '{private-project-name}')
         .replaceAll(
