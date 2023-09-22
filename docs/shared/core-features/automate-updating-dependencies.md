@@ -15,9 +15,9 @@ src="https://www.youtube.com/embed/Ss6MfcXi0jE"
 title="How Automated Code Migrations Work"
 /%}
 
-Nx knows where its configuration files are and can therefore make sure they match the expected format. This automated update process, commonly referred to as "migration," becomes even more powerful when you leverage [Nx plugins](/packages). Nx plugins, which are NPM packages with a range of capabilities (code generation, task automation...), offer targeted updates based on their specific areas of responsibility.
+Nx knows where its configuration files are and can therefore make sure they match the expected format. This automated update process, commonly referred to as "migration," becomes even more powerful when you leverage [Nx plugins](/nx-api). Nx plugins, which are NPM packages with a range of capabilities (code generation, task automation...), offer targeted updates based on their specific areas of responsibility.
 
-For example, the [Nx ESLint plugin](/packages/linter) excels at configuring linting in your workspace. With its understanding of the configuration file locations, this plugin can provide precise migration scripts to update ESLint packages in your `package.json` and corresponding configuration files in your workspace when a new version is released.
+For example, the [Nx ESLint plugin](/nx-api/linter) excels at configuring linting in your workspace. With its understanding of the configuration file locations, this plugin can provide precise migration scripts to update ESLint packages in your `package.json` and corresponding configuration files in your workspace when a new version is released.
 
 Updating happens in three steps:
 

@@ -1,25 +1,20 @@
-import { PackageSchemaList } from '@nx/nx-dev/feature-package-schema-viewer';
-import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
-import { GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { menusApi } from '../../../lib/menus.api';
-import { useNavToggle } from '../../../lib/navigation-toggle.effect';
-import { nxPackagesApi } from '../../../lib/packages.api';
-import { tagsApi } from '../../../lib/tags.api';
+import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
+import { menusApi } from '../../../../lib/menus.api';
+import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
+import { pkg } from '../../../../lib/rspack/pkg';
 
-export default function Package({
-  overview,
+export default function DocumentsIndex({
   menu,
   pkg,
 }: {
   menu: MenuItem[];
-  overview: string;
   pkg: ProcessedPackageMetadata;
 }): JSX.Element {
   const router = useRouter();
@@ -75,65 +70,23 @@ export default function Package({
           data-testid="wrapper"
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
-          <PackageSchemaList pkg={vm.package} overview={overview} />
+          <PackageSchemaSubList pkg={vm.package} type={'document'} />
         </div>
       </main>
     </div>
   );
 }
 
-export const getStaticPaths: GetStaticPaths = () => {
-  return {
-    paths: [
-      ...nxPackagesApi.getStaticDocumentPaths().packages.map((x) => ({
-        params: { name: x.params.segments.slice(1)[0] },
-      })),
-    ],
-    fallback: 'blocking',
+export async function getStaticProps(): Promise<{
+  props: {
+    menu: MenuItem[];
+    pkg: ProcessedPackageMetadata;
   };
-};
-
-function getData(packageName: string): {
-  menu: MenuItem[];
-  overview: string;
-  pkg: ProcessedPackageMetadata;
-} {
-  const pkg = nxPackagesApi.getPackage([packageName]);
-  const documents = new DocumentsApi({
-    id: [packageName, 'documents'].join('-'),
-    manifest: nxPackagesApi.getPackageDocuments(packageName),
-    prefix: '',
-    publicDocsRoot: 'public/documentation',
-    tagsApi,
-  });
-
-  let overview = '';
-  try {
-    overview = documents.getDocument([
-      'packages',
-      packageName,
-      'documents',
-      'overview',
-    ])['content'];
-  } catch (e) {
-    overview = pkg.description;
-  }
-
+}> {
   return {
-    menu: menusApi.getMenu('packages', 'packages'),
-    overview: overview,
-    pkg,
+    props: {
+      menu: menusApi.getMenu('nx-api', 'nx-api'),
+      pkg,
+    },
   };
-}
-export async function getStaticProps({ params }: { params: { name: string } }) {
-  try {
-    return { props: getData(params.name) };
-  } catch (e) {
-    return {
-      notFound: true,
-      props: {
-        statusCode: 404,
-      },
-    };
-  }
 }

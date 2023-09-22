@@ -30,6 +30,6 @@ export const schema = {
   description: 'Serve a web application.',
   aliases: [],
   hidden: false,
-  path: '/packages/rspack/src/executors/dev-server/schema.json',
+  path: '/nx-api/rspack/src/executors/dev-server/schema.json',
   type: 'executor',
 };

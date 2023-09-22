@@ -17,7 +17,7 @@ Nx plugins help you scaffold new projects, pre-configure tooling, follow best pr
 
 {% cards cols="2" %}
 
-{% card title="Browse Existing Plugins" description="Find a plugin to use" url="/extending-nx/registry" /%}
+{% card title="Browse Existing Plugins" description="Find a plugin to use" url="/plugin-registry" /%}
 {% card title="Use Task Executors" description="Run operations on your code" url="/core-features/plugin-features/use-task-executors" /%}
 {% card title="Use Code Generators" description="Create or modify code" url="/core-features/plugin-features/use-code-generators" /%}
 

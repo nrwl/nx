@@ -1,27 +1,21 @@
-import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
-import {
-  ProcessedPackageMetadata,
-  SchemaMetadata,
-} from '@nx/nx-dev/models-package';
+import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
-import { GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
+import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
 import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
-import { nxPackagesApi } from '../../../../lib/packages.api';
+import { pkg } from '../../../../lib/rspack/pkg';
 
-export default function PackageExecutor({
+export default function ExecutorsIndex({
   menu,
   pkg,
-  schema,
 }: {
   menu: MenuItem[];
   pkg: ProcessedPackageMetadata;
-  schema: SchemaMetadata;
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -43,11 +37,7 @@ export default function PackageExecutor({
     return () => router.events.off('routeChangeComplete', handleRouteChange);
   }, [router, wrapperElement]);
 
-  const vm: {
-    menu: Menu;
-    package: ProcessedPackageMetadata;
-    schema: SchemaMetadata;
-  } = {
+  const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
@@ -55,7 +45,6 @@ export default function PackageExecutor({
       ),
     },
     package: pkg,
-    schema: schema,
   };
 
   /**
@@ -81,60 +70,23 @@ export default function PackageExecutor({
           data-testid="wrapper"
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
-          <PackageSchemaViewer pkg={vm.package} schema={vm.schema} />
+          <PackageSchemaSubList pkg={vm.package} type={'executor'} />
         </div>
       </main>
     </div>
   );
 }
 
-export const getStaticPaths: GetStaticPaths = () => {
-  return {
-    paths: [
-      ...nxPackagesApi.getStaticDocumentPaths().executors.map((x) => ({
-        params: {
-          name: x.params.segments.slice(1)[0],
-          segments: x.params.segments.slice(3),
-        },
-      })),
-    ],
-    fallback: 'blocking',
+export async function getStaticProps(): Promise<{
+  props: {
+    menu: MenuItem[];
+    pkg: ProcessedPackageMetadata;
   };
-};
-
-function getData(
-  packageName: string,
-  segments: string[]
-): {
-  pkg: ProcessedPackageMetadata;
-  schema: SchemaMetadata;
-  menu: MenuItem[];
-} {
+}> {
   return {
-    pkg: nxPackagesApi.getPackage([packageName]),
-    schema: nxPackagesApi.getSchemaMetadata(
-      nxPackagesApi.getPackageFileMetadatas(packageName, 'executors')[
-        '/' + ['packages', packageName, 'executors', ...segments].join('/')
-      ]
-    ),
-    menu: menusApi.getMenu('packages', 'packages'),
+    props: {
+      menu: menusApi.getMenu('nx-api', 'nx-api'),
+      pkg,
+    },
   };
-}
-export async function getStaticProps({
-  params,
-}: {
-  params: { name: string; segments: string[] };
-}) {
-  try {
-    return {
-      props: getData(params.name, params.segments),
-    };
-  } catch (e) {
-    return {
-      notFound: true,
-      props: {
-        statusCode: 404,
-      },
-    };
-  }
 }

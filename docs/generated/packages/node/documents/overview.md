@@ -86,5 +86,5 @@ For additional information on how to debug Node applications, see the [Node.js d
 
 ## More Documentation
 
-- [Using Cypress](/packages/cypress)
-- [Using Jest](/packages/jest)
+- [Using Cypress](/nx-api/cypress)
+- [Using Jest](/nx-api/jest)

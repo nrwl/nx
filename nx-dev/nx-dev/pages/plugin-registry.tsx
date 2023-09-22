@@ -1,18 +1,13 @@
 import { getBasicPluginsSection } from '@nx/nx-dev/data-access-menu';
 import { Menu } from '@nx/nx-dev/models-menu';
-import {
-  Breadcrumbs,
-  DocumentationHeader,
-  Footer,
-  SidebarContainer,
-} from '@nx/nx-dev/ui-common';
+import { Breadcrumbs, DocumentationHeader, Footer } from '@nx/nx-dev/ui-common';
 import { PluginDirectory } from '@nx/nx-dev/ui-community';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { useRef } from 'react';
-import { menusApi } from '../../lib/menus.api';
-import { useNavToggle } from '../../lib/navigation-toggle.effect';
-import { nxPackagesApi } from '../../lib/packages.api';
+import { menusApi } from '../lib/menus.api';
+import { useNavToggle } from '../lib/navigation-toggle.effect';
+import { nxPackagesApi } from '../lib/packages.api';
 
 declare const fetch: any;
 let qualityIndicators = require('./quality-indicators.json');
@@ -111,7 +106,6 @@ export default function Browse(props: BrowseProps): JSX.Element {
           role="main"
           className="flex h-full flex-1 overflow-y-hidden"
         >
-          <SidebarContainer menu={vm.menu} navIsOpen={navIsOpen} />
           <div
             ref={wrapperElement}
             id="wrapper"

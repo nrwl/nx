@@ -160,7 +160,7 @@ export async function getStaticProps(): Promise<{
   return {
     props: {
       packages: nxPackagesApi.getRootPackageIndex(),
-      menu: menusApi.getMenu('packages', ''),
+      menu: menusApi.getMenu('nx-api', ''),
     },
   };
 }

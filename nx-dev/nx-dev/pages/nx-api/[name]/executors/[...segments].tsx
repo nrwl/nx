@@ -1,10 +1,11 @@
-import { DocumentsApi } from '@nx/nx-dev/data-access-documents/node-only';
+import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
-import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import {
+  ProcessedPackageMetadata,
+  SchemaMetadata,
+} from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
@@ -12,20 +13,15 @@ import { useEffect, useRef } from 'react';
 import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../../../lib/packages.api';
-import { tagsApi } from '../../../../lib/tags.api';
-import { fetchGithubStarCount } from '../../../../lib/githubStars.api';
 
-export default function PackageDocument({
-  document,
+export default function PackageExecutor({
   menu,
-  relatedDocuments,
-  widgetData,
+  pkg,
+  schema,
 }: {
-  document: ProcessedDocument;
   menu: MenuItem[];
   pkg: ProcessedPackageMetadata;
-  relatedDocuments: RelatedDocument[];
-  widgetData: { githubStarsCount: number };
+  schema: SchemaMetadata;
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -48,19 +44,25 @@ export default function PackageDocument({
   }, [router, wrapperElement]);
 
   const vm: {
-    document: ProcessedDocument;
     menu: Menu;
-    relatedDocuments: RelatedDocument[];
+    package: ProcessedPackageMetadata;
+    schema: SchemaMetadata;
   } = {
-    document,
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
         'id'
       ),
     },
-    relatedDocuments,
+    package: pkg,
+    schema: schema,
   };
+
+  /**
+   * Show either the docviewer or the package view depending on:
+   * - docviewer: it is a documentation document
+   * - packageviewer: it is package generated documentation
+   */
 
   return (
     <div id="shell" className="flex h-full flex-col">
@@ -79,11 +81,7 @@ export default function PackageDocument({
           data-testid="wrapper"
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
-          <DocViewer
-            document={vm.document}
-            relatedDocuments={vm.relatedDocuments}
-            widgetData={widgetData}
-          />
+          <PackageSchemaViewer pkg={vm.package} schema={vm.schema} />
         </div>
       </main>
     </div>
@@ -93,7 +91,7 @@ export default function PackageDocument({
 export const getStaticPaths: GetStaticPaths = () => {
   return {
     paths: [
-      ...nxPackagesApi.getStaticDocumentPaths().documents.map((x) => ({
+      ...nxPackagesApi.getStaticDocumentPaths().executors.map((x) => ({
         params: {
           name: x.params.segments.slice(1)[0],
           segments: x.params.segments.slice(3),
@@ -104,34 +102,32 @@ export const getStaticPaths: GetStaticPaths = () => {
   };
 };
 
+function getData(
+  packageName: string,
+  segments: string[]
+): {
+  pkg: ProcessedPackageMetadata;
+  schema: SchemaMetadata;
+  menu: MenuItem[];
+} {
+  return {
+    pkg: nxPackagesApi.getPackage([packageName]),
+    schema: nxPackagesApi.getSchemaMetadata(
+      nxPackagesApi.getPackageFileMetadatas(packageName, 'executors')[
+        '/' + ['nx-api', packageName, 'executors', ...segments].join('/')
+      ]
+    ),
+    menu: menusApi.getMenu('nx-api', 'nx-api'),
+  };
+}
 export async function getStaticProps({
   params,
 }: {
   params: { name: string; segments: string[] };
 }) {
   try {
-    const segments = ['packages', params.name, 'documents', ...params.segments];
-    const documents = new DocumentsApi({
-      id: [params.name, 'documents'].join('-'),
-      manifest: nxPackagesApi.getPackageDocuments(params.name),
-      prefix: '',
-      publicDocsRoot: 'public/documentation',
-      tagsApi,
-    });
-    const document = documents.getDocument(segments);
-
     return {
-      props: {
-        pkg: nxPackagesApi.getPackage([params.name]),
-        document,
-        widgetData: {
-          githubStarsCount: await fetchGithubStarCount(),
-        },
-        relatedDocuments: tagsApi
-          .getAssociatedItemsFromTags(document.tags)
-          .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
-        menu: menusApi.getMenu('packages', ''),
-      },
+      props: getData(params.name, params.segments),
     };
   } catch (e) {
     return {

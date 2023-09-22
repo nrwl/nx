@@ -338,6 +338,6 @@ To serve the application at `http://localhost:4200`.
 
 A larger example including libraries, test and more is available at [Nx Svelte Example](https://github.com/nrwl/nx-recipes/tree/main/svelte) on Github.
 
-- [Nx Vite Plugin](https://nx.dev/packages/vite)
+- [Nx Vite Plugin](/nx-api/vite)
 - [Vite](https://vitejs.dev/)
 - [Svelte](https://svelte.dev/)

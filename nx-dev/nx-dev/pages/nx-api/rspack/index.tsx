@@ -1,27 +1,24 @@
-import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
+import { PackageSchemaList } from '@nx/nx-dev/feature-package-schema-viewer';
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
-import {
-  ProcessedPackageMetadata,
-  SchemaMetadata,
-} from '@nx/nx-dev/models-package';
+import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { menusApi } from '../../../../lib/menus.api';
-import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
-import { schema } from '../../../../lib/rspack/schema/generators/init';
-import { pkg } from '../../../../lib/rspack/pkg';
+import { menusApi } from '../../../lib/menus.api';
+import { useNavToggle } from '../../../lib/navigation-toggle.effect';
+import { content } from '../../../lib/rspack/content/overview';
+import { pkg } from '../../../lib/rspack/pkg';
 
-export default function InitGenerator({
+export default function RspackIndex({
+  overview,
   menu,
   pkg,
-  schema,
 }: {
   menu: MenuItem[];
+  overview: string;
   pkg: ProcessedPackageMetadata;
-  schema: SchemaMetadata;
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -43,11 +40,7 @@ export default function InitGenerator({
     return () => router.events.off('routeChangeComplete', handleRouteChange);
   }, [router, wrapperElement]);
 
-  const vm: {
-    menu: Menu;
-    package: ProcessedPackageMetadata;
-    schema: SchemaMetadata;
-  } = {
+  const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
@@ -55,7 +48,6 @@ export default function InitGenerator({
       ),
     },
     package: pkg,
-    schema: schema,
   };
 
   /**
@@ -81,7 +73,7 @@ export default function InitGenerator({
           data-testid="wrapper"
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
-          <PackageSchemaViewer pkg={vm.package} schema={vm.schema} />
+          <PackageSchemaList pkg={vm.package} overview={overview} />
         </div>
       </main>
     </div>
@@ -91,9 +83,9 @@ export default function InitGenerator({
 export async function getStaticProps() {
   return {
     props: {
+      menu: menusApi.getMenu('nx-api', 'nx-api'),
+      overview: content,
       pkg,
-      schema,
-      menu: menusApi.getMenu('packages', 'packages'),
     },
   };
 }

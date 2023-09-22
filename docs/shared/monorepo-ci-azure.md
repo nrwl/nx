@@ -195,6 +195,6 @@ jobs:
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint --parallel=3 & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t test --parallel=3 --configuration=ci & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t build --parallel=3
 ```
 
-You can also use our [ci-workflow generator](/packages/workspace/generators/ci-workflow) to generate the pipeline file.
+You can also use our [ci-workflow generator](/nx-api/workspace/generators/ci-workflow) to generate the pipeline file.
 
 {% /nx-cloud-section %}

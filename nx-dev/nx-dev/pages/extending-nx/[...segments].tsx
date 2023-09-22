@@ -85,9 +85,7 @@ export default function Pages({
 
 export const getStaticPaths: GetStaticPaths = () => {
   return {
-    paths: nxPluginsApi
-      .getSlugsStaticDocumentPaths()
-      .filter((v) => v !== '/extending-nx/registry'),
+    paths: nxPluginsApi.getSlugsStaticDocumentPaths(),
     fallback: 'blocking',
   };
 };

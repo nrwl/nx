@@ -70,7 +70,7 @@ nx build my-app
 
 ### Generate a non-React project using Rspack
 
-You can generate a [Web](/packages/web) application, and then use the \`@nx/rspack:configuration\` generator to configure the build and serve targets.
+You can generate a [Web](/nx-api/web) application, and then use the \`@nx/rspack:configuration\` generator to configure the build and serve targets.
 
 Make sure you have the Web plugin installed.
 
@@ -109,7 +109,7 @@ nx g @nx/rspack:configuration --project=my-app
 You can use the \`@nx/rspack:configuration\` generator to change your React or Web project to use Rspack.
 This generator will modify your project's configuration to use Rspack, and it will also install all the necessary dependencies.
 
-You can read more about this generator on the [\`@nx/rspack:configuration\`](/packages/rspack/generators/configuration) generator page.
+You can read more about this generator on the [\`@nx/rspack:configuration\`](/nx-api/rspack/generators/configuration) generator page.
 
 ### Initialize Rspack
 

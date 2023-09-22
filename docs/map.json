@@ -1418,7 +1418,7 @@
               "id": "skip-nx-cache-flag",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/packages/nx/documents/affected#skip-nx-cache",
+              "path": "/nx-api/nx/documents/affected#skip-nx-cache",
               "isExternal": true
             },
             {
@@ -1486,14 +1486,6 @@
               "id": "getting-started",
               "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
               "file": "shared/plugins/intro"
-            },
-            {
-              "name": "Plugin Registry",
-              "description": "Browse official and community plugins",
-              "id": "registry",
-              "file": "",
-              "path": "/extending-nx/registry",
-              "isExternal": false
             }
           ]
         },
@@ -1915,7 +1907,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/workspace",
+              "path": "/nx-api/workspace",
               "file": "shared/packages/workspace/workspace-plugin"
             },
             {
@@ -1933,7 +1925,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/plugin",
+              "path": "/nx-api/plugin",
               "file": "shared/packages/plugin/plugin"
             }
           ]
@@ -1963,7 +1955,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/js",
+              "path": "/nx-api/js",
               "file": "shared/packages/js/js-plugin"
             }
           ]
@@ -1976,7 +1968,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/web",
+              "path": "/nx-api/web",
               "file": "shared/packages/web/web-plugin"
             }
           ]
@@ -1989,7 +1981,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/esbuild",
+              "path": "/nx-api/esbuild",
               "file": "shared/packages/esbuild/esbuild-plugin"
             }
           ]
@@ -2001,7 +1993,7 @@
           "itemList": [
             {
               "id": "overview",
-              "path": "/packages/vite",
+              "path": "/nx-api/vite",
               "name": "Overview of the Nx Vite Plugin",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
@@ -2015,7 +2007,7 @@
           "itemList": [
             {
               "id": "overview",
-              "path": "/packages/vue",
+              "path": "/nx-api/vue",
               "name": "Overview of the Nx Vue Plugin",
               "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
               "file": "shared/packages/vue/vue-plugin"
@@ -2029,7 +2021,7 @@
           "itemList": [
             {
               "id": "overview",
-              "path": "/packages/webpack",
+              "path": "/nx-api/webpack",
               "name": "Overview of the Nx Webpack Plugin",
               "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
               "file": "shared/packages/webpack/plugin-overview"
@@ -2044,7 +2036,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/angular",
+              "path": "/nx-api/angular",
               "file": "shared/packages/angular/angular-plugin"
             },
             {
@@ -2063,7 +2055,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/react",
+              "path": "/nx-api/react",
               "file": "shared/packages/react/react-plugin"
             }
           ]
@@ -2076,7 +2068,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/jest",
+              "path": "/nx-api/jest",
               "file": "shared/packages/jest/jest-plugin"
             }
           ]
@@ -2089,7 +2081,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/cypress",
+              "path": "/nx-api/cypress",
               "file": "shared/packages/cypress/cypress-plugin"
             }
           ]
@@ -2102,7 +2094,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/playwright",
+              "path": "/nx-api/playwright",
               "file": "shared/packages/playwright/playwright-plugin"
             }
           ]
@@ -2116,7 +2108,7 @@
               "id": "overview",
               "name": "Nx Storybook Plugin Overview",
               "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
-              "path": "/packages/storybook",
+              "path": "/nx-api/storybook",
               "file": "shared/packages/storybook/plugin-overview"
             },
             {
@@ -2141,7 +2133,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/linter",
+              "path": "/nx-api/linter",
               "file": "shared/packages/linter/linter-plugin"
             }
           ]
@@ -2154,19 +2146,19 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/eslint-plugin",
+              "path": "/nx-api/eslint-plugin",
               "file": "shared/packages/linter/eslint-plugin"
             },
             {
               "id": "enforce-module-boundaries",
               "name": "The `enforce-module-boundaries` rule",
-              "path": "/packages/eslint-plugin",
+              "path": "/nx-api/eslint-plugin",
               "file": "shared/packages/linter/enforce-module-boundaries"
             },
             {
               "id": "dependency-checks",
               "name": "The `dependency-checks` rule",
-              "path": "/packages/eslint-plugin",
+              "path": "/nx-api/eslint-plugin",
               "file": "shared/packages/linter/dependency-checks"
             }
           ]
@@ -2179,7 +2171,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/node",
+              "path": "/nx-api/node",
               "file": "shared/packages/node/node-plugin"
             }
           ]
@@ -2192,7 +2184,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/express",
+              "path": "/nx-api/express",
               "file": "shared/packages/express/express-plugin"
             }
           ]
@@ -2205,7 +2197,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/nest",
+              "path": "/nx-api/nest",
               "file": "shared/packages/nest/nest-plugin"
             }
           ]
@@ -2218,7 +2210,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/next",
+              "path": "/nx-api/next",
               "file": "shared/packages/next/plugin-overview"
             }
           ]
@@ -2231,7 +2223,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/detox",
+              "path": "/nx-api/detox",
               "file": "shared/packages/detox/detox-plugin"
             }
           ]
@@ -2244,7 +2236,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/react-native",
+              "path": "/nx-api/react-native",
               "file": "shared/packages/react-native/react-native-plugin"
             }
           ]
@@ -2257,7 +2249,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/expo",
+              "path": "/nx-api/expo",
               "file": "shared/packages/expo/expo-plugin"
             }
           ]

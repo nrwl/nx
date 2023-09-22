@@ -1,29 +1,22 @@
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
+import { GetStaticPaths } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
+import { PackageSchemaSubList } from '@nx/nx-dev/feature-package-schema-viewer/src/lib/package-schema-sub-list';
 import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
-import { content } from '../../../../lib/rspack/content/rspack-plugin';
-import { pkg } from '../../../../lib/rspack/pkg';
-import { fetchGithubStarCount } from '../../../../lib/githubStars.api';
+import { nxPackagesApi } from '../../../../lib/packages.api';
 
-export default function RspackPlugins({
-  document,
+export default function ExecutorsIndex({
   menu,
-  relatedDocuments,
-  widgetData,
+  pkg,
 }: {
-  document: ProcessedDocument;
   menu: MenuItem[];
   pkg: ProcessedPackageMetadata;
-  relatedDocuments: RelatedDocument[];
-  widgetData: { githubStarsCount: number };
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -45,20 +38,21 @@ export default function RspackPlugins({
     return () => router.events.off('routeChangeComplete', handleRouteChange);
   }, [router, wrapperElement]);
 
-  const vm: {
-    document: ProcessedDocument;
-    menu: Menu;
-    relatedDocuments: RelatedDocument[];
-  } = {
-    document,
+  const vm: { menu: Menu; package: ProcessedPackageMetadata } = {
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
         'id'
       ),
     },
-    relatedDocuments,
+    package: pkg,
   };
+
+  /**
+   * Show either the docviewer or the package view depending on:
+   * - docviewer: it is a documentation document
+   * - packageviewer: it is package generated documentation
+   */
 
   return (
     <div id="shell" className="flex h-full flex-col">
@@ -77,37 +71,38 @@ export default function RspackPlugins({
           data-testid="wrapper"
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
-          <DocViewer
-            document={vm.document}
-            relatedDocuments={vm.relatedDocuments}
-            widgetData={widgetData}
-          />
+          <PackageSchemaSubList pkg={vm.package} type={'executor'} />
         </div>
       </main>
     </div>
   );
 }
 
-export async function getStaticProps() {
-  const document = {
-    content: content,
-    description: 'Rspack plugins',
-    filePath: '',
-    id: 'rspack-plugins',
-    name: 'Rspack plugins',
-    relatedDocuments: {},
-    tags: [],
+export const getStaticPaths: GetStaticPaths = () => {
+  return {
+    paths: [
+      ...nxPackagesApi.getStaticDocumentPaths().packages.map((x) => ({
+        params: { name: x.params.segments.slice(1)[0] },
+      })),
+    ],
+    fallback: 'blocking',
   };
-
+};
+export async function getStaticProps({
+  params,
+}: {
+  params: { name: string };
+}): Promise<{
+  props: {
+    menu: MenuItem[];
+    pkg: ProcessedPackageMetadata;
+  };
+}> {
+  const pkg = nxPackagesApi.getPackage([params.name]);
   return {
     props: {
+      menu: menusApi.getMenu('nx-api', 'nx-api'),
       pkg,
-      document,
-      widgetData: {
-        githubStarsCount: await fetchGithubStarCount(),
-      },
-      relatedDocuments: [],
-      menu: menusApi.getMenu('packages', ''),
     },
   };
 }

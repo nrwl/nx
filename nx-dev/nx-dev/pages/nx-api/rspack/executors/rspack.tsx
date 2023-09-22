@@ -1,29 +1,27 @@
+import { PackageSchemaViewer } from '@nx/nx-dev/feature-package-schema-viewer';
 import { getPackagesSections } from '@nx/nx-dev/data-access-menu';
 import { sortCorePackagesFirst } from '@nx/nx-dev/data-access-packages';
-import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
 import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
-import { ProcessedPackageMetadata } from '@nx/nx-dev/models-package';
+import {
+  ProcessedPackageMetadata,
+  SchemaMetadata,
+} from '@nx/nx-dev/models-package';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
 import { menusApi } from '../../../../lib/menus.api';
 import { useNavToggle } from '../../../../lib/navigation-toggle.effect';
-import { content } from '../../../../lib/rspack/content/overview';
+import { schema } from '../../../../lib/rspack/schema/executors/rspack';
 import { pkg } from '../../../../lib/rspack/pkg';
-import { fetchGithubStarCount } from '../../../../lib/githubStars.api';
 
-export default function Overview({
-  document,
+export default function RspackExecutor({
   menu,
-  relatedDocuments,
-  widgetData,
+  pkg,
+  schema,
 }: {
-  document: ProcessedDocument;
   menu: MenuItem[];
   pkg: ProcessedPackageMetadata;
-  relatedDocuments: RelatedDocument[];
-  widgetData: { githubStarsCount: number };
+  schema: SchemaMetadata;
 }): JSX.Element {
   const router = useRouter();
   const { toggleNav, navIsOpen } = useNavToggle();
@@ -46,19 +44,25 @@ export default function Overview({
   }, [router, wrapperElement]);
 
   const vm: {
-    document: ProcessedDocument;
     menu: Menu;
-    relatedDocuments: RelatedDocument[];
+    package: ProcessedPackageMetadata;
+    schema: SchemaMetadata;
   } = {
-    document,
     menu: {
       sections: sortCorePackagesFirst<MenuSection>(
         getPackagesSections(menu),
         'id'
       ),
     },
-    relatedDocuments,
+    package: pkg,
+    schema: schema,
   };
+
+  /**
+   * Show either the docviewer or the package view depending on:
+   * - docviewer: it is a documentation document
+   * - packageviewer: it is package generated documentation
+   */
 
   return (
     <div id="shell" className="flex h-full flex-col">
@@ -77,11 +81,7 @@ export default function Overview({
           data-testid="wrapper"
           className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
         >
-          <DocViewer
-            document={vm.document}
-            relatedDocuments={vm.relatedDocuments}
-            widgetData={widgetData}
-          />
+          <PackageSchemaViewer pkg={vm.package} schema={vm.schema} />
         </div>
       </main>
     </div>
@@ -89,25 +89,11 @@ export default function Overview({
 }
 
 export async function getStaticProps() {
-  const document = {
-    content: content,
-    description: '',
-    filePath: '',
-    id: 'overview',
-    name: 'Overview of the Nx Rspack Plugin',
-    relatedDocuments: {},
-    tags: [],
-  };
-
   return {
     props: {
       pkg,
-      document,
-      widgetData: {
-        githubStarsCount: await fetchGithubStarCount(),
-      },
-      relatedDocuments: [],
-      menu: menusApi.getMenu('packages', ''),
+      schema,
+      menu: menusApi.getMenu('nx-api', 'nx-api'),
     },
   };
 }
