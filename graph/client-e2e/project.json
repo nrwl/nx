@@ -52,6 +52,9 @@
       "outputs": [],
       "options": {
         "commands": [
+          "ls -lah /home/workflows",
+          "ls -lah /home/workflows/.cache/Cypress",
+          "ls -lah /home/workflows/.cache",
           "npx nx e2e-base e2e-graph-client --configuration dev",
           "npx nx e2e-base e2e-graph-client --configuration release",
           "npx nx e2e-base e2e-graph-client --configuration release-static"
