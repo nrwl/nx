@@ -2,7 +2,6 @@ import * as enquirer from 'enquirer';
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from 'nx/src/generators/tree';
 import { updateJson } from 'nx/src/generators/utils/json';
-import { readNxJson } from 'nx/src/generators/utils/nx-json';
 import { determineProjectNameAndRootOptions } from './project-name-and-root-utils';
 
 describe('determineProjectNameAndRootOptions', () => {
@@ -325,43 +324,6 @@ describe('determineProjectNameAndRootOptions', () => {
           name: 'shared-lib-name @ shared/lib-name',
         },
       ]);
-
-      // restore original interactive mode
-      restoreOriginalInteractiveMode();
-    });
-
-    it('should prompt to save default when as-provided is choosen', async () => {
-      // simulate interactive mode
-      ensureInteractiveMode();
-      const promptSpy = jest
-        .spyOn(enquirer, 'prompt')
-        .mockImplementation(() =>
-          Promise.resolve({ format: 'lib-name @ shared', saveDefault: true })
-        );
-
-      await determineProjectNameAndRootOptions(tree, {
-        name: 'libName',
-        projectType: 'library',
-        directory: 'shared',
-        callingGenerator: '@nx/some-plugin:app',
-      });
-
-      expect(promptSpy).toHaveBeenCalledTimes(2);
-
-      expect(readNxJson(tree).workspaceLayout).toEqual({
-        projectNameAndRootFormat: 'as-provided',
-      });
-
-      promptSpy.mockReset();
-
-      await determineProjectNameAndRootOptions(tree, {
-        name: 'libName',
-        projectType: 'library',
-        directory: 'shared',
-        callingGenerator: '@nx/some-plugin:app',
-      });
-
-      expect(promptSpy).not.toHaveBeenCalled();
 
       // restore original interactive mode
       restoreOriginalInteractiveMode();

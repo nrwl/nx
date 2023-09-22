@@ -19,8 +19,12 @@
         }
       }
     },
+    "copy-native-package-directories": {
+      "command": "cp -R build/packages/nx/native-packages/* build/packages"
+    },
     "artifacts": {
-      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages/nx/native-packages"
+      "dependsOn": ["copy-native-package-directories"],
+      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages"
     },
     "build-base": {
       "executor": "@nx/js:tsc",
