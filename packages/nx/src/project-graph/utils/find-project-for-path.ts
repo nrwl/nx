@@ -8,6 +8,8 @@ export type ProjectRootMappings = Map<string, string>;
 /**
  * This creates a map of project roots to project names to easily look up the project of a file
  * @param projects This is the map of project configurations commonly found in "workspace.json"
+ *
+ * @deprecated Use {@link createProjectRootMappings} instead, it accepts Record<string, ProjectConfiguration> now.
  */
 export function createProjectRootMappingsFromProjectConfigurations(
   projects: Record<string, ProjectConfiguration>
@@ -22,14 +24,15 @@ export function createProjectRootMappingsFromProjectConfigurations(
 
 /**
  * This creates a map of project roots to project names to easily look up the project of a file
- * @param nodes This is the nodes from the project graph
+ * @param nodes This is the nodes from the project graph or a Record<string, ProjectConfiguration>
  */
 export function createProjectRootMappings(
-  nodes: Record<string, ProjectGraphProjectNode>
+  nodes: Record<string, ProjectGraphProjectNode | ProjectConfiguration>
 ): ProjectRootMappings {
   const projectRootMappings = new Map<string, string>();
   for (const projectName of Object.keys(nodes)) {
-    let root = nodes[projectName].data.root;
+    const project = nodes[projectName];
+    const { root } = 'data' in project ? project.data : project;
 
     projectRootMappings.set(normalizeProjectRoot(root), projectName);
   }

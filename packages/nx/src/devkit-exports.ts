@@ -250,3 +250,8 @@ export { cacheDir } from './utils/cache-directory';
  * @category Utils
  */
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
+
+export {
+  createProjectRootMappings,
+  findProjectForPath,
+} from './project-graph/utils/find-project-for-path';
