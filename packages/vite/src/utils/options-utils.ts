@@ -89,10 +89,10 @@ export function getViteSharedConfig(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  const root = relative(
-    context.cwd,
-    joinPathFragments(context.root, projectRoot)
-  );
+  const root =
+    projectRoot === '.'
+      ? process.cwd()
+      : relative(context.cwd, joinPathFragments(context.root, projectRoot));
 
   return {
     mode: options.mode,
