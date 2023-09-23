@@ -35,12 +35,7 @@ import {
   pleaseUpgrade,
   storybookMajorVersion,
 } from '../../utils/utilities';
-import {
-  coreJsVersion,
-  nxVersion,
-  storybookVersion,
-  tsNodeVersion,
-} from '../../utils/versions';
+import { coreJsVersion, nxVersion, tsNodeVersion } from '../../utils/versions';
 import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 
 export async function configurationGenerator(
