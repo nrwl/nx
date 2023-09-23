@@ -23,7 +23,7 @@ import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
 
-import minimatch = require('minimatch');
+import { glob } from './glob';
 
 export { readNxJson, updateNxJson } from './nx-json';
 
@@ -132,7 +132,7 @@ export function readProjectConfiguration(
   tree: Tree,
   projectName: string
 ): ProjectConfiguration {
-  const allProjects = readAndCombineAllProjectConfigurations(tree);
+  const allProjects = readAndCombineAllProjectConfigurations(tree, true);
   if (!allProjects[projectName]) {
     // temporary polyfill to make sure our generators work for existing angularcli workspaces
     if (tree.exists('angular.json')) {
@@ -149,10 +149,30 @@ export function readProjectConfiguration(
  * Get a map of all projects in a workspace.
  *
  * Use {@link readProjectConfiguration} if only one project is needed.
+ *
+ * @deprecated This method will be removed in Nx v18. It's usefulness is a bit hampered from including non-project.json projects which are not updateable. It also has never been truly accurate, and projects that are identified which do not contain a project.json or package.json file have never been returned. Use a combination of {@link getProjectJsonProjects} and {@link glob} instead to find the projects you wish to update.
  */
 export function getProjects(tree: Tree): Map<string, ProjectConfiguration> {
-  let allProjects = readAndCombineAllProjectConfigurations(tree);
+  let allProjects = readAndCombineAllProjectConfigurations(tree, true);
   // temporary polyfill to make sure our generators work for existing angularcli workspaces
+  if (tree.exists('angular.json')) {
+    const angularJson = toNewFormat(readJson(tree, 'angular.json'));
+    allProjects = { ...allProjects, ...angularJson.projects };
+  }
+  return new Map(
+    Object.keys(allProjects || {}).map((projectName) => {
+      return [projectName, allProjects[projectName]];
+    })
+  );
+}
+
+export function getProjectJsonProjects(
+  tree: Tree
+): Map<string, ProjectConfiguration> {
+  let allProjects = readAndCombineAllProjectConfigurations(tree, false);
+  // temporary polyfill to make sure our generators work for existing angularcli workspaces
+  // Even though these aren't **strictly** a project.json, their configuration is close enough
+  // and is updateable with updateProjectConfiguration, so we will keep that support.
   if (tree.exists('angular.json')) {
     const angularJson = toNewFormat(readJson(tree, 'angular.json'));
     allProjects = { ...allProjects, ...angularJson.projects };
@@ -176,7 +196,10 @@ export function getRelativeProjectJsonSchemaPath(
   );
 }
 
-function readAndCombineAllProjectConfigurations(tree: Tree): {
+function readAndCombineAllProjectConfigurations(
+  tree: Tree,
+  includePackageJsonProjects: boolean
+): {
   [name: string]: ProjectConfiguration;
 } {
   /**
@@ -184,22 +207,17 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
    * to ignore them for now. Plugins should add their own add/create/update methods
    * if they would like to use devkit to update inferred projects.
    */
-  const patterns = [
-    '**/project.json',
-    'project.json',
-    ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
-      readJson(tree, p)
-    ),
-  ];
+  const patterns = ['**/project.json', 'project.json'];
 
-  const globbedFiles = retrieveProjectConfigurationPathsWithoutPluginInference(
-    tree.root
-  );
-  const createdFiles = findCreatedProjectFiles(tree, patterns);
-  const deletedFiles = findDeletedProjectFiles(tree, patterns);
-  const projectFiles = [...globbedFiles, ...createdFiles].filter(
-    (r) => deletedFiles.indexOf(r) === -1
-  );
+  if (includePackageJsonProjects) {
+    patterns.push(
+      ...getGlobPatternsFromPackageManagerWorkspaces(tree.root, (p) =>
+        readJson(tree, p)
+      )
+    );
+  }
+
+  const projectFiles = glob(tree, patterns);
 
   const rootMap: Map<string, ProjectConfiguration> = new Map();
   for (const projectFile of projectFiles) {
@@ -227,58 +245,6 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
   }
 
   return readProjectConfigurationsFromRootMap(rootMap);
-}
-
-/**
- * Used to ensure that projects created during
- * the same devkit generator run show up when
- * there is no project.json file, as `glob`
- * cannot find them.
- *
- * We exclude the root `package.json` from this list unless
- * considered a project during workspace generation
- */
-function findCreatedProjectFiles(tree: Tree, globPatterns: string[]) {
-  const createdProjectFiles = [];
-
-  for (const change of tree.listChanges()) {
-    if (change.type === 'CREATE') {
-      const fileName = basename(change.path);
-      if (
-        globPatterns.some((pattern) =>
-          minimatch(change.path, pattern, { dot: true })
-        )
-      ) {
-        createdProjectFiles.push(change.path);
-      } else if (fileName === 'package.json') {
-        try {
-          const contents: PackageJson = JSON.parse(change.content.toString());
-          if (contents.nx) {
-            createdProjectFiles.push(change.path);
-          }
-        } catch {}
-      }
-    }
-  }
-  return createdProjectFiles.map(normalizePath);
-}
-
-/**
- * Used to ensure that projects created during
- * the same devkit generator run show up when
- * there is no project.json file, as `glob`
- * cannot find them.
- */
-function findDeletedProjectFiles(tree: Tree, globPatterns: string[]) {
-  return tree
-    .listChanges()
-    .filter((f) => {
-      return (
-        f.type === 'DELETE' &&
-        globPatterns.some((pattern) => minimatch(f.path, pattern))
-      );
-    })
-    .map((r) => r.path);
 }
 
 function toNewFormat(w: any): ProjectsConfigurations {

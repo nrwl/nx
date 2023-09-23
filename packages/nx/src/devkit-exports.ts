@@ -116,6 +116,7 @@ export {
   removeProjectConfiguration,
   updateProjectConfiguration,
   getProjects,
+  getProjectJsonProjects,
 } from './generators/utils/project-configuration';
 
 /**

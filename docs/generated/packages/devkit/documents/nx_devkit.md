@@ -115,6 +115,7 @@ It only uses language primitives and immutable objects
 - [getOutputsForTargetAndConfiguration](../../devkit/documents/getOutputsForTargetAndConfiguration)
 - [getPackageManagerCommand](../../devkit/documents/getPackageManagerCommand)
 - [getPackageManagerVersion](../../devkit/documents/getPackageManagerVersion)
+- [getProjectJsonProjects](../../devkit/documents/getProjectJsonProjects)
 - [getProjects](../../devkit/documents/getProjects)
 - [getWorkspaceLayout](../../devkit/documents/getWorkspaceLayout)
 - [glob](../../devkit/documents/glob)

@@ -8,6 +8,7 @@ import { readJson, writeJson } from '../utils/json';
 import {
   addProjectConfiguration,
   getProjects,
+  getProjectJsonProjects,
   readProjectConfiguration,
   removeProjectConfiguration,
   updateProjectConfiguration,
@@ -175,7 +176,7 @@ describe('project configuration', () => {
       writeJson<PackageJson>(tree, 'package.json', {
         name: '@testing/root',
         version: '0.0.1',
-        workspaces: ['*/**/package.json'],
+        workspaces: ['**/package.json'],
       });
     });
 
@@ -205,6 +206,27 @@ describe('project configuration', () => {
         name: 'proj',
         root: 'proj',
       });
+    });
+  });
+
+  describe('getProjectJsonProjects', () => {
+    it('should not find package.json based projects', () => {
+      writeJson<PackageJson>(tree, 'package.json', {
+        name: '@testing/root',
+        version: '0.0.1',
+        workspaces: ['**/package.json'],
+      });
+      writeJson<PackageJson>(tree, 'proj/package.json', {
+        name: 'proj',
+        version: '0.0.1',
+      });
+      writeJson<ProjectConfiguration>(tree, 'other/project.json', {
+        name: 'other',
+        root: 'other',
+      });
+      const projects = getProjectJsonProjects(tree);
+      expect(projects.size).toEqual(1);
+      expect(projects.has('other')).toEqual(true);
     });
   });
 });

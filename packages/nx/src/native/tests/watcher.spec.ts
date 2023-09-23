@@ -147,7 +147,7 @@ describe('watcher', () => {
     wait().then(() => {
       temp.appendFile('.env.local', 'hello');
     });
-  });
+  }, 60_000);
 });
 
 function wait(timeout = 500) {

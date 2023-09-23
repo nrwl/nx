@@ -6,7 +6,7 @@ import {
   readProjectConfiguration,
   updateNxJson,
 } from '../../generators/utils/project-configuration';
-import { readJson, writeJson } from '../../generators/utils/json';
+import { readJson, updateJson, writeJson } from '../../generators/utils/json';
 import prefixOutputs from './prefix-outputs';
 import { validateOutputs } from '../../tasks-runner/utils';
 
@@ -83,6 +83,10 @@ describe('15.0.0 migration (prefix-outputs)', () => {
   });
 
   it('should migrate package.json projects', async () => {
+    updateJson(tree, 'package.json', (j) => {
+      j.workspaces = ['proj'];
+      return j;
+    });
     writeJson(tree, 'proj/package.json', {
       name: 'proj',
       scripts: {
