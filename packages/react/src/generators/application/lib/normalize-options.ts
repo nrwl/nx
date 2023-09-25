@@ -80,6 +80,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
   normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
   normalized.devServerPort ??= findFreePort(host);
   normalized.minimal = normalized.minimal ?? false;
+  normalized.typescriptConfiguration =
+    normalized.typescriptConfiguration ?? false;
 
   return normalized;
 }

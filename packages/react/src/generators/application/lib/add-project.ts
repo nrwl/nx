@@ -70,7 +70,9 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
       isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
-        'webpack.config.js'
+        options.typescriptConfiguration
+          ? 'webpack.config.ts'
+          : 'webpack.config.js'
       ),
     },
     configurations: {

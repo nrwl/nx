@@ -194,6 +194,11 @@
       "description": "Generate a React app with a minimal setup, no separate test files.",
       "type": "boolean",
       "default": false
+    },
+    "typescriptConfiguration": {
+      "type": "boolean",
+      "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+      "default": false
     }
   },
   "required": ["name"],

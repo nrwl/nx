@@ -1,5 +1,6 @@
 import {
   generateFiles,
+  joinPathFragments,
   names,
   offsetFromRoot,
   toJS,
@@ -55,6 +56,31 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       options.appProjectRoot,
       templateVariables
     );
+
+    const configFileName = joinPathFragments(
+      options.appProjectRoot,
+      options.typescriptConfiguration
+        ? 'webpack.config.ts'
+        : 'webpack.config.js'
+    );
+
+    const configContent = options.typescriptConfiguration
+      ? `
+import { composePlugins, withNx } from '@nx/webpack';
+import { withReact } from '@nx/react';
+
+export default composePlugins(withNx(), withReact());
+`
+      : `
+const { composePlugins, withNx } = require('@nx/webpack');
+const { withReact } = require('@nx/react');
+
+module.exports = composePlugins(withNx(), withReact(), (config) => {
+  return config; // Update config as needed.
+});
+`;
+    host.write(configFileName, configContent);
+
     if (options.compiler === 'babel') {
       writeJson(host, `${options.appProjectRoot}/.babelrc`, {
         presets: [

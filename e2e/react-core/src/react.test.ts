@@ -363,6 +363,26 @@ describe('React Applications', () => {
       expect(buildResults.combinedOutput).not.toMatch(/HELLO FROM LIB/);
     }, 250_000);
   });
+
+  it('should generate a react app with webpack typescript enabled', async () => {
+    const appName = uniq('app');
+    runCLI(
+      `generate @nx/react:app ${appName} --bundler=webpack --style=scss --typescriptConfiguration=true --no-interactive`
+    );
+
+    checkFilesExist(`apps/${appName}/webpack.config.ts`);
+
+    // Check build works
+    expect(runCLI(`build ${appName}`)).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+
+    // check tests pass
+    const appTestResult = runCLI(`test ${appName}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${appName}`
+    );
+  });
 });
 
 async function testGeneratedApp(
