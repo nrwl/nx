@@ -27,8 +27,7 @@ describe('js:tsc executor', () => {
   beforeAll(() => (scope = newProject()));
   afterAll(() => cleanupProject());
 
-  // TODO: Re-enable this when it is passing again
-  xit('should create libs with js executors (--compiler=tsc)', async () => {
+  it('xxxx should create libs with js executors (--compiler=tsc)', async () => {
     const lib = uniq('lib');
     runCLI(`generate @nx/js:lib ${lib} --bundler=tsc --no-interactive`);
     const libPackageJson = readJson(`libs/${lib}/package.json`);
@@ -71,20 +70,27 @@ describe('js:tsc executor', () => {
     });
     updateFile(`libs/${lib}/docs/a/b/nested.md`, 'Nested File');
     await expect(
-      waitUntil(() =>
-        readFile(`dist/libs/${lib}/README.md`).includes(`Hello, World!`)
+      waitUntil(
+        () => readFile(`dist/libs/${lib}/README.md`).includes(`Hello, World!`),
+        { timeout: 15_000, ms: 1000 }
       )
     ).resolves.not.toThrow();
     await expect(
-      waitUntil(() =>
-        readFile(`dist/libs/${lib}/docs/a/b/nested.md`).includes(`Nested File`)
+      waitUntil(
+        () =>
+          readFile(`dist/libs/${lib}/docs/a/b/nested.md`).includes(
+            `Nested File`
+          ),
+        { timeout: 15_000, ms: 1000 }
       )
     ).resolves.not.toThrow();
     await expect(
-      waitUntil(() =>
-        readFile(`dist/libs/${lib}/package.json`).includes(
-          `"version": "999.9.9"`
-        )
+      waitUntil(
+        () =>
+          readFile(`dist/libs/${lib}/package.json`).includes(
+            `"version": "999.9.9"`
+          ),
+        { timeout: 15_000, ms: 1000 }
       )
     ).resolves.not.toThrow();
     libBuildProcess.kill();
