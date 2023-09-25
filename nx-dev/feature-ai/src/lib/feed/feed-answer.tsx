@@ -67,8 +67,8 @@ export function FeedAnswer({
         <div>
           <div className="text-lg flex gap-2 items-center text-slate-900 dark:text-slate-100">
             Nx Assistant{' '}
-            <span className="rounded-md bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 text-xs font-medium text-red-600 dark:text-red-400">
-              alpha
+            <span className="rounded-md bg-yellow-50 dark:bg-yellow-900/30 px-1.5 py-0.5 text-xs font-medium text-yellow-600 dark:text-yellow-400">
+              beta
             </span>
           </div>
           <p className="mt-0.5 flex items-center gap-x-1 text-sm text-slate-500">
