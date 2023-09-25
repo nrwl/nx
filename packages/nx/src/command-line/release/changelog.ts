@@ -1,13 +1,11 @@
 import * as chalk from 'chalk';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { FsTree } from 'nx/src/generators/tree';
 import { dirSync } from 'tmp';
-import {
-  joinPathFragments,
-  logger,
-  output,
-  workspaceRoot,
-} from '../../devkit-exports';
+import { FsTree } from '../../generators/tree';
+import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
+import { joinPathFragments } from '../../utils/path';
+import { workspaceRoot } from '../../utils/workspace-root';
 import { ChangelogOptions } from './command-object';
 import {
   GitCommit,
