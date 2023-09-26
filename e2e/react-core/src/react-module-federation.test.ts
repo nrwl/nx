@@ -292,45 +292,27 @@ describe('React Module Federation', () => {
 
     // update host and remote to use library type var
     updateFile(
-      `${shell}/module-federation.config.ts`,
+      `${shell}/module-federation.config.js`,
       stripIndents`
-      import { ModuleFederationConfig } from '@nx/webpack';
-
-      const config: ModuleFederationConfig = {
+      module.exports = {
         name: '${shell}',
         library: { type: 'var', name: '${shell}' },
         remotes: ['${remote}'],
       };
-
-      export default config;
       `
     );
 
     updateFile(
-      `${shell}/webpack.config.prod.ts`,
-      `export { default } from './webpack.config';`
-    );
-
-    updateFile(
-      `${remote}/module-federation.config.ts`,
+      `${remote}/module-federation.config.js`,
       stripIndents`
-      import { ModuleFederationConfig } from '@nx/webpack';
-
-      const config: ModuleFederationConfig = {
+      module.exports = {
         name: '${remote}',
         library: { type: 'var', name: '${remote}' },
         exposes: {
           './Module': './src/remote-entry.ts',
         },
       };
-
-      export default config;
       `
-    );
-
-    updateFile(
-      `${remote}/webpack.config.prod.ts`,
-      `export { default } from './webpack.config';`
     );
 
     // Update host e2e test to check that the remote works with library type var via navigation
