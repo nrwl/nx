@@ -32,7 +32,7 @@ export async function hostGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
-    typescriptConfiguration: schema.typescriptConfiguration ?? true,
+    typescriptConfiguration: schema.typescriptConfiguration ?? false,
   };
 
   const initTask = await applicationGenerator(host, {
