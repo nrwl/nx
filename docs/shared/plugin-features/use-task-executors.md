@@ -56,7 +56,7 @@ Each executor definition has an `executor` property and, optionally, an `options
 
 ## Running executors
 
-The [`nx run`](/packages/nx/documents/run) cli command (or the shorthand versions) can be used to run executors.
+The [`nx run`](/nx-api/nx/documents/run) cli command (or the shorthand versions) can be used to run executors.
 
 ```shell
 nx run [project]:[command]
@@ -102,7 +102,7 @@ If defining a new target that needs to run a single shell command, there is a sh
 }
 ```
 
-For more info, see the [run-commands documentation](/packages/nx/executors/run-commands)
+For more info, see the [run-commands documentation](/nx-api/nx/executors/run-commands)
 
 ## Use Executor Configurations
 

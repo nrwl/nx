@@ -107,6 +107,6 @@ export const schema = {
   description: 'Run rspack build.',
   aliases: [],
   hidden: false,
-  path: '/packages/rspack/src/executors/rspack/schema.json',
+  path: '/nx-api/rspack/src/executors/rspack/schema.json',
   type: 'executor',
 };

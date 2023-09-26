@@ -26,10 +26,7 @@ describe('implicit project dependencies', () => {
 
     applyImplicitDependencies(
       {
-        version: 2,
-        projects: {
-          proj1: { root: '', implicitDependencies: ['proj2'] },
-        },
+        proj1: { root: '', implicitDependencies: ['proj2'] },
       },
       builder
     );
@@ -57,10 +54,7 @@ describe('implicit project dependencies', () => {
 
     applyImplicitDependencies(
       {
-        version: 2,
-        projects: {
-          proj1: { root: '', implicitDependencies: ['!proj2'] },
-        },
+        proj1: { root: '', implicitDependencies: ['!proj2'] },
       },
       builder
     );

@@ -6,7 +6,7 @@ The code for this example is available on Github:
 
 **Supported Features**
 
-We'll be using an Nx plugin for Vue called [@nx/vite](https://nx.dev/packages/vite). Although we are using `@nx/vite`, not all dependencies will be able to be automatically updated. So we'll have to update any framework dependencies as needed.
+We'll be using an Nx plugin for Vue called [@nx/vite](/nx-api/vite). Although we are using `@nx/vite`, not all dependencies will be able to be automatically updated. So we'll have to update any framework dependencies as needed.
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
@@ -299,6 +299,6 @@ nx serve acme
 
 A larger example including libraries, tests, and more is available at [Nx Vue Example](https://github.com/nrwl/nx-recipes/tree/main/vue) on Github.
 
-- [Nx Vite Plugin](https://nx.dev/packages/vite)
+- [Nx Vite Plugin](/nx-api/vite)
 - [Vite](https://vitejs.dev/)
 - [Vue](https://v3.vuejs.org/)

@@ -1,4 +1,4 @@
-import { Menu } from '@nx/nx-dev/models-menu';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 import { Sidebar, SidebarMobile } from './sidebar';
 import { useMemo } from 'react';
 
@@ -9,12 +9,12 @@ const rspackSection = {
   itemList: [
     {
       id: 'documents',
-      path: '/packages/rspack/documents',
+      path: '/nx-api/rspack/documents',
       name: 'documents',
       children: [
         {
           name: 'Overview of the Nx Rspack plugin',
-          path: '/packages/rspack/documents/overview',
+          path: '/nx-api/rspack/documents/overview',
           id: 'overview',
           isExternal: false,
           children: [],
@@ -22,7 +22,7 @@ const rspackSection = {
         },
         {
           name: 'Rspack plugins',
-          path: '/packages/rspack/documents/rspack-plugins',
+          path: '/nx-api/rspack/documents/rspack-plugins',
           id: 'rspack-plugins',
           isExternal: false,
           children: [],
@@ -30,7 +30,7 @@ const rspackSection = {
         },
         {
           name: 'How to configure Rspack in your Nx workspace',
-          path: '/packages/rspack/documents/rspack-config-setup',
+          path: '/nx-api/rspack/documents/rspack-config-setup',
           id: 'rspack-config-setup',
           isExternal: false,
           children: [],
@@ -42,12 +42,12 @@ const rspackSection = {
     },
     {
       id: 'executors',
-      path: '/packages/rspack/executors',
+      path: '/nx-api/rspack/executors',
       name: 'executors',
       children: [
         {
           id: 'rspack',
-          path: '/packages/rspack/executors/rspack',
+          path: '/nx-api/rspack/executors/rspack',
           name: 'rspack',
           children: [],
           isExternal: false,
@@ -55,7 +55,7 @@ const rspackSection = {
         },
         {
           id: 'dev-server',
-          path: '/packages/rspack/executors/dev-server',
+          path: '/nx-api/rspack/executors/dev-server',
           name: 'dev-server',
           children: [],
           isExternal: false,
@@ -67,12 +67,12 @@ const rspackSection = {
     },
     {
       id: 'generators',
-      path: '/packages/rspack/generators',
+      path: '/nx-api/rspack/generators',
       name: 'generators',
       children: [
         {
           id: 'init',
-          path: '/packages/rspack/generators/init',
+          path: '/nx-api/rspack/generators/init',
           name: 'init',
           children: [],
           isExternal: false,
@@ -80,7 +80,7 @@ const rspackSection = {
         },
         {
           id: 'configuration',
-          path: '/packages/rspack/generators/configuration',
+          path: '/nx-api/rspack/generators/configuration',
           name: 'configuration',
           children: [],
           isExternal: false,
@@ -88,7 +88,7 @@ const rspackSection = {
         },
         {
           id: 'application',
-          path: '/packages/rspack/generators/application',
+          path: '/nx-api/rspack/generators/application',
           name: 'application',
           children: [],
           isExternal: false,

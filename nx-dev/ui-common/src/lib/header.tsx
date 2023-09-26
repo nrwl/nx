@@ -63,14 +63,14 @@ export function Header(): JSX.Element {
       href: '/getting-started/intro',
     },
     {
+      name: 'Blog',
+      description: 'Latest news from the Nx & Nx Cloud core team',
+      href: '/blog',
+    },
+    {
       name: 'Community',
       description: "Check how to reach out and be part of Nx' community.",
       href: '/community',
-    },
-    {
-      name: 'Extending Nx',
-      description: 'Add capabilities to your workspace with plugins.',
-      href: '/extending-nx/intro/getting-started',
     },
     {
       name: 'Nx Conf',
@@ -179,18 +179,18 @@ export function Header(): JSX.Element {
               Enterprise
             </Link>
             <Link
+              href="/blog"
+              title="Blog"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Blog
+            </Link>
+            <Link
               href="/community"
               title="Nx Community: Join us!"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               Community
-            </Link>
-            <Link
-              href="/extending-nx/registry"
-              title="Check Nx available plugins"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
-            >
-              Plugins registry
             </Link>
             <Link
               href="/conf"

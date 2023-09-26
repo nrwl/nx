@@ -25,7 +25,7 @@ import { writeFileSync } from 'fs-extra';
 import { fileExists } from 'nx/src/utils/fileutils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { existsSync } from 'fs';
-import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
 
@@ -57,7 +57,7 @@ export function updatePackageJson(
 ): void {
   let packageJson: PackageJson;
   if (fileMap == null) {
-    fileMap = readProjectFileMapCache()?.projectFileMap || {};
+    fileMap = readFileMapCache()?.fileMap?.projectFileMap || {};
   }
 
   if (options.updateBuildableProjectDepsInPackageJson) {

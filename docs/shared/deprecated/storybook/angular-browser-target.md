@@ -6,12 +6,12 @@ description: This document explains the role of the browserTarget in Angular pro
 # The `browserTarget` for Angular projects with a Storybook configuration
 
 {% callout type="note" title="Note" %}
-This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/recipes/storybook/overview-angular).
+This documentation page contains information about the [Storybook plugin](/nx-api/storybook), specifically regarding [Angular projects that are using Storybook](/recipes/storybook/overview-angular).
 {% /callout %}
 
 ## Setting up `browserTarget`
 
-If you're using [Storybook](/packages/storybook) in your Angular project, you will notice that `browserTarget` is specified for the `storybook` and `build-storybook` targets, much like it is done for `serve` or other targets. Angular needs the `browserTarget` for Storybook in order to know which configuration to use for the build. If your project is buildable (it has a `build` target, and uses the main Angular builder - `@angular-devkit/build-angular:browser`) the `browserTarget` for Storybook will use the `build` target, if it's not buildable it will use the `build-storybook` target.
+If you're using [Storybook](/nx-api/storybook) in your Angular project, you will notice that `browserTarget` is specified for the `storybook` and `build-storybook` targets, much like it is done for `serve` or other targets. Angular needs the `browserTarget` for Storybook in order to know which configuration to use for the build. If your project is buildable (it has a `build` target, and uses the main Angular builder - `@angular-devkit/build-angular:browser`) the `browserTarget` for Storybook will use the `build` target, if it's not buildable it will use the `build-storybook` target.
 You do not have to do anything manually. Nx will create the configuration for you. Even if you are migrating from an older version of Nx, Nx will make sure to change your `package.json` Storybook targets to match the new schema.
 
 You can read more about the `browserTarget` in the [official Angular documentation](https://angular.io/cli/serve).

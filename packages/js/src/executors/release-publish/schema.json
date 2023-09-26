@@ -16,6 +16,10 @@
     "tag": {
       "type": "string",
       "description": "The distribution tag to apply to the published package."
+    },
+    "dryRun": {
+      "type": "boolean",
+      "description": "Whether to run the command without actually publishing the package to the registry."
     }
   },
   "required": []

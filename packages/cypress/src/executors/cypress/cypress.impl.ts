@@ -168,7 +168,7 @@ async function* startDevServer(
 
   const parsedDevServerTarget = parseTargetString(
     opts.devServerTarget,
-    context.projectGraph
+    context
   );
 
   const [targetSupportsWatchOpt] = getValueFromSchema(

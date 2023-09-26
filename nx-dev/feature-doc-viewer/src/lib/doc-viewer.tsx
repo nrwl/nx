@@ -25,7 +25,7 @@ export function DocViewer({
   const hideTableOfContent =
     router.asPath.includes('/getting-started/intro') ||
     router.asPath.includes('/extending-nx/intro/getting-started') ||
-    router.asPath.includes('/packages/devkit') ||
+    router.asPath.includes('/nx-api/devkit') ||
     router.asPath.includes('/reference/glossary');
   const ref = useRef<HTMLDivElement | null>(null);
 

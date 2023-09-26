@@ -308,7 +308,7 @@ nx g @nx/react:library orders --directory=libs/orders --unitTestRunner=vitest --
 nx g @nx/react:library shared-ui --directory=libs/shared/ui --unitTestRunner=vitest --bundler=none
 ```
 
-Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/packages/workspace/generators/move) to move a project to a different folder.
+Note how we type out the full path in the `directory` flag to place the libraries into a subfolder. You can choose whatever folder structure you like to organize your projects. If you change your mind later, you can run the [move generator](/nx-api/workspace/generators/move) to move a project to a different folder.
 
 Running the above commands should lead to the following directory structure:
 
@@ -1033,7 +1033,7 @@ Here's some more things you can dive into next:
 
 Also, make sure you
 
-- [Join the Nx community Slack](https://go.nrwl.io/join-slack) to ask questions and find out the latest news about Nx.
+- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](https://blog.nrwl.io/)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

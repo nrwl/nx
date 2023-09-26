@@ -95,7 +95,7 @@ nx g @nx/angular:service my-service
 
 ## More Documentation
 
-- [Angular Nx Tutorial](/angular-tutorial/1-code-generation)
+- [Angular Nx Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
 - [Setup Module Federation with Angular and Nx](/concepts/more-concepts/faster-builds-with-module-federation)
 - [Upgrading an AngularJS application to Angular](/recipes/angular/migration/angularjs)

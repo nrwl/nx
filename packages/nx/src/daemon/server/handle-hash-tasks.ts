@@ -19,14 +19,14 @@ export async function handleHashTasks(payload: {
 }) {
   setHashEnv(payload.env);
 
-  const { projectGraph, allWorkspaceFiles, projectFileMap } =
+  const { projectGraph, allWorkspaceFiles, fileMap } =
     await getCachedSerializedProjectGraphPromise();
   const nxJson = readNxJson();
 
   if (projectGraph !== storedProjectGraph) {
     storedProjectGraph = projectGraph;
     storedHasher = new InProcessTaskHasher(
-      projectFileMap,
+      fileMap?.projectFileMap,
       allWorkspaceFiles,
       projectGraph,
       nxJson,

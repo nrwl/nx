@@ -15,7 +15,6 @@ export {
   readWorkspaceConfig,
   readPackageJson,
 } from 'nx/src/project-graph/file-utils';
-export { ProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 export {
   getWorkspacePath,

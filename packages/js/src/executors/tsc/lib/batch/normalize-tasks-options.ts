@@ -11,7 +11,7 @@ export function normalizeTasksOptions(
   context: ExecutorContext
 ): Record<string, NormalizedExecutorOptions> {
   return Object.entries(inputs).reduce((tasksOptions, [taskName, options]) => {
-    const { project } = parseTargetString(taskName, context.projectGraph);
+    const { project } = parseTargetString(taskName, context);
     const { sourceRoot, root } =
       context.projectsConfigurations.projects[project];
     tasksOptions[taskName] = normalizeOptions(

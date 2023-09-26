@@ -149,4 +149,4 @@ nx test my-nest-lib
 
 ## More Documentation
 
-- [Using Jest](/packages/jest)
+- [Using Jest](/nx-api/jest)

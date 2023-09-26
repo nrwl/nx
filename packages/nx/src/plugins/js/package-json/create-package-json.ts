@@ -14,7 +14,7 @@ import {
   getTargetInputs,
 } from '../../../hasher/task-hasher';
 import { readNxJson } from '../../../config/configuration';
-import { readProjectFileMapCache } from '../../../project-graph/nx-deps-cache';
+import { readFileMapCache } from '../../../project-graph/nx-deps-cache';
 import { join } from 'path';
 
 interface NpmDeps {
@@ -193,7 +193,7 @@ export function findProjectsNpmDependencies(
   fileMap?: ProjectFileMap
 ): NpmDeps {
   if (fileMap == null) {
-    fileMap = readProjectFileMapCache()?.projectFileMap || {};
+    fileMap = readFileMapCache()?.fileMap?.projectFileMap || {};
   }
 
   const { selfInputs, dependencyInputs } = target

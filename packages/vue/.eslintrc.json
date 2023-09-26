@@ -33,7 +33,8 @@
               "nx",
               "typescript",
               "@nx/cypress",
-              "@nx/playwright"
+              "@nx/playwright",
+              "@nx/storybook"
             ]
           }
         ]

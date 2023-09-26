@@ -11,7 +11,7 @@ import {
 } from 'nx/src/project-graph/utils/find-project-for-path';
 import { readNxJson } from 'nx/src/config/configuration';
 import { TargetProjectLocator } from '@nx/js/src/internal';
-import { readProjectFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**
@@ -37,7 +37,7 @@ export function ensureGlobalProjectGraph(ruleName: string) {
       globalThis.projectRootMappings = createProjectRootMappings(
         projectGraph.nodes
       );
-      globalThis.projectFileMap = readProjectFileMapCache().projectFileMap;
+      globalThis.projectFileMap = readFileMapCache().fileMap.projectFileMap;
       globalThis.targetProjectLocator = new TargetProjectLocator(
         projectGraph.nodes,
         projectGraph.externalNodes

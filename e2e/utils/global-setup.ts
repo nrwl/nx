@@ -8,6 +8,8 @@ import { existsSync, removeSync } from 'fs-extra';
 import { Config } from '@jest/types';
 import * as isCI from 'is-ci';
 
+const LARGE_BUFFER = 1024 * 1000000;
+
 export default async function (globalConfig: Config.ConfigGlobals) {
   const isVerbose: boolean =
     process.env.NX_VERBOSE_LOGGING === 'true' || !!globalConfig.verbose;
@@ -33,6 +35,7 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     await new Promise<void>((res, rej) => {
       const publishProcess = exec(`pnpm nx-release --local ${publishVersion}`, {
         env: process.env,
+        maxBuffer: LARGE_BUFFER,
       });
       let logs = Buffer.from('');
       if (isVerbose) {

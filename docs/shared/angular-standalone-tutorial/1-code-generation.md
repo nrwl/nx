@@ -4,7 +4,7 @@ description: In this tutorial you'll create a frontend-focused workspace with Nx
 ---
 
 {% callout type="check" title="Looking for Angular monorepos?" %}
-This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a Angular monorepo setup then check out our [Angular monorepo tutorial](/angular-tutorial/1-code-generation).
+This tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a Angular monorepo setup then check out our [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial).
 {% /callout %}
 
 {% youtube
@@ -65,7 +65,7 @@ There are two projects that have been created for you:
 
 As far as Nx is concerned, the root-level `store` app owns every file that doesn't belong to a different project. So files in the `e2e` folder belong to the `e2e` project, everything else belongs to `store`.
 
-{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nx/cypress package page." url="/packages/cypress" /%}
+{% card title="Nx Cypress Support" description="While we see the Cypress project here, we won't go deeper on Cypress in this tutorial. You can find more materials on Nx Cypress support on the @nx/cypress package page." url="/nx-api/cypress" /%}
 
 ## Generating a component for the store
 

@@ -14,7 +14,6 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### Properties
 
-- [fileMap](../../devkit/documents/ProjectGraphBuilder#filemap): ProjectFileMap
 - [graph](../../devkit/documents/ProjectGraphBuilder#graph): ProjectGraph
 - [removedEdges](../../devkit/documents/ProjectGraphBuilder#removededges): Object
 
@@ -27,11 +26,8 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 - [addImplicitDependency](../../devkit/documents/ProjectGraphBuilder#addimplicitdependency)
 - [addNode](../../devkit/documents/ProjectGraphBuilder#addnode)
 - [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency)
-- [calculateAlreadySetTargetDeps](../../devkit/documents/ProjectGraphBuilder#calculatealreadysettargetdeps)
-- [calculateTargetDepsFromFiles](../../devkit/documents/ProjectGraphBuilder#calculatetargetdepsfromfiles)
 - [getUpdatedProjectGraph](../../devkit/documents/ProjectGraphBuilder#getupdatedprojectgraph)
 - [mergeProjectGraph](../../devkit/documents/ProjectGraphBuilder#mergeprojectgraph)
-- [removeDependenciesWithNode](../../devkit/documents/ProjectGraphBuilder#removedependencieswithnode)
 - [removeDependency](../../devkit/documents/ProjectGraphBuilder#removedependency)
 - [removeNode](../../devkit/documents/ProjectGraphBuilder#removenode)
 - [setVersion](../../devkit/documents/ProjectGraphBuilder#setversion)
@@ -40,22 +36,17 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### constructor
 
-• **new ProjectGraphBuilder**(`graph?`, `fileMap?`)
+• **new ProjectGraphBuilder**(`graph?`, `projectFileMap?`, `nonProjectFiles?`)
 
 #### Parameters
 
-| Name       | Type                                                      |
-| :--------- | :-------------------------------------------------------- |
-| `graph?`   | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
-| `fileMap?` | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
+| Name               | Type                                                      |
+| :----------------- | :-------------------------------------------------------- |
+| `graph?`           | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
+| `projectFileMap?`  | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
+| `nonProjectFiles?` | [`FileData`](../../devkit/documents/FileData)[]           |
 
 ## Properties
-
-### fileMap
-
-• `Private` `Readonly` **fileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
-
----
 
 ### graph
 
@@ -211,38 +202,6 @@ Adds static dependency from source project to target project
 
 ---
 
-### calculateAlreadySetTargetDeps
-
-▸ `Private` **calculateAlreadySetTargetDeps**(`sourceProject`): `Map`<`string`, `Map`<`string`, [`ProjectGraphDependency`](../../devkit/documents/ProjectGraphDependency)\>\>
-
-#### Parameters
-
-| Name            | Type     |
-| :-------------- | :------- |
-| `sourceProject` | `string` |
-
-#### Returns
-
-`Map`<`string`, `Map`<`string`, [`ProjectGraphDependency`](../../devkit/documents/ProjectGraphDependency)\>\>
-
----
-
-### calculateTargetDepsFromFiles
-
-▸ `Private` **calculateTargetDepsFromFiles**(`sourceProject`): `Map`<`string`, `Set`<`string`\>\>
-
-#### Parameters
-
-| Name            | Type     |
-| :-------------- | :------- |
-| `sourceProject` | `string` |
-
-#### Returns
-
-`Map`<`string`, `Set`<`string`\>\>
-
----
-
 ### getUpdatedProjectGraph
 
 ▸ **getUpdatedProjectGraph**(): [`ProjectGraph`](../../devkit/documents/ProjectGraph)
@@ -264,22 +223,6 @@ Merges the nodes and dependencies of p into the built project graph.
 | Name | Type                                                  |
 | :--- | :---------------------------------------------------- |
 | `p`  | [`ProjectGraph`](../../devkit/documents/ProjectGraph) |
-
-#### Returns
-
-`void`
-
----
-
-### removeDependenciesWithNode
-
-▸ `Private` **removeDependenciesWithNode**(`name`): `void`
-
-#### Parameters
-
-| Name   | Type     |
-| :----- | :------- |
-| `name` | `string` |
 
 #### Returns
 

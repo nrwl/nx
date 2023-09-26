@@ -1,7 +1,7 @@
 import {
-  ArrowDownIcon,
   ArrowLongDownIcon,
   ArrowLongUpIcon,
+  ArrowDownTrayIcon,
   ClockIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
@@ -110,7 +110,7 @@ export function PluginDirectory({
                 className="rounded-sm border border-slate-200 bg-white py-1 px-1 font-semibold transition hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700"
                 onClick={() => setOrderBy('npmDownloads')}
               >
-                <ArrowDownIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></ArrowDownIcon>
+                <ArrowDownTrayIcon className="h-4 w-4 inline-block mr-0.5 align-bottom"></ArrowDownTrayIcon>
                 Downloads
                 {modifiers.orderBy === 'npmDownloads' &&
                 modifiers.orderDirection === 'ASC' ? (

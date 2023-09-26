@@ -69,7 +69,7 @@ jobs:
       number-of-agents: 3
 ```
 
-You can also use our [ci-workflow generator](/packages/workspace/generators/ci-workflow) to generate the workflow file.
+You can also use our [ci-workflow generator](/nx-api/workspace/generators/ci-workflow) to generate the workflow file.
 
 ## Custom distributed CI with Nx Cloud
 

@@ -48,11 +48,11 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/webpack"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js webpack",
-          "node ./scripts/add-dependency-to-build.js webpack @nrwl/webpack"
-        ]
+        "command": "node ./scripts/copy-readme.js webpack"
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js webpack @nrwl/webpack"
     },
     "lint": {}
   }

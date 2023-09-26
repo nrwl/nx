@@ -280,11 +280,10 @@ Where new apps + libs should be placed
 
 #### Type declaration
 
-| Name                        | Type                           |
-| :-------------------------- | :----------------------------- |
-| `appsDir?`                  | `string`                       |
-| `libsDir?`                  | `string`                       |
-| `projectNameAndRootFormat?` | `"as-provided"` \| `"derived"` |
+| Name       | Type     |
+| :--------- | :------- |
+| `appsDir?` | `string` |
+| `libsDir?` | `string` |
 
 #### Inherited from
 

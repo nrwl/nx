@@ -18,7 +18,6 @@ describe('init', () => {
     expect(packageJson.dependencies['react-native']).toBeDefined();
     expect(packageJson.devDependencies['@types/node']).toBeDefined();
     expect(packageJson.devDependencies['@types/react']).toBeDefined();
-    expect(packageJson.devDependencies['@types/react-native']).toBeDefined();
   });
 
   it('should add .gitignore entries for React native files and directories', async () => {

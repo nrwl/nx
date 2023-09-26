@@ -87,7 +87,7 @@ function readSiteMapLinks(filePath: string): string[] {
  * This function checks if a link is for a private package.
  * When link is for a private package, it is not included in the sitemap.
  * However, some shared docs might be written for this private package during development.
- * @param link e.g. /packages/vite/generators/configuration
+ * @param link e.g. /nx-api/vite/generators/configuration
  * @returns true if the link is for a private package or NODE_ENV is not development, false otherwise.
  */
 function checkLinkIsForPrivatePackage(link: string) {
@@ -96,10 +96,10 @@ function checkLinkIsForPrivatePackage(link: string) {
     return false;
   }
   const pathSegments = link.split('/').filter(Boolean);
-  if (pathSegments[0] === 'packages') {
+  if (pathSegments[0] === 'nx-api') {
     const packageJsonPath = join(
       workspaceRoot,
-      pathSegments[0],
+      'packages',
       pathSegments[1],
       'package.json'
     );

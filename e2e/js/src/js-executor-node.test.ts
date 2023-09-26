@@ -50,8 +50,7 @@ describe('js:node executor', () => {
     expect(output).toContain('This is an error');
   }, 240_000);
 
-  // TODO: Re-enable this when it is passing
-  xit('should execute library compiled with rollup', async () => {
+  it('should execute library compiled with rollup', async () => {
     const rollupLib = uniq('rolluplib');
 
     runCLI(

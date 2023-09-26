@@ -1,5 +1,5 @@
 import { ProjectType } from '../config/workspace-json-project-json';
-import { createProjectFileMap, updateProjectFileMap } from './file-map-utils';
+import { createFileMap, updateFileMap } from './file-map-utils';
 
 describe('fileMapUtils', () => {
   describe('createFileMap', () => {
@@ -31,15 +31,18 @@ describe('fileMapUtils', () => {
         { file: 'tools/myfile.txt', hash: 'some-hash' },
       ];
 
-      const result = createProjectFileMap(projectsConfigurations, files);
+      const result = createFileMap(projectsConfigurations, files);
 
       expect(result).toEqual({
-        projectFileMap: {
-          demo: [{ file: 'apps/demo/src/main.ts', hash: 'some-hash' }],
-          'demo-e2e': [
-            { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash' },
-          ],
-          ui: [{ file: 'libs/ui/src/index.ts', hash: 'some-hash' }],
+        fileMap: {
+          projectFileMap: {
+            demo: [{ file: 'apps/demo/src/main.ts', hash: 'some-hash' }],
+            'demo-e2e': [
+              { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash' },
+            ],
+            ui: [{ file: 'libs/ui/src/index.ts', hash: 'some-hash' }],
+          },
+          nonProjectFiles: [{ file: 'tools/myfile.txt', hash: 'some-hash' }],
         },
         allWorkspaceFiles: [
           { file: 'apps/demo/src/main.ts', hash: 'some-hash' },
@@ -76,6 +79,7 @@ describe('fileMapUtils', () => {
         { file: 'libs/ui/src/index.ts', hash: 'some-hash' },
         { file: 'libs/ui/src/second.ts', hash: 'some-hash' },
         { file: 'tools/myfile.txt', hash: 'some-hash' },
+        { file: 'tools/secondfile.txt', hash: 'some-hash' },
       ];
 
       const projectFileMap = {
@@ -86,33 +90,47 @@ describe('fileMapUtils', () => {
           { file: 'libs/ui/src/second.ts', hash: 'some-hash' },
         ],
       };
-      const result = updateProjectFileMap(
-        projectsConfigurations,
+
+      const fileMap = {
         projectFileMap,
+        allWorkspaceFiles: files,
+        nonProjectFiles: files.filter(
+          (f) =>
+            !Object.values(projectFileMap).some((arr) =>
+              arr.some((projectFile) => projectFile.file === f.file)
+            )
+        ),
+      };
+      const result = updateFileMap(
+        projectsConfigurations,
+        fileMap,
         files,
         new Map([
           ['apps/demo/src/main.ts', 'demo-main-update'],
           ['apps/demo/src/new-main.ts', 'new-main-hash'],
         ]),
-        ['libs/ui/src/second.ts']
+        ['libs/ui/src/second.ts', 'tools/secondfile.txt']
       );
 
       expect(result).toEqual({
-        projectFileMap: {
-          demo: [
-            {
-              file: 'apps/demo/src/main.ts',
-              hash: 'demo-main-update',
-            },
-            {
-              file: 'apps/demo/src/new-main.ts',
-              hash: 'new-main-hash',
-            },
-          ],
-          'demo-e2e': [
-            { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash' },
-          ],
-          ui: [{ file: 'libs/ui/src/index.ts', hash: 'some-hash' }],
+        fileMap: {
+          projectFileMap: {
+            demo: [
+              {
+                file: 'apps/demo/src/main.ts',
+                hash: 'demo-main-update',
+              },
+              {
+                file: 'apps/demo/src/new-main.ts',
+                hash: 'new-main-hash',
+              },
+            ],
+            'demo-e2e': [
+              { file: 'apps/demo-e2e/src/main.ts', hash: 'some-hash' },
+            ],
+            ui: [{ file: 'libs/ui/src/index.ts', hash: 'some-hash' }],
+          },
+          nonProjectFiles: [{ file: 'tools/myfile.txt', hash: 'some-hash' }],
         },
         allWorkspaceFiles: [
           { file: 'apps/demo/src/main.ts', hash: 'demo-main-update' },

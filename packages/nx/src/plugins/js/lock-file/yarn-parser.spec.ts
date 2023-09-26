@@ -192,8 +192,14 @@ describe('yarn LockFile utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -510,8 +516,14 @@ describe('yarn LockFile utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -577,8 +589,14 @@ describe('yarn LockFile utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -716,8 +734,14 @@ describe('yarn LockFile utility', () => {
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -793,8 +817,14 @@ __metadata:
         const ctx: CreateDependenciesContext = {
           projects: {},
           externalNodes,
-          fileMap: {},
-          filesToProcess: {},
+          fileMap: {
+            nonProjectFiles: [],
+            projectFileMap: {},
+          },
+          filesToProcess: {
+            nonProjectFiles: [],
+            projectFileMap: {},
+          },
           nxJsonConfiguration: null,
           workspaceRoot: '/virtual',
         };
@@ -1267,8 +1297,14 @@ nx-cloud@latest:
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -1476,8 +1512,14 @@ nx-cloud@latest:
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -1533,8 +1575,14 @@ nx-cloud@latest:
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -1676,8 +1724,14 @@ type-fest@^0.20.2:
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -1789,8 +1843,14 @@ __metadata:
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -1912,8 +1972,14 @@ __metadata:
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -2149,8 +2215,14 @@ __metadata:
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };
@@ -2536,8 +2608,14 @@ __metadata:
       const ctx: CreateDependenciesContext = {
         projects: {},
         externalNodes,
-        fileMap: {},
-        filesToProcess: {},
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
         nxJsonConfiguration: null,
         workspaceRoot: '/virtual',
       };

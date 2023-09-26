@@ -112,9 +112,7 @@ Yarn Berry operates slightly differently than Yarn Classic. In order to publish 
     - localhost
   ```
 
-- Run `pnpm nx-release --local` in Terminal 2 to publish next minor version. If this version already exists, you can
-  bump the minor version in `lerna.json` to toggle the next minor. The output will report the version of published
-  packages.
+- Run `pnpm nx-release minor --local` in Terminal 2 to publish next minor version. The output will report the version of published packages.
 - Go to your target folder (e.g. `cd ./tmp`) in Terminal 2
 - Run `yarn dlx create-nx-workspace@123.4.5` in Terminal 2 (replace `123.4.5` with the version that got published).
 

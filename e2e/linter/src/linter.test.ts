@@ -558,7 +558,9 @@ describe('Linter', () => {
         bundler: 'vite',
         e2eTestRunner: 'none',
       });
-      runCLI(`generate @nx/js:lib ${mylib} --directory libs/${mylib}`);
+      runCLI(
+        `generate @nx/js:lib ${mylib} --directory libs/${mylib} --projectNameAndRootFormat as-provided`
+      );
 
       // migrate to flat structure
       runCLI(`generate @nx/linter:convert-to-flat-config`);

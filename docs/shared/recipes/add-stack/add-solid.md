@@ -312,7 +312,7 @@ Now when you serve your application, you'll see the content from the library bei
 
 ## More Documentation
 
-- [@nx/vite](/packages/vite)
-- [@nx/js](/packages/js)
-- [@nx/web](/packages/web)
+- [@nx/vite](/nx-api/vite)
+- [@nx/js](/nx-api/js)
+- [@nx/web](/nx-api/web)
 - [Solid](https://www.solidjs.com/)

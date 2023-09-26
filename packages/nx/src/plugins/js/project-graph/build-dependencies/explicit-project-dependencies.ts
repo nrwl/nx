@@ -79,7 +79,9 @@ export function buildExplicitTypeScriptDependencies(
     moduleExtensions.push('.vue');
   }
 
-  for (const [project, fileData] of Object.entries(ctx.fileMap)) {
+  for (const [project, fileData] of Object.entries(
+    ctx.fileMap.projectFileMap
+  )) {
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {
       if (moduleExtensions.some((ext) => file.endsWith(ext))) {

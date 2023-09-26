@@ -3,8 +3,11 @@
  */
 import {
   DependencyType,
+  FileData,
+  FileDataDependency,
   fileDataDepTarget,
   fileDataDepType,
+  FileMap,
   ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
@@ -13,7 +16,7 @@ import {
 } from '../config/project-graph';
 import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { CreateDependenciesContext } from '../utils/nx-plugin';
-import { getProjectFileMap } from './build-project-graph';
+import { getFileMap } from './build-project-graph';
 
 /**
  * A class which builds up a project graph
@@ -22,19 +25,34 @@ import { getProjectFileMap } from './build-project-graph';
 export class ProjectGraphBuilder {
   // TODO(FrozenPandaz): make this private
   readonly graph: ProjectGraph;
-  private readonly fileMap: ProjectFileMap;
+
+  private readonly projectFileMap: ProjectFileMap;
+  private readonly nonProjectFiles: FileData[];
+
   readonly removedEdges: { [source: string]: Set<string> } = {};
-  constructor(graph?: ProjectGraph, fileMap?: ProjectFileMap) {
+
+  constructor(
+    graph?: ProjectGraph,
+    projectFileMap?: ProjectFileMap,
+    nonProjectFiles?: FileMap['nonProjectFiles']
+  ) {
+    if (!projectFileMap || !nonProjectFiles) {
+      const fileMap = getFileMap().fileMap;
+      projectFileMap ??= fileMap.projectFileMap;
+      nonProjectFiles ??= fileMap.nonProjectFiles;
+    }
     if (graph) {
       this.graph = graph;
-      this.fileMap = fileMap || getProjectFileMap().projectFileMap;
+      this.projectFileMap = projectFileMap;
+      this.nonProjectFiles = nonProjectFiles;
     } else {
       this.graph = {
         nodes: {},
         externalNodes: {},
         dependencies: {},
       };
-      this.fileMap = fileMap || {};
+      this.projectFileMap = projectFileMap || {};
+      this.nonProjectFiles = nonProjectFiles || [];
     }
   }
 
@@ -234,6 +252,28 @@ export class ProjectGraphBuilder {
         }
       }
     }
+    for (const file of this.nonProjectFiles) {
+      if (file.deps) {
+        for (const dep of file.deps) {
+          if (!Array.isArray(dep)) {
+            throw new Error(
+              'Cached data on non project files should be a tuple'
+            );
+          }
+          const [source, target, type] = dep;
+          if (!source || !target || !type) {
+            throw new Error(
+              'Cached dependencies for non project files should be a tuple of length 3.'
+            );
+          }
+          this.graph.dependencies[source].push({
+            source,
+            target,
+            type,
+          });
+        }
+      }
+    }
     return this.graph;
   }
 
@@ -256,7 +296,10 @@ export class ProjectGraphBuilder {
       },
       {
         externalNodes: this.graph.externalNodes,
-        fileMap: this.fileMap,
+        fileMap: {
+          projectFileMap: this.projectFileMap,
+          nonProjectFiles: this.nonProjectFiles,
+        },
         // the validators only really care about the keys on this.
         projects: this.graph.nodes as any,
         filesToProcess: null,
@@ -273,23 +316,28 @@ export class ProjectGraphBuilder {
     );
 
     if (sourceFile) {
-      const fileData = getFileData(
+      let fileData = getProjectFileData(
         source,
         sourceFile,
-        this.graph.nodes,
-        this.fileMap
+        this.projectFileMap
       );
+      const isProjectFileData = !!fileData;
+      fileData ??= getNonProjectFileData(sourceFile, this.nonProjectFiles);
 
       if (!fileData.deps) {
         fileData.deps = [];
       }
+
       if (
         !fileData.deps.find(
           (t) => fileDataDepTarget(t) === target && fileDataDepType(t) === type
         )
       ) {
-        const dep: string | [string, string] =
-          type === 'static' ? target : [target, type];
+        const dep: FileDataDependency = isProjectFileData
+          ? type === 'static'
+            ? target
+            : [target, type]
+          : [source, target, type];
         fileData.deps.push(dep);
       }
     } else if (!isDuplicate) {
@@ -328,7 +376,7 @@ export class ProjectGraphBuilder {
     sourceProject: string
   ): Map<string, Set<DependencyType | string>> {
     const fileDeps = new Map<string, Set<DependencyType | string>>();
-    const files = this.fileMap[sourceProject] || [];
+    const files = this.projectFileMap[sourceProject] || [];
     if (!files) {
       return fileDeps;
     }
@@ -488,8 +536,19 @@ function validateCommonDependencyRules(
     throw new Error(`External projects can't depend on internal projects`);
   }
   if ('sourceFile' in d && d.sourceFile) {
-    // Throws if source file is not a valid file within the source project.
-    getFileData(d.source, d.sourceFile, projects, fileMap);
+    if (projects[d.source]) {
+      // Throws if source file is not a valid file within the source project.
+      // We can pass empty array for all workspace files here, since its not checked by the impl.
+      // We need all workspace files in here for the TODO comment though, so lets figure that out.
+      getFileData(
+        d.source,
+        d.sourceFile,
+        projects,
+        externalNodes,
+        fileMap.projectFileMap,
+        fileMap.nonProjectFiles
+      );
+    }
   }
 }
 
@@ -528,21 +587,44 @@ function validateStaticDependency(
   }
 }
 
+function getProjectFileData(
+  source: string,
+  sourceFile: string,
+  fileMap: ProjectFileMap
+) {
+  let fileData = (fileMap[source] || []).find((f) => f.file === sourceFile);
+  if (fileData) {
+    return fileData;
+  }
+}
+
+function getNonProjectFileData(sourceFile: string, files: FileData[]) {
+  const fileData = files.find((f) => f.file === sourceFile);
+  if (!fileData) {
+    throw new Error(
+      `Source file "${sourceFile}" does not exist in the workspace.`
+    );
+  }
+  return fileData;
+}
+
 function getFileData(
   source: string,
   sourceFile: string,
   projects: Record<string, ProjectGraphProjectNode | ProjectConfiguration>,
-  fileMap: ProjectFileMap
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  fileMap: ProjectFileMap,
+  nonProjectFiles: FileData[]
 ) {
   const sourceProject = projects[source];
-  if (!sourceProject) {
+  const matchingExternalNode = externalNodes[source];
+
+  if (!sourceProject && !matchingExternalNode) {
     throw new Error(`Source project is not a project node: ${sourceProject}`);
   }
-  const fileData = (fileMap[source] || []).find((f) => f.file === sourceFile);
-  if (!fileData) {
-    throw new Error(
-      `Source project ${source} does not have a file: ${sourceFile}`
-    );
-  }
-  return fileData;
+
+  return (
+    getProjectFileData(source, sourceFile, fileMap) ??
+    getNonProjectFileData(sourceFile, nonProjectFiles)
+  );
 }

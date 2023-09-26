@@ -114,7 +114,7 @@ async function normalizeOptions(
 
   const { sourceRoot: projectSourceRoot, projectType } = project;
 
-  const directory = await getDirectory(host, options);
+  const directory = await getDirectory(options);
 
   if (options.export && projectType === 'application') {
     logger.warn(
@@ -134,7 +134,7 @@ async function normalizeOptions(
   };
 }
 
-async function getDirectory(host: Tree, options: Schema) {
+async function getDirectory(options: Schema) {
   if (options.directory) return options.directory;
   if (options.flat) return 'components';
   const { className, fileName } = names(options.name);

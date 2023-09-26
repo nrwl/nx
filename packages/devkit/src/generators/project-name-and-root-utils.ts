@@ -1,6 +1,7 @@
 import { prompt } from 'enquirer';
 import type { ProjectType } from 'nx/src/config/workspace-json-project-json';
 import type { Tree } from 'nx/src/generators/tree';
+import { relative } from 'path';
 import { requireNx } from '../../nx';
 import {
   extractLayoutDirectory,
@@ -16,6 +17,7 @@ const {
   readNxJson,
   updateNxJson,
   stripIndents,
+  workspaceRoot,
 } = requireNx();
 
 export type ProjectNameAndRootFormat = 'as-provided' | 'derived';
@@ -77,17 +79,9 @@ export async function determineProjectNameAndRootOptions(
 > {
   validateName(options.name, options.projectNameAndRootFormat);
   const formats = getProjectNameAndRootFormats(tree, options);
-  const configuredDefault = getDefaultProjectNameAndRootFormat(tree);
-
-  if (configuredDefault === 'derived') {
-    logger.warn(
-      deprecationWarning + '\n' + getExample(options.callingGenerator, formats)
-    );
-  }
 
   const format =
     options.projectNameAndRootFormat ??
-    configuredDefault ??
     (await determineFormat(tree, formats, options.callingGenerator));
 
   return {
@@ -155,6 +149,10 @@ async function determineFormat(
     Root: ${formats['derived'].projectRoot}`;
   const derivedSelectedValue = `${formats['derived'].projectName} @ ${formats['derived'].projectRoot}`;
 
+  if (asProvidedSelectedValue === derivedSelectedValue) {
+    return 'as-provided';
+  }
+
   const result = await prompt<{ format: ProjectNameAndRootFormat }>({
     type: 'select',
     name: 'format',
@@ -175,38 +173,13 @@ async function determineFormat(
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
 
-  if (result === 'as-provided' && callingGenerator) {
-    const { saveDefault } = await prompt<{ saveDefault: boolean }>({
-      type: 'confirm',
-      message: `Would you like to configure Nx to always take project name and root as provided for ${callingGenerator}?`,
-      name: 'saveDefault',
-      initial: true,
-    });
-    if (saveDefault) {
-      setProjectNameAndRootFormatDefault(tree);
-    } else {
-      logger.warn(deprecationWarning);
-    }
-  } else {
+  if (result === 'derived' && callingGenerator) {
     const example = getExample(callingGenerator, formats);
     logger.warn(deprecationWarning + '\n' + example);
   }
 
   return result;
 }
-
-function setProjectNameAndRootFormatDefault(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  nxJson.workspaceLayout ??= {};
-  nxJson.workspaceLayout.projectNameAndRootFormat = 'as-provided';
-  updateNxJson(tree, nxJson);
-}
-
-function getDefaultProjectNameAndRootFormat(tree: Tree) {
-  const nxJson = readNxJson(tree);
-  return nxJson.workspaceLayout?.projectNameAndRootFormat;
-}
-
 function getProjectNameAndRootFormats(
   tree: Tree,
   options: ProjectGenerationOptions
@@ -217,11 +190,37 @@ function getProjectNameAndRootFormats(
     : undefined;
 
   const asProvidedProjectName = name;
-  const asProvidedProjectDirectory = directory
-    ? names(directory).fileName
-    : options.rootProject
-    ? '.'
-    : asProvidedProjectName;
+
+  let asProvidedProjectDirectory: string;
+  const relativeCwd = normalizePath(relative(workspaceRoot, getCwd())).replace(
+    /\/$/,
+    ''
+  );
+  if (directory) {
+    // append the directory to the current working directory if it doesn't start with it
+    if (directory === relativeCwd || directory.startsWith(`${relativeCwd}/`)) {
+      asProvidedProjectDirectory = names(directory).fileName;
+    } else {
+      asProvidedProjectDirectory = joinPathFragments(
+        relativeCwd,
+        names(directory).fileName
+      );
+    }
+  } else if (options.rootProject) {
+    asProvidedProjectDirectory = '.';
+  } else {
+    asProvidedProjectDirectory = relativeCwd;
+    // append the project name to the current working directory if it doesn't end with it
+    if (
+      !relativeCwd.endsWith(asProvidedProjectName) &&
+      !relativeCwd.endsWith(options.name)
+    ) {
+      asProvidedProjectDirectory = joinPathFragments(
+        relativeCwd,
+        asProvidedProjectName
+      );
+    }
+  }
 
   if (name.startsWith('@')) {
     const nameWithoutScope = asProvidedProjectName.split('/')[1];
@@ -349,4 +348,16 @@ function getNpmScope(tree: Tree): string | undefined {
 
 function isTTY(): boolean {
   return !!process.stdout.isTTY && process.env['CI'] !== 'true';
+}
+
+/**
+ * When running a script with the package manager (e.g. `npm run`), the package manager will
+ * traverse the directory tree upwards until it finds a `package.json` and will set `process.cwd()`
+ * to the folder where it found it. The actual working directory is stored in the INIT_CWD
+ * environment variable (see here: https://docs.npmjs.com/cli/v9/commands/npm-run-script#description).
+ */
+function getCwd(): string {
+  return process.env.INIT_CWD?.startsWith(workspaceRoot)
+    ? process.env.INIT_CWD
+    : process.cwd();
 }

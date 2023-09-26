@@ -83,7 +83,7 @@ The Nx CLI provides the [`migrate` command](/core-features/automate-updating-dep
 
 #### Use upgrade-native Generator
 
-To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/packages/react-native/generators/upgrade-native) generator:
+To upgrade native iOS and Android code to latest, you can use the [upgrade-native](/nx-api/react-native/generators/upgrade-native) generator:
 
 ```shell
 nx generate @nx/react-native:upgrade-native <your-app-name>
@@ -147,5 +147,5 @@ The build artifacts will be located under `<your app folder>/android/app/build`.
 
 ## More Documentation
 
-- [Using Detox](/packages/detox)
-- [Using Jest](/packages/jest)
+- [Using Detox](/nx-api/detox)
+- [Using Jest](/nx-api/jest)

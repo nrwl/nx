@@ -5,7 +5,7 @@ Why should you use this plugin?
 - _Fast_ builds using esbuild.
 - Type-checking using TypeScript, which esbuild does not handle.
 - Intelligent `package.json` output.
-- Additional [assets](/packages/esbuild/executors/esbuild#assets) for the output.
+- Additional [assets](/nx-api/esbuild/executors/esbuild#assets) for the output.
 
 ## Setting up esbuild
 
@@ -141,4 +141,4 @@ Extra API options for esbuild can be passed in the `esbuildOptions` object for y
 
 ## More Documentation
 
-- [Using JS](/packages/js)
+- [Using JS](/nx-api/js)

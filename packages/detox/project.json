@@ -48,11 +48,11 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/detox"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js detox",
-          "node ./scripts/add-dependency-to-build.js detox @nrwl/detox"
-        ]
+        "command": "node ./scripts/copy-readme.js detox"
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js detox @nrwl/detox"
     }
   }
 }

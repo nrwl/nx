@@ -69,8 +69,8 @@
     "node-machine-id": "1.1.12"
   },
   "peerDependencies": {
-    "@swc-node/register": "^1.4.2",
-    "@swc/core": "^1.2.173"
+    "@swc-node/register": "^1.6.7",
+    "@swc/core": "^1.3.85"
   },
   "peerDependenciesMeta": {
     "@swc-node/register": {

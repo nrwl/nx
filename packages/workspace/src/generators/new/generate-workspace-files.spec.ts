@@ -124,9 +124,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "runner": "nx/tasks-runners/default",
           },
         },
-        "workspaceLayout": {
-          "projectNameAndRootFormat": "as-provided",
-        },
       }
     `);
     const validateNxJson = ajv.compile(nxSchema);
@@ -178,9 +175,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             },
             "runner": "nx/tasks-runners/default",
           },
-        },
-        "workspaceLayout": {
-          "projectNameAndRootFormat": "as-provided",
         },
       }
     `);
@@ -245,9 +239,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             },
             "runner": "nx/tasks-runners/default",
           },
-        },
-        "workspaceLayout": {
-          "projectNameAndRootFormat": "as-provided",
         },
       }
     `);

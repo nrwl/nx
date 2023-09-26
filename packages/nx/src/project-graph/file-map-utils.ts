@@ -1,5 +1,6 @@
 import {
   FileData,
+  FileMap,
   ProjectFileMap,
   ProjectGraph,
 } from '../config/project-graph';
@@ -28,55 +29,79 @@ export async function createProjectFileMapUsingProjectGraph(
     files = getAllFileDataInContext(workspaceRoot);
   }
 
-  return createProjectFileMap(configs, files).projectFileMap;
+  return createFileMap(configs, files).fileMap.projectFileMap;
 }
 
-export function createProjectFileMap(
+export function createFileMap(
   projectsConfigurations: ProjectsConfigurations,
   allWorkspaceFiles: FileData[]
-): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
+): {
+  allWorkspaceFiles: FileData[];
+  fileMap: FileMap;
+} {
   const projectFileMap: ProjectFileMap = {};
   const projectRootMappings =
     createProjectRootMappingsFromProjectConfigurations(
       projectsConfigurations.projects
     );
+  const nonProjectFiles: FileData[] = [];
 
   for (const projectName of Object.keys(projectsConfigurations.projects)) {
     projectFileMap[projectName] ??= [];
   }
   for (const f of allWorkspaceFiles) {
     const projectFileMapKey = findProjectForPath(f.file, projectRootMappings);
-    const matchingProjectFiles = projectFileMap[projectFileMapKey];
-    if (matchingProjectFiles) {
-      matchingProjectFiles.push(f);
+    if (projectFileMapKey) {
+      const matchingProjectFiles = projectFileMap[projectFileMapKey];
+      if (matchingProjectFiles) {
+        matchingProjectFiles.push(f);
+      }
+    } else {
+      nonProjectFiles.push(f);
     }
   }
-  return { projectFileMap, allWorkspaceFiles };
+  return {
+    allWorkspaceFiles,
+    fileMap: {
+      projectFileMap,
+      nonProjectFiles,
+    },
+  };
 }
 
-export function updateProjectFileMap(
+export function updateFileMap(
   projectsConfigurations: Record<string, ProjectConfiguration>,
-  projectFileMap: ProjectFileMap,
+  { projectFileMap, nonProjectFiles }: FileMap,
   allWorkspaceFiles: FileData[],
   updatedFiles: Map<string, string>,
   deletedFiles: string[]
-): { projectFileMap: ProjectFileMap; allWorkspaceFiles: FileData[] } {
+): { fileMap: FileMap; allWorkspaceFiles: FileData[] } {
   const projectRootMappings =
     createProjectRootMappingsFromProjectConfigurations(projectsConfigurations);
+  let nonProjectFilesMap = new Map(nonProjectFiles.map((f) => [f.file, f]));
 
   for (const f of updatedFiles.keys()) {
-    const matchingProjectFiles =
-      projectFileMap[findProjectForPath(f, projectRootMappings)] ?? [];
-    if (matchingProjectFiles) {
-      const fileData: FileData = matchingProjectFiles.find((t) => t.file === f);
-      if (fileData) {
-        fileData.hash = updatedFiles.get(f);
-      } else {
-        matchingProjectFiles.push({
-          file: f,
-          hash: updatedFiles.get(f),
-        });
+    const project = findProjectForPath(f, projectRootMappings);
+    if (project) {
+      const matchingProjectFiles = projectFileMap[project] ?? [];
+      if (matchingProjectFiles) {
+        const fileData: FileData = matchingProjectFiles.find(
+          (t) => t.file === f
+        );
+        if (fileData) {
+          fileData.hash = updatedFiles.get(f);
+        } else {
+          matchingProjectFiles.push({
+            file: f,
+            hash: updatedFiles.get(f),
+          });
+        }
       }
+    } else {
+      const hash = updatedFiles.get(f);
+      const entry = nonProjectFilesMap.get(f) ?? { file: f, hash };
+      entry.hash = hash;
+      nonProjectFilesMap.set(f, entry);
     }
 
     const fileData: FileData = allWorkspaceFiles.find((t) => t.file === f);
@@ -99,10 +124,19 @@ export function updateProjectFileMap(
         matchingProjectFiles.splice(index, 1);
       }
     }
+    if (nonProjectFilesMap.has(f)) {
+      nonProjectFilesMap.delete(f);
+    }
     const index = allWorkspaceFiles.findIndex((t) => t.file === f);
     if (index > -1) {
       allWorkspaceFiles.splice(index, 1);
     }
   }
-  return { projectFileMap, allWorkspaceFiles };
+  return {
+    fileMap: {
+      projectFileMap,
+      nonProjectFiles: Array.from(nonProjectFilesMap.values()),
+    },
+    allWorkspaceFiles,
+  };
 }

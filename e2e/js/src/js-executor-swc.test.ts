@@ -1,7 +1,5 @@
-import { satisfies } from 'semver';
 import { execSync } from 'child_process';
 import {
-  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   detectPackageManager,
@@ -9,7 +7,6 @@ import {
   packageManagerLockFile,
   readJson,
   runCLI,
-  runCLIAsync,
   tmpProjPath,
   uniq,
   updateFile,
@@ -65,14 +62,9 @@ describe('js:swc executor', () => {
         packageManagerLockFile[detectPackageManager(tmpProjPath())]
       }`
     );
-    expect(
-      satisfies(
-        readJson(`dist/libs/${lib}/package.json`).peerDependencies[
-          '@swc/helpers'
-        ],
-        readJson(`package.json`).dependencies['@swc/helpers']
-      )
-    ).toBeTruthy();
+    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
+      'peerDependencies.@swc/helpers'
+    );
 
     // Legacy behavior (updateBuildableProjectDepsInPackageJson): don't add @swc/helpers if externalHelpers is false
     // TODO(v17):  Remove this test

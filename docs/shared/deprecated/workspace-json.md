@@ -17,7 +17,7 @@ To remove `workspace.json` in favor of `project.json` files, run:
 nx g @nx/workspace:fix-configuration
 ```
 
-See [fix-configuration](/packages/workspace/generators/fix-configuration) for more options.
+See [fix-configuration](/nx-api/workspace/generators/fix-configuration) for more options.
 
 After this command, `workspace.json` should look like this:
 

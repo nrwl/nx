@@ -15,7 +15,7 @@ You can read more about Storybook interaction tests in the following sections of
 - [The `play` function](https://storybook.js.org/docs/react/writing-stories/play-function)
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
-You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/packages/storybook) to get started.
+You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/nx-api/storybook) to get started.
 {% /callout %}
 
 ## Setup Storybook Interaction Tests
@@ -50,7 +50,7 @@ nx g @nx/storybook:configuration project-name --interactionTests=true
 
 This command will:
 
-- [Set up Storybook for your project](/packages/storybook) - including the `@storybook/addon-interactions` addon.
+- [Set up Storybook for your project](/nx-api/storybook) - including the `@storybook/addon-interactions` addon.
 - Add a `play` function to your stories.
 - Install the necessary dependencies.
 - Generate a `test-storybook` target in your project's `project.json`, which has a command to invoke the Storybook test runner.

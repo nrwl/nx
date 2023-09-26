@@ -6,7 +6,7 @@ description: This guide explains how to set up Compodoc for Storybook on Angular
 # Set up Compodoc for Storybook on Nx
 
 {% callout type="note" title="Note" %}
-This documentation page contains information about the [Storybook plugin](/packages/storybook), specifically regarding [Angular projects that are using Storybook](/recipes/storybook/overview-angular).
+This documentation page contains information about the [Storybook plugin](/nx-api/storybook), specifically regarding [Angular projects that are using Storybook](/recipes/storybook/overview-angular).
 {% /callout %}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/storybook-compodoc-angular" /%}
@@ -141,7 +141,7 @@ Let's see the result for our `web` app `storybook` target, for example (in `apps
 {% callout type="warning" title="Check the version!" %}
 Make sure you are on Nx version `>=14.1.8` and your `storybook` target is using `@storybook/angular:start-storybook` as the `executor` (like the example above).
 
-If you are using an older version of Nx, you can use [`nx migrate`](/packages/nx/documents/migrate) to migrate your codebase to a later version. Using `nx migrate` will also make sure to update your `storybook` and `build-storybook` targets to match the new format.
+If you are using an older version of Nx, you can use [`nx migrate`](/nx-api/nx/documents/migrate) to migrate your codebase to a later version. Using `nx migrate` will also make sure to update your `storybook` and `build-storybook` targets to match the new format.
 
 If you **are** on Nx `>=14.1.8` and you are still using the old executor (`@nx/storybook:storybook`), you can read our documentation about the [Angular Storybook targets](/deprecated/storybook/angular-storybook-targets) to help you change your `storybook` and `build-storybook` targets across your workspace for your Angular projects using Storybook.
 {% /callout %}

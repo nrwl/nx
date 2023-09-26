@@ -10,7 +10,7 @@ What are you going to learn?
 - how to modularize your codebase and impose architectural constraints for better maintainability
 
 {% callout type="info" title="Looking for Angular monorepos?" %}
-Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for an Angular monorepo setup then check out our [Angular monorepo tutorial](/angular-tutorial/1-code-generation).
+Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for an Angular monorepo setup then check out our [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial).
 
 {% /callout %}
 

@@ -85,6 +85,6 @@ export const schema = {
   hidden: false,
   implementation:
     '/packages/rspack/src/generators/configuration/configuration#configurationGenerator.ts',
-  path: '/packages/rspack/src/generators/configuration/schema.json',
+  path: '/nx-api/rspack/src/generators/configuration/schema.json',
   type: 'generator',
 };

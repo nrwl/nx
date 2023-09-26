@@ -44,11 +44,11 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/react-native"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js react-native",
-          "node ./scripts/add-dependency-to-build.js react-native @nrwl/react-native"
-        ]
+        "command": "node ./scripts/copy-readme.js react-native"
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js react-native @nrwl/react-native"
     }
   }
 }

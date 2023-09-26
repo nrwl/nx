@@ -138,27 +138,6 @@ describe('component', () => {
     });
   });
 
-  // TODO: figure out routing
-  xdescribe('--routing', () => {
-    it('should add routes to the component', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        project: projectName,
-        routing: true,
-      });
-
-      const content = appTree
-        .read('my-lib/src/components/hello/hello.tsx')
-        .toString();
-      expect(content).toContain('react-router-dom');
-      expect(content).toMatch(/<Route\s*path="\/"/);
-      expect(content).toMatch(/<Link\s*to="\/"/);
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['react-router-dom']).toBeDefined();
-    });
-  });
-
   describe('--directory', () => {
     it('should create component under the directory', async () => {
       await componentGenerator(appTree, {

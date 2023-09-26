@@ -237,7 +237,7 @@ npx nx affected -t build
 
 {% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="/concepts/integrated-vs-package-based" /%}
 
-{% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/react-tutorial/1-code-generation" /%}
+{% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/getting-started/tutorials/react-monorepo-tutorial" /%}
 
 {% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/getting-started/tutorials/node-server-tutorial" /%}
 

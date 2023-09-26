@@ -27,9 +27,7 @@ const swcOptionsString = (type: 'commonjs' | 'es6' = 'commonjs') => `{
     "loose": true
   },
   "module": {
-    "type": "${type}",
-    "strict": true,
-    "noInterop": true
+    "type": "${type}"
   },
   "sourceMaps": true,
   "exclude": ${JSON.stringify(defaultExclude)}

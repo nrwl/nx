@@ -8,12 +8,12 @@ description: This guide explains how to set up Storybook for React projects in y
 This guide will walk you through setting up [Storybook](https://storybook.js.org) for React projects in your Nx workspace.
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
-You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/packages/storybook) to get started.
+You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/nx-api/storybook) to get started.
 {% /callout %}
 
 ## Generate Storybook Configuration for a React project
 
-You can generate Storybook configuration for an individual React project by using the [`@nx/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration), like this:
+You can generate Storybook configuration for an individual React project by using the [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration), like this:
 
 ```shell
 nx g @nx/react:storybook-configuration project-name
@@ -21,7 +21,7 @@ nx g @nx/react:storybook-configuration project-name
 
 ## Nx React Storybook Preset
 
-The [`@nx/react`](/packages/react) package ships with a Storybook addon to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the addon to your configuration.
+The [`@nx/react`](/nx-api/react) package ships with a Storybook addon to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the addon to your configuration.
 
 ```typescript
 module.exports = {
@@ -33,7 +33,7 @@ module.exports = {
 
 ## Auto-generate Stories
 
-The [`@nx/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
 
 ```text
 <some-folder>/
@@ -41,7 +41,7 @@ The [`@nx/react:storybook-configuration` generator](/packages/react/generators/s
 └── my-component.stories.tsx
 ```
 
-If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/react:stories` generator](/packages/react/generators/stories):
+If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/react:stories` generator](/nx-api/react/generators/stories):
 
 ```shell
 nx g @nx/react:stories --project=<project-name>
@@ -87,7 +87,7 @@ and the result would be the following:
 
 ## Cypress tests for Stories
 
-The [`@nx/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
+The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
 
 To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
 
@@ -111,7 +111,7 @@ Let's take for a example a library in your workspace, under `libs/feature/ui`, c
 
 ### Story file
 
-The [`@nx/react:storybook-configuration` generator](/packages/react/generators/storybook-configuration) would generate a Story file that looks like this:
+The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.tsx" %}
 import type { Meta } from '@storybook/react';
@@ -154,7 +154,7 @@ Depending on your Cypress version, the file will end with `.spec.ts` or `.cy.ts`
 
 ## More Documentation
 
-You can find all Storybook-related Nx topics [here](/packages#storybook).
+You can find all Storybook-related Nx topics [here](/nx-api#storybook).
 
 For more on using Storybook, see the [official Storybook documentation](https://storybook.js.org/docs/react/get-started/introduction).
 
@@ -162,8 +162,8 @@ For more on using Storybook, see the [official Storybook documentation](https://
 
 Here's more information on common migration scenarios for Storybook with Nx. For Storybook specific migrations that are not automatically handled by Nx please refer to the [official Storybook page](https://storybook.js.org/)
 
-- [Set up Storybook version 7](/packages/storybook/documents/storybook-7-setup)
-- [Migrate to Storybook version 7](/packages/storybook/generators/migrate-7)
+- [Set up Storybook version 7](/nx-api/storybook/documents/storybook-7-setup)
+- [Migrate to Storybook version 7](/nx-api/storybook/generators/migrate-7)
 
 #### Older migration scenarios
 

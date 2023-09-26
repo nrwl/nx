@@ -1,5 +1,5 @@
 import {
-  ArrowDownIcon,
+  ArrowDownTrayIcon,
   ClockIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
@@ -117,7 +117,7 @@ function NpmDownloadsWidget({
   }
   return (
     <abbr data-tooltip="Monthly NPM Downloads" data-tooltip-align-right>
-      <ArrowDownIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ArrowDownIcon>
+      <ArrowDownTrayIcon className="h-4 w-4 inline-block mx-0.5 align-bottom"></ArrowDownTrayIcon>
       {shortenNumber(npmDownloads)}
       <span className="md:hidden">
         <br />

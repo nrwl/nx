@@ -22,8 +22,7 @@ describe('packaging libs', () => {
 
   afterEach(() => cleanupProject());
 
-  // TODO Re-enable this when it is passing
-  xit('should bundle libs using esbuild, vite, rollup and be used in CJS/ESM projects', () => {
+  it('should bundle libs using esbuild, vite, rollup and be used in CJS/ESM projects', () => {
     const esbuildLib = uniq('esbuildlib');
     const viteLib = uniq('vitelib');
     const rollupLib = uniq('rolluplib');
@@ -130,8 +129,7 @@ describe('packaging libs', () => {
     expect(output).toContain('rollup default');
   }, 500_000);
 
-  // TODO Re-enable this when it is passing
-  xit('should build with tsc, swc and be used in CJS/ESM projects', async () => {
+  it('should build with tsc, swc and be used in CJS/ESM projects', async () => {
     const tscLib = uniq('tsclib');
     const swcLib = uniq('swclib');
     const tscEsmLib = uniq('tscesmlib');

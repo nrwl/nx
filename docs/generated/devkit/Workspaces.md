@@ -10,10 +10,6 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 
 - [constructor](../../devkit/documents/Workspaces#constructor)
 
-### Properties
-
-- [root](../../devkit/documents/Workspaces#root): string
-
 ### Methods
 
 - [readWorkspaceConfiguration](../../devkit/documents/Workspaces#readworkspaceconfiguration)
@@ -29,12 +25,6 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 | Name   | Type     |
 | :----- | :------- |
 | `root` | `string` |
-
-## Properties
-
-### root
-
-• `Private` **root**: `string`
 
 ## Methods
 

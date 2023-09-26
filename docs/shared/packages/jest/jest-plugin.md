@@ -117,7 +117,7 @@ export default {
 
 ### Nx
 
-Nx Jest Plugin options can be configured via the [project config file](/reference/project-configuration) or via the [command line flags](/packages/jest).
+Nx Jest Plugin options can be configured via the [project config file](/reference/project-configuration) or via the [command line flags](/nx-api/jest).
 
 > Hint: Use `--help` to see all available options
 >
@@ -203,4 +203,4 @@ export default async function () {
 ## More Documentation
 
 - [Jest Docs](https://jestjs.io/)
-- [@nx/jest options](/packages/jest)
+- [@nx/jest options](/nx-api/jest)

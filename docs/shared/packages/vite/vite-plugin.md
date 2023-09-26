@@ -38,7 +38,7 @@ There is a number of ways to use Vite in your existing workspace.
 
 ### Generate a new project using Vite
 
-You can generate a [React](/packages/react) application or library or a [Web](/packages/web) application that uses Vite.js. The [`@nx/react:app`](/packages/react/generators/application), [`@nx/react:lib`](/packages/react/generators/library) and [`@nx/web:app`](/packages/web/generators/application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite.js, and it will also install all the necessary dependencies, including the `@nx/vite` plugin.
+You can generate a [React](/nx-api/react) application or library or a [Web](/nx-api/web) application that uses Vite.js. The [`@nx/react:app`](/nx-api/react/generators/application), [`@nx/react:lib`](/nx-api/react/generators/library) and [`@nx/web:app`](/nx-api/web/generators/application) generators accept the `bundler` option, where you can pass `vite`. This will generate a new application configured to use Vite.js, and it will also install all the necessary dependencies, including the `@nx/vite` plugin.
 
 To generate a React application using Vite.js, run the following:
 
@@ -62,7 +62,7 @@ nx g @nx/web:app my-app --bundler=vite
 
 You can use the `@nx/vite:configuration` generator to change your React or Web project to use Vite.js. This generator will modify your project's configuration to use Vite.js, and it will also install all the necessary dependencies, including the `@nx/vite` plugin..
 
-You can read more about this generator on the [`@nx/vite:configuration`](/packages/vite/generators/configuration) generator page.
+You can read more about this generator on the [`@nx/vite:configuration`](/nx-api/vite/generators/configuration) generator page.
 
 ### Initialize Vite.js
 

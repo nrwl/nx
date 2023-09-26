@@ -6,14 +6,14 @@ description: This guide explains how you can manually set up your project to use
 # Manually set up your project to use Vite.js
 
 {% callout type="note" title="Use our generator!" %}
-It is recommended that you use the [`@nx/vite:configuration`](/packages/vite/generators/configuration) generator to do convert an existing project to use [Vite](https://vitejs.dev/).
+It is recommended that you use the [`@nx/vite:configuration`](/nx-api/vite/generators/configuration) generator to do convert an existing project to use [Vite](https://vitejs.dev/).
 {% /callout %}
 
-You can use the `@nx/vite:dev-server`,`@nx/vite:build` and `@nx/vite:test` executors to serve, build and test your project using [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/). To do this, you need to make a few adjustments to your project. It is recommended that you use the [`@nx/vite:configuration`](/packages/vite/generators/configuration) generator to do this, but you can also do it manually.
+You can use the `@nx/vite:dev-server`,`@nx/vite:build` and `@nx/vite:test` executors to serve, build and test your project using [Vite](https://vitejs.dev/) and [Vitest](https://vitest.dev/). To do this, you need to make a few adjustments to your project. It is recommended that you use the [`@nx/vite:configuration`](/nx-api/vite/generators/configuration) generator to do this, but you can also do it manually.
 
 A reason you may need to do this manually, is if our generator does not support conversion for your project, or if you want to experiment with custom options.
 
-The list of steps below assumes that your project can be converted to use the `@nx/vite` executors. However, if it's not supported by the [`@nx/vite:configuration`](/packages/vite/generators/configuration) generator, it's likely that your project will not work as expected when converted. So, proceed with caution and always commit your code before making any changes.
+The list of steps below assumes that your project can be converted to use the `@nx/vite` executors. However, if it's not supported by the [`@nx/vite:configuration`](/nx-api/vite/generators/configuration) generator, it's likely that your project will not work as expected when converted. So, proceed with caution and always commit your code before making any changes.
 
 ## 1. Change the executors in your `project.json`
 
@@ -43,7 +43,7 @@ In your app's `project.json` file, change the executor of your `serve` target to
 ```
 
 {% callout type="note" title="Other options" %}
-Any extra options that you may need to add to your server's configuration can be added in your project's `vite.config.ts` file. You can find all the options that are supported in the [Vite.js documentation](https://vitejs.dev/config/). You can see which of these options you can add in your `project.json` in the [`@nx/vite:dev-server`](/packages/vite/executors/dev-server#options) documentation.
+Any extra options that you may need to add to your server's configuration can be added in your project's `vite.config.ts` file. You can find all the options that are supported in the [Vite.js documentation](https://vitejs.dev/config/). You can see which of these options you can add in your `project.json` in the [`@nx/vite:dev-server`](/nx-api/vite/executors/dev-server#options) documentation.
 {% /callout %}
 
 ### The `build` target

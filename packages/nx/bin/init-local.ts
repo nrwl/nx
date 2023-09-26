@@ -87,7 +87,10 @@ function rewritePositionalArguments(args: string[]) {
   const relevantPositionalArgs = [];
   const rest = [];
   for (let i = 2; i < args.length; i++) {
-    if (!args[i].startsWith('-')) {
+    if (args[i] === '--') {
+      rest.push(...args.slice(i + 1));
+      break;
+    } else if (!args[i].startsWith('-')) {
       relevantPositionalArgs.push(args[i]);
       if (relevantPositionalArgs.length === 2) {
         rest.push(...args.slice(i + 1));

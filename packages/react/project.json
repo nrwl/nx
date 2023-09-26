@@ -58,11 +58,11 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/react"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js react",
-          "node ./scripts/add-dependency-to-build.js react @nrwl/react"
-        ]
+        "command": "node ./scripts/copy-readme.js react"
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js react @nrwl/react"
     },
     "lint": {}
   }

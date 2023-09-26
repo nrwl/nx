@@ -3,6 +3,7 @@ import { execSync } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { logTar } from './log-tar';
 import { PublishExecutorSchema } from './schema';
+import chalk = require('chalk');
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -30,6 +31,25 @@ export default async function runExecutor(
     options.packageRoot ?? projectConfig.root
   );
 
+  const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
+  const projectPackageJson = readJsonFile(packageJsonPath);
+  const name = projectPackageJson.name;
+
+  // If package and project name match, we can make log messages terser
+  let packageTxt =
+    name === context.projectName
+      ? `package "${name}"`
+      : `package "${name}" from project "${context.projectName}"`;
+
+  if (projectPackageJson.private === true) {
+    console.warn(
+      `Skipping ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
+    );
+    return {
+      success: true,
+    };
+  }
+
   const npmPublishCommandSegments = [`npm publish --json`];
 
   if (options.registry) {
@@ -38,6 +58,10 @@ export default async function runExecutor(
 
   if (options.tag) {
     npmPublishCommandSegments.push(`--tag=${options.tag}`);
+  }
+
+  if (options.dryRun) {
+    npmPublishCommandSegments.push(`--dry-run`);
   }
 
   // Resolve values using the `npm config` command so that things like environment variables and `publishConfig`s are accounted for
@@ -59,17 +83,21 @@ export default async function runExecutor(
     const normalizedStdoutData = stdoutData[context.projectName!] ?? stdoutData;
     logTar(normalizedStdoutData);
 
-    console.log(`Published to ${registry} with tag "${tag}"`);
+    if (options.dryRun) {
+      console.log(
+        `Would publish to ${registry} with tag "${tag}", but ${chalk.keyword(
+          'orange'
+        )('[dry-run]')} was set`
+      );
+    } else {
+      console.log(`Published to ${registry} with tag "${tag}"`);
+    }
 
     return {
       success: true,
     };
   } catch (err) {
     try {
-      const projectPackageJson = readJsonFile(
-        joinPathFragments(packageRoot, 'package.json')
-      );
-      const name = projectPackageJson.name;
       const currentVersion = projectPackageJson.version;
 
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
@@ -80,12 +108,6 @@ export default async function runExecutor(
             'You cannot publish over the previously published versions'
           ))
       ) {
-        // If package and project name match, make it terser
-        let packageTxt =
-          name === context.projectName
-            ? `package "${name}"`
-            : `package "${name}" from project "${context.projectName}"`;
-
         console.warn(
           `Skipping ${packageTxt}, as v${currentVersion} has already been published to ${registry} with tag "${tag}"`
         );

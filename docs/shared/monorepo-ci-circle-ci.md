@@ -82,6 +82,6 @@ workflows:
       - main
 ```
 
-You can also use our [ci-workflow generator](/packages/workspace/generators/ci-workflow) to generate the configuration file.
+You can also use our [ci-workflow generator](/nx-api/workspace/generators/ci-workflow) to generate the configuration file.
 
 {% /nx-cloud-section %}

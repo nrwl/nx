@@ -53,7 +53,7 @@ This gives you the ability to customize the Rspack configuration as needed, and 
 
 ### Add configurations for other functionalities
 
-In addition to the basic configuration, you can add configurations for other frameworks or features. The \`@nx/rspack\` package provides plugins such as \`withWeb\` and \`withReact\`. This plugins provide features such as TS support, CSS support, JSX support, etc. You can read more about how these plugins work and how to use them in our [Rspack Plugins guide](/packages/rspack/documents/rspack-plugins).
+In addition to the basic configuration, you can add configurations for other frameworks or features. The \`@nx/rspack\` package provides plugins such as \`withWeb\` and \`withReact\`. This plugins provide features such as TS support, CSS support, JSX support, etc. You can read more about how these plugins work and how to use them in our [Rspack Plugins guide](/nx-api/rspack/documents/rspack-plugins).
 
 You may still reconfigure everything manually, without using the Nx plugins. However, these plugins ensure that you have the necessary configuration for Nx to work with your project.
 

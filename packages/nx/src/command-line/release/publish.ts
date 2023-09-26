@@ -1,9 +1,8 @@
-import { readNxJson } from '../../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
-import { NxJsonConfiguration, output } from '../../devkit-exports';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { runCommand } from '../../tasks-runner/run-command';
 import {
@@ -11,6 +10,9 @@ import {
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
+import { logger } from '../../utils/logger';
+import { output } from '../../utils/output';
+import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';
 import { createNxReleaseConfig } from './config/config';
 import {
@@ -19,7 +21,6 @@ import {
   createReleaseGroups,
   handleCreateReleaseGroupsError,
 } from './config/create-release-groups';
-import { generateGraph } from '../graph/graph';
 
 export async function publishHandler(
   args: PublishOptions & { __overrides_unparsed__: string[] }
@@ -151,6 +152,12 @@ export async function publishHandler(
     );
   }
 
+  if (args.dryRun) {
+    logger.warn(
+      `\nNOTE: The "dryRun" flag means no projects were actually published.`
+    );
+  }
+
   process.exit(0);
 }
 
@@ -171,6 +178,9 @@ async function runPublishOnProjects(
   }
   if (args.tag) {
     overrides.tag = args.tag;
+  }
+  if (args.dryRun) {
+    overrides.dryRun = args.dryRun;
   }
 
   if (args.verbose) {

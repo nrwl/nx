@@ -39,7 +39,7 @@ export async function* delegateBuildExecutor(
   }
 
   const { buildTarget, ...targetOptions } = options;
-  const delegateTarget = parseTargetString(buildTarget, context.projectGraph);
+  const delegateTarget = parseTargetString(buildTarget, context);
 
   yield* await runExecutor(delegateTarget, targetOptions, context);
 }

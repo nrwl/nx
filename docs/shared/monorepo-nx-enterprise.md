@@ -214,7 +214,7 @@ will get the following problems:
 - We will be affected by the code your change didn't touch
 
 We should utilize `affected:*` commands to build and test projects. Read more about
-them [here](/packages/nx/documents/affected).
+them [here](/nx-api/nx/documents/affected).
 
 ### Trunk-based development
 

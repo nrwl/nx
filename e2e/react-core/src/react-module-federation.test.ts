@@ -282,6 +282,98 @@ describe('React Module Federation', () => {
     }
   }, 500_000);
 
+  it('should support host and remote with library type var', async () => {
+    const shell = uniq('shell');
+    const remote = uniq('remote');
+
+    runCLI(
+      `generate @nx/react:host ${shell} --remotes=${remote} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // update host and remote to use library type var
+    updateFile(
+      `${shell}/module-federation.config.ts`,
+      stripIndents`
+      import { ModuleFederationConfig } from '@nx/webpack';
+
+      const config: ModuleFederationConfig = {
+        name: '${shell}',
+        library: { type: 'var', name: '${shell}' },
+        remotes: ['${remote}'],
+      };
+
+      export default config;
+      `
+    );
+
+    updateFile(
+      `${shell}/webpack.config.prod.ts`,
+      `export { default } from './webpack.config';`
+    );
+
+    updateFile(
+      `${remote}/module-federation.config.ts`,
+      stripIndents`
+      import { ModuleFederationConfig } from '@nx/webpack';
+
+      const config: ModuleFederationConfig = {
+        name: '${remote}',
+        library: { type: 'var', name: '${remote}' },
+        exposes: {
+          './Module': './src/remote-entry.ts',
+        },
+      };
+
+      export default config;
+      `
+    );
+
+    updateFile(
+      `${remote}/webpack.config.prod.ts`,
+      `export { default } from './webpack.config';`
+    );
+
+    // Update host e2e test to check that the remote works with library type var via navigation
+    updateFile(
+      `${shell}-e2e/src/e2e/app.cy.ts`,
+      `
+    import { getGreeting } from '../support/app.po';
+    
+    describe('${shell}', () => {
+      beforeEach(() => cy.visit('/'));
+    
+      it('should display welcome message', () => {
+        getGreeting().contains('Welcome ${shell}');
+        
+      });
+    
+      it('should navigate to /about from /', () => {
+        cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
+        1
+      )}').click();
+        cy.url().should('include', '/${remote}');
+        getGreeting().contains('Welcome ${remote}');
+      });
+    });
+    `
+    );
+
+    // Build host and remote
+    const buildOutput = runCLI(`build ${shell}`);
+    const remoteOutput = runCLI(`build ${remote}`);
+
+    expect(buildOutput).toContain('Successfully ran target build');
+    expect(remoteOutput).toContain('Successfully ran target build');
+
+    if (runE2ETests()) {
+      const hostE2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
+      const remoteE2eResults = runCLI(`e2e ${remote}-e2e --no-watch --verbose`);
+
+      expect(hostE2eResults).toContain('All specs passed!');
+      expect(remoteE2eResults).toContain('All specs passed!');
+    }
+  }, 500_000);
+
   function readPort(appName: string): number {
     const config = readJson(join('apps', appName, 'project.json'));
     return config.targets.serve.options.port;
