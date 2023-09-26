@@ -71,7 +71,8 @@ describe('nx release', () => {
 
   it('should version and publish multiple related npm packages with zero config', async () => {
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync('git config user.name "Mr Nrwl"');
+    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(`git config user.name "Test"`);
     // Create a baseline version tag
     await runCommandAsync(`git tag v0.0.0`);
 
@@ -133,7 +134,7 @@ describe('nx release', () => {
       +
       + ### ❤️  Thank You
       +
-      + - Mr Nrwl
+      + - Test
 
 
     `);
@@ -148,7 +149,7 @@ describe('nx release', () => {
 
       ### ❤️  Thank You
 
-      - Mr Nrwl
+      - Test
     `);
 
     // This is the verdaccio instance that the e2e tests themselves are working from
