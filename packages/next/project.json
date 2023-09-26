@@ -53,11 +53,11 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/next"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js next",
-          "node ./scripts/add-dependency-to-build.js next @nrwl/next"
-        ]
+        "command": "node ./scripts/copy-readme.js next"
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js next @nrwl/next"
     },
     "lint": {}
   }
