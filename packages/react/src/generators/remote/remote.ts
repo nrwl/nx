@@ -22,7 +22,7 @@ import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
 
 export function addModuleFederationFiles(
   host: Tree,
-  options: NormalizedSchema<Schema>
+  options: NormalizedSchema
 ) {
   const templateVariables = {
     ...names(options.name),
@@ -30,33 +30,12 @@ export function addModuleFederationFiles(
     tmpl: '',
   };
 
-  const pathToModuleFederationFiles = options.typescriptConfiguration
-    ? 'module-federation-ts'
-    : 'module-federation';
-
   generateFiles(
     host,
-    join(__dirname, `./files/${pathToModuleFederationFiles}`),
+    join(__dirname, `./files/module-federation`),
     options.appProjectRoot,
     templateVariables
   );
-
-  if (options.typescriptConfiguration) {
-    const pathToWebpackConfig = joinPathFragments(
-      options.appProjectRoot,
-      'webpack.config.js'
-    );
-    const pathToWebpackProdConfig = joinPathFragments(
-      options.appProjectRoot,
-      'webpack.config.prod.js'
-    );
-    if (host.exists(pathToWebpackConfig)) {
-      host.delete(pathToWebpackConfig);
-    }
-    if (host.exists(pathToWebpackProdConfig)) {
-      host.delete(pathToWebpackProdConfig);
-    }
-  }
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
@@ -68,10 +47,11 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
 
 export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-  const options: NormalizedSchema<Schema> = {
-    ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
-    typescriptConfiguration: schema.typescriptConfiguration ?? true,
-  };
+  const options = await normalizeOptions<Schema>(
+    host,
+    schema,
+    '@nx/react:remote'
+  );
   const initAppTask = await applicationGenerator(host, {
     ...options,
     // Only webpack works with module federation for now.
@@ -113,7 +93,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     const projectConfig = readProjectConfiguration(host, options.projectName);
     projectConfig.targets.server.options.webpackConfig = joinPathFragments(
       projectConfig.root,
-      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      'webpack.server.config.js'
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }

@@ -25,18 +25,10 @@ export function updateHostWithRemote(
   }
 
   const hostConfig = readProjectConfiguration(host, hostName);
-  let moduleFederationConfigPath = joinPathFragments(
+  const moduleFederationConfigPath = joinPathFragments(
     hostConfig.root,
     'module-federation.config.js'
   );
-
-  if (!host.exists(moduleFederationConfigPath)) {
-    moduleFederationConfigPath = joinPathFragments(
-      hostConfig.root,
-      'module-federation.config.ts'
-    );
-  }
-
   const remoteDefsPath = joinPathFragments(
     hostConfig.sourceRoot,
     'remotes.d.ts'

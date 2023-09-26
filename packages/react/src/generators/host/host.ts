@@ -19,7 +19,7 @@ import {
 } from './lib/normalize-remote';
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
-import { NormalizedSchema, Schema } from './schema';
+import { Schema } from './schema';
 
 export async function hostGenerator(host: Tree, schema: Schema) {
   return hostGeneratorInternal(host, {
@@ -30,10 +30,11 @@ export async function hostGenerator(host: Tree, schema: Schema) {
 
 export async function hostGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
-  const options: NormalizedSchema = {
-    ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
-    typescriptConfiguration: schema.typescriptConfiguration ?? true,
-  };
+  const options = await normalizeOptions<Schema>(
+    host,
+    schema,
+    '@nx/react:host'
+  );
 
   const initTask = await applicationGenerator(host, {
     ...options,
@@ -64,7 +65,6 @@ export async function hostGeneratorInternal(host: Tree, schema: Schema) {
         ssr: options.ssr,
         skipFormat: true,
         projectNameAndRootFormat: options.projectNameAndRootFormat,
-        typescriptConfiguration: options.typescriptConfiguration,
       });
       remotePort++;
     }
@@ -93,7 +93,7 @@ export async function hostGeneratorInternal(host: Tree, schema: Schema) {
     const projectConfig = readProjectConfiguration(host, options.projectName);
     projectConfig.targets.server.options.webpackConfig = joinPathFragments(
       projectConfig.root,
-      `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      'webpack.server.config.js'
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }

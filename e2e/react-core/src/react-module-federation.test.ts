@@ -39,10 +39,10 @@ describe('React Module Federation', () => {
       `generate @nx/react:remote ${remote3} --style=css --host=${shell} --no-interactive`
     );
 
-    checkFilesExist(`apps/${shell}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote1}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote2}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote3}/module-federation.config.ts`);
+    checkFilesExist(`apps/${shell}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote1}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote2}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote3}/module-federation.config.js`);
 
     await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
       combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
@@ -54,7 +54,7 @@ describe('React Module Federation', () => {
     expect(readPort(remote3)).toEqual(4203);
 
     updateFile(
-      `apps/${shell}/webpack.config.ts`,
+      `apps/${shell}/webpack.config.js`,
       stripIndents`
         import { composePlugins, withNx, ModuleFederationConfig } from '@nx/webpack';
         import { withReact } from '@nx/react';
@@ -135,8 +135,8 @@ describe('React Module Federation', () => {
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
-    checkFilesExist(`${shell}/module-federation.config.ts`);
-    checkFilesExist(`${remote}/module-federation.config.ts`);
+    checkFilesExist(`${shell}/module-federation.config.js`);
+    checkFilesExist(`${remote}/module-federation.config.js`);
 
     // check default generated host is built successfully
     const buildOutput = runCLI(`run ${shell}:build:development`);
