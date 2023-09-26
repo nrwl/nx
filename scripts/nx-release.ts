@@ -79,6 +79,11 @@ const LARGE_BUFFER = 1024 * 1000000;
 
     runNxReleaseVersion();
 
+    execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
+      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+      maxBuffer: LARGE_BUFFER,
+    });
+
     let changelogCommand = `pnpm nx release changelog ${options.version} --tagVersionPrefix="" --interactive`;
     if (options.from) {
       changelogCommand += ` --from ${options.from}`;
@@ -102,6 +107,11 @@ const LARGE_BUFFER = 1024 * 1000000;
   }
 
   runNxReleaseVersion();
+
+  execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
+    stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
+    maxBuffer: LARGE_BUFFER,
+  });
 
   if (options.dryRun) {
     console.warn('Not Publishing because --dryRun was passed');
