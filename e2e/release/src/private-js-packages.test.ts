@@ -18,6 +18,7 @@ expect.addSnapshotSerializer({
         .replaceAll('/private/', '')
         .replaceAll(/public-pkg-\d+/g, '{public-project-name}')
         .replaceAll(/private-pkg\d+/g, '{private-project-name}')
+        .replaceAll(/\s\/{private-project-name}/g, ' {private-project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
           'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -147,7 +148,7 @@ describe('nx release - private JS packages', () => {
 
       > nx run {private-project-name}:nx-release-publish
 
-      Skipping package "@proj/{private-project-name}" from project "{private-project-name}", because it has \`"private": true\` in /{private-project-name}/package.json
+      Skipping package "@proj/{private-project-name}" from project "{private-project-name}", because it has \`"private": true\` in {private-project-name}/package.json
 
       > nx run {public-project-name}:nx-release-publish
 
