@@ -1,4 +1,4 @@
-# SAML Auth
+# SAML Auth Managed Offering
 
 ## Okta Set-up
 
@@ -17,8 +17,12 @@ You'll be entering it in the instructions below.
 
 3. On the Next page, configure it as below:
 
-   1. The Single Sign On URL needs to be: 2. If using the main-US cluster: `https://auth.nx.app/login/callback?connection=SAML-IDENTIFIER` 3. If using the EU cluster: `https://auth.eu.nx.app/login/callback?connection=SAML-IDENTIFIER`
+   1. The Single Sign On URL needs to be:
+      - If using the main-US cluster: `https://auth.nx.app/login/callback?connection=SAML-IDENTIFIER`
+      - If using the EU cluster: `https://auth.eu.nx.app/login/callback?connection=SAML-IDENTIFIER`
    2. The Audience should be `urn:auth0:nrwl:SAML-IDENTIFIER`
+      - If using the main-US cluster: `urn:auth0:nrwl:SAML-IDENTIFIER`
+      - If using the EU cluster: `urn:auth0:nxcloud-eu:SAML-IDENTIFIER`
 
    ![Okta 4](/nx-cloud/private/images/saml/okta_4_public.png)
 

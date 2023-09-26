@@ -1,6 +1,8 @@
 import { dirname, join } from 'path';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
+import { existsSync } from 'fs';
+import { workspaceRoot } from '../../../utils/workspace-root';
 
 const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
@@ -44,6 +46,11 @@ export function getSwcTranspiler(
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
+  let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
+  if (existsSync(rootTsConfig)) {
+    process.env.SWC_NODE_PROJECT = rootTsConfig;
+  }
+
   const cleanupFn = register(compilerOptions);
 
   return typeof cleanupFn === 'function' ? cleanupFn : () => {};
@@ -66,7 +73,9 @@ export function getTsNodeTranspiler(
     warnTsNodeUsage();
   }
 
-  return () => {};
+  return () => {
+    service.enabled(false);
+  };
 }
 
 export function getTranspiler(compilerOptions: CompilerOptions) {

@@ -1,3 +1,4 @@
+import { type JSX } from 'react';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
 import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
@@ -22,7 +23,7 @@ function Menu({ tabs }: { tabs: any[] }): JSX.Element {
             )}
             aria-current={tab.current ? 'page' : undefined}
           >
-            {tab.name}
+            {tab.content ?? tab.name}
           </Link>
         ))}
       </nav>
@@ -38,11 +39,20 @@ export function DocumentationHeader({
   toggleNav: (value: boolean) => void;
 }): JSX.Element {
   const router = useRouter();
-  const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
-  const isPackages: boolean = router.asPath.startsWith('/packages');
-  const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
-  const isChangelog: boolean = router.asPath.startsWith('/changelog');
-  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isChangelog;
+  let routerPath = router.asPath;
+  const isNxCloud: boolean = routerPath.startsWith('/nx-cloud');
+  const isAPI: boolean = routerPath.startsWith('/nx-api');
+  const isExtendingNx: boolean = routerPath.startsWith('/extending-nx');
+  const isPlugins: boolean = routerPath.startsWith('/plugin-registry');
+  const isChangelog: boolean = routerPath.startsWith('/changelog');
+  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const isNx: boolean =
+    !isNxCloud &&
+    !isAPI &&
+    !isExtendingNx &&
+    !isPlugins &&
+    !isChangelog &&
+    !isAiChat;
 
   const sections = [
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
@@ -54,17 +64,35 @@ export function DocumentationHeader({
     {
       name: 'Extending Nx',
       href: '/extending-nx/intro/getting-started',
+      current: isExtendingNx,
+    },
+    {
+      name: 'Plugins',
+      href: '/plugin-registry',
       current: isPlugins,
     },
     {
-      name: 'Packages',
-      href: '/packages',
-      current: isPackages,
+      name: 'API',
+      href: '/nx-api',
+      current: isAPI,
     },
     {
       name: 'Changelog',
       href: '/changelog',
       current: isChangelog,
+    },
+    {
+      name: 'AI Chat',
+      href: '/ai-chat',
+      current: isAiChat,
+      content: (
+        <>
+          <span>AI Chat</span>
+          <span className="ml-1 rounded-md bg-yellow-50 dark:bg-yellow-900/30 px-1.5 py-0.5 text-xs font-medium text-yellow-600 dark:text-yellow-400">
+            beta
+          </span>
+        </>
+      ),
     },
   ];
 

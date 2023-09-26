@@ -12,7 +12,7 @@ There are three main types of generators:
 
 ## Invoking Plugin Generators
 
-Generators allow you to create or modify your codebase in a simple and repeatable way. Generators are invoked using the [`nx generate`](/packages/nx/documents/generate) command.
+Generators allow you to create or modify your codebase in a simple and repeatable way. Generators are invoked using the [`nx generate`](/nx-api/nx/documents/generate) command.
 
 ```shell
 nx generate [plugin]:[generator-name] [options]
@@ -20,6 +20,16 @@ nx generate @nx/react:component mycmp --project=myapp
 ```
 
 It is important to have a clean git working directory before invoking a generator so that you can easily revert changes and re-invoke the generator with different inputs.
+
+## Build your own Generator
+
+Nx comes with a Devkit that allows you to build your own generator for your Nx workspace. Learn more about it on [our docs page](/extending-nx/recipes/local-generators) or have a look at the video below:
+
+{% youtube
+src="https://www.youtube.com/embed/myqfGDWC2go"
+title="Scaffold new Pkgs in a PNPM Workspaces Monorepo"
+caption="Demoes how to use Nx generators in a PNPM workspace to automate the creation of libraries"
+/%}
 
 ## See Also
 

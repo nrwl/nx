@@ -27,10 +27,7 @@ export default async function* detoxTestExecutor(
 
   try {
     if (!options.reuse && options.buildTarget) {
-      const buildTarget = parseTargetString(
-        options.buildTarget,
-        context.projectGraph
-      );
+      const buildTarget = parseTargetString(options.buildTarget, context);
       const buildOptions = readTargetOptions<DetoxBuildOptions>(
         buildTarget,
         context

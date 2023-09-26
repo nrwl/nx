@@ -10,8 +10,8 @@
         "accessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
         "cacheableOperations": [
           "build",
-          "lint-base",
           "lint",
+          "lint-base",
           "build-ng",
           "build-base",
           "build-native",
@@ -32,8 +32,7 @@
     }
   },
   "workspaceLayout": {
-    "appsDir": "",
-    "libsDir": ""
+    "projectNameAndRootFormat": "as-provided"
   },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -53,11 +52,33 @@
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
       {
-        "runtime": "node -p 'process.platform'"
+        "runtime": "node -p '`${process.platform}_${process.arch}`'"
       }
     ]
   },
+  "release": {
+    "groups": {
+      "npm": {
+        "projects": [
+          "packages/*",
+          "packages/nx/native-packages/*",
+          "packages-legacy/*"
+        ],
+        "version": {
+          "generatorOptions": {
+            "packageRoot": "build/packages/{projectName}",
+            "currentVersionResolver": "registry"
+          }
+        }
+      }
+    }
+  },
   "targetDefaults": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "build/packages/{projectName}"
+      }
+    },
     "build": {
       "dependsOn": ["build-base", "build-native"],
       "inputs": [

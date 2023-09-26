@@ -20,9 +20,13 @@ export async function setupSsrForRemote(
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, appName);
 
+  const pathToModuleFederationSsrFiles = options.typescriptConfiguration
+    ? 'module-federation-ssr-ts'
+    : 'module-federation-ssr';
+
   generateFiles(
     tree,
-    joinPathFragments(__dirname, '../files/module-federation-ssr'),
+    joinPathFragments(__dirname, `../files/${pathToModuleFederationSsrFiles}`),
     project.root,
     {
       ...options,

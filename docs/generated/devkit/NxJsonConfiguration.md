@@ -29,6 +29,7 @@ Nx.json configuration
 - [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope): string
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): string[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record&lt;string, unknown&gt;
+- [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
@@ -163,6 +164,14 @@ Configuration for Nx Plugins
 
 ---
 
+### release
+
+• `Optional` **release**: `NxReleaseConfiguration`
+
+**ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+
+---
+
 ### targetDefaults
 
 • `Optional` **targetDefaults**: `TargetDefaults`
@@ -191,8 +200,7 @@ Where new apps + libs should be placed
 
 #### Type declaration
 
-| Name                        | Type                           |
-| :-------------------------- | :----------------------------- |
-| `appsDir?`                  | `string`                       |
-| `libsDir?`                  | `string`                       |
-| `projectNameAndRootFormat?` | `"as-provided"` \| `"derived"` |
+| Name       | Type     |
+| :--------- | :------- |
+| `appsDir?` | `string` |
+| `libsDir?` | `string` |

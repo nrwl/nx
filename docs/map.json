@@ -59,6 +59,11 @@
                   "file": "shared/angular-standalone-tutorial/angular-standalone"
                 },
                 {
+                  "name": "Angular Monorepo",
+                  "id": "angular-monorepo-tutorial",
+                  "file": "shared/angular-tutorial/angular-monorepo"
+                },
+                {
                   "name": "Node Standalone",
                   "id": "node-server-tutorial",
                   "file": "shared/node-server-tutorial/1-code-generation"
@@ -101,102 +106,6 @@
               "name": "6 - Summary",
               "id": "06-summary",
               "file": "shared/core-tutorial/06-summary"
-            }
-          ]
-        },
-        {
-          "name": "React Monorepo Tutorial",
-          "id": "react-tutorial",
-          "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
-          "itemList": [
-            {
-              "name": "1 - Code Generation",
-              "id": "1-code-generation",
-              "file": "shared/react-tutorial/1-code-generation"
-            },
-            {
-              "name": "2 - Project Graph",
-              "id": "2-project-graph",
-              "file": "shared/react-tutorial/2-project-graph"
-            },
-            {
-              "name": "3 - Task Running",
-              "id": "3-task-running",
-              "file": "shared/react-tutorial/3-task-running"
-            },
-            {
-              "name": "4 - Workspace Optimization",
-              "id": "4-workspace-optimization",
-              "file": "shared/react-tutorial/4-workspace-optimization"
-            },
-            {
-              "name": "5 - Summary",
-              "id": "5-summary",
-              "file": "shared/react-tutorial/5-summary"
-            }
-          ]
-        },
-        {
-          "name": "React Standalone Tutorial",
-          "id": "react-standalone-tutorial",
-          "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
-          "itemList": [
-            {
-              "name": "1 - Code Generation",
-              "id": "1-code-generation",
-              "file": "shared/react-standalone-tutorial/1-code-generation"
-            },
-            {
-              "name": "2 - Project Graph",
-              "id": "2-project-graph",
-              "file": "shared/react-standalone-tutorial/2-project-graph"
-            },
-            {
-              "name": "3 - Task Running",
-              "id": "3-task-running",
-              "file": "shared/react-standalone-tutorial/3-task-running"
-            },
-            {
-              "name": "4 - Task Pipelines",
-              "id": "4-task-pipelines",
-              "file": "shared/react-standalone-tutorial/4-task-pipelines"
-            },
-            {
-              "name": "5 - Summary",
-              "id": "5-summary",
-              "file": "shared/react-standalone-tutorial/5-summary"
-            }
-          ]
-        },
-        {
-          "name": "Angular Monorepo Tutorial",
-          "id": "angular-tutorial",
-          "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
-          "itemList": [
-            {
-              "name": "1 - Code Generation",
-              "id": "1-code-generation",
-              "file": "shared/angular-tutorial/1-code-generation"
-            },
-            {
-              "name": "2 - Project Graph",
-              "id": "2-project-graph",
-              "file": "shared/angular-tutorial/2-project-graph"
-            },
-            {
-              "name": "3 - Task Running",
-              "id": "3-task-running",
-              "file": "shared/angular-tutorial/3-task-running"
-            },
-            {
-              "name": "4 - Workspace Optimization",
-              "id": "4-workspace-optimization",
-              "file": "shared/angular-tutorial/4-workspace-optimization"
-            },
-            {
-              "name": "5 - Summary",
-              "id": "5-summary",
-              "file": "shared/angular-tutorial/5-summary"
             }
           ]
         },
@@ -748,6 +657,13 @@
                   "file": "shared/recipes/storybook/plugin-react"
                 },
                 {
+                  "name": "Set up Storybook for Vue Projects",
+                  "id": "overview-vue",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+                  "file": "shared/recipes/storybook/plugin-vue"
+                },
+                {
                   "name": "Set up Storybook for Angular Projects",
                   "id": "overview-angular",
                   "tags": ["storybook"],
@@ -1022,6 +938,16 @@
                   "file": "shared/recipes/enable-tsc-batch-mode"
                 },
                 {
+                  "name": "Define Secondary Entrypoints for Typescript Packages",
+                  "id": "define-secondary-entrypoints",
+                  "file": "shared/recipes/tips-n-tricks/define-secondary-entrypoints"
+                },
+                {
+                  "name": "Compile Typescript Packages to Multiple Formats",
+                  "id": "compile-multiple-formats",
+                  "file": "shared/recipes/tips-n-tricks/compile-multiple-formats"
+                },
+                {
                   "name": "Keep Nx Versions in Sync",
                   "id": "keep-nx-versions-in-sync",
                   "tags": ["automate-updating-dependencies"],
@@ -1211,9 +1137,9 @@
           "description": "Discover our selection of examples and benchmarks.",
           "itemList": [
             {
-              "name": "Example Repos",
+              "name": "Nx with your favorite tech",
               "id": "example-repos",
-              "description": "Examples of different ways to use Nx",
+              "description": "Examples of different ways to use Nx with your favorite tech",
               "itemList": [
                 {
                   "name": "Add an Express Project",
@@ -1280,11 +1206,6 @@
                   "id": "add-fastify",
                   "description": "Add a Fastify project to your repo",
                   "file": "shared/recipes/add-stack/add-fastify"
-                },
-                {
-                  "name": "Powering Up React Development With Nx",
-                  "id": "react-nx",
-                  "file": "shared/examples/react-nx"
                 },
                 {
                   "name": "Using Apollo GraphQL",
@@ -1504,7 +1425,7 @@
               "id": "skip-nx-cache-flag",
               "file": "",
               "tags": ["cache-task-results"],
-              "path": "/packages/nx/documents/affected#skip-nx-cache",
+              "path": "/nx-api/nx/documents/affected#skip-nx-cache",
               "isExternal": true
             },
             {
@@ -1572,14 +1493,6 @@
               "id": "getting-started",
               "description": "Learn how to extend Nx by creating and releasing your own Nx plugin.",
               "file": "shared/plugins/intro"
-            },
-            {
-              "name": "Plugin Registry",
-              "description": "Browse official and community plugins",
-              "id": "registry",
-              "file": "",
-              "path": "/extending-nx/registry",
-              "isExternal": false
             }
           ]
         },
@@ -1985,6 +1898,11 @@
               "name": "view-logs",
               "id": "view-logs",
               "file": "generated/cli/view-logs"
+            },
+            {
+              "name": "release",
+              "id": "release",
+              "file": "generated/cli/release"
             }
           ]
         },
@@ -1996,7 +1914,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/workspace",
+              "path": "/nx-api/workspace",
               "file": "shared/packages/workspace/workspace-plugin"
             },
             {
@@ -2014,7 +1932,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/plugin",
+              "path": "/nx-api/plugin",
               "file": "shared/packages/plugin/plugin"
             }
           ]
@@ -2044,7 +1962,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/js",
+              "path": "/nx-api/js",
               "file": "shared/packages/js/js-plugin"
             }
           ]
@@ -2057,7 +1975,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/web",
+              "path": "/nx-api/web",
               "file": "shared/packages/web/web-plugin"
             }
           ]
@@ -2070,7 +1988,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/esbuild",
+              "path": "/nx-api/esbuild",
               "file": "shared/packages/esbuild/esbuild-plugin"
             }
           ]
@@ -2082,7 +2000,7 @@
           "itemList": [
             {
               "id": "overview",
-              "path": "/packages/vite",
+              "path": "/nx-api/vite",
               "name": "Overview of the Nx Vite Plugin",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
@@ -2096,7 +2014,7 @@
           "itemList": [
             {
               "id": "overview",
-              "path": "/packages/vue",
+              "path": "/nx-api/vue",
               "name": "Overview of the Nx Vue Plugin",
               "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
               "file": "shared/packages/vue/vue-plugin"
@@ -2110,7 +2028,7 @@
           "itemList": [
             {
               "id": "overview",
-              "path": "/packages/webpack",
+              "path": "/nx-api/webpack",
               "name": "Overview of the Nx Webpack Plugin",
               "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
               "file": "shared/packages/webpack/plugin-overview"
@@ -2125,7 +2043,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/angular",
+              "path": "/nx-api/angular",
               "file": "shared/packages/angular/angular-plugin"
             },
             {
@@ -2144,7 +2062,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/react",
+              "path": "/nx-api/react",
               "file": "shared/packages/react/react-plugin"
             }
           ]
@@ -2157,7 +2075,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/jest",
+              "path": "/nx-api/jest",
               "file": "shared/packages/jest/jest-plugin"
             }
           ]
@@ -2170,7 +2088,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/cypress",
+              "path": "/nx-api/cypress",
               "file": "shared/packages/cypress/cypress-plugin"
             }
           ]
@@ -2183,7 +2101,7 @@
             {
               "name": "Overview",
               "id": "overview",
-              "path": "/packages/playwright",
+              "path": "/nx-api/playwright",
               "file": "shared/packages/playwright/playwright-plugin"
             }
           ]
@@ -2197,7 +2115,7 @@
               "id": "overview",
               "name": "Nx Storybook Plugin Overview",
               "description": "This is an overview page for the Storybook plugin in Nx. It explains what Storybook is and how to set it up in your Nx workspace.",
-              "path": "/packages/storybook",
+              "path": "/nx-api/storybook",
               "file": "shared/packages/storybook/plugin-overview"
             },
             {
@@ -2222,7 +2140,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/linter",
+              "path": "/nx-api/linter",
               "file": "shared/packages/linter/linter-plugin"
             }
           ]
@@ -2235,19 +2153,19 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/eslint-plugin",
+              "path": "/nx-api/eslint-plugin",
               "file": "shared/packages/linter/eslint-plugin"
             },
             {
               "id": "enforce-module-boundaries",
               "name": "The `enforce-module-boundaries` rule",
-              "path": "/packages/eslint-plugin",
+              "path": "/nx-api/eslint-plugin",
               "file": "shared/packages/linter/enforce-module-boundaries"
             },
             {
               "id": "dependency-checks",
               "name": "The `dependency-checks` rule",
-              "path": "/packages/eslint-plugin",
+              "path": "/nx-api/eslint-plugin",
               "file": "shared/packages/linter/dependency-checks"
             }
           ]
@@ -2260,7 +2178,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/node",
+              "path": "/nx-api/node",
               "file": "shared/packages/node/node-plugin"
             }
           ]
@@ -2273,7 +2191,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/express",
+              "path": "/nx-api/express",
               "file": "shared/packages/express/express-plugin"
             }
           ]
@@ -2286,7 +2204,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/nest",
+              "path": "/nx-api/nest",
               "file": "shared/packages/nest/nest-plugin"
             }
           ]
@@ -2299,7 +2217,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/next",
+              "path": "/nx-api/next",
               "file": "shared/packages/next/plugin-overview"
             }
           ]
@@ -2312,7 +2230,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/detox",
+              "path": "/nx-api/detox",
               "file": "shared/packages/detox/detox-plugin"
             }
           ]
@@ -2325,7 +2243,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/react-native",
+              "path": "/nx-api/react-native",
               "file": "shared/packages/react-native/react-native-plugin"
             }
           ]
@@ -2338,7 +2256,7 @@
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/packages/expo",
+              "path": "/nx-api/expo",
               "file": "shared/packages/expo/expo-plugin"
             }
           ]

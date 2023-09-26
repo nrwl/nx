@@ -995,6 +995,15 @@
         "type": "executor"
       },
       {
+        "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
+        "file": "generated/packages/js/executors/release-publish.json",
+        "hidden": true,
+        "name": "release-publish",
+        "originalFilePath": "/packages/js/src/executors/release-publish/schema.json",
+        "path": "js/executors/release-publish",
+        "type": "executor"
+      },
+      {
         "description": "Start local registry with verdaccio",
         "file": "generated/packages/js/executors/verdaccio.json",
         "hidden": false,
@@ -1030,6 +1039,15 @@
         "name": "convert-to-swc",
         "originalFilePath": "/packages/js/src/generators/convert-to-swc/schema.json",
         "path": "js/generators/convert-to-swc",
+        "type": "generator"
+      },
+      {
+        "description": "DO NOT INVOKE DIRECTLY WITH `nx generate`. Use `nx release version` instead.",
+        "file": "generated/packages/js/generators/release-version.json",
+        "hidden": true,
+        "name": "release-version",
+        "originalFilePath": "/packages/js/src/generators/release-version/schema.json",
+        "path": "js/generators/release-version",
         "type": "generator"
       },
       {
@@ -1754,6 +1772,17 @@
         "path": "nx/documents/view-logs",
         "tags": [],
         "originalFilePath": "generated/cli/view-logs"
+      },
+      {
+        "id": "release",
+        "name": "release",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/release",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/release",
+        "tags": [],
+        "originalFilePath": "generated/cli/release"
       }
     ],
     "executors": [

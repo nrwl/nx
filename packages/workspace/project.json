@@ -75,16 +75,14 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/workspace"],
+      "command": "node ./scripts/copy-readme.js workspace"
+    },
+    "add-extra-dependencies": {
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
-          {
-            "command": "node ./scripts/copy-readme.js workspace"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js workspace nx"
-          },
+          "node ./scripts/add-dependency-to-build.js workspace nx",
           "node ./scripts/add-dependency-to-build.js workspace @nrwl/workspace"
         ],
         "parallel": false

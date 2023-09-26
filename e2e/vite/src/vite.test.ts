@@ -5,6 +5,7 @@ import {
   directoryExists,
   exists,
   fileExists,
+  getPackageManagerCommand,
   killPorts,
   listFiles,
   newProject,
@@ -14,12 +15,14 @@ import {
   removeFile,
   rmDist,
   runCLI,
+  runCommand,
   runCLIAsync,
   runCommandUntil,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
+  checkFilesExist,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -282,7 +285,7 @@ export function App() {
        <${buildableLibCmp} />
        <${nonBuildableLibCmp} />
        <p>{${buildableJsLibFn}()}</p>
-       <NxWelcome title="${app}" />
+       <NxWelcome title='${app}' />
       </div>
   );
 }
@@ -354,7 +357,7 @@ export default App;
     it('should collect coverage', () => {
       runCLI(`generate @nx/react:lib ${lib} --unitTestRunner=vitest`);
       updateFile(`libs/${lib}/vite.config.ts`, () => {
-        return `/// <reference types="vitest" />
+        return `/// <reference types='vitest' />
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -474,5 +477,72 @@ export default defineConfig({
       const result = await runCLIAsync(`test ${lib}`);
       expect(result.combinedOutput).toContain(`1 passed`);
     }, 100_000);
+  });
+
+  describe('ESM-only apps', () => {
+    beforeAll(() => {
+      newProject({ unsetProjectNameAndRootFormat: false });
+    });
+
+    it('should support ESM-only plugins in vite.config.ts for root apps (#NXP-168)', () => {
+      // ESM-only plugin to test with
+      updateFile(
+        'foo/package.json',
+        JSON.stringify({
+          name: '@acme/foo',
+          type: 'module',
+          version: '1.0.0',
+          main: 'index.js',
+        })
+      );
+      updateFile(
+        'foo/index.js',
+        `
+        export default function fooPlugin() {
+          return {
+            name: 'foo-plugin',
+            configResolved() {
+              console.log('Foo plugin');
+            }
+          }
+        }`
+      );
+      updateJson('package.json', (json) => {
+        json.devDependencies['@acme/foo'] = 'file:./foo';
+        return json;
+      });
+      runCommand(getPackageManagerCommand().install);
+
+      const rootApp = uniq('root');
+      runCLI(
+        `generate @nx/react:app ${rootApp} --rootProject --bundler=vite --unitTestRunner=none --e2eTestRunner=none --style=css --no-interactive`
+      );
+      updateJson(`package.json`, (json) => {
+        // This allows us to use ESM-only packages in vite.config.ts.
+        json.type = 'module';
+        return json;
+      });
+      updateFile(
+        `vite.config.ts`,
+        `
+        import fooPlugin from '@acme/foo';
+        import { defineConfig } from 'vite';
+        import react from '@vitejs/plugin-react';
+        import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+        
+        export default defineConfig({
+          cacheDir: './node_modules/.vite/root-app',
+          server: {
+            port: 4200,
+            host: 'localhost',
+          },
+          plugins: [react(), nxViteTsPaths(), fooPlugin()],
+        });`
+      );
+
+      runCLI(`build ${rootApp}`);
+
+      checkFilesExist(`dist/${rootApp}/index.html`);
+    });
   });
 });

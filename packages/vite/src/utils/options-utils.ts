@@ -89,10 +89,10 @@ export function getViteSharedConfig(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  const root = relative(
-    context.cwd,
-    joinPathFragments(context.root, projectRoot)
-  );
+  const root =
+    projectRoot === '.'
+      ? process.cwd()
+      : relative(context.cwd, joinPathFragments(context.root, projectRoot));
 
   return {
     mode: options.mode,
@@ -197,6 +197,6 @@ export function getVitePreviewOptions(
 }
 
 export function getNxTargetOptions(target: string, context: ExecutorContext) {
-  const targetObj = parseTargetString(target, context.projectGraph);
+  const targetObj = parseTargetString(target, context);
   return readTargetOptions(targetObj, context);
 }

@@ -9,7 +9,7 @@ Codifying your organization's best practices into local generators is a great wa
 ## Reorganizing Projects
 
 After some time of working within a workspace, projects might need to be moved or sometimes even removed.
-The workspace plugin provides the [`@nx/workspace:move`](/packages/workspace/generators/move) and [`@nx/workspace:remove`](/packages/workspace/generators/remove) generators to help aid with this.
+The workspace plugin provides the [`@nx/workspace:move`](/nx-api/workspace/generators/move) and [`@nx/workspace:remove`](/nx-api/workspace/generators/remove) generators to help aid with this.
 
 ### Moving Projects
 
@@ -24,7 +24,7 @@ Moving the files manually can be done easily but a lot of steps are often missed
 5. Paths in target options such as output path will be changed
 6. Other configuration will be updated too, such as `extends` in `tsconfig.json`, the name of the project in `jest.config.js`, and the extends in `.eslintrc.json`
 
-> See more about [`@nx/workspace:move`](/packages/workspace/generators/move)
+> See more about [`@nx/workspace:move`](/nx-api/workspace/generators/move)
 
 ### Removing Projects
 
@@ -37,12 +37,12 @@ Like when moving projects, some steps are often missed when removing projects. T
 3. The project's configuration will be removed.
 4. The path mapping in `tsconfig.base.json` will be removed.
 
-> See more about [`@nx/workspace:remove`](/packages/workspace/generators/remove)
+> See more about [`@nx/workspace:remove`](/nx-api/workspace/generators/remove)
 
 ## Running custom commands
 
-Executors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`nx:run-commands`](/packages/nx/executors/run-commands) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.
+Executors provide an optimized way of running targets but unfortunately, not every target has an executor written for it. The [`nx:run-commands`](/nx-api/nx/executors/run-commands) executor is an executor that runs any command or multiple commands in the shell. This can be useful when integrating with other tools which do not have an executor provided. There is also a generator to help configure this executor.
 
 Running `nx g @nx/workspace:run-commands printhello --project my-feature-lib --command 'echo hello'` will create a `my-feature-lib:printhello` target that executes `echo hello` in the shell.
 
-> See more about [`nx:run-commands`](/packages/nx/executors/run-commands)
+> See more about [`nx:run-commands`](/nx-api/nx/executors/run-commands)

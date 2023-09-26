@@ -495,25 +495,42 @@ for (const path of oldAngularTutorialPaths) {
  * New single-page standalone tutorials
  */
 const standaloneTutorialRedirects = {
-  '/shared/react-standalone-tutorial/1-code-generation':
+  '/showcase/example-repos/react-nx':
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/react-tutorial': '/getting-started/tutorials/react-monorepo-tutorial',
+  '/react-tutorial/1-code-generation':
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/react-tutorial/2-project-graph':
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/react-tutorial/3-task-running':
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/react-tutorial/4-task-pipelines':
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/react-tutorial/5-summary':
+    '/getting-started/tutorials/react-monorepo-tutorial',
+  '/react-standalone-tutorial':
     '/getting-started/tutorials/react-standalone-tutorial',
-  '/shared/react-standalone-tutorial/2-project-graph':
+  '/react-standalone-tutorial/1-code-generation':
     '/getting-started/tutorials/react-standalone-tutorial',
-  '/shared/react-standalone-tutorial/3-task-running':
+  '/react-standalone-tutorial/2-project-graph':
     '/getting-started/tutorials/react-standalone-tutorial',
-  '/shared/react-standalone-tutorial/4-task-pipelines':
+  '/react-standalone-tutorial/3-task-running':
     '/getting-started/tutorials/react-standalone-tutorial',
-  '/shared/react-standalone-tutorial/5-summary':
+  '/react-standalone-tutorial/4-task-pipelines':
     '/getting-started/tutorials/react-standalone-tutorial',
-  '/shared/angular-standalone-tutorial/1-code-generation':
+  '/react-standalone-tutorial/5-summary':
+    '/getting-started/tutorials/react-standalone-tutorial',
+  '/angular-standalone-tutorial':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  '/shared/angular-standalone-tutorial/2-project-graph':
+  '/angular-standalone-tutorial/1-code-generation':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  '/shared/angular-standalone-tutorial/3-task-running':
+  '/angular-standalone-tutorial/2-project-graph':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  '/shared/angular-standalone-tutorial/4-task-pipelines':
+  '/angular-standalone-tutorial/3-task-running':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  '/shared/angular-standalone-tutorial/5-summary':
+  '/angular-standalone-tutorial/4-task-pipelines':
+    '/getting-started/tutorials/angular-standalone-tutorial',
+  '/angular-standalone-tutorial/5-summary':
     '/getting-started/tutorials/angular-standalone-tutorial',
 };
 
@@ -680,6 +697,17 @@ const nested5minuteTutorialUrls = {
     '/getting-started/tutorials/angular-standalone-tutorial',
   '/tutorials/node-server-tutorial':
     '/getting-started/tutorials/node-server-tutorial',
+  '/angular-tutorial': '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/1-code-generation':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/2-project-graph':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/3-task-running':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/4-workspace-optimization':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
+  '/angular-tutorial/5-summary':
+    '/getting-started/tutorials/angular-monorepo-tutorial',
 };
 
 const pluginUrls = {
@@ -713,6 +741,7 @@ const pluginUrls = {
     '/extending-nx/recipes/local-generators',
   '/recipes/generators/modifying-files':
     '/extending-nx/recipes/modifying-files',
+  '/extending-nx/registry': '/plugin-registry',
 };
 
 const referenceUrls = {
@@ -733,6 +762,7 @@ const missingAndCatchAllRedirects = {
     '/storybook/executors-storybook',
   // Nx Console
   '/nx-console': '/using-nx/console',
+  '/packages/:path*': '/nx-api/:path*',
 };
 
 const movePluginFeaturesToCore = {

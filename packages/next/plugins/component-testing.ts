@@ -12,6 +12,7 @@ import {
   readCachedProjectGraph,
   readTargetOptions,
   stripIndents,
+  workspaceRoot,
 } from '@nx/devkit';
 import { withReact } from '@nx/react';
 import {
@@ -57,7 +58,13 @@ export function nxComponentTestingPreset(
   let buildFileReplacements = [];
   let buildOuputPath = `dist/${ctProjectName}/.next`;
   if (buildTarget) {
-    const parsedBuildTarget = parseTargetString(buildTarget, graph);
+    const parsedBuildTarget = parseTargetString(buildTarget, {
+      cwd: process.cwd(),
+      root: workspaceRoot,
+      isVerbose: false,
+      projectName: ctProjectName,
+      projectGraph: graph,
+    });
     const buildProjectConfig = graph.nodes[parsedBuildTarget.project]?.data;
     const buildExecutorContext = createExecutorContext(
       graph,

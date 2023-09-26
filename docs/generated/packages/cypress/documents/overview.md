@@ -110,11 +110,11 @@ For adding more dynamic configurations to your cypress configuration, you can lo
 
 If you're needing to pass a variable to cypress that you wish to not commit to your repository, i.e. API keys, or dynamic values based on configurations, i.e. API Urls. This is where [Cypress environment variables](https://docs.cypress.io/guides/guides/environment-variables) can be used.
 
-There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the [env executor option for cypress](https://nx.dev/packages/cypress/executors/cypress#env) or the commandline.
+There are a handful of ways to pass environment variables to Cypress, but the most common is going to be via the [`cypress.env.json` file](https://docs.cypress.io/guides/guides/environment-variables#Option-1-configuration-file), the [env executor option for cypress](/nx-api/cypress/executors/cypress#env) or the commandline.
 
 Create a `cypress.env.json` file in the projects root i.e. `apps/my-cool-app-e2e/cypress.env.json`. Cypress will automatically pick up this file. This method is helpful for configurations that you want to not commit. Just don't forget to add the file to the `.gitignore` and add documentation so people in your repo know what values to popluate in their local copy of the `cypress.env.json` file.
 
-Using [@nx/cypress:cypress](/packages/cypress/executors/cypress) env executor option is a good way to add values you want to define that you don't mine commit to the repository, such as a base API url. You can leverage [target configurations](/reference/project-configuration#targets) to define different values as well.
+Using [@nx/cypress:cypress](/nx-api/cypress/executors/cypress) env executor option is a good way to add values you want to define that you don't mine commit to the repository, such as a base API url. You can leverage [target configurations](/reference/project-configuration#targets) to define different values as well.
 
 Optionally, you can pass environment variables via the commandline with the `--env` flag.
 

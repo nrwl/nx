@@ -24,7 +24,7 @@ jest.debug.config.js
 # Issues scraper creates these files, stored by github's cache
 /scripts/issues-scraper/cached
 
-# Lerna creates this
+# We don't commit a CHANELGELOG.md file to the repo, we only create Github releases
 CHANGELOG.md
 
 # Next.js
@@ -36,8 +36,19 @@ CHANGELOG.md
 # Local dev files
 .env
 .bashrc
+.nx
 
 *.node
 
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
+.nx/cache
+
+.cargo/.package-cache
+.cargo/bin/
+.cargo/env
+.cargo/registry/
+.local/
+.npm/
+.profile
+.rustup/

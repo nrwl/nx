@@ -28,6 +28,23 @@
       "aliases": ["c"],
       "x-type": "component",
       "description": "Create a Vue component."
+    },
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/setup-tailwind",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Set up Tailwind configuration for a project."
+    },
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up storybook for a Vue app or library.",
+      "hidden": false
+    },
+    "stories": {
+      "factory": "./src/generators/stories/stories",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories for all components declared in an app or library.",
+      "hidden": false
     }
   }
 }

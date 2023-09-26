@@ -42,7 +42,7 @@ Example:
 }]
 ```
 
-Once merged, your plugin will be available when running the `nx list` command, and will also be available in the Plugin Registry on [nx.dev](https://nx.dev/extending-nx/registry)
+Once merged, your plugin will be available when running the `nx list` command, and will also be available in the Plugin Registry on [nx.dev](https://nx.dev/plugin-registry)
 -->
 
 # Community Plugin Submission

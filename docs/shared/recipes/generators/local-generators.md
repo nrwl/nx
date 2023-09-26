@@ -15,10 +15,11 @@ caption="Demoes how to use Nx generators in a PNPM workspace to automate the cre
 If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
-# replace `latest` with the version that matches your Nx version
 npm install @nx/plugin@latest
 nx g @nx/plugin:plugin my-plugin
 ```
+
+Note that `latest` should match the version of the `nx` plugins installed in your workspace.
 
 Use the Nx CLI to generate the initial files needed for your generator.
 
@@ -115,4 +116,4 @@ Nx uses the paths from `tsconfig.base.json` when running plugins locally, but us
 
 ## Generator Utilities
 
-The [`@nx/devkit` package](/packages/devkit/documents/nx_devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).
+The [`@nx/devkit` package](/nx-api/devkit/documents/nx_devkit) provides many utility functions that can be used in generators to help with modifying files, reading and updating configuration files, and working with an Abstract Syntax Tree (AST).

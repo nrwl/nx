@@ -63,12 +63,12 @@
       "outputs": ["{workspaceRoot}/build/packages/angular"],
       "dependsOn": ["build-ng", "build-base", "^build"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js angular",
-          "node ./scripts/add-dependency-to-build.js angular @nrwl/angular"
-        ],
+        "command": "node ./scripts/copy-readme.js angular",
         "parallel": false
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js angular @nrwl/angular"
     },
     "lint": {}
   },

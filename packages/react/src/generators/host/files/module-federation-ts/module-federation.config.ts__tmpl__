@@ -1,0 +1,10 @@
+import { ModuleFederationConfig } from '@nx/webpack';
+
+const config: ModuleFederationConfig = {
+    name: '<%= projectName %>',
+    remotes: [
+        <% remotes.forEach(function(r) {%> "<%= r.fileName %>", <% }); %>
+],
+};
+
+export default config;

@@ -53,7 +53,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/angular:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nx/angular:app ${appName} --projectNameAndRootFormat as-provided --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   }, 1_000_000);
@@ -64,7 +66,7 @@ describe('create-nx-workspace --preset=npm', () => {
 
     expect(() => {
       runCLI(
-        `generate @nx/angular:lib ${libName} --directory packages/${libName} --no-interactive`
+        `generate @nx/angular:lib ${libName} --directory packages/${libName} --projectNameAndRootFormat as-provided --no-interactive`
       );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
@@ -81,7 +83,7 @@ describe('create-nx-workspace --preset=npm', () => {
 
     expect(() =>
       runCLI(
-        `generate @nx/js:library ${libName} --directory packages/${libName} --no-interactive`
+        `generate @nx/js:library ${libName} --directory packages/${libName} --projectNameAndRootFormat as-provided --no-interactive`
       )
     ).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
@@ -97,7 +99,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() =>
-      runCLI(`generate @nx/web:app ${appName} --no-interactive`)
+      runCLI(
+        `generate @nx/web:app ${appName} --projectNameAndRootFormat as-provided --no-interactive`
+      )
     ).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -108,7 +112,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/react:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nx/react:app ${appName} --projectNameAndRootFormat as-provided --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -120,7 +126,7 @@ describe('create-nx-workspace --preset=npm', () => {
 
     expect(() => {
       runCLI(
-        `generate @nx/react:lib ${libName} --directory packages/${libName} --no-interactive`
+        `generate @nx/react:lib ${libName} --directory packages/${libName} --projectNameAndRootFormat as-provided --no-interactive`
       );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
@@ -136,7 +142,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/next:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nx/next:app ${appName} --projectNameAndRootFormat as-provided --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -148,7 +156,7 @@ describe('create-nx-workspace --preset=npm', () => {
 
     expect(() => {
       runCLI(
-        `generate @nx/next:lib ${libName} --directory packages/${libName} --no-interactive`
+        `generate @nx/next:lib ${libName} --directory packages/${libName} --projectNameAndRootFormat as-provided --no-interactive`
       );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
@@ -166,7 +174,7 @@ describe('create-nx-workspace --preset=npm', () => {
 
     expect(() => {
       runCLI(
-        `generate @nx/react-native:app ${appName} --install=false --no-interactive`
+        `generate @nx/react-native:app ${appName} --install=false --projectNameAndRootFormat as-provided --no-interactive`
       );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
@@ -179,7 +187,7 @@ describe('create-nx-workspace --preset=npm', () => {
 
     expect(() => {
       runCLI(
-        `generate @nx/react-native:lib ${libName} --directory packages/${libName} --no-interactive`
+        `generate @nx/react-native:lib ${libName} --directory packages/${libName} --projectNameAndRootFormat as-provided --no-interactive`
       );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
@@ -195,7 +203,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/node:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nx/node:app ${appName} --projectNameAndRootFormat as-provided --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -207,7 +217,7 @@ describe('create-nx-workspace --preset=npm', () => {
 
     expect(() => {
       runCLI(
-        `generate @nx/node:lib ${libName} --directory packages/${libName} --no-interactive`
+        `generate @nx/node:lib ${libName} --directory packages/${libName} --projectNameAndRootFormat as-provided --no-interactive`
       );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
@@ -223,7 +233,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/nest:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nx/nest:app ${appName} --projectNameAndRootFormat as-provided --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });
@@ -235,7 +247,7 @@ describe('create-nx-workspace --preset=npm', () => {
 
     expect(() => {
       runCLI(
-        `generate @nx/nest:lib ${libName} --directory packages/${libName} --no-interactive`
+        `generate @nx/nest:lib ${libName} --directory packages/${libName} --projectNameAndRootFormat as-provided --no-interactive`
       );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
@@ -251,7 +263,9 @@ describe('create-nx-workspace --preset=npm', () => {
     const appName = uniq('my-app');
 
     expect(() => {
-      runCLI(`generate @nx/express:app ${appName} --no-interactive`);
+      runCLI(
+        `generate @nx/express:app ${appName} --projectNameAndRootFormat as-provided --no-interactive`
+      );
     }).not.toThrowError();
     checkFilesExist('tsconfig.base.json');
   });

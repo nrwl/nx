@@ -57,16 +57,16 @@ npx create-nx-workspace@latest
 
 {% cards cols="3" lgCols="8" mdCols="6" smCols="5" moreLink="/showcase/example-repos" %}
 
-{% link-card title="Express" appearance="small" url="/packages/express" icon="express" /%}
+{% link-card title="Express" appearance="small" url="/nx-api/express" icon="express" /%}
 {% link-card title="Vue" appearance="small" url="/showcase/example-repos/add-vue" icon="vue" /%}
-{% link-card title="Next" appearance="small" url="/packages/next" icon="nextjs" /%}
+{% link-card title="Next" appearance="small" url="/nx-api/next" icon="nextjs" /%}
 {% link-card title="Nuxt" appearance="small" url="/showcase/example-repos/add-nuxt" icon="nuxt" /%}
-{% link-card title="Nest" appearance="small" url="/packages/nest" icon="nestjs" /%}
+{% link-card title="Nest" appearance="small" url="/nx-api/nest" icon="nestjs" /%}
 {% link-card title="Remix" appearance="small" url="/recipes/react/remix" icon="remix" /%}
-{% link-card title="Expo" appearance="small" url="/packages/expo" icon="expo" /%}
-{% link-card title="React Native" appearance="small" url="/packages/react-native" icon="react" /%}
+{% link-card title="Expo" appearance="small" url="/nx-api/expo" icon="expo" /%}
+{% link-card title="React Native" appearance="small" url="/nx-api/react-native" icon="react" /%}
 {% link-card title="Fastify" appearance="small" url="/showcase/example-repos/mongo-fastify" icon="fastify" /%}
-{% link-card title="Deno" appearance="small" url="https://github.com/nrwl/nx-labs/tree/main/packages/deno" icon="deno" /%}
+{% link-card title="Deno" appearance="small" url="https://github.com/nrwl/nx-labs/tree/main/api/deno" icon="deno" /%}
 {% link-card title="Svelte" appearance="small" url="/showcase/example-repos/add-svelte" icon="svelte" /%}
 {% link-card title="Solid" appearance="small" url="/showcase/example-repos/add-solid" icon="solid" /%}
 {% link-card title="Lit" appearance="small" url="/showcase/example-repos/add-lit" icon="lit" /%}
@@ -76,12 +76,12 @@ npx create-nx-workspace@latest
 {% link-card title="Rust" appearance="small" url="/showcase/example-repos/add-rust" icon="rust" /%}
 {% link-card title="Go" appearance="small" url="https://github.com/nrwl/nx-recipes/blob/main/go/README.md" icon="go" /%}
 {% link-card title=".NET" appearance="small" url="https://github.com/nrwl/nx-recipes/tree/main/dot-net-standalone" icon="dotnet" /%}
-{% link-card title="Cypress" appearance="small" url="/packages/cypress" icon="cypress" /%}
-{% link-card title="Playwright" appearance="small" url="/packages/playwright" icon="playwright" /%}
-{% link-card title="Vite" appearance="small" url="/packages/vite" icon="vite" /%}
-{% link-card title="Storybook" appearance="small" url="/packages/storybook" icon="storybook" /%}
-{% link-card title="Jest" appearance="small" url="/packages/jest" icon="jest" /%}
-{% link-card title="Rspack" appearance="small" url="/packages/rspack" icon="rspack" /%}
+{% link-card title="Cypress" appearance="small" url="/nx-api/cypress" icon="cypress" /%}
+{% link-card title="Playwright" appearance="small" url="/nx-api/playwright" icon="playwright" /%}
+{% link-card title="Vite" appearance="small" url="/nx-api/vite" icon="vite" /%}
+{% link-card title="Storybook" appearance="small" url="/nx-api/storybook" icon="storybook" /%}
+{% link-card title="Jest" appearance="small" url="/nx-api/jest" icon="jest" /%}
+{% link-card title="Rspack" appearance="small" url="/nx-api/rspack" icon="rspack" /%}
 
 {% /cards %}
 

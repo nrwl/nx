@@ -43,7 +43,7 @@ export function buildExplicitDependencies(
 
 function totalNumberOfFilesToProcess(ctx: CreateDependenciesContext) {
   let totalNumOfFilesToProcess = 0;
-  Object.values(ctx.filesToProcess).forEach(
+  Object.values(ctx.filesToProcess.projectFileMap).forEach(
     (t) => (totalNumOfFilesToProcess += t.length)
   );
   return totalNumOfFilesToProcess;

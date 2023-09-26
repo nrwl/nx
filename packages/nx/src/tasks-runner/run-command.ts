@@ -32,7 +32,7 @@ import {
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { getProjectFileMap } from '../project-graph/build-project-graph';
+import { getFileMap } from '../project-graph/build-project-graph';
 import { performance } from 'perf_hooks';
 
 async function getTerminalOutputLifeCycle(
@@ -117,7 +117,7 @@ function createTaskGraphAndValidateCycles(
 
   const cycle = findCycle(taskGraph);
   if (cycle) {
-    if (nxArgs.nxIgnoreCycles) {
+    if (process.env.NX_IGNORE_CYCLES === 'true' || nxArgs.nxIgnoreCycles) {
       output.warn({
         title: `The task graph has a circular dependency`,
         bodyLines: [`${cycle.join(' --> ')}`],
@@ -144,7 +144,7 @@ export async function runCommand(
   initiatingProject: string | null,
   extraTargetDependencies: Record<string, (TargetDependencyConfig | string)[]>,
   extraOptions: { excludeTaskDependencies: boolean; loadDotEnvFiles: boolean }
-) {
+): Promise<NodeJS.Process['exitCode']> {
   const status = await handleErrors(
     process.env.NX_VERBOSE_LOGGING === 'true',
     async () => {
@@ -189,9 +189,8 @@ export async function runCommand(
       return status;
     }
   );
-  // fix for https://github.com/nrwl/nx/issues/1666
-  if (process.stdin['unref']) (process.stdin as any).unref();
-  process.exit(status);
+
+  return status;
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
@@ -234,9 +233,9 @@ export async function invokeTasksRunner({
   if (daemonClient.enabled()) {
     hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
   } else {
-    const { projectFileMap, allWorkspaceFiles } = getProjectFileMap();
+    const { fileMap, allWorkspaceFiles } = getFileMap();
     hasher = new InProcessTaskHasher(
-      projectFileMap,
+      fileMap?.projectFileMap,
       allWorkspaceFiles,
       projectGraph,
       nxJson,

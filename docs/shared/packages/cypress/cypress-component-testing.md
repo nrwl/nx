@@ -3,12 +3,12 @@
 > Component testing requires Cypress v10 and above.
 > See our [guide for more information](/recipes/cypress/cypress-v11-migration) to migrate to Cypress v10.
 
-Unlike [E2E testing](/packages/cypress), component testing does not create a new project. Instead, Cypress component testing is added
-directly to a project, like [Jest](/packages/jest)
+Unlike [E2E testing](/nx-api/cypress), component testing does not create a new project. Instead, Cypress component testing is added
+directly to a project, like [Jest](/nx-api/jest)
 
 ## Add Component Testing to a Project
 
-> Currently only [@nx/react](/packages/react/generators/cypress-component-configuration), [@nx/angular](/packages/angular/generators/cypress-component-configuration), and [@nx/next](/packages/next/generators/cypress-component-configuration) plugins support component testing
+> Currently only [@nx/react](/nx-api/react/generators/cypress-component-configuration), [@nx/angular](/nx-api/angular/generators/cypress-component-configuration), and [@nx/next](/nx-api/next/generators/cypress-component-configuration) plugins support component testing
 
 Use the `cypress-component-configuration` generator from the respective plugin to add component testing to a project.
 
@@ -24,7 +24,7 @@ You can optionally pass in `--generate-tests` to create component tests for all 
 
 Component testing supports both applications and libraries. By default, the generator attempts to find the build target for you based on the project's dependent apps. But you can manually specify the build target to use via the `--build-target` option. Note, in most cases, the build target will be from a different project than the one being configured. The only case where the build targets are from the same project is when the component tests are being added to an application.
 
-> Note: The [@nx/next:cypress-component-configuration generator](/packages/next/generators/cypress-component-configuration) doesn't require a build target
+> Note: The [@nx/next:cypress-component-configuration generator](/nx-api/next/generators/cypress-component-configuration) doesn't require a build target
 
 ```shell
 nx g @nx/react:cypress-component-configuration --project=your-project --build-target=my-react-app:build

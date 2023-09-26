@@ -51,6 +51,35 @@ interface NxInstallationConfiguration {
 }
 
 /**
+ * **ALPHA**
+ */
+interface NxReleaseVersionConfiguration {
+  generator: string;
+  generatorOptions?: Record<string, unknown>;
+}
+
+/**
+ * **ALPHA**
+ */
+interface NxReleaseConfiguration {
+  /**
+   * @note: When no groups are configured at all (the default), all projects in the workspace are treated as
+   * if they were in a release group together.
+   */
+  groups?: Record<
+    string,
+    {
+      projects: string[] | string;
+      /**
+       * If no version config is provided for the group, we will assume that @nx/js:release-version
+       * is the desired generator implementation, allowing for terser config for the common case.
+       */
+      version?: NxReleaseVersionConfiguration;
+    }
+  >;
+}
+
+/**
  * Nx.json configuration
  *
  * @note: when adding properties here add them to `allowedWorkspaceExtensions` in adapter/compat.ts
@@ -88,7 +117,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   workspaceLayout?: {
     libsDir?: string;
     appsDir?: string;
-    projectNameAndRootFormat?: 'as-provided' | 'derived';
   };
   /**
    * Available Task Runners
@@ -158,6 +186,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * useful for workspaces that don't have a root package.json + node_modules.
    */
   installation?: NxInstallationConfiguration;
+
+  /**
+   * **ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
+   */
+  release?: NxReleaseConfiguration;
 }
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {

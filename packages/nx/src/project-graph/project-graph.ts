@@ -1,7 +1,4 @@
-import {
-  readProjectFileMapCache,
-  readProjectGraphCache,
-} from './nx-deps-cache';
+import { readFileMapCache, readProjectGraphCache } from './nx-deps-cache';
 import { buildProjectGraphUsingProjectFileMap } from './build-project-graph';
 import { output } from '../utils/output';
 import { markDaemonAsDisabled, writeDaemonLogs } from '../daemon/tmp-dir';
@@ -17,6 +14,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
 import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
+import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -24,14 +22,15 @@ import { readNxJson } from '../config/nx-json';
  */
 export function readCachedProjectGraph(): ProjectGraph {
   const projectGraphCache: ProjectGraph = readProjectGraphCache();
-  const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
-    ? stripIndents`
+  if (!projectGraphCache) {
+    const angularSpecificError = fileExists(`${workspaceRoot}/angular.json`)
+      ? stripIndents`
       Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script.
       The decorated CLI will compute the project graph.
       'ng --help' should say 'Smart, Fast and Extensible Build System'.
       `
-    : '';
-  if (!projectGraphCache) {
+      : '';
+
     throw new Error(stripIndents`
       [readCachedProjectGraph] ERROR: No cached ProjectGraph is available.
 
@@ -74,24 +73,24 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   const nxJson = readNxJson();
 
-  const {
-    allWorkspaceFiles,
-    projectFileMap,
-    projectConfigurations,
-    externalNodes,
-  } = await retrieveWorkspaceFiles(workspaceRoot, nxJson);
+  const { allWorkspaceFiles, fileMap, projectConfigurations, externalNodes } =
+    await retrieveWorkspaceFiles(workspaceRoot, nxJson);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
-  return (
+  const projectGraph = (
     await buildProjectGraphUsingProjectFileMap(
       projectConfigurations.projects,
       externalNodes,
-      projectFileMap,
+      fileMap,
       allWorkspaceFiles,
-      cacheEnabled ? readProjectFileMapCache() : null,
+      cacheEnabled ? readFileMapCache() : null,
       cacheEnabled
     )
   ).projectGraph;
+
+  unregisterPluginTSTranspiler();
+
+  return projectGraph;
 }
 
 function handleProjectGraphError(opts: { exitOnError: boolean }, e) {

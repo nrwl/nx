@@ -4,7 +4,6 @@ import {
   type JSX,
   RefObject,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -27,8 +26,6 @@ export function FeedContainer(): JSX.Element {
   const [error, setError] = useState<Error | null>(null);
   const [startedReply, setStartedReply] = useState(false);
   const [isStopped, setStopped] = useState(false);
-
-  const feedContainer: RefObject<HTMLDivElement> | undefined = useRef(null);
 
   const {
     messages,
@@ -57,14 +54,28 @@ export function FeedContainer(): JSX.Element {
     },
   });
 
-  const hasReply = useMemo(() => messages.length > 0, [messages]);
-
+  /*
+   * Determine whether we should scroll to the bottom of new messages.
+   * Scroll if:
+   * 1. New message has come in (length > previous length)
+   * 2. User is close to the bottom of the messages
+   *
+   * Otherwise, user is probably reading messages, so don't scroll.
+   */
+  const scrollableWrapperRef: RefObject<HTMLDivElement> | undefined =
+    useRef(null);
+  const currentMessagesLength = useRef(0);
   useEffect(() => {
-    if (feedContainer.current) {
-      const elements =
-        feedContainer.current.getElementsByClassName('feed-item');
-      elements[elements.length - 1].scrollIntoView({ behavior: 'smooth' });
+    if (!scrollableWrapperRef.current) return;
+    const el = scrollableWrapperRef.current;
+    let shouldScroll = false;
+    if (messages.length > currentMessagesLength.current) {
+      currentMessagesLength.current = messages.length;
+      shouldScroll = true;
+    } else if (el.scrollTop + el.clientHeight + 50 >= el.scrollHeight) {
+      shouldScroll = true;
     }
+    if (shouldScroll) el.scrollTo(0, el.scrollHeight);
   }, [messages, isLoading]);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -100,6 +111,7 @@ export function FeedContainer(): JSX.Element {
     <>
       {/*WRAPPER*/}
       <div
+        ref={scrollableWrapperRef}
         id="wrapper"
         data-testid="wrapper"
         className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
@@ -111,11 +123,7 @@ export function FeedContainer(): JSX.Element {
           >
             <div className="relative min-w-0 flex-auto">
               {/*MAIN CONTENT*/}
-              <div
-                ref={feedContainer}
-                data-document="main"
-                className="relative pb-36"
-              >
+              <div data-document="main" className="relative pb-36">
                 <Feed
                   activity={!!messages.length ? messages : [assistantWelcome]}
                   onFeedback={handleFeedback}
@@ -139,7 +147,7 @@ export function FeedContainer(): JSX.Element {
                     onRegenerate={handleRegenerate}
                     input={input}
                     isGenerating={isLoading}
-                    showNewChatCta={!isLoading && hasReply}
+                    showNewChatCta={!isLoading && messages.length > 0}
                     showRegenerateCta={isStopped}
                   />
                 </div>

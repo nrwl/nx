@@ -1,0 +1,32 @@
+import type { Meta, StoryObj } from '@storybook/vue3';
+import <%= componentName %> from './<%= componentImportFileName %>';
+<% if ( interactionTests ) { %>
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+<% } %>
+
+const meta: Meta<typeof <%= componentName %>> = {
+  component: <%= componentName %>,
+  title: '<%= componentName %>',
+};
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+
+export const Primary = {
+  args: {<% for (let prop of props) { %>
+    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+  },
+};
+
+<% if ( interactionTests ) { %>
+export const Heading: Story = {
+  args: {<% for (let prop of props) { %>
+    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/Welcome to <%=componentName%>!/gi)).toBeTruthy();
+  },
+};
+<% } %>

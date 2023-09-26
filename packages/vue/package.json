@@ -28,6 +28,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "minimatch": "3.0.5",
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/jest": "file:../jest",
@@ -40,12 +41,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "peerDependencies": {},
-  "exports": {
-    ".": "./index.js",
-    "./package.json": "./package.json",
-    "./migrations.json": "./migrations.json",
-    "./generators.json": "./generators.json",
-    "./executors.json": "./executors.json"
-  }
+  "peerDependencies": {}
 }
