@@ -15,6 +15,7 @@ import {
 } from './utils/github';
 import { launchEditor } from './utils/launch-editor';
 import { printDiff } from './utils/print-diff';
+import { prerelease } from 'semver';
 
 export async function changelogHandler(args: ChangelogOptions): Promise<void> {
   /**
@@ -22,7 +23,10 @@ export async function changelogHandler(args: ChangelogOptions): Promise<void> {
    * changelog customization, and how it will interact with independently released projects.
    */
   const tagVersionPrefix = args.tagVersionPrefix ?? 'v';
-  const releaseVersion = `${tagVersionPrefix}${args.version}`;
+  // Allow the user to pass the version with or without the prefix already applied
+  const releaseVersion = args.version.startsWith(tagVersionPrefix)
+    ? args.version
+    : `${tagVersionPrefix}${args.version}`;
 
   const githubRemote = getGitHubRemote(args.gitRemote);
   const token = await resolveGithubToken();
@@ -129,6 +133,9 @@ export async function changelogHandler(args: ChangelogOptions): Promise<void> {
       {
         version: releaseVersion,
         body: finalMarkdown,
+        prerelease: isPrerelease(
+          releaseVersion.replace(args.tagVersionPrefix, '')
+        ),
       },
       existingGithubReleaseForVersion
     );
@@ -160,4 +167,9 @@ function printReleaseLog(
   }
   console.log('');
   printDiff('', finalMarkdown);
+}
+
+function isPrerelease(version: string): boolean {
+  // prerelease returns an array of matching prerelease "components", or null if the version is not a prerelease
+  return prerelease(version) !== null;
 }
