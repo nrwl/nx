@@ -95,13 +95,13 @@
           },
           {
             "command": "node ./scripts/copy-readme.js nx"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
           }
         ],
         "parallel": false
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
     },
     "lint": {},
     "test": {},

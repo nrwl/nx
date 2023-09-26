@@ -48,11 +48,11 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/linter"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js linter",
-          "node ./scripts/add-dependency-to-build.js linter @nrwl/linter"
-        ]
+        "command": "node ./scripts/copy-readme.js linter"
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js linter @nrwl/linter"
     },
     "lint": {}
   },

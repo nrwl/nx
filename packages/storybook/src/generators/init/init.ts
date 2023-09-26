@@ -83,6 +83,15 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
       }
     }
 
+    if (schema.uiFramework === '@storybook/vue3-vite') {
+      if (
+        !packageJson.dependencies['@storybook/vue3'] &&
+        !packageJson.devDependencies['@storybook/vue3']
+      ) {
+        devDependencies['@storybook/vue3'] = storybook7VersionToInstall;
+      }
+    }
+
     if (schema.uiFramework === '@storybook/angular') {
       if (
         !packageJson.dependencies['@angular/forms'] &&
