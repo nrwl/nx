@@ -48,7 +48,7 @@ export default function Packages({
           githubRoot: 'https://github.com/nrwl/nx/blob/master',
           name: 'rspack',
           packageName: '@nrwl/rspack',
-          path: '/packages/rspack',
+          path: '/nx-api/rspack',
           root: '/packages/rspack',
           source: '/packages/rspack/src',
         },

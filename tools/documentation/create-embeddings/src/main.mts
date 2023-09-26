@@ -482,7 +482,7 @@ function createMarkdownForCommunityPlugins(): {
 }[] {
   return communityPlugins.map((plugin) => {
     return {
-      text: `## ${plugin.name} plugin\n\nThere is a ${plugin.name} community plugin.\n\nHere is the description for it: ${plugin.description}\n\nHere is the link to it: [${plugin.url}](${plugin.url})\n\nHere is the list of all the plugins that exist for Nx: https://nx.dev/extending-nx/registry`,
+      text: `## ${plugin.name} plugin\n\nThere is a ${plugin.name} community plugin.\n\nHere is the description for it: ${plugin.description}\n\nHere is the link to it: [${plugin.url}](${plugin.url})\n\nHere is the list of all the plugins that exist for Nx: https://nx.dev/plugin-registry`,
       url: plugin.url,
     };
   });
