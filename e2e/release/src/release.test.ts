@@ -1,8 +1,11 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
+  createFile,
+  exists,
   killProcessAndPorts,
   newProject,
+  readFile,
   runCLI,
   runCommandUntil,
   uniq,
@@ -66,6 +69,10 @@ describe('nx release', () => {
   afterAll(() => cleanupProject());
 
   it('should version and publish multiple related npm packages with zero config', async () => {
+    // Add an example feature so that we can generate a CHANGELOG.md for it
+    createFile('./an-awesome-new-thing.js', 'console.log("Hello world!");');
+    execSync(`git add --all && git commit -m "feat: an awesome new feature"`);
+
     const versionOutput = runCLI(`release version 999.9.9`);
 
     /**
@@ -99,6 +106,14 @@ describe('nx release', () => {
         /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
       ).length
     ).toEqual(1);
+
+    // Generate a changelog for the new version
+    expect(exists('CHANGELOG.md')).toEqual(false);
+
+    const changelogOutput = runCLI(`release changelog 999.9.9`);
+    expect(changelogOutput).toMatchInlineSnapshot();
+
+    expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot();
 
     // This is the verdaccio instance that the e2e tests themselves are working from
     const e2eRegistryUrl = execSync('npm config get registry')
