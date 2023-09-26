@@ -299,11 +299,17 @@ export function interpolateArgsIntoCommand(
     return command.replace(regex, (_, group: string) => opts.parsedArgs[group]);
   } else if (forwardAllArgs) {
     return `${command}${
-      opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
+      opts.__unparsed__.length > 0
+        ? ' ' + opts.__unparsed__.map(wrapInQuotesIfNeeded).join(' ')
+        : ''
     }`;
   } else {
     return command;
   }
+}
+
+function wrapInQuotesIfNeeded(arg: string) {
+  return arg.indexOf(' ') > -1 ? `"${arg}"` : arg;
 }
 
 function parseArgs(options: RunCommandsOptions) {

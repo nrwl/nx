@@ -179,6 +179,16 @@ describe('Run Commands', () => {
         )
       ).toEqual('echo one -a=b');
     });
+
+    it('should wrap unparsed args with spaces if necessary', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'react-native',
+          { __unparsed__: ['run-ios', '--simulator=iPhone 14 Pro'] } as any,
+          true
+        )
+      ).toEqual('react-native run-ios "--simulator=iPhone 14 Pro"');
+    });
   });
 
   describe('--color', () => {
