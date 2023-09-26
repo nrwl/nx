@@ -3,9 +3,8 @@ import { joinPathFragments, normalizePath } from '@nx/devkit';
 import { basename, dirname } from 'path';
 import type { NormalizedSchema } from '../schema';
 
-// Adapted from https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/find-module.ts#L29
-// to match the logic in the component schematic. It doesn't throw if it can't
-// find a module since the schematic would have thrown before getting here.
+// Adapted from https://github.com/angular/angular-cli/blob/732aab5fa7e63618c89dfbbb6f78753f706d7014/packages/schematics/angular/utility/find-module.ts#L29
+// to match the logic from the Angular CLI component schematic.
 const moduleExt = '.module.ts';
 const routingModuleExt = '-routing.module.ts';
 
@@ -13,7 +12,7 @@ export function findModuleFromOptions(
   tree: Tree,
   options: NormalizedSchema,
   projectRoot: string
-): string | null {
+): string {
   if (!options.module) {
     return normalizePath(findModule(tree, options.directory, projectRoot));
   } else {
@@ -49,7 +48,12 @@ export function findModuleFromOptions(
       }
     }
 
-    return null;
+    throw new Error(
+      `Specified module '${options.module}' does not exist.\n` +
+        `Looked in the following directories:\n    ${candidatesDirs.join(
+          '\n    '
+        )}`
+    );
   }
 }
 
