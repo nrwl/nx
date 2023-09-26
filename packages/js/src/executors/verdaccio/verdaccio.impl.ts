@@ -167,6 +167,7 @@ function setupNpm(options: VerdaccioExecutorSchema) {
         logger.info(`Reset npm registry to ${npmRegistryPath}`);
       } else {
         execSync(`npm config delete registry --location ${options.location}`);
+        logger.info('Cleared custom npm registry');
       }
       execSync(
         `npm config delete //localhost:${options.port}/:_authToken  --location ${options.location}`
@@ -267,6 +268,7 @@ function setupYarn(options: VerdaccioExecutorSchema) {
             } ${registryConfigName}` +
               (options.location === 'user' ? ' --home' : '')
           );
+          logger.info(`Cleared custom yarn ${registryConfigName}`);
         }
 
         if (whitelistedLocalhost) {
