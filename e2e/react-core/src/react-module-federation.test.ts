@@ -141,6 +141,17 @@ describe('React Module Federation', () => {
     // check default generated host is built successfully
     const buildOutput = runCLI(`run ${shell}:build:development`);
     expect(buildOutput).toContain('Successfully ran target build');
+
+    // check serves devRemotes ok
+    const shellProcess = await runCommandUntil(
+      `serve ${shell} --devRemotes=${remote} --verbose`,
+      (output) => {
+        return output.includes(
+          `All remotes started, server ready at http://localhost:4200`
+        );
+      }
+    );
+    await killProcessAndPorts(shellProcess.pid, 4200);
   }, 500_000);
 
   it('should support different versions workspace libs for host and remote', async () => {

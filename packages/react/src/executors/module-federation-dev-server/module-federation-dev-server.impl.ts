@@ -3,7 +3,6 @@ import {
   logger,
   parseTargetString,
   readTargetOptions,
-  runExecutor,
 } from '@nx/devkit';
 import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
 import { WebDevServerOptions } from '@nx/webpack/src/executors/dev-server/schema';
@@ -133,63 +132,46 @@ export default async function* moduleFederationDevServer(
     )} with ${knownRemotes.length} remotes`
   );
 
-  const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
-  let isCollectingStaticRemoteOutput = true;
+  let isCollectingRemoteOutput = true;
 
   for (const app of knownRemotes) {
     const appName = Array.isArray(app) ? app[0] : app;
-    if (devServeApps.includes(appName)) {
-      devRemoteIters.push(
-        await runExecutor(
-          {
-            project: appName,
-            target: 'serve',
-            configuration: context.configurationName,
-          },
-          {
-            watch: true,
-          },
-          context
-        )
-      );
-    } else {
-      let outWithErr: null | string[] = [];
-      const staticProcess = fork(
-        nxBin,
-        [
-          'run',
-          `${appName}:serve-static${
-            context.configurationName ? `:${context.configurationName}` : ''
-          }`,
-        ],
-        {
-          cwd: context.root,
-          stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-        }
-      );
-      staticProcess.stdout.on('data', (data) => {
-        if (isCollectingStaticRemoteOutput) {
-          outWithErr.push(data.toString());
-        } else {
-          outWithErr = null;
-          staticProcess.stdout.removeAllListeners('data');
-        }
-      });
-      staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
-      staticProcess.on('exit', (code) => {
-        if (code !== 0) {
-          logger.info(outWithErr.join(''));
-          throw new Error(`Remote failed to start. See above for errors.`);
-        }
-      });
-      process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
-      process.on('exit', () => staticProcess.kill('SIGTERM'));
-    }
+    const target = devServeApps.includes(appName) ? 'serve' : 'serve-static';
+    let outWithErr: null | string[] = [];
+    const remoteProcess = fork(
+      nxBin,
+      [
+        'run',
+        `${appName}:${target}${
+          context.configurationName ? `:${context.configurationName}` : ''
+        }`,
+      ],
+      {
+        cwd: context.root,
+        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      }
+    );
+    remoteProcess.stdout.on('data', (data) => {
+      if (isCollectingRemoteOutput) {
+        outWithErr.push(data.toString());
+      } else {
+        outWithErr = null;
+        remoteProcess.stdout.removeAllListeners('data');
+      }
+    });
+    remoteProcess.stderr.on('data', (data) => logger.info(data.toString()));
+    remoteProcess.on('exit', (code) => {
+      if (code !== 0) {
+        logger.info(outWithErr.join(''));
+        throw new Error(`Remote failed to start. See above for errors.`);
+      }
+    });
+    process.on('SIGTERM', () => remoteProcess.kill('SIGTERM'));
+    process.on('exit', () => remoteProcess.kill('SIGTERM'));
   }
 
   return yield* combineAsyncIterables(
     currIter,
-    ...devRemoteIters,
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
         if (remotePorts.length === 0) {
@@ -208,7 +190,7 @@ export default async function* moduleFederationDevServer(
               })
             )
           );
-          isCollectingStaticRemoteOutput = false;
+          isCollectingRemoteOutput = false;
           logger.info(
             `NX All remotes started, server ready at http://localhost:${options.port}`
           );
