@@ -403,7 +403,7 @@ export function getRunner(
   let runner = nxArgs.runner;
   runner = runner || 'default';
 
-  if (runner !== 'default' && !nxJson.tasksRunnerOptions[runner]) {
+  if (runner !== 'default' && !nxJson.tasksRunnerOptions?.[runner]) {
     throw new Error(`Could not find runner configuration for ${runner}`);
   }
 
@@ -417,7 +417,12 @@ export function getRunner(
 
   return {
     tasksRunner,
-    runnerOptions: getRunnerOptions(runner, nxJson, nxArgs),
+    runnerOptions: getRunnerOptions(
+      runner,
+      nxJson,
+      nxArgs,
+      modulePath === 'nx-cloud'
+    ),
   };
 }
 function getTasksRunnerPath(
@@ -433,9 +438,10 @@ function getTasksRunnerPath(
     return modulePath;
   }
 
-  // No runner prop in tasks runner options, check if access token is set.
   const isCloudRunner =
-    nxJson.accessToken ||
+    // No tasksRunnerOptions for given --runner
+    nxJson.nxCloudAccessToken ||
+    // No runner prop in tasks runner options, check if access token is set.
     nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken;
 
   return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
@@ -444,7 +450,8 @@ function getTasksRunnerPath(
 function getRunnerOptions(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>,
-  nxArgs: NxArgs
+  nxArgs: NxArgs,
+  isCloudDefault: boolean
 ): any {
   const defaultCacheableOperations = [];
 
@@ -459,8 +466,8 @@ function getRunnerOptions(
     ...nxArgs,
   };
 
-  if (nxJson.accessToken) {
-    result.accessToken ??= nxJson.accessToken;
+  if (nxJson.nxCloudAccessToken && isCloudDefault) {
+    result.accessToken ??= nxJson.nxCloudAccessToken;
   }
 
   if (nxJson.parallel) {

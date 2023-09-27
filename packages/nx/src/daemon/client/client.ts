@@ -64,6 +64,7 @@ export class DaemonClient {
 
   enabled() {
     if (this._enabled === undefined) {
+      // TODO(v18): Add migration to move it out of existing configs and remove the ?? here.
       const useDaemonProcessOption =
         this.nxJson.useDaemonProcess ??
         this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;

@@ -89,7 +89,7 @@ describe('getRunner', () => {
     const { tasksRunner } = getRunner(
       {},
       {
-        accessToken: 'XXXX-XXX-XXXX',
+        nxCloudAccessToken: 'XXXX-XXX-XXXX',
       }
     );
 

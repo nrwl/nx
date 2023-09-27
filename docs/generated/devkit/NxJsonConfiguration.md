@@ -18,7 +18,6 @@ Nx.json configuration
 
 ### Properties
 
-- [accessToken](../../devkit/documents/NxJsonConfiguration#accesstoken): string
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
@@ -29,6 +28,7 @@ Nx.json configuration
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
 - [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope): string
+- [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
 - [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): string[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record&lt;string, unknown&gt;
@@ -39,15 +39,6 @@ Nx.json configuration
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
-
-### accessToken
-
-• `Optional` **accessToken**: `string`
-
-If specified Nx will use nx-cloud by default with the given token.
-To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
-
----
 
 ### affected
 
@@ -61,7 +52,7 @@ Default options for `nx affected`
 
 • `Optional` **cacheDirectory**: `string`
 
-Changes the default location of the cache directory.
+Changes the directory used by Nx to store its cache.
 
 ---
 
@@ -169,11 +160,20 @@ NPM Scope that the workspace uses
 
 ---
 
+### nxCloudAccessToken
+
+• `Optional` **nxCloudAccessToken**: `string`
+
+If specified Nx will use nx-cloud by default with the given token.
+To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
+
+---
+
 ### parallel
 
 • `Optional` **parallel**: `number`
 
-Specifies how many tasks are ran in parallel by Nx for the default tasks runner.
+Specifies how many tasks can be run in parallel.
 
 ---
 
@@ -203,7 +203,7 @@ Configuration for Nx Plugins
 
 ### targetDefaults
 
-• `Optional` **targetDefaults**: `TargetDefaults`
+• `Optional` **targetDefaults**: [`TargetDefaults`](../../devkit/documents/TargetDefaults)
 
 Dependencies between different target names across all projects
 
@@ -225,7 +225,7 @@ Available Task Runners
 
 • `Optional` **useDaemonProcess**: `boolean`
 
-Allows turning the daemon off if set to false explicitly.
+Set this to false to disable the daemon.
 
 ---
 

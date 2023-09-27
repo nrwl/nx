@@ -181,10 +181,4 @@ export interface TargetConfiguration<T = any> {
    * A default named configuration to use when a target configuration is not provided.
    */
   defaultConfiguration?: string;
-
-  /**
-   * Determines if Nx is able to cache a given target.
-   * Currently only supported in `targetDefaults`.
-   */
-  cache?: boolean;
 }

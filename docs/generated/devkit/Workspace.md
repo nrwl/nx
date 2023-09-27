@@ -16,7 +16,6 @@ use ProjectsConfigurations or NxJsonConfiguration
 
 ### Properties
 
-- [accessToken](../../devkit/documents/Workspace#accesstoken): string
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
 - [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
@@ -27,6 +26,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
 - [npmScope](../../devkit/documents/Workspace#npmscope): string
+- [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
 - [parallel](../../devkit/documents/Workspace#parallel): number
 - [plugins](../../devkit/documents/Workspace#plugins): string[]
 - [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, unknown&gt;
@@ -39,19 +39,6 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
 ## Properties
-
-### accessToken
-
-• `Optional` **accessToken**: `string`
-
-If specified Nx will use nx-cloud by default with the given token.
-To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
-
-#### Inherited from
-
-[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[accessToken](../../devkit/documents/NxJsonConfiguration#accesstoken)
-
----
 
 ### affected
 
@@ -69,7 +56,7 @@ Default options for `nx affected`
 
 • `Optional` **cacheDirectory**: `string`
 
-Changes the default location of the cache directory.
+Changes the directory used by Nx to store its cache.
 
 #### Inherited from
 
@@ -213,11 +200,24 @@ NPM Scope that the workspace uses
 
 ---
 
+### nxCloudAccessToken
+
+• `Optional` **nxCloudAccessToken**: `string`
+
+If specified Nx will use nx-cloud by default with the given token.
+To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken)
+
+---
+
 ### parallel
 
 • `Optional` **parallel**: `number`
 
-Specifies how many tasks are ran in parallel by Nx for the default tasks runner.
+Specifies how many tasks can be run in parallel.
 
 #### Inherited from
 
@@ -275,7 +275,7 @@ Projects' projects
 
 ### targetDefaults
 
-• `Optional` **targetDefaults**: `TargetDefaults`
+• `Optional` **targetDefaults**: [`TargetDefaults`](../../devkit/documents/TargetDefaults)
 
 Dependencies between different target names across all projects
 
@@ -305,7 +305,7 @@ Available Task Runners
 
 • `Optional` **useDaemonProcess**: `boolean`
 
-Allows turning the daemon off if set to false explicitly.
+Set this to false to disable the daemon.
 
 #### Inherited from
 

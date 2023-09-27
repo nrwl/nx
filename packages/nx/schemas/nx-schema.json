@@ -81,6 +81,22 @@
     "defaultProject": {
       "type": "string",
       "description": "Default project. When project isn't provided, the default project will be used."
+    },
+    "accessToken": {
+      "type": "string",
+      "description": "The access token to use for nx-cloud. If set, the default tasks runner will be nx-cloud."
+    },
+    "parallel": {
+      "type": "number",
+      "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
+    },
+    "cacheDirectory": {
+      "type": "string",
+      "description": "Specifies the default location of the cache directory."
+    },
+    "useDaemonProcess": {
+      "type": "boolean",
+      "description": "Specifies whether the daemon should be used for the default tasks runner."
     }
   },
   "definitions": {

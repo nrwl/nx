@@ -25,7 +25,16 @@ export interface NxAffectedConfig {
   defaultBase?: string;
 }
 
-export type TargetDefaults = Record<string, Partial<TargetConfiguration>>;
+export type TargetDefaults = Record<
+  string,
+  Partial<TargetConfiguration> & {
+    /**
+     * Determines if Nx is able to cache a given target.
+     * Currently only supported in `targetDefaults`.
+     */
+    cache?: boolean;
+  }
+>;
 
 export type TargetDependencies = Record<
   string,
@@ -196,20 +205,20 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * If specified Nx will use nx-cloud by default with the given token.
    * To use a different runner that accepts an access token, define it in {@link tasksRunnerOptions}
    */
-  accessToken?: string;
+  nxCloudAccessToken?: string;
 
   /**
-   * Specifies how many tasks are ran in parallel by Nx for the default tasks runner.
+   * Specifies how many tasks can be run in parallel.
    */
   parallel?: number;
 
   /**
-   * Changes the default location of the cache directory.
+   * Changes the directory used by Nx to store its cache.
    */
   cacheDirectory?: string;
 
   /**
-   * Allows turning the daemon off if set to false explicitly.
+   * Set this to false to disable the daemon.
    */
   useDaemonProcess?: boolean;
 }

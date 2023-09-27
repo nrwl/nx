@@ -1,8 +1,8 @@
-import { readNxJson } from '../config/configuration';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 
-export function isNxCloudUsed(nxJson = readNxJson()) {
+export function isNxCloudUsed(nxJson: NxJsonConfiguration) {
   return (
-    !!nxJson.accessToken ||
+    !!nxJson.nxCloudAccessToken ||
     Object.values(nxJson.tasksRunnerOptions ?? {}).find(
       (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
     )
@@ -10,7 +10,7 @@ export function isNxCloudUsed(nxJson = readNxJson()) {
 }
 
 export function getNxCloudUrl(): string {
-  const taskRunner = isNxCloudUsed();
+  const taskRunner = isNxCloudUsed(readNxJson());
   if (!taskRunner) throw new Error('nx-cloud runner not find in nx.json');
   return (
     (typeof taskRunner === 'object' ? taskRunner.options.url : null) ??
@@ -25,5 +25,5 @@ export function getNxCloudToken(): string {
 
   return typeof taskRunner === 'object'
     ? taskRunner.options.accessToken
-    : nxJson.accessToken;
+    : nxJson.nxCloudAccessToken;
 }
