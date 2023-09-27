@@ -1279,6 +1279,13 @@
           "description": "Understand how to use Nx functionalities, what arguments and options are available for each component.",
           "itemList": [
             {
+              "name": "Commands",
+              "id": "commands",
+              "file": "",
+              "path": "/nx-api/nx",
+              "isExternal": true
+            },
+            {
               "name": "Nx Configuration",
               "id": "nx-json",
               "file": "shared/reference/nx-json"
