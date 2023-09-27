@@ -2,6 +2,9 @@ import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  ensureCypressInstallation,
+  killPort,
+  killPorts,
   killProcessAndPorts,
   newProject,
   readJson,
@@ -22,7 +25,7 @@ describe('React Module Federation', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should generate host and remote apps', async () => {
+  it('xyz should generate host and remote apps', async () => {
     const shell = uniq('shell');
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
@@ -106,20 +109,17 @@ describe('React Module Federation', () => {
         });
       `
     );
-    // TODO(caleb): cypress isn't able to find the element and then throws error with an address already in use error.
-    // https://staging.nx.app/runs/ASAokpXhnE/task/e2e-react:e2e
-    // if (runCypressTests()) {
-    //   const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
-    //   expect(e2eResults).toContain('All specs passed!');
-    //   expect(
-    //     await killPorts([
-    //       readPort(shell),
-    //       readPort(remote1),
-    //       readPort(remote2),
-    //       readPort(remote3),
-    //     ])
-    //   ).toBeTruthy();
-    // }
+
+    ensureCypressInstallation();
+
+    const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
+    expect(e2eResults).toContain('All specs passed!');
+    await Promise.all([
+      killPort(readPort(shell)),
+      killPort(readPort(remote1)),
+      killPort(readPort(remote2)),
+      killPort(readPort(remote3)),
+    ]);
   }, 500_000);
 
   it('should should support generating host and remote apps with the new name and root format', async () => {
