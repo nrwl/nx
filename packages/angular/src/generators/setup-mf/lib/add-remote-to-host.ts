@@ -41,19 +41,19 @@ export function addRemoteToHost(tree: Tree, options: Schema) {
       addRemoteToDynamicHost(tree, options, pathToMFManifest);
     }
 
-    const declarationFilePath = joinPathFragments(
-      hostProject.sourceRoot,
-      'remotes.d.ts'
-    );
-
-    const declarationFileContent =
-      (tree.exists(declarationFilePath)
-        ? tree.read(declarationFilePath, 'utf-8')
-        : '') +
-      `\ndeclare module '${options.appName}/${
-        options.standalone ? `Routes` : `Module`
-      }';`;
-    tree.write(declarationFilePath, declarationFileContent);
+    // const declarationFilePath = joinPathFragments(
+    //   hostProject.sourceRoot,
+    //   'remotes.d.ts'
+    // );
+    //
+    // const declarationFileContent =
+    //   (tree.exists(declarationFilePath)
+    //     ? tree.read(declarationFilePath, 'utf-8')
+    //     : '') +
+    //   `\ndeclare module '${options.appName}/${
+    //     options.standalone ? `Routes` : `Module`
+    //   }';`;
+    // tree.write(declarationFilePath, declarationFileContent);
 
     addLazyLoadedRouteToHostAppModule(tree, options, hostFederationType);
   }
