@@ -11,12 +11,12 @@ export function AnnouncementBanner(): JSX.Element {
                 href="https://www.producthunt.com/posts/nx-cloud#nx-cloud"
                 className="underline"
               >
-                Nx Conf is happening again!!
+                Missed Nx Conf? Watch the recording!
               </Link>
             </span>
             <span className="hidden md:inline">
               <span className="font-semibold">
-                Nx Conf is happening again!!
+                Missed Nx Conf? Watch the recording!
               </span>
             </span>
             <span className="ml-2 inline-block">
