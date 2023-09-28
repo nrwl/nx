@@ -19,6 +19,7 @@ import { updateModuleFederationProject } from '../../rules/update-module-federat
 import { Schema } from './schema';
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
 import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
+import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -94,6 +95,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
 
   addModuleFederationFiles(host, options);
   updateModuleFederationProject(host, options);
+  setupTspathForRemote(host, options);
 
   if (options.ssr) {
     const setupSsrTask = await setupSsrGenerator(host, {
