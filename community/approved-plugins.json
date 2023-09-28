@@ -413,5 +413,10 @@
     "name": "@jnxplus/nx-maven",
     "description": "Nx plugin to add Maven multi-module project support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-maven"
+  },
+  {
+    "name": "@simondotm/nx-firebase",
+    "description": "Nx plugin to support Firebase Apps and Cloud Functions in Nx workspaces",
+    "url": "https://github.com/simondotm/nx-firebase"
   }
 ]
