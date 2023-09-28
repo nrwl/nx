@@ -22,7 +22,9 @@ export async function createAllStories(
   ignorePaths?: string[]
 ) {
   ensurePackage('@nx/storybook', nxVersion);
-  const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
+  const { isTheFileAStory } = await import(
+    '@nx/storybook/src/utils/utilities.js'
+  );
 
   const projects = getProjects(tree);
   const projectConfiguration = projects.get(projectName);

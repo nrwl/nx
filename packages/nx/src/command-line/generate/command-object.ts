@@ -12,7 +12,9 @@ export const yargsGenerateCommand: CommandModule = {
     // Remove the command from the args
     args._ = args._.slice(1);
 
-    process.exit(await (await import('./generate')).generate(getCwd(), args));
+    process.exit(
+      await (await import('./generate.js')).generate(getCwd(), args)
+    );
   },
 };
 
@@ -28,7 +30,7 @@ export const yargsWorkspaceGeneratorCommand: CommandModule = {
   builder: async (yargs) =>
     linkToNxDevAndExamples(withGenerateOptions(yargs), 'workspace-generator'),
   handler: async (args) => {
-    await (await import('./generate')).workspaceGenerators(args);
+    await (await import('./generate.js')).workspaceGenerators(args);
     process.exit(0);
   },
 };

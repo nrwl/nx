@@ -54,7 +54,7 @@ export async function subscribeToOutputsChanges(
 }
 
 export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
-  const { Watcher } = await import('../../native');
+  const { Watcher } = await import('../../native/index.js');
 
   let relativeServerProcess = normalizePath(
     relative(workspaceRoot, serverProcessJsonPath)
@@ -94,7 +94,7 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
 }
 
 export async function watchOutputFiles(cb: FileWatcherCallback) {
-  const { Watcher } = await import('../../native');
+  const { Watcher } = await import('../../native/index.js');
 
   let watcher = new Watcher(workspaceRoot, null, false);
   watcher.watch((err, events) => {

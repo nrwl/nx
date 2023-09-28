@@ -58,7 +58,7 @@ export async function jestConfigParser(
   // support passing extra args to jest cli supporting 3rd party plugins
   // like 'jest-runner-groups' --group arg
   const schema = await import('./schema.json');
-  const extraArgs = getExtraArgs(options, schema);
+  const extraArgs = getExtraArgs(options, schema.default);
 
   const config: Config.Argv = {
     ...extraArgs,
@@ -185,7 +185,7 @@ export async function batchJest(
   }
   if (projectsWithNoName.length > 0) {
     throw new Error(
-      stripIndents`Some projects do not have a "displayName" property. Jest Batch Mode requires this to be set. Please ensure this value is set. 
+      stripIndents`Some projects do not have a "displayName" property. Jest Batch Mode requires this to be set. Please ensure this value is set.
 
       Projects missing "displayName":
       ${projectsWithNoName.map(

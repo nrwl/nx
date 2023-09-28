@@ -5,9 +5,9 @@ import {
   getViteSharedConfig,
   getViteBuildOptions,
   getVitePreviewOptions,
-} from '../../utils/options-utils';
-import { ViteBuildExecutorOptions } from '../build/schema';
-import { VitePreviewServerExecutorOptions } from './schema';
+} from '../../utils/options-utils.mjs';
+import type { ViteBuildExecutorOptions } from '../build/schema.d.ts';
+import type { VitePreviewServerExecutorOptions } from './schema.d.ts';
 
 interface CustomBuildTargetOptions {
   outputPath: string;

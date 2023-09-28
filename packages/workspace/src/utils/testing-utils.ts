@@ -8,7 +8,7 @@ import { Architect, BuilderContext, Target } from '@angular-devkit/architect';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { json, JsonObject } from '@angular-devkit/core';
 import { ScheduleOptions } from '@angular-devkit/architect/src/api';
-import { LoggerApi, LogLevel } from '@angular-devkit/core/src/logger';
+import { LoggerApi, LogLevel } from '@angular-devkit/core/src/logger/index';
 
 /**
  * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. Use tree.read(filePath, 'utf-8') instead.

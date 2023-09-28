@@ -500,11 +500,13 @@ function readPluginMainFromProjectConfiguration(
 }
 
 async function getDefaultPlugins(root: string) {
-  const plugins: NxPlugin[] = [await import('../plugins/js')];
+  const plugins: NxPlugin[] = [await import('../plugins/js/index.js')];
 
   if (shouldMergeAngularProjects(root, false)) {
     plugins.push(
-      await import('../adapter/angular-json').then((m) => m.NxAngularJsonPlugin)
+      await import('../adapter/angular-json.js').then(
+        (m) => m.NxAngularJsonPlugin
+      )
     );
   }
   return plugins;

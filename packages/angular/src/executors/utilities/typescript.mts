@@ -11,7 +11,7 @@ import type {
   CompilerOptions,
   ParsedConfiguration,
 } from '@angular/compiler-cli';
-import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
+import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli.js';
 import { resolve } from 'path';
 import * as ts from 'typescript';
 

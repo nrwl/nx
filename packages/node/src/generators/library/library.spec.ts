@@ -460,10 +460,10 @@ describe('lib', () => {
           preset: '../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\.[tj]s$': 'babel-jest',
+            '^.+\\\\.[tj]s$': 'babel-jest'
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-lib',
+          coverageDirectory: '../coverage/my-lib'
         };
         "
       `);

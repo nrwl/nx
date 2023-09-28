@@ -2,17 +2,12 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
-import type { AxiosRequestConfig } from 'axios';
 import * as chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
 import { joinPathFragments, output } from '../../../devkit-exports';
 import { GitCommit, Reference } from './git';
-
-// axios types and values don't seem to match
-import _axios = require('axios');
-const axios = _axios as any as typeof _axios['default'];
 
 export interface GithubRequestConfig {
   repo: string;
@@ -100,6 +95,10 @@ export async function generateMarkdown(
   releaseVersion: string,
   githubRequestConfig: GithubRequestConfig
 ) {
+  const _axios = await import('axios');
+  // axios types and values don't seem to match
+  const axios = _axios as any as typeof _axios['default'];
+
   const typeGroups = groupBy(commits, 'type');
 
   const markdown: string[] = [];
@@ -273,8 +272,16 @@ export async function getGithubReleaseByTag(
 async function makeGithubRequest(
   config: GithubRequestConfig,
   url: string,
-  opts: AxiosRequestConfig = {}
+  opts: {
+    method?: 'GET' | 'POST' | 'PATCH';
+    data?: GithubRelease;
+    headers?: Record<string, string>;
+  } = {}
 ) {
+  const _axios = await import('axios');
+  // axios types and values don't seem to match
+  const axios = _axios as any as typeof _axios['default'];
+
   return (
     await axios<any, any>(url, {
       ...opts,

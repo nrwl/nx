@@ -21,7 +21,7 @@ export async function addFiles(
   // must dyanmicaly import to prevent packages not using cypress from erroring out
   // when importing react
   const { addMountDefinition, addDefaultCTConfig } = await import(
-    '@nx/cypress/src/utils/config'
+    '@nx/cypress/src/utils/config.js'
   );
 
   // Specifically undefined to allow Remix workaround of passing an empty string

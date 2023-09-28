@@ -14,5 +14,12 @@
     "jest.config.ts",
     "test-setup.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": [
+    "**/*.ts",
+    "src/executors/ng-packagr-lite/ng-packagr-adjustments/ngc/compile-source-files.mts",
+    "src/runtime/nx/data-persistence.mts",
+    "src/executors/utilities/typescript.mts",
+    "index.mts",
+    "src/executors/package/package.impl.mts"
+  ]
 }

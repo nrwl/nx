@@ -18,5 +18,5 @@ export const yargsRunManyCommand: CommandModule = {
       'run-many'
     ),
   handler: async (args) =>
-    (await import('./run-many')).runMany(withOverrides(args)),
+    (await import('./run-many.js')).runMany(withOverrides(args)),
 };

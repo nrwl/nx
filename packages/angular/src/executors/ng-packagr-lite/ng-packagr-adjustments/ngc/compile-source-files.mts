@@ -11,7 +11,7 @@ import type {
   CompilerOptions,
   ParsedConfiguration,
 } from '@angular/compiler-cli';
-import { BuildGraph } from 'ng-packagr/lib/graph/build-graph';
+import { BuildGraph } from 'ng-packagr/lib/graph/build-graph.js';
 import {
   EntryPointNode,
   isEntryPointInProgress,

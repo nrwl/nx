@@ -3,7 +3,7 @@
     "target": "ES2021",
     "importHelpers": true,
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "outDir": "build",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,

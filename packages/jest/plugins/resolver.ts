@@ -1,6 +1,6 @@
 import { dirname, extname, join } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
-import type defaultResolver from 'jest-resolve/build/defaultResolver';
+import { ResolverOptions } from 'jest-resolve';
 
 interface ResolveOptions {
   rootDir: string;
@@ -9,7 +9,7 @@ interface ResolveOptions {
   moduleDirectory: string[];
   browser: boolean;
   extensions: string[];
-  defaultResolver: typeof defaultResolver;
+  defaultResolver: ResolverOptions['defaultResolver'];
 }
 
 let compilerSetup;

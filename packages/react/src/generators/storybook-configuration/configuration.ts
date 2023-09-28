@@ -13,7 +13,7 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   // TODO(v18): remove Cypress
   ensurePackage('@nx/cypress', nxVersion);
   const { getE2eProjectName } = await import(
-    '@nx/cypress/src/utils/project-name'
+    '@nx/cypress/src/utils/project-name.js'
   );
   const projectConfig = readProjectConfiguration(host, schema.name);
   const cypressProject = getE2eProjectName(

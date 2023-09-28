@@ -20,5 +20,5 @@ export const yargsRepairCommand: CommandModule = {
         'Prints additional information about the commands (e.g., stack traces)',
     }),
   handler: async (args: ArgumentsCamelCase<{ verbose: boolean }>) =>
-    process.exit(await (await import('./repair')).repair(args)),
+    process.exit(await (await import('./repair.js')).repair(args)),
 };

@@ -6,11 +6,11 @@ import {
   getNxTargetOptions,
   getViteServerOptions,
   getViteBuildOptions,
-} from '../../utils/options-utils';
+} from '../../utils/options-utils.mjs';
 
-import { ViteDevServerExecutorOptions } from './schema';
-import { ViteBuildExecutorOptions } from '../build/schema';
-import { createBuildableTsConfig } from '../../utils/executor-utils';
+import type { ViteDevServerExecutorOptions } from './schema.d.ts';
+import type { ViteBuildExecutorOptions } from '../build/schema.d.ts';
+import { createBuildableTsConfig } from '../../utils/executor-utils.js';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,

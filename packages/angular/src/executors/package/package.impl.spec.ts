@@ -15,7 +15,7 @@ import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
 } from './ng-packagr-adjustments/ng-package/package.di';
-import { packageExecutor } from './package.impl';
+import { packageExecutor } from './package.impl.mjs';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
 
 describe('Package executor', () => {

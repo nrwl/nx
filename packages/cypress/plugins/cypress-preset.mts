@@ -2,7 +2,7 @@ import { workspaceRoot } from '@nx/devkit';
 import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
-import vitePreprocessor from '../src/plugins/preprocessor-vite';
+import vitePreprocessor from '../src/plugins/preprocessor-vite.mjs';
 
 interface BaseCypressPreset {
   videosFolder: string;

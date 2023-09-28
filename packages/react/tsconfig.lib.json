@@ -13,5 +13,5 @@
     "**/*_test.ts",
     "jest.config.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "plugins/component-testing/index.mts"]
 }

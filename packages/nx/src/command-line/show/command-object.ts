@@ -96,7 +96,8 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         '$0 show projects --affected --exclude=*-e2e',
         'Show affected projects in the workspace, excluding end-to-end projects'
       ) as any,
-  handler: (args) => import('./show').then((m) => m.showProjectsHandler(args)),
+  handler: (args) =>
+    import('./show.js').then((m) => m.showProjectsHandler(args)),
 };
 
 const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
@@ -114,5 +115,6 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         '$0 show project my-app',
         'View project information for my-app in JSON format'
       ),
-  handler: (args) => import('./show').then((m) => m.showProjectHandler(args)),
+  handler: (args) =>
+    import('./show.js').then((m) => m.showProjectHandler(args)),
 };

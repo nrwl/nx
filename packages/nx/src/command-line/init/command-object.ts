@@ -7,7 +7,7 @@ export const yargsInitCommand: CommandModule = {
     'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.',
   builder: (yargs) => withInitOptions(yargs),
   handler: async (args: any) => {
-    await (await import('./init')).initHandler(args);
+    await (await import('./init.js')).initHandler(args);
     process.exit(0);
   },
 };

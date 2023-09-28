@@ -27,7 +27,7 @@ export const yargsInternalMigrateCommand: CommandModule = {
   handler: async (args) =>
     process.exit(
       await (
-        await import('./migrate')
+        await import('./migrate.js')
       ).migrate(process.cwd(), args, process.argv.slice(3))
     ),
 };

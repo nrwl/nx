@@ -27,7 +27,7 @@ export async function addCTTargetWithBuildTarget(
   // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
   if (options.buildTarget === undefined) {
     const { findBuildConfig } = await import(
-      '@nx/cypress/src/utils/find-target-options'
+      '@nx/cypress/src/utils/find-target-options.js'
     );
     found = await findBuildConfig(tree, {
       project: options.project,

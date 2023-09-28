@@ -69,7 +69,7 @@ export function NxProjectGraphViz({
 
   useEffect(() => {
     if (containerRef.current !== null) {
-      import('./graph')
+      import('./graph.ts')
         .then((module) => module.GraphService)
         .then((GraphService) => {
           const graph = new GraphService(

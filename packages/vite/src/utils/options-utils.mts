@@ -15,10 +15,10 @@ import {
   searchForWorkspaceRoot,
   ServerOptions,
 } from 'vite';
-import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
-import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
-import replaceFiles from '../../plugins/rollup-replace-files.plugin';
-import { ViteBuildExecutorOptions } from '../executors/build/schema';
+import type { ViteDevServerExecutorOptions } from '../executors/dev-server/schema.d.ts';
+import type { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema.d.ts';
+import replaceFiles from '../../plugins/rollup-replace-files.plugin.js';
+import type { ViteBuildExecutorOptions } from '../executors/build/schema.d.ts';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
@@ -99,7 +99,7 @@ export function getViteSharedConfig(
     root,
     base: options.base,
     configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
-    plugins: [replaceFiles(options.fileReplacements) as PluginOption],
+    plugins: [replaceFiles.default(options.fileReplacements) as PluginOption],
     optimizeDeps: { force: options.force },
     clearScreen: clearScreen,
     logLevel: options.logLevel,

@@ -24,5 +24,5 @@ export const yargsDepGraphCommand: CommandModule = {
       .implies('base', 'affected')
       .implies('head', 'affected'),
   handler: async (args) =>
-    await (await import('./graph')).generateGraph(args as any, []),
+    await (await import('./graph.js')).generateGraph(args as any, []),
 };

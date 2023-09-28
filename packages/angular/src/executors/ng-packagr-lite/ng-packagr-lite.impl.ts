@@ -5,9 +5,9 @@ import {
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
-import { createLibraryExecutor } from '../package/package.impl';
+import { createLibraryExecutor } from '../package/package.impl.mjs';
 import type { BuildAngularLibraryExecutorOptions } from '../package/schema';
-import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
+import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript.mjs';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
 import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
 import {

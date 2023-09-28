@@ -406,7 +406,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       }
     } else {
       require('../../adapter/compat');
-      return (await import('../../adapter/ngcli-adapter')).generate(
+      return (await import('../../adapter/ngcli-adapter.js')).generate(
         workspaceRoot,
         {
           ...opts,

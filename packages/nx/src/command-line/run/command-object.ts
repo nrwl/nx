@@ -15,5 +15,5 @@ export const yargsRunCommand: CommandModule = {
     You can skip the use of Nx cache by using the --skip-nx-cache option.`,
   builder: (yargs) => withRunOneOptions(yargs),
   handler: async (args) =>
-    (await import('./run-one')).runOne(process.cwd(), withOverrides(args)),
+    (await import('./run-one.js')).runOne(process.cwd(), withOverrides(args)),
 };

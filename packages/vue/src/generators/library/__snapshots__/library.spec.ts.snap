@@ -145,81 +145,78 @@ exports[`lib should add correct jest.config.ts and dependencies to package.json 
 export default {
   displayName: 'my-lib',
   preset: '../jest.preset.js',
-
-  coverageDirectory: '../coverage/my-lib',
-  moduleFileExtensions: ['js', 'ts', 'json', 'vue'],
-  transform: {
-    '^.+.[tj]sx?$': ['babel-jest'],
-    '^.+.vue$': [
-      '@vue/vue3-jest',
-      {
-        tsConfig: './tsconfig.spec.json',
-      },
-    ],
-  },
-  testEnvironment: 'jsdom',
-  testMatch: ['**/__tests__/**/*.spec.ts?(x)', '**/__tests__/*.ts?(x)'],
-};
+  
+  
+  coverageDirectory: '../coverage/my-lib'
+,
+            moduleFileExtensions: ['js', 'ts', 'json', 'vue'],
+            transform: {
+              '^.+\\.[tj]sx?$': ['babel-jest'],
+              '^.+\\.vue$': [
+                '@vue/vue3-jest',
+                {
+                  tsConfig: './tsconfig.spec.json',
+                },
+              ],
+            },
+            testEnvironment: 'jsdom',
+            testMatch: ['**/__tests__/**/*.spec.ts?(x)', '**/__tests__/*.ts?(x)'],
+            };
 "
 `;
 
 exports[`lib should add correct jest.config.ts and dependencies to package.json 4`] = `
 "{
-  "presets": ["@nx/js/babel"]
+  "presets": [
+    "@nx/js/babel"
+  ]
 }
 "
 `;
 
 exports[`lib should add vite types to tsconfigs and generate correct vite.config.ts file 1`] = `
-"import vue from '@vitejs/plugin-vue';
+"import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite';
-import dts from 'vite-plugin-dts';
+      import dts from 'vite-plugin-dts';
 import * as path from 'path';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      
+      export default defineConfig({
+        cacheDir: '../node_modules/.vite/my-lib',
+        
+        
+        
+        plugins: [nxViteTsPaths(),
+dts({ entryRoot: 'src', tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'), skipDiagnostics: true }),
+vue(),
+],
+        
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [ nxViteTsPaths() ],
+    // },
+        
+      // Configuration for building your library.
+      // See: https://vitejs.dev/guide/build.html#library-mode
+      build: {
+          'entry': 'src/index.ts',
+'name': 'my-lib',
+'fileName': 'index',
+'formats': ['es', 'cjs'],
+'external': [],
+'lib': {"entry":"src/index.ts","name":"my-lib","fileName":"index","formats":["es","cjs"]},
+'rollupOptions': {"external":[]},
 
-export default defineConfig({
-  cacheDir: '../node_modules/.vite/my-lib',
+        },
+        
+        test: {
+          'globals': true,
+'cache': {"dir":"../node_modules/.vitest"},
+'environment': "jsdom",
+'include': ["src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"],
 
-  plugins: [
-    nxViteTsPaths(),
-    dts({
-      entryRoot: 'src',
-      tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
-      skipDiagnostics: true,
-    }),
-    vue(),
-  ],
-
-  // Uncomment this if you are using workers.
-  // worker: {
-  //  plugins: [ nxViteTsPaths() ],
-  // },
-
-  // Configuration for building your library.
-  // See: https://vitejs.dev/guide/build.html#library-mode
-  build: {
-    entry: 'src/index.ts',
-    name: 'my-lib',
-    fileName: 'index',
-    formats: ['es', 'cjs'],
-    external: [],
-    lib: {
-      entry: 'src/index.ts',
-      name: 'my-lib',
-      fileName: 'index',
-      formats: ['es', 'cjs'],
-    },
-    rollupOptions: { external: [] },
-  },
-
-  test: {
-    globals: true,
-    cache: { dir: '../node_modules/.vitest' },
-    environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-  },
-});
-"
+        },
+      });"
 `;
 
 exports[`lib should add vue, vite and vitest to package.json 1`] = `

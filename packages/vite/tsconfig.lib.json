@@ -4,6 +4,18 @@
     "outDir": "../../dist/out-tsc",
     "declaration": true
   },
-  "include": ["**/*.ts"],
+  "include": [
+    "**/*.ts",
+    "src/utils/options-utils.mts",
+    "src/executors/test/vitest.impl.mts",
+    "executors.mts",
+    "src/executors/build/build.impl.mts",
+    "src/executors/dev-server/dev-server.impl.mts",
+    "src/executors/preview-server/preview-server.impl.mts",
+    "src/executors/test/compat.mts",
+    "src/executors/preview-server/compat.mts",
+    "src/executors/dev-server/compat.mts",
+    "src/executors/build/compat.mts"
+  ],
   "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
 }

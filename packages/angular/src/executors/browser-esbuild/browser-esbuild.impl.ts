@@ -31,7 +31,7 @@ export default async function* esbuildExecutor(
     delegateExecutorOptions.tsConfig = tsConfigPath;
   }
   const { buildEsbuildBrowser } = await import(
-    '@angular-devkit/build-angular/src/builders/browser-esbuild/index'
+    '@angular-devkit/build-angular/src/builders/browser-esbuild/index.js'
   );
 
   const builderContext = await createBuilderContext(

@@ -3,4 +3,4 @@ export {
   navigation,
   optimisticUpdate,
   pessimisticUpdate,
-} from './src/runtime/nx/data-persistence';
+} from './src/runtime/nx/data-persistence.mjs';

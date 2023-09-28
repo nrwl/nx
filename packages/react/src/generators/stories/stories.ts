@@ -40,7 +40,7 @@ export async function projectRootPath(
   config: ProjectConfiguration
 ): Promise<string> {
   const { findStorybookAndBuildTargetsAndCompiler } = await import(
-    '@nx/storybook/src/utils/utilities'
+    '@nx/storybook/src/utils/utilities.js'
   );
   let projectDir: string;
   if (config.projectType === 'application') {
@@ -98,7 +98,9 @@ export async function createAllStories(
   cypressProject?: string,
   ignorePaths?: string[]
 ) {
-  const { isTheFileAStory } = await import('@nx/storybook/src/utils/utilities');
+  const { isTheFileAStory } = await import(
+    '@nx/storybook/src/utils/utilities.js'
+  );
 
   const { sourceRoot, root } = projectConfiguration;
   let componentPaths: string[] = [];

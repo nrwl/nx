@@ -10,8 +10,8 @@ import {
   getProjectTsConfigPath,
   getViteBuildOptions,
   getViteSharedConfig,
-} from '../../utils/options-utils';
-import { ViteBuildExecutorOptions } from './schema';
+} from '../../utils/options-utils.mjs';
+import type { ViteBuildExecutorOptions } from './schema.d.ts';
 import {
   copyAssets,
   createLockFile,
@@ -24,7 +24,7 @@ import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   createBuildableTsConfig,
   validateTypes,
-} from '../../utils/executor-utils';
+} from '../../utils/executor-utils.js';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,

@@ -1,14 +1,13 @@
 import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
-} from '@nx/cypress/plugins/cypress-preset';
-import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
+} from '@nx/cypress/plugins/cypress-preset.js';
+import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl.js';
 import {
   ExecutorContext,
   joinPathFragments,
   logger,
   parseTargetString,
-  ProjectGraph,
   readCachedProjectGraph,
   readTargetOptions,
   stripIndents,
@@ -18,7 +17,7 @@ import {
 import {
   createExecutorContext,
   getProjectConfigByPath,
-} from '@nx/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/src/utils/ct-helpers.js';
 
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
@@ -152,7 +151,7 @@ export function nxComponentTestingPreset(
     );
   } catch (e) {
     logger.warn(
-      stripIndents`Unable to build a webpack config with the project graph. 
+      stripIndents`Unable to build a webpack config with the project graph.
       Falling back to default webpack config.`
     );
     logger.warn(e);
@@ -217,7 +216,7 @@ function buildTargetWebpack(
   const ctProjectConfig = graph.nodes[componentTestingProjectName]?.data;
 
   if (!buildableProjectConfig || !ctProjectConfig) {
-    throw new Error(stripIndents`Unable to load project configs from graph. 
+    throw new Error(stripIndents`Unable to load project configs from graph.
     Using build target '${buildTarget}'
     Has build config? ${!!buildableProjectConfig}
     Has component config? ${!!ctProjectConfig}

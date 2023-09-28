@@ -1,4 +1,4 @@
-import { boolean, CommandModule, middleware } from 'yargs';
+import { CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import {
   withAffectedOptions,
@@ -34,7 +34,7 @@ export const yargsAffectedCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) =>
-    (await import('./affected')).affected('affected', withOverrides(args)),
+    (await import('./affected.js')).affected('affected', withOverrides(args)),
 };
 
 export const yargsAffectedTestCommand: CommandModule = {
@@ -48,7 +48,7 @@ export const yargsAffectedTestCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) =>
-    (await import('./affected')).affected('affected', {
+    (await import('./affected.js')).affected('affected', {
       ...withOverrides(args),
       target: 'test',
     }),
@@ -65,7 +65,7 @@ export const yargsAffectedBuildCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) =>
-    (await import('./affected')).affected('affected', {
+    (await import('./affected.js')).affected('affected', {
       ...withOverrides(args),
       target: 'build',
     }),
@@ -82,7 +82,7 @@ export const yargsAffectedLintCommand: CommandModule = {
       'affected'
     ),
   handler: async (args) =>
-    (await import('./affected')).affected('affected', {
+    (await import('./affected.js')).affected('affected', {
       ...withOverrides(args),
       target: 'lint',
     }),
@@ -99,7 +99,7 @@ export const yargsAffectedE2ECommand: CommandModule = {
       'affected'
     ),
   handler: async (args) =>
-    (await import('./affected')).affected('affected', {
+    (await import('./affected.js')).affected('affected', {
       ...withOverrides(args),
       target: 'e2e',
     }),
@@ -121,7 +121,7 @@ export const yargsAffectedGraphCommand: CommandModule = {
     ),
   handler: async (args) =>
     await (
-      await import('./affected')
+      await import('./affected.js')
     ).affected('graph', {
       ...args,
     }),
@@ -155,7 +155,7 @@ export const yargsPrintAffectedCommand: CommandModule = {
       }),
   handler: async (args) => {
     await (
-      await import('./affected')
+      await import('./affected.js')
     ).affected('print-affected', withOverrides(args));
     process.exit(0);
   },

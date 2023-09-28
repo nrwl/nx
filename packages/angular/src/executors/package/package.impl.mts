@@ -1,24 +1,24 @@
 import type { ExecutorContext } from '@nx/devkit';
-import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await.js';
 import {
   calculateProjectBuildableDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
   DependentBuildableProjectNode,
   updateBuildableProjectPackageJsonDependencies,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils.js';
 import type { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { from } from 'rxjs';
 import { mapTo, switchMap, tap } from 'rxjs/operators';
-import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
-import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
-import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
+import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript.mjs';
+import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di.js';
+import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di.js';
 import {
   NX_PACKAGE_PROVIDERS,
   NX_PACKAGE_TRANSFORM,
-} from './ng-packagr-adjustments/ng-package/package.di';
-import type { BuildAngularLibraryExecutorOptions } from './schema';
+} from './ng-packagr-adjustments/ng-package/package.di.js';
+import type { BuildAngularLibraryExecutorOptions } from './schema.d.ts';
 
 async function initializeNgPackagr(
   options: BuildAngularLibraryExecutorOptions,

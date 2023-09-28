@@ -7,5 +7,9 @@
     "types": ["node"]
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
-  "include": ["**/*.ts"]
+  "include": [
+    "**/*.ts",
+    "src/plugins/preprocessor-vite.mts",
+    "plugins/cypress-preset.mts"
+  ]
 }

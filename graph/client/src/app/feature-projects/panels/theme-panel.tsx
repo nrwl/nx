@@ -1,4 +1,3 @@
-import { Menu, Transition } from '@headlessui/react';
 import {
   ComputerDesktopIcon,
   MoonIcon,
@@ -16,10 +15,20 @@ export function ThemePanel(): JSX.Element {
   const [theme, setTheme] = useState(
     (localStorage.getItem(localStorageThemeKey) as Theme) || 'system'
   );
+  const [Menu, setMenu] = useState(null);
+  const [Transition, setTransition] = useState(null);
 
   useEffect(() => {
     themeResolver(theme);
   }, [theme]);
+
+  useEffect(() => {
+    (async function () {
+      const { Menu, Transition } = await import('@headlessui/react');
+      setMenu(Menu);
+      setTransition(Transition);
+    })();
+  }, []);
 
   return (
     <Menu as="div" className="relative inline-block text-left">

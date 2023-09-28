@@ -9,7 +9,7 @@ export const yargsWorkspaceLintCommand: CommandModule = {
   deprecated:
     'workspace-lint is deprecated, and will be removed in v17. The checks it used to perform are no longer relevant.  See: https://nx.dev/deprecated/workspace-lint',
   handler: async () => {
-    await (await import('./workspace-lint')).workspaceLint();
+    await (await import('./workspace-lint.js')).workspaceLint();
     process.exit(0);
   },
 };

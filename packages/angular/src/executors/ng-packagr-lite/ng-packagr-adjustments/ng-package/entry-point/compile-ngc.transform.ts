@@ -17,7 +17,7 @@ import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { getInstalledAngularVersionInfo } from '../../../../utilities/angular-version-utils';
-import { compileSourceFiles } from '../../ngc/compile-source-files';
+import { compileSourceFiles } from '../../ngc/compile-source-files.mjs';
 import { StylesheetProcessor as StylesheetProcessorClass } from '../../styles/stylesheet-processor';
 import { NgPackagrOptions } from '../options.di';
 

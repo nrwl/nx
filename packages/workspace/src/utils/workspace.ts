@@ -3,7 +3,7 @@ import { JsonArray, JsonObject, workspaces } from '@angular-devkit/core';
 import {
   ProjectDefinition,
   TargetDefinition,
-} from '@angular-devkit/core/src/workspace';
+} from '@angular-devkit/core/src/workspace/index';
 
 function createHost(tree: Tree): workspaces.WorkspaceHost {
   return {

@@ -293,7 +293,7 @@ async function addBundler(options: NormalizedOptions) {
   if (options.isVite) {
     output.log({ title: '🧑‍🔧  Setting up Vite' });
     const { addViteCommandsToPackageScripts } = await import(
-      './add-vite-commands-to-package-scripts'
+      './add-vite-commands-to-package-scripts.js'
     );
     addViteCommandsToPackageScripts(options.reactAppName, options.isStandalone);
     writeViteConfig(
@@ -310,7 +310,7 @@ async function addBundler(options: NormalizedOptions) {
   } else {
     output.log({ title: '🧑‍🔧  Setting up craco + Webpack' });
     const { addCracoCommandsToPackageScripts } = await import(
-      './add-craco-commands-to-package-scripts'
+      './add-craco-commands-to-package-scripts.js'
     );
     addCracoCommandsToPackageScripts(
       options.reactAppName,

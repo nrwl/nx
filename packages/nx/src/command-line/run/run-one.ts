@@ -55,7 +55,7 @@ export async function runOne(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
   if (nxArgs.help) {
-    await (await import('./run')).printTargetRunHelp(opts, workspaceRoot);
+    await (await import('./run.js')).printTargetRunHelp(opts, workspaceRoot);
     process.exit(0);
   }
 

@@ -116,7 +116,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
           'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
         default: '',
       }),
-  handler: (args) => import('./version').then((m) => m.versionHandler(args)),
+  handler: (args) => import('./version.js').then((m) => m.versionHandler(args)),
 };
 
 const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
@@ -165,7 +165,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         return true;
       }),
   handler: (args) =>
-    import('./changelog').then((m) => m.changelogHandler(args)),
+    import('./changelog.js').then((m) => m.changelogHandler(args)),
 };
 
 const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
@@ -183,7 +183,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
         description: 'The distribution tag to apply to the published package',
       }),
   handler: (args) =>
-    import('./publish').then((m) =>
+    import('./publish.js').then((m) =>
       m.publishHandler(coerceParallelOption(withOverrides(args, 2)))
     ),
 };

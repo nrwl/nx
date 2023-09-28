@@ -67,7 +67,7 @@ async function addFiles(
   opts: CypressComponentConfigurationGeneratorSchema
 ) {
   const { addMountDefinition, addDefaultCTConfig } = await import(
-    '@nx/cypress/src/utils/config'
+    '@nx/cypress/src/utils/config.js'
   );
 
   const ctFile = joinPathFragments(

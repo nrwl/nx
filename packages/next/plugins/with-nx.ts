@@ -144,7 +144,7 @@ function withNx(
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
   return async (phase: string) => {
-    const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
+    const { PHASE_PRODUCTION_SERVER } = await import('next/constants.js');
     if (phase === PHASE_PRODUCTION_SERVER) {
       // If we are running an already built production server, just return the configuration.
       // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
