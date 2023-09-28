@@ -32,6 +32,7 @@ import {
   onlyLoadChildren,
   stringifyTags,
   isComboDepConstraint,
+  appIsMFERemote,
 } from '../utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { basename, dirname, relative } from 'path';
@@ -515,7 +516,7 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // cannot import apps
-      if (targetProject.type === 'app') {
+      if (targetProject.type === 'app' && !appIsMFERemote(targetProject)) {
         context.report({
           node,
           messageId: 'noImportsOfApps',
