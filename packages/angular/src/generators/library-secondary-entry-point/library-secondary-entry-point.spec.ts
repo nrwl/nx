@@ -6,6 +6,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { generateTestLibrary } from '../utils/testing';
 import { librarySecondaryEntryPointGenerator } from './library-secondary-entry-point';
 
 describe('librarySecondaryEntryPoint generator', () => {
@@ -178,6 +179,38 @@ describe('librarySecondaryEntryPoint generator', () => {
         'libs/lib1/testing/**/*.html',
       ])
     );
+  });
+
+  it('should update the tsconfig "include" and "exclude" options', async () => {
+    await generateTestLibrary(tree, {
+      name: 'lib1',
+      directory: 'libs/lib1',
+      importPath: '@my-org/lib1',
+      publishable: true,
+    });
+    // verify initial state
+    let tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+    expect(tsConfig.include).toStrictEqual(['src/**/*.ts']);
+    expect(tsConfig.exclude).toStrictEqual([
+      'src/**/*.spec.ts',
+      'src/test-setup.ts',
+      'jest.config.ts',
+      'src/**/*.test.ts',
+    ]);
+
+    await librarySecondaryEntryPointGenerator(tree, {
+      name: 'testing',
+      library: 'lib1',
+    });
+
+    tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
+    expect(tsConfig.include).toStrictEqual(['**/*.ts']);
+    expect(tsConfig.exclude).toStrictEqual([
+      '**/*.spec.ts',
+      'test-setup.ts',
+      'jest.config.ts',
+      '**/*.test.ts',
+    ]);
   });
 
   it('should format files', async () => {
