@@ -53,13 +53,20 @@ function getModuleFederationConfig(
 
   let moduleFederationConfigPath = moduleFederationConfigPathJS;
 
+  // create a no-op so this can be called with issue
+  let tsNodeService;
   if (existsSync(moduleFederationConfigPathTS)) {
-    tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath);
+    tsNodeService = tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath, {
+      transpileOnly: true,
+    });
     moduleFederationConfigPath = moduleFederationConfigPathTS;
   }
 
   try {
     const config = require(moduleFederationConfigPath);
+    if (tsNodeService) {
+      tsNodeService.enabled(false);
+    }
     return config.default || config;
   } catch {
     throw new Error(

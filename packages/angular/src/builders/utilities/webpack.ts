@@ -26,9 +26,12 @@ export async function mergeCustomWebpackConfig(
 }
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
-  tsNodeRegister(path, tsConfig);
+  const tsNodeService = tsNodeRegister(path, tsConfig);
 
   const customWebpackConfig = require(path);
+  if (tsNodeService) {
+    tsNodeService.enabled(false);
+  }
   // If the user provides a configuration in TS file
   // then there are 2 cases for exporting an object. The first one is:
   // `module.exports = { ... }`. And the second one is:
@@ -42,9 +45,13 @@ export function resolveIndexHtmlTransformer(
   tsConfig: string,
   target: import('@angular-devkit/architect').Target
 ) {
-  tsNodeRegister(path, tsConfig);
-
+  const tsNodeService = tsNodeRegister(path, tsConfig);
   const indexTransformer = require(path);
+
+  if (tsNodeService) {
+    tsNodeService.enabled(false);
+  }
+
   const transform = indexTransformer.default ?? indexTransformer;
 
   return (indexHtml) => transform(target, indexHtml);

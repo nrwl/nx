@@ -4,7 +4,17 @@
   "sourceRoot": "graph/client-e2e/src",
   "projectType": "application",
   "targets": {
+    "pre-e2e": {
+      "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "{projectRoot}/jest.config.ts",
+        "passWithNoTests": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+    },
     "e2e-base": {
+      "dependsOn": ["pre-e2e"],
       "executor": "@nx/cypress:cypress",
       "options": {
         "testingType": "e2e",

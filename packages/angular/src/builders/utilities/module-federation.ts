@@ -91,13 +91,19 @@ function getModuleFederationConfig(
 
   let moduleFederationConfigPath = moduleFederationConfigPathJS;
 
+  let tsNodeService;
   if (existsSync(moduleFederationConfigPathTS)) {
-    tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath);
+    tsNodeService = tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath, {
+      transpileOnly: true,
+    });
     moduleFederationConfigPath = moduleFederationConfigPathTS;
   }
 
   try {
     const config = require(moduleFederationConfigPath);
+    if (tsNodeService) {
+      tsNodeService.enabled(false);
+    }
     return {
       mfeConfig: config.default || config,
       mfConfigPath: moduleFederationConfigPath,

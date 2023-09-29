@@ -4,7 +4,7 @@
     "sourceMap": false,
     "outDir": "../../dist/out-tsc",
     "allowJs": true,
-    "types": ["cypress", "node"],
+    "types": ["cypress", "jest", "node"],
     "lib": ["DOM"]
   },
   "files": [],
@@ -16,6 +16,10 @@
     "src/**/*.ts",
     "src/**/*.js"
   ],
-  "references": [],
-  "exclude": []
+  "references": [
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "exclude": ["src/**/*.spec.ts"]
 }

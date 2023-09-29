@@ -110,13 +110,13 @@ export const packageManagerLockFile = {
   pnpm: 'pnpm-lock.yaml',
 };
 
-export function ensureCypressInstallation() {
+export function ensureCypressInstallation(cwd = tmpProjPath()) {
   let cypressVerified = true;
   try {
     const r = execSync('npx cypress verify', {
       stdio: isVerbose() ? 'inherit' : 'pipe',
       encoding: 'utf-8',
-      cwd: tmpProjPath(),
+      cwd,
     });
     if (r.indexOf('Verified Cypress!') === -1) {
       cypressVerified = false;
@@ -129,7 +129,7 @@ export function ensureCypressInstallation() {
       execSync('npx cypress install', {
         stdio: isVerbose() ? 'inherit' : 'pipe',
         encoding: 'utf-8',
-        cwd: tmpProjPath(),
+        cwd,
       });
     }
   }
