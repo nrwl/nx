@@ -1,13 +1,13 @@
-import { TempFs } from '../../../../utils/testing/temp-fs';
+import { TempFs } from '../../../../internal-testing-utils/temp-fs';
 const tempFs = new TempFs('explicit-package-json');
 
 import { buildExplicitPackageJsonDependencies } from './explicit-package-json-dependencies';
 
 import { ProjectGraphProjectNode } from '../../../../config/project-graph';
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
-import { createProjectFileMap } from '../../../../project-graph/file-map-utils';
-import { fileHasher } from '../../../../hasher/file-hasher';
+import { createFileMap } from '../../../../project-graph/file-map-utils';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
+import { getAllFileDataInContext } from '../../../../utils/workspace-context';
 
 describe('explicit package json dependencies', () => {
   let ctx: CreateDependenciesContext;
@@ -51,8 +51,6 @@ describe('explicit package json dependencies', () => {
       }),
     });
 
-    await fileHasher.init();
-
     projects = {
       proj: {
         name: 'proj',
@@ -73,12 +71,12 @@ describe('explicit package json dependencies', () => {
       },
     };
 
-    const projectFileMap = createProjectFileMap(
+    const fileMap = createFileMap(
       projectsConfigurations as any,
-      fileHasher.allFileData()
-    ).projectFileMap;
+      getAllFileDataInContext(tempFs.tempDir)
+    ).fileMap;
 
-    const builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    const builder = new ProjectGraphBuilder(undefined, fileMap.projectFileMap);
     Object.values(projects).forEach((p) => {
       builder.addNode(p);
     });
@@ -92,11 +90,11 @@ describe('explicit package json dependencies', () => {
     });
 
     ctx = {
-      fileMap: projectFileMap,
+      fileMap: fileMap,
       externalNodes: builder.getUpdatedProjectGraph().externalNodes,
       projects: projectsConfigurations.projects,
       nxJsonConfiguration,
-      filesToProcess: projectFileMap,
+      filesToProcess: fileMap,
       workspaceRoot: tempFs.tempDir,
     };
   });

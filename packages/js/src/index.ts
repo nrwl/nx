@@ -10,6 +10,7 @@ export * from './utils/typescript/ast-utils';
 export * from './utils/package-json';
 export * from './utils/assets';
 export * from './utils/package-json/update-package-json';
+export * from './utils/package-json/create-entry-points';
 export { libraryGenerator } from './generators/library/library';
 export { initGenerator } from './generators/init/init';
 

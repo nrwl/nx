@@ -3,13 +3,21 @@ import {
   HandThumbUpIcon,
 } from '@heroicons/react/24/outline';
 import { cx } from '@nx/nx-dev/ui-primitives';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChatGptLogo } from './chat-gpt-logo';
-import ReactMarkdown from 'react-markdown';
 import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 
-const callout: string =
-  '{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n';
+// Exported for tests
+export function normalizeContent(content: string): string {
+  return (
+    content
+      // Prevents accidentally triggering numbered list.
+      .replace(/\n(\d)\./g, '\n$1\\.')
+      // The AI is prompted to replace relative links with absolute links (https://nx.dev/<path>).
+      // However, our docs renderer will prefix img src with `/documentation`, so we need to convert image links back to relative paths.
+      .replace(/\(https:\/\/nx.dev\/(.+?\.(png|svg|jpg|webp))\)/, '(/$1)')
+  );
+}
 
 export function FeedAnswer({
   content,
@@ -20,6 +28,14 @@ export function FeedAnswer({
   feedbackButtonCallback: (value: 'bad' | 'good') => void;
   isFirst: boolean;
 }) {
+  const callout = useMemo(
+    () =>
+      renderMarkdown(
+        `{% callout type="warning" title="Always double-check!" %}The results may not be accurate, so please always double check with our documentation.{% /callout %}\n`,
+        { filePath: '' }
+      ).node,
+    []
+  );
   const [feedbackStatement, setFeedbackStatement] = useState<
     'bad' | 'good' | null
   >(null);
@@ -30,6 +46,8 @@ export function FeedAnswer({
     setFeedbackStatement(statement);
     feedbackButtonCallback(statement);
   }
+
+  const normalizedContent = normalizeContent(content);
 
   return (
     <>
@@ -49,8 +67,8 @@ export function FeedAnswer({
         <div>
           <div className="text-lg flex gap-2 items-center text-slate-900 dark:text-slate-100">
             Nx Assistant{' '}
-            <span className="rounded-md bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 text-xs font-medium text-red-600 dark:text-red-400">
-              alpha
+            <span className="rounded-md bg-yellow-50 dark:bg-yellow-900/30 px-1.5 py-0.5 text-xs font-medium text-yellow-600 dark:text-yellow-400">
+              beta
             </span>
           </div>
           <p className="mt-0.5 flex items-center gap-x-1 text-sm text-slate-500">
@@ -62,11 +80,11 @@ export function FeedAnswer({
           </p>
         </div>
         <div className="mt-2 prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl">
-          {!isFirst && renderMarkdown(callout, { filePath: '' }).node}
-          <ReactMarkdown children={content} />
+          {!isFirst && callout}
+          {renderMarkdown(normalizedContent, { filePath: '' }).node}
         </div>
         {!isFirst && (
-          <div className="group text-xs flex-1 md:flex md:justify-end gap-4 md:items-center text-slate-400 hover:text-slate-500 transition">
+          <div className="group text-md flex-1 md:flex md:justify-end gap-4 md:items-center text-slate-400 hover:text-slate-500 transition">
             {feedbackStatement ? (
               <p className="italic group-hover:flex">
                 {feedbackStatement === 'good'
@@ -89,7 +107,7 @@ export function FeedAnswer({
                 title="Bad"
               >
                 <span className="sr-only">Bad answer</span>
-                <HandThumbDownIcon className="h-5 w-5" aria-hidden="true" />
+                <HandThumbDownIcon className="h-6 w-6" aria-hidden="true" />
               </button>
               <button
                 className={cx(
@@ -101,7 +119,7 @@ export function FeedAnswer({
                 title="Good"
               >
                 <span className="sr-only">Good answer</span>
-                <HandThumbUpIcon className="h-5 w-5" aria-hidden="true" />
+                <HandThumbUpIcon className="h-6 w-6" aria-hidden="true" />
               </button>
             </div>
           </div>

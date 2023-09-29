@@ -40,6 +40,7 @@ import { yargsShowCommand } from './show/command-object';
 import { yargsWatchCommand } from './watch/command-object';
 import { yargsWorkspaceLintCommand } from './workspace-lint/command-object';
 import { yargsResetCommand } from './reset/command-object';
+import { yargsReleaseCommand } from './release/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -78,6 +79,7 @@ export const commandsObject = yargs
   .command(yargsMigrateCommand)
   .command(yargsNewCommand)
   .command(yargsPrintAffectedCommand)
+  .command(yargsReleaseCommand)
   .command(yargsRepairCommand)
   .command(yargsReportCommand)
   .command(yargsResetCommand)

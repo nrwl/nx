@@ -19,6 +19,8 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 import { assertSupportedPlatform } from '../src/native/assert-supported-platform';
 import { performance } from 'perf_hooks';
+import { setupWorkspaceContext } from '../src/utils/workspace-context';
+import { daemonClient } from '../src/daemon/client/client';
 
 function main() {
   if (
@@ -64,6 +66,11 @@ function main() {
     ) {
       require('v8-compile-cache');
     }
+
+    if (!daemonClient.enabled() && workspace !== null) {
+      setupWorkspaceContext(workspace.dir);
+    }
+
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
     // https://twitter.com/BenLesh/status/1192478226385428483?s=20
     if (!(Symbol as any).observable)

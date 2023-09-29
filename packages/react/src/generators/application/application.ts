@@ -115,9 +115,8 @@ export async function applicationGeneratorInternal(
   addProject(host, options);
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
+    const { createOrEditViteConfig, viteConfigurationGenerator } =
+      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -138,6 +137,28 @@ export async function applicationGeneratorInternal(
       skipFormat: true,
     });
     tasks.push(viteTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: options.unitTestRunner === 'vitest',
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          `'react'`,
+          `'react-dom'`,
+          `'react/jsx-runtime'`,
+        ],
+        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+        imports: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      false
+    );
   } else if (options.bundler === 'webpack') {
     const { webpackInitGenerator } = ensurePackage<
       typeof import('@nx/webpack')
@@ -167,10 +188,9 @@ export async function applicationGeneratorInternal(
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
-      '@nx/vite',
-      nxVersion
-    );
+    const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
 
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
@@ -180,6 +200,28 @@ export async function applicationGeneratorInternal(
       skipFormat: true,
     });
     tasks.push(vitestTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: true,
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          `'react'`,
+          `'react-dom'`,
+          `'react/jsx-runtime'`,
+        ],
+        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
+        imports: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      true
+    );
   }
 
   if (

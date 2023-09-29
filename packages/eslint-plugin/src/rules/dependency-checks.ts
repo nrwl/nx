@@ -20,7 +20,6 @@ export type Options = [
     checkMissingDependencies?: boolean;
     checkObsoleteDependencies?: boolean;
     checkVersionMismatches?: boolean;
-    checkMissingPackageJson?: boolean;
     ignoredDependencies?: string[];
     ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;
@@ -48,9 +47,9 @@ export default createESLintRule<Options, MessageIds>({
       {
         type: 'object',
         properties: {
-          buildTargets: [{ type: 'string' }],
-          ignoredDependencies: [{ type: 'string' }],
-          ignoredFiles: [{ type: 'string' }],
+          buildTargets: { type: 'array', items: { type: 'string' } },
+          ignoredDependencies: { type: 'array', items: { type: 'string' } },
+          ignoredFiles: { type: 'array', items: { type: 'string' } },
           checkMissingDependencies: { type: 'boolean' },
           checkObsoleteDependencies: { type: 'boolean' },
           checkVersionMismatches: { type: 'boolean' },

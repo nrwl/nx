@@ -1,4 +1,4 @@
-import 'nx/src/utils/testing/mock-fs';
+import 'nx/src/internal-testing-utils/mock-fs';
 
 import dependencyChecks, {
   Options,
@@ -15,6 +15,7 @@ import {
   ProjectGraphExternalNode,
 } from '@nx/devkit';
 import { Linter } from 'eslint';
+import { FileDataDependency } from 'nx/src/config/project-graph';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
@@ -1652,7 +1653,7 @@ it('should require swc if @nx/js:swc executor', () => {
   expect(failures[0].line).toEqual(3);
 });
 
-function createFile(f: string, deps?: (string | [string, string])[]): FileData {
+function createFile(f: string, deps?: FileDataDependency[]): FileData {
   return { file: f, hash: '', deps };
 }
 

@@ -18,8 +18,9 @@ import mapJson from '../../../../docs/map.json' assert { type: 'json' };
 import manifestsCloud from '../../../../docs/generated/manifests/cloud.json' assert { type: 'json' };
 import manifestsExtending from '../../../../docs/generated/manifests/extending-nx.json' assert { type: 'json' };
 import manifestsNx from '../../../../docs/generated/manifests/nx.json' assert { type: 'json' };
-import manifestsPackages from '../../../../docs/generated/manifests/packages.json' assert { type: 'json' };
+import manifestsPackages from '../../../../docs/generated/manifests/nx-api.json' assert { type: 'json' };
 import manifestsTags from '../../../../docs/generated/manifests/tags.json' assert { type: 'json' };
+import communityPlugins from '../../../../community/approved-plugins.json' assert { type: 'json' };
 
 let identityMap = {};
 
@@ -125,14 +126,16 @@ class MarkdownEmbeddingSource extends BaseEmbeddingSource {
   constructor(
     source: string,
     public filePath: string,
-    public url_partial: string
+    public url_partial: string,
+    public fileContent?: string
   ) {
     const path = filePath.replace(/^docs/, '').replace(/\.md?$/, '');
     super(source, path, url_partial);
   }
 
   async load() {
-    const contents = await readFile(this.filePath, 'utf8');
+    const contents =
+      this.fileContent ?? (await readFile(this.filePath, 'utf8'));
 
     const { checksum, sections } = processMdxForSearch(contents);
 
@@ -207,6 +210,14 @@ async function generateEmbeddings() {
         'guide',
         entry.path,
         entry.url_partial
+      );
+    }),
+    ...createMarkdownForCommunityPlugins().map((content, index) => {
+      return new MarkdownEmbeddingSource(
+        'community-plugins',
+        '/community/approved-plugins.json#' + index,
+        content.url,
+        content.text
       );
     }),
   ];
@@ -307,7 +318,10 @@ async function generateEmbeddings() {
 
           const [responseData] = embeddingResponse.data;
 
-          const longer_heading = createLongerHeading(heading, url_partial);
+          const longer_heading =
+            source !== 'community-plugins'
+              ? createLongerHeading(heading, url_partial)
+              : heading;
 
           const { error: insertPageSectionError, data: pageSection } =
             await supabaseClient
@@ -446,7 +460,7 @@ function createLongerHeading(
   if (url_partial?.length) {
     if (heading?.length && heading !== null && heading !== 'null') {
       return `${heading}${` - ${
-        url_partial.split('/')?.[1]?.[0].toUpperCase() +
+        url_partial.split('/')?.[1]?.[0]?.toUpperCase() +
         url_partial.split('/')?.[1]?.slice(1)
       }`}`;
     } else {
@@ -454,12 +468,24 @@ function createLongerHeading(
         .split('#')[0]
         .split('/')
         .map((part) =>
-          part?.length ? part[0].toUpperCase() + part.slice(1) + ' - ' : ''
+          part?.length ? part[0]?.toUpperCase() + part.slice(1) + ' - ' : ''
         )
         .join('')
         .slice(0, -3);
     }
   }
+}
+
+function createMarkdownForCommunityPlugins(): {
+  text: string;
+  url: string;
+}[] {
+  return communityPlugins.map((plugin) => {
+    return {
+      text: `## ${plugin.name} plugin\n\nThere is a ${plugin.name} community plugin.\n\nHere is the description for it: ${plugin.description}\n\nHere is the link to it: [${plugin.url}](${plugin.url})\n\nHere is the list of all the plugins that exist for Nx: https://nx.dev/extending-nx/registry`,
+      url: plugin.url,
+    };
+  });
 }
 
 async function main() {

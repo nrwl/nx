@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`vue:component-story default setup component with other syntax of props defined should create a story with controls 1`] = `
+"import type { Meta, StoryObj } from '@storybook/vue3';
+import testUiLib from './test-ui-lib.vue';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+
+const meta: Meta<typeof testUiLib> = {
+  component: testUiLib,
+  title: 'testUiLib',
+};
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+
+export const Primary = {
+  args: {
+    name:  'name',
+    displayAge:  false,
+    age:  0,
+  },
+};
+
+
+export const Heading: Story = {
+  args: {
+    name:  'name',
+    displayAge:  false,
+    age:  0,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
+  },
+};
+
+"
+`;
+
+exports[`vue:component-story default setup component with props defined should create a story with controls 1`] = `
+"import type { Meta, StoryObj } from '@storybook/vue3';
+import testUiLib from './test-ui-lib.vue';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+
+const meta: Meta<typeof testUiLib> = {
+  component: testUiLib,
+  title: 'testUiLib',
+};
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+
+export const Primary = {
+  args: {
+    name:  'name',
+    displayAge:  false,
+    age:  0,
+  },
+};
+
+
+export const Heading: Story = {
+  args: {
+    name:  'name',
+    displayAge:  false,
+    age:  0,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
+  },
+};
+
+"
+`;
+
+exports[`vue:component-story default setup default component setup should properly set up the story 1`] = `
+"import type { Meta, StoryObj } from '@storybook/vue3';
+import testUiLib from './test-ui-lib.vue';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+
+const meta: Meta<typeof testUiLib> = {
+  component: testUiLib,
+  title: 'testUiLib',
+};
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+
+export const Primary = {
+  args: {
+  },
+};
+
+
+export const Heading: Story = {
+  args: {
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/Welcome to testUiLib!/gi)).toBeTruthy();
+  },
+};
+
+"
+`;

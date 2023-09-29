@@ -1,11 +1,19 @@
 import { sendCustomEvent } from '@nx/nx-dev/feature-analytics';
-import { RefObject, useEffect, useRef, useState } from 'react';
+import {
+  type FormEvent,
+  type JSX,
+  RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { ErrorMessage } from './error-message';
 import { Feed } from './feed/feed';
 import { LoadingState } from './loading-state';
 import { Prompt } from './prompt';
 import { getQueryFromUid, storeQueryForUid } from '@nx/nx-dev/util-ai';
 import { Message, useChat } from 'ai/react';
+import { cx } from '@nx/nx-dev/ui-primitives';
 
 const assistantWelcome: Message = {
   id: 'first-custom-message',
@@ -17,34 +25,70 @@ const assistantWelcome: Message = {
 export function FeedContainer(): JSX.Element {
   const [error, setError] = useState<Error | null>(null);
   const [startedReply, setStartedReply] = useState(false);
+  const [isStopped, setStopped] = useState(false);
 
-  const feedContainer: RefObject<HTMLDivElement> | undefined = useRef(null);
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
-      api: '/api/query-ai-handler',
-      onError: (error) => {
-        setError(error);
-      },
-      onResponse: (_response) => {
-        setStartedReply(true);
-        sendCustomEvent('ai_query', 'ai', 'query', undefined, {
-          query: input,
-        });
-        setError(null);
-      },
-      onFinish: (response: Message) => {
-        setStartedReply(false);
-        storeQueryForUid(response.id, input);
-      },
-    });
+  const {
+    messages,
+    setMessages,
+    input,
+    handleInputChange,
+    handleSubmit: _handleSubmit,
+    stop,
+    reload,
+    isLoading,
+  } = useChat({
+    api: '/api/query-ai-handler',
+    onError: (error) => {
+      setError(error);
+    },
+    onResponse: (_response) => {
+      setStartedReply(true);
+      sendCustomEvent('ai_query', 'ai', 'query', undefined, {
+        query: input,
+      });
+      setError(null);
+    },
+    onFinish: (response: Message) => {
+      setStartedReply(false);
+      storeQueryForUid(response.id, input);
+    },
+  });
 
+  /*
+   * Determine whether we should scroll to the bottom of new messages.
+   * Scroll if:
+   * 1. New message has come in (length > previous length)
+   * 2. User is close to the bottom of the messages
+   *
+   * Otherwise, user is probably reading messages, so don't scroll.
+   */
+  const scrollableWrapperRef: RefObject<HTMLDivElement> | undefined =
+    useRef(null);
+  const currentMessagesLength = useRef(0);
   useEffect(() => {
-    if (feedContainer.current) {
-      const elements =
-        feedContainer.current.getElementsByClassName('feed-item');
-      elements[elements.length - 1].scrollIntoView({ behavior: 'smooth' });
+    if (!scrollableWrapperRef.current) return;
+    const el = scrollableWrapperRef.current;
+    let shouldScroll = false;
+    if (messages.length > currentMessagesLength.current) {
+      currentMessagesLength.current = messages.length;
+      shouldScroll = true;
+    } else if (el.scrollTop + el.clientHeight + 50 >= el.scrollHeight) {
+      shouldScroll = true;
     }
+    if (shouldScroll) el.scrollTo(0, el.scrollHeight);
   }, [messages, isLoading]);
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    setStopped(false);
+    _handleSubmit(event);
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setError(null);
+    setStartedReply(false);
+    setStopped(false);
+  };
 
   const handleFeedback = (statement: 'good' | 'bad', chatItemUid: string) => {
     const query = getQueryFromUid(chatItemUid);
@@ -53,10 +97,21 @@ export function FeedContainer(): JSX.Element {
     });
   };
 
+  const handleStopGenerating = () => {
+    setStopped(true);
+    stop();
+  };
+
+  const handleRegenerate = () => {
+    setStopped(false);
+    reload();
+  };
+
   return (
     <>
       {/*WRAPPER*/}
       <div
+        ref={scrollableWrapperRef}
         id="wrapper"
         data-testid="wrapper"
         className="relative flex flex-grow flex-col items-stretch justify-start overflow-y-scroll"
@@ -68,28 +123,32 @@ export function FeedContainer(): JSX.Element {
           >
             <div className="relative min-w-0 flex-auto">
               {/*MAIN CONTENT*/}
-              <div
-                ref={feedContainer}
-                data-document="main"
-                className="relative"
-              >
+              <div data-document="main" className="relative pb-36">
                 <Feed
                   activity={!!messages.length ? messages : [assistantWelcome]}
-                  handleFeedback={(statement, chatItemUid) =>
-                    handleFeedback(statement, chatItemUid)
-                  }
+                  onFeedback={handleFeedback}
                 />
 
                 {/* Change this message if it's loading but it's writing as well  */}
                 {isLoading && !startedReply && <LoadingState />}
                 {error && <ErrorMessage error={error} />}
 
-                <div className="sticky bottom-0 left-0 right-0 w-full pt-6 pb-4 bg-gradient-to-t from-white via-white dark:from-slate-900 dark:via-slate-900">
+                <div
+                  className={cx(
+                    'fixed bottom-0 left0 right-0 w-full py-4 px-4 lg:py-6 lg:px-0',
+                    'bg-gradient-to-t from-white via-white/75 dark:from-slate-900 dark:via-slate-900/75'
+                  )}
+                >
                   <Prompt
-                    handleSubmit={handleSubmit}
-                    handleInputChange={handleInputChange}
+                    onSubmit={handleSubmit}
+                    onInputChange={handleInputChange}
+                    onNewChat={handleNewChat}
+                    onStopGenerating={handleStopGenerating}
+                    onRegenerate={handleRegenerate}
                     input={input}
-                    isDisabled={isLoading}
+                    isGenerating={isLoading}
+                    showNewChatCta={!isLoading && messages.length > 0}
+                    showRegenerateCta={isStopped}
                   />
                 </div>
               </div>

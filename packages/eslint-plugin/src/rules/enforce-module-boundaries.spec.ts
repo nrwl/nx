@@ -1,4 +1,4 @@
-import 'nx/src/utils/testing/mock-fs';
+import 'nx/src/internal-testing-utils/mock-fs';
 
 import type { FileData, ProjectFileMap, ProjectGraph } from '@nx/devkit';
 import { DependencyType } from '@nx/devkit';
@@ -10,6 +10,7 @@ import enforceModuleBoundaries, {
   RULE_NAME as enforceModuleBoundariesRuleName,
 } from '../../src/rules/enforce-module-boundaries';
 import { createProjectRootMappings } from 'nx/src/project-graph/utils/find-project-for-path';
+import { FileDataDependency } from 'nx/src/config/project-graph';
 
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),
@@ -1303,8 +1304,8 @@ Violation detected in:
         {
           mylibName: [
             createFile(`libs/mylib/src/main.ts`, [
-              ['otherName', 'static'],
-              ['otherName', 'dynamic'],
+              ['otherName', DependencyType.static],
+              ['otherName', DependencyType.dynamic],
             ]),
           ],
           otherName: [createFile(`libs/other/index.ts`)],
@@ -2250,7 +2251,7 @@ const baseConfig = {
 linter.defineParser('@typescript-eslint/parser', parser);
 linter.defineRule(enforceModuleBoundariesRuleName, enforceModuleBoundaries);
 
-function createFile(f: string, deps?: (string | [string, string])[]): FileData {
+function createFile(f: string, deps?: FileDataDependency[]): FileData {
   return { file: f, hash: '', deps };
 }
 

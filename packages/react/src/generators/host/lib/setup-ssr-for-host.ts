@@ -23,9 +23,13 @@ export async function setupSsrForHost(
   project.targets.serve.executor = '@nx/react:module-federation-ssr-dev-server';
   updateProjectConfiguration(tree, appName, project);
 
+  const pathToModuleFederationSsrFiles = options.typescriptConfiguration
+    ? 'module-federation-ssr-ts'
+    : 'module-federation-ssr';
+
   generateFiles(
     tree,
-    joinPathFragments(__dirname, '../files/module-federation-ssr'),
+    joinPathFragments(__dirname, `../files/${pathToModuleFederationSsrFiles}`),
     project.root,
     {
       ...options,

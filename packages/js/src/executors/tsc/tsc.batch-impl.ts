@@ -4,10 +4,7 @@ import type { BatchExecutorTaskResult } from 'nx/src/config/misc-interfaces';
 import { getLastValueFromAsyncIterableIterator } from 'nx/src/utils/async-iterator';
 import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import type { ExecutorOptions } from '../../utils/schema';
-import {
-  createEntryPoints,
-  determineModuleFormatFromTsConfig,
-} from './tsc.impl';
+import { determineModuleFormatFromTsConfig } from './tsc.impl';
 import {
   TypescripCompilationLogger,
   TypescriptCompilationResult,
@@ -23,6 +20,7 @@ import {
   watchTaskProjectsFileChangesForAssets,
   watchTaskProjectsPackageJsonFileChanges,
 } from './lib/batch';
+import { createEntryPoints } from '../../utils/package-json/create-entry-points';
 
 export async function* tscBatchExecutor(
   taskGraph: TaskGraph,
@@ -87,7 +85,10 @@ export async function* tscBatchExecutor(
       updatePackageJson(
         {
           ...taskInfo.options,
-          additionalEntryPoints: createEntryPoints(taskInfo.options, context),
+          additionalEntryPoints: createEntryPoints(
+            taskInfo.options.additionalEntryPoints,
+            context.root
+          ),
           format: [determineModuleFormatFromTsConfig(tsConfig)],
           // As long as d.ts files match their .js counterparts, we don't need to emit them.
           // TSC can match them correctly based on file names.
@@ -127,7 +128,10 @@ export async function* tscBatchExecutor(
             updatePackageJson(
               {
                 ...t.options,
-                additionalEntryPoints: createEntryPoints(t.options, context),
+                additionalEntryPoints: createEntryPoints(
+                  t.options.additionalEntryPoints,
+                  context.root
+                ),
                 format: [determineModuleFormatFromTsConfig(t.options.tsConfig)],
                 // As long as d.ts files match their .js counterparts, we don't need to emit them.
                 // TSC can match them correctly based on file names.
@@ -261,7 +265,7 @@ function createTypescriptCompilationContext(
   Object.entries(taskInMemoryTsConfigMap).forEach(([task, tsConfig]) => {
     if (!tsCompilationContext[tsConfig.path]) {
       tsCompilationContext[tsConfig.path] = {
-        project: parseTargetString(task, context.projectGraph).project,
+        project: parseTargetString(task, context).project,
         transformers: [],
         tsConfig: tsConfig,
       };

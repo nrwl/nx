@@ -1,7 +1,6 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { isPackagerRunning } from './lib/is-packager-running';
 import { ReactNativeStartOptions } from './schema';
 
@@ -16,7 +15,6 @@ export default async function* startExecutor(
 ): AsyncGenerator<ReactNativeStartOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   const startProcess = await runCliStart(context.root, projectRoot, options);
 

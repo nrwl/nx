@@ -1,6 +1,6 @@
 import * as memfs from 'memfs';
 
-import '../src/utils/testing/mock-fs';
+import '../src/internal-testing-utils/mock-fs';
 import { createNodeFromPackageJson } from './package-json-workspaces';
 
 describe('nx package.json workspaces plugin', () => {
@@ -52,6 +52,13 @@ describe('nx package.json workspaces plugin', () => {
                   "script": "echo",
                 },
               },
+              "nx-release-publish": {
+                "dependsOn": [
+                  "^nx-release-publish",
+                ],
+                "executor": "@nx/js:release-publish",
+                "options": {},
+              },
             },
           },
         },
@@ -67,6 +74,13 @@ describe('nx package.json workspaces plugin', () => {
             "root": "packages/lib-a",
             "sourceRoot": "packages/lib-a",
             "targets": {
+              "nx-release-publish": {
+                "dependsOn": [
+                  "^nx-release-publish",
+                ],
+                "executor": "@nx/js:release-publish",
+                "options": {},
+              },
               "test": {
                 "executor": "nx:run-script",
                 "options": {
@@ -103,6 +117,13 @@ describe('nx package.json workspaces plugin', () => {
                 "outputs": [
                   "{projectRoot}/dist",
                 ],
+              },
+              "nx-release-publish": {
+                "dependsOn": [
+                  "^nx-release-publish",
+                ],
+                "executor": "@nx/js:release-publish",
+                "options": {},
               },
               "test": {
                 "executor": "nx:run-script",

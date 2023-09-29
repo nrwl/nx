@@ -63,9 +63,25 @@
                 "disableCollapsible": false
               },
               {
+                "name": "React Monorepo",
+                "path": "/getting-started/tutorials/react-monorepo-tutorial",
+                "id": "react-monorepo-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Angular Standalone",
                 "path": "/getting-started/tutorials/angular-standalone-tutorial",
                 "id": "angular-standalone-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Angular Monorepo",
+                "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+                "id": "angular-monorepo-tutorial",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -139,9 +155,25 @@
             "disableCollapsible": false
           },
           {
+            "name": "React Monorepo",
+            "path": "/getting-started/tutorials/react-monorepo-tutorial",
+            "id": "react-monorepo-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Angular Standalone",
             "path": "/getting-started/tutorials/angular-standalone-tutorial",
             "id": "angular-standalone-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular Monorepo",
+            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+            "id": "angular-monorepo-tutorial",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -182,9 +214,25 @@
         "disableCollapsible": false
       },
       {
+        "name": "React Monorepo",
+        "path": "/getting-started/tutorials/react-monorepo-tutorial",
+        "id": "react-monorepo-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Angular Standalone",
         "path": "/getting-started/tutorials/angular-standalone-tutorial",
         "id": "angular-standalone-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular Monorepo",
+        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+        "id": "angular-monorepo-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -298,273 +346,6 @@
         "name": "6 - Summary",
         "path": "/core-tutorial/06-summary",
         "id": "06-summary",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React Monorepo Tutorial",
-        "path": "/react-tutorial",
-        "id": "react-tutorial",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "1 - Code Generation",
-            "path": "/react-tutorial/1-code-generation",
-            "id": "1-code-generation",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "2 - Project Graph",
-            "path": "/react-tutorial/2-project-graph",
-            "id": "2-project-graph",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "3 - Task Running",
-            "path": "/react-tutorial/3-task-running",
-            "id": "3-task-running",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "4 - Workspace Optimization",
-            "path": "/react-tutorial/4-workspace-optimization",
-            "id": "4-workspace-optimization",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "5 - Summary",
-            "path": "/react-tutorial/5-summary",
-            "id": "5-summary",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "1 - Code Generation",
-        "path": "/react-tutorial/1-code-generation",
-        "id": "1-code-generation",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "2 - Project Graph",
-        "path": "/react-tutorial/2-project-graph",
-        "id": "2-project-graph",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "3 - Task Running",
-        "path": "/react-tutorial/3-task-running",
-        "id": "3-task-running",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "4 - Workspace Optimization",
-        "path": "/react-tutorial/4-workspace-optimization",
-        "id": "4-workspace-optimization",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "5 - Summary",
-        "path": "/react-tutorial/5-summary",
-        "id": "5-summary",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "React Standalone Tutorial",
-        "path": "/react-standalone-tutorial",
-        "id": "react-standalone-tutorial",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "1 - Code Generation",
-            "path": "/react-standalone-tutorial/1-code-generation",
-            "id": "1-code-generation",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "2 - Project Graph",
-            "path": "/react-standalone-tutorial/2-project-graph",
-            "id": "2-project-graph",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "3 - Task Running",
-            "path": "/react-standalone-tutorial/3-task-running",
-            "id": "3-task-running",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "4 - Task Pipelines",
-            "path": "/react-standalone-tutorial/4-task-pipelines",
-            "id": "4-task-pipelines",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "5 - Summary",
-            "path": "/react-standalone-tutorial/5-summary",
-            "id": "5-summary",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "1 - Code Generation",
-        "path": "/react-standalone-tutorial/1-code-generation",
-        "id": "1-code-generation",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "2 - Project Graph",
-        "path": "/react-standalone-tutorial/2-project-graph",
-        "id": "2-project-graph",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "3 - Task Running",
-        "path": "/react-standalone-tutorial/3-task-running",
-        "id": "3-task-running",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "4 - Task Pipelines",
-        "path": "/react-standalone-tutorial/4-task-pipelines",
-        "id": "4-task-pipelines",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "5 - Summary",
-        "path": "/react-standalone-tutorial/5-summary",
-        "id": "5-summary",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Angular Monorepo Tutorial",
-        "path": "/angular-tutorial",
-        "id": "angular-tutorial",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "1 - Code Generation",
-            "path": "/angular-tutorial/1-code-generation",
-            "id": "1-code-generation",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "2 - Project Graph",
-            "path": "/angular-tutorial/2-project-graph",
-            "id": "2-project-graph",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "3 - Task Running",
-            "path": "/angular-tutorial/3-task-running",
-            "id": "3-task-running",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "4 - Workspace Optimization",
-            "path": "/angular-tutorial/4-workspace-optimization",
-            "id": "4-workspace-optimization",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "5 - Summary",
-            "path": "/angular-tutorial/5-summary",
-            "id": "5-summary",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "1 - Code Generation",
-        "path": "/angular-tutorial/1-code-generation",
-        "id": "1-code-generation",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "2 - Project Graph",
-        "path": "/angular-tutorial/2-project-graph",
-        "id": "2-project-graph",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "3 - Task Running",
-        "path": "/angular-tutorial/3-task-running",
-        "id": "3-task-running",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "4 - Workspace Optimization",
-        "path": "/angular-tutorial/4-workspace-optimization",
-        "id": "4-workspace-optimization",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "5 - Summary",
-        "path": "/angular-tutorial/5-summary",
-        "id": "5-summary",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1654,6 +1435,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Migrate From Turborepo",
+                "path": "/recipes/adopting-nx/from-turborepo",
+                "id": "from-turborepo",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Add to any Project",
                 "path": "/recipes/adopting-nx/adding-to-existing-project",
                 "id": "adding-to-existing-project",
@@ -1918,6 +1707,14 @@
                 "name": "Set up Storybook for React Projects",
                 "path": "/recipes/storybook/overview-react",
                 "id": "overview-react",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Set up Storybook for Vue Projects",
+                "path": "/recipes/storybook/overview-vue",
+                "id": "overview-vue",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2283,6 +2080,22 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Define Secondary Entrypoints for Typescript Packages",
+                "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+                "id": "define-secondary-entrypoints",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Compile Typescript Packages to Multiple Formats",
+                "path": "/recipes/tips-n-tricks/compile-multiple-formats",
+                "id": "compile-multiple-formats",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Keep Nx Versions in Sync",
                 "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
                 "id": "keep-nx-versions-in-sync",
@@ -2546,6 +2359,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Migrate From Turborepo",
+            "path": "/recipes/adopting-nx/from-turborepo",
+            "id": "from-turborepo",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Add to any Project",
             "path": "/recipes/adopting-nx/adding-to-existing-project",
             "id": "adding-to-existing-project",
@@ -2584,6 +2405,14 @@
         "name": "NPM/Yarn/PNPM workspaces",
         "path": "/recipes/adopting-nx/adding-to-monorepo",
         "id": "adding-to-monorepo",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Migrate From Turborepo",
+        "path": "/recipes/adopting-nx/from-turborepo",
+        "id": "from-turborepo",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3080,6 +2909,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Set up Storybook for Vue Projects",
+            "path": "/recipes/storybook/overview-vue",
+            "id": "overview-vue",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Set up Storybook for Angular Projects",
             "path": "/recipes/storybook/overview-angular",
             "id": "overview-angular",
@@ -3166,6 +3003,14 @@
         "name": "Set up Storybook for React Projects",
         "path": "/recipes/storybook/overview-react",
         "id": "overview-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Storybook for Vue Projects",
+        "path": "/recipes/storybook/overview-vue",
+        "id": "overview-vue",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3696,6 +3541,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Define Secondary Entrypoints for Typescript Packages",
+            "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+            "id": "define-secondary-entrypoints",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Compile Typescript Packages to Multiple Formats",
+            "path": "/recipes/tips-n-tricks/compile-multiple-formats",
+            "id": "compile-multiple-formats",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Keep Nx Versions in Sync",
             "path": "/recipes/tips-n-tricks/keep-nx-versions-in-sync",
             "id": "keep-nx-versions-in-sync",
@@ -3854,6 +3715,22 @@
         "name": "Enable Typescript Batch Mode",
         "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
         "id": "enable-tsc-batch-mode",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Define Secondary Entrypoints for Typescript Packages",
+        "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+        "id": "define-secondary-entrypoints",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Compile Typescript Packages to Multiple Formats",
+        "path": "/recipes/tips-n-tricks/compile-multiple-formats",
+        "id": "compile-multiple-formats",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4204,7 +4081,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Example Repos",
+            "name": "Nx with your favorite tech",
             "path": "/showcase/example-repos",
             "id": "example-repos",
             "isExternal": false,
@@ -4293,14 +4170,6 @@
                 "name": "Add a Fastify Project",
                 "path": "/showcase/example-repos/add-fastify",
                 "id": "add-fastify",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Powering Up React Development With Nx",
-                "path": "/showcase/example-repos/react-nx",
-                "id": "react-nx",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -4401,7 +4270,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Example Repos",
+        "name": "Nx with your favorite tech",
         "path": "/showcase/example-repos",
         "id": "example-repos",
         "isExternal": false,
@@ -4490,14 +4359,6 @@
             "name": "Add a Fastify Project",
             "path": "/showcase/example-repos/add-fastify",
             "id": "add-fastify",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Powering Up React Development With Nx",
-            "path": "/showcase/example-repos/react-nx",
-            "id": "react-nx",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4650,14 +4511,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Powering Up React Development With Nx",
-        "path": "/showcase/example-repos/react-nx",
-        "id": "react-nx",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Using Apollo GraphQL",
         "path": "/showcase/example-repos/apollo-react",
         "id": "apollo-react",
@@ -4777,6 +4630,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Commands",
+            "path": "/nx-api/nx",
+            "id": "commands",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx Configuration",
             "path": "/reference/nx-json",
             "id": "nx-json",
@@ -4817,6 +4678,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Commands",
+        "path": "/nx-api/nx",
+        "id": "commands",
+        "isExternal": true,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5182,7 +5051,7 @@
           },
           {
             "name": "--skip-nx-cache flag",
-            "path": "/packages/nx/documents/affected#skip-nx-cache",
+            "path": "/nx-api/nx/documents/affected#skip-nx-cache",
             "id": "skip-nx-cache-flag",
             "isExternal": true,
             "children": [],
@@ -5249,7 +5118,7 @@
       },
       {
         "name": "--skip-nx-cache flag",
-        "path": "/packages/nx/documents/affected#skip-nx-cache",
+        "path": "/nx-api/nx/documents/affected#skip-nx-cache",
         "id": "skip-nx-cache-flag",
         "isExternal": true,
         "children": [],
@@ -5321,14 +5190,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Plugin Registry",
-            "path": "/extending-nx/registry",
-            "id": "registry",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5337,14 +5198,6 @@
         "name": "Getting Started with Plugins",
         "path": "/extending-nx/intro/getting-started",
         "id": "getting-started",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Plugin Registry",
-        "path": "/extending-nx/registry",
-        "id": "registry",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6012,21 +5865,21 @@
     ]
   },
   {
-    "id": "packages",
+    "id": "nx-api",
     "menu": [
       {
         "id": "angular",
-        "path": "/packages/angular",
+        "path": "/nx-api/angular",
         "name": "angular",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/angular/documents",
+            "path": "/nx-api/angular/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/angular/documents/overview",
+                "path": "/nx-api/angular/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -6034,7 +5887,7 @@
               },
               {
                 "name": "Angular and Nx Version Matrix",
-                "path": "/packages/angular/documents/angular-nx-version-matrix",
+                "path": "/nx-api/angular/documents/angular-nx-version-matrix",
                 "id": "angular-nx-version-matrix",
                 "isExternal": false,
                 "children": [],
@@ -6046,12 +5899,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/angular/executors",
+            "path": "/nx-api/angular/executors",
             "name": "executors",
             "children": [
               {
                 "id": "delegate-build",
-                "path": "/packages/angular/executors/delegate-build",
+                "path": "/nx-api/angular/executors/delegate-build",
                 "name": "delegate-build",
                 "children": [],
                 "isExternal": false,
@@ -6059,7 +5912,7 @@
               },
               {
                 "id": "ng-packagr-lite",
-                "path": "/packages/angular/executors/ng-packagr-lite",
+                "path": "/nx-api/angular/executors/ng-packagr-lite",
                 "name": "ng-packagr-lite",
                 "children": [],
                 "isExternal": false,
@@ -6067,7 +5920,7 @@
               },
               {
                 "id": "package",
-                "path": "/packages/angular/executors/package",
+                "path": "/nx-api/angular/executors/package",
                 "name": "package",
                 "children": [],
                 "isExternal": false,
@@ -6075,7 +5928,7 @@
               },
               {
                 "id": "browser-esbuild",
-                "path": "/packages/angular/executors/browser-esbuild",
+                "path": "/nx-api/angular/executors/browser-esbuild",
                 "name": "browser-esbuild",
                 "children": [],
                 "isExternal": false,
@@ -6083,7 +5936,7 @@
               },
               {
                 "id": "webpack-browser",
-                "path": "/packages/angular/executors/webpack-browser",
+                "path": "/nx-api/angular/executors/webpack-browser",
                 "name": "webpack-browser",
                 "children": [],
                 "isExternal": false,
@@ -6091,7 +5944,7 @@
               },
               {
                 "id": "webpack-dev-server",
-                "path": "/packages/angular/executors/webpack-dev-server",
+                "path": "/nx-api/angular/executors/webpack-dev-server",
                 "name": "webpack-dev-server",
                 "children": [],
                 "isExternal": false,
@@ -6099,7 +5952,7 @@
               },
               {
                 "id": "webpack-server",
-                "path": "/packages/angular/executors/webpack-server",
+                "path": "/nx-api/angular/executors/webpack-server",
                 "name": "webpack-server",
                 "children": [],
                 "isExternal": false,
@@ -6107,7 +5960,7 @@
               },
               {
                 "id": "module-federation-dev-server",
-                "path": "/packages/angular/executors/module-federation-dev-server",
+                "path": "/nx-api/angular/executors/module-federation-dev-server",
                 "name": "module-federation-dev-server",
                 "children": [],
                 "isExternal": false,
@@ -6115,7 +5968,7 @@
               },
               {
                 "id": "module-federation-dev-ssr",
-                "path": "/packages/angular/executors/module-federation-dev-ssr",
+                "path": "/nx-api/angular/executors/module-federation-dev-ssr",
                 "name": "module-federation-dev-ssr",
                 "children": [],
                 "isExternal": false,
@@ -6127,12 +5980,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/angular/generators",
+            "path": "/nx-api/angular/generators",
             "name": "generators",
             "children": [
               {
                 "id": "add-linting",
-                "path": "/packages/angular/generators/add-linting",
+                "path": "/nx-api/angular/generators/add-linting",
                 "name": "add-linting",
                 "children": [],
                 "isExternal": false,
@@ -6140,7 +5993,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/angular/generators/application",
+                "path": "/nx-api/angular/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -6148,7 +6001,7 @@
               },
               {
                 "id": "component",
-                "path": "/packages/angular/generators/component",
+                "path": "/nx-api/angular/generators/component",
                 "name": "component",
                 "children": [],
                 "isExternal": false,
@@ -6156,7 +6009,7 @@
               },
               {
                 "id": "component-cypress-spec",
-                "path": "/packages/angular/generators/component-cypress-spec",
+                "path": "/nx-api/angular/generators/component-cypress-spec",
                 "name": "component-cypress-spec",
                 "children": [],
                 "isExternal": false,
@@ -6164,7 +6017,7 @@
               },
               {
                 "id": "component-story",
-                "path": "/packages/angular/generators/component-story",
+                "path": "/nx-api/angular/generators/component-story",
                 "name": "component-story",
                 "children": [],
                 "isExternal": false,
@@ -6172,7 +6025,7 @@
               },
               {
                 "id": "component-test",
-                "path": "/packages/angular/generators/component-test",
+                "path": "/nx-api/angular/generators/component-test",
                 "name": "component-test",
                 "children": [],
                 "isExternal": false,
@@ -6180,7 +6033,7 @@
               },
               {
                 "id": "convert-tslint-to-eslint",
-                "path": "/packages/angular/generators/convert-tslint-to-eslint",
+                "path": "/nx-api/angular/generators/convert-tslint-to-eslint",
                 "name": "convert-tslint-to-eslint",
                 "children": [],
                 "isExternal": false,
@@ -6188,7 +6041,7 @@
               },
               {
                 "id": "directive",
-                "path": "/packages/angular/generators/directive",
+                "path": "/nx-api/angular/generators/directive",
                 "name": "directive",
                 "children": [],
                 "isExternal": false,
@@ -6196,7 +6049,7 @@
               },
               {
                 "id": "init",
-                "path": "/packages/angular/generators/init",
+                "path": "/nx-api/angular/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -6204,7 +6057,7 @@
               },
               {
                 "id": "library",
-                "path": "/packages/angular/generators/library",
+                "path": "/nx-api/angular/generators/library",
                 "name": "library",
                 "children": [],
                 "isExternal": false,
@@ -6212,7 +6065,7 @@
               },
               {
                 "id": "library-secondary-entry-point",
-                "path": "/packages/angular/generators/library-secondary-entry-point",
+                "path": "/nx-api/angular/generators/library-secondary-entry-point",
                 "name": "library-secondary-entry-point",
                 "children": [],
                 "isExternal": false,
@@ -6220,7 +6073,7 @@
               },
               {
                 "id": "remote",
-                "path": "/packages/angular/generators/remote",
+                "path": "/nx-api/angular/generators/remote",
                 "name": "remote",
                 "children": [],
                 "isExternal": false,
@@ -6228,7 +6081,7 @@
               },
               {
                 "id": "move",
-                "path": "/packages/angular/generators/move",
+                "path": "/nx-api/angular/generators/move",
                 "name": "move",
                 "children": [],
                 "isExternal": false,
@@ -6236,7 +6089,7 @@
               },
               {
                 "id": "convert-to-with-mf",
-                "path": "/packages/angular/generators/convert-to-with-mf",
+                "path": "/nx-api/angular/generators/convert-to-with-mf",
                 "name": "convert-to-with-mf",
                 "children": [],
                 "isExternal": false,
@@ -6244,7 +6097,7 @@
               },
               {
                 "id": "host",
-                "path": "/packages/angular/generators/host",
+                "path": "/nx-api/angular/generators/host",
                 "name": "host",
                 "children": [],
                 "isExternal": false,
@@ -6252,7 +6105,7 @@
               },
               {
                 "id": "ng-add",
-                "path": "/packages/angular/generators/ng-add",
+                "path": "/nx-api/angular/generators/ng-add",
                 "name": "ng-add",
                 "children": [],
                 "isExternal": false,
@@ -6260,7 +6113,7 @@
               },
               {
                 "id": "ngrx",
-                "path": "/packages/angular/generators/ngrx",
+                "path": "/nx-api/angular/generators/ngrx",
                 "name": "ngrx",
                 "children": [],
                 "isExternal": false,
@@ -6268,7 +6121,7 @@
               },
               {
                 "id": "ngrx-feature-store",
-                "path": "/packages/angular/generators/ngrx-feature-store",
+                "path": "/nx-api/angular/generators/ngrx-feature-store",
                 "name": "ngrx-feature-store",
                 "children": [],
                 "isExternal": false,
@@ -6276,7 +6129,7 @@
               },
               {
                 "id": "ngrx-root-store",
-                "path": "/packages/angular/generators/ngrx-root-store",
+                "path": "/nx-api/angular/generators/ngrx-root-store",
                 "name": "ngrx-root-store",
                 "children": [],
                 "isExternal": false,
@@ -6284,7 +6137,7 @@
               },
               {
                 "id": "pipe",
-                "path": "/packages/angular/generators/pipe",
+                "path": "/nx-api/angular/generators/pipe",
                 "name": "pipe",
                 "children": [],
                 "isExternal": false,
@@ -6292,7 +6145,7 @@
               },
               {
                 "id": "scam-to-standalone",
-                "path": "/packages/angular/generators/scam-to-standalone",
+                "path": "/nx-api/angular/generators/scam-to-standalone",
                 "name": "scam-to-standalone",
                 "children": [],
                 "isExternal": false,
@@ -6300,7 +6153,7 @@
               },
               {
                 "id": "scam",
-                "path": "/packages/angular/generators/scam",
+                "path": "/nx-api/angular/generators/scam",
                 "name": "scam",
                 "children": [],
                 "isExternal": false,
@@ -6308,7 +6161,7 @@
               },
               {
                 "id": "scam-directive",
-                "path": "/packages/angular/generators/scam-directive",
+                "path": "/nx-api/angular/generators/scam-directive",
                 "name": "scam-directive",
                 "children": [],
                 "isExternal": false,
@@ -6316,7 +6169,7 @@
               },
               {
                 "id": "scam-pipe",
-                "path": "/packages/angular/generators/scam-pipe",
+                "path": "/nx-api/angular/generators/scam-pipe",
                 "name": "scam-pipe",
                 "children": [],
                 "isExternal": false,
@@ -6324,7 +6177,7 @@
               },
               {
                 "id": "setup-mf",
-                "path": "/packages/angular/generators/setup-mf",
+                "path": "/nx-api/angular/generators/setup-mf",
                 "name": "setup-mf",
                 "children": [],
                 "isExternal": false,
@@ -6332,7 +6185,7 @@
               },
               {
                 "id": "setup-ssr",
-                "path": "/packages/angular/generators/setup-ssr",
+                "path": "/nx-api/angular/generators/setup-ssr",
                 "name": "setup-ssr",
                 "children": [],
                 "isExternal": false,
@@ -6340,7 +6193,7 @@
               },
               {
                 "id": "setup-tailwind",
-                "path": "/packages/angular/generators/setup-tailwind",
+                "path": "/nx-api/angular/generators/setup-tailwind",
                 "name": "setup-tailwind",
                 "children": [],
                 "isExternal": false,
@@ -6348,7 +6201,7 @@
               },
               {
                 "id": "stories",
-                "path": "/packages/angular/generators/stories",
+                "path": "/nx-api/angular/generators/stories",
                 "name": "stories",
                 "children": [],
                 "isExternal": false,
@@ -6356,7 +6209,7 @@
               },
               {
                 "id": "storybook-configuration",
-                "path": "/packages/angular/generators/storybook-configuration",
+                "path": "/nx-api/angular/generators/storybook-configuration",
                 "name": "storybook-configuration",
                 "children": [],
                 "isExternal": false,
@@ -6364,7 +6217,7 @@
               },
               {
                 "id": "cypress-component-configuration",
-                "path": "/packages/angular/generators/cypress-component-configuration",
+                "path": "/nx-api/angular/generators/cypress-component-configuration",
                 "name": "cypress-component-configuration",
                 "children": [],
                 "isExternal": false,
@@ -6372,7 +6225,7 @@
               },
               {
                 "id": "web-worker",
-                "path": "/packages/angular/generators/web-worker",
+                "path": "/nx-api/angular/generators/web-worker",
                 "name": "web-worker",
                 "children": [],
                 "isExternal": false,
@@ -6388,7 +6241,7 @@
       },
       {
         "id": "create-nx-plugin",
-        "path": "/packages/create-nx-plugin",
+        "path": "/nx-api/create-nx-plugin",
         "name": "create-nx-plugin",
         "children": [],
         "isExternal": false,
@@ -6396,7 +6249,7 @@
       },
       {
         "id": "create-nx-workspace",
-        "path": "/packages/create-nx-workspace",
+        "path": "/nx-api/create-nx-workspace",
         "name": "create-nx-workspace",
         "children": [],
         "isExternal": false,
@@ -6404,17 +6257,17 @@
       },
       {
         "id": "cypress",
-        "path": "/packages/cypress",
+        "path": "/nx-api/cypress",
         "name": "cypress",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/cypress/documents",
+            "path": "/nx-api/cypress/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/cypress/documents/overview",
+                "path": "/nx-api/cypress/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -6426,12 +6279,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/cypress/executors",
+            "path": "/nx-api/cypress/executors",
             "name": "executors",
             "children": [
               {
                 "id": "cypress",
-                "path": "/packages/cypress/executors/cypress",
+                "path": "/nx-api/cypress/executors/cypress",
                 "name": "cypress",
                 "children": [],
                 "isExternal": false,
@@ -6443,12 +6296,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/cypress/generators",
+            "path": "/nx-api/cypress/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/cypress/generators/init",
+                "path": "/nx-api/cypress/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -6456,7 +6309,7 @@
               },
               {
                 "id": "cypress-project",
-                "path": "/packages/cypress/generators/cypress-project",
+                "path": "/nx-api/cypress/generators/cypress-project",
                 "name": "cypress-project",
                 "children": [],
                 "isExternal": false,
@@ -6464,7 +6317,7 @@
               },
               {
                 "id": "configuration",
-                "path": "/packages/cypress/generators/configuration",
+                "path": "/nx-api/cypress/generators/configuration",
                 "name": "configuration",
                 "children": [],
                 "isExternal": false,
@@ -6472,7 +6325,7 @@
               },
               {
                 "id": "component-configuration",
-                "path": "/packages/cypress/generators/component-configuration",
+                "path": "/nx-api/cypress/generators/component-configuration",
                 "name": "component-configuration",
                 "children": [],
                 "isExternal": false,
@@ -6480,7 +6333,7 @@
               },
               {
                 "id": "migrate-to-cypress-11",
-                "path": "/packages/cypress/generators/migrate-to-cypress-11",
+                "path": "/nx-api/cypress/generators/migrate-to-cypress-11",
                 "name": "migrate-to-cypress-11",
                 "children": [],
                 "isExternal": false,
@@ -6496,17 +6349,17 @@
       },
       {
         "id": "detox",
-        "path": "/packages/detox",
+        "path": "/nx-api/detox",
         "name": "detox",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/detox/documents",
+            "path": "/nx-api/detox/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/detox/documents/overview",
+                "path": "/nx-api/detox/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -6518,12 +6371,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/detox/executors",
+            "path": "/nx-api/detox/executors",
             "name": "executors",
             "children": [
               {
                 "id": "build",
-                "path": "/packages/detox/executors/build",
+                "path": "/nx-api/detox/executors/build",
                 "name": "build",
                 "children": [],
                 "isExternal": false,
@@ -6531,7 +6384,7 @@
               },
               {
                 "id": "test",
-                "path": "/packages/detox/executors/test",
+                "path": "/nx-api/detox/executors/test",
                 "name": "test",
                 "children": [],
                 "isExternal": false,
@@ -6543,12 +6396,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/detox/generators",
+            "path": "/nx-api/detox/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/detox/generators/init",
+                "path": "/nx-api/detox/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -6556,7 +6409,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/detox/generators/application",
+                "path": "/nx-api/detox/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -6572,17 +6425,17 @@
       },
       {
         "id": "devkit",
-        "path": "/packages/devkit",
+        "path": "/nx-api/devkit",
         "name": "devkit",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/devkit/documents",
+            "path": "/nx-api/devkit/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/devkit/documents/nx_devkit",
+                "path": "/nx-api/devkit/documents/nx_devkit",
                 "id": "nx_devkit",
                 "isExternal": false,
                 "children": [],
@@ -6590,7 +6443,7 @@
               },
               {
                 "name": "Ng CLI Adapter",
-                "path": "/packages/devkit/documents/ngcli_adapter",
+                "path": "/nx-api/devkit/documents/ngcli_adapter",
                 "id": "ngcli_adapter",
                 "isExternal": false,
                 "children": [],
@@ -6606,17 +6459,17 @@
       },
       {
         "id": "esbuild",
-        "path": "/packages/esbuild",
+        "path": "/nx-api/esbuild",
         "name": "esbuild",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/esbuild/documents",
+            "path": "/nx-api/esbuild/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/esbuild/documents/overview",
+                "path": "/nx-api/esbuild/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -6628,12 +6481,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/esbuild/executors",
+            "path": "/nx-api/esbuild/executors",
             "name": "executors",
             "children": [
               {
                 "id": "esbuild",
-                "path": "/packages/esbuild/executors/esbuild",
+                "path": "/nx-api/esbuild/executors/esbuild",
                 "name": "esbuild",
                 "children": [],
                 "isExternal": false,
@@ -6645,12 +6498,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/esbuild/generators",
+            "path": "/nx-api/esbuild/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/esbuild/generators/init",
+                "path": "/nx-api/esbuild/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -6658,7 +6511,7 @@
               },
               {
                 "id": "configuration",
-                "path": "/packages/esbuild/generators/configuration",
+                "path": "/nx-api/esbuild/generators/configuration",
                 "name": "configuration",
                 "children": [],
                 "isExternal": false,
@@ -6674,17 +6527,17 @@
       },
       {
         "id": "eslint-plugin",
-        "path": "/packages/eslint-plugin",
+        "path": "/nx-api/eslint-plugin",
         "name": "eslint-plugin",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/eslint-plugin/documents",
+            "path": "/nx-api/eslint-plugin/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/eslint-plugin/documents/overview",
+                "path": "/nx-api/eslint-plugin/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -6692,7 +6545,7 @@
               },
               {
                 "name": "The `enforce-module-boundaries` rule",
-                "path": "/packages/eslint-plugin/documents/enforce-module-boundaries",
+                "path": "/nx-api/eslint-plugin/documents/enforce-module-boundaries",
                 "id": "enforce-module-boundaries",
                 "isExternal": false,
                 "children": [],
@@ -6700,7 +6553,7 @@
               },
               {
                 "name": "The `dependency-checks` rule",
-                "path": "/packages/eslint-plugin/documents/dependency-checks",
+                "path": "/nx-api/eslint-plugin/documents/dependency-checks",
                 "id": "dependency-checks",
                 "isExternal": false,
                 "children": [],
@@ -6716,17 +6569,17 @@
       },
       {
         "id": "expo",
-        "path": "/packages/expo",
+        "path": "/nx-api/expo",
         "name": "expo",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/expo/documents",
+            "path": "/nx-api/expo/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/expo/documents/overview",
+                "path": "/nx-api/expo/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -6738,12 +6591,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/expo/executors",
+            "path": "/nx-api/expo/executors",
             "name": "executors",
             "children": [
               {
                 "id": "update",
-                "path": "/packages/expo/executors/update",
+                "path": "/nx-api/expo/executors/update",
                 "name": "update",
                 "children": [],
                 "isExternal": false,
@@ -6751,7 +6604,7 @@
               },
               {
                 "id": "build",
-                "path": "/packages/expo/executors/build",
+                "path": "/nx-api/expo/executors/build",
                 "name": "build",
                 "children": [],
                 "isExternal": false,
@@ -6759,7 +6612,7 @@
               },
               {
                 "id": "build-list",
-                "path": "/packages/expo/executors/build-list",
+                "path": "/nx-api/expo/executors/build-list",
                 "name": "build-list",
                 "children": [],
                 "isExternal": false,
@@ -6767,7 +6620,7 @@
               },
               {
                 "id": "download",
-                "path": "/packages/expo/executors/download",
+                "path": "/nx-api/expo/executors/download",
                 "name": "download",
                 "children": [],
                 "isExternal": false,
@@ -6775,7 +6628,7 @@
               },
               {
                 "id": "run",
-                "path": "/packages/expo/executors/run",
+                "path": "/nx-api/expo/executors/run",
                 "name": "run",
                 "children": [],
                 "isExternal": false,
@@ -6783,7 +6636,7 @@
               },
               {
                 "id": "start",
-                "path": "/packages/expo/executors/start",
+                "path": "/nx-api/expo/executors/start",
                 "name": "start",
                 "children": [],
                 "isExternal": false,
@@ -6791,7 +6644,7 @@
               },
               {
                 "id": "sync-deps",
-                "path": "/packages/expo/executors/sync-deps",
+                "path": "/nx-api/expo/executors/sync-deps",
                 "name": "sync-deps",
                 "children": [],
                 "isExternal": false,
@@ -6799,7 +6652,7 @@
               },
               {
                 "id": "ensure-symlink",
-                "path": "/packages/expo/executors/ensure-symlink",
+                "path": "/nx-api/expo/executors/ensure-symlink",
                 "name": "ensure-symlink",
                 "children": [],
                 "isExternal": false,
@@ -6807,7 +6660,7 @@
               },
               {
                 "id": "prebuild",
-                "path": "/packages/expo/executors/prebuild",
+                "path": "/nx-api/expo/executors/prebuild",
                 "name": "prebuild",
                 "children": [],
                 "isExternal": false,
@@ -6815,7 +6668,7 @@
               },
               {
                 "id": "install",
-                "path": "/packages/expo/executors/install",
+                "path": "/nx-api/expo/executors/install",
                 "name": "install",
                 "children": [],
                 "isExternal": false,
@@ -6823,7 +6676,7 @@
               },
               {
                 "id": "export",
-                "path": "/packages/expo/executors/export",
+                "path": "/nx-api/expo/executors/export",
                 "name": "export",
                 "children": [],
                 "isExternal": false,
@@ -6831,7 +6684,7 @@
               },
               {
                 "id": "submit",
-                "path": "/packages/expo/executors/submit",
+                "path": "/nx-api/expo/executors/submit",
                 "name": "submit",
                 "children": [],
                 "isExternal": false,
@@ -6843,12 +6696,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/expo/generators",
+            "path": "/nx-api/expo/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/expo/generators/init",
+                "path": "/nx-api/expo/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -6856,7 +6709,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/expo/generators/application",
+                "path": "/nx-api/expo/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -6864,7 +6717,7 @@
               },
               {
                 "id": "library",
-                "path": "/packages/expo/generators/library",
+                "path": "/nx-api/expo/generators/library",
                 "name": "library",
                 "children": [],
                 "isExternal": false,
@@ -6872,7 +6725,7 @@
               },
               {
                 "id": "component",
-                "path": "/packages/expo/generators/component",
+                "path": "/nx-api/expo/generators/component",
                 "name": "component",
                 "children": [],
                 "isExternal": false,
@@ -6888,17 +6741,17 @@
       },
       {
         "id": "express",
-        "path": "/packages/express",
+        "path": "/nx-api/express",
         "name": "express",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/express/documents",
+            "path": "/nx-api/express/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/express/documents/overview",
+                "path": "/nx-api/express/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -6910,12 +6763,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/express/generators",
+            "path": "/nx-api/express/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/express/generators/init",
+                "path": "/nx-api/express/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -6923,7 +6776,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/express/generators/application",
+                "path": "/nx-api/express/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -6939,17 +6792,17 @@
       },
       {
         "id": "jest",
-        "path": "/packages/jest",
+        "path": "/nx-api/jest",
         "name": "jest",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/jest/documents",
+            "path": "/nx-api/jest/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/jest/documents/overview",
+                "path": "/nx-api/jest/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -6961,12 +6814,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/jest/executors",
+            "path": "/nx-api/jest/executors",
             "name": "executors",
             "children": [
               {
                 "id": "jest",
-                "path": "/packages/jest/executors/jest",
+                "path": "/nx-api/jest/executors/jest",
                 "name": "jest",
                 "children": [],
                 "isExternal": false,
@@ -6978,12 +6831,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/jest/generators",
+            "path": "/nx-api/jest/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/jest/generators/init",
+                "path": "/nx-api/jest/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -6991,7 +6844,7 @@
               },
               {
                 "id": "configuration",
-                "path": "/packages/jest/generators/configuration",
+                "path": "/nx-api/jest/generators/configuration",
                 "name": "configuration",
                 "children": [],
                 "isExternal": false,
@@ -7007,17 +6860,17 @@
       },
       {
         "id": "js",
-        "path": "/packages/js",
+        "path": "/nx-api/js",
         "name": "js",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/js/documents",
+            "path": "/nx-api/js/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/js/documents/overview",
+                "path": "/nx-api/js/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -7029,12 +6882,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/js/executors",
+            "path": "/nx-api/js/executors",
             "name": "executors",
             "children": [
               {
                 "id": "tsc",
-                "path": "/packages/js/executors/tsc",
+                "path": "/nx-api/js/executors/tsc",
                 "name": "tsc",
                 "children": [],
                 "isExternal": false,
@@ -7042,7 +6895,7 @@
               },
               {
                 "id": "swc",
-                "path": "/packages/js/executors/swc",
+                "path": "/nx-api/js/executors/swc",
                 "name": "swc",
                 "children": [],
                 "isExternal": false,
@@ -7050,15 +6903,23 @@
               },
               {
                 "id": "node",
-                "path": "/packages/js/executors/node",
+                "path": "/nx-api/js/executors/node",
                 "name": "node",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
+                "id": "release-publish",
+                "path": "/nx-api/js/executors/release-publish",
+                "name": "release-publish",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "verdaccio",
-                "path": "/packages/js/executors/verdaccio",
+                "path": "/nx-api/js/executors/verdaccio",
                 "name": "verdaccio",
                 "children": [],
                 "isExternal": false,
@@ -7070,12 +6931,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/js/generators",
+            "path": "/nx-api/js/generators",
             "name": "generators",
             "children": [
               {
                 "id": "library",
-                "path": "/packages/js/generators/library",
+                "path": "/nx-api/js/generators/library",
                 "name": "library",
                 "children": [],
                 "isExternal": false,
@@ -7083,7 +6944,7 @@
               },
               {
                 "id": "init",
-                "path": "/packages/js/generators/init",
+                "path": "/nx-api/js/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -7091,15 +6952,23 @@
               },
               {
                 "id": "convert-to-swc",
-                "path": "/packages/js/generators/convert-to-swc",
+                "path": "/nx-api/js/generators/convert-to-swc",
                 "name": "convert-to-swc",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
               },
               {
+                "id": "release-version",
+                "path": "/nx-api/js/generators/release-version",
+                "name": "release-version",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "setup-verdaccio",
-                "path": "/packages/js/generators/setup-verdaccio",
+                "path": "/nx-api/js/generators/setup-verdaccio",
                 "name": "setup-verdaccio",
                 "children": [],
                 "isExternal": false,
@@ -7107,7 +6976,7 @@
               },
               {
                 "id": "setup-build",
-                "path": "/packages/js/generators/setup-build",
+                "path": "/nx-api/js/generators/setup-build",
                 "name": "setup-build",
                 "children": [],
                 "isExternal": false,
@@ -7123,17 +6992,17 @@
       },
       {
         "id": "linter",
-        "path": "/packages/linter",
+        "path": "/nx-api/linter",
         "name": "linter",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/linter/documents",
+            "path": "/nx-api/linter/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/linter/documents/overview",
+                "path": "/nx-api/linter/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -7145,12 +7014,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/linter/executors",
+            "path": "/nx-api/linter/executors",
             "name": "executors",
             "children": [
               {
                 "id": "eslint",
-                "path": "/packages/linter/executors/eslint",
+                "path": "/nx-api/linter/executors/eslint",
                 "name": "eslint",
                 "children": [],
                 "isExternal": false,
@@ -7162,12 +7031,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/linter/generators",
+            "path": "/nx-api/linter/generators",
             "name": "generators",
             "children": [
               {
                 "id": "workspace-rules-project",
-                "path": "/packages/linter/generators/workspace-rules-project",
+                "path": "/nx-api/linter/generators/workspace-rules-project",
                 "name": "workspace-rules-project",
                 "children": [],
                 "isExternal": false,
@@ -7175,7 +7044,7 @@
               },
               {
                 "id": "workspace-rule",
-                "path": "/packages/linter/generators/workspace-rule",
+                "path": "/nx-api/linter/generators/workspace-rule",
                 "name": "workspace-rule",
                 "children": [],
                 "isExternal": false,
@@ -7183,7 +7052,7 @@
               },
               {
                 "id": "convert-to-flat-config",
-                "path": "/packages/linter/generators/convert-to-flat-config",
+                "path": "/nx-api/linter/generators/convert-to-flat-config",
                 "name": "convert-to-flat-config",
                 "children": [],
                 "isExternal": false,
@@ -7199,17 +7068,17 @@
       },
       {
         "id": "nest",
-        "path": "/packages/nest",
+        "path": "/nx-api/nest",
         "name": "nest",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/nest/documents",
+            "path": "/nx-api/nest/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/nest/documents/overview",
+                "path": "/nx-api/nest/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -7221,12 +7090,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/nest/generators",
+            "path": "/nx-api/nest/generators",
             "name": "generators",
             "children": [
               {
                 "id": "application",
-                "path": "/packages/nest/generators/application",
+                "path": "/nx-api/nest/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -7234,7 +7103,7 @@
               },
               {
                 "id": "convert-tslint-to-eslint",
-                "path": "/packages/nest/generators/convert-tslint-to-eslint",
+                "path": "/nx-api/nest/generators/convert-tslint-to-eslint",
                 "name": "convert-tslint-to-eslint",
                 "children": [],
                 "isExternal": false,
@@ -7242,7 +7111,7 @@
               },
               {
                 "id": "init",
-                "path": "/packages/nest/generators/init",
+                "path": "/nx-api/nest/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -7250,7 +7119,7 @@
               },
               {
                 "id": "library",
-                "path": "/packages/nest/generators/library",
+                "path": "/nx-api/nest/generators/library",
                 "name": "library",
                 "children": [],
                 "isExternal": false,
@@ -7258,7 +7127,7 @@
               },
               {
                 "id": "class",
-                "path": "/packages/nest/generators/class",
+                "path": "/nx-api/nest/generators/class",
                 "name": "class",
                 "children": [],
                 "isExternal": false,
@@ -7266,7 +7135,7 @@
               },
               {
                 "id": "controller",
-                "path": "/packages/nest/generators/controller",
+                "path": "/nx-api/nest/generators/controller",
                 "name": "controller",
                 "children": [],
                 "isExternal": false,
@@ -7274,7 +7143,7 @@
               },
               {
                 "id": "decorator",
-                "path": "/packages/nest/generators/decorator",
+                "path": "/nx-api/nest/generators/decorator",
                 "name": "decorator",
                 "children": [],
                 "isExternal": false,
@@ -7282,7 +7151,7 @@
               },
               {
                 "id": "filter",
-                "path": "/packages/nest/generators/filter",
+                "path": "/nx-api/nest/generators/filter",
                 "name": "filter",
                 "children": [],
                 "isExternal": false,
@@ -7290,7 +7159,7 @@
               },
               {
                 "id": "gateway",
-                "path": "/packages/nest/generators/gateway",
+                "path": "/nx-api/nest/generators/gateway",
                 "name": "gateway",
                 "children": [],
                 "isExternal": false,
@@ -7298,7 +7167,7 @@
               },
               {
                 "id": "guard",
-                "path": "/packages/nest/generators/guard",
+                "path": "/nx-api/nest/generators/guard",
                 "name": "guard",
                 "children": [],
                 "isExternal": false,
@@ -7306,7 +7175,7 @@
               },
               {
                 "id": "interceptor",
-                "path": "/packages/nest/generators/interceptor",
+                "path": "/nx-api/nest/generators/interceptor",
                 "name": "interceptor",
                 "children": [],
                 "isExternal": false,
@@ -7314,7 +7183,7 @@
               },
               {
                 "id": "interface",
-                "path": "/packages/nest/generators/interface",
+                "path": "/nx-api/nest/generators/interface",
                 "name": "interface",
                 "children": [],
                 "isExternal": false,
@@ -7322,7 +7191,7 @@
               },
               {
                 "id": "middleware",
-                "path": "/packages/nest/generators/middleware",
+                "path": "/nx-api/nest/generators/middleware",
                 "name": "middleware",
                 "children": [],
                 "isExternal": false,
@@ -7330,7 +7199,7 @@
               },
               {
                 "id": "module",
-                "path": "/packages/nest/generators/module",
+                "path": "/nx-api/nest/generators/module",
                 "name": "module",
                 "children": [],
                 "isExternal": false,
@@ -7338,7 +7207,7 @@
               },
               {
                 "id": "pipe",
-                "path": "/packages/nest/generators/pipe",
+                "path": "/nx-api/nest/generators/pipe",
                 "name": "pipe",
                 "children": [],
                 "isExternal": false,
@@ -7346,7 +7215,7 @@
               },
               {
                 "id": "provider",
-                "path": "/packages/nest/generators/provider",
+                "path": "/nx-api/nest/generators/provider",
                 "name": "provider",
                 "children": [],
                 "isExternal": false,
@@ -7354,7 +7223,7 @@
               },
               {
                 "id": "resolver",
-                "path": "/packages/nest/generators/resolver",
+                "path": "/nx-api/nest/generators/resolver",
                 "name": "resolver",
                 "children": [],
                 "isExternal": false,
@@ -7362,7 +7231,7 @@
               },
               {
                 "id": "resource",
-                "path": "/packages/nest/generators/resource",
+                "path": "/nx-api/nest/generators/resource",
                 "name": "resource",
                 "children": [],
                 "isExternal": false,
@@ -7370,7 +7239,7 @@
               },
               {
                 "id": "service",
-                "path": "/packages/nest/generators/service",
+                "path": "/nx-api/nest/generators/service",
                 "name": "service",
                 "children": [],
                 "isExternal": false,
@@ -7386,17 +7255,17 @@
       },
       {
         "id": "next",
-        "path": "/packages/next",
+        "path": "/nx-api/next",
         "name": "next",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/next/documents",
+            "path": "/nx-api/next/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/next/documents/overview",
+                "path": "/nx-api/next/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -7408,12 +7277,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/next/executors",
+            "path": "/nx-api/next/executors",
             "name": "executors",
             "children": [
               {
                 "id": "build",
-                "path": "/packages/next/executors/build",
+                "path": "/nx-api/next/executors/build",
                 "name": "build",
                 "children": [],
                 "isExternal": false,
@@ -7421,7 +7290,7 @@
               },
               {
                 "id": "server",
-                "path": "/packages/next/executors/server",
+                "path": "/nx-api/next/executors/server",
                 "name": "server",
                 "children": [],
                 "isExternal": false,
@@ -7429,7 +7298,7 @@
               },
               {
                 "id": "export",
-                "path": "/packages/next/executors/export",
+                "path": "/nx-api/next/executors/export",
                 "name": "export",
                 "children": [],
                 "isExternal": false,
@@ -7441,12 +7310,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/next/generators",
+            "path": "/nx-api/next/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/next/generators/init",
+                "path": "/nx-api/next/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -7454,7 +7323,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/next/generators/application",
+                "path": "/nx-api/next/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -7462,7 +7331,7 @@
               },
               {
                 "id": "page",
-                "path": "/packages/next/generators/page",
+                "path": "/nx-api/next/generators/page",
                 "name": "page",
                 "children": [],
                 "isExternal": false,
@@ -7470,7 +7339,7 @@
               },
               {
                 "id": "component",
-                "path": "/packages/next/generators/component",
+                "path": "/nx-api/next/generators/component",
                 "name": "component",
                 "children": [],
                 "isExternal": false,
@@ -7478,7 +7347,7 @@
               },
               {
                 "id": "library",
-                "path": "/packages/next/generators/library",
+                "path": "/nx-api/next/generators/library",
                 "name": "library",
                 "children": [],
                 "isExternal": false,
@@ -7486,7 +7355,7 @@
               },
               {
                 "id": "custom-server",
-                "path": "/packages/next/generators/custom-server",
+                "path": "/nx-api/next/generators/custom-server",
                 "name": "custom-server",
                 "children": [],
                 "isExternal": false,
@@ -7494,7 +7363,7 @@
               },
               {
                 "id": "cypress-component-configuration",
-                "path": "/packages/next/generators/cypress-component-configuration",
+                "path": "/nx-api/next/generators/cypress-component-configuration",
                 "name": "cypress-component-configuration",
                 "children": [],
                 "isExternal": false,
@@ -7510,17 +7379,17 @@
       },
       {
         "id": "node",
-        "path": "/packages/node",
+        "path": "/nx-api/node",
         "name": "node",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/node/documents",
+            "path": "/nx-api/node/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/node/documents/overview",
+                "path": "/nx-api/node/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -7532,12 +7401,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/node/generators",
+            "path": "/nx-api/node/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/node/generators/init",
+                "path": "/nx-api/node/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -7545,7 +7414,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/node/generators/application",
+                "path": "/nx-api/node/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -7553,7 +7422,7 @@
               },
               {
                 "id": "library",
-                "path": "/packages/node/generators/library",
+                "path": "/nx-api/node/generators/library",
                 "name": "library",
                 "children": [],
                 "isExternal": false,
@@ -7561,7 +7430,7 @@
               },
               {
                 "id": "setup-docker",
-                "path": "/packages/node/generators/setup-docker",
+                "path": "/nx-api/node/generators/setup-docker",
                 "name": "setup-docker",
                 "children": [],
                 "isExternal": false,
@@ -7577,17 +7446,17 @@
       },
       {
         "id": "nx",
-        "path": "/packages/nx",
+        "path": "/nx-api/nx",
         "name": "nx",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/nx/documents",
+            "path": "/nx-api/nx/documents",
             "name": "documents",
             "children": [
               {
                 "name": "create-nx-workspace",
-                "path": "/packages/nx/documents/create-nx-workspace",
+                "path": "/nx-api/nx/documents/create-nx-workspace",
                 "id": "create-nx-workspace",
                 "isExternal": false,
                 "children": [],
@@ -7595,7 +7464,7 @@
               },
               {
                 "name": "init",
-                "path": "/packages/nx/documents/init",
+                "path": "/nx-api/nx/documents/init",
                 "id": "init",
                 "isExternal": false,
                 "children": [],
@@ -7603,7 +7472,7 @@
               },
               {
                 "name": "generate",
-                "path": "/packages/nx/documents/generate",
+                "path": "/nx-api/nx/documents/generate",
                 "id": "generate",
                 "isExternal": false,
                 "children": [],
@@ -7611,7 +7480,7 @@
               },
               {
                 "name": "run",
-                "path": "/packages/nx/documents/run",
+                "path": "/nx-api/nx/documents/run",
                 "id": "run",
                 "isExternal": false,
                 "children": [],
@@ -7619,7 +7488,7 @@
               },
               {
                 "name": "daemon",
-                "path": "/packages/nx/documents/daemon",
+                "path": "/nx-api/nx/documents/daemon",
                 "id": "daemon",
                 "isExternal": false,
                 "children": [],
@@ -7627,7 +7496,7 @@
               },
               {
                 "name": "graph",
-                "path": "/packages/nx/documents/dep-graph",
+                "path": "/nx-api/nx/documents/dep-graph",
                 "id": "dep-graph",
                 "isExternal": false,
                 "children": [],
@@ -7635,7 +7504,7 @@
               },
               {
                 "name": "run-many",
-                "path": "/packages/nx/documents/run-many",
+                "path": "/nx-api/nx/documents/run-many",
                 "id": "run-many",
                 "isExternal": false,
                 "children": [],
@@ -7643,7 +7512,7 @@
               },
               {
                 "name": "affected",
-                "path": "/packages/nx/documents/affected",
+                "path": "/nx-api/nx/documents/affected",
                 "id": "affected",
                 "isExternal": false,
                 "children": [],
@@ -7651,7 +7520,7 @@
               },
               {
                 "name": "affected:graph",
-                "path": "/packages/nx/documents/affected-dep-graph",
+                "path": "/nx-api/nx/documents/affected-dep-graph",
                 "id": "affected-dep-graph",
                 "isExternal": false,
                 "children": [],
@@ -7659,7 +7528,7 @@
               },
               {
                 "name": "print-affected",
-                "path": "/packages/nx/documents/print-affected",
+                "path": "/nx-api/nx/documents/print-affected",
                 "id": "print-affected",
                 "isExternal": false,
                 "children": [],
@@ -7667,7 +7536,7 @@
               },
               {
                 "name": "format:check",
-                "path": "/packages/nx/documents/format-check",
+                "path": "/nx-api/nx/documents/format-check",
                 "id": "format-check",
                 "isExternal": false,
                 "children": [],
@@ -7675,7 +7544,7 @@
               },
               {
                 "name": "format:write",
-                "path": "/packages/nx/documents/format-write",
+                "path": "/nx-api/nx/documents/format-write",
                 "id": "format-write",
                 "isExternal": false,
                 "children": [],
@@ -7683,7 +7552,7 @@
               },
               {
                 "name": "migrate",
-                "path": "/packages/nx/documents/migrate",
+                "path": "/nx-api/nx/documents/migrate",
                 "id": "migrate",
                 "isExternal": false,
                 "children": [],
@@ -7691,7 +7560,7 @@
               },
               {
                 "name": "report",
-                "path": "/packages/nx/documents/report",
+                "path": "/nx-api/nx/documents/report",
                 "id": "report",
                 "isExternal": false,
                 "children": [],
@@ -7699,7 +7568,7 @@
               },
               {
                 "name": "list",
-                "path": "/packages/nx/documents/list",
+                "path": "/nx-api/nx/documents/list",
                 "id": "list",
                 "isExternal": false,
                 "children": [],
@@ -7707,7 +7576,7 @@
               },
               {
                 "name": "workspace-lint",
-                "path": "/packages/nx/documents/workspace-lint",
+                "path": "/nx-api/nx/documents/workspace-lint",
                 "id": "workspace-lint",
                 "isExternal": false,
                 "children": [],
@@ -7715,7 +7584,7 @@
               },
               {
                 "name": "workspace-generator",
-                "path": "/packages/nx/documents/workspace-generator",
+                "path": "/nx-api/nx/documents/workspace-generator",
                 "id": "workspace-generator",
                 "isExternal": false,
                 "children": [],
@@ -7723,7 +7592,7 @@
               },
               {
                 "name": "connect-to-nx-cloud",
-                "path": "/packages/nx/documents/connect-to-nx-cloud",
+                "path": "/nx-api/nx/documents/connect-to-nx-cloud",
                 "id": "connect-to-nx-cloud",
                 "isExternal": false,
                 "children": [],
@@ -7731,7 +7600,7 @@
               },
               {
                 "name": "reset",
-                "path": "/packages/nx/documents/reset",
+                "path": "/nx-api/nx/documents/reset",
                 "id": "reset",
                 "isExternal": false,
                 "children": [],
@@ -7739,7 +7608,7 @@
               },
               {
                 "name": "repair",
-                "path": "/packages/nx/documents/repair",
+                "path": "/nx-api/nx/documents/repair",
                 "id": "repair",
                 "isExternal": false,
                 "children": [],
@@ -7747,7 +7616,7 @@
               },
               {
                 "name": "exec",
-                "path": "/packages/nx/documents/exec",
+                "path": "/nx-api/nx/documents/exec",
                 "id": "exec",
                 "isExternal": false,
                 "children": [],
@@ -7755,7 +7624,7 @@
               },
               {
                 "name": "watch",
-                "path": "/packages/nx/documents/watch",
+                "path": "/nx-api/nx/documents/watch",
                 "id": "watch",
                 "isExternal": false,
                 "children": [],
@@ -7763,7 +7632,7 @@
               },
               {
                 "name": "show",
-                "path": "/packages/nx/documents/show",
+                "path": "/nx-api/nx/documents/show",
                 "id": "show",
                 "isExternal": false,
                 "children": [],
@@ -7771,8 +7640,16 @@
               },
               {
                 "name": "view-logs",
-                "path": "/packages/nx/documents/view-logs",
+                "path": "/nx-api/nx/documents/view-logs",
                 "id": "view-logs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "release",
+                "path": "/nx-api/nx/documents/release",
+                "id": "release",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -7783,12 +7660,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/nx/executors",
+            "path": "/nx-api/nx/executors",
             "name": "executors",
             "children": [
               {
                 "id": "noop",
-                "path": "/packages/nx/executors/noop",
+                "path": "/nx-api/nx/executors/noop",
                 "name": "noop",
                 "children": [],
                 "isExternal": false,
@@ -7796,7 +7673,7 @@
               },
               {
                 "id": "run-commands",
-                "path": "/packages/nx/executors/run-commands",
+                "path": "/nx-api/nx/executors/run-commands",
                 "name": "run-commands",
                 "children": [],
                 "isExternal": false,
@@ -7804,7 +7681,7 @@
               },
               {
                 "id": "run-script",
-                "path": "/packages/nx/executors/run-script",
+                "path": "/nx-api/nx/executors/run-script",
                 "name": "run-script",
                 "children": [],
                 "isExternal": false,
@@ -7820,17 +7697,17 @@
       },
       {
         "id": "playwright",
-        "path": "/packages/playwright",
+        "path": "/nx-api/playwright",
         "name": "playwright",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/playwright/documents",
+            "path": "/nx-api/playwright/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/playwright/documents/overview",
+                "path": "/nx-api/playwright/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -7842,12 +7719,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/playwright/executors",
+            "path": "/nx-api/playwright/executors",
             "name": "executors",
             "children": [
               {
                 "id": "playwright",
-                "path": "/packages/playwright/executors/playwright",
+                "path": "/nx-api/playwright/executors/playwright",
                 "name": "playwright",
                 "children": [],
                 "isExternal": false,
@@ -7859,12 +7736,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/playwright/generators",
+            "path": "/nx-api/playwright/generators",
             "name": "generators",
             "children": [
               {
                 "id": "configuration",
-                "path": "/packages/playwright/generators/configuration",
+                "path": "/nx-api/playwright/generators/configuration",
                 "name": "configuration",
                 "children": [],
                 "isExternal": false,
@@ -7872,7 +7749,7 @@
               },
               {
                 "id": "init",
-                "path": "/packages/playwright/generators/init",
+                "path": "/nx-api/playwright/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -7888,17 +7765,17 @@
       },
       {
         "id": "plugin",
-        "path": "/packages/plugin",
+        "path": "/nx-api/plugin",
         "name": "plugin",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/plugin/documents",
+            "path": "/nx-api/plugin/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/plugin/documents/overview",
+                "path": "/nx-api/plugin/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -7910,12 +7787,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/plugin/executors",
+            "path": "/nx-api/plugin/executors",
             "name": "executors",
             "children": [
               {
                 "id": "e2e",
-                "path": "/packages/plugin/executors/e2e",
+                "path": "/nx-api/plugin/executors/e2e",
                 "name": "e2e",
                 "children": [],
                 "isExternal": false,
@@ -7927,12 +7804,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/plugin/generators",
+            "path": "/nx-api/plugin/generators",
             "name": "generators",
             "children": [
               {
                 "id": "plugin",
-                "path": "/packages/plugin/generators/plugin",
+                "path": "/nx-api/plugin/generators/plugin",
                 "name": "plugin",
                 "children": [],
                 "isExternal": false,
@@ -7940,7 +7817,7 @@
               },
               {
                 "id": "create-package",
-                "path": "/packages/plugin/generators/create-package",
+                "path": "/nx-api/plugin/generators/create-package",
                 "name": "create-package",
                 "children": [],
                 "isExternal": false,
@@ -7948,7 +7825,7 @@
               },
               {
                 "id": "e2e-project",
-                "path": "/packages/plugin/generators/e2e-project",
+                "path": "/nx-api/plugin/generators/e2e-project",
                 "name": "e2e-project",
                 "children": [],
                 "isExternal": false,
@@ -7956,7 +7833,7 @@
               },
               {
                 "id": "migration",
-                "path": "/packages/plugin/generators/migration",
+                "path": "/nx-api/plugin/generators/migration",
                 "name": "migration",
                 "children": [],
                 "isExternal": false,
@@ -7964,7 +7841,7 @@
               },
               {
                 "id": "generator",
-                "path": "/packages/plugin/generators/generator",
+                "path": "/nx-api/plugin/generators/generator",
                 "name": "generator",
                 "children": [],
                 "isExternal": false,
@@ -7972,7 +7849,7 @@
               },
               {
                 "id": "executor",
-                "path": "/packages/plugin/generators/executor",
+                "path": "/nx-api/plugin/generators/executor",
                 "name": "executor",
                 "children": [],
                 "isExternal": false,
@@ -7980,7 +7857,7 @@
               },
               {
                 "id": "plugin-lint-checks",
-                "path": "/packages/plugin/generators/plugin-lint-checks",
+                "path": "/nx-api/plugin/generators/plugin-lint-checks",
                 "name": "plugin-lint-checks",
                 "children": [],
                 "isExternal": false,
@@ -7988,7 +7865,7 @@
               },
               {
                 "id": "preset",
-                "path": "/packages/plugin/generators/preset",
+                "path": "/nx-api/plugin/generators/preset",
                 "name": "preset",
                 "children": [],
                 "isExternal": false,
@@ -8004,17 +7881,17 @@
       },
       {
         "id": "react",
-        "path": "/packages/react",
+        "path": "/nx-api/react",
         "name": "react",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/react/documents",
+            "path": "/nx-api/react/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/react/documents/overview",
+                "path": "/nx-api/react/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -8026,12 +7903,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/react/executors",
+            "path": "/nx-api/react/executors",
             "name": "executors",
             "children": [
               {
                 "id": "module-federation-dev-server",
-                "path": "/packages/react/executors/module-federation-dev-server",
+                "path": "/nx-api/react/executors/module-federation-dev-server",
                 "name": "module-federation-dev-server",
                 "children": [],
                 "isExternal": false,
@@ -8039,7 +7916,7 @@
               },
               {
                 "id": "module-federation-ssr-dev-server",
-                "path": "/packages/react/executors/module-federation-ssr-dev-server",
+                "path": "/nx-api/react/executors/module-federation-ssr-dev-server",
                 "name": "module-federation-ssr-dev-server",
                 "children": [],
                 "isExternal": false,
@@ -8051,12 +7928,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/react/generators",
+            "path": "/nx-api/react/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/react/generators/init",
+                "path": "/nx-api/react/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -8064,7 +7941,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/react/generators/application",
+                "path": "/nx-api/react/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -8072,7 +7949,7 @@
               },
               {
                 "id": "library",
-                "path": "/packages/react/generators/library",
+                "path": "/nx-api/react/generators/library",
                 "name": "library",
                 "children": [],
                 "isExternal": false,
@@ -8080,7 +7957,7 @@
               },
               {
                 "id": "component",
-                "path": "/packages/react/generators/component",
+                "path": "/nx-api/react/generators/component",
                 "name": "component",
                 "children": [],
                 "isExternal": false,
@@ -8088,7 +7965,7 @@
               },
               {
                 "id": "redux",
-                "path": "/packages/react/generators/redux",
+                "path": "/nx-api/react/generators/redux",
                 "name": "redux",
                 "children": [],
                 "isExternal": false,
@@ -8096,7 +7973,7 @@
               },
               {
                 "id": "storybook-configuration",
-                "path": "/packages/react/generators/storybook-configuration",
+                "path": "/nx-api/react/generators/storybook-configuration",
                 "name": "storybook-configuration",
                 "children": [],
                 "isExternal": false,
@@ -8104,7 +7981,7 @@
               },
               {
                 "id": "component-story",
-                "path": "/packages/react/generators/component-story",
+                "path": "/nx-api/react/generators/component-story",
                 "name": "component-story",
                 "children": [],
                 "isExternal": false,
@@ -8112,7 +7989,7 @@
               },
               {
                 "id": "stories",
-                "path": "/packages/react/generators/stories",
+                "path": "/nx-api/react/generators/stories",
                 "name": "stories",
                 "children": [],
                 "isExternal": false,
@@ -8120,7 +7997,7 @@
               },
               {
                 "id": "component-cypress-spec",
-                "path": "/packages/react/generators/component-cypress-spec",
+                "path": "/nx-api/react/generators/component-cypress-spec",
                 "name": "component-cypress-spec",
                 "children": [],
                 "isExternal": false,
@@ -8128,7 +8005,7 @@
               },
               {
                 "id": "hook",
-                "path": "/packages/react/generators/hook",
+                "path": "/nx-api/react/generators/hook",
                 "name": "hook",
                 "children": [],
                 "isExternal": false,
@@ -8136,7 +8013,7 @@
               },
               {
                 "id": "host",
-                "path": "/packages/react/generators/host",
+                "path": "/nx-api/react/generators/host",
                 "name": "host",
                 "children": [],
                 "isExternal": false,
@@ -8144,7 +8021,7 @@
               },
               {
                 "id": "remote",
-                "path": "/packages/react/generators/remote",
+                "path": "/nx-api/react/generators/remote",
                 "name": "remote",
                 "children": [],
                 "isExternal": false,
@@ -8152,7 +8029,7 @@
               },
               {
                 "id": "cypress-component-configuration",
-                "path": "/packages/react/generators/cypress-component-configuration",
+                "path": "/nx-api/react/generators/cypress-component-configuration",
                 "name": "cypress-component-configuration",
                 "children": [],
                 "isExternal": false,
@@ -8160,7 +8037,7 @@
               },
               {
                 "id": "component-test",
-                "path": "/packages/react/generators/component-test",
+                "path": "/nx-api/react/generators/component-test",
                 "name": "component-test",
                 "children": [],
                 "isExternal": false,
@@ -8168,7 +8045,7 @@
               },
               {
                 "id": "setup-tailwind",
-                "path": "/packages/react/generators/setup-tailwind",
+                "path": "/nx-api/react/generators/setup-tailwind",
                 "name": "setup-tailwind",
                 "children": [],
                 "isExternal": false,
@@ -8176,7 +8053,7 @@
               },
               {
                 "id": "setup-ssr",
-                "path": "/packages/react/generators/setup-ssr",
+                "path": "/nx-api/react/generators/setup-ssr",
                 "name": "setup-ssr",
                 "children": [],
                 "isExternal": false,
@@ -8192,17 +8069,17 @@
       },
       {
         "id": "react-native",
-        "path": "/packages/react-native",
+        "path": "/nx-api/react-native",
         "name": "react-native",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/react-native/documents",
+            "path": "/nx-api/react-native/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/react-native/documents/overview",
+                "path": "/nx-api/react-native/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -8214,12 +8091,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/react-native/executors",
+            "path": "/nx-api/react-native/executors",
             "name": "executors",
             "children": [
               {
                 "id": "run-android",
-                "path": "/packages/react-native/executors/run-android",
+                "path": "/nx-api/react-native/executors/run-android",
                 "name": "run-android",
                 "children": [],
                 "isExternal": false,
@@ -8227,7 +8104,7 @@
               },
               {
                 "id": "run-ios",
-                "path": "/packages/react-native/executors/run-ios",
+                "path": "/nx-api/react-native/executors/run-ios",
                 "name": "run-ios",
                 "children": [],
                 "isExternal": false,
@@ -8235,7 +8112,7 @@
               },
               {
                 "id": "bundle",
-                "path": "/packages/react-native/executors/bundle",
+                "path": "/nx-api/react-native/executors/bundle",
                 "name": "bundle",
                 "children": [],
                 "isExternal": false,
@@ -8243,7 +8120,7 @@
               },
               {
                 "id": "build-android",
-                "path": "/packages/react-native/executors/build-android",
+                "path": "/nx-api/react-native/executors/build-android",
                 "name": "build-android",
                 "children": [],
                 "isExternal": false,
@@ -8251,7 +8128,7 @@
               },
               {
                 "id": "build-ios",
-                "path": "/packages/react-native/executors/build-ios",
+                "path": "/nx-api/react-native/executors/build-ios",
                 "name": "build-ios",
                 "children": [],
                 "isExternal": false,
@@ -8259,7 +8136,7 @@
               },
               {
                 "id": "start",
-                "path": "/packages/react-native/executors/start",
+                "path": "/nx-api/react-native/executors/start",
                 "name": "start",
                 "children": [],
                 "isExternal": false,
@@ -8267,7 +8144,7 @@
               },
               {
                 "id": "sync-deps",
-                "path": "/packages/react-native/executors/sync-deps",
+                "path": "/nx-api/react-native/executors/sync-deps",
                 "name": "sync-deps",
                 "children": [],
                 "isExternal": false,
@@ -8275,7 +8152,7 @@
               },
               {
                 "id": "ensure-symlink",
-                "path": "/packages/react-native/executors/ensure-symlink",
+                "path": "/nx-api/react-native/executors/ensure-symlink",
                 "name": "ensure-symlink",
                 "children": [],
                 "isExternal": false,
@@ -8283,7 +8160,7 @@
               },
               {
                 "id": "storybook",
-                "path": "/packages/react-native/executors/storybook",
+                "path": "/nx-api/react-native/executors/storybook",
                 "name": "storybook",
                 "children": [],
                 "isExternal": false,
@@ -8291,7 +8168,7 @@
               },
               {
                 "id": "pod-install",
-                "path": "/packages/react-native/executors/pod-install",
+                "path": "/nx-api/react-native/executors/pod-install",
                 "name": "pod-install",
                 "children": [],
                 "isExternal": false,
@@ -8303,12 +8180,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/react-native/generators",
+            "path": "/nx-api/react-native/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/react-native/generators/init",
+                "path": "/nx-api/react-native/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -8316,7 +8193,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/react-native/generators/application",
+                "path": "/nx-api/react-native/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -8324,7 +8201,7 @@
               },
               {
                 "id": "library",
-                "path": "/packages/react-native/generators/library",
+                "path": "/nx-api/react-native/generators/library",
                 "name": "library",
                 "children": [],
                 "isExternal": false,
@@ -8332,7 +8209,7 @@
               },
               {
                 "id": "component",
-                "path": "/packages/react-native/generators/component",
+                "path": "/nx-api/react-native/generators/component",
                 "name": "component",
                 "children": [],
                 "isExternal": false,
@@ -8340,7 +8217,7 @@
               },
               {
                 "id": "storybook-configuration",
-                "path": "/packages/react-native/generators/storybook-configuration",
+                "path": "/nx-api/react-native/generators/storybook-configuration",
                 "name": "storybook-configuration",
                 "children": [],
                 "isExternal": false,
@@ -8348,7 +8225,7 @@
               },
               {
                 "id": "component-story",
-                "path": "/packages/react-native/generators/component-story",
+                "path": "/nx-api/react-native/generators/component-story",
                 "name": "component-story",
                 "children": [],
                 "isExternal": false,
@@ -8356,7 +8233,7 @@
               },
               {
                 "id": "stories",
-                "path": "/packages/react-native/generators/stories",
+                "path": "/nx-api/react-native/generators/stories",
                 "name": "stories",
                 "children": [],
                 "isExternal": false,
@@ -8364,7 +8241,7 @@
               },
               {
                 "id": "upgrade-native",
-                "path": "/packages/react-native/generators/upgrade-native",
+                "path": "/nx-api/react-native/generators/upgrade-native",
                 "name": "upgrade-native",
                 "children": [],
                 "isExternal": false,
@@ -8380,17 +8257,17 @@
       },
       {
         "id": "rollup",
-        "path": "/packages/rollup",
+        "path": "/nx-api/rollup",
         "name": "rollup",
         "children": [
           {
             "id": "executors",
-            "path": "/packages/rollup/executors",
+            "path": "/nx-api/rollup/executors",
             "name": "executors",
             "children": [
               {
                 "id": "rollup",
-                "path": "/packages/rollup/executors/rollup",
+                "path": "/nx-api/rollup/executors/rollup",
                 "name": "rollup",
                 "children": [],
                 "isExternal": false,
@@ -8402,12 +8279,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/rollup/generators",
+            "path": "/nx-api/rollup/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/rollup/generators/init",
+                "path": "/nx-api/rollup/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -8415,7 +8292,7 @@
               },
               {
                 "id": "configuration",
-                "path": "/packages/rollup/generators/configuration",
+                "path": "/nx-api/rollup/generators/configuration",
                 "name": "configuration",
                 "children": [],
                 "isExternal": false,
@@ -8431,17 +8308,17 @@
       },
       {
         "id": "storybook",
-        "path": "/packages/storybook",
+        "path": "/nx-api/storybook",
         "name": "storybook",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/storybook/documents",
+            "path": "/nx-api/storybook/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Nx Storybook Plugin Overview",
-                "path": "/packages/storybook/documents/overview",
+                "path": "/nx-api/storybook/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -8449,7 +8326,7 @@
               },
               {
                 "name": "Storybook best practices for making the most out of Nx",
-                "path": "/packages/storybook/documents/best-practices",
+                "path": "/nx-api/storybook/documents/best-practices",
                 "id": "best-practices",
                 "isExternal": false,
                 "children": [],
@@ -8457,7 +8334,7 @@
               },
               {
                 "name": "Storybook 7 overview",
-                "path": "/packages/storybook/documents/storybook-7-setup",
+                "path": "/nx-api/storybook/documents/storybook-7-setup",
                 "id": "storybook-7-setup",
                 "isExternal": false,
                 "children": [],
@@ -8469,12 +8346,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/storybook/executors",
+            "path": "/nx-api/storybook/executors",
             "name": "executors",
             "children": [
               {
                 "id": "storybook",
-                "path": "/packages/storybook/executors/storybook",
+                "path": "/nx-api/storybook/executors/storybook",
                 "name": "storybook",
                 "children": [],
                 "isExternal": false,
@@ -8482,7 +8359,7 @@
               },
               {
                 "id": "build",
-                "path": "/packages/storybook/executors/build",
+                "path": "/nx-api/storybook/executors/build",
                 "name": "build",
                 "children": [],
                 "isExternal": false,
@@ -8494,12 +8371,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/storybook/generators",
+            "path": "/nx-api/storybook/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/storybook/generators/init",
+                "path": "/nx-api/storybook/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -8507,7 +8384,7 @@
               },
               {
                 "id": "configuration",
-                "path": "/packages/storybook/generators/configuration",
+                "path": "/nx-api/storybook/generators/configuration",
                 "name": "configuration",
                 "children": [],
                 "isExternal": false,
@@ -8515,7 +8392,7 @@
               },
               {
                 "id": "cypress-project",
-                "path": "/packages/storybook/generators/cypress-project",
+                "path": "/nx-api/storybook/generators/cypress-project",
                 "name": "cypress-project",
                 "children": [],
                 "isExternal": false,
@@ -8523,7 +8400,7 @@
               },
               {
                 "id": "migrate-7",
-                "path": "/packages/storybook/generators/migrate-7",
+                "path": "/nx-api/storybook/generators/migrate-7",
                 "name": "migrate-7",
                 "children": [],
                 "isExternal": false,
@@ -8539,7 +8416,7 @@
       },
       {
         "id": "tao",
-        "path": "/packages/tao",
+        "path": "/nx-api/tao",
         "name": "tao",
         "children": [],
         "isExternal": false,
@@ -8547,17 +8424,17 @@
       },
       {
         "id": "vite",
-        "path": "/packages/vite",
+        "path": "/nx-api/vite",
         "name": "vite",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/vite/documents",
+            "path": "/nx-api/vite/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview of the Nx Vite Plugin",
-                "path": "/packages/vite/documents/overview",
+                "path": "/nx-api/vite/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -8569,12 +8446,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/vite/executors",
+            "path": "/nx-api/vite/executors",
             "name": "executors",
             "children": [
               {
                 "id": "dev-server",
-                "path": "/packages/vite/executors/dev-server",
+                "path": "/nx-api/vite/executors/dev-server",
                 "name": "dev-server",
                 "children": [],
                 "isExternal": false,
@@ -8582,7 +8459,7 @@
               },
               {
                 "id": "build",
-                "path": "/packages/vite/executors/build",
+                "path": "/nx-api/vite/executors/build",
                 "name": "build",
                 "children": [],
                 "isExternal": false,
@@ -8590,7 +8467,7 @@
               },
               {
                 "id": "test",
-                "path": "/packages/vite/executors/test",
+                "path": "/nx-api/vite/executors/test",
                 "name": "test",
                 "children": [],
                 "isExternal": false,
@@ -8598,7 +8475,7 @@
               },
               {
                 "id": "preview-server",
-                "path": "/packages/vite/executors/preview-server",
+                "path": "/nx-api/vite/executors/preview-server",
                 "name": "preview-server",
                 "children": [],
                 "isExternal": false,
@@ -8610,12 +8487,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/vite/generators",
+            "path": "/nx-api/vite/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/vite/generators/init",
+                "path": "/nx-api/vite/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -8623,7 +8500,7 @@
               },
               {
                 "id": "configuration",
-                "path": "/packages/vite/generators/configuration",
+                "path": "/nx-api/vite/generators/configuration",
                 "name": "configuration",
                 "children": [],
                 "isExternal": false,
@@ -8631,7 +8508,7 @@
               },
               {
                 "id": "vitest",
-                "path": "/packages/vite/generators/vitest",
+                "path": "/nx-api/vite/generators/vitest",
                 "name": "vitest",
                 "children": [],
                 "isExternal": false,
@@ -8647,17 +8524,17 @@
       },
       {
         "id": "web",
-        "path": "/packages/web",
+        "path": "/nx-api/web",
         "name": "web",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/web/documents",
+            "path": "/nx-api/web/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/web/documents/overview",
+                "path": "/nx-api/web/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -8669,12 +8546,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/web/executors",
+            "path": "/nx-api/web/executors",
             "name": "executors",
             "children": [
               {
                 "id": "file-server",
-                "path": "/packages/web/executors/file-server",
+                "path": "/nx-api/web/executors/file-server",
                 "name": "file-server",
                 "children": [],
                 "isExternal": false,
@@ -8686,12 +8563,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/web/generators",
+            "path": "/nx-api/web/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/web/generators/init",
+                "path": "/nx-api/web/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -8699,7 +8576,7 @@
               },
               {
                 "id": "application",
-                "path": "/packages/web/generators/application",
+                "path": "/nx-api/web/generators/application",
                 "name": "application",
                 "children": [],
                 "isExternal": false,
@@ -8707,7 +8584,7 @@
               },
               {
                 "id": "static-config",
-                "path": "/packages/web/generators/static-config",
+                "path": "/nx-api/web/generators/static-config",
                 "name": "static-config",
                 "children": [],
                 "isExternal": false,
@@ -8723,17 +8600,17 @@
       },
       {
         "id": "webpack",
-        "path": "/packages/webpack",
+        "path": "/nx-api/webpack",
         "name": "webpack",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/webpack/documents",
+            "path": "/nx-api/webpack/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview of the Nx Webpack Plugin",
-                "path": "/packages/webpack/documents/overview",
+                "path": "/nx-api/webpack/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -8745,12 +8622,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/webpack/executors",
+            "path": "/nx-api/webpack/executors",
             "name": "executors",
             "children": [
               {
                 "id": "webpack",
-                "path": "/packages/webpack/executors/webpack",
+                "path": "/nx-api/webpack/executors/webpack",
                 "name": "webpack",
                 "children": [],
                 "isExternal": false,
@@ -8758,7 +8635,7 @@
               },
               {
                 "id": "dev-server",
-                "path": "/packages/webpack/executors/dev-server",
+                "path": "/nx-api/webpack/executors/dev-server",
                 "name": "dev-server",
                 "children": [],
                 "isExternal": false,
@@ -8766,7 +8643,7 @@
               },
               {
                 "id": "ssr-dev-server",
-                "path": "/packages/webpack/executors/ssr-dev-server",
+                "path": "/nx-api/webpack/executors/ssr-dev-server",
                 "name": "ssr-dev-server",
                 "children": [],
                 "isExternal": false,
@@ -8778,12 +8655,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/webpack/generators",
+            "path": "/nx-api/webpack/generators",
             "name": "generators",
             "children": [
               {
                 "id": "init",
-                "path": "/packages/webpack/generators/init",
+                "path": "/nx-api/webpack/generators/init",
                 "name": "init",
                 "children": [],
                 "isExternal": false,
@@ -8791,7 +8668,7 @@
               },
               {
                 "id": "configuration",
-                "path": "/packages/webpack/generators/configuration",
+                "path": "/nx-api/webpack/generators/configuration",
                 "name": "configuration",
                 "children": [],
                 "isExternal": false,
@@ -8807,17 +8684,17 @@
       },
       {
         "id": "workspace",
-        "path": "/packages/workspace",
+        "path": "/nx-api/workspace",
         "name": "workspace",
         "children": [
           {
             "id": "documents",
-            "path": "/packages/workspace/documents",
+            "path": "/nx-api/workspace/documents",
             "name": "documents",
             "children": [
               {
                 "name": "Overview",
-                "path": "/packages/workspace/documents/overview",
+                "path": "/nx-api/workspace/documents/overview",
                 "id": "overview",
                 "isExternal": false,
                 "children": [],
@@ -8825,7 +8702,7 @@
               },
               {
                 "name": "Nx, NodeJS and Typescript Versions",
-                "path": "/packages/workspace/documents/nx-nodejs-typescript-version-matrix",
+                "path": "/nx-api/workspace/documents/nx-nodejs-typescript-version-matrix",
                 "id": "nx-nodejs-typescript-version-matrix",
                 "isExternal": false,
                 "children": [],
@@ -8837,12 +8714,12 @@
           },
           {
             "id": "executors",
-            "path": "/packages/workspace/executors",
+            "path": "/nx-api/workspace/executors",
             "name": "executors",
             "children": [
               {
                 "id": "counter",
-                "path": "/packages/workspace/executors/counter",
+                "path": "/nx-api/workspace/executors/counter",
                 "name": "counter",
                 "children": [],
                 "isExternal": false,
@@ -8854,12 +8731,12 @@
           },
           {
             "id": "generators",
-            "path": "/packages/workspace/generators",
+            "path": "/nx-api/workspace/generators",
             "name": "generators",
             "children": [
               {
                 "id": "preset",
-                "path": "/packages/workspace/generators/preset",
+                "path": "/nx-api/workspace/generators/preset",
                 "name": "preset",
                 "children": [],
                 "isExternal": false,
@@ -8867,7 +8744,7 @@
               },
               {
                 "id": "move",
-                "path": "/packages/workspace/generators/move",
+                "path": "/nx-api/workspace/generators/move",
                 "name": "move",
                 "children": [],
                 "isExternal": false,
@@ -8875,7 +8752,7 @@
               },
               {
                 "id": "remove",
-                "path": "/packages/workspace/generators/remove",
+                "path": "/nx-api/workspace/generators/remove",
                 "name": "remove",
                 "children": [],
                 "isExternal": false,
@@ -8883,7 +8760,7 @@
               },
               {
                 "id": "convert-to-monorepo",
-                "path": "/packages/workspace/generators/convert-to-monorepo",
+                "path": "/nx-api/workspace/generators/convert-to-monorepo",
                 "name": "convert-to-monorepo",
                 "children": [],
                 "isExternal": false,
@@ -8891,7 +8768,7 @@
               },
               {
                 "id": "new",
-                "path": "/packages/workspace/generators/new",
+                "path": "/nx-api/workspace/generators/new",
                 "name": "new",
                 "children": [],
                 "isExternal": false,
@@ -8899,7 +8776,7 @@
               },
               {
                 "id": "workspace-generator",
-                "path": "/packages/workspace/generators/workspace-generator",
+                "path": "/nx-api/workspace/generators/workspace-generator",
                 "name": "workspace-generator",
                 "children": [],
                 "isExternal": false,
@@ -8907,7 +8784,7 @@
               },
               {
                 "id": "run-commands",
-                "path": "/packages/workspace/generators/run-commands",
+                "path": "/nx-api/workspace/generators/run-commands",
                 "name": "run-commands",
                 "children": [],
                 "isExternal": false,
@@ -8915,7 +8792,7 @@
               },
               {
                 "id": "fix-configuration",
-                "path": "/packages/workspace/generators/fix-configuration",
+                "path": "/nx-api/workspace/generators/fix-configuration",
                 "name": "fix-configuration",
                 "children": [],
                 "isExternal": false,
@@ -8923,7 +8800,7 @@
               },
               {
                 "id": "npm-package",
-                "path": "/packages/workspace/generators/npm-package",
+                "path": "/nx-api/workspace/generators/npm-package",
                 "name": "npm-package",
                 "children": [],
                 "isExternal": false,
@@ -8931,7 +8808,7 @@
               },
               {
                 "id": "ci-workflow",
-                "path": "/packages/workspace/generators/ci-workflow",
+                "path": "/nx-api/workspace/generators/ci-workflow",
                 "name": "ci-workflow",
                 "children": [],
                 "isExternal": false,

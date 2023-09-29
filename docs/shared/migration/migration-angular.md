@@ -114,8 +114,8 @@ Your workspace is now powered by Nx! You can verify that your application still 
 
 Learn more about the advantages of Nx in the following guides:
 
-- [Using Cypress for e2e tests](/packages/cypress)
-- [Using Jest for unit tests](/packages/jest)
+- [Using Cypress for e2e tests](/nx-api/cypress)
+- [Using Jest for unit tests](/nx-api/jest)
 - [Computation Caching](/concepts/how-caching-works)
 - [Rebuilding and Retesting What is Affected](/concepts/affected)
 - [Integrate with Editors](/core-features/integrate-with-editors)
@@ -123,30 +123,14 @@ Learn more about the advantages of Nx in the following guides:
 
 ## From Nx Console
 
-{% youtube
-src="https://www.youtube.com/embed/vRj9SNVYKrE"
-title="Nx Console Updates 17.15.0"
-/%}
-
-Nx Console no longer supports the Angular CLI. Angular CLI users will receive a notice, asking if they want to switch to Nx.
-
-When you click this button, we’ll run the `nx init` command to set up the Nx CLI, allowing for cached builds, and for you to share this cache with your teammates via Nx Cloud.
-
-The script will make the following changes:
-
-- Installs the `@nx/workspace` and `nx` packages.
-  - If you opted into Nx Cloud, `nx-cloud` will be installed as well.
-  - If your project's Angular version is greater than or equal to version 13, then the `@nx/angular` package will be installed as well.
-- Creates an `nx.json` file in the root of your workspace.
-
-By running this command and accepting Nx Cloud, Nx distributed caching is now enabled.
-
-Once the script has run, commit the changes. Reverting this commit will effectively undo the changes made.
+Nx Console no longer supports the Angular CLI. Angular CLI users will receive a notice, asking if they want to switch to Nx. When you click this button, we’ll run the `nx init` command to set up the Nx CLI, allowing for cached builds, and for you to share this cache with your teammates via Nx Cloud.
 
 If you're not ready to make the change yet, you can come back to this later:
 
 - If you're using Nx Console: open the Vs Code command palette and start typing "Convert Angular CLI to Nx Workspace".
 - Regardless of using Nx Console (or your IDE): run `npx nx init` from the root of your project.
+
+Once the script has run, commit the changes. Reverting this commit will effectively undo the changes made.
 
 {% cards %}
 

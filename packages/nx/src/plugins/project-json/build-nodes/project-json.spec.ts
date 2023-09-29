@@ -1,6 +1,6 @@
 import * as memfs from 'memfs';
 
-import '../../../utils/testing/mock-fs';
+import '../../../internal-testing-utils/mock-fs';
 
 import { PackageJson } from '../../../utils/package-json';
 
@@ -10,6 +10,14 @@ import {
 } from './project-json';
 import { CreateNodesContext } from '../../../utils/nx-plugin';
 const { createNodes } = CreateProjectJsonProjectsPlugin;
+
+const defaultReleasePublishTarget = {
+  'nx-release-publish': {
+    dependsOn: ['^nx-release-publish'],
+    executor: '@nx/js:release-publish',
+    options: {},
+  },
+};
 
 describe('nx project.json plugin', () => {
   let context: CreateNodesContext;
@@ -72,6 +80,13 @@ describe('nx project.json plugin', () => {
                 "executor": "nx:run-commands",
                 "options": {},
               },
+              "nx-release-publish": {
+                "dependsOn": [
+                  "^nx-release-publish",
+                ],
+                "executor": "@nx/js:release-publish",
+                "options": {},
+              },
               "test": {
                 "executor": "nx:run-script",
                 "options": {
@@ -115,7 +130,10 @@ describe('nx project.json plugin', () => {
         packageJson,
         projectJsonTargets
       );
-      expect(result).toEqual(projectJsonTargets);
+      expect(result).toEqual({
+        ...projectJsonTargets,
+        ...defaultReleasePublishTarget,
+      });
     });
 
     it('should provide targets from project.json and package.json', () => {
@@ -135,6 +153,7 @@ describe('nx project.json plugin', () => {
       expect(result).toEqual({
         ...projectJsonTargets,
         build: packageJsonBuildTarget,
+        ...defaultReleasePublishTarget,
       });
     });
 
@@ -158,6 +177,7 @@ describe('nx project.json plugin', () => {
       );
       expect(result).toEqual({
         build: { ...packageJsonBuildTarget, outputs: ['custom'] },
+        ...defaultReleasePublishTarget,
       });
     });
 
@@ -171,6 +191,7 @@ describe('nx project.json plugin', () => {
             script: 'build',
           },
         },
+        ...defaultReleasePublishTarget,
       });
     });
 
@@ -200,6 +221,7 @@ describe('nx project.json plugin', () => {
           executor: 'nx:run-script',
           options: { script: 'test' },
         },
+        ...defaultReleasePublishTarget,
       });
     });
 
@@ -233,6 +255,7 @@ describe('nx project.json plugin', () => {
           executor: 'nx:run-script',
           options: { script: 'test' },
         },
+        ...defaultReleasePublishTarget,
       });
     });
   });

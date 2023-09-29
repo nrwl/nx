@@ -15,18 +15,19 @@ import {
   readTargetDefaultsForTarget,
   resolveNxTokensInOptions,
 } from '../utils/project-configuration-utils';
+import { CreateDependenciesContext } from '../../utils/nx-plugin';
 
 export async function normalizeProjectNodes(
-  ctx: ProjectGraphProcessorContext,
+  ctx: CreateDependenciesContext,
   builder: ProjectGraphBuilder,
   nxJson: NxJsonConfiguration
 ) {
   const toAdd = [];
-  const projects = Object.keys(ctx.projectsConfigurations.projects);
+  const projects = Object.keys(ctx.projects);
 
   // Used for expanding implicit dependencies (e.g. `@proj/*` or `tag:foo`)
   const partialProjectGraphNodes = projects.reduce((graph, project) => {
-    const projectConfiguration = ctx.projectsConfigurations.projects[project];
+    const projectConfiguration = ctx.projects[project];
     graph[project] = {
       name: project,
       type: projectConfiguration.projectType === 'library' ? 'lib' : 'app', // missing fallback to `e2e`
@@ -38,7 +39,7 @@ export async function normalizeProjectNodes(
   }, {} as Record<string, ProjectGraphProjectNode>);
 
   for (const key of projects) {
-    const p = ctx.projectsConfigurations.projects[key];
+    const p = ctx.projects[key];
 
     p.implicitDependencies = normalizeImplicitDependencies(
       key,
@@ -55,7 +56,7 @@ export async function normalizeProjectNodes(
           ? 'e2e'
           : 'app'
         : 'lib';
-    const tags = ctx.projectsConfigurations.projects?.[key]?.tags || [];
+    const tags = ctx.projects?.[key]?.tags || [];
 
     toAdd.push({
       name: key,

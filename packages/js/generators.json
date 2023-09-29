@@ -59,6 +59,12 @@
       "x-type": "library",
       "description": "Convert a TypeScript library to compile with SWC."
     },
+    "release-version": {
+      "factory": "./src/generators/release-version/release-version#releaseVersionGenerator",
+      "schema": "./src/generators/release-version/schema.json",
+      "description": "DO NOT INVOKE DIRECTLY WITH `nx generate`. Use `nx release version` instead.",
+      "hidden": true
+    },
     "setup-verdaccio": {
       "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccio",
       "schema": "./src/generators/setup-verdaccio/schema.json",

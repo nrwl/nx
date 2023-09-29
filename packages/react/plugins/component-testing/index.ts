@@ -145,7 +145,11 @@ export function nxComponentTestingPreset(
       );
     }
 
-    webpackConfig = buildTargetWebpack(graph, buildTarget, ctProjectName);
+    webpackConfig = buildTargetWebpack(
+      ctExecutorContext,
+      buildTarget,
+      ctProjectName
+    );
   } catch (e) {
     logger.warn(
       stripIndents`Unable to build a webpack config with the project graph. 
@@ -202,10 +206,11 @@ function withSchemaDefaults(target: Target, context: ExecutorContext) {
 }
 
 function buildTargetWebpack(
-  graph: ProjectGraph,
+  ctx: ExecutorContext,
   buildTarget: string,
   componentTestingProjectName: string
 ) {
+  const graph = ctx.projectGraph;
   const parsed = parseTargetString(buildTarget, graph);
 
   const buildableProjectConfig = graph.nodes[parsed.project]?.data;

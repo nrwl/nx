@@ -11,15 +11,47 @@ import { NxJsonConfiguration } from './nx-json';
 export interface FileData {
   file: string;
   hash: string;
-  deps?: (string | [string, string])[];
+  /**
+   * An array of dependencies. If an element is just a string,
+   * the dependency is assumed to be a static dependency targetting
+   * that string. If the element is a tuple with two elements, the first element
+   * inside of it is the target project, with the second element being the type of dependency.
+   * If the tuple has 3 elements, the first is preceded by a source.
+   */
+  deps?: FileDataDependency[];
 }
 
-export function fileDataDepTarget(dep: string | [string, string]) {
-  return typeof dep === 'string' ? dep : dep[0];
+/**
+ * A file data dependency, as stored in the cache. If just a string,
+ * the dependency is assumed to be a static dependency targetting
+ * that string. If it is a tuple with two elements, the first element
+ * inside of it is the target project, with the second element being the type of dependency.
+ * If the tuple has 3 elements, the first is preceded by a source.
+ */
+export type FileDataDependency =
+  | string
+  | [target: string, type: DependencyType]
+  | [source: string, target: string, type: DependencyType];
+
+export function fileDataDepTarget(dep: FileDataDependency) {
+  return typeof dep === 'string'
+    ? dep
+    : Array.isArray(dep) && dep.length === 2
+    ? dep[0]
+    : dep[1];
 }
 
-export function fileDataDepType(dep: string | [string, string]) {
-  return typeof dep === 'string' ? 'static' : dep[1];
+export function fileDataDepType(dep: FileDataDependency) {
+  return typeof dep === 'string'
+    ? 'static'
+    : Array.isArray(dep) && dep.length === 2
+    ? dep[1]
+    : dep[2];
+}
+
+export interface FileMap {
+  nonProjectFiles: FileData[];
+  projectFileMap: ProjectFileMap;
 }
 
 /**

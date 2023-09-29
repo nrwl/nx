@@ -11,7 +11,7 @@
     "**/*_spec.ts",
     "jest.config.ts",
     "**/__fixtures__/**/*.*",
-    "internal-testing-utils/**/*.ts"
+    "./src/internal-testing-utils/**/*.ts"
   ],
   "include": ["**/*.ts"]
 }

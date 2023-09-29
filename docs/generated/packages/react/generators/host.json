@@ -160,6 +160,11 @@
         "description": "Generate a React app with a minimal setup. No nx starter template.",
         "type": "boolean",
         "default": false
+      },
+      "typescriptConfiguration": {
+        "type": "boolean",
+        "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+        "default": true
       }
     },
     "required": ["name"],

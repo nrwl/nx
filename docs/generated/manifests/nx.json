@@ -72,6 +72,16 @@
             "tags": []
           },
           {
+            "id": "react-monorepo-tutorial",
+            "name": "React Monorepo",
+            "description": "",
+            "file": "shared/react-tutorial/react-monorepo",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/getting-started/tutorials/react-monorepo-tutorial",
+            "tags": []
+          },
+          {
             "id": "angular-standalone-tutorial",
             "name": "Angular Standalone",
             "description": "",
@@ -79,6 +89,16 @@
             "itemList": [],
             "isExternal": false,
             "path": "/getting-started/tutorials/angular-standalone-tutorial",
+            "tags": []
+          },
+          {
+            "id": "angular-monorepo-tutorial",
+            "name": "Angular Monorepo",
+            "description": "",
+            "file": "shared/angular-tutorial/angular-monorepo",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/getting-started/tutorials/angular-monorepo-tutorial",
             "tags": []
           },
           {
@@ -168,6 +188,16 @@
         "tags": []
       },
       {
+        "id": "react-monorepo-tutorial",
+        "name": "React Monorepo",
+        "description": "",
+        "file": "shared/react-tutorial/react-monorepo",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/tutorials/react-monorepo-tutorial",
+        "tags": []
+      },
+      {
         "id": "angular-standalone-tutorial",
         "name": "Angular Standalone",
         "description": "",
@@ -175,6 +205,16 @@
         "itemList": [],
         "isExternal": false,
         "path": "/getting-started/tutorials/angular-standalone-tutorial",
+        "tags": []
+      },
+      {
+        "id": "angular-monorepo-tutorial",
+        "name": "Angular Monorepo",
+        "description": "",
+        "file": "shared/angular-tutorial/angular-monorepo",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/tutorials/angular-monorepo-tutorial",
         "tags": []
       },
       {
@@ -222,6 +262,16 @@
     "path": "/getting-started/tutorials/react-standalone-tutorial",
     "tags": []
   },
+  "/getting-started/tutorials/react-monorepo-tutorial": {
+    "id": "react-monorepo-tutorial",
+    "name": "React Monorepo",
+    "description": "",
+    "file": "shared/react-tutorial/react-monorepo",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/tutorials/react-monorepo-tutorial",
+    "tags": []
+  },
   "/getting-started/tutorials/angular-standalone-tutorial": {
     "id": "angular-standalone-tutorial",
     "name": "Angular Standalone",
@@ -230,6 +280,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/angular-standalone-tutorial",
+    "tags": []
+  },
+  "/getting-started/tutorials/angular-monorepo-tutorial": {
+    "id": "angular-monorepo-tutorial",
+    "name": "Angular Monorepo",
+    "description": "",
+    "file": "shared/angular-tutorial/angular-monorepo",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/tutorials/angular-monorepo-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/node-server-tutorial": {
@@ -371,339 +431,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/core-tutorial/06-summary",
-    "tags": []
-  },
-  "/react-tutorial": {
-    "id": "react-tutorial",
-    "name": "React Monorepo Tutorial",
-    "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "1-code-generation",
-        "name": "1 - Code Generation",
-        "description": "",
-        "file": "shared/react-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/1-code-generation",
-        "tags": []
-      },
-      {
-        "id": "2-project-graph",
-        "name": "2 - Project Graph",
-        "description": "",
-        "file": "shared/react-tutorial/2-project-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/2-project-graph",
-        "tags": []
-      },
-      {
-        "id": "3-task-running",
-        "name": "3 - Task Running",
-        "description": "",
-        "file": "shared/react-tutorial/3-task-running",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/3-task-running",
-        "tags": []
-      },
-      {
-        "id": "4-workspace-optimization",
-        "name": "4 - Workspace Optimization",
-        "description": "",
-        "file": "shared/react-tutorial/4-workspace-optimization",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/4-workspace-optimization",
-        "tags": []
-      },
-      {
-        "id": "5-summary",
-        "name": "5 - Summary",
-        "description": "",
-        "file": "shared/react-tutorial/5-summary",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-tutorial/5-summary",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/react-tutorial",
-    "tags": []
-  },
-  "/react-tutorial/1-code-generation": {
-    "id": "1-code-generation",
-    "name": "1 - Code Generation",
-    "description": "",
-    "file": "shared/react-tutorial/1-code-generation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/1-code-generation",
-    "tags": []
-  },
-  "/react-tutorial/2-project-graph": {
-    "id": "2-project-graph",
-    "name": "2 - Project Graph",
-    "description": "",
-    "file": "shared/react-tutorial/2-project-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/2-project-graph",
-    "tags": []
-  },
-  "/react-tutorial/3-task-running": {
-    "id": "3-task-running",
-    "name": "3 - Task Running",
-    "description": "",
-    "file": "shared/react-tutorial/3-task-running",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/3-task-running",
-    "tags": []
-  },
-  "/react-tutorial/4-workspace-optimization": {
-    "id": "4-workspace-optimization",
-    "name": "4 - Workspace Optimization",
-    "description": "",
-    "file": "shared/react-tutorial/4-workspace-optimization",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/4-workspace-optimization",
-    "tags": []
-  },
-  "/react-tutorial/5-summary": {
-    "id": "5-summary",
-    "name": "5 - Summary",
-    "description": "",
-    "file": "shared/react-tutorial/5-summary",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-tutorial/5-summary",
-    "tags": []
-  },
-  "/react-standalone-tutorial": {
-    "id": "react-standalone-tutorial",
-    "name": "React Standalone Tutorial",
-    "description": "In this tutorial you'll create a frontend-focused workspace with Nx.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "1-code-generation",
-        "name": "1 - Code Generation",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/1-code-generation",
-        "tags": []
-      },
-      {
-        "id": "2-project-graph",
-        "name": "2 - Project Graph",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/2-project-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/2-project-graph",
-        "tags": []
-      },
-      {
-        "id": "3-task-running",
-        "name": "3 - Task Running",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/3-task-running",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/3-task-running",
-        "tags": []
-      },
-      {
-        "id": "4-task-pipelines",
-        "name": "4 - Task Pipelines",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/4-task-pipelines",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/4-task-pipelines",
-        "tags": []
-      },
-      {
-        "id": "5-summary",
-        "name": "5 - Summary",
-        "description": "",
-        "file": "shared/react-standalone-tutorial/5-summary",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/react-standalone-tutorial/5-summary",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial",
-    "tags": []
-  },
-  "/react-standalone-tutorial/1-code-generation": {
-    "id": "1-code-generation",
-    "name": "1 - Code Generation",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/1-code-generation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/1-code-generation",
-    "tags": []
-  },
-  "/react-standalone-tutorial/2-project-graph": {
-    "id": "2-project-graph",
-    "name": "2 - Project Graph",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/2-project-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/2-project-graph",
-    "tags": []
-  },
-  "/react-standalone-tutorial/3-task-running": {
-    "id": "3-task-running",
-    "name": "3 - Task Running",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/3-task-running",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/3-task-running",
-    "tags": []
-  },
-  "/react-standalone-tutorial/4-task-pipelines": {
-    "id": "4-task-pipelines",
-    "name": "4 - Task Pipelines",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/4-task-pipelines",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/4-task-pipelines",
-    "tags": []
-  },
-  "/react-standalone-tutorial/5-summary": {
-    "id": "5-summary",
-    "name": "5 - Summary",
-    "description": "",
-    "file": "shared/react-standalone-tutorial/5-summary",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/react-standalone-tutorial/5-summary",
-    "tags": []
-  },
-  "/angular-tutorial": {
-    "id": "angular-tutorial",
-    "name": "Angular Monorepo Tutorial",
-    "description": "Learn to use Nx with this Angular tutorial where you will learn about all its main feature with a real project.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "1-code-generation",
-        "name": "1 - Code Generation",
-        "description": "",
-        "file": "shared/angular-tutorial/1-code-generation",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-tutorial/1-code-generation",
-        "tags": []
-      },
-      {
-        "id": "2-project-graph",
-        "name": "2 - Project Graph",
-        "description": "",
-        "file": "shared/angular-tutorial/2-project-graph",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-tutorial/2-project-graph",
-        "tags": []
-      },
-      {
-        "id": "3-task-running",
-        "name": "3 - Task Running",
-        "description": "",
-        "file": "shared/angular-tutorial/3-task-running",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-tutorial/3-task-running",
-        "tags": []
-      },
-      {
-        "id": "4-workspace-optimization",
-        "name": "4 - Workspace Optimization",
-        "description": "",
-        "file": "shared/angular-tutorial/4-workspace-optimization",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-tutorial/4-workspace-optimization",
-        "tags": []
-      },
-      {
-        "id": "5-summary",
-        "name": "5 - Summary",
-        "description": "",
-        "file": "shared/angular-tutorial/5-summary",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/angular-tutorial/5-summary",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/angular-tutorial",
-    "tags": []
-  },
-  "/angular-tutorial/1-code-generation": {
-    "id": "1-code-generation",
-    "name": "1 - Code Generation",
-    "description": "",
-    "file": "shared/angular-tutorial/1-code-generation",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-tutorial/1-code-generation",
-    "tags": []
-  },
-  "/angular-tutorial/2-project-graph": {
-    "id": "2-project-graph",
-    "name": "2 - Project Graph",
-    "description": "",
-    "file": "shared/angular-tutorial/2-project-graph",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-tutorial/2-project-graph",
-    "tags": []
-  },
-  "/angular-tutorial/3-task-running": {
-    "id": "3-task-running",
-    "name": "3 - Task Running",
-    "description": "",
-    "file": "shared/angular-tutorial/3-task-running",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-tutorial/3-task-running",
-    "tags": []
-  },
-  "/angular-tutorial/4-workspace-optimization": {
-    "id": "4-workspace-optimization",
-    "name": "4 - Workspace Optimization",
-    "description": "",
-    "file": "shared/angular-tutorial/4-workspace-optimization",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-tutorial/4-workspace-optimization",
-    "tags": []
-  },
-  "/angular-tutorial/5-summary": {
-    "id": "5-summary",
-    "name": "5 - Summary",
-    "description": "",
-    "file": "shared/angular-tutorial/5-summary",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/angular-tutorial/5-summary",
     "tags": []
   },
   "/angular-standalone-tutorial": {
@@ -2062,6 +1789,16 @@
             "tags": []
           },
           {
+            "id": "from-turborepo",
+            "name": "Migrate From Turborepo",
+            "description": "",
+            "file": "shared/migration/from-turborepo",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/adopting-nx/from-turborepo",
+            "tags": []
+          },
+          {
             "id": "adding-to-existing-project",
             "name": "Add to any Project",
             "description": "",
@@ -2394,6 +2131,16 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/storybook/overview-react",
+            "tags": ["storybook"]
+          },
+          {
+            "id": "overview-vue",
+            "name": "Set up Storybook for Vue Projects",
+            "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+            "file": "shared/recipes/storybook/plugin-vue",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/overview-vue",
             "tags": ["storybook"]
           },
           {
@@ -2845,6 +2592,26 @@
             "tags": []
           },
           {
+            "id": "define-secondary-entrypoints",
+            "name": "Define Secondary Entrypoints for Typescript Packages",
+            "description": "",
+            "file": "shared/recipes/tips-n-tricks/define-secondary-entrypoints",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+            "tags": []
+          },
+          {
+            "id": "compile-multiple-formats",
+            "name": "Compile Typescript Packages to Multiple Formats",
+            "description": "",
+            "file": "shared/recipes/tips-n-tricks/compile-multiple-formats",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/compile-multiple-formats",
+            "tags": []
+          },
+          {
             "id": "keep-nx-versions-in-sync",
             "name": "Keep Nx Versions in Sync",
             "description": "",
@@ -3174,6 +2941,16 @@
         "tags": []
       },
       {
+        "id": "from-turborepo",
+        "name": "Migrate From Turborepo",
+        "description": "",
+        "file": "shared/migration/from-turborepo",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/adopting-nx/from-turborepo",
+        "tags": []
+      },
+      {
         "id": "adding-to-existing-project",
         "name": "Add to any Project",
         "description": "",
@@ -3226,6 +3003,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-monorepo",
+    "tags": []
+  },
+  "/recipes/adopting-nx/from-turborepo": {
+    "id": "from-turborepo",
+    "name": "Migrate From Turborepo",
+    "description": "",
+    "file": "shared/migration/from-turborepo",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/adopting-nx/from-turborepo",
     "tags": []
   },
   "/recipes/adopting-nx/adding-to-existing-project": {
@@ -3840,6 +3627,16 @@
         "tags": ["storybook"]
       },
       {
+        "id": "overview-vue",
+        "name": "Set up Storybook for Vue Projects",
+        "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+        "file": "shared/recipes/storybook/plugin-vue",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/overview-vue",
+        "tags": ["storybook"]
+      },
+      {
         "id": "overview-angular",
         "name": "Set up Storybook for Angular Projects",
         "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
@@ -3952,6 +3749,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/storybook/overview-react",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/overview-vue": {
+    "id": "overview-vue",
+    "name": "Set up Storybook for Vue Projects",
+    "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+    "file": "shared/recipes/storybook/plugin-vue",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/overview-vue",
     "tags": ["storybook"]
   },
   "/recipes/storybook/overview-angular": {
@@ -4608,6 +4415,26 @@
         "tags": []
       },
       {
+        "id": "define-secondary-entrypoints",
+        "name": "Define Secondary Entrypoints for Typescript Packages",
+        "description": "",
+        "file": "shared/recipes/tips-n-tricks/define-secondary-entrypoints",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+        "tags": []
+      },
+      {
+        "id": "compile-multiple-formats",
+        "name": "Compile Typescript Packages to Multiple Formats",
+        "description": "",
+        "file": "shared/recipes/tips-n-tricks/compile-multiple-formats",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/compile-multiple-formats",
+        "tags": []
+      },
+      {
         "id": "keep-nx-versions-in-sync",
         "name": "Keep Nx Versions in Sync",
         "description": "",
@@ -4810,6 +4637,26 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/define-secondary-entrypoints": {
+    "id": "define-secondary-entrypoints",
+    "name": "Define Secondary Entrypoints for Typescript Packages",
+    "description": "",
+    "file": "shared/recipes/tips-n-tricks/define-secondary-entrypoints",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/compile-multiple-formats": {
+    "id": "compile-multiple-formats",
+    "name": "Compile Typescript Packages to Multiple Formats",
+    "description": "",
+    "file": "shared/recipes/tips-n-tricks/compile-multiple-formats",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/compile-multiple-formats",
     "tags": []
   },
   "/recipes/tips-n-tricks/keep-nx-versions-in-sync": {
@@ -5243,8 +5090,8 @@
     "itemList": [
       {
         "id": "example-repos",
-        "name": "Example Repos",
-        "description": "Examples of different ways to use Nx",
+        "name": "Nx with your favorite tech",
+        "description": "Examples of different ways to use Nx with your favorite tech",
         "file": "",
         "itemList": [
           {
@@ -5355,16 +5202,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/showcase/example-repos/add-fastify",
-            "tags": []
-          },
-          {
-            "id": "react-nx",
-            "name": "Powering Up React Development With Nx",
-            "description": "",
-            "file": "shared/examples/react-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/react-nx",
             "tags": []
           },
           {
@@ -5490,8 +5327,8 @@
   },
   "/showcase/example-repos": {
     "id": "example-repos",
-    "name": "Example Repos",
-    "description": "Examples of different ways to use Nx",
+    "name": "Nx with your favorite tech",
+    "description": "Examples of different ways to use Nx with your favorite tech",
     "file": "",
     "itemList": [
       {
@@ -5602,16 +5439,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/showcase/example-repos/add-fastify",
-        "tags": []
-      },
-      {
-        "id": "react-nx",
-        "name": "Powering Up React Development With Nx",
-        "description": "",
-        "file": "shared/examples/react-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/react-nx",
         "tags": []
       },
       {
@@ -5799,16 +5626,6 @@
     "path": "/showcase/example-repos/add-fastify",
     "tags": []
   },
-  "/showcase/example-repos/react-nx": {
-    "id": "react-nx",
-    "name": "Powering Up React Development With Nx",
-    "description": "",
-    "file": "shared/examples/react-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/react-nx",
-    "tags": []
-  },
   "/showcase/example-repos/apollo-react": {
     "id": "apollo-react",
     "name": "Using Apollo GraphQL",
@@ -5957,6 +5774,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "commands",
+        "name": "Commands",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/nx-api/nx",
+        "tags": []
+      },
+      {
         "id": "nx-json",
         "name": "Nx Configuration",
         "description": "",
@@ -6009,6 +5836,16 @@
     ],
     "isExternal": false,
     "path": "/reference",
+    "tags": []
+  },
+  "/nx-api/nx": {
+    "id": "commands",
+    "name": "Commands",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/nx-api/nx",
     "tags": []
   },
   "/reference/nx-json": {
@@ -6467,7 +6304,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/packages/nx/documents/affected#skip-nx-cache",
+        "path": "/nx-api/nx/documents/affected#skip-nx-cache",
         "tags": ["cache-task-results"]
       },
       {
@@ -6545,14 +6382,14 @@
     "path": "/nx-cloud/intro/what-is-nx-cloud",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
-  "/packages/nx/documents/affected#skip-nx-cache": {
+  "/nx-api/nx/documents/affected#skip-nx-cache": {
     "id": "skip-nx-cache-flag",
     "name": "--skip-nx-cache flag",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/packages/nx/documents/affected#skip-nx-cache",
+    "path": "/nx-api/nx/documents/affected#skip-nx-cache",
     "tags": ["cache-task-results"]
   },
   "/reference/nx-json#tasks-runner-options": {

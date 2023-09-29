@@ -37,6 +37,23 @@ export interface NxArgs {
   type?: string;
 }
 
+export function createOverrides(__overrides_unparsed__: string[] = []) {
+  let overrides =
+    yargsParser(__overrides_unparsed__, {
+      configuration: {
+        'camel-case-expansion': false,
+        'dot-notation': true,
+      },
+    }) || {};
+
+  if (!overrides._ || overrides._.length === 0) {
+    delete overrides._;
+  }
+
+  overrides.__overrides_unparsed__ = __overrides_unparsed__;
+  return overrides;
+}
+
 export function splitArgsIntoNxArgsAndOverrides(
   args: { [k: string]: any },
   mode: 'run-one' | 'run-many' | 'affected' | 'print-affected',
@@ -66,18 +83,8 @@ export function splitArgsIntoNxArgsAndOverrides(
   }
 
   const nxArgs: RawNxArgs = args;
-  let overrides = yargsParser(args.__overrides_unparsed__ as string[], {
-    configuration: {
-      'camel-case-expansion': false,
-      'dot-notation': true,
-    },
-  });
 
-  if (!overrides._ || overrides._.length === 0) {
-    delete overrides._;
-  }
-
-  overrides.__overrides_unparsed__ = args.__overrides_unparsed__;
+  let overrides = createOverrides(args.__overrides_unparsed__);
   delete (nxArgs as any).$0;
   delete (nxArgs as any).__overrides_unparsed__;
 
@@ -322,7 +329,7 @@ export function getProjectRoots(
   return projectNames.map((name) => nodes[name].data.root);
 }
 
-export function readGraphFileFromGraphArg({ graph }: NxArgs) {
+export function readGraphFileFromGraphArg({ graph }: Pick<NxArgs, 'graph'>) {
   return typeof graph === 'string' && graph !== 'true' && graph !== ''
     ? graph
     : undefined;

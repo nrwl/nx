@@ -149,7 +149,7 @@ export function findFilesInCircularPath(
 
   for (let i = 0; i < circularPath.length - 1; i++) {
     const next = circularPath[i + 1].name;
-    const files: FileData[] = projectFileMap[circularPath[i].name] || [];
+    const files = projectFileMap[circularPath[i].name] || [];
     filePathChain.push(
       files
         .filter(

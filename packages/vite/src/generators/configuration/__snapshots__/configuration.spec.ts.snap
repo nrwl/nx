@@ -1,24 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`@nx/vite:configuration library mode should add config for building library 1`] = `
-"/// <reference types="vitest" />
+"/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   cacheDir: '../node_modules/.vite/my-lib',
 
   plugins: [
+    react(),
+    nxViteTsPaths(),
     dts({
       entryRoot: 'src',
       tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
-    react(),
-    nxViteTsPaths(),
   ],
 
   // Uncomment this if you are using workers.
@@ -48,24 +48,24 @@ export default defineConfig({
 `;
 
 exports[`@nx/vite:configuration library mode should set up non buildable library correctly 1`] = `
-"/// <reference types="vitest" />
+"/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
 
   plugins: [
+    react(),
+    nxViteTsPaths(),
     dts({
       entryRoot: 'src',
       tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
       skipDiagnostics: true,
     }),
-    react(),
-    nxViteTsPaths(),
   ],
 
   // Uncomment this if you are using workers.
@@ -143,7 +143,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
 import * as path from 'path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
   // Configuration for building your library.
@@ -165,12 +165,8 @@ export default defineConfig({
     },
   },
   plugins: [
-    ...[
-      react(),
-      viteTsConfigPaths({
-        root: '../../',
-      }),
-    ],
+    nxViteTsPaths(),
+    react(),
     dts({
       entryRoot: 'src',
       tsConfigFilePath: path.join(__dirname, 'tsconfig.lib.json'),
@@ -180,9 +176,7 @@ export default defineConfig({
 
   test: {
     globals: true,
-    cache: {
-      dir: '../../node_modules/.vitest',
-    },
+    cache: { dir: '../../node_modules/.vitest' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   },
@@ -286,7 +280,7 @@ exports[`@nx/vite:configuration transform React app to use Vite by providing cus
 `;
 
 exports[`@nx/vite:configuration transform React app to use Vite should create vite.config file at the root of the app 1`] = `
-"/// <reference types="vitest" />
+"/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -427,7 +421,7 @@ exports[`@nx/vite:configuration transform React app to use Vite should transform
 `;
 
 exports[`@nx/vite:configuration transform Web app to use Vite should create vite.config file at the root of the app 1`] = `
-"/// <reference types="vitest" />
+"/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -555,7 +549,7 @@ exports[`@nx/vite:configuration transform Web app to use Vite should transform w
 `;
 
 exports[`@nx/vite:configuration vitest should create a vitest configuration if "includeVitest" is true 1`] = `
-"/// <reference types="vitest" />
+"/// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';

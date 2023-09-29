@@ -17,7 +17,7 @@ export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
   context: ExecutorContext
 ) {
-  const target = parseTargetString(options.buildTarget, context.projectGraph);
+  const target = parseTargetString(options.buildTarget, context);
   const targetConfiguration =
     context.projectsConfigurations.projects[target.project]?.targets[
       target.target

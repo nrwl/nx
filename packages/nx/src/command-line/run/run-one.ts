@@ -79,7 +79,7 @@ export async function runOne(
       projectNames
     );
   } else {
-    await runCommand(
+    const status = await runCommand(
       projects,
       projectGraph,
       { nxJson },
@@ -89,6 +89,9 @@ export async function runOne(
       extraTargetDependencies,
       extraOptions
     );
+    // fix for https://github.com/nrwl/nx/issues/1666
+    if (process.stdin['unref']) (process.stdin as any).unref();
+    process.exit(status);
   }
 }
 

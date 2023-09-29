@@ -549,12 +549,16 @@ export function createProjectStorybookDir(
   usesVite?: boolean,
   viteConfigFilePath?: string
 ) {
-  const projectDirectory =
+  let projectDirectory =
     projectType === 'application'
       ? isNextJs
         ? 'components'
         : 'src/app'
       : 'src/lib';
+
+  if (uiFramework === '@storybook/vue3-vite') {
+    projectDirectory = 'src/components';
+  }
 
   const storybookConfigExists = projectIsRootProjectInStandaloneWorkspace
     ? tree.exists('.storybook/main.js') || tree.exists('.storybook/main.ts')

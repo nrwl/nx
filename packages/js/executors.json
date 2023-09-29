@@ -17,6 +17,12 @@
       "schema": "./src/executors/node/schema.json",
       "description": "Execute a Node application."
     },
+    "release-publish": {
+      "implementation": "./src/executors/release-publish/release-publish.impl",
+      "schema": "./src/executors/release-publish/schema.json",
+      "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
+      "hidden": true
+    },
     "verdaccio": {
       "implementation": "./src/executors/verdaccio/verdaccio.impl",
       "schema": "./src/executors/verdaccio/schema.json",

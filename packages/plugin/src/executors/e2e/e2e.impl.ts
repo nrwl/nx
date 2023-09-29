@@ -1,7 +1,6 @@
 import type { ExecutorContext } from '@nx/devkit';
 
 import {
-  createProjectGraphAsync,
   logger,
   output,
   parseTargetString,
@@ -44,10 +43,9 @@ async function* runBuildTarget(
   buildTarget: string,
   context: ExecutorContext
 ): AsyncGenerator<boolean> {
-  const graph = await createProjectGraphAsync();
   const { project, target, configuration } = parseTargetString(
     buildTarget,
-    graph
+    context
   );
   const buildTargetOptions = readTargetOptions(
     { project, target, configuration },

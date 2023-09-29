@@ -84,7 +84,7 @@ export async function getModuleFederationConfig(
   const npmPackages = sharePackages(dependencies.npmPackages);
 
   const sharedDependencies = {
-    ...sharedLibraries.getLibraries(),
+    ...sharedLibraries.getLibraries(project.root),
     ...npmPackages,
   };
 
@@ -95,14 +95,26 @@ export async function getModuleFederationConfig(
     projectGraph
   );
 
+  // Choose the correct mapRemotes function based on the server state.
   const mapRemotesFunction = options.isServer ? mapRemotesForSSR : mapRemotes;
-  const determineRemoteUrlFn =
-    options.determineRemoteUrl ||
-    getFunctionDeterminateRemoteUrl(options.isServer);
-  const mappedRemotes =
-    !mfConfig.remotes || mfConfig.remotes.length === 0
-      ? {}
-      : mapRemotesFunction(mfConfig.remotes, 'js', determineRemoteUrlFn);
+
+  // Determine the URL function, either from provided options or by using a default.
+  const determineRemoteUrlFunction = options.determineRemoteUrl
+    ? options.determineRemoteUrl
+    : getFunctionDeterminateRemoteUrl(options.isServer);
+
+  // Map the remotes if they exist, otherwise default to an empty object.
+  let mappedRemotes = {};
+
+  if (mfConfig.remotes && mfConfig.remotes.length > 0) {
+    const isLibraryTypeVar = mfConfig.library?.type === 'var';
+    mappedRemotes = mapRemotesFunction(
+      mfConfig.remotes,
+      'js',
+      determineRemoteUrlFunction,
+      isLibraryTypeVar
+    );
+  }
 
   return { sharedLibraries, sharedDependencies, mappedRemotes };
 }

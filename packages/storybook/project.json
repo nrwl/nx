@@ -58,11 +58,11 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/storybook"],
       "options": {
-        "commands": [
-          "node ./scripts/copy-readme.js storybook",
-          "node ./scripts/add-dependency-to-build.js storybook @nrwl/storybook"
-        ]
+        "command": "node ./scripts/copy-readme.js storybook"
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js storybook @nrwl/storybook"
     },
     "lint": {}
   }

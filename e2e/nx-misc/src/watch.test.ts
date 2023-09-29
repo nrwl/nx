@@ -31,6 +31,10 @@ describe('Nx Commands', () => {
     runCLI(`generate @nx/js:lib ${proj3}`);
   });
 
+  afterEach(() => {
+    runCLI('reset');
+  });
+
   afterAll(() => cleanupProject());
 
   it('should watch for project changes', async () => {

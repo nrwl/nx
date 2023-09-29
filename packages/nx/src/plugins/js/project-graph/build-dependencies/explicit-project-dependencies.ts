@@ -63,14 +63,25 @@ export function buildExplicitTypeScriptDependencies(
 
   const filesToProcess: Record<string, string[]> = {};
 
-  const moduleExtensions = ['.ts', '.js', '.tsx', '.jsx', '.mts', '.mjs'];
+  const moduleExtensions = [
+    '.ts',
+    '.js',
+    '.tsx',
+    '.jsx',
+    '.mts',
+    '.mjs',
+    '.cjs',
+    '.cts',
+  ];
 
   // TODO: This can be removed when vue is stable
   if (isVuePluginInstalled()) {
     moduleExtensions.push('.vue');
   }
 
-  for (const [project, fileData] of Object.entries(ctx.fileMap)) {
+  for (const [project, fileData] of Object.entries(
+    ctx.fileMap.projectFileMap
+  )) {
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {
       if (moduleExtensions.some((ext) => file.endsWith(ext))) {

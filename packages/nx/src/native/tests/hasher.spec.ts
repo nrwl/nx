@@ -12,7 +12,7 @@ describe('hasher', () => {
     const tempFilePath = join(tempDirPath, 'temp.txt');
     await writeFile(tempFilePath, 'content');
 
-    expect(hashFile(tempFilePath).hash).toBe('6193209363630369380');
+    expect(hashFile(tempFilePath)).toBe('6193209363630369380');
   });
 
   it('should hash content', async () => {
