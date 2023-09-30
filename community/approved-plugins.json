@@ -413,5 +413,10 @@
     "name": "@jnxplus/nx-maven",
     "description": "Nx plugin to add Maven multi-module project support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-maven"
+  },
+  {
+    "name": "@naxodev/nx-cloudflare",
+    "description": "Nx plugin for Cloudflare, in particular Cloudflare workers. It allows to generate build and run Cloudflare workers in your Nx workspace.",
+    "url": "https://github.com/naxodev/oss/tree/main/packages/plugins/nx-cloudflare"
   }
 ]
