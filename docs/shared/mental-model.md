@@ -64,7 +64,7 @@ running `nx run-many -t test -p app1 app2 lib`, the created task graph will look
 {% /graph %}
 {% /side-by-side %}
 
-Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the two tasks
+Even though the apps depend on `lib`, testing `app1` doesn’t depend on the testing `lib`. This means that the three tasks
 can
 run in parallel.
 
