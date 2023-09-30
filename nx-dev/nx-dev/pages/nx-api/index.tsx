@@ -49,8 +49,8 @@ export default function Packages({
           name: 'rspack',
           packageName: '@nrwl/rspack',
           path: '/nx-api/rspack',
-          root: '/packages/rspack',
-          source: '/packages/rspack/src',
+          root: '/nx-api/rspack',
+          source: '/nx-api/rspack/src',
         },
         ...packages.slice(storybookIdx),
       ];
