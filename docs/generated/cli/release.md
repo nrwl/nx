@@ -93,7 +93,7 @@ Show version number
 
 ### changelog
 
-Generate a changelog for one or more projects, and optionally push to GitHub
+Generate a changelog for one or more projects, and optionally push to Github
 
 ```shell
 nx release changelog [version]
@@ -113,7 +113,7 @@ Type: `string`
 
 Default: `origin`
 
-Alternate git remote in the form {user}/{repo} on which to create the GitHub release (useful for testing)
+Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)
 
 ##### help
 
@@ -131,7 +131,7 @@ Type: `string`
 
 Default: `v`
 
-Prefix to apply to the version when creating the GitHub release tag
+Prefix to apply to the version when creating the Github release tag
 
 ##### to
 
@@ -145,7 +145,7 @@ The git reference to use as the end of the changelog
 
 Type: `string`
 
-The version to create a GitHub release and changelog for
+The version to create a Github release and changelog for
 
 ### publish
 
