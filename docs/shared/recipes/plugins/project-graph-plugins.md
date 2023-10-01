@@ -57,7 +57,7 @@ A simplified version of Nx's built-in `project.json` plugin is shown below, whic
 
 ```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = [
-  'project.json',
+  '**/project.json',
   (projectConfigurationFile: string, context: CreateNodesContext) => {
     const projectConfiguration = readJson(projectConfigurationFile);
     const projectRoot = dirname(projectConfigurationFile);
