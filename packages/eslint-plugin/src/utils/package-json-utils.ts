@@ -21,6 +21,7 @@ export function getProductionDependencies(
     const packageJson = getPackageJson(packageJsonPath);
     globalThis.projPackageJsonDeps = {
       ...packageJson.dependencies,
+      ...packageJson.devDependencies,
       ...packageJson.peerDependencies,
       ...packageJson.optionalDependencies,
     };

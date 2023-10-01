@@ -1538,7 +1538,7 @@ describe('Dependency checks (eslint)', () => {
     expect(failures[0].line).toEqual(3);
   });
 
-  it('should report missing package if it is in devDependencies', () => {
+  it("shouldn't report missing package if it is in devDependencies", () => {
     const packageJson = {
       name: '@mycompany/liba',
       dependencies: {},
@@ -1583,11 +1583,7 @@ describe('Dependency checks (eslint)', () => {
         ],
       }
     );
-    expect(failures.length).toEqual(1);
-    expect(failures[0].message).toMatchInlineSnapshot(`
-      "The "liba" project uses the following packages, but they are missing from "dependencies":
-          - external1"
-    `);
+    expect(failures.length).toEqual(0);
   });
 });
 
