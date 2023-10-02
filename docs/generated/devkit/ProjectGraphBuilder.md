@@ -15,8 +15,6 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 ### Properties
 
 - [graph](../../devkit/documents/ProjectGraphBuilder#graph): ProjectGraph
-- [nonProjectFiles](../../devkit/documents/ProjectGraphBuilder#nonprojectfiles): FileData[]
-- [projectFileMap](../../devkit/documents/ProjectGraphBuilder#projectfilemap): ProjectFileMap
 - [removedEdges](../../devkit/documents/ProjectGraphBuilder#removededges): Object
 
 ### Methods
@@ -28,11 +26,8 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 - [addImplicitDependency](../../devkit/documents/ProjectGraphBuilder#addimplicitdependency)
 - [addNode](../../devkit/documents/ProjectGraphBuilder#addnode)
 - [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency)
-- [calculateAlreadySetTargetDeps](../../devkit/documents/ProjectGraphBuilder#calculatealreadysettargetdeps)
-- [calculateTargetDepsFromFiles](../../devkit/documents/ProjectGraphBuilder#calculatetargetdepsfromfiles)
 - [getUpdatedProjectGraph](../../devkit/documents/ProjectGraphBuilder#getupdatedprojectgraph)
 - [mergeProjectGraph](../../devkit/documents/ProjectGraphBuilder#mergeprojectgraph)
-- [removeDependenciesWithNode](../../devkit/documents/ProjectGraphBuilder#removedependencieswithnode)
 - [removeDependency](../../devkit/documents/ProjectGraphBuilder#removedependency)
 - [removeNode](../../devkit/documents/ProjectGraphBuilder#removenode)
 - [setVersion](../../devkit/documents/ProjectGraphBuilder#setversion)
@@ -56,18 +51,6 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 ### graph
 
 • `Readonly` **graph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
-
----
-
-### nonProjectFiles
-
-• `Private` `Readonly` **nonProjectFiles**: [`FileData`](../../devkit/documents/FileData)[]
-
----
-
-### projectFileMap
-
-• `Private` `Readonly` **projectFileMap**: [`ProjectFileMap`](../../devkit/documents/ProjectFileMap)
 
 ---
 
@@ -219,38 +202,6 @@ Adds static dependency from source project to target project
 
 ---
 
-### calculateAlreadySetTargetDeps
-
-▸ `Private` **calculateAlreadySetTargetDeps**(`sourceProject`): `Map`<`string`, `Map`<`string`, [`ProjectGraphDependency`](../../devkit/documents/ProjectGraphDependency)\>\>
-
-#### Parameters
-
-| Name            | Type     |
-| :-------------- | :------- |
-| `sourceProject` | `string` |
-
-#### Returns
-
-`Map`<`string`, `Map`<`string`, [`ProjectGraphDependency`](../../devkit/documents/ProjectGraphDependency)\>\>
-
----
-
-### calculateTargetDepsFromFiles
-
-▸ `Private` **calculateTargetDepsFromFiles**(`sourceProject`): `Map`<`string`, `Set`<`string`\>\>
-
-#### Parameters
-
-| Name            | Type     |
-| :-------------- | :------- |
-| `sourceProject` | `string` |
-
-#### Returns
-
-`Map`<`string`, `Set`<`string`\>\>
-
----
-
 ### getUpdatedProjectGraph
 
 ▸ **getUpdatedProjectGraph**(): [`ProjectGraph`](../../devkit/documents/ProjectGraph)
@@ -272,22 +223,6 @@ Merges the nodes and dependencies of p into the built project graph.
 | Name | Type                                                  |
 | :--- | :---------------------------------------------------- |
 | `p`  | [`ProjectGraph`](../../devkit/documents/ProjectGraph) |
-
-#### Returns
-
-`void`
-
----
-
-### removeDependenciesWithNode
-
-▸ `Private` **removeDependenciesWithNode**(`name`): `void`
-
-#### Parameters
-
-| Name   | Type     |
-| :----- | :------- |
-| `name` | `string` |
 
 #### Returns
 

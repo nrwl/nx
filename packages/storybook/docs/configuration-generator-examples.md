@@ -39,11 +39,11 @@ You can read more about how this generator works, in the [Storybook package over
 
 If you are using Angular, React, React Native or Next.js in your project, it's best to use the framework specific generator:
 
-- [React Storybook Configuration Generator](/packages/react/generators/storybook-configuration) (React and Next.js projects)
+- [React Storybook Configuration Generator](/nx-api/react/generators/storybook-configuration) (React and Next.js projects)
 
-- [Angular Storybook Configuration Generator](/packages/angular/generators/storybook-configuration)
+- [Angular Storybook Configuration Generator](/nx-api/angular/generators/storybook-configuration)
 
-- [React Native Storybook Configuration Generator](/packages/react-native/generators/storybook-configuration)
+- [React Native Storybook Configuration Generator](/nx-api/react-native/generators/storybook-configuration)
 
 ## Examples
 

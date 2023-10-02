@@ -117,7 +117,7 @@ When upgrading to this version and anything above it, you will need to use Helm 
 
 ##### VCS proxy support
 
-- For the Github/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub/GitLab to post comments
+- For the GitHub/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub/GitLab to post comments
 - If are behind a proxy however, these requests might fail
 - If you are using our [Helm chart](https://github.com/nrwl/nx-cloud-helm/), you can now configure this option to unblock the vcs integration and allow it to work with your proxy:
   ```yaml
@@ -179,7 +179,7 @@ You will see some updates in the UI to reflect this, however, **you don't need t
 
 One of the features of NxCloud is its integrations with your repository hosting solution. When you open up a Pull Request, you can configure NxCloud to post a comment to it once your CI has finished running, with a summary of all the tasks that succeeded and failed on that code change, and a link to your branch on NxCloud so you can further analyse your run. Your developers save time, and allows them to skip digging through long CI logs.
 
-Before, if you had a self-hosted instance of Github, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise.
+Before, if you had a self-hosted instance of GitHub, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise.
 
 [We now support self-signed SVN certificates, via a simple k8s configMap.](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#supporting-self-signed-ssl-certificates)
 
@@ -227,7 +227,7 @@ Any questions at all or to report issues with the new release [please get in tou
 
 - Feat: Targettable agents for DTE. You can now ask specific agents to pick up specific tasks (via `--targets
 - Fix: DTE fixes for 404 not found artefacts errors
-- Fix: issue when using Github integration with self-hosted Github instances
+- Fix: issue when using GitHub integration with self-hosted GitHub instances
 
 ### 26-01-2023T21-22-48
 

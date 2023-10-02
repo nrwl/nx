@@ -1712,6 +1712,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Set up Storybook for Vue Projects",
+                "path": "/recipes/storybook/overview-vue",
+                "id": "overview-vue",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Set up Storybook for Angular Projects",
                 "path": "/recipes/storybook/overview-angular",
                 "id": "overview-angular",
@@ -2901,6 +2909,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Set up Storybook for Vue Projects",
+            "path": "/recipes/storybook/overview-vue",
+            "id": "overview-vue",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Set up Storybook for Angular Projects",
             "path": "/recipes/storybook/overview-angular",
             "id": "overview-angular",
@@ -2987,6 +3003,14 @@
         "name": "Set up Storybook for React Projects",
         "path": "/recipes/storybook/overview-react",
         "id": "overview-react",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Storybook for Vue Projects",
+        "path": "/recipes/storybook/overview-vue",
+        "id": "overview-vue",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4606,6 +4630,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Commands",
+            "path": "/nx-api/nx",
+            "id": "commands",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx Configuration",
             "path": "/reference/nx-json",
             "id": "nx-json",
@@ -4646,6 +4678,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Commands",
+        "path": "/nx-api/nx",
+        "id": "commands",
+        "isExternal": true,
+        "children": [],
         "disableCollapsible": false
       },
       {

@@ -2134,6 +2134,16 @@
             "tags": ["storybook"]
           },
           {
+            "id": "overview-vue",
+            "name": "Set up Storybook for Vue Projects",
+            "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+            "file": "shared/recipes/storybook/plugin-vue",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/overview-vue",
+            "tags": ["storybook"]
+          },
+          {
             "id": "overview-angular",
             "name": "Set up Storybook for Angular Projects",
             "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
@@ -3617,6 +3627,16 @@
         "tags": ["storybook"]
       },
       {
+        "id": "overview-vue",
+        "name": "Set up Storybook for Vue Projects",
+        "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+        "file": "shared/recipes/storybook/plugin-vue",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/overview-vue",
+        "tags": ["storybook"]
+      },
+      {
         "id": "overview-angular",
         "name": "Set up Storybook for Angular Projects",
         "description": "This guide explains how to set up Storybook for Angular projects in your Nx workspace.",
@@ -3729,6 +3749,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/storybook/overview-react",
+    "tags": ["storybook"]
+  },
+  "/recipes/storybook/overview-vue": {
+    "id": "overview-vue",
+    "name": "Set up Storybook for Vue Projects",
+    "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+    "file": "shared/recipes/storybook/plugin-vue",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/overview-vue",
     "tags": ["storybook"]
   },
   "/recipes/storybook/overview-angular": {
@@ -5744,6 +5774,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "commands",
+        "name": "Commands",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/nx-api/nx",
+        "tags": []
+      },
+      {
         "id": "nx-json",
         "name": "Nx Configuration",
         "description": "",
@@ -5796,6 +5836,16 @@
     ],
     "isExternal": false,
     "path": "/reference",
+    "tags": []
+  },
+  "/nx-api/nx": {
+    "id": "commands",
+    "name": "Commands",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/nx-api/nx",
     "tags": []
   },
   "/reference/nx-json": {

@@ -145,6 +145,7 @@ export {
  */
 export type {
   ProjectFileMap,
+  FileMap,
   FileData,
   ProjectGraph,
   ProjectGraphDependency,
