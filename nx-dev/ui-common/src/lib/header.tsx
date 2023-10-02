@@ -192,6 +192,13 @@ export function Header(): JSX.Element {
               Community
             </Link>
             <Link
+              href="/plugin-registry"
+              title="Check Nx available plugins"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Plugins registry
+            </Link>
+            <Link
               href="/conf"
               title="Check Nx conference"
               className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
