@@ -81,9 +81,8 @@ async function getPatterns(
 
     const p = parseFiles(args);
 
-    const supportedExtensions = (await prettier
-      .getSupportInfo())
-      .languages.flatMap((language) => language.extensions)
+    const supportedExtensions = (await prettier.getSupportInfo()).languages
+      .flatMap((language) => language.extensions)
       .filter((extension) => !!extension)
       // Prettier supports ".swcrc" as a file instead of an extension
       // So we add ".swcrc" as a supported extension manually
