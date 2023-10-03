@@ -744,7 +744,9 @@ class TaskHasherImpl {
   }
 
   private async hashRuntime(runtime: string): Promise<PartialHash> {
-    const mapKey = `runtime:${runtime}`;
+    const env = getHashEnv();
+    const env_key = JSON.stringify(env);
+    const mapKey = `runtime:${runtime}-${env_key}`;
     if (!this.runtimeHashes[mapKey]) {
       this.runtimeHashes[mapKey] = new Promise((res, rej) => {
         exec(
@@ -752,7 +754,7 @@ class TaskHasherImpl {
           {
             windowsHide: true,
             cwd: workspaceRoot,
-            env: getHashEnv(),
+            env,
           },
           (err, stdout, stderr) => {
             if (err) {
