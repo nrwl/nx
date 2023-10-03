@@ -117,6 +117,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "16.9.2": {
+      "version": "16.9.2-beta.0",
+      "packages": {
+        "@swc-node/register": {
+          "version": "~1.6.7",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
