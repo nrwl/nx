@@ -1,12 +1,15 @@
 import * as chalk from 'chalk';
 import * as stringWidth from 'string-width';
-// cliui is the CLI layout engine developed by, and used within, yargs
-import * as cliui from 'cliui';
 import { logger } from './logger';
 import { output } from './output';
 import { Schema } from './params';
 import { nxVersion } from './versions';
 import { readModulePackageJson } from './package-json';
+
+// cliui is the CLI layout engine developed by, and used within, yargs
+// the typings for cliui do not play nice with our tsconfig, it either
+// works in build or in test but not both.
+const cliui = require('cliui') as typeof import('cliui')['default'];
 
 export function printHelp(
   header: string,
@@ -91,7 +94,7 @@ function generateGeneratorOverviewOutput({
   description: string;
   aliases: string[];
 }): string {
-  const ui = cliui();
+  const ui = cliui(null);
   const overviewItemsLabelWidth =
     // Chars in labels "From" and "Name"
     4 +
@@ -156,7 +159,7 @@ function generateExecutorOverviewOutput({
   name: string;
   description: string;
 }): string {
-  const ui = cliui();
+  const ui = cliui(null);
   const overviewItemsLeftPadding = 2;
   const overviewItemsLabelWidth = overviewItemsLeftPadding + 'Executor:'.length;
 
@@ -204,7 +207,7 @@ const formatOptionType = (optionConfig: Schema['properties'][0]) => {
 };
 
 function generateOptionsOutput(schema: Schema): string {
-  const ui = cliui();
+  const ui = cliui(null);
   const flagAndAliasLeftPadding = 4;
   const flagAndAliasRightPadding = 4;
 
@@ -281,7 +284,7 @@ function generateOptionsOutput(schema: Schema): string {
       {
         text: renderedTypesAndDefault,
         padding: [0, 0, 0, 0],
-        align: 'right',
+        align: 'right' as const,
       },
     ];
 
@@ -295,7 +298,7 @@ function generateExamplesOutput(schema: Schema): string {
   if (!schema.examples || schema.examples.length === 0) {
     return '';
   }
-  const ui = cliui();
+  const ui = cliui(null);
   const xPadding = 4;
 
   ui.div({
