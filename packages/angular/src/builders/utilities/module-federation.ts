@@ -1,9 +1,7 @@
-import { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { logger } from '@nx/devkit';
-import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
-import { registerTsProject } from 'nx/src/utils/register';
+import { logger, ProjectConfiguration } from '@nx/devkit';
+import { registerTsProject } from '@nx/js/src/internal';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,

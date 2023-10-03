@@ -17,8 +17,7 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { fork } from 'child_process';
 import { existsSync } from 'fs';
-import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
-import { registerTsProject } from 'nx/src/utils/register';
+import { registerTsProject } from '@nx/js/src/internal';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];

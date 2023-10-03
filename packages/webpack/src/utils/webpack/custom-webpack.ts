@@ -1,5 +1,4 @@
-import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
-import { registerTsProject } from 'nx/src/utils/register';
+import { registerTsProject } from '@nx/js/src/internal';
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
   const cleanupTranspiler = registerTsProject(path, tsConfig);
