@@ -1,104 +1,15 @@
-# `nx-cloud` - Release notes
+# Enterprise Release Notes
 
-## Nx Cloud package
+### 2308.22.7.patch2
 
-{% callout type="check" title="@nrwl/nx-cloud was changed to nx-cloud" %}
+- Fix: github member invites
 
-[Read more about the rescope ≫](/recipes/other/rescope)
+### 2308.22.7.patch1
 
-{% /callout %}
-
-### 14.3.0
-
-- Fix: Resolve issue where sometimes cache hits would be reported as misses when paired with Nx 13.0-13.5
-- Fix: Correctly infer NX_BRANCH while running in Gitlab CI
-
-### 14.2.0
-
-- Feat: Add `NX_CLOUD_SILENT_RECORD` environment variable for use with `nx-cloud record`
-- Feat: Add `NX_CLOUD_AGENT_TIMEOUT_MS` environment variable to configure task timeouts
-
-### 14.1.2
-
-- Fix: Provider nicer failure message when version of Nx is incompatible with `@nx/nx-cloud`
-- Fix: Use Nx task graph if provided
-
-### 14.1.1
-
-- Fix: Handle **overrides_unparsed** property for nx:run-commands executor
-
-### 14.1.0
-
-- Fix: Gracefully handle errors with corrupted tarballs
-- Fix: Resolve issue where tasks run with read-only DTE would cause 404s on artifact retrieval
-- Feat: Allow specifying Nx Cloud installation source through generator
-
-### 14.0.5
-
-- Fix: Workspace name for new Nx Cloud workspaces is pulled from `package.json` instead of `nx.json`
-- Fix: `@nx/nx-cloud` can be run from directories other than workspace root
-- Fix: Correctly infer `NX_BRANCH` and `NX_RUN_GROUP` from Jenkins
-- Fix: Ignore errors related to excess whitespace in tarballs
-
-### 14.0.3
-
-- Fix: Enable caching for all inner commands
-
-### 14.0.2
-
-- Fix: Remove dependency on `@nx/devkit` for init generator
-
-### 14.0.1
-
-- Fix: Correctly infer `NX_BRANCH` and `NX_RUN_GROUP` from Vercel
-
-### 14.0.0
-
-- Feat: Nx 14 Compatibility
-- Fix: Exit with status code of child process when recording commands with `nx-cloud record`
-
-### 13.3.1
-
-- Feat: Store output for non-Nx commands in Nx Cloud. Check out https://nx.dev/nx-cloud/set-up/record-commands for more information.
-
-### 13.2.1
-
-- Fix: Newer version of chalk was required, so the package didn't work with older versions of Nx.
-- Feat: Prepare the package to work with Nx 13.10.0
-
-### 13.0.3
-
-Cleanup: Handle issues with the network and the api in a consistent fashion.
-
-### 13.0.1
-
-- Fix: Print detailed errors when an agent is not able to upload file artifacts.
-
-### 13.0.0
-
-- Feat: Support Nx 13.3 new life cycle API
-
-### 12.5.2
-
-- Feat: GitHub Actions handle DTE reruns without requiring `npx nx-cloud start-ci-run`
-
-### 12.5.1
-
-- Fix: DTE main job properly copies files after DTE is finished
-- Fix: Increased Node version compatibility for DTE Agents
-
-### 12.5.0
-
-- Fix: Correctly print unexpected exceptions
-- Fix: Gracefully handle the case when tasks-hashes are missing
-- Fix: Agents should wait for the main job to start a rerun of a run group
-- Fix: Retry requests if we receive a 503
-
-### 12.3.13
-
-- Fix: DTE could get stuck when trying to execute tasks with different configurations
-
-## Docker Containers
+- Feature: self-signed certificate support for aggregator
+  - This is needed if you are using self-signed certificate for your external Mongo instance
+  - See [here](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#supporting-self-signed-ssl-certificates) for usage details.
+- Fix: aggregator issue when creating text Mongo indexes
 
 ### 2308.22.7
 
@@ -117,7 +28,7 @@ When upgrading to this version and anything above it, you will need to use Helm 
 
 ##### VCS proxy support
 
-- For the Github/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub/GitLab to post comments
+- For the GitHub/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub/GitLab to post comments
 - If are behind a proxy however, these requests might fail
 - If you are using our [Helm chart](https://github.com/nrwl/nx-cloud-helm/), you can now configure this option to unblock the vcs integration and allow it to work with your proxy:
   ```yaml
@@ -179,7 +90,7 @@ You will see some updates in the UI to reflect this, however, **you don't need t
 
 One of the features of NxCloud is its integrations with your repository hosting solution. When you open up a Pull Request, you can configure NxCloud to post a comment to it once your CI has finished running, with a summary of all the tasks that succeeded and failed on that code change, and a link to your branch on NxCloud so you can further analyse your run. Your developers save time, and allows them to skip digging through long CI logs.
 
-Before, if you had a self-hosted instance of Github, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise.
+Before, if you had a self-hosted instance of GitHub, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise.
 
 [We now support self-signed SVN certificates, via a simple k8s configMap.](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#supporting-self-signed-ssl-certificates)
 
@@ -227,7 +138,7 @@ Any questions at all or to report issues with the new release [please get in tou
 
 - Feat: Targettable agents for DTE. You can now ask specific agents to pick up specific tasks (via `--targets
 - Fix: DTE fixes for 404 not found artefacts errors
-- Fix: issue when using Github integration with self-hosted Github instances
+- Fix: issue when using GitHub integration with self-hosted GitHub instances
 
 ### 26-01-2023T21-22-48
 

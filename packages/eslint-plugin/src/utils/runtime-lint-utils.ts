@@ -501,3 +501,30 @@ function fileIsSecondaryEntryPoint(file: string, projectRoot: string): boolean {
   }
   return false;
 }
+
+/**
+ * Returns true if the given project contains MFE config with "exposes:" section
+ */
+export function appIsMFERemote(project: ProjectGraphProjectNode): boolean {
+  const mfeConfig =
+    readFileIfExisting(
+      joinPathFragments(
+        workspaceRoot,
+        project.data.root,
+        'module-federation.config.js'
+      )
+    ) ||
+    readFileIfExisting(
+      joinPathFragments(
+        workspaceRoot,
+        project.data.root,
+        'module-federation.config.ts'
+      )
+    );
+
+  if (mfeConfig) {
+    return !!mfeConfig.match(/('|")?exposes('|")?:/);
+  }
+
+  return false;
+}

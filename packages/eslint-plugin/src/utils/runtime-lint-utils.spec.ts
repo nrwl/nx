@@ -7,6 +7,7 @@ import {
 } from '@nx/devkit';
 import {
   DepConstraint,
+  appIsMFERemote,
   findConstraintsFor,
   findTransitiveExternalDependencies,
   getSourceFilePath,
@@ -574,4 +575,70 @@ describe('getSourceFilePath', () => {
       );
     }
   );
+});
+
+describe('appIsMFERemote', () => {
+  const targetJs: ProjectGraphProjectNode = {
+    type: 'lib',
+    name: 'aApp',
+    data: {
+      tags: ['abc'],
+      root: 'apps/remote1',
+    } as any,
+  };
+  const targetTs: ProjectGraphProjectNode = {
+    type: 'lib',
+    name: 'bApp',
+    data: {
+      tags: ['abc'],
+      root: 'apps/remote2',
+    } as any,
+  };
+  const targetNoExposes: ProjectGraphProjectNode = {
+    type: 'lib',
+    name: 'cApp',
+    data: {
+      tags: ['abc'],
+      root: 'apps/remote3',
+    } as any,
+  };
+  const targetNone: ProjectGraphProjectNode = {
+    type: 'lib',
+    name: 'dApp',
+    data: {
+      tags: ['abc'],
+      root: 'apps/nonremote',
+    } as any,
+  };
+  const fsJson = {
+    'apps/remote1/module-federation.config.js': JSON.stringify({
+      name: 'remote1',
+      exposes: {
+        './Module': './apps/remote1/src/app/remote-entry/entry.module.ts',
+      },
+    }),
+    'apps/remote2/module-federation.config.ts': JSON.stringify({
+      name: 'remote2',
+      exposes: {
+        './Module': './apps/remote2/src/app/remote-entry/entry.module.ts',
+      },
+    }),
+    'apps/remote3/module-federation.config.js': JSON.stringify({
+      name: 'remote3',
+    }),
+  };
+  vol.fromJSON(fsJson, '/root');
+
+  it('should return true for remote apps with JS mfe config', () => {
+    expect(appIsMFERemote(targetJs)).toBe(true);
+  });
+  it('should return true for remote apps with TS mfe config', () => {
+    expect(appIsMFERemote(targetTs)).toBe(true);
+  });
+  it('should return true for remote apps with no exposes mfe config', () => {
+    expect(appIsMFERemote(targetNoExposes)).toBe(false);
+  });
+  it('should return true for remote apps with no mfe config', () => {
+    expect(appIsMFERemote(targetNone)).toBe(false);
+  });
 });

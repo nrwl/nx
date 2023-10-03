@@ -1,6 +1,6 @@
 # Add a Vue Project
 
-The code for this example is available on Github:
+The code for this example is available on GitHub:
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/vue" /%}
 
@@ -297,7 +297,7 @@ nx serve acme
 
 ## More Documentation
 
-A larger example including libraries, tests, and more is available at [Nx Vue Example](https://github.com/nrwl/nx-recipes/tree/main/vue) on Github.
+A larger example including libraries, tests, and more is available at [Nx Vue Example](https://github.com/nrwl/nx-recipes/tree/main/vue) on GitHub.
 
 - [Nx Vite Plugin](/nx-api/vite)
 - [Vite](https://vitejs.dev/)

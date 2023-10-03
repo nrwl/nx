@@ -76,7 +76,7 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/nx-cloud/reference/server-api',
   },
   {
-    title: 'nx-cloud - Release notes',
+    title: 'Enterprise Release Notes',
     path: '/nx-cloud/reference/release-notes',
   },
 ];

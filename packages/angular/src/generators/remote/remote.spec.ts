@@ -1,6 +1,7 @@
 import { E2eTestRunner } from '../../utils/test-runners';
 import {
   getProjects,
+  readJson,
   readNxJson,
   readProjectConfiguration,
   stripIndents,
@@ -11,6 +12,7 @@ import {
   generateTestHostApplication,
   generateTestRemoteApplication,
 } from '../utils/testing';
+import { getRootTsConfigPathInTree } from '@nx/js';
 
 describe('MF Remote App Generator', () => {
   it('should generate a remote mf app with no host', async () => {
@@ -25,6 +27,10 @@ describe('MF Remote App Generator', () => {
 
     // ASSERT
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
+    const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
+    expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
+      'test/src/app/remote-entry/entry.module.ts',
+    ]);
   });
 
   it('should generate a remote mf app with a host', async () => {
@@ -138,6 +144,10 @@ describe('MF Remote App Generator', () => {
     expect(
       tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
     ).toMatchSnapshot();
+    const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
+    expect(tsconfigJson.compilerOptions.paths['test/Routes']).toEqual([
+      'test/src/app/remote-entry/entry.routes.ts',
+    ]);
   });
 
   it('should not generate an e2e project when e2eTestRunner is none', async () => {

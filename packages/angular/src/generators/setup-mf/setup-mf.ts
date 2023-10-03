@@ -17,6 +17,7 @@ import {
   normalizeOptions,
   removeDeadCodeFromRemote,
   setupHostIfDynamic,
+  setupTspathForRemote,
   setupServeTarget,
   updateHostAppRoutes,
   updateTsConfigTarget,
@@ -41,6 +42,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
     addRemoteToHost(tree, options);
     addRemoteEntry(tree, options, projectConfig.root);
     removeDeadCodeFromRemote(tree, options);
+    setupTspathForRemote(tree, options);
     installTask = addDependenciesToPackageJson(
       tree,
       {},

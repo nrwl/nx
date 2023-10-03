@@ -270,7 +270,6 @@ export class StylesheetProcessor {
           await import('less')
         ).render(css, {
           filename: filePath,
-          math: 'always',
           javascriptEnabled: true,
           paths: this.styleIncludePaths,
         });

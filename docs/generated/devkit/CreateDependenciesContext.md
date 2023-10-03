@@ -25,7 +25,7 @@ The external nodes that have been added to the graph.
 
 ### fileMap
 
-• `Readonly` **fileMap**: `FileMap`
+• `Readonly` **fileMap**: [`FileMap`](../../devkit/documents/FileMap)
 
 All files in the workspace
 
@@ -33,7 +33,7 @@ All files in the workspace
 
 ### filesToProcess
 
-• `Readonly` **filesToProcess**: `FileMap`
+• `Readonly` **filesToProcess**: [`FileMap`](../../devkit/documents/FileMap)
 
 Files changes since last invocation
 

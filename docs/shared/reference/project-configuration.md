@@ -2,7 +2,7 @@
 
 Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
 [use task executors](/core-features/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
-files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on Github.
+files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
 
 The following configuration creates `build` and `test` targets for Nx.
 

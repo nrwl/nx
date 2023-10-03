@@ -4630,6 +4630,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Commands",
+            "path": "/nx-api/nx",
+            "id": "commands",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Nx Configuration",
             "path": "/reference/nx-json",
             "id": "nx-json",
@@ -4670,6 +4678,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Commands",
+        "path": "/nx-api/nx",
+        "id": "commands",
+        "isExternal": true,
+        "children": [],
         "disableCollapsible": false
       },
       {

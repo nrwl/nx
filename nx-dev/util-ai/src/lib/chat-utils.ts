@@ -77,7 +77,8 @@ export function getListOfSources(
         longer_heading: section.longer_heading,
         url: url.toString(),
       };
-    });
+    })
+    .slice(0, 4);
 
   return result;
 }

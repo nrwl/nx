@@ -91,6 +91,7 @@ export const compileNgcTransformFactory = (
         graph,
         tsConfig,
         moduleResolutionCache,
+        options,
         {
           outDir: path.dirname(esmModulePath),
           declarationDir: path.dirname(declarations),
@@ -101,8 +102,7 @@ export const compileNgcTransformFactory = (
               : ts.ScriptTarget.ES2020,
         },
         entryPoint.cache.stylesheetProcessor as any,
-        ngccProcessor,
-        options.watch
+        ngccProcessor
       );
     } catch (error) {
       spinner.fail();

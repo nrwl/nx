@@ -55,7 +55,7 @@ export default createESLintRule<Options, MessageIds>({
       description: 'Checks common nx-plugin configuration files for validity',
       recommended: 'error',
     },
-    schema: {},
+    schema: [],
     type: 'problem',
     messages: {
       invalidSchemaPath: 'Schema path should point to a valid file',

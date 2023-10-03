@@ -28,7 +28,6 @@ describe('hostGenerator', () => {
     expect(tree.exists('test/module-federation.config.js')).toBeTruthy();
     expect(tree.exists('test/src/bootstrap.tsx')).toBeTruthy();
     expect(tree.exists('test/src/main.ts')).toBeTruthy();
-    expect(tree.exists('test/src/remotes.d.ts')).toBeTruthy();
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
     expect(
       tree.read('test/module-federation.config.js', 'utf-8')
@@ -52,7 +51,6 @@ describe('hostGenerator', () => {
     expect(tree.exists('test/module-federation.config.ts')).toBeTruthy();
     expect(tree.exists('test/src/bootstrap.tsx')).toBeTruthy();
     expect(tree.exists('test/src/main.ts')).toBeTruthy();
-    expect(tree.exists('test/src/remotes.d.ts')).toBeTruthy();
     expect(tree.read('test/webpack.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
       tree.read('test/module-federation.config.ts', 'utf-8')
@@ -95,7 +93,6 @@ describe('hostGenerator', () => {
     expect(tree.exists('test/src/main.server.tsx')).toBeTruthy();
     expect(tree.exists('test/src/bootstrap.tsx')).toBeTruthy();
     expect(tree.exists('test/src/main.ts')).toBeTruthy();
-    expect(tree.exists('test/src/remotes.d.ts')).toBeTruthy();
 
     expect(readJson(tree, 'test/tsconfig.server.json')).toEqual({
       compilerOptions: {
@@ -136,7 +133,6 @@ describe('hostGenerator', () => {
     expect(tree.exists('test/src/main.server.tsx')).toBeTruthy();
     expect(tree.exists('test/src/bootstrap.tsx')).toBeTruthy();
     expect(tree.exists('test/src/main.ts')).toBeTruthy();
-    expect(tree.exists('test/src/remotes.d.ts')).toBeTruthy();
 
     expect(readJson(tree, 'test/tsconfig.server.json')).toEqual({
       compilerOptions: {

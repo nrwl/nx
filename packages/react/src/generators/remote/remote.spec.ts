@@ -2,6 +2,7 @@ import { readJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/linter';
 import remote from './remote';
+import { getRootTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 
 describe('remote generator', () => {
   it('should create the remote with the correct config files', async () => {
@@ -27,6 +28,11 @@ describe('remote generator', () => {
     expect(
       tree.read('test/module-federation.config.js', 'utf-8')
     ).toMatchSnapshot();
+
+    const tsconfigJson = readJson(tree, getRootTsConfigPathInTree(tree));
+    expect(tsconfigJson.compilerOptions.paths['test/Module']).toEqual([
+      'test/src/remote-entry.ts',
+    ]);
   });
 
   it('should create the remote with the correct config files when --typescriptConfiguration=true', async () => {

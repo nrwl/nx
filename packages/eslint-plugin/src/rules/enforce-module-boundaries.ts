@@ -32,6 +32,7 @@ import {
   onlyLoadChildren,
   stringifyTags,
   isComboDepConstraint,
+  appIsMFERemote,
 } from '../utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { basename, dirname, relative } from 'path';
@@ -87,33 +88,71 @@ export default createESLintRule<Options, MessageIds>({
         properties: {
           enforceBuildableLibDependency: { type: 'boolean' },
           allowCircularSelfDependency: { type: 'boolean' },
-          checkDynamicDependenciesExceptions: [{ type: 'string' }],
+          checkDynamicDependenciesExceptions: {
+            type: 'array',
+            items: { type: 'string' },
+          },
           banTransitiveDependencies: { type: 'boolean' },
           checkNestedExternalImports: { type: 'boolean' },
-          allow: [{ type: 'string' }],
-          buildTargets: [{ type: 'string' }],
-          depConstraints: [
-            {
-              type: 'object',
-              properties: {
-                oneOf: [
-                  { sourceTag: { type: 'string' } },
-                  {
+          allow: { type: 'array', items: { type: 'string' } },
+          buildTargets: { type: 'array', items: { type: 'string' } },
+          depConstraints: {
+            type: 'array',
+            items: {
+              oneOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    sourceTag: { type: 'string' },
+                    onlyDependOnLibsWithTags: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                    allowedExternalImports: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                    bannedExternalImports: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                    notDependOnLibsWithTags: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                  },
+                  additionalProperties: false,
+                },
+                {
+                  type: 'object',
+                  properties: {
                     allSourceTags: {
                       type: 'array',
                       items: { type: 'string' },
                       minItems: 2,
                     },
+                    onlyDependOnLibsWithTags: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                    allowedExternalImports: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                    bannedExternalImports: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
+                    notDependOnLibsWithTags: {
+                      type: 'array',
+                      items: { type: 'string' },
+                    },
                   },
-                ],
-                onlyDependOnLibsWithTags: [{ type: 'string' }],
-                allowedExternalImports: [{ type: 'string' }],
-                bannedExternalImports: [{ type: 'string' }],
-                notDependOnLibsWithTags: [{ type: 'string' }],
-              },
-              additionalProperties: false,
+                  additionalProperties: false,
+                },
+              ],
             },
-          ],
+          },
         },
         additionalProperties: false,
       },
@@ -477,7 +516,7 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // cannot import apps
-      if (targetProject.type === 'app') {
+      if (targetProject.type === 'app' && !appIsMFERemote(targetProject)) {
         context.report({
           node,
           messageId: 'noImportsOfApps',

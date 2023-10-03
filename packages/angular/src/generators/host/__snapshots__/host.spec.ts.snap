@@ -418,11 +418,6 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 `;
 
 exports[`Host App Generator should generate a host with remotes using standalone components 2`] = `
-"declare module 'remote1/Routes';
-"
-`;
-
-exports[`Host App Generator should generate a host with remotes using standalone components 3`] = `
 "import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';

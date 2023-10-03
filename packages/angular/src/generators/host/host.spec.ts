@@ -131,7 +131,6 @@ describe('Host App Generator', () => {
     // ASSERT
     expect(tree.exists(`host/src/app/app.module.ts`)).toBeFalsy();
     expect(tree.read(`host/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
-    expect(tree.read(`host/src/remotes.d.ts`, 'utf-8')).toMatchSnapshot();
     expect(
       tree.read(`host/src/app/app.component.ts`, 'utf-8')
     ).toMatchSnapshot();

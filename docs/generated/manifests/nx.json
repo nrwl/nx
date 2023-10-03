@@ -5774,6 +5774,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "commands",
+        "name": "Commands",
+        "description": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/nx-api/nx",
+        "tags": []
+      },
+      {
         "id": "nx-json",
         "name": "Nx Configuration",
         "description": "",
@@ -5826,6 +5836,16 @@
     ],
     "isExternal": false,
     "path": "/reference",
+    "tags": []
+  },
+  "/nx-api/nx": {
+    "id": "commands",
+    "name": "Commands",
+    "description": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/nx-api/nx",
     "tags": []
   },
   "/reference/nx-json": {

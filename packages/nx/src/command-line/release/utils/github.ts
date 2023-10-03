@@ -53,7 +53,7 @@ export function getGitHubRemote(remoteName = 'origin') {
 
 export async function createOrUpdateGithubRelease(
   githubRequestConfig: GithubRequestConfig,
-  release: { version: string; body: string },
+  release: { version: string; body: string; prerelease: boolean },
   existingGithubReleaseForVersion?: GithubRelease
 ) {
   const result = await syncGithubRelease(

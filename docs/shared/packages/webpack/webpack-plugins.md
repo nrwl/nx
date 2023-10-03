@@ -150,7 +150,7 @@ module.exports = composePlugins(
   withNx(), // always pass withNx() first
   withReact({
     styles: ['my-app/src/styles.css'],
-    svgr: true,
+    svgr: false,
     postcssConfig: 'my-app/postcss',
   }),
   (config) => {
