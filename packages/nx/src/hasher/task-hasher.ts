@@ -65,6 +65,7 @@ export interface TaskHasher {
    * @param task
    */
   hashTask(task: Task): Promise<Hash>;
+
   hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash>;
 
   /**
@@ -72,6 +73,7 @@ export interface TaskHasher {
    * @param tasks
    */
   hashTasks(tasks: Task[]): Promise<Hash[]>;
+
   hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
 }
 
@@ -750,6 +752,7 @@ class TaskHasherImpl {
           {
             windowsHide: true,
             cwd: workspaceRoot,
+            env: getHashEnv(),
           },
           (err, stdout, stderr) => {
             if (err) {
