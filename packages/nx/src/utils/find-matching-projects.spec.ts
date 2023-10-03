@@ -78,7 +78,7 @@ describe('findMatchingProjects', () => {
       'c',
       'nested',
     ]);
-    expect(findMatchingProjects(['!*', 'a'], projectGraph)).toEqual([]);
+    expect(findMatchingProjects(['a', '!*'], projectGraph)).toEqual([]);
   });
 
   it('should expand generic glob patterns', () => {
@@ -124,10 +124,14 @@ describe('findMatchingProjects', () => {
   });
 
   it('should support negation "!" for tags', () => {
-    expect(findMatchingProjects(['*', '!tag:api'], projectGraph)).toEqual([
-      'b',
-      'nested',
-    ]);
+    // Picks everything, except things tagged API, unless those also
+    // have the tag theme2 in which case we still want them.
+    const matches = findMatchingProjects(
+      ['*', '!tag:api', 'tag:theme2'],
+      projectGraph
+    );
+    expect(matches).toEqual(expect.arrayContaining(['a', 'b', 'nested']));
+    expect(matches.length).toEqual(3);
   });
 
   it('should expand generic glob patterns for tags', () => {

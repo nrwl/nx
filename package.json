@@ -325,7 +325,7 @@
     "@zkochan/js-yaml": "0.0.6",
     "axios": "1.0.0",
     "classnames": "^2.3.1",
-    "cliui": "^7.0.2",
+    "cliui": "^8.0.1",
     "core-js": "^3.6.5",
     "enquirer": "~2.3.6",
     "fast-glob": "3.2.7",

@@ -177,6 +177,8 @@ The `docs/map.json` file is considered our source of truth for our site's struct
 new page to our documentation to ensure that it is included in the documentation site. We also run automated scripts
 based on this `map.json` data to safeguard against common human errors that could break our site.
 
+When you make a change to the `map.json` file, make sure to run `pnpm documentation` to propagate your changes to the `nx-dev` application.
+
 #### Nx-Dev Application
 
 Our public `nx.dev` documentation site is a [Next.js](https://nextjs.org/) application, that can be found in
@@ -209,10 +211,10 @@ adjusting the docs.
 To run `nx-dev` locally, run the command:
 
 ```bash
-npx nx serve nx-dev
+npx nx serve-docs nx-dev
 ```
 
-You can then access the application locally at `localhost:4200`.
+You can then access the application locally at `localhost:4200`. Changes to markdown documentation files will be automatically applied to the site when you refresh the browser.
 
 #### Troubleshooting: `JavaScript heap out of memory`
 
