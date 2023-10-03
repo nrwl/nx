@@ -1609,6 +1609,11 @@
               "name": "What is Nx Cloud?",
               "id": "what-is-nx-cloud",
               "file": "nx-cloud/intro/nx-cloud"
+            },
+            {
+              "name": "Nx Cloud Workflows",
+              "id": "nx-cloud-workflows",
+              "file": "nx-cloud/intro/nx-cloud-workflows"
             }
           ]
         },

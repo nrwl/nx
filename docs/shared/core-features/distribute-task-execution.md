@@ -54,7 +54,7 @@ For existing workspaces you would probably want to adjust your configuration by 
 
 Distributed task execution can work on any CI provider. You are responsible for launching jobs in your CI system. Nx
 Cloud then coordinates the way those jobs work together. There are two different kinds of jobs that you'll need to
-create in your CI system.
+create in your CI system. If you would like Nx Cloud to dynamically provision agents for you, check out [Nx Cloud Workflows](/nx-cloud/intro/nx-cloud-workflows)
 
 1. Main job that controls what is going to be executed
 2. Multiple agent jobs that actually execute the tasks

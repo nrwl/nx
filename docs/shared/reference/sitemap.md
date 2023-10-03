@@ -262,6 +262,7 @@
 
   - [Intro](/nx-cloud/intro)
     - [What is Nx Cloud?](/nx-cloud/intro/what-is-nx-cloud)
+    - [Nx Cloud Workflows](/nx-cloud/intro/nx-cloud-workflows)
   - [Set Up](/nx-cloud/set-up)
     - [Record Non-Nx Commands](/nx-cloud/set-up/record-commands)
     - [Enable GitHub PR Integration](/nx-cloud/set-up/github)
