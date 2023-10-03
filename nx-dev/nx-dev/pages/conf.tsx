@@ -177,11 +177,11 @@ export default function ConfPage(): JSX.Element {
                 <a
                   rel="noreferrer"
                   target="_blank"
-                  href="https://ti.to/nx-conf/nxconf2023online"
+                  href="https://www.youtube.com/live/IQ5YyEYZw68"
                   className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
                 >
                   <span className="group-hover:underline">
-                    Register to attend online for free
+                    Watch the live stream recording
                   </span>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -198,7 +198,7 @@ export default function ConfPage(): JSX.Element {
                     />
                   </svg>
                 </a>
-                <a
+                {/* <a
                   rel="noreferrer"
                   target="_blank"
                   href="https://www.youtube.com/watch?v=-g3NABhePJg&utm_source=nx.dev"
@@ -221,7 +221,7 @@ export default function ConfPage(): JSX.Element {
                       d="M13 7l5 5m0 0l-5 5m5-5H6"
                     />
                   </svg>
-                </a>
+                </a> */}
               </div>
             </div>
           </div>

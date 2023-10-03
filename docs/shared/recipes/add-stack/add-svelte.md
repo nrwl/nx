@@ -1,6 +1,6 @@
 # Add a Svelte Project
 
-The code for this example is available on Github:
+The code for this example is available on GitHub:
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/svelte" /%}
 
@@ -336,7 +336,7 @@ To serve the application at `http://localhost:4200`.
 
 ## More Documentation
 
-A larger example including libraries, test and more is available at [Nx Svelte Example](https://github.com/nrwl/nx-recipes/tree/main/svelte) on Github.
+A larger example including libraries, test and more is available at [Nx Svelte Example](https://github.com/nrwl/nx-recipes/tree/main/svelte) on GitHub.
 
 - [Nx Vite Plugin](/nx-api/vite)
 - [Vite](https://vitejs.dev/)

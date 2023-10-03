@@ -1,5 +1,6 @@
 import * as chalk from 'chalk';
 import { readFileSync, writeFileSync } from 'node:fs';
+import { prerelease } from 'semver';
 import { dirSync } from 'tmp';
 import { FsTree } from '../../generators/tree';
 import { logger } from '../../utils/logger';
@@ -209,6 +210,9 @@ export async function changelogHandler(args: ChangelogOptions): Promise<void> {
         {
           version: releaseVersion,
           body: finalMarkdown,
+          prerelease: isPrerelease(
+            releaseVersion.replace(args.tagVersionPrefix, '')
+          ),
         },
         existingGithubReleaseForVersion
       );
@@ -252,4 +256,9 @@ async function resolveFinalMarkdown(
     markdown = readFileSync(changelogPath, 'utf-8');
   }
   return markdown;
+}
+
+function isPrerelease(version: string): boolean {
+  // prerelease returns an array of matching prerelease "components", or null if the version is not a prerelease
+  return prerelease(version) !== null;
 }

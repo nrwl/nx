@@ -29,7 +29,7 @@ export function categorizeRelatedDocuments(
     {
       id: 'reference',
       name: 'Reference',
-      matchers: ['/workspace/', '/packages/'],
+      matchers: ['/workspace/', '/nx-api/'],
       relatedDocuments: [],
     },
     {

@@ -60,6 +60,7 @@ export const nxCompileNgcTransformFactory = (
         graph,
         tsConfig,
         moduleResolutionCache,
+        options,
         {
           outDir: path.dirname(esmModulePath),
           declarationDir: path.dirname(declarations),
@@ -69,8 +70,7 @@ export const nxCompileNgcTransformFactory = (
               ? ts.ScriptTarget.ES2022
               : ts.ScriptTarget.ES2020,
         },
-        entryPoint.cache.stylesheetProcessor as any,
-        options.watch
+        entryPoint.cache.stylesheetProcessor as any
       );
     } catch (error) {
       throw error;
