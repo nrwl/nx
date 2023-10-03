@@ -23,6 +23,8 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
         {},
         {
           '@nx/playwright': nxVersion,
+          // required since used in playwright config
+          '@nx/devkit': nxVersion,
           '@playwright/test': playwrightVersion,
         }
       )
