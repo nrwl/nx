@@ -1,13 +1,10 @@
 import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
+import { registerTsProject } from 'nx/src/utils/register';
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
-  const tsNodeService = tsNodeRegister(path, tsConfig);
-
+  const cleanupTranspiler = registerTsProject(path, tsConfig);
   const customWebpackConfig = require(path);
-
-  if (tsNodeService) {
-    tsNodeService.enabled(false);
-  }
+  cleanupTranspiler();
 
   // If the user provides a configuration in TS file
   // then there are 2 cases for exporing an object. The first one is:

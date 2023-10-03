@@ -3,6 +3,7 @@ import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { logger } from '@nx/devkit';
 import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
+import { registerTsProject } from 'nx/src/utils/register';
 
 export function getDynamicRemotes(
   project: ProjectConfiguration,
@@ -91,19 +92,19 @@ function getModuleFederationConfig(
 
   let moduleFederationConfigPath = moduleFederationConfigPathJS;
 
-  let tsNodeService;
+  let cleanupTranspiler = () => {};
   if (existsSync(moduleFederationConfigPathTS)) {
-    tsNodeService = tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath, {
-      transpileOnly: true,
-    });
+    cleanupTranspiler = registerTsProject(
+      moduleFederationConfigPathTS,
+      tsconfigPath
+    );
     moduleFederationConfigPath = moduleFederationConfigPathTS;
   }
 
   try {
     const config = require(moduleFederationConfigPath);
-    if (tsNodeService) {
-      tsNodeService.enabled(false);
-    }
+    cleanupTranspiler();
+
     return {
       mfeConfig: config.default || config,
       mfConfigPath: moduleFederationConfigPath,
