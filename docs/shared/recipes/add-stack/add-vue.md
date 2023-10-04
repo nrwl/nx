@@ -250,7 +250,7 @@ export { default as Counter } from './Counter.vue';
 ```
 
 {% callout type="Note" %}
-The `default` is very import here as it allows us to import the component using `import { Counter } from '@acme/counter'` instead of `import Counter from '@acme/counter'`.
+The `default` is very important here as it allows us to import the component using `import { Counter } from '@acme/counter'` instead of `import Counter from '@acme/counter'`.
 {% /callout %}
 
 Update your root `./vite.config.ts` to include the following:
