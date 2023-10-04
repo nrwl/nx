@@ -436,7 +436,7 @@ describe('create-nx-workspace', () => {
     checkFilesExist('project.json');
     checkFilesExist('index.html');
     checkFilesExist('src/main.ts');
-    checkFilesExist('src/App.vue');
+    checkFilesExist('src/app/App.vue');
     expectCodeIsFormatted();
   });
 
