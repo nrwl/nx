@@ -163,9 +163,7 @@ describe('lib', () => {
     expect(tree.exists('my-lib/package.json')).toBeFalsy();
     expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
     expect(tree.exists('my-lib/src/components/my-lib.vue')).toBeTruthy();
-    expect(
-      tree.exists('my-lib/src/components/__tests__/my-lib.spec.ts')
-    ).toBeTruthy();
+    expect(tree.exists('my-lib/src/components/my-lib.spec.ts')).toBeTruthy();
     const eslintJson = readJson(tree, 'my-lib/.eslintrc.json');
     expect(eslintJson).toMatchSnapshot();
   });
@@ -206,9 +204,7 @@ describe('lib', () => {
         tree.exists('my-dir/my-lib/src/components/my-dir-my-lib.vue')
       ).toBeTruthy();
       expect(
-        tree.exists(
-          'my-dir/my-lib/src/components/__tests__/my-dir-my-lib.spec.ts'
-        )
+        tree.exists('my-dir/my-lib/src/components/my-dir-my-lib.spec.ts')
       ).toBeTruthy();
     });
 

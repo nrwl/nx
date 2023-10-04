@@ -13,15 +13,10 @@ defineProps<{
 </script>
 
 <template>
-  <div>
-    <p>Welcome to Vlv!</p>
-  </div>
+  <p>Welcome to Vlv!</p>
 </template>
 
 <style scoped>
-div {
-  color: pink;
-}
 </style>
 `;
 
@@ -44,7 +39,7 @@ describe('vue:stories for applications', () => {
     });
 
     expect(
-      appTree.read('test-ui-app/src/components/NxWelcome.stories.ts', 'utf-8')
+      appTree.read('test-ui-app/src/app/NxWelcome.stories.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
       appTree.read(
@@ -61,7 +56,7 @@ describe('vue:stories for applications', () => {
     });
 
     expect(
-      appTree.read('test-ui-app/src/components/NxWelcome.stories.ts', 'utf-8')
+      appTree.read('test-ui-app/src/app/NxWelcome.stories.ts', 'utf-8')
     ).toMatchSnapshot();
     expect(
       appTree.read(
@@ -73,7 +68,7 @@ describe('vue:stories for applications', () => {
 
   it('should not update existing stories', async () => {
     appTree.write(
-      'test-ui-app/src/components/NxWelcome.stories.ts',
+      'test-ui-app/src/app/NxWelcome.stories.ts',
       `import { ComponentStory, ComponentMeta } from '@storybook/vue3'`
     );
 
@@ -82,7 +77,7 @@ describe('vue:stories for applications', () => {
     });
 
     expect(
-      appTree.read('test-ui-app/src/components/NxWelcome.stories.ts', 'utf-8')
+      appTree.read('test-ui-app/src/app/NxWelcome.stories.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -104,7 +99,7 @@ describe('vue:stories for applications', () => {
       });
 
       expect(
-        appTree.exists('test-ui-app/src/components/NxWelcome.stories.ts')
+        appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
         appTree.exists(
@@ -135,7 +130,7 @@ describe('vue:stories for applications', () => {
       });
 
       expect(
-        appTree.exists('test-ui-app/src/components/NxWelcome.stories.ts')
+        appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
         appTree.exists(
@@ -166,7 +161,7 @@ describe('vue:stories for applications', () => {
       });
 
       expect(
-        appTree.exists('test-ui-app/src/components/NxWelcome.stories.ts')
+        appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
         appTree.exists(
@@ -194,7 +189,7 @@ describe('vue:stories for applications', () => {
       });
 
       expect(
-        appTree.exists('test-ui-app/src/components/NxWelcome.stories.ts')
+        appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
         appTree.exists(
@@ -229,7 +224,7 @@ describe('vue:stories for applications', () => {
       });
 
       expect(
-        appTree.exists('test-ui-app/src/components/NxWelcome.stories.ts')
+        appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
         appTree.exists(
