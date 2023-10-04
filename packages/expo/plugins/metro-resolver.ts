@@ -133,17 +133,16 @@ function tsconfigPathsResolver(
   platform: string,
   debug: boolean
 ) {
-  const tsConfigPathMatcher = getMatcher(debug);
-  const match = tsConfigPathMatcher(
-    realModuleName,
-    undefined,
-    undefined,
-    extensions.map((ext) => `.${ext}`)
-  );
-
-  if (match) {
+  try {
+    const tsConfigPathMatcher = getMatcher(debug);
+    const match = tsConfigPathMatcher(
+      realModuleName,
+      undefined,
+      undefined,
+      extensions.map((ext) => `.${ext}`)
+    );
     return metroResolver.resolve(context, match, platform);
-  } else {
+  } catch {
     if (debug) {
       console.log(
         chalk.red(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
