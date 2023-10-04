@@ -31,7 +31,7 @@ watchexec-events = "1.0.0"
 watchexec-filterer-ignore = "1.2.1"
 watchexec-signals = "1.0.0"
 xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
-serde = "1"
+serde = {version = "1", features = ["derive"]}
 serde_json = "1"
 swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
