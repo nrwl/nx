@@ -19,6 +19,7 @@ import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { getRootTsConfigPath } from '@nx/js';
+import { join } from 'path';
 
 type BuildTargetOptions = {
   tsConfig: string;
@@ -159,7 +160,7 @@ export function executeWebpackDevServerBuilder(
           ? {
               indexHtml: resolveIndexHtmlTransformer(
                 pathToIndexFileTransformer,
-                buildTargetOptions.tsConfig,
+                join(context.workspaceRoot, buildTargetOptions.tsConfig),
                 context.target
               ),
             }

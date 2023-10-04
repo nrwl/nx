@@ -1,7 +1,7 @@
 import { registerTsProject } from '@nx/js/src/internal';
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
-  const cleanupTranspiler = registerTsProject(path, tsConfig);
+  const cleanupTranspiler = registerTsProject(tsConfig);
   const customWebpackConfig = require(path);
   cleanupTranspiler();
 

@@ -9,6 +9,7 @@ import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
+import { join } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
@@ -135,7 +136,7 @@ export function executeWebpackBrowserBuilder(
           ? {
               indexHtml: resolveIndexHtmlTransformer(
                 pathToIndexFileTransformer,
-                delegateBuilderOptions.tsConfig,
+                join(context.workspaceRoot, delegateBuilderOptions.tsConfig),
                 context.target
               ),
             }

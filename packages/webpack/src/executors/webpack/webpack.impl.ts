@@ -1,4 +1,9 @@
-import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
+import {
+  ExecutorContext,
+  logger,
+  stripIndents,
+  workspaceRoot,
+} from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
@@ -9,7 +14,7 @@ import {
   switchMap,
   tap,
 } from 'rxjs/operators';
-import { resolve } from 'path';
+import { join, resolve } from 'path';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
@@ -40,7 +45,7 @@ async function getWebpackConfigs(
   if (options.webpackConfig) {
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
-      options.tsConfig
+      join(workspaceRoot, options.tsConfig)
     );
 
     if (typeof customWebpack.then === 'function') {
