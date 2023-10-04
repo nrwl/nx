@@ -136,7 +136,7 @@ export function executeWebpackBrowserBuilder(
           ? {
               indexHtml: resolveIndexHtmlTransformer(
                 pathToIndexFileTransformer,
-                join(context.workspaceRoot, delegateBuilderOptions.tsConfig),
+                delegateBuilderOptions.tsConfig,
                 context.target
               ),
             }

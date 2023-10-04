@@ -145,7 +145,7 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
     /**
      * Load the ts config from the source project
      */
-    const tsconfigPaths: typeof import('tsconfig-paths') = require('tsconfig-paths');
+    const tsconfigPaths = loadTsConfigPaths();
     const tsConfigResult = tsconfigPaths.loadConfig(tsConfigPath);
     /**
      * Register the custom workspace path mappings with node so that workspace libraries
@@ -158,9 +158,11 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
       });
     }
   } catch (err) {
-    warnNoTsconfigPaths();
+    if (err instanceof Error) {
+      throw new Error(`Unable to load ${tsConfigPath}: ` + err.message);
+    }
   }
-  return () => {};
+  throw new Error(`Unable to load ${tsConfigPath}`);
 }
 
 function readCompilerOptions(tsConfigPath): CompilerOptions {
@@ -189,6 +191,14 @@ function readCompilerOptionsWithTypescript(tsConfigPath) {
   // ts-node fails on unknown props, so we have to remove it.
   delete options.configFilePath;
   return options;
+}
+
+function loadTsConfigPaths(): typeof import('tsconfig-paths') | null {
+  try {
+    return require('tsconfig-paths');
+  } catch {
+    warnNoTsconfigPaths();
+  }
 }
 
 function warnTsNodeUsage() {

@@ -160,7 +160,7 @@ export function executeWebpackDevServerBuilder(
           ? {
               indexHtml: resolveIndexHtmlTransformer(
                 pathToIndexFileTransformer,
-                join(context.workspaceRoot, buildTargetOptions.tsConfig),
+                buildTargetOptions.tsConfig,
                 context.target
               ),
             }

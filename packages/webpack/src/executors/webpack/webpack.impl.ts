@@ -45,7 +45,7 @@ async function getWebpackConfigs(
   if (options.webpackConfig) {
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
-      join(workspaceRoot, options.tsConfig)
+      options.tsConfig
     );
 
     if (typeof customWebpack.then === 'function') {

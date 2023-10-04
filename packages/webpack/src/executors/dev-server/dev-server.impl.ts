@@ -63,9 +63,12 @@ export async function* devServerExecutor(
   let config = getDevServerConfig(context, buildOptions, serveOptions);
 
   if (buildOptions.webpackConfig) {
+    let tsconfigPath = buildOptions.tsConfig.startsWith(context.root)
+      ? buildOptions.tsConfig
+      : join(context.root, buildOptions.tsConfig);
     let customWebpack = resolveCustomWebpackConfig(
       buildOptions.webpackConfig,
-      join(context.root, buildOptions.tsConfig)
+      tsconfigPath
     );
 
     if (typeof customWebpack.then === 'function') {
