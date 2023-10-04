@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "noEmit": false,
+    "incremental": true,
+    "tsBuildInfoFile": "<%= offsetFromRoot %>tmp/buildcache/<%= projectRoot %>/server",
+    "types": [
+      "node"
+    ]
+  },
+  "include": [
+    "server/**/*.ts"
+  ]
+}

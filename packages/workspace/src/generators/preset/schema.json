@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxWorkspacePreset",
+  "cli": "nx",
+  "title": "Creates applications in a new workspace",
+  "description": "Creates applications in a new workspace.",
+  "type": "object",
+  "properties": {
+    "preset": {
+      "description": "The name of the preset.",
+      "type": "string"
+    },
+    "name": {
+      "description": "The name of the application.",
+      "type": "string"
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint"],
+      "default": "eslint"
+    },
+    "routing": {
+      "description": "Add routing to the generated application.",
+      "type": "boolean",
+      "default": true
+    },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "default": "css",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "css",
+            "label": "CSS"
+          },
+          {
+            "value": "scss",
+            "label": "SASS(.scss)  [ http://sass-lang.com   ]"
+          },
+          {
+            "value": "less",
+            "label": "LESS         [ http://lesscss.org     ]"
+          }
+        ]
+      }
+    },
+    "standaloneApi": {
+      "description": "Use Standalone Components if generating an Angular application.",
+      "type": "boolean",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configurations into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
+    },
+    "packageManager": {
+      "description": "The package manager used to install dependencies.",
+      "type": "string",
+      "enum": ["npm", "yarn", "pnpm"]
+    },
+    "framework": {
+      "description": "The framework which the application is using",
+      "type": "string",
+      "enum": ["express", "koa", "fastify", "nest", "none"]
+    },
+    "bundler": {
+      "description": "The bundler to use for building the application.",
+      "type": "string",
+      "enum": ["webpack", "vite", "rspack", "esbuild"],
+      "default": "vite"
+    },
+    "docker": {
+      "description": "Generate a Dockerfile",
+      "type": "boolean",
+      "default": false
+    },
+    "nextAppDir": {
+      "description": "Enable the App Router for this project.",
+      "type": "boolean",
+      "default": true
+    },
+    "e2eTestRunner": {
+      "description": "The tool to use for running e2e tests.",
+      "type": "string",
+      "enum": ["cypress", "playwright", "jest", "detox", "none"]
+    }
+  },
+  "required": ["preset", "name"]
+}

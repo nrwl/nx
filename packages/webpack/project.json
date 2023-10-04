@@ -1,0 +1,59 @@
+{
+  "name": "webpack",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/webpack",
+  "projectType": "library",
+  "targets": {
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/webpack",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/webpack",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/webpack",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/webpack",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/webpack",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/webpack"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js webpack"
+      }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js webpack @nrwl/webpack"
+    },
+    "lint": {}
+  }
+}

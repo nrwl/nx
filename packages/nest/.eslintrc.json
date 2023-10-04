@@ -1,0 +1,58 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          "@angular-devkit/architect",
+          "@angular-devkit/core",
+          "@angular-devkit/schematics",
+          "@nx/workspace"
+        ]
+      }
+    },
+    {
+      "files": ["./package.json", "./generators.json", "./migrations.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "eslint",
+              "nest",
+              "@nestjs/schematics"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

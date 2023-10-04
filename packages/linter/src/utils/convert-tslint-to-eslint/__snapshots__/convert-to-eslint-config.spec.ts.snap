@@ -1,0 +1,244 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 1`] = `
+"
+      /* eslint-disable */
+      eval('');
+    "
+`;
+
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 2`] = `
+"
+      // eslint-disable-next-line
+      eval('');
+    "
+`;
+
+exports[`convertTSLintDisableCommentsForProject should replace tslint:disable comments with their ESLint equivalents in .ts files for the given project 3`] = `
+"
+      /* eslint-disable quotes, @typescript-eslint/quotes */
+      eval('');
+    "
+`;
+
+exports[`convertToESLintConfig() should work for a non-Angular project tslint.json file 1`] = `
+{
+  "convertedESLintConfig": {
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true,
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": "tsconfig.json",
+      "sourceType": "module",
+    },
+    "plugins": [
+      "@typescript-eslint",
+    ],
+    "root": true,
+  },
+  "ensureESLintPlugins": [],
+  "unconvertedTSLintRules": [],
+}
+`;
+
+exports[`convertToESLintConfig() should work for a project tslint.json file 1`] = `
+{
+  "convertedESLintConfig": {
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true,
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": "tsconfig.json",
+      "sourceType": "module",
+    },
+    "plugins": [
+      "@angular-eslint/eslint-plugin",
+      "@typescript-eslint",
+    ],
+    "root": true,
+    "rules": {
+      "@angular-eslint/component-selector": [
+        "error",
+        {
+          "prefix": "angular-app",
+          "style": "kebab-case",
+          "type": "element",
+        },
+      ],
+      "@angular-eslint/directive-selector": [
+        "error",
+        {
+          "prefix": "angular-app",
+          "style": "camelCase",
+          "type": "attribute",
+        },
+      ],
+    },
+  },
+  "ensureESLintPlugins": [],
+  "unconvertedTSLintRules": [],
+}
+`;
+
+exports[`convertToESLintConfig() should work for a root tslint.json file 1`] = `
+{
+  "convertedESLintConfig": {
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true,
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": "tsconfig.json",
+      "sourceType": "module",
+    },
+    "plugins": [
+      "eslint-plugin-import",
+      "@angular-eslint/eslint-plugin",
+      "@angular-eslint/eslint-plugin-template",
+      "@typescript-eslint",
+    ],
+    "root": true,
+    "rules": {
+      "@angular-eslint/component-selector": [
+        "error",
+        {
+          "prefix": "app",
+          "style": "kebab-case",
+          "type": "element",
+        },
+      ],
+      "@angular-eslint/directive-selector": [
+        "error",
+        {
+          "prefix": "app",
+          "style": "camelCase",
+          "type": "attribute",
+        },
+      ],
+      "@angular-eslint/no-conflicting-lifecycle": "error",
+      "@angular-eslint/no-host-metadata-property": "error",
+      "@angular-eslint/no-input-rename": "error",
+      "@angular-eslint/no-inputs-metadata-property": "error",
+      "@angular-eslint/no-output-native": "error",
+      "@angular-eslint/no-output-on-prefix": "error",
+      "@angular-eslint/no-output-rename": "error",
+      "@angular-eslint/no-outputs-metadata-property": "error",
+      "@angular-eslint/template/banana-in-box": "error",
+      "@angular-eslint/template/eqeqeq": "error",
+      "@angular-eslint/template/no-negated-async": "error",
+      "@angular-eslint/use-lifecycle-interface": "error",
+      "@angular-eslint/use-pipe-transform-interface": "error",
+      "@typescript-eslint/consistent-type-definitions": "error",
+      "@typescript-eslint/dot-notation": "off",
+      "@typescript-eslint/explicit-member-accessibility": [
+        "off",
+        {
+          "accessibility": "explicit",
+        },
+      ],
+      "@typescript-eslint/member-ordering": "error",
+      "@typescript-eslint/naming-convention": [
+        "error",
+        {
+          "format": [
+            "camelCase",
+            "UPPER_CASE",
+          ],
+          "leadingUnderscore": "forbid",
+          "selector": "variable",
+          "trailingUnderscore": "forbid",
+        },
+      ],
+      "@typescript-eslint/no-empty-function": "off",
+      "@typescript-eslint/no-empty-interface": "error",
+      "@typescript-eslint/no-inferrable-types": [
+        "error",
+        {
+          "ignoreParameters": true,
+        },
+      ],
+      "@typescript-eslint/no-misused-new": "error",
+      "@typescript-eslint/no-non-null-assertion": "error",
+      "@typescript-eslint/no-shadow": [
+        "error",
+        {
+          "hoist": "all",
+        },
+      ],
+      "@typescript-eslint/no-unused-expressions": "error",
+      "@typescript-eslint/prefer-function-type": "error",
+      "@typescript-eslint/unified-signatures": "error",
+      "arrow-body-style": "error",
+      "constructor-super": "error",
+      "dot-notation": "off",
+      "eqeqeq": [
+        "error",
+        "smart",
+      ],
+      "guard-for-in": "error",
+      "id-denylist": "off",
+      "id-match": "off",
+      "import/no-deprecated": "warn",
+      "no-bitwise": "error",
+      "no-caller": "error",
+      "no-console": [
+        "error",
+        {},
+      ],
+      "no-debugger": "error",
+      "no-empty": "off",
+      "no-empty-function": "off",
+      "no-eval": "error",
+      "no-fallthrough": "error",
+      "no-new-wrappers": "error",
+      "no-restricted-imports": [
+        "error",
+        "rxjs/Rx",
+      ],
+      "no-shadow": "off",
+      "no-throw-literal": "error",
+      "no-undef-init": "error",
+      "no-underscore-dangle": "off",
+      "no-unused-expressions": "off",
+      "no-var": "error",
+      "prefer-const": "error",
+      "radix": "error",
+    },
+  },
+  "ensureESLintPlugins": [
+    "eslint-plugin-import",
+  ],
+  "unconvertedTSLintRules": [],
+}
+`;
+
+exports[`convertToESLintConfig() should work for an e2e project tslint.json file 1`] = `
+{
+  "convertedESLintConfig": {
+    "env": {
+      "browser": true,
+      "es6": true,
+      "node": true,
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "project": "tsconfig.json",
+      "sourceType": "module",
+    },
+    "plugins": [
+      "@typescript-eslint",
+    ],
+    "root": true,
+  },
+  "ensureESLintPlugins": [],
+  "unconvertedTSLintRules": [],
+}
+`;

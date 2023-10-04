@@ -1,0 +1,189 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "esbuild (experimental)",
+  "description": "Bundle a package for different platforms. Note: declaration (*.d.ts) file are not currently generated.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "main": {
+      "type": "string",
+      "description": "The path to the entry file, relative to project.",
+      "alias": "entryFile",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/*@(.js|.ts)",
+      "x-priority": "important"
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory",
+      "x-priority": "important"
+    },
+    "outputFileName": {
+      "type": "string",
+      "description": "Name of the main output file. Defaults same basename as 'main' file."
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The path to tsconfig file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json",
+      "x-priority": "important"
+    },
+    "additionalEntryPoints": {
+      "type": "array",
+      "description": "List of additional entry points.",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "bundle": {
+      "type": "boolean",
+      "description": "Whether to bundle the main entry point and additional entry points. Set to false to keep individual output files.",
+      "default": true
+    },
+    "format": {
+      "type": "array",
+      "description": "List of module formats to output. Defaults to matching format from tsconfig (e.g. CJS for CommonJS, and ESM otherwise).",
+      "alias": "f",
+      "items": {
+        "type": "string",
+        "enum": ["esm", "cjs"]
+      },
+      "default": ["esm"]
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Enable re-building when files change.",
+      "default": false
+    },
+    "assets": {
+      "type": "array",
+      "description": "List of static assets.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/assetPattern"
+      }
+    },
+    "deleteOutputPath": {
+      "type": "boolean",
+      "description": "Remove previous output before build.",
+      "alias": "clean",
+      "default": true
+    },
+    "external": {
+      "type": "array",
+      "description": "Mark one or more module as external. Can use * wildcards, such as '*.png'.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "outputHashing": {
+      "type": "string",
+      "description": "Define the output filename cache-busting hashing mode.",
+      "default": "none",
+      "enum": ["none", "all"]
+    },
+    "metafile": {
+      "type": "boolean",
+      "description": "Generate a meta.json file in the output folder that includes metadata about the build. This file can be analyzed by other tools.",
+      "default": false
+    },
+    "sourcemap": {
+      "oneOf": [
+        { "type": "string", "enum": ["linked", "inline", "external", "both"] },
+        { "type": "boolean" }
+      ],
+      "alias": "sourceMap",
+      "description": "Generate sourcemap."
+    },
+    "minify": {
+      "type": "boolean",
+      "description": "Minifies outputs.",
+      "default": false
+    },
+    "platform": {
+      "type": "string",
+      "description": "Platform target for outputs.",
+      "enum": ["browser", "node", "neutral"],
+      "default": "node"
+    },
+    "target": {
+      "type": "string",
+      "description": "The environment target for outputs.",
+      "default": "esnext"
+    },
+    "skipTypeCheck": {
+      "type": "boolean",
+      "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "generatePackageJson": {
+      "type": "boolean",
+      "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated.",
+      "default": false
+    },
+    "thirdParty": {
+      "type": "boolean",
+      "description": "Includes third-party packages in the bundle (i.e. npm packages)."
+    },
+    "dependenciesFieldType": {
+      "type": "string",
+      "description": "When `bundleInternalProjectsOnly` is true, this option determines whether external packages should be in 'dependencies' or 'peerDependencies' field in the generated package.json file.",
+      "enum": ["dependencies", "peerDependencies"],
+      "default": "dependencies"
+    },
+    "esbuildOptions": {
+      "type": "object",
+      "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/. Cannot be used with 'esbuildConfig' option.",
+      "additionalProperties": true,
+      "x-priority": "important"
+    },
+    "esbuildConfig": {
+      "type": "string",
+      "description": "Path to a esbuild configuration file. See https://esbuild.github.io/api/. Cannot be used with 'esbuildOptions' option.",
+      "x-priority": "important"
+    }
+  },
+  "required": ["tsConfig", "main", "outputPath"],
+  "definitions": {
+    "assetPattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "glob": {
+              "type": "string",
+              "description": "The pattern to match."
+            },
+            "input": {
+              "type": "string",
+              "description": "The input directory path in which to apply `glob`. Defaults to the project root."
+            },
+            "output": {
+              "type": "string",
+              "description": "Relative path within the output folder."
+            },
+            "ignore": {
+              "description": "An array of globs to ignore.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false,
+          "required": ["glob", "input", "output"]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    }
+  },
+  "additionalProperties": true,
+  "examplesFile": "../../../docs/esbuild-examples.md"
+}

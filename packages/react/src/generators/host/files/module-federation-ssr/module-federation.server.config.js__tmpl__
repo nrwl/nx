@@ -1,0 +1,13 @@
+// @ts-check
+
+/**
+ * @type {import('@nx/webpack').ModuleFederationConfig}
+ **/
+const moduleFederationConfig = {
+    name: '<%= projectName %>',
+    remotes: [
+    <% remotes.forEach(function(r) {%> "<%= r.fileName %>", <% }); %>
+    ],
+};
+
+module.exports = moduleFederationConfig;

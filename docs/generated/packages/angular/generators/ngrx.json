@@ -1,0 +1,111 @@
+{
+  "name": "ngrx",
+  "factory": "./src/generators/ngrx/ngrx",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxNgrxGenerator",
+    "title": "Add NgRx support to an application or library.",
+    "description": "Adds NgRx support to an application or library.",
+    "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead.",
+    "cli": "nx",
+    "type": "object",
+    "examples": [
+      {
+        "command": "nx g @nx/angular:ngrx --root --parent=apps/my-app/src/app/app.module.ts --facade=false placeholder",
+        "description": "Add root ngrx configration to the `my-app` application"
+      },
+      {
+        "command": "nx g @nx/angular:ngrx --parent=libs/my-lib/src/lib/my-lib.module.ts --facade=true --root=false users",
+        "description": "Add a `users` state with a facade to the `my-lib` library. It will be tracked under the default `+state` folder in the lib"
+      },
+      {
+        "command": "nx g @nx/angular:ngrx --parent=apps/my-app/src/app/app.config.ts --root",
+        "description": "Add a root state configuration to `my-app` when `my-app` uses Standalone APIs"
+      },
+      {
+        "command": "nx g @nx/angular:ngrx --parent=libs/my-lib/src/lib.routes.ts users",
+        "description": "Add a `users` feature state to the Route definition of a library using Standalone APIs"
+      }
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "description": "Name of the NgRx feature state, such as `products` or `users`. Recommended to use the plural form of the name.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the NgRx feature state? An example would be `users`.",
+        "x-priority": "important"
+      },
+      "module": {
+        "type": "string",
+        "description": "The path to the `NgModule` where the feature state will be registered. The host directory will create/use the new state directory.",
+        "x-deprecated": "This option will be removed in a future version of Nx. Please switch to using --parent instead."
+      },
+      "parent": {
+        "type": "string",
+        "description": "The path to the file where the state will be registered. For NgModule usage, this will be your `app.module.ts` for your root state, or your Feature Module for feature state. For Standalone API usage, this will be your `app.config.ts` file for your root state, or the Routes definition file for your feature state. The host directory will create/use the new state directory. _Note: The Standalone API usage is only supported in Angular versions >= 14.1.0_.",
+        "x-prompt": "What is the path to the module or Routes definition where this NgRx state should be registered?",
+        "x-priority": "important"
+      },
+      "route": {
+        "type": "string",
+        "description": "The route that the Standalone NgRx Providers should be added to. _Note: This is only supported in Angular versions >= 14.1.0_.",
+        "default": "''"
+      },
+      "directory": {
+        "type": "string",
+        "default": "+state",
+        "description": "The name of the folder used to contain/group the generated NgRx files."
+      },
+      "root": {
+        "type": "boolean",
+        "default": false,
+        "description": "Setup root or feature state management with NgRx.",
+        "x-prompt": "Is this the root state of the application?",
+        "x-priority": "important"
+      },
+      "facade": {
+        "type": "boolean",
+        "default": false,
+        "description": "Create a Facade class for the the feature.",
+        "x-prompt": "Would you like to use a Facade with your NgRx state?"
+      },
+      "skipImport": {
+        "type": "boolean",
+        "default": false,
+        "description": "Generate NgRx feature files without registering the feature in the NgModule."
+      },
+      "minimal": {
+        "type": "boolean",
+        "default": true,
+        "description": "Only register the root state management setup or feature state."
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
+      "skipPackageJson": {
+        "type": "boolean",
+        "default": false,
+        "description": "Do not update the `package.json` with NgRx dependencies.",
+        "x-priority": "internal"
+      },
+      "barrels": {
+        "type": "boolean",
+        "default": false,
+        "description": "Use barrels to re-export actions, state and selectors."
+      }
+    },
+    "additionalProperties": false,
+    "required": ["name"],
+    "presets": []
+  },
+  "description": "Adds NgRx support to an application or library.",
+  "x-deprecated": "This generator is deprecated and will be removed in a future version of Nx. Use the 'ngrx-root-store' and 'ngrx-feature-store' generators instead.",
+  "implementation": "/packages/angular/src/generators/ngrx/ngrx.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/angular/src/generators/ngrx/schema.json",
+  "type": "generator"
+}

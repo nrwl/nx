@@ -1,0 +1,43 @@
+{
+  "name": "@nx/node",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Node Plugin for Nx contains generators to manage Node applications within an Nx workspace.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/node"
+  },
+  "keywords": [
+    "Monorepo",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/workspace": "file:../workspace"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

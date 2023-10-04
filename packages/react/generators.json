@@ -1,0 +1,223 @@
+{
+  "name": "Nx React",
+  "version": "0.1",
+  "extends": ["@nx/workspace"],
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#reactInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/react` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/generators/application/application#applicationSchematic",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create a React application."
+    },
+
+    "library": {
+      "factory": "./src/generators/library/library#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a React library."
+    },
+
+    "component": {
+      "factory": "./src/generators/component/component#componentSchematic",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a React component.",
+      "aliases": ["c"]
+    },
+
+    "redux": {
+      "factory": "./src/generators/redux/redux#reduxSchematic",
+      "schema": "./src/generators/redux/schema.json",
+      "description": "Create a Redux slice for a project.",
+      "aliases": ["slice"]
+    },
+
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationSchematic",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up storybook for a React app or library.",
+      "hidden": false
+    },
+
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story#componentStorySchematic",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Generate storybook story for a React component.",
+      "hidden": false
+    },
+
+    "stories": {
+      "factory": "./src/generators/stories/stories#storiesSchematic",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories/specs for all components declared in an app or library.",
+      "hidden": false
+    },
+
+    "component-cypress-spec": {
+      "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressSchematic",
+      "schema": "./src/generators/component-cypress-spec/schema.json",
+      "description": "Create a Cypress spec for a UI component that has a story.",
+      "hidden": false
+    },
+
+    "hook": {
+      "factory": "./src/generators/hook/hook#hookSchematic",
+      "schema": "./src/generators/hook/schema.json",
+      "description": "Create a hook.",
+      "aliases": ["h"]
+    },
+
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Setup Cypress component testing for a React project.",
+      "hidden": false
+    },
+
+    "component-test": {
+      "factory": "./src/generators/component-test/component-test#componentTestGenerator",
+      "schema": "./src/generators/component-test/schema.json",
+      "description": "Generate a Cypress component test for a React component.",
+      "hidden": false
+    },
+
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/setup-tailwind#setupTailwindSchematic",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Set up Tailwind configuration for a project.",
+      "hidden": false
+    },
+
+    "setup-ssr": {
+      "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrSchematic",
+      "schema": "./src/generators/setup-ssr/schema.json",
+      "description": "Set up SSR configuration for a project.",
+      "hidden": false
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#reactInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/react` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+
+    "application": {
+      "factory": "./src/generators/application/application#applicationGeneratorInternal",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "x-type": "application",
+      "description": "Create a React application."
+    },
+
+    "library": {
+      "factory": "./src/generators/library/library#libraryGeneratorInternal",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a React library."
+    },
+
+    "component": {
+      "factory": "./src/generators/component/component#componentGenerator",
+      "schema": "./src/generators/component/schema.json",
+      "description": "Create a React component.",
+      "aliases": ["c"]
+    },
+
+    "redux": {
+      "factory": "./src/generators/redux/redux#reduxGenerator",
+      "schema": "./src/generators/redux/schema.json",
+      "description": "Create a Redux slice for a project.",
+      "aliases": ["slice"]
+    },
+
+    "storybook-configuration": {
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "schema": "./src/generators/storybook-configuration/schema.json",
+      "description": "Set up storybook for a React app or library.",
+      "hidden": false
+    },
+
+    "component-story": {
+      "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
+      "schema": "./src/generators/component-story/schema.json",
+      "description": "Generate storybook story for a React component",
+      "hidden": false
+    },
+
+    "stories": {
+      "factory": "./src/generators/stories/stories#storiesGenerator",
+      "schema": "./src/generators/stories/schema.json",
+      "description": "Create stories/specs for all components declared in an app or library.",
+      "hidden": false
+    },
+
+    "component-cypress-spec": {
+      "factory": "./src/generators/component-cypress-spec/component-cypress-spec#componentCypressGenerator",
+      "schema": "./src/generators/component-cypress-spec/schema.json",
+      "description": "Create a Cypress spec for a UI component that has a story.",
+      "hidden": false
+    },
+
+    "hook": {
+      "factory": "./src/generators/hook/hook#hookGenerator",
+      "schema": "./src/generators/hook/schema.json",
+      "description": "Create a hook.",
+      "aliases": ["c"]
+    },
+
+    "host": {
+      "factory": "./src/generators/host/host#hostGeneratorInternal",
+      "schema": "./src/generators/host/schema.json",
+      "x-type": "application",
+      "description": "Generate a host react application"
+    },
+
+    "remote": {
+      "factory": "./src/generators/remote/remote#remoteGeneratorInternal",
+      "schema": "./src/generators/remote/schema.json",
+      "x-type": "application",
+      "description": "Generate a remote react application"
+    },
+
+    "cypress-component-configuration": {
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigGenerator",
+      "schema": "./src/generators/cypress-component-configuration/schema.json",
+      "description": "Setup Cypress component testing for a React project",
+      "hidden": false
+    },
+
+    "component-test": {
+      "factory": "./src/generators/component-test/component-test#componentTestGenerator",
+      "schema": "./src/generators/component-test/schema.json",
+      "description": "Generate a Cypress component test for a React component",
+      "hidden": false
+    },
+
+    "setup-tailwind": {
+      "factory": "./src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator",
+      "schema": "./src/generators/setup-tailwind/schema.json",
+      "description": "Set up Tailwind configuration for a project.",
+      "hidden": false
+    },
+
+    "setup-ssr": {
+      "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
+      "schema": "./src/generators/setup-ssr/schema.json",
+      "description": "Set up SSR configuration for a project.",
+      "hidden": false
+    }
+  }
+}

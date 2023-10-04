@@ -1,0 +1,39 @@
+{
+  "name": "@nrwl/expo",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Expo Plugin for Nx contains executors and generators for managing and developing an expo application within your workspace. For example, you can directly build for different target platforms as well as generate projects and publish your code.",
+  "keywords": [
+    "Monorepo",
+    "Expo",
+    "React",
+    "Web",
+    "Jest",
+    "Native",
+    "CLI"
+  ],
+  "homepage": "https://nx.dev",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages-legacy/expo"
+  },
+  "license": "MIT",
+  "author": "Victor Savkin",
+  "main": "./index",
+  "types": "index.d.ts",
+  "dependencies": {
+    "@nx/expo": "file:../../packages/expo"
+  },
+  "builders": "./executors.json",
+  "schematics": "./generators.json",
+  "publishConfig": {
+    "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/expo/migrations.json"
+  }
+}

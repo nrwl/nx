@@ -1,0 +1,36 @@
+image: node:16.18
+
+clone:
+  depth: full
+
+definitions:
+  steps:
+    - step: &agent
+        name: Agent
+        script:
+          - export NX_BRANCH=$BITBUCKET_PR_ID
+          <% if(packageManagerPrefix == 'pnpm exec'){ %>
+          - npm install --prefix=$HOME/.local -g pnpm@8.2.0
+          <% } %>
+          - <%= packageManagerInstall %>
+          - <%= packageManagerPrefix %> nx-cloud start-agent
+
+pipelines:
+  pull-requests:
+    '**':
+      - parallel:
+          - step:
+              name: <%= workflowName %>
+              script:
+                - export NX_BRANCH=$BITBUCKET_PR_ID
+                <% if(packageManagerPrefix == 'pnpm exec'){ %>
+                - npm install --prefix=$HOME/.local -g pnpm@8.2.0
+                <% } %>
+                - <%= packageManagerInstall %>
+                - <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
+                - <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check
+                - <%= packageManagerPrefix %> nx affected --target=lint & <%= packageManagerPrefix %> nx affected --target=test & <%= packageManagerPrefix %> nx affected --target=build
+                - <%= packageManagerPrefix %> nx-cloud stop-all-agents
+          - step: *agent
+          - step: *agent
+          - step: *agent

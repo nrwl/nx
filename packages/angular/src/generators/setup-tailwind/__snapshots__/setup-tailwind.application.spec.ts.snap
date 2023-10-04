@@ -1,0 +1,83 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`setupTailwind generator application should add tailwind styles to "apps/app1/src/styles.css" when not provided 1`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p {
+  margin: 0;
+}
+"
+`;
+
+exports[`setupTailwind generator application should add tailwind styles to "apps/app1/src/styles.less" when not provided 1`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p {
+  margin: 0;
+}
+"
+`;
+
+exports[`setupTailwind generator application should add tailwind styles to "apps/app1/src/styles.sass" when not provided 1`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p { margin: 0; }"
+`;
+
+exports[`setupTailwind generator application should add tailwind styles to "apps/app1/src/styles.scss" when not provided 1`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p {
+  margin: 0;
+}
+"
+`;
+
+exports[`setupTailwind generator support angular v14 application should add tailwind styles to "apps/app1/src/styles.css" when not provided 1`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p {
+  margin: 0;
+}
+"
+`;
+
+exports[`setupTailwind generator support angular v14 application should add tailwind styles to "apps/app1/src/styles.less" when not provided 1`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p {
+  margin: 0;
+}
+"
+`;
+
+exports[`setupTailwind generator support angular v14 application should add tailwind styles to "apps/app1/src/styles.sass" when not provided 1`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p { margin: 0; }"
+`;
+
+exports[`setupTailwind generator support angular v14 application should add tailwind styles to "apps/app1/src/styles.scss" when not provided 1`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+p {
+  margin: 0;
+}
+"
+`;

@@ -1,0 +1,85 @@
+{
+  "name": "my-test-react-app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "apps/my-test-react-app",
+  "sourceRoot": "apps/my-test-react-app/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "babel",
+        "outputPath": "dist/apps/my-test-react-app",
+        "index": "apps/my-test-react-app/src/index.html",
+        "baseHref": "/",
+        "main": "apps/my-test-react-app/src/main.tsx",
+        "polyfills": "apps/my-test-react-app/src/polyfills.ts",
+        "tsConfig": "apps/my-test-react-app/tsconfig.app.json",
+        "assets": [
+          "apps/my-test-react-app/src/favicon.ico",
+          "apps/my-test-react-app/src/assets"
+        ],
+        "styles": ["apps/my-test-react-app/src/styles.css"],
+        "scripts": [],
+        "webpackConfig": "@nx/react/plugins/webpack"
+      },
+      "configurations": {
+        "development": {
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": true
+        },
+        "production": {
+          "fileReplacements": [
+            {
+              "replace": "apps/my-test-react-app/src/environments/environment.ts",
+              "with": "apps/my-test-react-app/src/environments/environment.prod.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "my-test-react-app:build",
+        "hmr": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "my-test-react-app:build:development"
+        },
+        "production": {
+          "buildTarget": "my-test-react-app:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/my-test-react-app/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/my-test-react-app/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

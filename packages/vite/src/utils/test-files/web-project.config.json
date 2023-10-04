@@ -1,0 +1,72 @@
+{
+  "name": "my-test-web-app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "root": "apps/my-test-web-app",
+  "sourceRoot": "apps/my-test-web-app/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/my-test-web-app",
+        "compiler": "babel",
+        "main": "apps/my-test-web-app/src/main.ts",
+        "tsConfig": "apps/my-test-web-app/tsconfig.app.json",
+        "assets": [
+          "apps/my-test-web-app/src/favicon.ico",
+          "apps/my-test-web-app/src/assets"
+        ],
+        "index": "apps/my-test-web-app/src/index.html",
+        "baseHref": "/",
+        "polyfills": "apps/my-test-web-app/src/polyfills.ts",
+        "styles": ["apps/my-test-web-app/src/styles.css"],
+        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/my-test-web-app/src/environments/environment.ts",
+              "with": "apps/my-test-web-app/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "options": {
+        "buildTarget": "my-test-web-app:build"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "my-test-web-app:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/my-test-web-app/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/my-test-web-app/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

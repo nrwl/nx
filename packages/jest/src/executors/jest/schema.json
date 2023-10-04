@@ -1,0 +1,226 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Jest Builder",
+  "description": "Jest target options for Build Facade.",
+  "cli": "nx",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Pass Without Tests",
+      "keys": ["jestConfig", "passWithNoTests"]
+    },
+    {
+      "name": "Code Coverage",
+      "keys": ["jestConfig", "coverageReporters"]
+    },
+    {
+      "name": "Stop After 'n' Failed",
+      "keys": ["jestConfig", "bail"]
+    }
+  ],
+  "properties": {
+    "codeCoverage": {
+      "description": "Indicates that test coverage information should be collected and reported in the output. (https://jestjs.io/docs/cli#--coverageboolean)",
+      "type": "boolean",
+      "aliases": ["coverage"]
+    },
+    "config": {
+      "description": "The path to a Jest config file specifying how to find and execute tests. If no `rootDir` is set in the config, the directory containing the config file is assumed to be the `rootDir` for the project. This can also be a JSON-encoded value which Jest will use as configuration.",
+      "type": "string"
+    },
+    "clearCache": {
+      "description": "Deletes the Jest cache directory and then exits without running tests. Will delete Jest's default cache directory. _Note: clearing the cache will reduce performance_.",
+      "type": "boolean"
+    },
+    "detectOpenHandles": {
+      "description": "Attempt to collect and print open handles preventing Jest from exiting cleanly (https://jestjs.io/docs/cli#--detectopenhandles)",
+      "type": "boolean"
+    },
+    "logHeapUsage": {
+      "description": "Logs the heap usage after every test. Useful to debug memory leaks. Use together with --runInBand and --expose-gc in node.",
+      "type": "boolean"
+    },
+    "detectLeaks": {
+      "description": "**EXPERIMENTAL**: Detect memory leaks in tests. After executing a test, it will try to garbage collect the global object used, and fail if it was leaked",
+      "type": "boolean"
+    },
+    "jestConfig": {
+      "description": "The path of the Jest configuration. (https://jestjs.io/docs/en/configuration)",
+      "type": "string",
+      "x-completion-type": "file",
+      "x-completion-glob": "jest.config@(.js|.ts)"
+    },
+    "testFile": {
+      "description": "The name of the file to test.",
+      "type": "string"
+    },
+    "tsConfig": {
+      "description": "The name of the Typescript configuration file.",
+      "type": "string",
+      "x-deprecated": "Use the ts-jest configuration options in the jest config file instead."
+    },
+    "setupFile": {
+      "description": "The name of a setup file used by Jest.",
+      "type": "string",
+      "x-deprecated": "Use the setupFilesAfterEnv option in the jest config file. https://jestjs.io/docs/en/configuration#setupfilesafterenv-array"
+    },
+    "bail": {
+      "alias": "b",
+      "description": "Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/cli#--bail)",
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        }
+      ]
+    },
+    "ci": {
+      "description": "Whether to run Jest in continuous integration (CI) mode. This option is on by default in most popular CI environments. It will prevent snapshots from being written unless explicitly requested. (https://jestjs.io/docs/cli#--ci)",
+      "type": "boolean"
+    },
+    "color": {
+      "alias": "colors",
+      "description": "Forces test results output color highlighting (even if `stdout` is not a TTY). Set to false if you would like to have no colors. (https://jestjs.io/docs/cli#--colors)",
+      "type": "boolean"
+    },
+    "findRelatedTests": {
+      "description": "Find and run the tests that cover a comma separated list of source files that were passed in as arguments. (https://jestjs.io/docs/cli#--findrelatedtests-spaceseparatedlistofsourcefiles)",
+      "type": "string"
+    },
+    "forceExit": {
+      "description": "Force Jest to exit after all tests have completed running. This is useful when resources set up by test code cannot be adequately cleaned up.This feature is an escape-hatch. If Jest doesn't exit at the end of a test run, it means external resources are still being held on to or timers are still pending in your code. It is advised to tear down external resources after each test to make sure Jest can shut down cleanly. You can use --detectOpenHandles to help track it down.",
+      "type": "boolean"
+    },
+    "json": {
+      "description": "Prints the test results in `JSON`. This mode will send all other test output and user messages to `stderr`. (https://jestjs.io/docs/cli#--json)",
+      "type": "boolean"
+    },
+    "maxWorkers": {
+      "alias": "w",
+      "description": "Specifies the maximum number of workers the worker-pool will spawn for running tests. This defaults to the number of the cores available on your machine. Useful for CI. (its usually best not to override this default) (https://jestjs.io/docs/cli#--maxworkersnumstring)",
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "onlyChanged": {
+      "alias": "o",
+      "description": "Attempts to identify which tests to run based on which files have changed in the current repository. Only works if you're running tests in a `git` or `hg` repository at the moment. (https://jestjs.io/docs/cli#--onlychanged)",
+      "type": "boolean"
+    },
+    "changedSince": {
+      "description": "Runs tests related to the changes since the provided branch or commit hash. If the current branch has diverged from the given branch, then only changes made locally will be tested. (https://jestjs.io/docs/cli#--changedsince)",
+      "type": "string"
+    },
+    "outputFile": {
+      "description": "Write test results to a file when the `--json` option is also specified. (https://jestjs.io/docs/cli#--outputfilefilename)",
+      "type": "string"
+    },
+    "passWithNoTests": {
+      "description": "Will not fail if no tests are found (for example while using `--testPathPattern`.) (https://jestjs.io/docs/cli#--passwithnotests)",
+      "type": "boolean"
+    },
+    "randomize": {
+      "description": "Shuffle the order of the tests within a file. The shuffling is based on the seed. This option is only supported using the default jest-circus test runner.",
+      "type": "boolean"
+    },
+    "runInBand": {
+      "alias": "i",
+      "description": "Run all tests serially in the current process (rather than creating a worker pool of child processes that run tests). This is sometimes useful for debugging, but such use cases are pretty rare. Useful for CI. (https://jestjs.io/docs/cli#--runinband)",
+      "type": "boolean"
+    },
+    "showConfig": {
+      "description": "Print your Jest config and then exits. (https://jestjs.io/docs/en/cli#--showconfig)",
+      "type": "boolean"
+    },
+    "silent": {
+      "description": "Prevent tests from printing messages through the console. (https://jestjs.io/docs/cli#--silent)",
+      "type": "boolean"
+    },
+    "testNamePattern": {
+      "alias": "t",
+      "description": "Run only tests with a name that matches the regex pattern. (https://jestjs.io/docs/cli#--testnamepatternregex)",
+      "type": "string"
+    },
+    "testPathIgnorePatterns": {
+      "description": "An array of regexp pattern strings that is matched against all tests paths before executing the test. Only run those tests with a path that does not match with the provided regexp expressions. (https://jestjs.io/docs/cli#--testpathignorepatternsregexarray)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "testPathPattern": {
+      "description": "An array of regexp pattern strings that is matched against all tests paths before executing the test. (https://jestjs.io/docs/cli#--testpathpatternregex)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "colors": {
+      "description": "Forces test results output highlighting even if stdout is not a TTY. (https://jestjs.io/docs/cli#--colors)",
+      "type": "boolean"
+    },
+    "reporters": {
+      "description": "Run tests with specified reporters. Reporter options are not available via CLI. Example with multiple reporters: `jest --reporters=\"default\" --reporters=\"jest-junit\"`. (https://jestjs.io/docs/cli#--reporters)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "verbose": {
+      "description": "Display individual test results with the test suite hierarchy. (https://jestjs.io/docs/cli#--verbose)",
+      "type": "boolean"
+    },
+    "coverageReporters": {
+      "description": "A list of reporter names that Jest uses when writing coverage reports. Any istanbul reporter.",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "coverageDirectory": {
+      "description": "The directory where Jest should output its coverage files.",
+      "type": "string",
+      "x-completion-type": "directory"
+    },
+    "testResultsProcessor": {
+      "description": "Node module that implements a custom results processor. (https://jestjs.io/docs/en/configuration#testresultsprocessor-string)",
+      "type": "string"
+    },
+    "updateSnapshot": {
+      "alias": "u",
+      "description": "Use this flag to re-record snapshots. Can be used together with a test suite pattern or with `--testNamePattern` to re-record snapshot for test matching the pattern. (https://jestjs.io/docs/cli#--updatesnapshot)",
+      "type": "boolean"
+    },
+    "useStderr": {
+      "description": "Divert all output to stderr.",
+      "type": "boolean"
+    },
+    "watch": {
+      "description": "Watch files for changes and rerun tests related to changed files. If you want to re-run all tests when a file has changed, use the `--watchAll` option. (https://jestjs.io/docs/cli#--watch)",
+      "type": "boolean"
+    },
+    "watchAll": {
+      "description": "Watch files for changes and rerun all tests when something changes. If you want to re-run only the tests that depend on the changed files, use the `--watch` option. (https://jestjs.io/docs/cli#--watchall)",
+      "type": "boolean"
+    },
+    "testLocationInResults": {
+      "description": "Adds a location field to test results.  Used to report location of a test in a reporter. { \"column\": 4, \"line\": 5 } (https://jestjs.io/docs/cli#--testlocationinresults)",
+      "type": "boolean"
+    },
+    "testTimeout": {
+      "description": "Default timeout of a test in milliseconds. Default value: `5000`. (https://jestjs.io/docs/cli#--testtimeoutnumber)",
+      "type": "number"
+    }
+  },
+  "required": ["jestConfig"],
+  "examplesFile": "../../../docs/jest-examples.md"
+}

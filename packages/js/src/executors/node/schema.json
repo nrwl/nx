@@ -1,0 +1,92 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "title": "Node executor",
+  "description": "Execute Nodejs applications.",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "The target to run to build you the app."
+    },
+    "buildTargetOptions": {
+      "type": "object",
+      "description": "Additional options to pass into the build target.",
+      "default": {}
+    },
+    "waitUntilTargets": {
+      "type": "array",
+      "description": "The targets to run before starting the node app. Listed in the form <project>:<target>. The main target will run once all listed targets have output something to the console.",
+      "default": [],
+      "items": {
+        "type": "string"
+      }
+    },
+    "host": {
+      "type": "string",
+      "default": "localhost",
+      "description": "The host to inspect the process on.",
+      "x-priority": "important"
+    },
+    "port": {
+      "type": "number",
+      "default": 9229,
+      "description": "The port to inspect the process on. Setting port to 0 will assign random free ports to all forked processes.",
+      "x-priority": "important"
+    },
+    "inspect": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["inspect", "inspect-brk"]
+        },
+        {
+          "type": "boolean"
+        }
+      ],
+      "description": "Ensures the app is starting with debugging.",
+      "default": "inspect",
+      "x-priority": "important"
+    },
+    "runtimeArgs": {
+      "type": "array",
+      "description": "Extra args passed to the node process.",
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "x-priority": "important"
+    },
+    "args": {
+      "type": "array",
+      "description": "Extra args when starting the app.",
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "x-priority": "important"
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Enable re-building when files change.",
+      "default": true,
+      "x-priority": "important"
+    },
+    "debounce": {
+      "type": "number",
+      "description": "Delay in milliseconds to wait before restarting. Useful to batch multiple file changes events together. Set to zero (0) to disable.",
+      "default": 500,
+      "x-priority": "important"
+    },
+    "runBuildTargetDependencies": {
+      "type": "boolean",
+      "description": "Whether to run dependencies before running the build. Set this to true if the project does not build libraries from source (e.g. 'buildLibsFromSource: false').",
+      "default": false
+    }
+  },
+  "additionalProperties": false,
+  "required": ["buildTarget"],
+  "examplesFile": "../../../docs/node-examples.md"
+}

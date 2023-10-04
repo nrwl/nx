@@ -1,0 +1,64 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": [
+        "./package.json",
+        "./generators.json",
+        "./executors.json",
+        "./generators.json",
+        "./executors.json",
+        "./migrations.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "prettier",
+              "typescript",
+              "eslint",
+              "verdaccio", // Optional, used for local registry
+              // require.resolve is used for these packages
+              "source-map-support",
+              "@babel/core",
+              "@babel/plugin-proposal-class-properties",
+              "@babel/plugin-proposal-decorators",
+              "@babel/plugin-transform-runtime",
+              "@babel/preset-env",
+              "@babel/preset-typescript",
+              "@babel/runtime",
+              "@swc/cli",
+              "babel-plugin-const-enum",
+              "babel-plugin-macros",
+              "babel-plugin-transform-typescript-metadata"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

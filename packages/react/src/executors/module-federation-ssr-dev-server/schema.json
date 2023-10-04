@@ -1,0 +1,48 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Module Federation SSR Dev Server",
+  "description": "Serve a SSR host application along with its known remotes.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "browserTarget": {
+      "type": "string",
+      "description": "Target which builds the browser application.",
+      "x-priority": "important"
+    },
+    "serverTarget": {
+      "type": "string",
+      "description": "Target which builds the server application.",
+      "x-priority": "important"
+    },
+    "port": {
+      "type": "number",
+      "description": "The port to be set on `process.env.PORT` for use in the server.",
+      "default": 4200,
+      "x-priority": "important"
+    },
+    "devRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of remote applications to run in development mode (i.e. using serve target).",
+      "x-priority": "important"
+    },
+    "skipRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of remote applications to not automatically serve, either statically or in development mode.",
+      "x-priority": "important"
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    }
+  },
+  "required": ["browserTarget", "serverTarget"]
+}

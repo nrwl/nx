@@ -1,0 +1,290 @@
+{
+  "generators": {
+    "update-jest-preset-angular-8-4-0": {
+      "version": "12.1.0-beta.1",
+      "cli": "nx",
+      "description": "Update jest-preset-angular to version 8.4.0",
+      "factory": "./src/migrations/update-12-1-2/update-jest-preset-angular"
+    },
+    "update-ts-jest-6-5-5": {
+      "version": "12.1.2-beta.1",
+      "cli": "nx",
+      "description": "Replace tsConfig with tsconfig for ts-jest in jest.config.js",
+      "factory": "./src/migrations/update-12-1-2/update-ts-jest"
+    },
+    "support-jest-27": {
+      "version": "12.4.0-beta.1",
+      "cli": "nx",
+      "description": "Add testEnvironment: 'jsdom' in web apps + libraries",
+      "factory": "./src/migrations/update-12-4-0/add-test-environment-for-node"
+    },
+    "update-ts-jest-and-jest-preset-angular": {
+      "version": "12.4.0-beta.1",
+      "cli": "nx",
+      "description": "Support for Jest 27 via updating ts-jest + jest-preset-angular",
+      "factory": "./src/migrations/update-12-4-0/update-jest-preset-angular"
+    },
+    "update-jest-config-to-use-util": {
+      "version": "12.6.0-beta.0",
+      "cli": "nx",
+      "description": "Uses `getJestProjects()` to populate projects array in root level `jest.config.js` file.",
+      "factory": "./src/migrations/update-12-6-0/update-base-jest-config"
+    },
+    "update-ts-config-for-test-filenames": {
+      "version": "13.1.2-beta.0",
+      "cli": "nx",
+      "description": "Support .test. file names in tsconfigs",
+      "factory": "./src/migrations/update-13-1-2/update-tsconfigs-for-tests"
+    },
+    "add-missing-root-babel-config": {
+      "version": "13.4.4-beta.0",
+      "cli": "nx",
+      "description": "Create a root babel config file if it doesn't exist and using babel-jest in jest.config.js and add @nrwl/web as needed",
+      "factory": "./src/migrations/update-13-4-4/add-missing-root-babel-config"
+    },
+    "update-jest-config-extensions": {
+      "version": "14.0.0-beta.2",
+      "cli": "nx",
+      "description": "Update move jest config files to .ts files.",
+      "factory": "./src/migrations/update-14-0-0/update-jest-config-ext"
+    },
+    "update-to-export-default": {
+      "version": "14.1.5-beta.0",
+      "cli": "nx",
+      "description": "Update to export default in jest config and revert jest.preset.ts to jest.preset.js",
+      "factory": "./src/migrations/update-14-1-5/update-exports-jest-config"
+    },
+    "exclude-jest-config-from-ts-config": {
+      "version": "14.5.5-beta.0",
+      "cli": "nx",
+      "description": "Exclude jest.config.ts from tsconfig where missing.",
+      "factory": "./src/migrations/update-14-0-0/update-jest-config-ext"
+    },
+    "update-configs-jest-28": {
+      "version": "14.6.0-beta.0",
+      "cli": "nx",
+      "description": "Update jest configs to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28#configuration-options)",
+      "factory": "./src/migrations/update-14-6-0/update-configs-jest-28"
+    },
+    "update-tests-jest-28": {
+      "version": "14.6.0-beta.0",
+      "cli": "nx",
+      "description": "Update jest test files to support jest 28 changes (https://jestjs.io/docs/upgrading-to-jest28)",
+      "factory": "./src/migrations/update-14-6-0/update-tests-jest-28"
+    },
+    "add-jest-inputs": {
+      "version": "15.0.0-beta.0",
+      "cli": "nx",
+      "description": "Stop hashing jest spec files and config files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-jest-inputs"
+    },
+    "update-configs-jest-29": {
+      "version": "15.8.0-beta.0",
+      "cli": "nx",
+      "description": "Update jest configs to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
+      "factory": "./src/migrations/update-15-8-0/update-configs-jest-29"
+    },
+    "update-tests-jest-29": {
+      "version": "15.8.0-beta.0",
+      "cli": "nx",
+      "description": "Update jest test files to support jest 29 changes (https://jestjs.io/docs/upgrading-to-jest29)",
+      "factory": "./src/migrations/update-15-8-0/update-tests-jest-29"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/jest with @nx/jest",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "add-test-setup-to-inputs-ignore": {
+      "cli": "nx",
+      "version": "16.5.0-beta.2",
+      "description": "Add test-setup.ts to ignored files in production input",
+      "implementation": "./src/migrations/update-16-5-0/add-test-setup-to-inputs-ignore"
+    }
+  },
+  "packageJsonUpdates": {
+    "12.1.0": {
+      "version": "12.1.0-beta.1",
+      "packages": {
+        "jest-preset-angular": {
+          "version": "8.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "26.5.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.4.0": {
+      "version": "12.4.0-beta.1",
+      "packages": {
+        "jest": {
+          "version": "27.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "27.0.3",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "9.0.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.10.0": {
+      "version": "12.10.0-beta.1",
+      "packages": {
+        "jest": {
+          "version": "27.2.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "27.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "27.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "27.2.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.0": {
+      "version": "14.0.0-beta.2",
+      "packages": {
+        "jest": {
+          "version": "27.5.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "27.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "27.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "27.5.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.2.0": {
+      "version": "14.2.0-rc.2",
+      "packages": {
+        "ts-node": {
+          "version": "~10.8.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.5": {
+      "version": "14.5.5-beta.0",
+      "packages": {
+        "ts-node": {
+          "version": "10.9.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.6.0": {
+      "version": "14.6.0-beta.0",
+      "packages": {
+        "jest": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "expect": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@jest/globals": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-jasmine2": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-environment-jsdom": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "~28.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "~28.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.0.1-beta.3": {
+      "version": "15.0.1-beta.3",
+      "packages": {
+        "jest-environment-jsdom": {
+          "version": "~28.1.1",
+          "addToPackageJson": "devDependencies"
+        }
+      }
+    },
+    "15.8.0": {
+      "version": "15.8.0-beta.0",
+      "packages": {
+        "jest": {
+          "version": "~29.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jest": {
+          "version": "~29.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expect": {
+          "version": "~29.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@jest/globals": {
+          "version": "~29.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-jasmine2": {
+          "version": "~29.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-environment-jsdom": {
+          "version": "~29.4.1",
+          "alwaysAddToPackageJson": false
+        },
+        "ts-jest": {
+          "version": "~29.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-jest": {
+          "version": "~29.4.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.4",
+      "packages": {
+        "ts-jest": {
+          "version": "~29.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

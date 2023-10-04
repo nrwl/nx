@@ -1,0 +1,54 @@
+{
+  "name": "react-native",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/react-native/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {},
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          "packages/react-native/*.md",
+          {
+            "input": "packages/react-native",
+            "glob": "**/files/**/.babelrc.template",
+            "output": "/"
+          },
+          {
+            "input": "packages/react-native/src",
+            "glob": "**/*.!(ts)",
+            "output": "/src"
+          },
+          {
+            "input": "packages/react-native",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/react-native",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/react-native"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js react-native"
+      }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js react-native @nrwl/react-native"
+    }
+  }
+}

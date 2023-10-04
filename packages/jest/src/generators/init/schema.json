@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxJestInit",
+  "cli": "nx",
+  "title": "Jest init",
+  "description": "Add Jest Configuration to a workspace.",
+  "type": "object",
+  "properties": {
+    "babelJest": {
+      "type": "boolean",
+      "alias": "babel-jest",
+      "description": "Use `babel-jest` instead of `ts-jest`.",
+      "default": false
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "testEnvironment": {
+      "type": "string",
+      "enum": ["jsdom", "node", "none"],
+      "description": "The test environment for jest. This controls which jest-environment-* package is installed",
+      "default": "jsdom",
+      "x-priority": "important"
+    },
+    "js": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use JavaScript instead of TypeScript for config files"
+    },
+    "rootProject": {
+      "description": "initialize Jest for an application at the root of the workspace",
+      "type": "boolean",
+      "default": false,
+      "hidden": true,
+      "x-priority": "internal"
+    }
+  },
+  "required": []
+}

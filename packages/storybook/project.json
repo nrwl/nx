@@ -1,0 +1,69 @@
+{
+  "name": "storybook",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/storybook",
+  "projectType": "library",
+  "targets": {
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/storybook",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/project-files/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/project-files-ts/.storybook/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/*.json",
+            "ignore": [
+              "**/tsconfig*.json",
+              "project.json",
+              ".eslintrc.json",
+              "**/test-configs/**"
+            ],
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/storybook",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/storybook"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js storybook"
+      }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js storybook @nrwl/storybook"
+    },
+    "lint": {}
+  }
+}

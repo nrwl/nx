@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxEsBuildProject",
+  "cli": "nx",
+  "title": "Add esbuild configuration to a project",
+  "description": "Add esbuild configuration to a project.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-dropdown": "project",
+      "x-prompt": "What is the name of the project to set up a esbuild for?",
+      "x-priority": "important"
+    },
+    "main": {
+      "type": "string",
+      "description": "Path relative to the workspace root for the main entry file. Defaults to `<project-root>/src/main.ts` or `<project-root>src/index.ts`, whichever is found.",
+      "alias": "entryFile",
+      "x-priority": "important"
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to `<project-root>/tsconfig.app.json` or `<project-root>/tsconfig.lib.json`, whichever is found.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "skipValidation": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not perform any validation on existing project.",
+      "x-priority": "internal"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The library name used to import it, like `@myorg/my-awesome-lib`."
+    },
+    "platform": {
+      "type": "string",
+      "description": "Platform target for outputs.",
+      "enum": ["browser", "node", "neutral"],
+      "default": "node"
+    },
+    "buildTarget": {
+      "description": "The build target to add.",
+      "type": "string",
+      "default": "build"
+    }
+  },
+  "required": [],
+  "examplesFile": "../../../docs/configuration-examples.md"
+}

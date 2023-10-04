@@ -1,0 +1,1359 @@
+{
+  "generators": {
+    "install-required-packages": {
+      "cli": "nx",
+      "version": "15.7.0-beta.1",
+      "description": "Install the required angular-devkit packages as we do not directly depend on them anymore",
+      "factory": "./src/migrations/update-15-7-0/install-required-packages"
+    },
+    "remove-show-circular-dependencies-option": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Remove 'showCircularDependencies' option from browser and server executors.",
+      "factory": "./src/migrations/update-14-2-0/remove-show-circular-dependencies-option"
+    },
+    "update-angular-cli-version": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Update the @angular/cli package version.",
+      "factory": "./src/migrations/update-14-2-0/update-angular-cli"
+    },
+    "update-libraries-secondary-entrypoints": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Remove 'package.json' files from library projects secondary entrypoints.",
+      "factory": "./src/migrations/update-14-2-0/update-libraries-secondary-entrypoints"
+    },
+    "update-postinstall-script-ngcc-target": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Update postinstall script running ngcc to use ES2020 target.",
+      "factory": "./src/migrations/update-14-2-0/update-ngcc-target"
+    },
+    "update-tsconfig-target": {
+      "cli": "nx",
+      "version": "14.2.0-beta.0",
+      "description": "Update TypeScript compilation target to 'ES2020'.",
+      "factory": "./src/migrations/update-14-2-0/update-tsconfig-target"
+    },
+    "update-router-initial-navigation": {
+      "cli": "nx",
+      "version": "14.2.0-beta.6",
+      "description": "Update `initialNavigation: 'enabled'` to `initialNavigation: 'enabledBlocking'`.",
+      "factory": "./src/migrations/update-14-2-0/update-router-initial-navigation"
+    },
+    "migrate-mfe-to-mf": {
+      "cli": "nx",
+      "version": "14.5.0-beta.0",
+      "description": "Update any references of MFE to MF.",
+      "factory": "./src/migrations/update-14-5-0/migrate-mfe-to-mf"
+    },
+    "update-angular-cli-version-14-1-0": {
+      "cli": "nx",
+      "version": "14.5.2-beta.0",
+      "requires": {
+        "@angular/core": ">=14.1.0"
+      },
+      "description": "Update the @angular/cli package version to ~14.1.0.",
+      "factory": "./src/migrations/update-14-5-2/update-angular-cli"
+    },
+    "update-angular-cli-version-14-2-0": {
+      "cli": "nx",
+      "version": "14.6.0-beta.0",
+      "requires": {
+        "@angular/core": ">=14.2.0"
+      },
+      "description": "Update the @angular/cli package version to ~14.2.0.",
+      "factory": "./src/migrations/update-14-6-0/update-angular-cli"
+    },
+    "rename-webpack-server-executor": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Rename @nrwl/angular:webpack-server executor to @nrwl/angular:webpack-dev-server",
+      "factory": "./src/migrations/update-14-8-0/rename-webpack-server"
+    },
+    "switch-to-jasmine-marbles": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Update the usages of @nrwl/angular/testing to import jasmine-marbles symbols from jasmine-marbles itself.",
+      "factory": "./src/migrations/update-15-0-0/switch-to-jasmine-marbles"
+    },
+    "add-karma-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.1",
+      "description": "Stop hashing karma spec files and config files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-karma-inputs"
+    },
+    "update-angular-cli-version-15-0-0": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
+      "description": "Update the @angular/cli package version to ~15.0.0.",
+      "factory": "./src/migrations/update-15-2-0/update-angular-cli"
+    },
+    "remove-browserlist-config": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
+      "description": "Remove browserslist config as it's handled by build-angular",
+      "factory": "./src/migrations/update-15-2-0/remove-browserlist-config"
+    },
+    "update-typescript-target": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
+      "description": "Update typescript target to ES2022",
+      "factory": "./src/migrations/update-15-2-0/update-typescript-target"
+    },
+    "update-workspace-config": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
+      "description": "Remove bundleDependencies from server targets",
+      "factory": "./src/migrations/update-15-2-0/update-workspace-config"
+    },
+    "update-platform-server-exports": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
+      "description": "Remove exported `@angular/platform-server` `renderModule` method. The `renderModule` method is now exported by the Angular CLI.",
+      "factory": "./src/migrations/update-15-2-0/remove-platform-server-exports"
+    },
+    "update-karma-main-file": {
+      "cli": "nx",
+      "version": "15.2.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
+      "description": "Remove no longer needed require calls in Karma builder main file.",
+      "factory": "./src/migrations/update-15-2-0/update-karma-main-file"
+    },
+    "update-angular-cli-version-15-1-0": {
+      "cli": "nx",
+      "version": "15.5.0-beta.0",
+      "requires": {
+        "@angular/core": ">=15.1.0"
+      },
+      "description": "Update the @angular/cli package version to ~15.1.0.",
+      "factory": "./src/migrations/update-15-5-0/update-angular-cli"
+    },
+    "update-angular-cli-version-15-2-0": {
+      "cli": "nx",
+      "version": "15.8.0-beta.4",
+      "requires": {
+        "@angular/core": ">=15.2.0"
+      },
+      "description": "Update the @angular/cli package version to ~15.2.0.",
+      "factory": "./src/migrations/update-15-8-0/update-angular-cli"
+    },
+    "update-tsconfig-spec-jest": {
+      "cli": "nx",
+      "version": "15.9.0-beta.3",
+      "description": "Update the tsconfig.spec.json to use target es2016 for jest-preset-angular v13",
+      "factory": "./src/migrations/update-15-9-0/update-testing-tsconfig"
+    },
+    "update-file-server-executor": {
+      "cli": "nx",
+      "version": "15.9.0-beta.9",
+      "description": "Update the file-server executor to use @nrwl/web:file-server",
+      "factory": "./src/migrations/update-15-9-0/update-file-server-executor"
+    },
+    "remove-library-generator-simple-module-name-option": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace the deprecated library generator 'simpleModuleName' option from generator defaults with 'simpleName'",
+      "factory": "./src/migrations/update-16-0-0/remove-library-generator-simple-module-name-option"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/angular with @nx/angular",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "remove-protractor-defaults-from-generators": {
+      "cli": "nx",
+      "version": "16.0.0-beta.6",
+      "description": "Remove protractor as default e2eTestRunner from nxJson and project configurations",
+      "implementation": "./src/migrations/update-16-0-0/remove-protractor-defaults"
+    },
+    "remove-karma-defaults-from-generators": {
+      "cli": "nx",
+      "version": "16.0.0-beta.6",
+      "description": "Remove karma as default unitTestRunner from nxJson and project configurations",
+      "implementation": "./src/migrations/update-16-0-0/remove-karma-defaults"
+    },
+    "remove-render-module-platform-server-exports": {
+      "cli": "nx",
+      "version": "16.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=15.0.0"
+      },
+      "description": "Remove exported `@angular/platform-server` `renderModule` method. The `renderModule` method is now exported by the Angular CLI.",
+      "factory": "./src/migrations/update-16-1-0/remove-render-module-platform-server-exports"
+    },
+    "remove-ngcc-invocation": {
+      "cli": "nx",
+      "version": "16.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=16.0.0-rc.4"
+      },
+      "description": "Remove 'ngcc' invocation if exists from the 'postinstall' script in package.json.",
+      "factory": "./src/migrations/update-16-1-0/remove-ngcc-invocation"
+    },
+    "extract-app-config-for-standalone": {
+      "cli": "nx",
+      "version": "16.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=16.0.0-rc.4"
+      },
+      "description": "Extract the app config for standalone apps",
+      "factory": "./src/migrations/update-16-1-0/extract-standalone-config-from-bootstrap"
+    },
+    "update-server-executor-config": {
+      "cli": "nx",
+      "version": "16.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=16.0.0-rc.4"
+      },
+      "description": "Update server executors' configuration to disable 'buildOptimizer' for non optimized builds.",
+      "factory": "./src/migrations/update-16-1-0/update-server-executor-config"
+    },
+    "update-angular-cli-version-16-0-0": {
+      "cli": "nx",
+      "version": "16.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=16.0.0"
+      },
+      "description": "Update the @angular/cli package version to ~16.0.0.",
+      "factory": "./src/migrations/update-16-1-0/update-angular-cli"
+    },
+    "switch-data-persistence-operators-imports-to-ngrx-router-store": {
+      "cli": "nx",
+      "version": "16.2.0-beta.0",
+      "requires": {
+        "@ngrx/store": ">=16.0.0"
+      },
+      "description": "Switch the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
+      "factory": "./src/migrations/update-16-2-0/switch-data-persistence-operators-imports-to-ngrx-router-store"
+    },
+    "rename-angular-eslint-accesibility-rules": {
+      "cli": "nx",
+      "version": "16.4.0-beta.6",
+      "requires": {
+        "@angular-eslint/eslint-plugin-template": ">=16.0.0"
+      },
+      "description": "Remove the 'accessibility-' prefix from '@angular-eslint/eslint-plugin-template' rules.",
+      "factory": "./src/migrations/update-16-4-0/rename-angular-eslint-accesibility-rules"
+    },
+    "update-angular-cli-version-16-1-0": {
+      "cli": "nx",
+      "version": "16.4.0-beta.11",
+      "requires": {
+        "@angular/core": ">=16.1.0"
+      },
+      "description": "Update the @angular/cli package version to ~16.1.0.",
+      "factory": "./src/migrations/update-16-4-0/update-angular-cli"
+    },
+    "explicitly-set-projects-to-update-buildable-deps": {
+      "cli": "nx",
+      "version": "16.6.0-beta.0",
+      "description": "Explicitly set 'updateBuildableProjectDepsInPackageJson' to 'true' in targets that rely on that value as the default.",
+      "factory": "./src/migrations/update-16-6-0/explicitly-set-projects-to-update-buildable-deps"
+    },
+    "update-angular-cli-version-16-2-0": {
+      "cli": "nx",
+      "version": "16.7.0-beta.6",
+      "requires": {
+        "@angular/core": ">=16.2.0"
+      },
+      "description": "Update the @angular/cli package version to ~16.2.0.",
+      "factory": "./src/migrations/update-16-7-0/update-angular-cli"
+    }
+  },
+  "packageJsonUpdates": {
+    "14.1.8": {
+      "version": "14.1.8-beta.0",
+      "packages": {
+        "postcss-import": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "postcss-preset-env": {
+          "version": "~7.5.0",
+          "alwaysAddToPackageJson": false
+        },
+        "postcss-url": {
+          "version": "~10.1.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.2.0": {
+      "version": "14.2.0-beta.6",
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1400.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1400.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/common": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/forms": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/elements": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/compiler-cli": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/localize": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-browser-dynamic": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/platform-server": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/router": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/upgrade": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/language-service": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/animations": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/service-worker": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/material": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin": {
+          "version": "~13.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~13.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~13.2.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-preset-angular": {
+          "version": "~11.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine": {
+          "version": "~5.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-core": {
+          "version": "~4.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-spec-reporter": {
+          "version": "~7.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/jasmine": {
+          "version": "~4.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.3.7": {
+      "version": "14.3.7-beta.0",
+      "requires": {
+        "@angular/core": "^14.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~14.0.0"
+        }
+      }
+    },
+    "14.4.0": {
+      "version": "14.4.0-beta.1",
+      "requires": {
+        "eslint": "^7.0.0 || ^8.0.0",
+        "@angular/core": ">=14.0.0 <15.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~14.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.2": {
+      "version": "14.5.2-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v14.1?",
+      "requires": {
+        "@angular/core": ">=14.0.0 <14.1.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1401.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1401.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma": {
+          "version": "~6.4.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine": {
+          "version": "~5.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "karma-jasmine-html-reporter": {
+          "version": "~2.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jasmine-core": {
+          "version": "~4.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.3": {
+      "version": "14.5.3-beta.0",
+      "requires": {
+        "@angular/core": "14.1.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1401.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1401.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~14.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.5": {
+      "version": "14.5.5-beta.0",
+      "packages": {
+        "ts-node": {
+          "version": "10.9.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.6.0-angular": {
+      "version": "14.6.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v14.2?",
+      "requires": {
+        "@angular/core": ">=14.1.0 <14.2.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1402.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1402.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~14.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.6.0-jest-preset-angular": {
+      "version": "14.6.0-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=0.1102.19 <15.0.0",
+        "@angular/compiler-cli": ">=11.2.14 <15.0.0",
+        "@angular/core": ">=11.2.14 <15.0.0",
+        "@angular/platform-browser-dynamic": ">=11.2.14 <15.0.0",
+        "jest": "^28.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "12.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.6.0-rxjs": {
+      "version": "14.6.0-beta.0",
+      "requires": {
+        "rxjs": ">=7.0.0 <7.5.0"
+      },
+      "packages": {
+        "rxjs": {
+          "version": "~7.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.8.0-angular-eslint": {
+      "version": "14.8.0-beta.0",
+      "requires": {
+        "eslint": "^7.0.0 || ^8.0.0",
+        "@angular/core": ">=14.0.0 <15.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~14.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~14.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~14.0.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.8.0-jest-preset-angular": {
+      "version": "14.8.0-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=0.1102.19 <15.0.0",
+        "@angular/compiler-cli": ">=11.2.14 <15.0.0",
+        "@angular/core": ">=11.2.14 <15.0.0",
+        "@angular/platform-browser-dynamic": ">=11.2.14 <15.0.0",
+        "jest": "^28.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "12.2.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.2.0": {
+      "version": "15.2.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v15?",
+      "requires": {
+        "@angular/core": "^14.2.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1500.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1500.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/common": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/builders": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.2.2-angular-eslint": {
+      "version": "15.2.2-beta.0",
+      "requires": {
+        "eslint": "^7.20.0 || ^8.0.0",
+        "@angular/core": ">=15.0.0 <16.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.2.2-jest": {
+      "version": "15.2.2-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=12.2.18 <16.0.0",
+        "@angular/compiler-cli": ">=12.2.16 <16.0.0",
+        "@angular/core": ">=12.2.16 <16.0.0",
+        "@angular/platform-browser-dynamic": ">=12.2.16 <16.0.0",
+        "jest": "^28.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "12.2.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.3.1": {
+      "version": "15.3.1-beta.0",
+      "requires": {
+        "@angular/core": "^15.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~15.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~15.0.0"
+        }
+      }
+    },
+    "15.5.0": {
+      "version": "15.5.0-beta.0",
+      "x-prompt": "Do you want to update the Angular version to v15.1?",
+      "requires": {
+        "@angular/core": ">=15.0.0 <15.1.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1501.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1501.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.5.2": {
+      "version": "15.5.2-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=15.0.0 <16.0.0"
+      },
+      "packages": {
+        "@nguniversal/builders": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.8.0": {
+      "version": "15.8.0-beta.4",
+      "x-prompt": "Do you want to update the Angular version to v15.2?",
+      "requires": {
+        "@angular/core": ">=15.1.0 <15.2.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1502.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1502.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/build-angular": {
+          "version": "~15.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~15.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "zone.js": {
+          "version": "~0.12.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.8.0-jest": {
+      "version": "15.8.0-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=13.0.0 <16.0.0",
+        "@angular/compiler-cli": ">=13.0.0 <16.0.0",
+        "@angular/core": ">=13.0.0 <16.0.0",
+        "@angular/platform-browser-dynamic": ">=13.0.0 <16.0.0",
+        "jest": "^29.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "13.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.8.0-ngrx": {
+      "version": "15.8.0-beta.6",
+      "requires": {
+        "@angular/core": "^15.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/effects": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/entity": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/router-store": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/schematics": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/store-devtools": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@ngrx/component-store": {
+          "version": "~15.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.8.6-rxjs": {
+      "version": "15.8.6-beta.0",
+      "requires": {
+        "rxjs": ">=7.5.0 <7.6.0"
+      },
+      "packages": {
+        "rxjs": {
+          "version": "~7.8.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.0": {
+      "version": "16.1.0-beta.1",
+      "x-prompt": "Do you want to update the Angular version to v16?",
+      "requires": {
+        "@angular/core": ">=15.2.0 <16.0.0"
+      },
+      "packages": {
+        "@angular/core": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": true
+        },
+        "zone.js": {
+          "version": "~0.13.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1600.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1600.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/build-angular": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/builders": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/common": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/material": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.0-angular-eslint": {
+      "version": "16.1.0-beta.1",
+      "requires": {
+        "eslint": "^7.20.0 || ^8.0.0",
+        "@angular/core": ">=16.0.0 <17.0.0"
+      },
+      "packages": {
+        "@angular-eslint/eslint-plugin": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/eslint-plugin-template": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-eslint/template-parser": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.3-jest": {
+      "version": "16.1.3-beta.0",
+      "requires": {
+        "@angular-devkit/build-angular": ">=13.0.0 <17.0.0",
+        "@angular/compiler-cli": ">=13.0.0 <17.0.0",
+        "@angular/core": ">=13.0.0 <17.0.0",
+        "@angular/platform-browser-dynamic": ">=13.0.0 <17.0.0",
+        "jest": "^29.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "~13.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.2.0-ngrx": {
+      "version": "16.2.0-beta.0",
+      "requires": {
+        "@angular/core": "^16.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "~16.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.4.0": {
+      "version": "16.4.0-beta.11",
+      "x-prompt": "Do you want to update the Angular version to v16.1?",
+      "requires": {
+        "@angular/core": ">=16.0.0 <16.1.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1601.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1601.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/builders": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/common": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~16.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.7.0": {
+      "version": "16.7.0-beta.6",
+      "x-prompt": "Do you want to update the Angular version to v16.2?",
+      "requires": {
+        "@angular/core": ">=16.1.0 <16.2.0"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1602.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1602.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/builders": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/common": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@nguniversal/express-engine": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~16.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.8.0": {
+      "version": "16.8.0-beta.2",
+      "packages": {
+        "esbuild": {
+          "version": "^0.19.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

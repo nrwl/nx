@@ -1,0 +1,16 @@
+{
+  "builders": {
+    "esbuild": {
+      "implementation": "./src/executors/esbuild/compat",
+      "schema": "./src/executors/esbuild/schema.json",
+      "description": "Bundle a package using EsBuild."
+    }
+  },
+  "executors": {
+    "esbuild": {
+      "implementation": "./src/executors/esbuild/esbuild.impl",
+      "schema": "./src/executors/esbuild/schema.json",
+      "description": "Bundle a package using EsBuild."
+    }
+  }
+}

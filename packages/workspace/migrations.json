@@ -1,0 +1,201 @@
+{
+  "generators": {
+    "add-target-dependencies": {
+      "version": "12.5.0-beta.1",
+      "description": "Rename the workspace-schematic script into workspace-generator script",
+      "factory": "./src/migrations/update-12-5-0/add-target-dependencies",
+      "cli": "nx"
+    },
+    "set-default-base-if-not-set": {
+      "version": "13.0.0-beta.1",
+      "description": "Add default base to nx.json if its not currently set",
+      "factory": "./src/migrations/update-13-0-0/set-default-base-if-not-set",
+      "cli": "nx"
+    },
+    "13-0-0-config-locations": {
+      "version": "13.0.0-beta.4",
+      "description": "Move global settings into nx.json, and project specific settings into workspace.json",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-0-0/config-locations/config-locations"
+    },
+    "set-parallel-default": {
+      "version": "13.2.0",
+      "description": "Set --parallel=1 for existing repos to preserve the existing behavior",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-2-0/set-parallel-default"
+    },
+    "13-3-0-tsc-location": {
+      "version": "13.3.0-beta.0",
+      "description": "@nrwl/workspace:tsc is now @nrwl/js:tsc",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-3-0/update-tsc-executor-location"
+    },
+    "13-6-0-remove-old-task-runner-options": {
+      "version": "13.6.0-beta.0",
+      "description": "Remove old options that are no longer used",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-6-0/remove-old-task-runner-options"
+    },
+    "13-9-0-replace-tao-with-nx": {
+      "version": "13.9.0-beta.0",
+      "description": "Replace @nrwl/tao with nx",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-9-0/replace-tao-with-nx"
+    },
+    "13-10-0-update-decorate-cli": {
+      "version": "13.10.0-beta.0",
+      "description": "Update the decorate-angular-cli script to require nx instead of @nrwl/cli",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-10-0/update-decorate-cli"
+    },
+    "13-10-0-update-tasks-runner": {
+      "version": "13.10.0-beta.0",
+      "description": "Update the tasks runner property to import it from the nx package instead of @nrwl/workspace",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-13-10-0/update-tasks-runner"
+    },
+    "14-0-0-change-nx-json-presets": {
+      "version": "14.0.0-beta.0",
+      "description": "Changes the presets in nx.json to come from the nx package",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-14-0-0/change-nx-json-presets"
+    },
+    "14-0-0-change-npm-script-executor": {
+      "version": "14.0.0-beta.0",
+      "description": "Migrates from @nrwl/workspace:run-script to nx:run-script",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-14-0-0/change-npm-script-executor"
+    },
+    "14-2-0-enable-source-analysis": {
+      "version": "14.2.0",
+      "description": "Explicitly enable sourceAnalysis for all workspaces extending from npm.json or core.json (this was default behavior prior to 14.2)",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-14-2-0/enable-source-analysis"
+    },
+    "14-8-0-change-run-commands-executor": {
+      "version": "14.8.0-beta.0",
+      "description": "Migrates from @nrwl/workspace:run-commands to nx:run-commands",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-14-8-0/change-run-commands-executor"
+    },
+    "15-7-0-split-configuration-into-project-json-files": {
+      "version": "15.7.0-beta.0",
+      "description": "Split global configuration files (e.g., workspace.json) into individual project.json files.",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-15-7-0/split-configuration-into-project-json-files"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/workspace with @nx/workspace",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "16-0-0-move-workspace-generators-into-local-plugin": {
+      "version": "16.0.0-beta.4",
+      "description": "Generates a plugin called 'workspace-plugin' containing your workspace generators.",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-16-0-0/move-workspace-generators-to-local-plugin"
+    },
+    "16-0-0-fix-invalid-babelrc": {
+      "version": "16.0.0-beta.9",
+      "description": "Fix .babelrc presets if it contains an invalid entry for @nx/web/babel.",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-16-0-0/fix-invalid-babelrc"
+    }
+  },
+  "packageJsonUpdates": {
+    "12.5.0": {
+      "version": "12.5.0",
+      "packages": {
+        "prettier": {
+          "version": "^2.3.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.6.0": {
+      "version": "12.6.0-beta.8",
+      "packages": {
+        "typescript": {
+          "version": "~4.3.5"
+        }
+      }
+    },
+    "12.7.0": {
+      "version": "12.7.0-beta.0",
+      "packages": {
+        "dotenv": {
+          "version": "~10.0.0"
+        }
+      }
+    },
+    "13.5.0": {
+      "version": "13.5.0",
+      "packages": {
+        "prettier": {
+          "version": "^2.5.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.2.0": {
+      "version": "14.2.0-beta.4",
+      "packages": {
+        "typescript": {
+          "version": "~4.7.2",
+          "alwaysAddToPackageJson": false
+        },
+        "prettier": {
+          "version": "^2.6.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.8.0": {
+      "version": "14.8.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v4.8?",
+      "packages": {
+        "typescript": {
+          "version": "~4.8.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.8.0": {
+      "version": "15.8.0-beta.2",
+      "x-prompt": "Do you want to update to TypeScript v4.9?",
+      "requires": {
+        "typescript": ">=4.8.2 <4.9.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~4.9.5"
+        }
+      }
+    },
+    "16.1.0": {
+      "version": "16.1.0-beta.0",
+      "x-prompt": "Do you want to update to TypeScript v5.0?",
+      "requires": {
+        "typescript": ">=4.9.5 <5.0.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.0.2"
+        }
+      }
+    },
+    "16.4.0": {
+      "version": "16.4.0-beta.11",
+      "x-prompt": "Do you want to update to TypeScript v5.1?",
+      "requires": {
+        "typescript": ">=5.0.0 <5.1.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.1.3"
+        }
+      }
+    }
+  }
+}

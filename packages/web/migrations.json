@@ -1,0 +1,96 @@
+{
+  "generators": {
+    "remove-node-sass-13-0-0": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Removes deprecated node-sass package (sass is already a dependency of @nrwl/web).",
+      "factory": "./src/migrations/update-13-0-0/remove-node-sass-13-0-0"
+    },
+    "remove-webpack-5-packages": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Remove packages installed by Nx 12's `@nrwl/web:webpack5` generator.",
+      "factory": "./src/migrations/update-13-0-0/remove-webpack-5-packages-13-0-0"
+    },
+    "rename-build-to-webpack": {
+      "cli": "nx",
+      "version": "13.3.0-beta.1",
+      "description": "Rename the 'build' executor to 'webpack'",
+      "factory": "./src/migrations/update-13-3-0/rename-build-to-webpack"
+    },
+    "rename-package-to-rollup": {
+      "cli": "nx",
+      "version": "13.3.0-beta.1",
+      "description": "Rename the 'package' executor to 'rollup'",
+      "factory": "./src/migrations/update-13-3-0/rename-package-to-rollup"
+    },
+    "add-postcss-config-option": {
+      "cli": "nx",
+      "version": "13.8.0-beta.1",
+      "description": "Add a postcss config option to apps to load a single config file for all libs",
+      "factory": "./src/migrations/update-13-8-0/add-postcss-config-option"
+    },
+    "update-webpack-executor": {
+      "cli": "nx",
+      "version": "14.7.6-beta.1",
+      "description": "Update usages of webpack executors to @nrwl/webpack",
+      "factory": "./src/migrations/update-14-7-6/update-webpack-executor"
+    },
+    "add-babel-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Adds babel.config.json to the hash of all tasks",
+      "factory": "./src/migrations/update-15-0-0/add-babel-inputs"
+    },
+    "update-rollup-executor": {
+      "cli": "nx",
+      "version": "15.0.0-beta.1",
+      "description": "Update usages of rollup executors to @nrwl/rollup",
+      "factory": "./src/migrations/update-15-0-0/update-rollup-executor"
+    },
+    "update-babel-preset": {
+      "cli": "nx",
+      "version": "15.5.4-beta.0",
+      "description": "Update `@nrwl/web/babel` preset to `@nrwl/js/babel` for projects that have a .babelrc file.",
+      "factory": "./src/migrations/update-15-5-4/update-babel-preset"
+    },
+    "add-dropped-dependencies": {
+      "cli": "nx",
+      "version": "15.9.1",
+      "description": "Add @nrwl/linter, @nrwl/cypress, @nrwl/jest, @nrwl/rollup if they are used",
+      "factory": "./src/migrations/update-15-9-1/add-dropped-dependencies"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/web with @nx/web",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-0-0-update-executors": {
+      "cli": "nx",
+      "version": "16.0.0-beta.4",
+      "description": "Replace @nrwl/web executors with @nx/webpack and @nx/rollup",
+      "implementation": "./src/migrations/update-16-0-0-update-executors/update-16-0-0-update-executors"
+    }
+  },
+  "packageJsonUpdates": {
+    "14.3.7": {
+      "version": "14.3.7-beta.0",
+      "packages": {
+        "@types/node": {
+          "version": "18.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.5": {
+      "version": "14.5.5-beta.0",
+      "packages": {
+        "@types/node": {
+          "version": "18.7.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

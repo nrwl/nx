@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "CypressComponentConfiguration",
+  "title": "NextJS Component Testing Configuration",
+  "description": "Add Cypress Componet Testing to an existing NextJS project.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nx/next:cypress-component-configuration --project=my-next-project",
+      "description": "Add component testing to your Next project"
+    },
+    {
+      "command": "nx g @nx/next:cypress-component-configuration --project=my-next-project --generate-tests",
+      "description": "Add component testing to your Next project and generate component tests for your existing components"
+    }
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add cypress component testing configuration to",
+      "x-dropdown": "projects",
+      "x-prompt": "What project should we add Cypress component testing to?",
+      "x-priority": "important"
+    },
+    "generateTests": {
+      "type": "boolean",
+      "description": "Generate default component tests for existing components in the project",
+      "x-prompt": "Automatically generate tests for components declared in this project?",
+      "default": false,
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": ["project"],
+  "examplesFile": "../../../docs/cypress-component-configuration-examples.md"
+}

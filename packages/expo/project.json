@@ -1,0 +1,61 @@
+{
+  "name": "expo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/expo/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {},
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          "packages/expo/*.md",
+          {
+            "input": "packages/expo",
+            "glob": "**/!(*.ts)",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/files/**/.babelrc.js.template",
+            "output": "/"
+          },
+          {
+            "input": "packages/expo",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "**/project.json"],
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/expo"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js expo"
+      }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js expo @nrwl/expo"
+    }
+  },
+  "tags": []
+}

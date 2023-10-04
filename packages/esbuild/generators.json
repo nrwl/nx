@@ -1,0 +1,33 @@
+{
+  "name": "Nx esbuild",
+  "version": "0.1",
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#esbuildInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/esbuild` plugin.",
+      "hidden": true
+    },
+    "configuration": {
+      "aliases": ["esbuild-project"],
+      "factory": "./src/generators/configuration/configuration#compat",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add esbuild configuration to a project."
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#esbuildInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/esbuild` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "aliases": ["esbuild-project"],
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add esbuild configuration to a project."
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxWorkspaceRule",
+  "cli": "nx",
+  "title": "Create a new Workspace Lint Rule",
+  "description": "Create a new Workspace Lint Rule.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the new rule.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "directory": {
+      "type": "string",
+      "description": "Create the rule under this directory within `tools/eslint-rules/` (can be nested).",
+      "alias": "dir",
+      "default": "rules"
+    }
+  },
+  "required": ["name", "directory"],
+  "examplesFile": "../../../docs/workspace-rule-examples.md"
+}

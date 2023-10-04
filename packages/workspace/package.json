@@ -1,0 +1,75 @@
+{
+  "name": "@nx/workspace",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/workspace"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json",
+    "packageGroup": {
+      "@nrwl/js": "*",
+      "@nrwl/jest": "*",
+      "@nrwl/linter": "*",
+      "@nrwl/angular": "*",
+      "@nrwl/cypress": "*",
+      "@nrwl/detox": "*",
+      "@nrwl/devkit": "*",
+      "@nrwl/esbuild": "*",
+      "@nrwl/eslint-plugin-nx": "*",
+      "@nrwl/expo": "*",
+      "@nrwl/express": "*",
+      "@nrwl/nest": "*",
+      "@nrwl/next": "*",
+      "@nrwl/node": "*",
+      "nx-cloud": "latest",
+      "@nrwl/nx-plugin": "*",
+      "@nrwl/react-native": "*",
+      "@nrwl/react": "*",
+      "@nrwl/rollup": "*",
+      "@nrwl/storybook": "*",
+      "@nrwl/tao": "*",
+      "@nrwl/vite": "*",
+      "@nrwl/web": "*",
+      "@nrwl/webpack": "*",
+      "nx": "*"
+    }
+  },
+  "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "chalk": "^4.1.0",
+    "enquirer": "~2.3.6",
+    "ignore": "^5.0.4",
+    "rxjs": "^7.8.0",
+    "tslib": "^2.3.0",
+    "yargs-parser": "21.1.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,11 @@
+import { <%= className %>ExecutorSchema } from './schema';
+import executor from './executor';
+
+const options: <%= className %>ExecutorSchema = {};
+
+describe('<%= className %> Executor', () => {
+  it('can run', async () => {
+    const output = await executor(options);
+    expect(output.success).toBe(true);
+  });
+});

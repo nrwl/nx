@@ -1,0 +1,110 @@
+{
+  "name": "page",
+  "factory": "./src/generators/page/page#pageGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxNextReactPage",
+    "title": "Create a Page for Next",
+    "description": "Create a Page for Next.",
+    "type": "object",
+    "properties": {
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-prompt": "What is the name of the project for this component?",
+        "x-priority": "important"
+      },
+      "name": {
+        "type": "string",
+        "description": "The name of the component.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What name would you like to use for the component?",
+        "x-priority": "important"
+      },
+      "directory": {
+        "type": "string",
+        "description": "Create the page under this directory (can be nested). Will be created under `pages/`.",
+        "alias": "dir",
+        "x-priority": "important"
+      },
+      "style": {
+        "description": "The file extension to be used for style files.",
+        "type": "string",
+        "alias": "s",
+        "default": "css",
+        "x-prompt": {
+          "message": "Which stylesheet format would you like to use?",
+          "type": "list",
+          "items": [
+            { "value": "css", "label": "CSS" },
+            {
+              "value": "scss",
+              "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+            },
+            {
+              "value": "less",
+              "label": "LESS              [ http://lesscss.org            ]"
+            },
+            {
+              "value": "styled-components",
+              "label": "styled-components [ https://styled-components.com ]"
+            },
+            {
+              "value": "@emotion/styled",
+              "label": "emotion           [ https://emotion.sh            ]"
+            },
+            {
+              "value": "styled-jsx",
+              "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+            },
+            { "value": "none", "label": "None" },
+            {
+              "value": "styl",
+              "label": "Stylus(.styl)     [ http://stylus-lang.com        ] (DEPRECATED)"
+            }
+          ]
+        },
+        "x-priority": "important"
+      },
+      "withTests": {
+        "type": "boolean",
+        "description": "When true, creates a `spec.ts` test file for the new page.",
+        "default": false
+      },
+      "export": {
+        "type": "boolean",
+        "description": "When true, the component is exported from the project `index.ts` (if it exists).",
+        "alias": "e",
+        "default": false
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript files rather than TypeScript files.",
+        "default": false
+      },
+      "flat": {
+        "type": "boolean",
+        "description": "Create component at the source root rather than its own directory.",
+        "default": false
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      }
+    },
+    "required": ["name", "project"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create static page in an app\" %}\n\n```shell\nnx g page my-page --project=my-app\n```\n\n{% /tab %}\n{% tab label=\"Create dynamic page in an app\" %}\n\nThe following creates a page under `apps/my-app/pages/products/[id].tsx`.\n\n```shell\nnx g page \"[id]\" --project=my-app --directory=products\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Create a page.",
+  "implementation": "/packages/next/src/generators/page/page#pageGenerator.ts",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/generators/page/schema.json",
+  "type": "generator"
+}

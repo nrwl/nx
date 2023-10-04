@@ -1,0 +1,175 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`workspace move to nx layout should create a root eslint config 1`] = `
+{
+  "ignorePatterns": [
+    "**/*",
+  ],
+  "overrides": [
+    {
+      "extends": [
+        "plugin:@angular-eslint/recommended",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": [
+        "*.ts",
+      ],
+      "parserOptions": {
+        "createDefaultProgram": true,
+      },
+      "rules": {
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "prefix": "app",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "prefix": "app",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    {
+      "extends": [
+        "plugin:@angular-eslint/template/recommended",
+      ],
+      "files": [
+        "*.html",
+      ],
+      "rules": {},
+    },
+    {
+      "files": [
+        "*.ts",
+        "*.tsx",
+        "*.js",
+        "*.jsx",
+      ],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "allow": [],
+            "depConstraints": [
+              {
+                "onlyDependOnLibsWithTags": [
+                  "*",
+                ],
+                "sourceTag": "*",
+              },
+            ],
+            "enforceBuildableLibDependency": true,
+          },
+        ],
+      },
+    },
+  ],
+  "plugins": [
+    "@nx",
+  ],
+  "root": true,
+}
+`;
+
+exports[`workspace move to nx layout should create nx.json 1`] = `
+{
+  "affected": {
+    "defaultBase": "main",
+  },
+  "defaultProject": "myApp",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/tsconfig.spec.json",
+      "!{projectRoot}/**/*.spec.[jt]s",
+      "!{projectRoot}/karma.conf.js",
+      "!{projectRoot}/.eslintrc.json",
+      "!{projectRoot}/eslint.config.js",
+    ],
+    "sharedGlobals": [],
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build",
+      ],
+      "inputs": [
+        "production",
+        "^production",
+      ],
+    },
+    "e2e": {
+      "inputs": [
+        "default",
+        "^production",
+      ],
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/eslint.config.js",
+      ],
+    },
+    "test": {
+      "inputs": [
+        "default",
+        "^production",
+        "{workspaceRoot}/karma.conf.js",
+      ],
+    },
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "test",
+          "lint",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;
+
+exports[`workspace move to nx layout should update tsconfig.base.json if present 1`] = `
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {},
+    "rootDir": ".",
+  },
+  "exclude": [
+    "node_modules",
+    "tmp",
+  ],
+}
+`;
+
+exports[`workspace move to nx layout should work if angular-cli workspace had tsconfig.base.json 1`] = `
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {},
+    "rootDir": ".",
+  },
+  "exclude": [
+    "node_modules",
+    "tmp",
+  ],
+}
+`;

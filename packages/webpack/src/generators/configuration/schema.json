@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxWebpackProject",
+  "cli": "nx",
+  "title": "Add Webpack Configuration to a project",
+  "description": "Add Webpack Configuration to a project.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-dropdown": "project",
+      "x-prompt": "What is the name of the project to set up a webpack for?",
+      "x-priority": "important"
+    },
+    "compiler": {
+      "type": "string",
+      "enum": ["babel", "swc", "tsc"],
+      "description": "The compiler to use to build source.",
+      "default": "swc"
+    },
+    "main": {
+      "type": "string",
+      "description": "Path relative to the workspace root for the main entry file. Defaults to '<projectRoot>/src/main.ts'.",
+      "x-priority": "important"
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "Path relative to the workspace root for the tsconfig file to build with. Defaults to '<projectRoot>/tsconfig.app.json'.",
+      "x-priority": "important"
+    },
+    "target": {
+      "type": "string",
+      "description": "Target platform for the build, same as the Webpack config option.",
+      "enum": ["node", "web", "webworker"],
+      "default": "web"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "skipValidation": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not perform any validation on existing project.",
+      "x-priority": "internal"
+    },
+    "devServer": {
+      "type": "boolean",
+      "description": "Add a serve target to run a local webpack dev-server",
+      "default": false
+    },
+    "webpackConfig": {
+      "type": "string",
+      "description": "Path relative to workspace root to a custom webpack file that takes a config object and returns an updated config.",
+      "x-priority": "internal"
+    },
+    "babelConfig": {
+      "type": "string",
+      "description": "Optionally specify a path relative to workspace root to the babel configuration file of your project.",
+      "x-completion-type": "file"
+    }
+  },
+  "required": []
+}

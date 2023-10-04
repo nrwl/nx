@@ -1,0 +1,58 @@
+{
+  "name": "detox",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/detox/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {},
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/detox",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/detox",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/detox",
+            "glob": "**/files/**/.babelrc.template",
+            "output": "/"
+          },
+          {
+            "input": "packages/detox",
+            "glob": "**/files/**/.detoxrc.json.template",
+            "output": "/"
+          },
+          {
+            "input": "./packages/detox",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json"],
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/detox"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js detox"
+      }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js detox @nrwl/detox"
+    }
+  }
+}

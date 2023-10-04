@@ -1,0 +1,73 @@
+version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.1
+
+jobs:
+  agent:
+    docker:
+      - image: cimg/node:lts-browsers
+    parameters:
+      ordinal:
+        type: integer
+    steps:
+      - checkout
+      <% if(packageManagerPrefix == 'pnpm exec'){ %>
+      - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@8.2.0
+      <% } %>- run:
+          name: Install dependencies
+          command: <%= packageManagerInstall %>
+      - run:
+          name: Start the agent << parameters.ordinal >>
+          command: <%= packageManagerPrefix %> nx-cloud start-agent
+          no_output_timeout: 60m
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    environment:
+      NX_CLOUD_DISTRIBUTED_EXECUTION: 'true'
+    steps:
+      - checkout
+      <% if(packageManagerPrefix == 'pnpm exec'){ %>
+      - run:
+          name: Install PNPM
+          command: npm install --prefix=$HOME/.local -g pnpm@8.2.0
+      <% } %>- run:
+          name: Install dependencies
+          command: <%= packageManagerInstall %>
+      - nx/set-shas:
+          main-branch-name: '<%= mainBranch %>'
+      - run:
+          name: Initialize the Nx Cloud distributed CI run
+          command: <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
+      - run:
+          name: Check format
+          command: <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check --base=$NX_BASE --head=$NX_HEAD
+      - run:
+          name: Run lint
+          command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3
+      - run:
+          name: Run test
+          command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage
+      - run:
+          name: Run build
+          command: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+      - run:
+          name: Stop all agents
+          command: <%= packageManagerPrefix %> nx-cloud stop-all-agents
+          when: always
+
+workflows:
+  version: 2
+
+  <%= workflowFileName %>:
+    jobs:
+      - agent:
+          name: Nx Cloud Agent << matrix.ordinal >>
+          matrix:
+            parameters:
+              ordinal: [1, 2, 3]
+      - main:
+          name: Nx Cloud Main

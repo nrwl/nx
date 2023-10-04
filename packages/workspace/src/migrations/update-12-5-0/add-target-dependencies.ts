@@ -1,0 +1,49 @@
+import {
+  formatFiles,
+  NxJsonConfiguration,
+  readNxJson,
+  TargetDependencyConfig,
+  Tree,
+  updateNxJson,
+} from '@nx/devkit';
+import { output } from '../../utilities/output';
+
+export async function setTargetDependencies(host: Tree) {
+  const config: NxJsonConfiguration & {
+    targetDependencies?: Record<string, TargetDependencyConfig[]>;
+  } = readNxJson(host);
+
+  const strictlyOrderedTargets = config.tasksRunnerOptions?.['default']?.options
+    ?.strictlyOrderedTargets || ['build'];
+  delete config.tasksRunnerOptions?.['default']?.options
+    ?.strictlyOrderedTargets;
+  config.targetDependencies = config.targetDependencies ?? {};
+
+  const updatedStrictlyOrderedTargets = [];
+  strictlyOrderedTargets.forEach((target) => {
+    if (!config.targetDependencies[target]) {
+      config.targetDependencies[target] = [
+        { target, projects: 'dependencies' },
+      ];
+      updatedStrictlyOrderedTargets.push(target);
+    }
+  });
+  updateNxJson(host, config);
+
+  if (updatedStrictlyOrderedTargets.length > 0) {
+    output.note({
+      title: 'Target dependencies have been updated in nx.json',
+      bodyLines: [
+        `Nx has deprecated strictlyOrderedTargets in favour of targetDependencies.`,
+        `Based on your configuration the migration has configured targetDependencies for the following targets: ${updatedStrictlyOrderedTargets.join(
+          ', '
+        )}.`,
+        `Read more here: https://nx.dev/reference/project-configuration`,
+      ],
+    });
+  }
+
+  await formatFiles(host);
+}
+
+export default setTargetDependencies;

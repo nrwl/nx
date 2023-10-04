@@ -1,0 +1,178 @@
+{
+  "name": "nx",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nx"
+  },
+  "scripts": {
+    "postinstall": "node ./bin/post-install"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "bin": {
+    "nx": "./bin/nx.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "@parcel/watcher": "2.0.4",
+    "@yarnpkg/lockfile": "^1.1.0",
+    "@yarnpkg/parsers": "3.0.0-rc.46",
+    "@zkochan/js-yaml": "0.0.6",
+    "axios": "^1.0.0",
+    "chalk": "^4.1.0",
+    "cli-cursor": "3.1.0",
+    "cli-spinners": "2.6.1",
+    "cliui": "^8.0.1",
+    "dotenv": "~16.3.1",
+    "dotenv-expand": "~10.0.0",
+    "enquirer": "~2.3.6",
+    "figures": "3.2.0",
+    "flat": "^5.0.2",
+    "fs-extra": "^11.1.0",
+    "glob": "7.1.4",
+    "ignore": "^5.0.4",
+    "jest-diff": "^29.4.1",
+    "js-yaml": "4.1.0",
+    "jsonc-parser": "3.2.0",
+    "lines-and-columns": "~2.0.3",
+    "minimatch": "3.0.5",
+    "npm-run-path": "^4.0.1",
+    "open": "^8.4.0",
+    "semver": "7.5.3",
+    "string-width": "^4.2.3",
+    "strong-log-transformer": "^2.1.0",
+    "tar-stream": "~2.2.0",
+    "tmp": "~0.2.1",
+    "tsconfig-paths": "^4.1.2",
+    "tslib": "^2.3.0",
+    "v8-compile-cache": "2.3.0",
+    "yargs": "^17.6.2",
+    "yargs-parser": "21.1.1",
+    "node-machine-id": "1.1.12"
+  },
+  "peerDependencies": {
+    "@swc-node/register": "^1.6.7",
+    "@swc/core": "^1.3.85"
+  },
+  "peerDependenciesMeta": {
+    "@swc-node/register": {
+      "optional": true
+    },
+    "@swc/core": {
+      "optional": true
+    }
+  },
+  "optionalDependencies": {
+    "@nx/nx-darwin-x64": "*",
+    "@nx/nx-darwin-arm64": "*",
+    "@nx/nx-linux-x64-gnu": "*",
+    "@nx/nx-linux-x64-musl": "*",
+    "@nx/nx-win32-x64-msvc": "*",
+    "@nx/nx-linux-arm64-gnu": "*",
+    "@nx/nx-linux-arm64-musl": "*",
+    "@nx/nx-linux-arm-gnueabihf": "*",
+    "@nx/nx-win32-arm64-msvc": "*",
+    "@nx/nx-freebsd-x64": "*"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json",
+    "packageGroup": [
+      "@nx/js",
+      "@nrwl/js",
+      "@nx/jest",
+      "@nrwl/jest",
+      "@nx/linter",
+      "@nrwl/linter",
+      "@nx/workspace",
+      "@nrwl/workspace",
+      "@nx/angular",
+      "@nrwl/angular",
+      "@nx/cypress",
+      "@nrwl/cypress",
+      "@nx/detox",
+      "@nrwl/detox",
+      "@nx/devkit",
+      "@nrwl/devkit",
+      "@nx/esbuild",
+      "@nrwl/esbuild",
+      "@nx/eslint-plugin",
+      "@nrwl/eslint-plugin-nx",
+      "@nx/expo",
+      "@nrwl/expo",
+      "@nx/express",
+      "@nrwl/express",
+      "@nx/nest",
+      "@nrwl/nest",
+      "@nx/next",
+      "@nrwl/next",
+      "@nx/node",
+      "@nrwl/node",
+      "@nx/playwright",
+      "@nx/plugin",
+      "@nrwl/nx-plugin",
+      "@nx/react",
+      "@nrwl/react",
+      "@nx/react-native",
+      "@nrwl/react-native",
+      "@nx/rollup",
+      "@nrwl/rollup",
+      "@nx/storybook",
+      "@nrwl/storybook",
+      "@nrwl/tao",
+      "@nx/vite",
+      "@nrwl/vite",
+      "@nx/web",
+      "@nrwl/web",
+      "@nx/webpack",
+      "@nrwl/webpack",
+      {
+        "package": "nx-cloud",
+        "version": "latest"
+      },
+      {
+        "package": "@nrwl/nx-cloud",
+        "version": "latest"
+      }
+    ]
+  },
+  "executors": "./executors.json",
+  "builders": "./executors.json",
+  "publishConfig": {
+    "access": "public"
+  },
+  "napi": {
+    "name": "nx",
+    "package": {
+      "name": "@nx/nx"
+    },
+    "triples": {
+      "additional": [
+        "aarch64-apple-darwin",
+        "aarch64-unknown-linux-gnu",
+        "aarch64-unknown-linux-musl",
+        "aarch64-pc-windows-msvc",
+        "armv7-unknown-linux-gnueabihf",
+        "x86_64-unknown-linux-musl",
+        "x86_64-unknown-freebsd"
+      ]
+    }
+  }
+}

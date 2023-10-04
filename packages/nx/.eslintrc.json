@@ -1,0 +1,106 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.ts"],
+      "excludedFiles": ["*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "typescript",
+                "message": "TypeScript is an optional dependency for Nx. If you need to use it, make sure its installed first with ensureTypescript.",
+                "allowTypeImports": true
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["nx/*"],
+                "message": "Circular import in 'nx' found. Use relative path."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["./package.json", "./executors.json", "./migrations.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": [
+          "error",
+          {
+            "allowedVersionStrings": ["latest"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["nxw.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["*", "!fs"],
+                "message": "The Nx wrapper is ran before packages are installed. It should only import node builtins.",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ],
+        "no-restricted-modules": [
+          "error",
+          {
+            "patterns": ["*", "!fs", "!path", "!child_process", "!node:*"]
+          }
+        ],
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "typescript",
+              "@nrwl/angular",
+              "@angular-devkit/build-angular",
+              "@angular-devkit/core",
+              "@angular-devkit/architect",
+              "@swc/core", //Optional, used in JS analysis if available
+              "@swc/node-register", //Optional, used in JS analysis if available
+              "rxjs",
+              "@angular-devkit/schematics",
+              "@pnpm/lockfile-types",
+              "@nestjs/cli", // nx init nest makes use of nestjs cli (which should be available in NestJS CLI app) to parse the nest-cli.json file
+              "ts-node", // We *may* fall back on ts-node, but we want to encourage the use of @swc-node instead so we don't explicitly list ts-node as an optional dep
+              "memfs", // used in mock for handling .node files in tests
+              "events", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "process", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "prettier", // This is coming from @storybook/builder-manager since it uses the browser polyfill
+              "util" // This is coming from @storybook/builder-manager since it uses the browser polyfill
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

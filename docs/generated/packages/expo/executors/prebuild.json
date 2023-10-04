@@ -1,0 +1,45 @@
+{
+  "name": "prebuild",
+  "implementation": "/packages/expo/src/executors/prebuild/prebuild.impl.ts",
+  "schema": {
+    "cli": "nx",
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "$id": "NxExpoPrebuild",
+    "$schema": "http://json-schema.org/schema",
+    "title": "Expo Prebuild",
+    "description": "Create native iOS and Android project files for building natively.",
+    "type": "object",
+    "properties": {
+      "clean": {
+        "type": "boolean",
+        "description": "Delete the native folders and regenerate them before applying changes",
+        "default": false
+      },
+      "install": {
+        "type": "boolean",
+        "description": "Installing npm packages and CocoaPods.",
+        "default": true,
+        "x-priority": "internal"
+      },
+      "platform": {
+        "description": "Platforms to sync",
+        "default": "all",
+        "enum": ["ios", "android", "all"],
+        "alias": "p",
+        "x-priority": "important"
+      },
+      "template": {
+        "type": "string",
+        "description": "Project template to clone from. File path pointing to a local tar file or a github repo"
+      }
+    },
+    "examplesFile": "The `prebuild` command generates native code before a native app can compile.\n\n`project.json`:\n\n```json\n{\n  \"name\": \"mobile\",\n  //...\n  \"targets\": {\n    //...\n    \"prebuild\": {\n      \"executor\": \"@nx/expo:prebuild\",\n      \"options\": {}\n    }\n    //...\n  }\n}\n```\n\n```shell\nnx run mobile:prebuild\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Generate Native Code for Different Platforms\" %}\nThe `platform` option allows you to specify the platform to generate native code for (e.g. android, ios, all).\n\n```json\n    \"prebuild\": {\n      \"executor\": \"@nx/expo:prebuild\",\n      \"options\": {\n        \"platform\": \"android\"\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Regenerate Native Code\" %}\n\nThe `clean` option allows you to delete the native folders and regenerate them before apply changes.\n\n```json\n    \"prebuild\": {\n      \"executor\": \"@nx/expo:prebuild\",\n      \"options\": {\n        \"clean\": true\n      }\n    }\n```\n\n{% /tab %}\n{% tab label=\"Install NPM Packages and CocoaPods\" %}\n\nThe `install` option allows you to install NPM Packages and CocoaPods.\n\n```json\n    \"prebuild\": {\n      \"executor\": \"@nx/expo:prebuild\",\n      \"options\": {\n        \"install\": true\n      }\n    }\n```\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
+    "presets": []
+  },
+  "description": "Create native iOS and Android project files for building natively.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/expo/src/executors/prebuild/schema.json",
+  "type": "executor"
+}

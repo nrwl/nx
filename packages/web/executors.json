@@ -1,0 +1,16 @@
+{
+  "builders": {
+    "file-server": {
+      "implementation": "./src/executors/file-server/compat",
+      "schema": "./src/executors/file-server/schema.json",
+      "description": "Serve a web application from a folder."
+    }
+  },
+  "executors": {
+    "file-server": {
+      "implementation": "./src/executors/file-server/file-server.impl",
+      "schema": "./src/executors/file-server/schema.json",
+      "description": "Serve a web application from a folder."
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "e2e-js",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/js",
+  "projectType": "application",
+  "targets": {
+    "e2e": {}
+  },
+  "implicitDependencies": ["jest"]
+}

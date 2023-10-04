@@ -1,0 +1,31 @@
+{
+  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+  "lib": {
+    "entryFile": "index.ts"
+  },
+  "dest": "../../build/packages/angular",
+  "deleteDestPath": false,
+  "allowedNonPeerDependencies": [
+    "@nx/",
+    "@angular-devkit",
+    "@angular-eslint/",
+    "@nguniversal/builders",
+    "@schematics",
+    "@phenomnomnominal/tsquery",
+    "@typescript-eslint/",
+    "chalk",
+    "ignore",
+    "minimatch",
+    "rxjs-for-await",
+    "webpack-merge",
+    "ts-node",
+    "tsconfig-paths",
+    "semver",
+    "webpack",
+    "http-server",
+    "magic-string",
+    "enquirer",
+    "find-cache-dir"
+  ],
+  "keepLifecycleScripts": true
+}

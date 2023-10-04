@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularStorybookConfigurationGenerator",
+  "title": "Adds Storybook configuration to a project.",
+  "description": "Adds Storybook configuration to a project to be able to use and create stories.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "aliases": ["project", "projectName"],
+      "description": "Project for which to generate Storybook configuration.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "For which project do you want to generate Storybook configuration?",
+      "x-dropdown": "projects",
+      "x-priority": "important"
+    },
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "alias": ["configureTestRunner"],
+      "x-priority": "important",
+      "default": true
+    },
+    "configureCypress": {
+      "type": "boolean",
+      "description": "Specifies whether to configure Cypress or not."
+    },
+    "generateStories": {
+      "type": "boolean",
+      "description": "Specifies whether to automatically generate `*.stories.ts` files for components declared in this project or not.",
+      "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
+      "default": true,
+      "x-priority": "important"
+    },
+    "generateCypressSpecs": {
+      "type": "boolean",
+      "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app."
+    },
+    "configureStaticServe": {
+      "type": "boolean",
+      "description": "Specifies whether to configure a static file server target for serving storybook. Helpful for speeding up CI build/test times.",
+      "x-prompt": "Configure a static file server for the storybook instance?",
+      "default": true,
+      "x-priority": "important"
+    },
+    "cypressDirectory": {
+      "type": "string",
+      "description": "A directory where the Cypress project will be placed. Placed at the root by default."
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "eslint"
+    },
+    "tsConfiguration": {
+      "type": "boolean",
+      "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
+      "default": true,
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "ignorePaths": {
+      "type": "array",
+      "description": "Paths to ignore when looking for components.",
+      "items": {
+        "type": "string",
+        "description": "Path to ignore."
+      },
+      "examples": [
+        "apps/my-app/src/not-stories/**",
+        "**/**/src/**/not-stories/**",
+        "libs/my-lib/**/*.something.ts",
+        "**/**/src/**/*.other.*",
+        "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": ["name"],
+  "examplesFile": "../../../docs/storybook-configuration-examples.md"
+}

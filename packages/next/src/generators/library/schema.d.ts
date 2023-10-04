@@ -1,0 +1,27 @@
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
+import type { Linter } from '@nx/linter';
+import type { SupportedStyles } from '@nx/react';
+
+export interface Schema {
+  name: string;
+  directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  style: SupportedStyles;
+  skipTsConfig?: boolean;
+  skipFormat?: boolean;
+  tags?: string;
+  pascalCaseFiles?: boolean;
+  routing?: boolean;
+  appProject?: string;
+  unitTestRunner: 'jest' | 'none';
+  linter: Linter;
+  component?: boolean;
+  publishable?: boolean;
+  buildable?: boolean;
+  importPath?: string;
+  js?: boolean;
+  globalCss?: boolean;
+  strict?: boolean;
+  setParserOptionsProject?: boolean;
+  skipPackageJson?: boolean;
+}

@@ -1,0 +1,198 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cypress 11 Migration should migrate to v11 1`] = `
+"it('calls the prop', () => {
+  cy.mount(<Comp onUnmount={cy.stub().as('onUnmount')} />);
+  cy.contains('My component');
+});
+
+describe('again', () => {
+  it('calls the prop', () => {
+    cy.mount(<Comp onUnmount={cy.stub().as('onUnmount')} />);
+    cy.contains('My component');
+  });
+});
+"
+`;
+
+exports[`Cypress 11 Migration should migrate to v11 2`] = `
+"/** TODO: mountHook is deprecate.
+ * Use a wrapper component instead.
+ * See post for details: https://www.cypress.io/blog/2022/11/04/upcoming-changes-to-component-testing/#reactmounthook-removed
+ * */
+import { mountHook, getContainerEl } from 'cypress/react18';
+import ReactDom from 'react-dom';
+import { useCounter } from './useCounter';
+
+it('increments the count', () => {
+  mountHook(() => useCounter()).then((result) => {
+    expect(result.current.count).to.equal(0);
+    result.current.increment();
+    expect(result.current.count).to.equal(1);
+    result.current.increment();
+    expect(result.current.count).to.equal(2);
+  });
+});
+
+describe('blah', () => {
+  it('increments the count', () => {
+    mountHook(() => useCounter()).then((result) => {
+      expect(result.current.count).to.equal(0);
+      result.current.increment();
+      expect(result.current.count).to.equal(1);
+      result.current.increment();
+      expect(result.current.count).to.equal(2);
+    });
+  });
+});
+
+it('calls the prop', () => {
+  cy.mount(<Comp onUnmount={cy.stub().as('onUnmount')} />);
+  cy.contains('My component');
+
+  cy.then(() => ReactDom.unmountComponentAtNode(getContainerEl()));
+
+  cy.contains('My component').should('not.exist');
+  cy.get('@onUnmount').should('have.been.calledOnce');
+});
+
+describe('again', () => {
+  it('calls the prop', () => {
+    cy.mount(<Comp onUnmount={cy.stub().as('onUnmount')} />);
+    cy.contains('My component');
+
+    cy.then(() => ReactDom.unmountComponentAtNode(getContainerEl()));
+
+    cy.contains('My component').should('not.exist');
+    cy.get('@onUnmount').should('have.been.calledOnce');
+  });
+});
+"
+`;
+
+exports[`Cypress 11 Migration should migrate to v11 3`] = `
+"/** TODO: mountHook is deprecate.
+ * Use a wrapper component instead.
+ * See post for details: https://www.cypress.io/blog/2022/11/04/upcoming-changes-to-component-testing/#reactmounthook-removed
+ * */
+import { mountHook, getContainerEl } from 'cypress/react';
+import ReactDom from 'react-dom';
+import { useCounter } from './useCounter';
+
+it('increments the count', () => {
+  mountHook(() => useCounter()).then((result) => {
+    expect(result.current.count).to.equal(0);
+    result.current.increment();
+    expect(result.current.count).to.equal(1);
+    result.current.increment();
+    expect(result.current.count).to.equal(2);
+  });
+});
+
+describe('blah', () => {
+  it('increments the count', () => {
+    mountHook(() => useCounter()).then((result) => {
+      expect(result.current.count).to.equal(0);
+      result.current.increment();
+      expect(result.current.count).to.equal(1);
+      result.current.increment();
+      expect(result.current.count).to.equal(2);
+    });
+  });
+});
+
+it('calls the prop', () => {
+  cy.mount(<Comp onUnmount={cy.stub().as('onUnmount')} />);
+  cy.contains('My component');
+
+  cy.then(() => ReactDom.unmountComponentAtNode(getContainerEl()));
+
+  cy.contains('My component').should('not.exist');
+  cy.get('@onUnmount').should('have.been.calledOnce');
+});
+
+describe('again', () => {
+  it('calls the prop', () => {
+    cy.mount(<Comp onUnmount={cy.stub().as('onUnmount')} />);
+    cy.contains('My component');
+
+    cy.then(() => ReactDom.unmountComponentAtNode(getContainerEl()));
+
+    cy.contains('My component').should('not.exist');
+    cy.get('@onUnmount').should('have.been.calledOnce');
+  });
+});
+"
+`;
+
+exports[`Cypress 11 Migration should migrate to v11 4`] = `
+"import { TestBed } from '@angular/core/testing';
+
+import { MyComponent } from './my.component';
+describe('MyComponent', () => {
+  const config = {
+    imports: [],
+    declarations: [],
+    providers: [{ provide: 'foo', useValue: 'bar' }],
+  };
+  it('direct usage', () => {
+    TestBed.overrideComponent(MyComponent, {
+      add: { providers: config.providers },
+    });
+    cy.mount(MyComponent, config);
+  });
+  it('spread usage', () => {
+    TestBed.overrideComponent(MyComponent, {
+      add: { providers: [{ provide: 'foo', useValue: 'bar' }] },
+    });
+    cy.mount(MyComponent, { ...config, providers: undefined });
+  });
+  it('inlined usage', () => {
+    TestBed.overrideComponent(MyComponent, {
+      add: { providers: [{ provide: 'foo', useValue: 'bar' }] },
+    });
+    cy.mount(MyComponent, {
+      imports: [],
+      declarations: [],
+      providers: undefined,
+    });
+  });
+});
+"
+`;
+
+exports[`Cypress 11 Migration should migrate to v11 5`] = `
+"import { MountConfig } from 'cypress/angular';
+import { MyComponent } from './my.component';
+import { TestBed } from '@angular/core/testing';
+describe('MyComponent', () => {
+  const config: MountConfig = {
+    imports: [],
+    declarations: [],
+    providers: [{ provide: 'foo', useValue: 'bar' }],
+  };
+  it('direct usage', () => {
+    TestBed.overrideComponent(MyComponent, {
+      add: { providers: config.providers },
+    });
+    cy.mount(MyComponent, config);
+  });
+  it('spread usage', () => {
+    TestBed.overrideComponent(MyComponent, {
+      add: { providers: [{ provide: 'foo', useValue: 'bar' }] },
+    });
+    cy.mount(MyComponent, { ...config, providers: undefined });
+  });
+  it('inlined usage', () => {
+    TestBed.overrideComponent(MyComponent, {
+      add: { providers: [{ provide: 'foo', useValue: 'bar' }] },
+    });
+    cy.mount(MyComponent, {
+      imports: [],
+      declarations: [],
+      providers: undefined,
+    });
+  });
+});
+"
+`;

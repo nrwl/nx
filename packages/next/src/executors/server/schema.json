@@ -1,0 +1,59 @@
+{
+  "version": 2,
+  "outputCapture": "pipe",
+  "cli": "nx",
+  "title": "Next Serve",
+  "description": "Serve a Next.js app.",
+  "type": "object",
+  "properties": {
+    "dev": {
+      "type": "boolean",
+      "description": "Serve the application in the dev mode.",
+      "default": true
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application.",
+      "x-priority": "important"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200,
+      "x-priority": "important"
+    },
+    "staticMarkup": {
+      "type": "boolean",
+      "description": "Static markup.",
+      "default": false
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Hide error messages containing server information.",
+      "default": false
+    },
+    "customServerTarget": {
+      "type": "string",
+      "description": "Target which builds the custom server."
+    },
+    "hostname": {
+      "type": "string",
+      "description": "Hostname on which the application is served."
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
+    },
+    "keepAliveTimeout": {
+      "type": "number",
+      "description": "Max milliseconds to wait before closing inactive connection."
+    },
+    "turbo": {
+      "type": "boolean",
+      "description": "Activate the incremental bundler for Next.js, which is implemented in Rust. Please note, this feature is exclusively available in development mode."
+    }
+  },
+  "required": ["buildTarget"],
+  "examplesFile": "../../../docs/server-next-executor-examples.md"
+}

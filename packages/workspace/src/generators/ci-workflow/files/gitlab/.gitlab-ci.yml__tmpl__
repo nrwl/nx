@@ -1,0 +1,47 @@
+image: node:18
+variables:
+  CI: 'true'
+
+# Creating template for DTE agents
+.dte-agent:
+  interruptible: true
+  script:
+    <% if(packageManagerPrefix == 'pnpm exec'){ %>
+    - npm install --prefix=$HOME/.local -g pnpm@8.2.0
+    <% } %>
+    - <%= packageManagerInstall %>
+    - <%= packageManagerPrefix %> nx-cloud start-agent
+
+# Creating template for a job running DTE (orchestrator)
+.base-pipeline:
+  interruptible: true
+  only:
+    - main
+    - merge_requests
+  before_script:
+    <% if(packageManagerPrefix == 'pnpm exec'){ %>
+    - npm install --prefix=$HOME/.local -g pnpm@8.2.0
+    <% } %>
+    - <%= packageManagerInstall %>
+    - NX_HEAD=$CI_COMMIT_SHA
+    - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+
+# Main job running DTE
+<%= workflowName %>:
+  stage: affected
+  extends: .base-pipeline
+  script:
+    - <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build"
+    - <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage & <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage & <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+
+# Create as many agents as you want
+nx-dte-agent1:
+  extends: .dte-agent
+  stage: affected
+nx-dte-agent2:
+  extends: .dte-agent
+  stage: affected
+nx-dte-agent3:
+  extends: .dte-agent
+  stage: affected

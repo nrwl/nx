@@ -1,0 +1,46 @@
+{
+  "builders": {
+    "dev-server": {
+      "implementation": "./src/executors/dev-server/compat",
+      "schema": "./src/executors/dev-server/schema.json",
+      "description": "Vite dev server."
+    },
+    "build": {
+      "implementation": "./src/executors/build/compat",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build with Vite."
+    },
+    "test": {
+      "implementation": "./src/executors/test/compat",
+      "schema": "./src/executors/test/schema.json",
+      "description": "Test with Vitest"
+    },
+    "preview-server": {
+      "implementation": "./src/executors/preview-server/compat",
+      "schema": "./src/executors/preview-server/schema.json",
+      "description": "Vite preview server"
+    }
+  },
+  "executors": {
+    "dev-server": {
+      "implementation": "./src/executors/dev-server/dev-server.impl",
+      "schema": "./src/executors/dev-server/schema.json",
+      "description": "Vite dev server."
+    },
+    "build": {
+      "implementation": "./src/executors/build/build.impl",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build with Vite."
+    },
+    "test": {
+      "implementation": "./src/executors/test/vitest.impl",
+      "schema": "./src/executors/test/schema.json",
+      "description": "Test with Vitest"
+    },
+    "preview-server": {
+      "implementation": "./src/executors/preview-server/preview-server.impl",
+      "schema": "./src/executors/preview-server/schema.json",
+      "description": "Vite preview server"
+    }
+  }
+}

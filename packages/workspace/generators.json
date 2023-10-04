@@ -1,0 +1,102 @@
+{
+  "name": "nx/workspace",
+  "version": "0.1",
+  "schematics": {
+    "move": {
+      "factory": "./src/generators/move/move#moveSchematic",
+      "schema": "./src/generators/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an application or library to another folder."
+    },
+    "remove": {
+      "factory": "./src/generators/remove/remove#removeSchematic",
+      "schema": "./src/generators/remove/schema.json",
+      "aliases": ["rm"],
+      "description": "Remove an application or library."
+    },
+    "convert-to-monorepo": {
+      "factory": "./src/generators/convert-to-monorepo/convert-to-monorepo#monorepoSchematic",
+      "schema": "./src/generators/convert-to-monorepo/schema.json",
+      "description": "Convert a Nx project to a monorepo."
+    },
+    "workspace-generator": {
+      "factory": "./src/generators/workspace-generator/workspace-generator",
+      "schema": "./src/generators/workspace-generator/schema.json",
+      "aliases": ["workspace-schematic"],
+      "description": "Generates a workspace generator."
+    },
+    "run-commands": {
+      "factory": "./src/generators/run-commands/run-commands#runCommandsSchematic",
+      "schema": "./src/generators/run-commands/schema.json",
+      "aliases": ["run-command", "target"],
+      "description": "Generates a target to run any command in the terminal."
+    },
+    "npm-package": {
+      "factory": "./src/generators/npm-package/npm-package#npmPackageSchematic",
+      "schema": "./src/generators/npm-package/schema.json",
+      "description": "Create a minimal NPM package.",
+      "x-type": "library"
+    }
+  },
+  "generators": {
+    "preset": {
+      "factory": "./src/generators/preset/preset#presetGenerator",
+      "schema": "./src/generators/preset/schema.json",
+      "description": "Create application in an empty workspace.",
+      "x-use-standalone-layout": true,
+      "hidden": true
+    },
+    "move": {
+      "factory": "./src/generators/move/move#moveGeneratorInternal",
+      "schema": "./src/generators/move/schema.json",
+      "aliases": ["mv"],
+      "description": "Move an application or library to another folder."
+    },
+    "remove": {
+      "factory": "./src/generators/remove/remove#removeGenerator",
+      "schema": "./src/generators/remove/schema.json",
+      "aliases": ["rm"],
+      "description": "Remove an application or library."
+    },
+    "convert-to-monorepo": {
+      "factory": "./src/generators/convert-to-monorepo/convert-to-monorepo",
+      "schema": "./src/generators/convert-to-monorepo/schema.json",
+      "description": "Convert a Nx project to a monorepo."
+    },
+    "new": {
+      "factory": "./src/generators/new/new#newGenerator",
+      "schema": "./src/generators/new/schema.json",
+      "description": "Create a workspace.",
+      "hidden": true
+    },
+    "workspace-generator": {
+      "factory": "./src/generators/workspace-generator/workspace-generator",
+      "schema": "./src/generators/workspace-generator/schema.json",
+      "aliases": ["workspace-schematic"],
+      "description": "Generates a workspace generator."
+    },
+    "run-commands": {
+      "factory": "./src/generators/run-commands/run-commands#runCommandsGenerator",
+      "schema": "./src/generators/run-commands/schema.json",
+      "aliases": ["run-command", "target"],
+      "description": "Generates a target to run any command in the terminal."
+    },
+    "fix-configuration": {
+      "factory": "./src/generators/convert-to-nx-project/convert-to-nx-project#convertToNxProjectGenerator",
+      "schema": "./src/generators/convert-to-nx-project/schema.json",
+      "aliases": ["convert-to-nx-project"],
+      "description": "Fixes projects configuration"
+    },
+    "npm-package": {
+      "factory": "./src/generators/npm-package/npm-package#npmPackageGeneratorInternal",
+      "schema": "./src/generators/npm-package/schema.json",
+      "description": "Create a minimal NPM package.",
+      "x-type": "library"
+    },
+    "ci-workflow": {
+      "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
+      "schema": "./src/generators/ci-workflow/schema.json",
+      "description": "Generate a CI workflow."
+    }
+  }
+}

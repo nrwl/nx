@@ -1,0 +1,63 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "env": {
+    "node": true
+  },
+  "ignorePatterns": ["**/*.ts"],
+  "plugins": ["@typescript-eslint", "@nx"],
+  "extends": ["plugin:storybook/recommended"],
+  "rules": {
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-restricted-imports": ["error", "create-nx-workspace"],
+    "@typescript-eslint/no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["nx/src/plugins/js*"],
+            "message": "Imports from 'nx/src/plugins/js' are not allowed. Use '@nx/js' instead"
+          }
+        ]
+      }
+    ],
+    "storybook/no-uninstalled-addons": [
+      "error",
+      {
+        "ignore": ["@nx/react/plugins/storybook"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["*.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {}
+    },
+    {
+      "files": ["**/executors/**/schema.json", "**/generators/**/schema.json"],
+      "rules": {
+        "@nx/workspace/valid-schema-description": "error"
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@nx/enforce-module-boundaries": [
+          "error",
+          {
+            "enforceBuildableLibDependency": true,
+            "checkDynamicDependenciesExceptions": [".*"],
+            "allow": [],
+            "depConstraints": [
+              {
+                "sourceTag": "*",
+                "onlyDependOnLibsWithTags": ["*"]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

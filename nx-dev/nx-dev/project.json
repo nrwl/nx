@@ -1,0 +1,137 @@
+{
+  "name": "nx-dev",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/nx-dev",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "target": "build-base"
+        }
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx run nx-dev:sitemap",
+          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
+        ],
+        "parallel": false
+      },
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
+    },
+    "sitemap": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
+      "options": {
+        "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
+      }
+    },
+    "sync-documentation": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/public/documentation"],
+      "options": {
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/nx-dev-docs-latest-sync.ts"
+      }
+    },
+    "generate-og-images": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/public/images/open-graph"],
+      "options": {
+        "command": "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/open-graph/generate-images.ts"
+      }
+    },
+    "build-base": {
+      "executor": "@nx/next:build",
+      "dependsOn": ["copy-docs"],
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "root": "nx-dev/nx-dev",
+        "outputPath": "dist/nx-dev/nx-dev"
+      },
+      "configurations": {
+        "development": {
+          "outputPath": "nx-dev/nx-dev"
+        },
+        "production": {}
+      }
+    },
+    "copy-docs": {
+      "inputs": ["{workspaceRoot}/docs/**/*"],
+      "outputs": ["{projectRoot}/public/documentation"],
+      "command": "node ./copy-docs.js",
+      "options": {
+        "cwd": "nx-dev/nx-dev"
+      }
+    },
+    "serve-docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx watch --projects=docs -- nx run nx-dev:copy-docs",
+          "nx run nx-dev:serve"
+        ],
+        "parallel": true
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "dependsOn": ["copy-docs"],
+      "options": {
+        "buildTarget": "nx-dev:build-base",
+        "dev": true
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "nx-dev:build-base:production",
+          "dev": false
+        },
+        "development": {
+          "buildTarget": "nx-dev:build-base:development",
+          "dev": true
+        }
+      },
+      "defaultConfiguration": "development"
+    },
+    "deploy-build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/public/documentation"],
+      "options": {
+        "commands": [
+          {
+            "command": "nx run nx-dev:generate-og-images",
+            "description": "OG images generation"
+          },
+          {
+            "command": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts",
+            "description": "Pre-generate official package metadata"
+          },
+          {
+            "command": "nx copy-docs nx-dev",
+            "description": "Copy generated docs to build output"
+          },
+          {
+            "command": "npx ts-node scripts/documentation/plugin-quality-indicators.ts",
+            "description": "Fetch plugin data"
+          },
+          {
+            "command": "nx run nx-dev:build",
+            "description": "NextJs build step"
+          }
+        ],
+        "color": true,
+        "parallel": false
+      }
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "nx-dev:build:production"
+      }
+    },
+    "lint": {},
+    "test": {}
+  },
+  "tags": ["scope:nx-dev", "type:app"],
+  "implicitDependencies": ["docs"]
+}

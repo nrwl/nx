@@ -1,0 +1,187 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Nx Plugin Migration - jest 29 mocked usage in tests should be idempotent 1`] = `
+"import { MaybeMockedDeep, MaybeMocked } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
+
+jest.mock('./song');
+jest.spyOn(console, 'log');
+
+const mockedSong = jest.mocked(song, true);
+// or through \`jest.Mocked<Source>\`
+// const mockedSong = song as jest.Mocked<typeof song>;
+
+test('deep method is typed correctly', () => {
+  mockedSong.one.more.time.mockReturnValue(12);
+
+  expect(mockedSong.one.more.time(10)).toBe(12);
+  expect(mockedSong.one.more.time.mock.calls).toHaveLength(1);
+});
+
+test('direct usage', () => {
+  jest.mocked(console.log).mockImplementation(() => {
+    return;
+  });
+
+  console.log('one more time');
+
+  expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
+});
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 mocked usage in tests should be idempotent 2`] = `
+"const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
+
+jest.mock('./song');
+jest.spyOn(console, 'log');
+
+const mockedSong = jest.mocked(song, true);
+// or through \`jest.Mocked<Source>\`
+// const mockedSong = song as jest.Mocked<typeof song>;
+
+test('deep method is typed correctly', () => {
+  mockedSong.one.more.time.mockReturnValue(12);
+
+  expect(mockedSong.one.more.time(10)).toBe(12);
+  expect(mockedSong.one.more.time.mock.calls).toHaveLength(1);
+});
+
+test('direct usage', () => {
+  jest.mocked(console.log).mockImplementation(() => {
+    return;
+  });
+
+  console.log('one more time');
+
+  expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
+});
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 mocked usage in tests should be idempotent 3`] = `
+"import { MaybeMockedDeep, MaybeMocked } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
+
+jest.mock('./song');
+jest.spyOn(console, 'log');
+
+const mockedSong = jest.mocked(song, true);
+// or through \`jest.Mocked<Source>\`
+// const mockedSong = song as jest.Mocked<typeof song>;
+
+test('deep method is typed correctly', () => {
+  mockedSong.one.more.time.mockReturnValue(12);
+
+  expect(mockedSong.one.more.time(10)).toBe(12);
+  expect(mockedSong.one.more.time.mock.calls).toHaveLength(1);
+});
+
+test('direct usage', () => {
+  jest.mocked(console.log).mockImplementation(() => {
+    return;
+  });
+
+  console.log('one more time');
+
+  expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
+});
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 mocked usage in tests should be idempotent 4`] = `
+"const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
+
+jest.mock('./song');
+jest.spyOn(console, 'log');
+
+const mockedSong = jest.mocked(song, true);
+// or through \`jest.Mocked<Source>\`
+// const mockedSong = song as jest.Mocked<typeof song>;
+
+test('deep method is typed correctly', () => {
+  mockedSong.one.more.time.mockReturnValue(12);
+
+  expect(mockedSong.one.more.time(10)).toBe(12);
+  expect(mockedSong.one.more.time.mock.calls).toHaveLength(1);
+});
+
+test('direct usage', () => {
+  jest.mocked(console.log).mockImplementation(() => {
+    return;
+  });
+
+  console.log('one more time');
+
+  expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
+});
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 mocked usage in tests should not update anything if there are no tests 1`] = `
+"import { MaybeMockedDeep, MaybeMocked } from 'jest-mock';
+import { expect, jest, test } from '@jest/globals';
+import { song } from './song';
+
+jest.mock('./song');
+jest.spyOn(console, 'log');
+
+const mockedSong = jest.mocked(song, true);
+// or through \`jest.Mocked<Source>\`
+// const mockedSong = song as jest.Mocked<typeof song>;
+
+test('deep method is typed correctly', () => {
+  mockedSong.one.more.time.mockReturnValue(12);
+
+  expect(mockedSong.one.more.time(10)).toBe(12);
+  expect(mockedSong.one.more.time.mock.calls).toHaveLength(1);
+});
+
+test('direct usage', () => {
+  jest.mocked(console.log).mockImplementation(() => {
+    return;
+  });
+
+  console.log('one more time');
+
+  expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
+});
+"
+`;
+
+exports[`Nx Plugin Migration - jest 29 mocked usage in tests should not update anything if there are no tests 2`] = `
+"const { MaybeMockedDeep, MaybeMocked } = require('jest-mock');
+const { expect, jest, test } = require('@jest/globals');
+const { song } = require('./song');
+
+jest.mock('./song');
+jest.spyOn(console, 'log');
+
+const mockedSong = jest.mocked(song, true);
+// or through \`jest.Mocked<Source>\`
+// const mockedSong = song as jest.Mocked<typeof song>;
+
+test('deep method is typed correctly', () => {
+  mockedSong.one.more.time.mockReturnValue(12);
+
+  expect(mockedSong.one.more.time(10)).toBe(12);
+  expect(mockedSong.one.more.time.mock.calls).toHaveLength(1);
+});
+
+test('direct usage', () => {
+  jest.mocked(console.log).mockImplementation(() => {
+    return;
+  });
+
+  console.log('one more time');
+
+  expect(jest.mocked(console.log, false).mock.calls).toHaveLength(1);
+});
+"
+`;

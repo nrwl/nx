@@ -1,0 +1,58 @@
+{
+  "name": "Nx Storybook",
+  "version": "0.1",
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add Storybook configuration to the workspace.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration#configurationSchematic",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add Storybook configuration to a UI library or an application.",
+      "hidden": false
+    },
+    "cypress-project": {
+      "factory": "./src/generators/cypress-project/cypress-project#cypressProjectSchematic",
+      "schema": "./src/generators/cypress-project/schema.json",
+      "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
+      "hidden": false
+    },
+    "migrate-7": {
+      "factory": "./src/generators/migrate-7/migrate-7#migrate7Schematic",
+      "schema": "./src/generators/migrate-7/schema.json",
+      "description": "Migrate to Storybook version 7.",
+      "hidden": false
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Add Storybook configuration to the workspace.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add Storybook configuration to a UI library or an application.",
+      "hidden": false
+    },
+    "cypress-project": {
+      "factory": "./src/generators/cypress-project/cypress-project",
+      "schema": "./src/generators/cypress-project/schema.json",
+      "description": "Add cypress e2e app to test a UI library that is set up for Storybook.",
+      "hidden": false
+    },
+    "migrate-7": {
+      "factory": "./src/generators/migrate-7/migrate-7",
+      "schema": "./src/generators/migrate-7/schema.json",
+      "description": "Migrate to Storybook version 7.",
+      "hidden": false
+    }
+  }
+}

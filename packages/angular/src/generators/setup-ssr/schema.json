@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "GeneratorAngularUniversalSetup",
+  "cli": "nx",
+  "title": "Generate Angular Universal (SSR) setup for an Angular App",
+  "description": "Create the additional configuration required to enable SSR via Angular Universal for an Angular application.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the application to generate the Angular Universal configuration for.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What app would you like to generate an Angular Universal configuration for?",
+      "x-dropdown": "projects"
+    },
+    "appId": {
+      "type": "string",
+      "format": "html-selector",
+      "description": "The `appId` to use with `withServerTransition`. _Note: This is only used in Angular versions <16.0.0. It's deprecated since Angular 16._",
+      "default": "serverApp"
+    },
+    "main": {
+      "type": "string",
+      "format": "path",
+      "description": "The name of the main entry-point file.",
+      "default": "main.server.ts"
+    },
+    "serverFileName": {
+      "type": "string",
+      "default": "server.ts",
+      "description": "The name of the Express server file."
+    },
+    "serverPort": {
+      "type": "number",
+      "default": 4000,
+      "description": "The port for the Express server."
+    },
+    "rootModuleFileName": {
+      "type": "string",
+      "format": "path",
+      "description": "The name of the root module file",
+      "default": "app.server.module.ts"
+    },
+    "rootModuleClassName": {
+      "type": "string",
+      "description": "The name of the root module class.",
+      "default": "AppServerModule"
+    },
+    "standalone": {
+      "type": "boolean",
+      "description": "Use Standalone Components to bootstrap SSR. _Note: This is only supported in Angular versions >= 14.1.0_."
+    },
+    "hydration": {
+      "type": "boolean",
+      "description": "Set up Hydration for the SSR application. _Note: This is only supported in Angular versions >= 16.0.0_."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the workspace after the generator completes.",
+      "x-priority": "internal"
+    }
+  },
+  "required": ["project"],
+  "additionalProperties": false
+}

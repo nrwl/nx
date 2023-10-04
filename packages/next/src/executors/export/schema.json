@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "outputCapture": "pipe",
+  "cli": "nx",
+  "title": "Next Export",
+  "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+  "type": "object",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application",
+      "x-priority": "important"
+    },
+    "silent": {
+      "type": "boolean",
+      "description": "Hide progress or not (default is `false`)",
+      "default": false
+    },
+    "threads": {
+      "type": "number",
+      "description": "Number of worker threads to utilize (defaults to the number of CPUs)"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
+    }
+  },
+  "required": []
+}

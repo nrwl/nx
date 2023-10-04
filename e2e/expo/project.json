@@ -1,0 +1,10 @@
+{
+  "name": "e2e-expo",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/expo",
+  "projectType": "application",
+  "targets": {
+    "e2e-macos": {}
+  },
+  "implicitDependencies": ["expo"]
+}

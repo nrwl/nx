@@ -1,0 +1,25 @@
+{
+  "name": "nx-dev-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/nx-dev-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {},
+    "e2e": {
+      "dependsOn": [
+        {
+          "target": "build-base",
+          "dependencies": true
+        }
+      ],
+      "executor": "@nx/playwright:playwright",
+      "outputs": ["{workspaceRoot}/dist/.playwright/nx-dev/nx-dev-e2e"],
+      "options": {
+        "config": "nx-dev/nx-dev-e2e/playwright.config.ts",
+        "project": ["chromium"]
+      }
+    }
+  },
+  "tags": ["scope:nx-dev", "type:e2e"],
+  "implicitDependencies": ["nx-dev"]
+}

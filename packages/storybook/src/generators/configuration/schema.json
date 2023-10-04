@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxStorybookConfigure",
+  "title": "Storybook Configuration",
+  "description": "Add Storybook configuration to a UI library or an application.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "aliases": ["project", "projectName"],
+      "description": "Project for which to generate Storybook configuration.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "For which project do you want to generate Storybook configuration?",
+      "x-dropdown": "projects",
+      "x-priority": "important"
+    },
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "alias": ["configureTestRunner"],
+      "default": true
+    },
+    "configureCypress": {
+      "type": "boolean",
+      "description": "Run the cypress-configure generator.",
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
+    },
+    "cypressDirectory": {
+      "type": "string",
+      "description": "A directory where the Cypress project will be placed. Added at root by default.",
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "eslint"
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript story files rather than TypeScript story files.",
+      "default": false
+    },
+    "tsConfiguration": {
+      "type": "boolean",
+      "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
+      "default": true,
+      "x-priority": "important"
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
+    },
+    "configureStaticServe": {
+      "type": "boolean",
+      "description": "Add a static-storybook to serve the static storybook built files.",
+      "default": false
+    },
+    "bundler": {
+      "description": "The Storybook builder to use.",
+      "type": "string",
+      "enum": ["vite", "webpack"],
+      "default": "webpack",
+      "x-priority": "important"
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook UI Framework to use.",
+      "enum": [
+        "@storybook/angular",
+        "@storybook/html-webpack5",
+        "@storybook/nextjs",
+        "@storybook/preact-webpack5",
+        "@storybook/react-webpack5",
+        "@storybook/react-vite",
+        "@storybook/server-webpack5",
+        "@storybook/svelte-webpack5",
+        "@storybook/svelte-vite",
+        "@storybook/sveltekit",
+        "@storybook/vue-webpack5",
+        "@storybook/vue-vite",
+        "@storybook/vue3-webpack5",
+        "@storybook/vue3-vite",
+        "@storybook/web-components-webpack5",
+        "@storybook/web-components-vite"
+      ],
+      "aliases": ["storybook7UiFramework"],
+      "x-prompt": "Choose the Storybook framework that you need to use.",
+      "x-priority": "important",
+      "hidden": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": ["name", "uiFramework"],
+  "examplesFile": "../../../docs/configuration-generator-examples.md"
+}

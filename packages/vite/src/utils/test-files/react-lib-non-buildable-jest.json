@@ -1,0 +1,25 @@
+{
+  "name": "react-lib-nonb-jest",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "libs/react-lib-nonb-jest",
+  "sourceRoot": "libs/react-lib-nonb-jest/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/react-lib-nonb-jest/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "libs/react-lib-nonb-jest/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

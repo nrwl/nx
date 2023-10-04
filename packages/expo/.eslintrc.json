@@ -1,0 +1,43 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": [
+        "./package.json",
+        "./generators.json",
+        "./executors.json",
+        "./migrations.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "@nx/rollup",
+              "@nx/webpack",
+              "typescript",
+              "eslint",
+              "expo",
+              "react",
+              "@expo/cli",
+              "eas-cli",
+              "util" // This is coming from @storybook/builder-manager since it uses the browser polyfill
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

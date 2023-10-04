@@ -1,0 +1,35 @@
+{
+  "name": "Nx Webpack",
+  "version": "0.1",
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#webpackInitSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/webpack` plugin.",
+      "hidden": true
+    },
+    "configuration": {
+      "aliases": ["webpack-project"],
+      "factory": "./src/generators/configuration/configuration#compat",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add webpack configuration to a project.",
+      "hidden": true
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#webpackInitGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nrwl/webpack` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "aliases": ["webpack-project"],
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add webpack configuration to a project.",
+      "hidden": true
+    }
+  }
+}

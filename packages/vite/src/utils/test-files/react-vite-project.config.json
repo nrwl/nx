@@ -1,0 +1,57 @@
+{
+  "name": "my-test-react-vite-app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "apps/my-test-react-vite-app",
+  "sourceRoot": "apps/my-test-react-vite-app/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/vite:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/my-test-react-vite-app"
+      },
+      "configurations": {
+        "development": {},
+        "production": {},
+        "ssr": {
+          "ssr": true,
+          "my-other-setting": "my-other-value"
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/vite:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "my-test-react-vite-app:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "my-test-react-vite-app:build:development",
+          "hmr": true
+        },
+        "production": {
+          "buildTarget": "my-test-react-vite-app:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "test": {
+      "executor": "@nrwl/vite:test",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "passWithNoTests": true
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/my-test-react-vite-app/**/*.{ts,tsx,js,jsx}"]
+      }
+    }
+  },
+  "tags": []
+}

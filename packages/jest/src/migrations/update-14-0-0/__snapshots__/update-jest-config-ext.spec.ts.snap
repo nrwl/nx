@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Jest Migration (v14.0.0) should NOT update jest.config.ts preset 1`] = `
+"/* eslint-disable */
+
+module.exports = {
+  displayName: 'lib-one',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    },
+  },
+  transform: {
+    '^.+\\\\.[tj]sx?$': 'ts-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/lib-one',
+};
+"
+`;
+
+exports[`Jest Migration (v14.0.0) should produce the same results when running multiple times 1`] = `
+{
+  "files": [
+    "*.ts",
+    "*.tsx",
+    "*.js",
+    "*.jsx",
+  ],
+  "parserOptions": {
+    "project": [
+      "libs/my-next-proj/tsconfig.*?.json",
+    ],
+  },
+  "rules": {},
+}
+`;
+
+exports[`Jest Migration (v14.0.0) should produce the same results when running multiple times 2`] = `
+"/* eslint-disable */
+module.exports = {
+  displayName: 'lib-one',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    },
+  },
+  transform: {
+    '^.+\\\\.[tj]sx?$': 'ts-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/lib-one',
+};
+"
+`;
+
+exports[`Jest Migration (v14.0.0) should rename project jest.config.js to jest.config.ts 1`] = `
+"/* eslint-disable */
+
+module.exports = {
+  displayName: 'lib-one',
+  preset: '../../jest.preset.js',
+  globals: {
+    'ts-jest': {
+      tsconfig: '<rootDir>/tsconfig.spec.json',
+    },
+  },
+  transform: {
+    '^.+\\\\.[tj]sx?$': 'ts-jest',
+  },
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
+  coverageDirectory: '../../coverage/libs/lib-one',
+};
+"
+`;
+
+exports[`Jest Migration (v14.0.0) should update the excludes of next js apps using the project parser settings 1`] = `
+{
+  "files": [
+    "*.ts",
+    "*.tsx",
+    "*.js",
+    "*.jsx",
+  ],
+  "parserOptions": {
+    "project": [
+      "libs/lib-one/tsconfig.*?.json",
+    ],
+  },
+  "rules": {},
+}
+`;

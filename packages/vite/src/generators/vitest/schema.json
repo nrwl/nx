@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "Vitest",
+  "title": "Vitest",
+  "type": "object",
+  "description": "Generate a Vitest setup for a project.",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to test.",
+      "$default": {
+        "$source": "projectName"
+      }
+    },
+    "uiFramework": {
+      "type": "string",
+      "enum": ["react", "none"],
+      "default": "none",
+      "description": "UI framework to use with vitest."
+    },
+    "inSourceTests": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not generate separate spec files and set up in-source testing."
+    },
+    "skipViteConfig": {
+      "type": "boolean",
+      "default": false,
+      "description": "Skip generating a vite config file."
+    },
+    "coverageProvider": {
+      "type": "string",
+      "enum": ["v8", "c8", "istanbul"],
+      "default": "v8",
+      "description": "Coverage provider to use."
+    },
+    "testTarget": {
+      "type": "string",
+      "description": "The test target of the project to be transformed to use the @nx/vite:test executor.",
+      "hidden": true
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "testEnvironment": {
+      "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
+      "type": "string",
+      "enum": ["node", "jsdom", "happy-dom", "edge-runtime"]
+    }
+  },
+  "required": ["project"]
+}

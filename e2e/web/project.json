@@ -1,0 +1,10 @@
+{
+  "name": "e2e-web",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/web",
+  "projectType": "application",
+  "targets": {
+    "e2e": {}
+  },
+  "implicitDependencies": ["web"]
+}

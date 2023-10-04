@@ -1,0 +1,54 @@
+{
+  "generators": {
+    "add-babel-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Adds babel.config.json to the hash of all tasks",
+      "factory": "./src/migrations/update-15-0-0/add-babel-inputs"
+    },
+    "remove-es2015-polyfills-option": {
+      "cli": "nx",
+      "version": "15.4.5-beta.0",
+      "description": "Removes es2015Polyfills option since legacy browsers are no longer supported.",
+      "factory": "./src/migrations/update-15-4-5/remove-es2015-polyfills-option"
+    },
+    "webpack-config-setup": {
+      "cli": "nx",
+      "version": "15.6.3-beta.0",
+      "description": "Creates or updates webpack.config.js file with the new options for webpack.",
+      "factory": "./src/migrations/update-15-6-3/webpack-config-setup"
+    },
+    "add-babelUpwardRootMode-flag": {
+      "cli": "nx",
+      "version": "15.7.2-beta.0",
+      "description": "Add the babelUpwardRootMode option to the build executor options.",
+      "factory": "./src/migrations/update-15-7-2/add-babelUpwardRootMode-flag"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/webpack with @nx/webpack",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    }
+  },
+  "packageJsonUpdates": {
+    "16.3.0": {
+      "version": "16.3.0-beta.8",
+      "packages": {
+        "@svgr/webpack": {
+          "version": "^8.0.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.4.1": {
+      "version": "16.4.1-beta.0",
+      "packages": {
+        "webpack": {
+          "version": "^5.80.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

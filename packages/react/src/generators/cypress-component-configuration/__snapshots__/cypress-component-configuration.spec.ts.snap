@@ -1,0 +1,101 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`React:CypressComponentTestConfiguration should generate cypress component test config with --build-target 1`] = `
+"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+});
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate cypress component test config with project graph 1`] = `
+"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+});
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate cypress component test config with webpack 1`] = `
+"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename),
+});
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate cypress config with vite 1`] = `
+"import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename, { bundler: 'vite' }),
+});
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 1`] = `
+"import * as React from 'react';
+import SomeCmp from './some-cmp';
+
+describe(SomeCmp.name, () => {
+  it('renders', () => {
+    cy.mount(<SomeCmp />);
+  });
+});
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate tests for existing js components 2`] = `
+"import * as React from 'react';
+import AnotherCmp from './another-cmp';
+
+describe(AnotherCmp.name, () => {
+  it('renders', () => {
+    cy.mount(<AnotherCmp />);
+  });
+});
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 1`] = `
+"import * as React from 'react';
+import SomeLib, { SomeLibProps } from './some-lib';
+
+describe(SomeLib.name, () => {
+  let props: SomeLibProps;
+
+  beforeEach(() => {
+    props = {};
+  });
+
+  it('renders', () => {
+    cy.mount(<SomeLib {...props} />);
+  });
+});
+"
+`;
+
+exports[`React:CypressComponentTestConfiguration should generate tests for existing tsx components 2`] = `
+"import * as React from 'react';
+import AnotherCmp, { AnotherCmpProps } from './another-cmp';
+
+describe(AnotherCmp.name, () => {
+  let props: AnotherCmpProps;
+
+  beforeEach(() => {
+    props = {};
+  });
+
+  it('renders', () => {
+    cy.mount(<AnotherCmp {...props} />);
+  });
+});
+"
+`;

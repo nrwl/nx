@@ -1,0 +1,163 @@
+{
+  "generators": {
+    "update-vite-tsconfig-paths": {
+      "cli": "nx",
+      "version": "15.3.1-beta.0",
+      "description": "Remove projects property from vite-tsconfig-paths plugin in vite.config.ts files.",
+      "factory": "./src/migrations/update-15-3-1/update-vite-tsconfig-paths"
+    },
+    "set-mode-in-configurations": {
+      "cli": "nx",
+      "version": "15.3.4-beta.0",
+      "description": "Set the mode in configurations to match the configurationName.",
+      "factory": "./src/migrations/update-15-3-4/set-mode-in-configuration"
+    },
+    "update-test-path-placeholder-vars": {
+      "cli": "nx",
+      "version": "15.4.3-beta.0",
+      "description": "Update @nrwl/vite:test reportsDirectory and outputs properties to point to correct paths.",
+      "factory": "./src/migrations/update-15-4-3/update-report-directory"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/vite with @nx/vite",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-4-1-test-file-config": {
+      "version": "16.4.1-beta.0",
+      "description": "Changes the testFile config in the vite:test exectutor from a string to an array of strings",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-16-4-1-update-test-file-config/update-16-4-1-test-file-config"
+    },
+    "16-6-0-change-ts-paths-plugin": {
+      "version": "16.6.0-beta.4",
+      "description": "Change vite-tsconfig-paths plugin for first party nx-vite-tsconfig-paths plugin",
+      "cli": "nx",
+      "implementation": "./src/migrations/update-16-6-0-change-ts-paths-plugin/change-ts-paths-plugin"
+    }
+  },
+  "packageJsonUpdates": {
+    "16.4.0-beta.7": {
+      "version": "16.4.0-beta.7",
+      "packages": {
+        "vite": {
+          "version": "^4.3.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.4.0-beta.4": {
+      "version": "16.4.0-beta.4",
+      "packages": {
+        "@vitejs/plugin-react": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitejs/plugin-react-swc": {
+          "version": "^3.3.2",
+          "alwaysAddToPackageJson": false
+        },
+        "jsdom": {
+          "version": "~22.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-plugin-dts": {
+          "version": "~2.3.0",
+          "alwaysAddToPackageJson": false
+        },
+        "vitest": {
+          "version": "^0.32.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-c8": {
+          "version": "^0.32.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^0.32.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^0.32.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.1.0-beta.0": {
+      "version": "16.1.0-beta.0",
+      "packages": {
+        "vite": {
+          "version": "^4.3.4",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-tsconfig-paths": {
+          "version": "^4.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "vitest": {
+          "version": "^0.31.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-c8": {
+          "version": "^0.31.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^0.31.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^0.31.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.3.1-beta.0": {
+      "version": "15.3.1-beta.0",
+      "packages": {
+        "vite-tsconfig-paths": {
+          "version": "4.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.3.4-beta.0": {
+      "version": "15.3.4-beta.0",
+      "packages": {
+        "vite": {
+          "version": "^4.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-tsconfig-paths": {
+          "version": "^4.0.2",
+          "alwaysAddToPackageJson": false
+        },
+        "vitest": {
+          "version": "^0.25.8",
+          "alwaysAddToPackageJson": false
+        },
+        "vite-plugin-dts": {
+          "version": "~1.7.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitejs/plugin-react": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-c8": {
+          "version": "^0.25.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^0.25.8",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^0.25.8",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

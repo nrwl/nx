@@ -1,0 +1,120 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "cli": "nx",
+  "$id": "NxReactNativeRunIos",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Run iOS application",
+  "description": "Run iOS target options.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Run iOS on a simulator",
+      "keys": ["simulator"]
+    },
+    {
+      "name": "Run iOS on a device",
+      "keys": ["device"]
+    },
+    {
+      "name": "Run iOS on a device with udid",
+      "keys": ["udid"]
+    }
+  ],
+  "properties": {
+    "xcodeConfiguration": {
+      "type": "string",
+      "description": "Explicitly set the Xcode configuration to use.",
+      "default": "Debug",
+      "examples": ["Debug", "Release"],
+      "x-deprecated": "Use `mode` instead. Deprecated from @react-native-community/cli. Will be removed in Nx 17."
+    },
+    "simulator": {
+      "type": "string",
+      "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: \"iPhone 6 (10.0)\"",
+      "examples": [
+        "iPhone 14",
+        "iPhone 13",
+        "iPhone 12",
+        "iPhone 11",
+        "iPhone X"
+      ],
+      "x-priority": "important"
+    },
+    "mode": {
+      "type": "string",
+      "description": "Explicitly set the scheme configuration to use",
+      "default": "Debug",
+      "examples": ["Debug", "Release"],
+      "x-priority": "important"
+    },
+    "scheme": {
+      "type": "string",
+      "description": "Explicitly set Xcode scheme to use"
+    },
+    "device": {
+      "type": "string",
+      "description": "Explicitly set device to use by name. The value is not required if you have a single device connected."
+    },
+    "udid": {
+      "type": "string",
+      "description": "Explicitly set device to use by udid"
+    },
+    "verbose": {
+      "type": "boolean",
+      "description": "Do not use xcbeautify or xcpretty even if installed"
+    },
+    "port": {
+      "type": "number",
+      "description": "The port where the packager server is listening on.",
+      "default": 8081
+    },
+    "xcconfig": {
+      "type": "string",
+      "description": "Explicitly set xcconfig to use"
+    },
+    "buildFolder": {
+      "type": "string",
+      "description": "Location for iOS build artifacts. Corresponds to Xcode's \"-derivedDataPath\". Relative to ios directory.",
+      "buildFolder": "./build"
+    },
+    "interactive": {
+      "type": "boolean",
+      "description": "Explicitly select which scheme and configuration to use before running a build"
+    },
+    "extraParams": {
+      "oneOf": [
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "string" }
+      ],
+      "description": "Custom params that will be passed to xcodebuild command."
+    },
+    "install": {
+      "type": "boolean",
+      "description": "Runs `pod install` for native modules before building iOS app.",
+      "default": true,
+      "x-deprecated": "Add `pod-install` to dependsOn for this target in project.json instead."
+    },
+    "sync": {
+      "type": "boolean",
+      "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
+      "x-deprecated": "Add `sync-deps` to dependsOn for this target in project.json instead.",
+      "default": true
+    },
+    "resetCache": {
+      "type": "boolean",
+      "description": "Resets metro cache.",
+      "default": false
+    },
+    "packager": {
+      "type": "boolean",
+      "description": "Launch packager while building",
+      "default": true
+    },
+    "binaryPath": {
+      "type": "string",
+      "description": "Path relative to project root where pre-built .app binary lives."
+    }
+  },
+  "examplesFile": "../../../docs/run-ios-examples.md"
+}

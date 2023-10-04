@@ -1,0 +1,11 @@
+{
+  "name": "nx-dev-data-access-documents",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/data-access-documents/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {},
+    "test": {}
+  },
+  "tags": ["scope:nx-dev", "type:data-access"]
+}

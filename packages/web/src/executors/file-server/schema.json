@@ -1,0 +1,99 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "File Server",
+  "description": "Serve a web application from a folder.",
+  "type": "object",
+  "cli": "nx",
+  "properties": {
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application."
+    },
+    "parallel": {
+      "type": "boolean",
+      "description": "Build the target in parallel.",
+      "default": true
+    },
+    "maxParallel": {
+      "type": "number",
+      "description": "Max number of parallel jobs."
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "ssl": {
+      "type": "boolean",
+      "description": "Serve using `HTTPS`.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving `HTTPS`."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving `HTTPS`."
+    },
+    "proxyUrl": {
+      "type": "string",
+      "description": "URL to proxy unhandled requests to."
+    },
+    "proxyOptions": {
+      "type": "object",
+      "description": "Options for the proxy used by `http-server`.",
+      "default": {},
+      "properties": {
+        "secure": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "additionalProperties": true
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Watch for file changes.",
+      "default": true
+    },
+    "spa": {
+      "type": "boolean",
+      "description": "Redirect 404 errors to index.html (useful for SPA's)",
+      "default": false,
+      "x-priority": "important"
+    },
+    "staticFilePath": {
+      "type": "string",
+      "description": "Path where the build artifacts are located. If not provided then it will be infered from the buildTarget executor options as outputPath"
+    },
+    "cors": {
+      "type": "boolean",
+      "description": "Enable CORS",
+      "default": true
+    },
+    "gzip": {
+      "type": "boolean",
+      "description": "Enable gzip compression",
+      "default": false
+    },
+    "brotli": {
+      "type": "boolean",
+      "description": "Enable brotli compression",
+      "default": false
+    },
+    "cacheSeconds": {
+      "type": "number",
+      "description": "Set cache time (in seconds) for cache-control max-age header. To disable caching, use -1. Caching defaults to disabled.",
+      "default": -1
+    }
+  },
+  "additionalProperties": false,
+  "required": ["buildTarget"]
+}

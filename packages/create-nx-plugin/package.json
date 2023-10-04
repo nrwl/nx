@@ -1,0 +1,41 @@
+{
+  "name": "create-nx-plugin",
+  "version": "0.0.1",
+  "private": false,
+  "description": "This package is used to scaffold a brand-new workspace used to develop an Nx plugin, and sets up a pre-configured plugin with the specified name. The new plugin is created with a default generator, executor, and e2e app.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/create-nx-plugin"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "bin": {
+    "create-nx-plugin": "./bin/create-nx-plugin.js"
+  },
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "dependencies": {
+    "create-nx-workspace": "file:../create-nx-workspace",
+    "chalk": "^4.1.0",
+    "enquirer": "~2.3.6",
+    "tslib": "^2.3.0",
+    "yargs": "^17.6.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

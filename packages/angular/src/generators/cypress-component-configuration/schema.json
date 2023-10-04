@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxAngularCypressComponentConfigurationGenerator",
+  "type": "object",
+  "cli": "nx",
+  "title": "Add Cypress component testing",
+  "description": "Add a Cypress component testing configuration to an existing project. Cypress v10.7.0 or higher is required.",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add cypress component testing configuration to",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-dropdown": "projects",
+      "x-prompt": "What project should we add Cypress component testing to?",
+      "x-priority": "important"
+    },
+    "generateTests": {
+      "type": "boolean",
+      "description": "Generate default component tests for existing components in the project",
+      "x-prompt": "Automatically generate tests for components declared in this project?",
+      "default": false
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "A build target used to configure Cypress component testing in the format of `project:target[:configuration]`. The build target should be an angular app. If not provided we will try to infer it from your projects usage.",
+      "pattern": "^[^:\\s]+:[^:\\s]+(:\\S+)?$",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": ["project"],
+  "examplesFile": "../../../docs/cypress-component-configuration-examples.md"
+}

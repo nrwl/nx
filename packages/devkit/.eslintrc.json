@@ -1,0 +1,78 @@
+{
+  "extends": "../../.eslintrc",
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@typescript-eslint/explicit-module-boundary-types": ["error"],
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              "@nx/workspace",
+              "@angular-devkit/core",
+              "@angular-devkit/architect",
+              "@angular-devkit/schematics"
+            ],
+            "patterns": [
+              {
+                "group": ["nx/**/*"],
+                "message": "Use requireNx() from packages/devkit/nx.ts OR use a type import instead.",
+                "allowTypeImports": true
+              },
+              {
+                "group": ["@nx/devkit/**/*"],
+                "message": "Use a relative import"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["*.spec.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": "off"
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "prettier",
+              // Installed to workspace by plugins
+              "rxjs",
+              "@angular-devkit/core",
+              "@angular-devkit/architect",
+              "@angular-devkit/schematics",
+              "webpack"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

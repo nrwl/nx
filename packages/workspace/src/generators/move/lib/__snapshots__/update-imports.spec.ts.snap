@@ -1,0 +1,38 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`updateImports should correctly update deep imports 1`] = `
+"
+        import { Table } from '@proj/table/components';
+        import { Tab } from '@proj/tabs/components';
+
+        export class MyTable extends Table {};
+        export class MyTab extends Tab {};
+      "
+`;
+
+exports[`updateImports should not update import paths when they contain a partial match 1`] = `
+"
+        import { Table } from '@proj/table';
+        import { Tab } from '@proj/tabs';
+
+        export class MyTable extends Table {};
+        export class MyTab extends Tab {};
+      "
+`;
+
+exports[`updateImports should update dynamic imports 1`] = `
+"
+      import('@proj/table').then(m => m.Table);
+      import('@proj/table/components').then(m => m.Table);
+      import('@proj/tabs').then(m => m.Tab);
+      import('@proj/tabs/components').then(m => m.Tab);
+      "
+`;
+
+exports[`updateImports should update project refs 1`] = `
+"
+        import { MyClass } from '@proj/my-destination';
+
+        export class MyExtendedClass extends MyClass {};
+      "
+`;

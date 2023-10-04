@@ -1,0 +1,282 @@
+{
+  "generators": {
+    "remove-eslint-project-config-if-no-type-checking-rules": {
+      "cli": "nx",
+      "version": "12.4.0-beta.0",
+      "description": "Remove ESLint parserOptions.project config if no rules requiring type-checking are in use",
+      "factory": "./src/migrations/update-12-4-0/remove-eslint-project-config-if-no-type-checking-rules"
+    },
+    "add-outputs": {
+      "cli": "nx",
+      "version": "12.9.0-beta.0",
+      "description": "Add outputs for caching",
+      "factory": "./src/migrations/update-12-9-0/add-outputs"
+    },
+    "remove-eslint-project-config-if-no-type-checking-rules-again": {
+      "cli": "nx",
+      "version": "12.9.0-beta.0",
+      "description": "Remove ESLint parserOptions.project config if no rules requiring type-checking are in use",
+      "factory": "./src/migrations/update-12-4-0/remove-eslint-project-config-if-no-type-checking-rules"
+    },
+    "eslint-8-updates": {
+      "cli": "nx",
+      "version": "13.3.0-beta.0",
+      "description": "Update eslint-rules jest.config.js in order to support ESLint v8 exports mapping, remove category field",
+      "factory": "./src/migrations/update-13-3-0/eslint-8-updates"
+    },
+    "add-swc-deps": {
+      "cli": "nx",
+      "version": "14.1.9-beta.0",
+      "description": "Adds @swc/core and @swc-node as a dev dep if you are using them",
+      "factory": "./src/migrations/update-14-1-9/add-swc-deps-if-needed"
+    },
+    "add-swc-deps-again": {
+      "cli": "nx",
+      "version": "14.2.3-beta.0",
+      "description": "Adds @swc/core and @swc-node as a dev dep if you are using them (repeated due to prior mistake)",
+      "factory": "./src/migrations/update-14-1-9/add-swc-deps-if-needed"
+    },
+    "experimental-to-utils-deps": {
+      "cli": "nx",
+      "version": "14.4.4",
+      "description": "Adds @typescript-eslint/utils as a dev dep",
+      "factory": "./src/migrations/update-14-4-4/experimental-to-utils-deps"
+    },
+    "experimental-to-utils-rules": {
+      "cli": "nx",
+      "version": "14.4.4",
+      "description": "Switch from  @typescript-eslint/experimental-utils to @typescript-eslint/utils in all rules and rules.spec files",
+      "factory": "./src/migrations/update-14-4-4/experimental-to-utils-rules"
+    },
+    "add-eslint-inputs": {
+      "cli": "nx",
+      "version": "15.0.0-beta.0",
+      "description": "Stop hashing eslint config files for build targets and dependent tasks",
+      "factory": "./src/migrations/update-15-0-0/add-eslint-inputs"
+    },
+    "add-eslint-ignore": {
+      "cli": "nx",
+      "version": "15.7.1-beta.0",
+      "description": "Add node_modules to root eslint ignore",
+      "factory": "./src/migrations/update-15-7-1/add-eslint-ignore"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/linter with @nx/linter",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-8-0-add-ignored-files": {
+      "version": "16.8.0",
+      "description": "update-16-8-0-add-ignored-files",
+      "implementation": "./src/migrations/update-16-8-0-add-ignored-files/update-16-8-0-add-ignored-files"
+    }
+  },
+  "packageJsonUpdates": {
+    "12.6.0": {
+      "version": "12.6.0-beta.8",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~4.28.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~4.28.0"
+        }
+      }
+    },
+    "12.10.0": {
+      "version": "12.10.0-beta.1",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~4.31.1"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~4.31.1"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~4.31.1"
+        }
+      }
+    },
+    "13.0.0": {
+      "version": "12.10.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~4.33.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~4.33.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~4.33.0"
+        },
+        "eslint": {
+          "version": "7.32.0"
+        }
+      }
+    },
+    "13.3.0": {
+      "version": "13.3.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~5.3.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~5.3.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~5.3.0"
+        },
+        "eslint": {
+          "version": "8.2.0"
+        }
+      }
+    },
+    "13.7.0": {
+      "version": "13.7.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~5.10.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~5.10.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~5.10.0"
+        },
+        "eslint": {
+          "version": "~8.7.0"
+        }
+      }
+    },
+    "13.10.0": {
+      "version": "13.10.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~5.18.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~5.18.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~5.18.0"
+        },
+        "eslint": {
+          "version": "~8.12.0"
+        }
+      }
+    },
+    "14.2.0": {
+      "version": "14.2.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~5.24.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~5.24.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "~5.24.0"
+        },
+        "eslint": {
+          "version": "~8.15.0"
+        }
+      }
+    },
+    "14.3.7": {
+      "version": "14.3.6",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "^5.29.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^5.29.0"
+        },
+        "@typescript-eslint/experimental-utils": {
+          "version": "^5.29.0"
+        }
+      }
+    },
+    "14.4.4": {
+      "version": "14.4.4",
+      "packages": {
+        "@typescript-eslint/utils": {
+          "version": "^5.29.0"
+        }
+      }
+    },
+    "14.6.0": {
+      "version": "14.6.0-rc.2",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "~5.33.1"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "~5.33.1"
+        },
+        "@typescript-eslint/utils": {
+          "version": "~5.33.1"
+        }
+      }
+    },
+    "14.8.0": {
+      "version": "14.8.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "^5.36.1"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^5.36.1"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^5.36.1"
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "^5.58.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^5.58.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^5.58.0"
+        }
+      }
+    },
+    "16.5.0": {
+      "version": "16.5.0-beta.2",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "^5.60.1"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^5.60.1"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^5.60.1"
+        }
+      }
+    },
+    "16.7.0": {
+      "version": "16.7.0-beta.2",
+      "packages": {
+        "eslint": {
+          "version": "~8.46.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^5.60.1"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^5.60.1"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^5.60.1"
+        }
+      }
+    }
+  }
+}

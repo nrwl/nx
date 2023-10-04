@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxAngularComponentStoryGenerator",
+  "type": "object",
+  "cli": "nx",
+  "description": "Creates a `stories.ts` file for an Angular component.",
+  "properties": {
+    "projectPath": {
+      "type": "string",
+      "description": "Path to the project.",
+      "examples": ["libs/ui-samples"],
+      "x-priority": "important"
+    },
+    "componentName": {
+      "type": "string",
+      "description": "Class name of the component.",
+      "examples": ["AwesomeComponent"],
+      "x-priority": "important"
+    },
+    "componentPath": {
+      "type": "string",
+      "description": "Relative path to the component file from the project root.",
+      "examples": ["awesome"],
+      "x-priority": "important"
+    },
+    "componentFileName": {
+      "type": "string",
+      "description": "Component file name without the `.ts` extension.",
+      "examples": ["awesome.component"],
+      "x-priority": "important"
+    },
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "x-priority": "important",
+      "default": true
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "projectPath",
+    "componentName",
+    "componentPath",
+    "componentFileName"
+  ]
+}

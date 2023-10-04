@@ -1,0 +1,61 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**", "./src/utils/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          "@nx/workspace",
+          "@angular-devkit/core",
+          "@angular-devkit/architect",
+          "@angular-devkit/schematics"
+        ]
+      }
+    },
+    {
+      "files": [
+        "./package.json",
+        "./generators.json",
+        "./executors.json",
+        "./migrations.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": [
+          "error",
+          {
+            "allowedVersionStrings": ["latest", "*"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "prettier",
+              "typescript",
+              "@angular-devkit/schematics",
+              "@angular-devkit/core",
+              "@angular-devkit/architect"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "ignorePatterns": ["!**/*"]
+}

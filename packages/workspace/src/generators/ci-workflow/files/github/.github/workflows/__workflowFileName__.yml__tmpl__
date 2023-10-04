@@ -1,0 +1,34 @@
+name: <%= workflowName %>
+
+on:
+  push:
+    branches:
+      - <%= mainBranch %>
+  pull_request:
+
+# Needed for nx-set-shas within nx-cloud-main.yml, when run on the <%= mainBranch %> branch
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.1
+    with:
+      main-branch-name: <%= mainBranch %>
+      number-of-agents: 3
+      init-commands: |
+        <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
+      parallel-commands: |
+        <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check
+      parallel-commands-on-agents: |
+        <%= packageManagerPrefix %> nx affected --target=lint --parallel=3
+        <%= packageManagerPrefix %> nx affected --target=test --parallel=3 --ci --code-coverage
+        <%= packageManagerPrefix %> nx affected --target=build --parallel=3
+
+  agents:
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.1
+    with:
+      number-of-agents: 3

@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`componentStory generator should generate the right props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/angular';
+import { TestButtonComponent } from './test-button.component';
+
+const meta: Meta<TestButtonComponent> = {
+  component: TestButtonComponent,
+  title: 'TestButtonComponent',
+};
+export default meta;
+type Story = StoryObj<TestButtonComponent>;
+
+export const Primary: Story = {
+  args: {
+    buttonType: 'button',
+    style: 'default',
+    age: 0,
+    isOn: false,
+  },
+};
+"
+`;

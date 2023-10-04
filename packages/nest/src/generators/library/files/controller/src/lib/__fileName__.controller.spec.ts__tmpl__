@@ -1,0 +1,20 @@
+import { Test } from '@nestjs/testing';
+import { <%= className %>Controller } from './<%= fileName %>.controller';<% if(service) { %>
+import { <%= className %>Service } from './<%= fileName %>.service';<% } %>
+
+describe('<%= className %>Controller', () => {
+	let controller: <%= className %>Controller;
+
+	beforeEach(async () => {
+		const module = await Test.createTestingModule({
+			providers: [<% if(service) { %><%= className %>Service<% } %>],
+			controllers: [<%= className %>Controller]
+		}).compile();
+
+		controller = module.get(<%= className %>Controller);
+	});
+
+	it('should be defined', () => {
+		expect(controller).toBeTruthy();
+	});
+})

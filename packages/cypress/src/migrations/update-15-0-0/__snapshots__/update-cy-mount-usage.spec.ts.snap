@@ -1,0 +1,221 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`update cy.mount usage should add the mount command 1`] = `
+"import { mount } from 'cypress/angular'
+/// <reference types="cypress" />
+
+// ***********************************************
+// This example commands.ts shows you how to
+// create various custom commands and overwrite
+// existing commands.
+//
+// For more comprehensive examples of custom
+// commands please read more here:
+// https://on.cypress.io/custom-commands
+// ***********************************************
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Cypress {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface Chainable<Subject> {
+      login(email: string, password: string): void;
+      mount: typeof mount;
+    }
+  }
+}
+
+//
+// -- This is a parent command --
+Cypress.Commands.add('login', (email, password) => {
+  console.log('Custom command example: Login', email, password);
+});
+//
+// -- This is a child command --
+// Cypress.Commands.add("drag", { prevSubject: 'element'}, (subject, options) => { ... })
+//
+//
+// -- This is a dual command --
+// Cypress.Commands.add("dismiss", { prevSubject: 'optional'}, (subject, options) => { ... })
+//
+//
+// -- This will overwrite an existing command --
+// Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+
+Cypress.Commands.add('mount', mount);"
+`;
+
+exports[`update cy.mount usage should update angular ct test file 1`] = `
+"
+    import { MountConfig } from 'cypress/angular';
+
+    describe('MyComponent', () => {
+      it('should work', () => {
+        cy.mount(MyComponent);
+      });
+
+      it('should work with config', () => {
+        cy.mount(MyComponent, {...config, componentProperties: {foo: 'bar'}});
+      });
+    });
+    "
+`;
+
+exports[`update cy.mount usage should update angular react test file 1`] = `
+"
+     
+
+    describe('MyComponent', () => {
+      it('should work', () => {
+        cy.mount(<MyComponent />);
+      });
+
+      it('should work with config', () => {
+        cy.mount(<MyComponent title={"blah"}/>,);
+      });
+    });
+    "
+`;
+
+exports[`update cy.mount usage should update angular react18 test file 1`] = `
+"
+     
+
+    describe('MyComponent', () => {
+      it('should work', () => {
+        cy.mount(<MyComponent />);
+      });
+
+      it('should work with config', () => {
+        cy.mount(<MyComponent title={"blah"}/>);
+      });
+    });
+    "
+`;
+
+exports[`update cy.mount usage should work 1`] = `
+"import { mount } from 'cypress/angular';
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace Cypress {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    interface Chainable<Subject> {
+      login(email: string, password: string): void;
+      mount: typeof mount;
+    }
+  }
+}
+
+// -- This is a parent command --
+Cypress.Commands.add('login', (email, password) => {
+  console.log('Custom command example: Login', email, password);
+});
+Cypress.Commands.add('mount', mount);
+"
+`;
+
+exports[`update cy.mount usage should work 2`] = `
+"import { MountConfig } from 'cypress/angular';
+
+describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(<MyComponent />);
+  });
+
+  it('should work with config', () => {
+    cy.mount(<MyComponent title={'blah'} />);
+  });
+});
+"
+`;
+
+exports[`update cy.mount usage should work 3`] = `
+"import { MountConfig } from 'cypress/angular';
+
+describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(<MyComponent />);
+  });
+
+  it('should work with config', () => {
+    cy.mount(<MyComponent title={'blah'} />);
+  });
+});
+"
+`;
+
+exports[`update cy.mount usage should work 4`] = `
+"import { MountConfig } from 'cypress/angular';
+
+describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(MyComponent);
+  });
+
+  it('should work with config', () => {
+    cy.mount(MyComponent, { ...config, componentProperties: { foo: 'bar' } });
+  });
+});
+"
+`;
+
+exports[`update cy.mount usage should work 5`] = `
+"// eslint-disable-next-line @typescript-eslint/no-namespace
+declare namespace Cypress {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface Chainable<Subject> {
+    login(email: string, password: string): void;
+    mount(c: any): void;
+  }
+}
+
+// -- This is a parent command --
+Cypress.Commands.add('login', (email, password) => {
+  console.log('Custom command example: Login', email, password);
+});
+Cypress.Commands.add('mount', (any) => {
+  console.log(mount);
+});
+"
+`;
+
+exports[`update cy.mount usage should work 6`] = `
+"describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(<MyComponent />);
+  });
+
+  it('should work with config', () => {
+    cy.mount(<MyComponent title={'blah'} />);
+  });
+});
+"
+`;
+
+exports[`update cy.mount usage should work 7`] = `
+"describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(<MyComponent />);
+  });
+
+  it('should work with config', () => {
+    cy.mount(<MyComponent title={'blah'} />);
+  });
+});
+"
+`;
+
+exports[`update cy.mount usage should work 8`] = `
+"describe('MyComponent', () => {
+  it('should work', () => {
+    cy.mount(MyComponent);
+  });
+
+  it('should work with config', () => {
+    cy.mount(MyComponent, { ...config, componentProperties: { foo: 'bar' } });
+  });
+});
+"
+`;

@@ -1,0 +1,82 @@
+name: 🐞 Bug Report
+description: This form is to report unexpected behavior in Nx.
+labels: ["type: bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking your precious time to file an issue! 🙏 We are sorry for the inconvenience this issue has caused you and want to resolve it as soon as possible.
+
+        Help us help you! We know that your time is precious and hate to ask for any more of it, but the first step in fixing this issue is to understand the issue. Taking some extra time to ensure that we are able to reproduce the issue will help us significantly in resolving the issue.
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current Behavior
+      description: What is the behavior that currently you experience?
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What is the behavior that you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: GitHub Repo
+      description: |
+        This is extremely important! If this issue is reproduce-able on https://github.com/nrwl/nx-examples, you may use that as the repo.
+        If not, please do take a few minutes of your time to create a repo to help us reproduce the issue.
+        This is the best way to help us reproduce the issue and fix it as soon as possible.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Please provide some instructions to reproduce the issue in the repo provided above. Be as detailed as possible.
+      value: |
+        1.
+    validations:
+      required: true
+  - type: textarea
+    id: nx-report
+    attributes:
+      label: Nx Report
+      description: Please paste the contents shown by `nx report`. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Failure Logs
+      description: Please include any relevant log snippets or files here. This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: input
+    id: pm
+    attributes:
+      label: Package Manager Version
+      description: |
+        If `nx report` doesn't work, please provide the name and the version of your package manager.
+        You can get version information by running `yarn --version`, `pnpm --version` or `npm --version`, depending on the package manager used.
+  - type: checkboxes
+    id: os
+    attributes:
+      label: Operating System
+      description: What Operating System are you using?
+      options:
+        - label: macOS
+        - label: Linux
+        - label: Windows
+        - label: Other (Please specify)
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Is there any additional information that you can provide?
+  - type: markdown
+    id: disclaimer
+    attributes:
+      value: |
+        > If we are not able to reproduce the issue, we will likely prioritize fixing other issues we can reproduce. Please do your best to fill out all of the sections above.

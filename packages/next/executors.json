@@ -1,0 +1,38 @@
+{
+  "executors": {
+    "build": {
+      "implementation": "./src/executors/build/build.impl",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build a Next.js application."
+    },
+    "server": {
+      "implementation": "./src/executors/server/server.impl",
+      "schema": "./src/executors/server/schema.json",
+      "description": "Serve a Next.js application."
+    },
+    "export": {
+      "implementation": "./src/executors/export/export.impl",
+      "schema": "./src/executors/export/schema.json",
+      "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+      "x-deprecated": "Use static exports in next.config.js instead. See: https://nextjs.org/docs/pages/building-your-application/deploying/static-exports."
+    }
+  },
+  "builders": {
+    "build": {
+      "implementation": "./src/executors/build/compat",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Build a Next.js application."
+    },
+    "server": {
+      "implementation": "./src/executors/server/compat",
+      "schema": "./src/executors/server/schema.json",
+      "description": "Serve a Next.js application."
+    },
+    "export": {
+      "implementation": "./src/executors/export/compat",
+      "schema": "./src/executors/export/schema.json",
+      "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`.",
+      "x-deprecated": "Use static exports in next.config.js instead. See: https://nextjs.org/docs/pages/building-your-application/deploying/static-exports."
+    }
+  }
+}

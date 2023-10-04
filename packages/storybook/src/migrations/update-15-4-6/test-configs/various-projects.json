@@ -1,0 +1,828 @@
+{
+  "main-vite-new": {
+    "name": "main-vite-new",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/main-vite-new/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/apps/main-vite-new" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nrwl/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "main-vite-new:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "main-vite-new:build:development",
+            "hmr": true
+          },
+          "production": {
+            "buildTarget": "main-vite-new:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "test": {
+        "executor": "@nrwl/vite:test",
+        "outputs": ["coverage/apps/main-vite-new"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/main-vite-new"
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/main-vite-new/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "storybook": {
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "configDir": "apps/main-vite-new/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nrwl/storybook:build",
+        "outputs": ["{options.outputDir}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputDir": "dist/storybook/main-vite-new",
+          "configDir": "apps/main-vite-new/.storybook"
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/main-vite-new"
+  },
+  "main-vite": {
+    "name": "main-vite",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/main-vite/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/apps/main-vite" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nrwl/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "main-vite:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "main-vite:build:development",
+            "hmr": true
+          },
+          "production": {
+            "buildTarget": "main-vite:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "test": {
+        "executor": "@nrwl/vite:test",
+        "outputs": ["coverage/apps/main-vite"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/main-vite"
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/main-vite/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "storybook": {
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "config": { "configFolder": "apps/main-vite/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nrwl/storybook:build",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputPath": "dist/storybook/main-vite",
+          "config": { "configFolder": "apps/main-vite/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/main-vite"
+  },
+  "main-vite-e2e": {
+    "name": "main-vite-e2e",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/main-vite-e2e/src",
+    "projectType": "application",
+    "targets": {
+      "e2e": {
+        "executor": "@nrwl/cypress:cypress",
+        "options": {
+          "cypressConfig": "apps/main-vite-e2e/cypress.config.ts",
+          "devServerTarget": "main-vite:serve:development",
+          "testingType": "e2e"
+        },
+        "configurations": {
+          "production": { "devServerTarget": "main-vite:serve:production" }
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["apps/main-vite-e2e/**/*.{js,ts}"] }
+      }
+    },
+    "tags": [],
+    "implicitDependencies": ["main-vite"],
+    "root": "apps/main-vite-e2e"
+  },
+  "main-vite-ts": {
+    "name": "main-vite-ts",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/main-vite-ts/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/apps/main-vite-ts" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "serve": {
+        "executor": "@nrwl/vite:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "main-vite-ts:build" },
+        "configurations": {
+          "development": {
+            "buildTarget": "main-vite-ts:build:development",
+            "hmr": true
+          },
+          "production": {
+            "buildTarget": "main-vite-ts:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "test": {
+        "executor": "@nrwl/vite:test",
+        "outputs": ["coverage/apps/main-vite-ts"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/apps/main-vite-ts"
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/main-vite-ts/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "storybook": {
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "config": { "configFolder": "apps/main-vite-ts/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nrwl/storybook:build",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputPath": "dist/storybook/main-vite-ts",
+          "config": { "configFolder": "apps/main-vite-ts/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/main-vite-ts"
+  },
+  "main-vite-ts-e2e": {
+    "name": "main-vite-ts-e2e",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/main-vite-ts-e2e/src",
+    "projectType": "application",
+    "targets": {
+      "e2e": {
+        "executor": "@nrwl/cypress:cypress",
+        "options": {
+          "cypressConfig": "apps/main-vite-ts-e2e/cypress.config.ts",
+          "devServerTarget": "main-vite-ts:serve:development",
+          "testingType": "e2e"
+        },
+        "configurations": {
+          "production": { "devServerTarget": "main-vite-ts:serve:production" }
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/main-vite-ts-e2e/**/*.{js,ts}"]
+        }
+      }
+    },
+    "tags": [],
+    "implicitDependencies": ["main-vite-ts"],
+    "root": "apps/main-vite-ts-e2e"
+  },
+  "main-webpack": {
+    "name": "main-webpack",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/main-webpack/src",
+    "projectType": "application",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/webpack:webpack",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": {
+          "compiler": "babel",
+          "outputPath": "dist/apps/main-webpack",
+          "index": "apps/main-webpack/src/index.html",
+          "baseHref": "/",
+          "main": "apps/main-webpack/src/main.tsx",
+          "polyfills": "apps/main-webpack/src/polyfills.ts",
+          "tsConfig": "apps/main-webpack/tsconfig.app.json",
+          "assets": [
+            "apps/main-webpack/src/favicon.ico",
+            "apps/main-webpack/src/assets"
+          ],
+          "styles": ["apps/main-webpack/src/styles.css"],
+          "scripts": [],
+          "webpackConfig": "@nrwl/react/plugins/webpack"
+        },
+        "configurations": {
+          "development": {
+            "extractLicenses": false,
+            "optimization": false,
+            "sourceMap": true,
+            "vendorChunk": true
+          },
+          "production": {
+            "fileReplacements": [
+              {
+                "replace": "apps/main-webpack/src/environments/environment.ts",
+                "with": "apps/main-webpack/src/environments/environment.prod.ts"
+              }
+            ],
+            "optimization": true,
+            "outputHashing": "all",
+            "sourceMap": false,
+            "namedChunks": false,
+            "extractLicenses": true,
+            "vendorChunk": false
+          }
+        }
+      },
+      "serve": {
+        "executor": "@nrwl/webpack:dev-server",
+        "defaultConfiguration": "development",
+        "options": { "buildTarget": "main-webpack:build", "hmr": true },
+        "configurations": {
+          "development": { "buildTarget": "main-webpack:build:development" },
+          "production": {
+            "buildTarget": "main-webpack:build:production",
+            "hmr": false
+          }
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/main-webpack/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "test": {
+        "executor": "@nrwl/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "apps/main-webpack/jest.config.ts",
+          "passWithNoTests": true
+        }
+      },
+      "storybook": {
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "config": { "configFolder": "apps/main-webpack/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nrwl/storybook:build",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputPath": "dist/storybook/main-webpack",
+          "config": { "configFolder": "apps/main-webpack/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "tags": [],
+    "root": "apps/main-webpack"
+  },
+  "main-webpack-e2e": {
+    "name": "main-webpack-e2e",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/main-webpack-e2e/src",
+    "projectType": "application",
+    "targets": {
+      "e2e": {
+        "executor": "@nrwl/cypress:cypress",
+        "options": {
+          "cypressConfig": "apps/main-webpack-e2e/cypress.config.ts",
+          "devServerTarget": "main-webpack:serve:development",
+          "testingType": "e2e"
+        },
+        "configurations": {
+          "production": { "devServerTarget": "main-webpack:serve:production" }
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/main-webpack-e2e/**/*.{js,ts}"]
+        }
+      }
+    },
+    "tags": [],
+    "implicitDependencies": ["main-webpack"],
+    "root": "apps/main-webpack-e2e"
+  },
+  "my-plugin-e2e": {
+    "name": "my-plugin-e2e",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "application",
+    "sourceRoot": "apps/my-plugin-e2e/src",
+    "targets": {
+      "e2e": {
+        "executor": "@nrwl/nx-plugin:e2e",
+        "options": {
+          "target": "my-plugin:build",
+          "jestConfig": "apps/my-plugin-e2e/jest.config.ts"
+        }
+      }
+    },
+    "tags": [],
+    "implicitDependencies": ["my-plugin"],
+    "root": "apps/my-plugin-e2e"
+  },
+  "react-rollup-e2e": {
+    "name": "react-rollup-e2e",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/react-rollup-e2e/src",
+    "projectType": "application",
+    "targets": {
+      "e2e": {
+        "executor": "@nrwl/cypress:cypress",
+        "options": {
+          "cypressConfig": "apps/react-rollup-e2e/cypress.config.ts",
+          "devServerTarget": "react-rollup:storybook",
+          "testingType": "e2e"
+        },
+        "configurations": {
+          "ci": { "devServerTarget": "react-rollup:storybook:ci" }
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["apps/react-rollup-e2e/**/*.{js,ts}"]
+        }
+      }
+    },
+    "tags": [],
+    "implicitDependencies": ["react-rollup"],
+    "root": "apps/react-rollup-e2e"
+  },
+  "react-vite-e2e": {
+    "name": "react-vite-e2e",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "apps/react-vite-e2e/src",
+    "projectType": "application",
+    "targets": {
+      "e2e": {
+        "executor": "@nrwl/cypress:cypress",
+        "options": {
+          "cypressConfig": "apps/react-vite-e2e/cypress.config.ts",
+          "devServerTarget": "react-vite:storybook",
+          "testingType": "e2e"
+        },
+        "configurations": {
+          "ci": { "devServerTarget": "react-vite:storybook:ci" }
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["apps/react-vite-e2e/**/*.{js,ts}"] }
+      }
+    },
+    "tags": [],
+    "implicitDependencies": ["react-vite"],
+    "root": "apps/react-vite-e2e"
+  },
+  "my-plugin": {
+    "name": "my-plugin",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/my-plugin/src",
+    "projectType": "library",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/js:tsc",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/libs/my-plugin",
+          "main": "libs/my-plugin/src/index.ts",
+          "tsConfig": "libs/my-plugin/tsconfig.lib.json",
+          "assets": [
+            "libs/my-plugin/*.md",
+            {
+              "input": "./libs/my-plugin/src",
+              "glob": "**/!(*.ts)",
+              "output": "./src"
+            },
+            {
+              "input": "./libs/my-plugin/src",
+              "glob": "**/*.d.ts",
+              "output": "./src"
+            },
+            {
+              "input": "./libs/my-plugin",
+              "glob": "generators.json",
+              "output": "."
+            },
+            {
+              "input": "./libs/my-plugin",
+              "glob": "executors.json",
+              "output": "."
+            }
+          ]
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": [
+            "libs/my-plugin/**/*.ts",
+            "libs/my-plugin/generators.json",
+            "libs/my-plugin/executors.json",
+            "libs/my-plugin/package.json"
+          ]
+        }
+      },
+      "test": {
+        "executor": "@nrwl/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "libs/my-plugin/jest.config.ts",
+          "passWithNoTests": true
+        }
+      }
+    },
+    "tags": [],
+    "root": "libs/my-plugin"
+  },
+  "mylib": {
+    "name": "mylib",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "projectType": "library",
+    "sourceRoot": "libs/mylib/src",
+    "targets": { "build": { "executor": "@imported-libs/my-plugin:build" } },
+    "tags": [],
+    "root": "libs/mylib"
+  },
+  "react-rollup": {
+    "name": "react-rollup",
+    "sourceRoot": "libs/react-rollup/src",
+    "projectType": "library",
+    "tags": [],
+    "targets": {
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["libs/react-rollup/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "build": {
+        "executor": "@nrwl/rollup:rollup",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/libs/react-rollup",
+          "tsConfig": "libs/react-rollup/tsconfig.lib.json",
+          "project": "libs/react-rollup/package.json",
+          "entryFile": "libs/react-rollup/src/index.ts",
+          "external": ["react/jsx-runtime"],
+          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "compiler": "babel",
+          "assets": [
+            {
+              "glob": "libs/react-rollup/README.md",
+              "input": ".",
+              "output": "."
+            }
+          ]
+        }
+      },
+      "test": {
+        "executor": "@nrwl/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "libs/react-rollup/jest.config.ts",
+          "passWithNoTests": true
+        }
+      },
+      "storybook": {
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "config": { "configFolder": "libs/react-rollup/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nrwl/storybook:build",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputPath": "dist/storybook/react-rollup",
+          "config": { "configFolder": "libs/react-rollup/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "root": "libs/react-rollup"
+  },
+  "react-rollup-2": {
+    "name": "react-rollup-2",
+    "sourceRoot": "libs/react-rollup-2/src",
+    "projectType": "library",
+    "tags": [],
+    "targets": {
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["libs/react-rollup-2/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "build": {
+        "executor": "@nrwl/rollup:rollup",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/libs/react-rollup-2",
+          "tsConfig": "libs/react-rollup-2/tsconfig.lib.json",
+          "project": "libs/react-rollup-2/package.json",
+          "entryFile": "libs/react-rollup-2/src/index.ts",
+          "external": ["react/jsx-runtime"],
+          "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+          "compiler": "babel",
+          "assets": [
+            {
+              "glob": "libs/react-rollup-2/README.md",
+              "input": ".",
+              "output": "."
+            }
+          ]
+        }
+      },
+      "test": {
+        "executor": "@nrwl/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "libs/react-rollup-2/jest.config.ts",
+          "passWithNoTests": true
+        }
+      }
+    },
+    "root": "libs/react-rollup-2"
+  },
+  "react-vite": {
+    "name": "react-vite",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/react-vite/src",
+    "projectType": "library",
+    "tags": [],
+    "targets": {
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["libs/react-vite/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "build": {
+        "executor": "@nrwl/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/libs/react-vite" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "test": {
+        "executor": "@nrwl/vite:test",
+        "outputs": ["coverage/libs/react-vite"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/libs/react-vite"
+        }
+      },
+      "storybook": {
+        "executor": "@nrwl/storybook:storybook",
+        "options": {
+          "uiFramework": "@storybook/react",
+          "port": 4400,
+          "config": { "configFolder": "libs/react-vite/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      },
+      "build-storybook": {
+        "executor": "@nrwl/storybook:build",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "uiFramework": "@storybook/react",
+          "outputPath": "dist/storybook/react-vite",
+          "config": { "configFolder": "libs/react-vite/.storybook" }
+        },
+        "configurations": { "ci": { "quiet": true } }
+      }
+    },
+    "root": "libs/react-vite"
+  },
+  "react-vite-2": {
+    "name": "react-vite-2",
+    "$schema": "../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/react-vite-2/src",
+    "projectType": "library",
+    "tags": [],
+    "targets": {
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": {
+          "lintFilePatterns": ["libs/react-vite-2/**/*.{ts,tsx,js,jsx}"]
+        }
+      },
+      "build": {
+        "executor": "@nrwl/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "defaultConfiguration": "production",
+        "options": { "outputPath": "dist/libs/react-vite-2" },
+        "configurations": {
+          "development": { "mode": "development" },
+          "production": { "mode": "production" }
+        }
+      },
+      "test": {
+        "executor": "@nrwl/vite:test",
+        "outputs": ["coverage/libs/react-vite-2"],
+        "options": {
+          "passWithNoTests": true,
+          "reportsDirectory": "../../coverage/libs/react-vite-2"
+        }
+      }
+    },
+    "root": "libs/react-vite-2"
+  },
+  "utils-one": {
+    "name": "utils-one",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/utils/one/src",
+    "projectType": "library",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/webpack:webpack",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/libs/utils/one",
+          "main": "libs/utils/one/src/index.ts",
+          "tsConfig": "libs/utils/one/tsconfig.lib.json",
+          "assets": []
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["libs/utils/one/**/*.ts"] }
+      },
+      "test": {
+        "executor": "@nrwl/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "libs/utils/one/jest.config.ts",
+          "passWithNoTests": true
+        }
+      }
+    },
+    "tags": [],
+    "root": "libs/utils/one"
+  },
+  "utils-three-vite": {
+    "name": "utils-three-vite",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/utils/three-vite/src",
+    "projectType": "library",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/vite:build",
+        "outputs": ["{options.outputPath}"],
+        "options": { "outputPath": "dist/libs/utils/three-vite" }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["libs/utils/three-vite/**/*.ts"] }
+      },
+      "test": {
+        "executor": "@nrwl/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "libs/utils/three-vite/jest.config.ts",
+          "passWithNoTests": true
+        }
+      }
+    },
+    "tags": [],
+    "root": "libs/utils/three-vite"
+  },
+  "utils-two": {
+    "name": "utils-two",
+    "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+    "sourceRoot": "libs/utils/two/src",
+    "projectType": "library",
+    "targets": {
+      "build": {
+        "executor": "@nrwl/webpack:webpack",
+        "outputs": ["{options.outputPath}"],
+        "options": {
+          "outputPath": "dist/libs/utils/two",
+          "main": "libs/utils/two/src/index.ts",
+          "tsConfig": "libs/utils/two/tsconfig.lib.json",
+          "assets": []
+        }
+      },
+      "lint": {
+        "executor": "@nrwl/linter:eslint",
+        "outputs": ["{options.outputFile}"],
+        "options": { "lintFilePatterns": ["libs/utils/two/**/*.ts"] }
+      },
+      "test": {
+        "executor": "@nrwl/jest:jest",
+        "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+        "options": {
+          "jestConfig": "libs/utils/two/jest.config.ts",
+          "passWithNoTests": true
+        }
+      }
+    },
+    "tags": [],
+    "root": "libs/utils/two"
+  }
+}

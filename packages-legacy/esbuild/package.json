@@ -1,0 +1,36 @@
+{
+  "name": "@nrwl/esbuild",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages-legacy/esbuild"
+  },
+  "keywords": [
+    "Monorepo",
+    "EsBuild",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "dependencies": {
+    "@nx/esbuild": "file:../../packages/esbuild"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/esbuild/migrations.json"
+  }
+}

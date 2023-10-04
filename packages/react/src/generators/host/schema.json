@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "GeneratorReactHost",
+  "cli": "nx",
+  "title": "Generate Module Federation Setup for React Host App",
+  "description": "Create Module Federation configuration files for given React Host Application.",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the host application to generate the Module Federation configuration",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use as the host application?",
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-priority": "important"
+    },
+    "directory": {
+      "description": "The directory of the new application.",
+      "type": "string",
+      "alias": "dir",
+      "x-priority": "important"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
+    },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "default": "css",
+      "alias": "s",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          {
+            "value": "css",
+            "label": "CSS"
+          },
+          {
+            "value": "scss",
+            "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
+          },
+          {
+            "value": "less",
+            "label": "LESS              [ http://lesscss.org                       ]"
+          },
+          {
+            "value": "styled-components",
+            "label": "styled-components [ https://styled-components.com            ]"
+          },
+          {
+            "value": "@emotion/styled",
+            "label": "emotion           [ https://emotion.sh                       ]"
+          },
+          {
+            "value": "styled-jsx",
+            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+          },
+          {
+            "value": "none",
+            "label": "None"
+          },
+          {
+            "value": "styl",
+            "label": "Stylus(.styl)     [ http://stylus-lang.com                   ] (DEPRECATED)"
+          }
+        ]
+      }
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint"],
+      "default": "eslint"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipNxJson": {
+      "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["jest", "none"],
+      "description": "Test runner to use for unit tests.",
+      "default": "jest"
+    },
+    "e2eTestRunner": {
+      "type": "string",
+      "enum": ["cypress", "none"],
+      "description": "Test runner to use for end to end (e2e) tests.",
+      "default": "cypress"
+    },
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the application (used for linting).",
+      "alias": "t"
+    },
+    "pascalCaseFiles": {
+      "type": "boolean",
+      "description": "Use pascal case component file name (e.g. App.tsx).",
+      "alias": "P",
+      "default": false
+    },
+    "classComponent": {
+      "type": "boolean",
+      "description": "Use class components instead of functional component.",
+      "alias": "C",
+      "default": false
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "default": false
+    },
+    "globalCss": {
+      "type": "boolean",
+      "description": "Default is false. When true, the component is generated with *.css/*.scss instead of *.module.css/*.module.scss",
+      "default": false
+    },
+    "strict": {
+      "type": "boolean",
+      "description": "Creates an application with strict mode and strict type checking",
+      "default": true
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "compiler": {
+      "type": "string",
+      "description": "The compiler to use",
+      "enum": ["babel", "swc"],
+      "default": "babel"
+    },
+    "remotes": {
+      "type": "array",
+      "description": "A list of remote application names that the host application should consume.",
+      "default": [],
+      "x-priority": "important"
+    },
+    "devServerPort": {
+      "type": "number",
+      "description": "The port for the dev server of the remote app.",
+      "default": 4200,
+      "x-priority": "important"
+    },
+    "ssr": {
+      "description": "Whether to configure SSR for the host application",
+      "type": "boolean",
+      "default": false
+    },
+    "minimal": {
+      "description": "Generate a React app with a minimal setup. No nx starter template.",
+      "type": "boolean",
+      "default": false
+    },
+    "typescriptConfiguration": {
+      "type": "boolean",
+      "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+      "default": true
+    }
+  },
+  "required": ["name"],
+  "additionalProperties": false
+}

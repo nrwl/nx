@@ -1,0 +1,869 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: PureComponent class & then default export new JSX transform should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: PureComponent class & then default export should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: arrow function should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: arrow function without {..} should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: component class & then default export new JSX transform should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: component class & then default export should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: default export function should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: direct export of component class new JSX transform should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: direct export of component class should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with DEFAULT export React component defined as: function and then export should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default PureComponent class & then default export new JSX transform should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default PureComponent class & then default export should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default arrow function should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default arrow function without {..} should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default component class should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default direct export of component class new JSX transform should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default direct export of component class should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export React component defined as: no default simple export function should properly setup the controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export should create stories for all components in a file with no default export 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { One } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof One> = {
+  component: One,
+  title: 'One',
+};
+export default meta;
+type Story = StoryObj<typeof One>;
+
+export const Primary = {
+  args: {},
+};
+
+export const Heading: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to One!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export should create stories for all components in a file with no default export 2`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Two } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Two> = {
+  component: Two,
+  title: 'Two',
+};
+export default meta;
+type Story = StoryObj<typeof Two>;
+
+export const Primary = {
+  args: {},
+};
+
+export const Heading: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Two!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup Other types of component definitions Component files with NO DEFAULT export should create stories for all components in a file with no default export 3`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Three } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Three> = {
+  component: Three,
+  title: 'Three',
+};
+export default meta;
+type Story = StoryObj<typeof Three>;
+
+export const Primary = {
+  args: {
+    name: '',
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Three!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup component with props and actions should setup controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+  argTypes: {
+    someAction: { action: 'someAction executed!' },
+  },
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup component with props should setup controls based on the component props 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup component without any props defined should create a story without controls 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {},
+};
+
+export const Heading: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup default component setup should properly set up the story 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { TestUiLib } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof TestUiLib> = {
+  component: TestUiLib,
+  title: 'TestUiLib',
+};
+export default meta;
+type Story = StoryObj<typeof TestUiLib>;
+
+export const Primary = {
+  args: {},
+};
+
+export const Heading: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to TestUiLib!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story default setup when using plain JS components should properly set up the story 1`] = `
+"import componentName from './test-ui-libplain';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+export default {
+  component: Test,
+  title: 'Test',
+};
+
+export const Primary = {
+  args: {},
+};
+
+export const Heading: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:component-story using eslint - not using interaction tests should properly set up the story 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { TestUiLib } from './test-ui-lib';
+
+const meta: Meta<typeof TestUiLib> = {
+  component: TestUiLib,
+  title: 'TestUiLib',
+};
+export default meta;
+type Story = StoryObj<typeof TestUiLib>;
+
+export const Primary = {
+  args: {},
+};
+"
+`;

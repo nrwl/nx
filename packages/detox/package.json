@@ -1,0 +1,47 @@
+{
+  "name": "@nx/detox",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for Detox contains executors and generators for allowing your workspace to use the powerful Detox integration testing capabilities.",
+  "keywords": [
+    "Monorepo",
+    "React",
+    "Web",
+    "Native",
+    "CLI",
+    "Detox"
+  ],
+  "homepage": "https://nx.dev",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/detox"
+  },
+  "license": "MIT",
+  "author": "Victor Savkin",
+  "main": "./index",
+  "types": "index.d.ts",
+  "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "@nx/jest": "file:../jest",
+    "@nx/js": "file:../js",
+    "@nx/linter": "file:../linter",
+    "@nx/react": "file:../react",
+    "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "detox": "^20.9.0"
+  },
+  "builders": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "schematics": "./generators.json",
+  "publishConfig": {
+    "access": "public"
+  }
+}

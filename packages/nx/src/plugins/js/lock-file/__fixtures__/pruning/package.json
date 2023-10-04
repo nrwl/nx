@@ -1,0 +1,12 @@
+{
+  "name": "test",
+  "version": "0.0.0",
+  "license": "MIT",
+  "devDependencies": {
+    "@nrwl/cli": "15.4.5",
+    "@nrwl/workspace": "15.4.5",
+    "nx": "15.4.5",
+    "prettier": "^2.6.2",
+    "typescript": "~4.8.2"
+  }
+}

@@ -1,0 +1,46 @@
+name: NPM Audit
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions: {}
+jobs:
+  audit:
+    permissions:
+      contents: read  #  to fetch code (actions/checkout)
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install PNPM
+        run: |
+          npm install -g @pnpm/exe@8.3.1
+
+      - name: Run a security audit
+        run: pnpm dlx audit-ci --critical --report-type summary
+
+    # - name: Run Dependency confusion supply chain check
+    #  run: npx snync -d .
+
+  report:
+    if: ${{ always() && github.repository_owner == 'nrwl' && github.event_name != 'workflow_dispatch' }}
+    needs: audit
+    runs-on: ubuntu-latest
+    name: Report status
+    steps:
+      - name: Send notification
+        uses: ravsamhq/notify-slack-action@v2
+        with:
+          status: ${{ needs.audit.result }}
+          message_format: '{emoji} Audit has {status_message}'
+          notification_title: '{workflow}'
+          footer: '<{run_url}|View Run> / Last commit <{commit_url}|{commit_sha}>'
+          mention_users: 'U01UELKLYF2,U9NPA6C90'
+          mention_users_when: 'failure,warnings'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.ACTION_MONITORING_SLACK }}

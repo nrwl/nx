@@ -1,0 +1,379 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Helper functions for the Storybook 7 migration generator addViteConfigFilePathInFrameworkOptions should add viteConfigFilePath in frameworkOptions in main.js 1`] = `
+"
+    const { mergeConfig } = require('vite');
+
+    module.exports = {
+      stories: [
+        '../src/app/**/*.stories.mdx',
+        '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: ['@storybook/addon-essentials'],
+      async viteFinal(config, { configType }) {
+        return mergeConfig(config, {});
+      },
+      framework: {
+        name: '@storybook/react-vite',
+        options: {
+                      builder: {
+                        viteConfigPath: 'apps/rv1/vite.config.js',
+                      },
+                      },
+      },
+    };
+    "
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator addViteConfigFilePathInFrameworkOptions should add viteConfigFilePath in frameworkOptions in main.js if no options present 1`] = `
+"
+    const { mergeConfig } = require('vite');
+
+    module.exports = {
+      stories: [
+        '../src/app/**/*.stories.mdx',
+        '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: ['@storybook/addon-essentials'],
+      async viteFinal(config, { configType }) {
+        return mergeConfig(config, {});
+      },
+      framework: { options: {
+                      builder: {
+                        viteConfigPath: 'apps/wv1/vite.config.js',
+                      },
+                    },
+                      
+        name: '@storybook/web-components-vite',
+      },
+    };
+    "
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator changeCoreCommonImportToFramework should change imports 1`] = `
+"
+    import type { StorybookConfig } from '@storybook/react-vite';
+    import { mergeConfig } from 'vite';
+    const config: StorybookConfig = {
+      core: {},
+      stories: ['../src/app/**/*.stories.mdx', '../src/app/**/*.stories.@(js|jsx|ts|tsx)'],
+      addons: ['@storybook/addon-essentials'],
+      async viteFinal(config: any) {
+        return mergeConfig(config, {});
+      },
+      framework: {
+        name: '@storybook/react-vite',
+        options: {}
+      }
+    };
+    module.exports = config;
+    "
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator changeCoreCommonImportToFramework should change imports 2`] = `
+"
+    import type { StorybookConfig } from '@storybook/angular';
+    const config: StorybookConfig = {
+      core: {},
+      stories: ['../src/app/**/*.stories.mdx', '../src/app/**/*.stories.@(js|jsx|ts|tsx)'],
+      addons: ['@storybook/addon-essentials'],
+      framework: {
+        name: '@storybook/angular',
+        options: {}
+      }
+    };
+    module.exports = config;
+    "
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator getAllStorybookInfo and onlyShowGuide should return all info for all projects with Storybook 1`] = `
+{
+  "nextapp": {
+    "configDir": "apps/nextapp/.storybook",
+    "uiFramework": "@storybook/react",
+    "viteConfigFilePath": undefined,
+  },
+  "nextapp-ts": {
+    "configDir": "apps/nextapp-ts/.storybook",
+    "uiFramework": "@storybook/react",
+    "viteConfigFilePath": undefined,
+  },
+  "ngapp": {
+    "configDir": "apps/ngapp/.storybook",
+    "uiFramework": "@storybook/angular",
+  },
+  "ngapp-ts": {
+    "configDir": "apps/ngapp-ts/.storybook",
+    "uiFramework": "@storybook/angular",
+  },
+  "rv1": {
+    "configDir": "apps/rv1/.storybook",
+    "uiFramework": "@storybook/react",
+    "viteConfigFilePath": "apps/rv1/vite.config.js",
+  },
+  "rv2-ts": {
+    "configDir": "apps/rv2-ts/.storybook",
+    "uiFramework": "@storybook/react",
+    "viteConfigFilePath": "apps/rv2-ts/vite.config.ts",
+  },
+  "rw1": {
+    "configDir": "apps/rw1/.storybook",
+    "uiFramework": "@storybook/react",
+    "viteConfigFilePath": undefined,
+  },
+  "wv1": {
+    "configDir": "apps/wv1/.storybook",
+    "uiFramework": "@storybook/web-components",
+    "viteConfigFilePath": "apps/wv1/vite.config.ts",
+  },
+  "ww1": {
+    "configDir": "apps/ww1/.storybook",
+    "uiFramework": "@storybook/web-components",
+    "viteConfigFilePath": undefined,
+  },
+}
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator logResult should create the summary file with the correct content 1`] = `
+"# Storybook 7 Migration Summary
+
+## Upgrade Storybook packages
+
+The following command was ran to upgrade the Storybook packages:
+
+\`\`\`bash
+npx storybook@latest upgrade
+\`\`\`
+
+## Your \`.storybook/main.js|ts\` files were prepared for Storybook's automigration scripts
+
+Some adjustments were made to your \`.storybook/main.js|ts\` files so that
+the Storybook automigration scripts could run successfully. The changes that were made are as follows:
+
+- Remove the \`as StorybookConfig\` typecast from the main.ts files, if any,
+  since it is not needed any more.
+- Remove the \`path.resolve\` calls from the Next.js Storybook configuration, if any, since it breaks the Storybook automigration scripts.
+
+## The Storybook automigration scripts were ran
+
+
+The following commands ran successfully and your Storybook configuration was successfully migrated to the latest version 7:
+
+
+- \`npx storybook@latest automigrate --config-dir apps/nextapp/.storybook --renderer @storybook/react\`
+
+- \`npx storybook@latest automigrate --config-dir apps/rv1/.storybook --renderer @storybook/react\`
+
+
+Please make sure to check the results yourself and make sure that everything is working as expected.
+
+
+
+### Some migrations failed
+
+The following commands failed and your Storybook configuration for these projects was not
+migrated to the latest version 7:
+
+
+- \`npx storybook@latest automigrate --config-dir apps/rv2-ts/.storybook --renderer @storybook/react\`
+
+- \`npx storybook@latest automigrate --config-dir apps/rw1/.storybook --renderer @storybook/react\`
+
+
+You can run these commands again, manually, and follow the instructions in the
+output of these commands to migrate your Storybook configuration to the latest version 7.
+
+
+Also, we may have missed something. Please make sure to check the logs of the Storybook CLI commands that were run, and look for
+the \`❌ Failed trying to evaluate\` message or \`❌ The migration failed to update\` message. This will indicate if a command was
+unsuccessful, and will help you run the migration again, manually.
+
+## Final adjustments
+
+After the Storybook automigration scripts have run, some additional adjustments were made to your
+workspace, to make sure that everything is working as expected. These adjustments are as follows:
+
+- The \`vite-tsconfig-paths\` plugin was removed from the Storybook configuration files since it's no longer needed.
+- The \`viteConfigPath\` option was added to the Storybook builder, where needed.
+- The import package for the \`StorybookConfig\` type was changed to be framework specific.
+- The \`uiFramework\` option was removed from your project's Storybook targets.
+- The \`lit\` package was added to your workspace, if you are using the
+Web Components \`@storybook/web-components\` package. Please note that the \`lit-html\` package is
+no longer needed by Storybook v7. So, if you are not using it anywhere else, you can safely remove it.
+
+## Next steps
+
+You can make sure everything is working as expected by trying
+to build or serve your Storybook as you normally would.
+
+\`\`\`bash
+npx nx build-storybook project-name
+\`\`\`
+
+\`\`\`bash
+npx nx storybook project-name
+\`\`\`
+
+Please read the [Storybook 7.0.0 release article](https://storybook.js.org/blog/storybook-7-0/) and the
+official [Storybook 7.0.0 migration guide](https://storybook.js.org/docs/react/migration-guide)
+for more information.
+
+You can also read the docs for the [@nx/storybook:migrate-7 generator](https://nx.dev/packages/storybook/generators/migrate-7) and our [Storybook 7 setup guide](https://nx.dev/packages/storybook/documents/storybook-7-setup).
+"
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator removePathResolvesFromNextConfig should remove path from nextConfigPath in main.js 1`] = `
+"
+    const path = require('path');
+
+    module.exports = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: '../next.config.js',
+          },
+        },
+      ],
+    };
+  "
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator removePathResolvesFromNextConfig should remove path from nextConfigPath in main.js 2`] = `
+"
+    import type { StorybookConfig } from '@storybook/core-common';
+    import path from 'path';
+
+    const config: StorybookConfig = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: '../next.config.js',
+          },
+        },
+      ],
+    } as StorybookConfig;
+
+    module.exports = config;
+  "
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator removeTypecastFromMainTs should remove typecast from TypeScript files 1`] = `
+"
+    import type { StorybookConfig } from '@storybook/core-common';
+
+    import { mergeConfig } from 'vite';
+    import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+    const config: StorybookConfig = {
+      core: { builder: '@storybook/builder-vite' },
+      stories: [
+        '../src/app/**/*.stories.mdx',
+        '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: ['@storybook/addon-essentials'],
+      async viteFinal(config: any) {
+        return mergeConfig(config, {
+          plugins: [
+            viteTsConfigPaths({
+              root: '../../../',
+            }),
+          ],
+        });
+      },
+    } ;
+
+    module.exports = config;
+  "
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator removeTypecastFromMainTs should remove typecast from TypeScript files 2`] = `
+"
+    import type { StorybookConfig } from '@storybook/core-common';
+    import path from 'path';
+
+    const config: StorybookConfig = {
+      core: { builder: 'webpack5' },
+      stories: [
+        '../components/**/*.stories.mdx',
+        '../components/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: [
+        '@storybook/addon-essentials',
+        '@nx/react/plugins/storybook',
+        'storybook-addon-swc',
+        {
+          name: 'storybook-addon-next',
+          options: {
+            nextConfigPath: path.resolve(__dirname, '../next.config.js'),
+          },
+        },
+      ],
+    } ;
+
+    module.exports = config;
+  "
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator removeViteTsConfigPathsPlugin should remove ViteTsConfigPathsPlugin from main.js and the whole plugin array if empty 1`] = `
+"
+    const { mergeConfig } = require('vite');
+    
+
+    module.exports = {
+      core: { builder: '@storybook/builder-vite' },
+      stories: [
+        '../src/app/**/*.stories.mdx',
+        '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: ['@storybook/addon-essentials'],
+      async viteFinal(config, { configType }) {
+        return mergeConfig(config, {
+          
+        });
+      },
+    };
+"
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator removeViteTsConfigPathsPlugin should remove ViteTsConfigPathsPlugin from main.ts and the whole plugin array if empty 1`] = `
+"
+    import type { StorybookConfig } from '@storybook/core-common';
+
+    import { mergeConfig } from 'vite';
+    
+
+    const config: StorybookConfig = {
+      core: { builder: '@storybook/builder-vite' },
+      stories: [
+        '../src/app/**/*.stories.mdx',
+        '../src/app/**/*.stories.@(js|jsx|ts|tsx)',
+      ],
+      addons: ['@storybook/addon-essentials'],
+      async viteFinal(config: any) {
+        return mergeConfig(config, {
+          
+        });
+      },
+    } as StorybookConfig;
+
+    module.exports = config;
+  "
+`;

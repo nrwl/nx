@@ -1,0 +1,325 @@
+{
+  "hash": "2243ecc815a9b5c726fa59f3c2eb8d15a36c9f467eed41cd231dd9980a737a4d",
+  "projects": [
+    {
+      "name": "auth",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "auth",
+        "files": [
+          {
+            "file": "auth/.babelrc",
+            "hash": "cf7ddd99c615a064ac18eb3109eee4f394ab1faf"
+          },
+          {
+            "file": "auth/.eslintrc.json",
+            "hash": "2ecc0fb3287e0c1e27691b519c3a058a3248ab44"
+          },
+          {
+            "file": "auth/jest.config.ts",
+            "hash": "9a572192bd6837978590302b51b89644e075ed71"
+          },
+          {
+            "file": "auth/project.json",
+            "hash": "947e2a7cfb1d11fc0edb398bb9cbabf05f3eed21"
+          },
+          {
+            "file": "auth/README.md",
+            "hash": "e895849f0d4f455473302f8dd795da5f2ff2dfab"
+          },
+          {
+            "file": "auth/src/index.ts",
+            "hash": "2953bfc1d2b036689276d7f95bd6653b2a487993"
+          },
+          {
+            "file": "auth/src/lib/auth.spec.ts",
+            "hash": "6b29b9cb382148b049b80a7a1ba6ec98193f90a6"
+          },
+          {
+            "file": "auth/src/lib/auth.ts",
+            "hash": "dcd6088b201a8159a82243b2d04034a7023a0087"
+          },
+          {
+            "file": "auth/tsconfig.json",
+            "hash": "f1a0ff5ec6a6f796fa26b4a8c82e74632b92a031"
+          },
+          {
+            "file": "auth/tsconfig.lib.json",
+            "hash": "53c4ac8d833637e0dca7b03920b04cae26d9c5bb"
+          },
+          {
+            "file": "auth/tsconfig.spec.json",
+            "hash": "fdb45891ed0c135fa82a503b4f115e31fe36bf91"
+          }
+        ],
+        "targets": {
+          "lint": {
+            "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": { "lintFilePatterns": ["auth/**/*.ts"] },
+            "configurations": {}
+          },
+          "test": {
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+            "options": {
+              "jestConfig": "auth/jest.config.ts",
+              "passWithNoTests": true
+            },
+            "configurations": {}
+          }
+        }
+      }
+    },
+    {
+      "name": "e2e",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "root": "e2e",
+        "files": [
+          {
+            "file": "e2e/.eslintrc.json",
+            "hash": "c9038d6e5ca20e9fa5cd35c9e3a6c99a5a7feb8b"
+          },
+          {
+            "file": "e2e/jest.config.ts",
+            "hash": "f9477b3d4a1ff3d9604277e734c2225999a83b0e"
+          },
+          {
+            "file": "e2e/project.json",
+            "hash": "67123c12436c550477c2788ef4eb5870a3adb3f0"
+          },
+          {
+            "file": "e2e/src/server/server.spec.ts",
+            "hash": "51717c797954a51eb0495dd069d018268f1921de",
+            "deps": ["npm:axios"]
+          },
+          {
+            "file": "e2e/src/support/global-setup.ts",
+            "hash": "c1f514446d8c15b5f2ef8eb1f6bf232a9b3b6cae"
+          },
+          {
+            "file": "e2e/src/support/global-teardown.ts",
+            "hash": "32ea345c47f1533607149a609aac15010d8c68e9"
+          },
+          {
+            "file": "e2e/src/support/test-setup.ts",
+            "hash": "07f2870393f1e3001ccdcdba4d7857aa5a36f03a",
+            "deps": ["npm:axios"]
+          },
+          {
+            "file": "e2e/tsconfig.json",
+            "hash": "9f8b535226f17c8a0597e41249116f0de7b2cf08"
+          },
+          {
+            "file": "e2e/tsconfig.spec.json",
+            "hash": "2ac21b50bb8d3c742fe5058d8ec0ae43e668d2dd"
+          }
+        ],
+        "targets": {
+          "e2e": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{e2eProjectRoot}"],
+            "options": {
+              "jestConfig": "e2e/jest.config.ts",
+              "passWithNoTests": true
+            }
+          },
+          "lint": {
+            "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": { "lintFilePatterns": ["e2e/**/*.{js,ts}"] },
+            "configurations": {}
+          }
+        }
+      }
+    },
+    {
+      "name": "products-api",
+      "type": "app",
+      "data": {
+        "tags": [],
+        "root": ".",
+        "files": [
+          {
+            "file": ".eslintrc.base.json",
+            "hash": "7c52faa3cc08c835904b5313d738d8d9781e6997"
+          },
+          {
+            "file": ".eslintrc.json",
+            "hash": "53d540eebe0a66d946cc7e8e963fc94033742beb"
+          },
+          {
+            "file": ".gitignore",
+            "hash": "51b9af5269c1df38f3252250d5b46665822374cc"
+          },
+          {
+            "file": ".prettierignore",
+            "hash": "d0b804da2a462044bb1c63364440b2c2164e86ad"
+          },
+          {
+            "file": ".prettierrc",
+            "hash": "544138be45652abc7bc3873341deacd3f4f90c61"
+          },
+          {
+            "file": ".vscode/extensions.json",
+            "hash": "64553b175b1109d40227087360bba86cbaa738fb"
+          },
+          {
+            "file": "jest.config.app.ts",
+            "hash": "33759b382d178de6c65ff4f26b34c192de5573cd"
+          },
+          {
+            "file": "jest.config.ts",
+            "hash": "2a738f7746dcbefabfa363e4e0a9ed10024ca942",
+            "deps": ["npm:@nrwl/jest"]
+          },
+          {
+            "file": "jest.preset.js",
+            "hash": "e6c8ebea00cfb845c55c897266534e9386904de0",
+            "deps": ["npm:@nrwl/jest"]
+          },
+          {
+            "file": "nx.json",
+            "hash": "af988c9133568995e00c8392e641ae3d5f5c7f9f"
+          },
+          {
+            "file": "package-lock.json",
+            "hash": "c673e6ed166924761428c2fa0c6406327870e420"
+          },
+          {
+            "file": "package.json",
+            "hash": "de7138436eaf8100c6de4cddddd50ccb881ad5df",
+            "deps": [
+              "npm:axios",
+              "npm:tslib",
+              "npm:@nrwl/esbuild",
+              "npm:@nrwl/eslint-plugin-nx",
+              "npm:@nrwl/jest",
+              "npm:@nrwl/linter",
+              "npm:@nrwl/node",
+              "npm:nx-cloud",
+              "npm:@nrwl/workspace",
+              "npm:@types/express",
+              "npm:@types/jest",
+              "npm:@types/node",
+              "npm:@typescript-eslint/eslint-plugin",
+              "npm:@typescript-eslint/parser",
+              "npm:esbuild",
+              "npm:eslint",
+              "npm:eslint-config-prettier",
+              "npm:express",
+              "npm:jest",
+              "npm:jest-environment-jsdom",
+              "npm:nx",
+              "npm:prettier",
+              "npm:ts-jest",
+              "npm:ts-node",
+              "npm:typescript"
+            ]
+          },
+          {
+            "file": "project.json",
+            "hash": "d808a6dfae9220eaecb9804da9f9186e580dacaa"
+          },
+          {
+            "file": "README.md",
+            "hash": "be383295d307d4db7bb3b773bf72acb4243c226b"
+          },
+          {
+            "file": "src/app/.gitkeep",
+            "hash": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          },
+          {
+            "file": "src/assets/.gitkeep",
+            "hash": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+          },
+          {
+            "file": "src/main.ts",
+            "hash": "664465562bdb3a29608d9eac73f05e633615fa02",
+            "deps": ["npm:express"]
+          },
+          {
+            "file": "tsconfig.app.json",
+            "hash": "c300cd67e29c6755eabb25a7529dd2e9de82177d"
+          },
+          {
+            "file": "tsconfig.json",
+            "hash": "10390542b24ec4b22c9358c82d0a858f10e9a7ec"
+          },
+          {
+            "file": "tsconfig.spec.json",
+            "hash": "2fa7e96d8d7f2598d83b187fbe3eaebd654f667b"
+          }
+        ],
+        "targets": {
+          "start": {
+            "executor": "nx:run-script",
+            "options": { "script": "start" }
+          },
+          "build": {
+            "dependsOn": ["^build"],
+            "inputs": ["production", "^production"],
+            "executor": "@nrwl/esbuild:esbuild",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+              "outputPath": "dist",
+              "format": ["cjs"],
+              "main": "src/main.ts",
+              "tsConfig": "tsconfig.app.json",
+              "assets": ["src/assets"]
+            },
+            "configurations": {}
+          },
+          "test": {
+            "inputs": [
+              "default",
+              "^production",
+              "{workspaceRoot}/jest.preset.js"
+            ],
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["{workspaceRoot}/coverage/{projectName}"],
+            "options": {
+              "jestConfig": "jest.config.app.ts",
+              "passWithNoTests": true
+            },
+            "configurations": {}
+          },
+          "serve": {
+            "executor": "@nrwl/js:node",
+            "options": { "buildTarget": "products-api:build" },
+            "configurations": {
+              "production": { "buildTarget": "products-api:build:production" }
+            }
+          },
+          "lint": {
+            "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": { "lintFilePatterns": ["./**/*.ts"] },
+            "configurations": {}
+          }
+        }
+      }
+    }
+  ],
+  "dependencies": {
+    "auth": [],
+    "e2e": [{ "source": "e2e", "target": "products-api", "type": "implicit" }],
+    "products-api": []
+  },
+  "workspaceLayout": { "appsDir": "apps", "libsDir": "libs" },
+  "affectedProjectIds": [],
+  "focus": null,
+  "groupByFolder": false,
+  "exclude": []
+}

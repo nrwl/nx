@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxReactNgInit",
+  "title": "Init React Plugin",
+  "description": "Initialize a React Plugin.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "unitTestRunner": {
+      "description": "Adds the specified unit test runner.",
+      "type": "string",
+      "enum": ["jest", "none"],
+      "default": "jest"
+    },
+    "e2eTestRunner": {
+      "description": "Adds the specified E2E test runner.",
+      "type": "string",
+      "enum": ["cypress", "playwright", "none"],
+      "default": "cypress"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipHelperLibs": {
+      "description": "Do not install  tslib.",
+      "type": "boolean",
+      "default": false,
+      "hidden": true
+    },
+    "js": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use JavaScript instead of TypeScript"
+    }
+  },
+  "required": []
+}

@@ -1,0 +1,76 @@
+{
+  "version": 2,
+  "outputCapture": "pipe",
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "title": "Next Build",
+  "description": "Build a Next.js app.",
+  "type": "object",
+  "properties": {
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory",
+      "x-priority": "important"
+    },
+    "fileReplacements": {
+      "description": "Replace files with other files in the build.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "replace": {
+            "type": "string",
+            "description": "The file to be replaced.",
+            "x-completion-type": "file"
+          },
+          "with": {
+            "type": "string",
+            "description": "The file to replace with.",
+            "x-completion-type": "file"
+          }
+        },
+        "additionalProperties": false,
+        "required": ["replace", "with"]
+      },
+      "default": []
+    },
+    "nextConfig": {
+      "description": "Path (relative to workspace root) to a function which takes phase, config, and builder options, and returns the resulting config. This is an advanced option and should not be used with a normal Next.js config file (i.e. `next.config.js`).",
+      "type": "string",
+      "x-completion-type": "file",
+      "x-completion-glob": "next?(*).js",
+      "x-priority": "important"
+    },
+    "buildLibsFromSource": {
+      "type": "boolean",
+      "description": "Read buildable libraries from source instead of building them separately.",
+      "default": true
+    },
+    "includeDevDependenciesInPackageJson": {
+      "type": "boolean",
+      "description": "Include `devDependencies` in the generated package.json file. By default only production `dependencies` are included.",
+      "default": false
+    },
+    "generateLockfile": {
+      "type": "boolean",
+      "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "debug": {
+      "type": "boolean",
+      "description": "Enable Next.js debug build logging"
+    },
+    "profile": {
+      "type": "boolean",
+      "description": "Used to enable React Production Profiling"
+    },
+    "experimentalAppOnly": {
+      "type": "boolean",
+      "description": "Only build 'app' routes"
+    }
+  },
+  "required": ["outputPath"],
+  "examplesFile": "../../../docs/build-next-executor-examples.md"
+}

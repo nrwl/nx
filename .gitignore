@@ -1,0 +1,54 @@
+node_modules
+/.idea
+/.fleet
+/.vscode
+dist
+/build
+/coverage
+./test
+.DS_Store
+tmp
+*.log
+jest.debug.config.js
+.tool-versions
+/.nx-cache
+/.nx
+/.verdaccio/build/local-registry
+/graph/client/src/assets/environment.js
+/graph/client/src/assets/dev/environment.js
+/graph/client/src/assets/generated-project-graphs
+/graph/client/src/assets/generated-task-graphs
+/nx-dev/nx-dev/public/documentation
+/nx-dev/nx-dev/public/images/open-graph
+
+# Issues scraper creates these files, stored by github's cache
+/scripts/issues-scraper/cached
+
+# We don't commit a CHANELGELOG.md file to the repo, we only create Github releases
+CHANGELOG.md
+
+# Next.js
+.next
+
+# Angular Cache
+.angular
+
+# Local dev files
+.env
+.bashrc
+.nx
+
+*.node
+
+# Fix for issue when working on the repo in a dev container
+.pnpm-store
+.nx/cache
+
+.cargo/.package-cache
+.cargo/bin/
+.cargo/env
+.cargo/registry/
+.local/
+.npm/
+.profile
+.rustup/

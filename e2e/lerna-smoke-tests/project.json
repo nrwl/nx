@@ -1,0 +1,10 @@
+{
+  "name": "e2e-lerna-smoke-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/lerna-smoke-tests",
+  "projectType": "application",
+  "targets": {
+    "e2e": {}
+  },
+  "implicitDependencies": ["nx", "devkit"]
+}

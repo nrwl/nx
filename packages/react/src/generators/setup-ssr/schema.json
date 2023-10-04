@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "GeneratorReactSSRSetup",
+  "cli": "nx",
+  "title": "Generate SSR setup for a React app",
+  "description": "Create the additional configuration required to enable SSR via Express for a React application.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the application to add SSR support to.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What app would you like to add SSR support to?",
+      "x-dropdown": "projects",
+      "x-priority": "important"
+    },
+    "appComponentImportPath": {
+      "type": "string",
+      "description": "The import path of the <App/ > component, relative to project sourceRoot.",
+      "default": "app/app"
+    },
+    "serverPort": {
+      "type": "number",
+      "default": 4200,
+      "description": "The port for the Express server.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the workspace after the generator completes.",
+      "x-priority": "internal"
+    },
+    "extraInclude": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "hidden": true,
+      "description": "Extra include entries in tsconfig.",
+      "default": []
+    }
+  },
+  "required": ["project"],
+  "additionalProperties": false
+}

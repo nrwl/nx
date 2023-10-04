@@ -1,0 +1,128 @@
+{
+  "name": "build",
+  "implementation": "/packages/vite/src/executors/build/build.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "direct-nodejs",
+    "title": "Vite Prod Builder",
+    "cli": "nx",
+    "description": "Builds a Vite.js application for production.",
+    "type": "object",
+    "presets": [{ "name": "Default minimum setup", "keys": [] }],
+    "properties": {
+      "outputPath": {
+        "type": "string",
+        "description": "The output path of the generated files.",
+        "x-completion-type": "directory",
+        "x-priority": "important"
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      },
+      "skipTypeCheck": {
+        "type": "boolean",
+        "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
+        "default": false
+      },
+      "base": {
+        "type": "string",
+        "description": "Base public path when served in development or production.",
+        "alias": "baseHref"
+      },
+      "configFile": {
+        "type": "string",
+        "description": "The name of the Vite.js configuration file.",
+        "x-completion-type": "file",
+        "x-completion-glob": "vite.config.@(js|ts)"
+      },
+      "fileReplacements": {
+        "description": "Replace files with other files in the build.",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "replace": {
+              "type": "string",
+              "description": "The file to be replaced.",
+              "x-completion-type": "file"
+            },
+            "with": {
+              "type": "string",
+              "description": "The file to replace with.",
+              "x-completion-type": "file"
+            }
+          },
+          "additionalProperties": false,
+          "required": ["replace", "with"]
+        },
+        "default": []
+      },
+      "emptyOutDir": {
+        "description": "When set to false, outputPath will not be emptied during the build process.",
+        "type": "boolean",
+        "default": true
+      },
+      "sourcemap": {
+        "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "target": {
+        "description": "Browser compatibility target for the final bundle. For more info: https://vitejs.dev/config/build-options.html#build-target",
+        "type": "string"
+      },
+      "minify": {
+        "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "manifest": {
+        "description": "Output sourcemaps. Use 'hidden' for use with error reporting tools without generating sourcemap comment.",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "ssrManifest": {
+        "description": "When set to true, the build will also generate an SSR manifest for determining style links and asset preload directives in production. When the value is a string, it will be used as the manifest file name.",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "ssr": {
+        "description": "Produce SSR-oriented build. The value can be a string to directly specify the SSR entry, or true, which requires specifying the SSR entry via rollupOptions.input.",
+        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
+      },
+      "logLevel": {
+        "type": "string",
+        "description": "Adjust console output verbosity.",
+        "enum": ["info", "warn", "error", "silent"]
+      },
+      "mode": { "type": "string", "description": "Mode to run the build in." },
+      "force": {
+        "description": "Force the optimizer to ignore the cache and re-bundle",
+        "type": "boolean"
+      },
+      "cssCodeSplit": {
+        "description": "Enable/disable CSS code splitting. When enabled, CSS imported in async chunks will be inlined into the async chunk itself and inserted when the chunk is loaded.",
+        "type": "boolean"
+      },
+      "watch": {
+        "description": "Enable re-building when files change.",
+        "oneOf": [{ "type": "boolean" }, { "type": "object" }],
+        "default": false
+      },
+      "generatePackageJson": {
+        "description": "Generate a package.json for the build output.",
+        "type": "boolean"
+      },
+      "includeDevDependenciesInPackageJson": {
+        "description": "Include devDependencies in the generated package.json.",
+        "type": "boolean"
+      }
+    },
+    "definitions": {},
+    "required": [],
+    "examplesFile": "---\ntitle: Examples for the Vite builder executor\ndescription: This page contains examples for the Vite @nx/vite:build executor.\n---\n\n`project.json`:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nx/vite:build\",\n            //...\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\"\n            },\n                //...\n            }\n        },\n    }\n}\n```\n\n```bash\nnx serve my-app\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Set a custom path for vite.config.ts\" %}\n\nNx will automatically look in the root of your application for a `vite.config.ts` (or a `vite.config.js`) file. If you want to use a different path, you can set it in your `project.json` file, in the `build` target options:\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nx/vite:build\",\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\",\n                \"configFile\": \"apps/my-app/vite.config.other-path.ts\"\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\nor even\n\n```json\n//...\n\"my-app\": {\n    \"targets\": {\n        //...\n        \"build\": {\n            \"executor\": \"@nx/vite:build\",\n            //...\n            \"options\": {\n                \"outputPath\": \"dist/apps/my-app\",\n                \"configFile\": \"vite.config.base.ts\"\n            },\n            \"configurations\": {\n                ...\n            }\n        },\n    }\n}\n```\n\n{% /tab %}\n\n{% /tabs %}\n"
+  },
+  "description": "Build with Vite.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/vite/src/executors/build/schema.json",
+  "type": "executor"
+}

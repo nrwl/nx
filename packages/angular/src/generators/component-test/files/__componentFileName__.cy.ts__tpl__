@@ -1,0 +1,23 @@
+import { TestBed } from '@angular/core/testing';
+import { <%= componentName %> } from './<%= componentFileName %>';
+
+describe(<%= componentName %>.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(<%= componentName %>, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(<%= componentName %>,<% if(props.length > 0) { %> {
+           componentProperties: {<% for (let prop of props) { %>
+               <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+          }
+       }<% } %>);
+  })
+
+})

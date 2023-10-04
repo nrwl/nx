@@ -1,0 +1,11 @@
+/***************************************************************************************************
+ * Initialize the server environment - for example, adding DOM built-in types to the global scope.
+ *
+ * NOTE:
+ * This import must come before any imports (direct or transitive) that rely on DOM built-ins being
+ * available, such as `@angular/elements`.
+ */
+import '@angular/platform-server/init';
+
+export { <%= rootModuleClassName %> } from './app/<%= rootModuleFileName.slice(0, -3) %>';
+export { renderModule } from '@angular/platform-server';

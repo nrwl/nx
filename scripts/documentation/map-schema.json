@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "documentation-map-schema",
+  "title": "JSON schema for documentation map",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the document"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the document"
+    },
+    "content": {
+      "type": "array",
+      "description": "Dictionary map section",
+      "items": {
+        "$ref": "#/definitions/entry"
+      }
+    }
+  },
+  "definitions": {
+    "entry": {
+      "type": "object",
+      "required": ["name", "id"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name for the current item"
+        },
+        "id": {
+          "type": "string",
+          "description": "Identifier for the current item"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description for the item"
+        },
+        "file": {
+          "type": "string",
+          "description": "Path to the markdown file"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Tags are used on nx.dev to link related piece of content together (e.g: Related Documentation)"
+        },
+        "path": {
+          "type": "string",
+          "description": "Custom path or URL to find the item on nx.dev"
+        },
+        "isExternal": {
+          "type": "boolean",
+          "description": "Is the path provided is external to nx.dev?"
+        },
+        "itemList": {
+          "type": "array",
+          "description": "Children for the item",
+          "items": {
+            "$ref": "#/definitions/entry"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

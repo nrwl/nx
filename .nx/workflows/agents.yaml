@@ -1,0 +1,62 @@
+parallelism: 8
+env:
+  CI: 'true'
+  GIT_AUTHOR_EMAIL: test@test.com
+  GIT_AUTHOR_NAME: Test
+  GIT_COMMITTER_EMAIL: test@test.com
+  GIT_COMMITTER_NAME: Test
+  NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
+  NX_VERBOSE_LOGGING: 'false'
+  NX_DAEMON: 'true'
+  NX_PERF_LOGGING: 'false'
+  NX_NATIVE_LOGGING: 'false'
+  SELECTED_PM: 'pnpm'
+  NX_E2E_RUN_E2E: 'true'
+  NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
+  NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
+steps:
+  - name: Git Clone
+    script: |
+      git init .
+      git remote add origin $GIT_REPOSITORY_URL
+      git fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +{{nxCommitSha}}:{{nxCommitRef}}
+      git checkout --progress --force -B {{nxBranch}} {{nxCommitRef}}
+
+  - name: Restore cache
+    script: |
+      nxw cache restore {{nxBranch}}-node_modules node_modules
+      nxw cache restore {{nxBranch}}-cypress ~/.cache/Cypress
+      nxw cache restore {{nxBranch}}-pnpm-store ~/.pnpm-store
+
+  - name: Install Pnpm
+    script: |
+      npm install -g @pnpm/exe@8.3.1
+
+  - name: Pnpm Install
+    script: |
+      pnpm install --frozen-lockfile
+
+  - name: Install Cypress
+    script: pnpm exec cypress install
+
+  - name: Install Rust
+    script: |
+      curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+      source "$HOME/.cargo/env"
+      rustup toolchain install 1.70.0
+
+  - name: Configure git metadata (needed for lerna smoke tests)
+    script: |
+      git config --global user.email test@test.com
+      git config --global user.name "Test Test"
+
+  - name: Run Agent
+    script: |
+      source "$HOME/.cargo/env"
+      npx nx-cloud start-agent
+
+  - name: Store to cache
+    script: |
+      nxw cache store {{nxBranch}}-node_modules node_modules
+      nxw cache store {{nxBranch}}-cypress ~/.cache/Cypress
+      nxw cache store {{nxBranch}}-pnpm-store ~/.pnpm-store

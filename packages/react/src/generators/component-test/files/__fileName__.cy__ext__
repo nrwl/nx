@@ -1,0 +1,21 @@
+import * as React from 'react'
+<%- importStatement %>
+
+<% for (let cmp of components) { %>
+describe(<%= cmp.name %>.name, () => {<% if (cmp.typeName) { %>
+  let props: <%= cmp.typeName%>;
+
+  beforeEach(() => {
+    props = {<% for (let prop of cmp.props) { %>
+      <%- prop.name %>: <% if(prop.type === 'action') { %>undefined<% } else { %><%- prop.defaultValue %>,<% } %><% }%>
+    }
+  })
+
+  it('renders', () => {
+    cy.mount(<<%= cmp.name %> {...props}/>)
+  })<% } else { %>
+  it('renders', () => {
+    cy.mount(<<%= cmp.name %> />)
+  })<% } %>
+})
+<% } %>

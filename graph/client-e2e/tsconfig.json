@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "sourceMap": false,
+    "outDir": "../../dist/out-tsc",
+    "allowJs": true,
+    "types": ["cypress", "node"],
+    "lib": ["DOM"]
+  },
+  "files": [],
+  "include": [
+    "cypress.config.ts",
+    "cypress-watch-mode.config.ts",
+    "cypress-release.config.ts",
+    "cypress-release-static.config.ts",
+    "src/**/*.ts",
+    "src/**/*.js"
+  ],
+  "references": [],
+  "exclude": []
+}

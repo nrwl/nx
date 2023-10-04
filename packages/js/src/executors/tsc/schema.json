@@ -1,0 +1,176 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Typescript Build Target",
+  "description": "Builds using TypeScript.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "main": {
+      "type": "string",
+      "description": "The name of the main entry-point file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "main@(.js|.ts|.jsx|.tsx)",
+      "x-priority": "important"
+    },
+    "generateExportsField": {
+      "type": "boolean",
+      "alias": "exports",
+      "description": "Update the output package.json file's 'exports' field. This field is used by Node and bundles.",
+      "default": false,
+      "x-priority": "important"
+    },
+    "additionalEntryPoints": {
+      "type": "array",
+      "description": "Additional entry-points to add to exports field in the package.json file.",
+      "items": {
+        "type": "string"
+      },
+      "x-priority": "important"
+    },
+    "rootDir": {
+      "type": "string",
+      "description": "Sets the rootDir for TypeScript compilation. When not defined, it uses the root of project."
+    },
+    "outputPath": {
+      "type": "string",
+      "description": "The output path of the generated files.",
+      "x-completion-type": "directory",
+      "x-priority": "important"
+    },
+    "tsConfig": {
+      "type": "string",
+      "description": "The path to the Typescript configuration file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json",
+      "x-priority": "important"
+    },
+    "assets": {
+      "type": "array",
+      "description": "List of static assets.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/assetPattern"
+      }
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Enable re-building when files change.",
+      "default": false
+    },
+    "clean": {
+      "type": "boolean",
+      "description": "Remove previous output before build.",
+      "default": true
+    },
+    "transformers": {
+      "type": "array",
+      "description": "List of TypeScript Transformer Plugins.",
+      "default": [],
+      "items": {
+        "$ref": "#/definitions/transformerPattern"
+      },
+      "x-priority": "important"
+    },
+    "updateBuildableProjectDepsInPackageJson": {
+      "type": "boolean",
+      "description": "Whether to update the buildable project dependencies in the build output package.json.",
+      "default": false,
+      "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
+    },
+    "buildableProjectDepsInPackageJsonType": {
+      "type": "string",
+      "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
+      "enum": ["dependencies", "peerDependencies"],
+      "default": "peerDependencies",
+      "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
+    },
+    "external": {
+      "description": "A list projects to be treated as external. This feature is experimental",
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["all", "none"]
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      ]
+    },
+    "externalBuildTargets": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of target names that annotate a build target for a project",
+      "default": ["build"]
+    },
+    "generateLockfile": {
+      "type": "boolean",
+      "description": "Generate a lockfile (e.g. package-lock.json) that matches the workspace lockfile to ensure package versions match.",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": ["main", "outputPath", "tsConfig"],
+  "definitions": {
+    "assetPattern": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "glob": {
+              "type": "string",
+              "description": "The pattern to match."
+            },
+            "input": {
+              "type": "string",
+              "description": "The input directory path in which to apply 'glob'. Defaults to the project root."
+            },
+            "ignore": {
+              "description": "An array of globs to ignore.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "output": {
+              "type": "string",
+              "description": "Absolute path within the output."
+            }
+          },
+          "additionalProperties": false,
+          "required": ["glob", "input", "output"]
+        },
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "transformerPattern": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "options": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["name"]
+        }
+      ]
+    }
+  },
+  "examplesFile": "../../../docs/tsc-examples.md"
+}

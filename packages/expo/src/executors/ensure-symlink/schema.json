@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "cli": "nx",
+  "$id": "NxExpoEnsureSymlink",
+  "$schema": "http://json-schema.org/schema",
+  "title": "Ensure Symlink for Expo",
+  "description": "Ensure workspace node_modules is symlink under app's node_modules folder.",
+  "type": "object",
+  "properties": {}
+}

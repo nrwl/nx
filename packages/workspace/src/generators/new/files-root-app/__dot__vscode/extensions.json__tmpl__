@@ -1,0 +1,6 @@
+{
+  "recommendations": [<% if(cliCommand === 'ng') { %>
+    "angular.ng-template",<% } %>
+    "nrwl.angular-console"
+  ]
+}

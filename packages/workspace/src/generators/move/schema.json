@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxWorkspaceMove",
+  "cli": "nx",
+  "title": "Nx Move",
+  "description": "Move a project to another folder in the workspace.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nx/workspace:move --project my-feature-lib --destination shared/my-feature-lib",
+      "description": "Move `libs/my-feature-lib` to `libs/shared/my-feature-lib`"
+    }
+  ],
+  "properties": {
+    "projectName": {
+      "type": "string",
+      "alias": "project",
+      "description": "The name of the project to move.",
+      "x-dropdown": "projects"
+    },
+    "newProjectName": {
+      "type": "string",
+      "alias": "project",
+      "description": "The new name of the project after the move.",
+      "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$",
+      "x-priority": "important"
+    },
+    "destination": {
+      "type": "string",
+      "description": "The folder to move the project into.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      }
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the new project name and destination as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The new import path to use in the `tsconfig.base.json`."
+    },
+    "updateImportPath": {
+      "type": "boolean",
+      "description": "Should the generator update the import path to reflect the new location?",
+      "default": true
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "aliases": ["skip-format"],
+      "description": "Skip formatting files.",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": ["projectName", "destination"]
+}

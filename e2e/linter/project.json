@@ -1,0 +1,19 @@
+{
+  "name": "e2e-linter",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/linter",
+  "projectType": "application",
+  "targets": {
+    "e2e": {},
+    "run-e2e-tests": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "e2e/linter/jest.config.ts",
+        "passWithNoTests": true,
+        "runInBand": true
+      },
+      "outputs": ["{workspaceRoot}/coverage/e2e/linter"]
+    }
+  },
+  "implicitDependencies": ["linter"]
+}

@@ -1,0 +1,65 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`updateRootJestConfig should delete lib project ref from root jest config 1`] = `
+"module.exports = {
+  projects: [
+    '<rootDir>/apps/my-app/',
+    '<rootDir>/apps/my-other-app',
+    '<rootDir>/libs/my-lib',
+    '<rootDir>/libs/my-other-lib/',
+  ],
+};
+"
+`;
+
+exports[`updateRootJestConfig should delete lib project ref from root jest config 2`] = `
+"module.exports = {
+  projects: [
+    '<rootDir>/apps/my-app/',
+    '<rootDir>/apps/my-other-app',
+    '<rootDir>/libs/my-other-lib/',
+  ],
+};
+"
+`;
+
+exports[`updateRootJestConfig should delete lib project ref from root jest config 3`] = `
+"module.exports = {
+  projects: [
+    '<rootDir>/apps/my-app/',
+    '<rootDir>/apps/my-other-app',
+  ],
+};
+"
+`;
+
+exports[`updateRootJestConfig should delete project if root jest config is not a multi-project config 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'node-app',
+  preset: './jest.preset.js',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: './coverage/node-app',
+  testMatch: [
+    '<rootDir>/src/**/__tests__/**/*.[jt]s?(x)',
+    '<rootDir>/src/**/*(*.)@(spec|test).[jt]s?(x)',
+  ],
+};
+"
+`;
+
+exports[`updateRootJestConfig should not delete lib project ref from root jest config if there is no project jest config 1`] = `
+"module.exports = {
+  projects: [
+    '<rootDir>/apps/my-app/',
+    '<rootDir>/apps/my-other-app',
+    
+    '<rootDir>/libs/my-other-lib/',
+  ],
+};
+"
+`;

@@ -1,0 +1,16 @@
+import { createAction, props } from '@ngrx/store';
+import { <%= className %>Entity } from './<%= relativeFileName %>.models';
+
+export const init<%= className %> = createAction(
+  '[<%= className %> Page] Init'
+);
+
+export const load<%= className %>Success = createAction(
+  '[<%= className %>/API] Load <%= className %> Success',
+  props<{ <%= propertyName %>: <%= className %>Entity[] }>()
+);
+
+export const load<%= className %>Failure = createAction(
+  '[<%= className %>/API] Load <%= className %> Failure',
+  props<{ error: any }>()
+);

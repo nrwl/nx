@@ -1,0 +1,11 @@
+{
+  "name": "nx-dev-ui-common",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/ui-common/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {},
+    "test": {}
+  },
+  "tags": ["scope:nx-dev", "type:ui"]
+}

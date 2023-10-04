@@ -1,0 +1,69 @@
+{
+  "name": "server",
+  "implementation": "/packages/next/src/executors/server/server.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "pipe",
+    "cli": "nx",
+    "title": "Next Serve",
+    "description": "Serve a Next.js app.",
+    "type": "object",
+    "properties": {
+      "dev": {
+        "type": "boolean",
+        "description": "Serve the application in the dev mode.",
+        "default": true
+      },
+      "buildTarget": {
+        "type": "string",
+        "description": "Target which builds the application.",
+        "x-priority": "important"
+      },
+      "port": {
+        "type": "number",
+        "description": "Port to listen on.",
+        "default": 4200,
+        "x-priority": "important"
+      },
+      "staticMarkup": {
+        "type": "boolean",
+        "description": "Static markup.",
+        "default": false
+      },
+      "quiet": {
+        "type": "boolean",
+        "description": "Hide error messages containing server information.",
+        "default": false
+      },
+      "customServerTarget": {
+        "type": "string",
+        "description": "Target which builds the custom server."
+      },
+      "hostname": {
+        "type": "string",
+        "description": "Hostname on which the application is served."
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately.",
+        "default": true
+      },
+      "keepAliveTimeout": {
+        "type": "number",
+        "description": "Max milliseconds to wait before closing inactive connection."
+      },
+      "turbo": {
+        "type": "boolean",
+        "description": "Activate the incremental bundler for Next.js, which is implemented in Rust. Please note, this feature is exclusively available in development mode."
+      }
+    },
+    "required": ["buildTarget"],
+    "examplesFile": "---\ntitle: Next.js server executor examples\ndescription: This page contains examples for the @nx/next:serve executor.\n---\n\n`project.json`:\n\n```json\n//...\n{\n  \"name\": \"acme\",\n  \"$schema\": \"node_modules/nx/schemas/project-schema.json\",\n  \"sourceRoot\": \".\",\n  \"projectType\": \"application\",\n  \"targets\": {\n    //...\n    \"serve\": {\n      \"executor\": \"@nx/next:server\",\n      \"defaultConfiguration\": \"production\",\n      \"options\": {\n        \"buildTarget\": \"acme:build\",\n        \"dev\": true\n      }\n    }\n    //...\n  }\n}\n```\n\n```bash\nnx run acme:serve\n```\n\n## Examples\n\n### For Next.js Standalone projects\n\n{% tabs %}\n{% tab label=\"Default configuration\" %}\n\nThis is the default configuration for Next.js standalone projects. Our `@nx/next:server` executor is integrated to use Next.js' CLI. You can read more about the serve options at [Next.js CLI Options](https://nextjs.org/docs/app/api-reference/next-cli)\n\n```json\n    \"serve\": {\n      \"executor\": \"@nx/next:server\",\n      \"defaultConfiguration\": \"development\",\n      \"options\": {\n        \"buildTarget\": \"acme:build\",\n        \"dev\": true\n      },\n      \"configurations\": {\n        \"development\": {\n          \"buildTarget\": \"acme:build:development\",\n          \"dev\": true\n        },\n        \"production\": {\n          \"buildTarget\": \"acme:build:production\",\n          \"dev\": false\n        }\n      }\n    },\n```\n\n{% /tab %}\n{% tab label=\"Enable turbo\" %}\n\nTurbopack (beta) is a cutting-edge bundler designed for JavaScript and TypeScript. To read more about support features see [Next.js Turbopack Doucmentation](https://turbo.build/pack/docs/features)\n\nIn the context of Nx, you can utilize Turbopack within both the `pages` and `app` directories of Next.js to enhance local development speed. To activate Turbopack, simply:\n\nAppend the `--turbo` flag while executing the Nx development server.\n\n```shell\nnx run acme:serve --turbo\n```\n\nUpdating the build options to include `turbo`.\n\n```json\n    \"serve\": {\n      \"executor\": \"@nx/next:server\",\n      \"defaultConfiguration\": \"development\",\n      \"options\": {\n        \"buildTarget\": \"acme:build\",\n        \"dev\": true\n      },\n      \"configurations\": {\n        \"development\": {\n          \"buildTarget\": \"acme:build:development\",\n          \"dev\": true,\n          \"turbo\": true\n        },\n        //\n    }\n  }\n```\n\n```bash\nnx run acme:serve\n```\n\n{% /tab %}\n\n{% tab label=\"Adding keep alive timeout\" %}\n\nWhen using Nx with Next.js behind a downstream proxy, it's important to make sure that the `keep-alive timeouts` of Next.js' HTTP server are set to longer durations than the timeouts of the proxy. If you don't do this, Node.js will unexpectedly end TCP connections without notifying the proxy when the `keep-alive timeout` is reached. This can lead to a proxy error when the proxy tries to reuse a connection that Node.js has already terminated.\n\nTo configure timeout values (in milliseconds) you can:\n\nPass `--keepAliveTimeout`\n\n```shell\nnx run acme:serve --keepAliveTimeout 60000\n```\n\nUpdating the serve options to include `keepAliveTimeout`.\n\n```json\n    \"serve\": {\n      \"executor\": \"@nx/next:server\",\n      \"defaultConfiguration\": \"development\",\n      \"options\": {\n        \"buildTarget\": \"acme:build\",\n        \"dev\": true\n      },\n      \"configurations\": {\n        \"development\": {\n          \"buildTarget\": \"acme:build:development\",\n          \"dev\": true,\n          \"keepAliveTimeout\": 60000\n        },\n        //\n    }\n  }\n```\n\n```shell\nnx run acme:serve\n```\n\n{% /tab %}\n\n{% /tabs %}\n",
+    "presets": []
+  },
+  "description": "Serve a Next.js application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/next/src/executors/server/schema.json",
+  "type": "executor"
+}

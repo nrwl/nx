@@ -1,0 +1,342 @@
+{
+  "generators": {
+    "fix-nextjs-lib-babel-config-12.8.0": {
+      "cli": "nx",
+      "version": "12.8.0-beta.11",
+      "description": "Adjust the Next.js lib babel configuration for styled-jsx",
+      "factory": "./src/migrations/update-12-8-0/remove-styled-jsx-babel-plugin"
+    },
+    "fix-page-dir-for-eslint": {
+      "cli": "nx",
+      "version": "12.10.0-beta.1",
+      "description": "Updates .eslintrc.json file to use the correct pages directory for '@next/next/no-html-link-for-pages'.",
+      "factory": "./src/migrations/update-12-10-0/fix-page-dir-for-eslint"
+    },
+    "update-emotion-setup-13.0.0": {
+      "cli": "nx",
+      "version": "13.0.0-beta.0",
+      "description": "Update tsconfig.json to use `jsxImportSource` to support css prop",
+      "factory": "./src/migrations/update-13-0-0/update-emotion-setup"
+    },
+    "update-to-webpack-5": {
+      "cli": "nx",
+      "version": "13.0.0-beta.1",
+      "description": "Set `webpack5: true` for all next.js projects.",
+      "factory": "./src/migrations/update-13-0-0/update-to-webpack-5"
+    },
+    "fix-less": {
+      "cli": "nx",
+      "version": "13.0.3-beta.1",
+      "description": "Fix setup for less stylesheets",
+      "factory": "./src/migrations/update-13-0-3/fix-less"
+    },
+    "add-default-development-configurations-14.0.0": {
+      "cli": "nx",
+      "version": "14.0.0-beta.0",
+      "description": "Add a default development configuration for build and serve targets.",
+      "factory": "./src/migrations/update-14-0-0/add-default-development-configurations"
+    },
+    "add-dev-output-path": {
+      "cli": "nx",
+      "version": "14.4.3-beta.0",
+      "description": "Add a development outputPath to avoid conflict with the production build.",
+      "factory": "./src/migrations/update-14-4-3/add-dev-output-path"
+    },
+    "add-gitignore-entry": {
+      "cli": "nx",
+      "version": "14.5.3-beta.0",
+      "description": "Add .next folder to gitignore.",
+      "factory": "./src/migrations/update-14-5-3/add-gitignore-entry"
+    },
+    "update-dev-output-path": {
+      "cli": "nx",
+      "version": "14.5.3-beta.0",
+      "description": "Update development outputPath to the project root.",
+      "factory": "./src/migrations/update-14-5-3/update-dev-output-path"
+    },
+    "add-style-packages": {
+      "cli": "nx",
+      "version": "15.8.8-beta.0",
+      "description": "Add less and stylus packages if used.",
+      "factory": "./src/migrations/update-15-8-8/add-style-packages"
+    },
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/next with @nx/next",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-3-0-remove-root-build-option": {
+      "cli": "nx",
+      "version": "16.3.0-beta.9",
+      "description": "Remove root build option from project configurations since it is not needed.",
+      "implementation": "./src/migrations/update-16-3-0/remove-root-build-option"
+    },
+    "update-16-4-0-update-next-dependency": {
+      "cli": "nx",
+      "version": "16.4.0-beta.3",
+      "description": "Update package.json moving @nx/next from dependency to devDependency",
+      "implementation": "./src/migrations/update-16-4-0/update-nx-next-dependency"
+    }
+  },
+  "packageJsonUpdates": {
+    "12.1.2": {
+      "version": "12.1.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "10.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "12.6.0": {
+      "version": "12.6.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "11.0.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "11.0.1",
+          "addToPackageJson": "devDependencies"
+        }
+      }
+    },
+    "update-12.7.2": {
+      "version": "12.7.2-beta.0",
+      "packages": {
+        "next": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "update-13.0.3": {
+      "version": "13.0.3-beta.0",
+      "packages": {
+        "next": {
+          "version": "12.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.3.0": {
+      "version": "13.3.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "12.0.7",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.0.7",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.9.0": {
+      "version": "13.9.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "12.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "13.10.0": {
+      "version": "13.10.0-beta.1",
+      "packages": {
+        "next": {
+          "version": "12.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "sass": {
+          "version": "1.49.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.0.0": {
+      "version": "14.0.0-beta.1",
+      "packages": {
+        "next": {
+          "version": "12.1.5",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.1.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.2.3": {
+      "version": "14.2.3-beta.0",
+      "packages": {
+        "next": {
+          "version": "12.1.6",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.1.6",
+          "alwaysAddToPackageJson": false
+        },
+        "sass": {
+          "version": "1.52.3",
+          "alwaysAddToPackageJson": false
+        },
+        "less-loader": {
+          "version": "11.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "stylus-loader": {
+          "version": "7.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.4.3": {
+      "version": "14.4.3",
+      "packages": {
+        "next": {
+          "version": "12.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.2.2",
+          "alwaysAddToPackageJson": false
+        },
+        "sass": {
+          "version": "1.53.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.0": {
+      "version": "14.5.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "12.2.3",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.2.3",
+          "alwaysAddToPackageJson": false
+        },
+        "sass": {
+          "version": "1.54.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.3": {
+      "version": "14.5.3-beta.0",
+      "packages": {
+        "@emotion/server": {
+          "version": "11.10.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.6.0": {
+      "version": "14.6.0-beta.1",
+      "packages": {
+        "next": {
+          "version": "12.2.5",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.2.5",
+          "alwaysAddToPackageJson": false
+        },
+        "sass": {
+          "version": "1.54.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.7.10": {
+      "version": "14.7.10-beta.1",
+      "packages": {
+        "next": {
+          "version": "12.3.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "12.3.1",
+          "alwaysAddToPackageJson": false
+        },
+        "sass": {
+          "version": "1.55.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.0.4": {
+      "version": "15.0.4-beta.0",
+      "packages": {
+        "next": {
+          "version": "13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "13.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "less-loader": {
+          "version": "11.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "stylus-loader": {
+          "version": "7.1.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "15.4.5": {
+      "version": "15.4.5-beta.0",
+      "packages": {
+        "next": {
+          "version": "13.1.1",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "13.1.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.0.0": {
+      "version": "16.0.0-beta.0",
+      "packages": {
+        "next": {
+          "version": "13.3.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "16.4.0-beta.4": {
+      "version": "16.4.0-beta.4",
+      "packages": {
+        "stylus": {
+          "version": "^0.59.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

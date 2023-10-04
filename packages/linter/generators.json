@@ -1,0 +1,35 @@
+{
+  "name": "nx/linter",
+  "version": "0.1",
+  "schematics": {
+    "workspace-rules-project": {
+      "factory": "./src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectSchematic",
+      "schema": "./src/generators/workspace-rules-project/schema.json",
+      "description": "Create the Workspace Lint Rules Project.",
+      "hidden": true
+    },
+    "workspace-rule": {
+      "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleSchematic",
+      "schema": "./src/generators/workspace-rule/schema.json",
+      "description": "Create a new Workspace ESLint rule."
+    }
+  },
+  "generators": {
+    "workspace-rules-project": {
+      "factory": "./src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectGenerator",
+      "schema": "./src/generators/workspace-rules-project/schema.json",
+      "description": "Create the Workspace Lint Rules Project.",
+      "hidden": true
+    },
+    "workspace-rule": {
+      "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator",
+      "schema": "./src/generators/workspace-rule/schema.json",
+      "description": "Create a new Workspace ESLint rule."
+    },
+    "convert-to-flat-config": {
+      "factory": "./src/generators/convert-to-flat-config/generator",
+      "schema": "./src/generators/convert-to-flat-config/schema.json",
+      "description": "Convert an Nx workspace's ESLint configs to use Flat Config."
+    }
+  }
+}

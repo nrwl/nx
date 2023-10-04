@@ -1,0 +1,43 @@
+<% if (usesVite && !viteConfigFilePath) { %>
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { mergeConfig } from 'vite';
+<% } %>
+
+const config = {
+  stories: [
+    <% if(uiFramework === '@storybook/angular' && projectType === 'library') { %>
+    '../**/*.stories.@(js|jsx|ts|tsx|mdx)' <% } else { %>
+    '../<%= projectDirectory %>/**/*.stories.@(js|jsx|ts|tsx|mdx)'
+  <% } %>],
+  addons: ['@storybook/addon-essentials' <% if(interactionTests) { %>, '@storybook/addon-interactions' <% } %><% if(uiFramework === '@storybook/react-webpack5') { %>, '@nx/react/plugins/storybook' <% } %><% if(uiFramework === '@storybook/react-native') { %>, '@storybook/addon-ondevice-actions',  '@storybook/addon-ondevice-backgrounds', '@storybook/addon-ondevice-controls', '@storybook/addon-ondevice-notes'  <% } %>],
+  framework: {
+    name: '<%= uiFramework %>',
+    options: {
+      <% if (usesVite && viteConfigFilePath) { %>
+      builder: {
+        viteConfigPath: '<%= viteConfigFilePath %>',
+      },
+      <% } %>
+    },
+  },
+  <% if (usesVite && !viteConfigFilePath) { %>
+  viteFinal: async (config) =>
+    mergeConfig(config, {
+      plugins: [nxViteTsPaths()],
+    }),
+  <% } %>
+};
+
+export default config;
+
+<% if(!usesVite) { %>
+// To customize your webpack configuration you can use the webpackFinal field.
+// Check https://storybook.js.org/docs/react/builders/webpack#extending-storybooks-webpack-config
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+<% } %>
+
+<% if(usesVite) { %>
+// To customize your Vite configuration you can use the viteFinal field.
+// Check https://storybook.js.org/docs/react/builders/vite#configuration
+// and https://nx.dev/recipes/storybook/custom-builder-configs
+<% } %>

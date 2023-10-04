@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxJSReleaseVersionGenerator",
+  "cli": "nx",
+  "title": "Implementation details of `nx release version`",
+  "description": "DO NOT INVOKE DIRECTLY WITH `nx generate`. Use `nx release version` instead.",
+  "type": "object",
+  "properties": {
+    "projects": {
+      "type": "array",
+      "description": "The ProjectGraphProjectNodes being versioned in the current execution.",
+      "items": {
+        "type": "object"
+      }
+    },
+    "projectGraph": {
+      "type": "object",
+      "description": "ProjectGraph instance"
+    },
+    "specifier": {
+      "type": "string",
+      "description": "Exact version or semver keyword to apply to the selected release group. NOTE: This should be set on the release group level, not the project level."
+    },
+    "preid": {
+      "type": "string",
+      "description": "The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease."
+    },
+    "packageRoot": {
+      "type": "string",
+      "description": "The root directory of the directory (containing a manifest file at its root) to publish. Defaults to the project root"
+    },
+    "currentVersionResolver": {
+      "type": "string",
+      "default": "disk",
+      "description": "Which approach to use to determine the current version of the project.",
+      "enum": ["registry", "disk"]
+    },
+    "currentVersionResolverMetadata": {
+      "type": "object",
+      "description": "Additional metadata to pass to the current version resolver.",
+      "default": {}
+    }
+  },
+  "required": ["projects", "projectGraph", "specifier"]
+}

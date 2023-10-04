@@ -1,0 +1,125 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Storybook Dev Builder",
+  "cli": "nx",
+  "description": "Serve up Storybook in development mode.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Default minimum setup",
+      "keys": ["port", "configDir"]
+    }
+  ],
+  "properties": {
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 9009
+    },
+    "previewUrl": {
+      "type": "string",
+      "description": "Preview URL."
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on."
+    },
+    "staticDir": {
+      "type": "array",
+      "description": "Directory where to load static files from, array of strings.",
+      "items": {
+        "type": "string"
+      },
+      "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
+    },
+    "configDir": {
+      "type": "string",
+      "description": "Directory where to load Storybook configurations from.",
+      "x-completion-type": "directory",
+      "x-priority": "important"
+    },
+    "https": {
+      "type": "boolean",
+      "description": "Serve Storybook over HTTPS. Note: You must provide your own certificate information.",
+      "default": false
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Open browser window automatically."
+    },
+    "ci": {
+      "type": "boolean",
+      "description": "CI mode (skip interactive prompts, don't open browser).",
+      "default": false
+    },
+    "loglevel": {
+      "type": "string",
+      "description": "Controls level of logging during build. Can be one of: [silly, verbose, info (default), warn, error, silent].",
+      "pattern": "(silly|verbose|info|warn|silent)"
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose build output."
+    },
+    "docs": {
+      "type": "boolean",
+      "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation."
+    },
+    "docsMode": {
+      "type": "boolean",
+      "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation.",
+      "default": false
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package.",
+      "enum": [
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
+      "x-deprecated": "Upgrade to Storybook 7."
+    },
+    "webpackStatsJson": {
+      "type": ["boolean", "string"],
+      "description": "Write Webpack Stats JSON to disk.",
+      "default": false
+    },
+    "sslCa": {
+      "type": "string",
+      "description": "Provide an SSL certificate authority. (Optional with --https, required if using a self-signed certificate)."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "Provide an SSL certificate. (Required with --https)."
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "Provide an SSL key. (Required with --https)."
+    },
+    "smokeTest": {
+      "type": "boolean",
+      "description": "Exit after successful start."
+    },
+    "noOpen": {
+      "type": "boolean",
+      "description": "Do not open Storybook automatically in the browser."
+    },
+    "debugWebpack": {
+      "type": "boolean",
+      "description": "Display final webpack configurations for debugging purposes."
+    },
+    "disableTelemetry": {
+      "type": "boolean",
+      "description": "Disables Storybook's telemetry."
+    }
+  },
+  "additionalProperties": true,
+  "definitions": {},
+  "required": ["configDir"],
+  "examplesFile": "../../../docs/storybook-executor-examples.md"
+}

@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxCypressProjectGeneratorSchema",
+  "cli": "nx",
+  "title": "Create Cypress Configuration for the workspace",
+  "description": "Create Cypress Configuration for the workspace.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the frontend project to test.",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-priority": "important"
+    },
+    "baseUrl": {
+      "type": "string",
+      "description": "The address (with the port) which your application is running on."
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the E2E Project.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the e2e project?"
+    },
+    "directory": {
+      "type": "string",
+      "description": "A directory where the project is placed.",
+      "x-priority": "important"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint", "none"],
+      "default": "eslint"
+    },
+    "js": {
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "setParserOptionsProject": {
+      "type": "boolean",
+      "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
+      "default": false
+    },
+    "standaloneConfig": {
+      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside workspace.json.",
+      "type": "boolean",
+      "default": true,
+      "x-deprecated": "Nx only supports standaloneConfig"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "bundler": {
+      "description": "The Cypress bundler to use.",
+      "type": "string",
+      "enum": ["vite", "webpack", "none"],
+      "x-prompt": "Which Cypress bundler do you want to use?",
+      "default": "webpack"
+    }
+  },
+  "required": ["name"],
+  "examplesFile": "../../../docs/cypress-project-examples.md"
+}

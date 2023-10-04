@@ -1,0 +1,96 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Module Federation Dev Server",
+  "description": "Serve a web application.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "devRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of remote applications to run in development mode (i.e. using serve target).",
+      "x-priority": "important"
+    },
+    "skipRemotes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of remote applications to not automatically serve, either statically or in development mode.",
+      "x-priority": "important"
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "Target which builds the application.",
+      "x-priority": "important"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port to listen on.",
+      "default": 4200,
+      "x-priority": "important"
+    },
+    "host": {
+      "type": "string",
+      "description": "Host to listen on.",
+      "default": "localhost"
+    },
+    "ssl": {
+      "type": "boolean",
+      "description": "Serve using `HTTPS`.",
+      "default": false
+    },
+    "sslKey": {
+      "type": "string",
+      "description": "SSL key to use for serving `HTTPS`."
+    },
+    "sslCert": {
+      "type": "string",
+      "description": "SSL certificate to use for serving `HTTPS`."
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Watches for changes and rebuilds application.",
+      "default": true
+    },
+    "liveReload": {
+      "type": "boolean",
+      "description": "Whether to reload the page on change, using live-reload.",
+      "default": true
+    },
+    "hmr": {
+      "type": "boolean",
+      "description": "Enable hot module replacement.",
+      "default": false
+    },
+    "publicHost": {
+      "type": "string",
+      "description": "Public URL where the application will be served."
+    },
+    "open": {
+      "type": "boolean",
+      "description": "Open the application in the browser.",
+      "default": false,
+      "x-priority": "important"
+    },
+    "allowedHosts": {
+      "type": "string",
+      "description": "This option allows you to whitelist services that are allowed to access the dev server."
+    },
+    "memoryLimit": {
+      "type": "number",
+      "description": "Memory limit for type checking service process in `MB`."
+    },
+    "maxWorkers": {
+      "type": "number",
+      "description": "Number of workers to use for type checking."
+    },
+    "baseHref": {
+      "type": "string",
+      "description": "Base url for the application being built."
+    }
+  }
+}

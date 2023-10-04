@@ -1,0 +1,11 @@
+{
+  "name": "nx-dev-data-access-menu",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/data-access-menu/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {},
+    "test": {}
+  },
+  "tags": []
+}

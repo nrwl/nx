@@ -1,0 +1,10 @@
+{
+  "extends": "<%= rootTsConfigPath %>",
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ]
+}

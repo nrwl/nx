@@ -1,0 +1,46 @@
+{
+  "name": "Nx Vite",
+  "version": "0.1",
+  "schematics": {
+    "init": {
+      "factory": "./src/generators/init/init#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize Vite in the workspace.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration#configurationSchematic",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Configure a project to use Vite.js.",
+      "aliases": ["config"],
+      "hidden": false
+    },
+    "vitest": {
+      "factory": "./src/generators/vitest/vitest-generator#vitestSchematic",
+      "schema": "./src/generators/vitest/schema.json",
+      "description": "Generate a vitest configuration"
+    }
+  },
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize Vite in the workspace.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "configuration": {
+      "factory": "./src/generators/configuration/configuration",
+      "schema": "./src/generators/configuration/schema.json",
+      "description": "Add Vite configuration to an application.",
+      "aliases": ["config"],
+      "hidden": false
+    },
+    "vitest": {
+      "factory": "./src/generators/vitest/vitest-generator",
+      "schema": "./src/generators/vitest/schema.json",
+      "description": "Generate a vitest configuration"
+    }
+  }
+}

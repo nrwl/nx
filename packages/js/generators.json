@@ -1,0 +1,81 @@
+{
+  "name": "nx/js",
+  "version": "0.1",
+  "schematics": {
+    "library": {
+      "factory": "./src/generators/library/library#librarySchematic",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library."
+    },
+    "init": {
+      "factory": "./src/generators/init/init#initSchematic",
+      "schema": "./src/generators/init/schema.json",
+      "x-type": "init",
+      "description": "Initialize a TS/JS workspace.",
+      "hidden": true
+    },
+    "convert-to-swc": {
+      "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcSchematic",
+      "schema": "./src/generators/convert-to-swc/schema.json",
+      "aliases": ["swc"],
+      "x-type": "library",
+      "description": "Convert a TypeScript library to compile with SWC."
+    },
+    "setup-verdaccio": {
+      "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccioSchematic",
+      "schema": "./src/generators/setup-verdaccio/schema.json",
+      "alias": ["verdaccio"],
+      "description": "Setup Verdaccio for local package management."
+    },
+    "setup-build": {
+      "factory": "./src/generators/setup-build/generator#setupBuildSchematic",
+      "schema": "./src/generators/setup-build/schema.json",
+      "alias": ["build"],
+      "description": "setup-build generator"
+    }
+  },
+  "generators": {
+    "library": {
+      "factory": "./src/generators/library/library#libraryGeneratorInternal",
+      "schema": "./src/generators/library/schema.json",
+      "aliases": ["lib"],
+      "x-type": "library",
+      "description": "Create a library"
+    },
+    "init": {
+      "factory": "./src/generators/init/init#initGenerator",
+      "schema": "./src/generators/init/schema.json",
+      "aliases": ["lib"],
+      "x-type": "init",
+      "description": "Initialize a TS/JS workspace.",
+      "hidden": true
+    },
+    "convert-to-swc": {
+      "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator",
+      "schema": "./src/generators/convert-to-swc/schema.json",
+      "aliases": ["swc"],
+      "x-type": "library",
+      "description": "Convert a TypeScript library to compile with SWC."
+    },
+    "release-version": {
+      "factory": "./src/generators/release-version/release-version#releaseVersionGenerator",
+      "schema": "./src/generators/release-version/schema.json",
+      "description": "DO NOT INVOKE DIRECTLY WITH `nx generate`. Use `nx release version` instead.",
+      "hidden": true
+    },
+    "setup-verdaccio": {
+      "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccio",
+      "schema": "./src/generators/setup-verdaccio/schema.json",
+      "alias": ["verdaccio"],
+      "description": "Setup Verdaccio for local package management."
+    },
+    "setup-build": {
+      "factory": "./src/generators/setup-build/generator",
+      "schema": "./src/generators/setup-build/schema.json",
+      "alias": ["build"],
+      "description": "setup-build generator"
+    }
+  }
+}

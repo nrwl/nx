@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "SchematicsAngularPipe",
+  "title": "Angular Pipe Options Schema",
+  "type": "object",
+  "cli": "nx",
+  "additionalProperties": false,
+  "description": "Creates a new, generic pipe definition in the given project.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the pipe.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "What name would you like to use for the pipe?"
+    },
+    "path": {
+      "type": "string",
+      "format": "path",
+      "$default": {
+        "$source": "workingDirectory"
+      },
+      "description": "The path at which to create the pipe, relative to the workspace root.",
+      "visible": false
+    },
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-dropdown": "projects"
+    },
+    "flat": {
+      "type": "boolean",
+      "default": true,
+      "description": "When true (the default) creates files at the top level of the project."
+    },
+    "skipTests": {
+      "type": "boolean",
+      "description": "Do not create \"spec.ts\" test files for the new pipe.",
+      "default": false
+    },
+    "skipImport": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not import this pipe into the owning NgModule."
+    },
+    "standalone": {
+      "description": "Whether the generated pipe is standalone. _Note: This is only supported in Angular versions >= 14.1.0_.",
+      "type": "boolean",
+      "default": false
+    },
+    "module": {
+      "type": "string",
+      "description": "The filename of the declaring NgModule.",
+      "alias": "m"
+    },
+    "export": {
+      "type": "boolean",
+      "default": false,
+      "description": "The declaring NgModule exports this pipe."
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "default": false,
+      "description": "Skip formatting of files."
+    }
+  },
+  "required": ["name", "project"]
+}

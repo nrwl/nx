@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Add Detox Schematics",
+  "description": "Add Detox Schematics.",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "framework": {
+      "type": "string",
+      "description": "App framework to test",
+      "enum": ["react-native", "expo"],
+      "default": "react-native"
+    }
+  },
+  "required": []
+}

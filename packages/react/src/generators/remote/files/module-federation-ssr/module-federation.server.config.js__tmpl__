@@ -1,0 +1,6 @@
+module.exports = {
+    name: '<%= projectName %>',
+   exposes: {
+     './Module': '<%= appProjectRoot %>/src/remote-entry.ts',
+   },
+};

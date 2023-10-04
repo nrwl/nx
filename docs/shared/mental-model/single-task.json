@@ -1,0 +1,29 @@
+{
+  "projects": [
+    {
+      "name": "lib",
+      "type": "lib",
+      "data": {
+        "tags": [],
+        "targets": {
+          "test": {}
+        }
+      }
+    }
+  ],
+  "taskId": "lib:test",
+  "taskGraphs": {
+    "lib:test": {
+      "roots": ["lib:test"],
+      "tasks": {
+        "lib:test": {
+          "id": "lib:test",
+          "target": { "project": "lib", "target": "test" },
+          "projectRoot": "libs/lib",
+          "overrides": {}
+        }
+      },
+      "dependencies": {}
+    }
+  }
+}

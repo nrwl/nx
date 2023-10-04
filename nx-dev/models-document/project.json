@@ -1,0 +1,11 @@
+{
+  "name": "nx-dev-models-document",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/models-document/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {},
+    "test": {}
+  },
+  "tags": ["scope:nx-dev", "type:util"]
+}

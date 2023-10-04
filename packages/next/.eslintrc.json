@@ -1,0 +1,100 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          "@nx/workspace",
+          "@angular-devkit/core",
+          "@angular-devkit/schematics",
+          "@angular-devkit/architect"
+        ]
+      }
+    },
+    {
+      "files": ["./plugins/with-nx.ts"],
+      "rules": {
+        "@typescript-eslint/no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              "@nx/workspace",
+              "@angular-devkit/core",
+              "@angular-devkit/architect",
+              "@angular-devkit/schematics"
+            ],
+            "patterns": [
+              {
+                "group": ["**/src/**/*"],
+                "message": "Inline functions instead of importing relative files. Relative files are not available in dist.",
+                "allowTypeImports": true
+              },
+              {
+                "group": ["./**/*"],
+                "message": "Inline functions instead of importing relative files. Relative files are not available in dist.",
+                "allowTypeImports": true
+              },
+              {
+                "group": ["@nx/**/*"],
+                "message": "Do not import Nx plugins.",
+                "allowTypeImports": true
+              },
+              {
+                "group": ["nx/**/*"],
+                "message": "Do not import Nx package.",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "./package.json",
+        "./generators.json",
+        "./executors.json",
+        "./migrations.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "@nx/webpack",
+              "@nx/cypress",
+              "@nx/jest",
+              "@nx/playwright",
+              "typescript",
+              "react",
+              "webpack",
+              // require.resovle is used for these
+              "@babel/plugin-proposal-decorators",
+              "url-loader",
+              "@svgr/webpack"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "ignorePatterns": ["!**/*"]
+}

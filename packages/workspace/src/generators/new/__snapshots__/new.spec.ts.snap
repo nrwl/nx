@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`new --preset should generate necessary npm dependencies for empty preset 1`] = `
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/js": "0.0.1",
+    "@nx/workspace": "0.0.1",
+    "nx": "0.0.1",
+  },
+  "license": "MIT",
+  "name": "@my-workspace/source",
+  "private": true,
+  "scripts": {},
+  "version": "0.0.0",
+}
+`;
+
+exports[`new should generate an empty nx.json 1`] = `
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": [
+      "default",
+    ],
+    "sharedGlobals": [],
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build",
+      ],
+      "inputs": [
+        "production",
+        "^production",
+      ],
+    },
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "lint",
+          "test",
+          "e2e",
+        ],
+      },
+      "runner": "nx/tasks-runners/default",
+    },
+  },
+}
+`;

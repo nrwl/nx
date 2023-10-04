@@ -1,0 +1,176 @@
+{
+  "version": 2,
+  "title": "Cypress Target",
+  "description": "Run Cypress for e2e, integration and component testing.",
+  "type": "object",
+  "outputCapture": "pipe",
+  "cli": "nx",
+  "presets": [
+    {
+      "name": "Starting Dev Server",
+      "keys": ["cypressConfig", "devServerTarget"]
+    },
+    {
+      "name": "Custom Base Url",
+      "keys": ["cypressConfig", "baseUrl"]
+    },
+    {
+      "name": "Component Testing",
+      "keys": ["cypressConfig", "devServerTarget", "testingType", "skipServe"]
+    }
+  ],
+  "properties": {
+    "cypressConfig": {
+      "type": "string",
+      "description": "The path of the Cypress configuration json file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "cypress?(*)@(.js|.ts|.json)"
+    },
+    "watch": {
+      "type": "boolean",
+      "description": "Recompile and run tests when files change.",
+      "default": false
+    },
+    "tsConfig": {
+      "x-deprecated": "This option no longer has any effect. Cypress supports typescript out of the box. Add any options directly to <projectRoot>/tsconfig.json or <projectRoot>/cypress/tsconfig.json",
+      "type": "string",
+      "description": "The path of the Cypress tsconfig configuration json file.",
+      "x-completion-type": "file",
+      "x-completion-glob": "tsconfig.*.json"
+    },
+    "devServerTarget": {
+      "type": "string",
+      "description": "Dev server target to run tests against."
+    },
+    "headed": {
+      "type": "boolean",
+      "description": "Displays the browser instead of running headlessly. Set this to `true` if your run depends on a Chrome extension being loaded.",
+      "default": false
+    },
+    "headless": {
+      "type": "boolean",
+      "description": "Hide the browser instead of running headed.",
+      "default": false,
+      "x-deprecated": "Cypress runs headless by default. Use the --watch flag to control head/headless behavior instead."
+    },
+    "exit": {
+      "type": "boolean",
+      "description": "Whether or not the Cypress Test Runner will stay open after running tests in a spec file.",
+      "default": true
+    },
+    "key": {
+      "type": "string",
+      "description": "The key cypress should use to run tests in parallel/record the run (CI only)."
+    },
+    "record": {
+      "type": "boolean",
+      "description": "Whether or not Cypress should record the results of the tests.",
+      "default": false
+    },
+    "parallel": {
+      "aliases": ["p"],
+      "type": "boolean",
+      "description": "Whether or not Cypress should run its tests in parallel (CI only).",
+      "default": false
+    },
+    "baseUrl": {
+      "type": "string",
+      "description": "The address (with the port) which your application is running on.",
+      "x-priority": "important"
+    },
+    "browser": {
+      "type": "string",
+      "description": "The browser to run tests in."
+    },
+    "env": {
+      "type": "object",
+      "description": "A key-value Pair of environment variables to pass to Cypress runner."
+    },
+    "spec": {
+      "type": "string",
+      "description": "A comma delimited glob string that is provided to the Cypress runner to specify which spec files to run. i.e. `**examples/**,**actions.spec**`."
+    },
+    "copyFiles": {
+      "type": "string",
+      "description": "A regex string that is used to choose what additional integration files to copy to the dist folder.",
+      "x-deprecated": "No longer used since cypress supports typescript out of the box. If specified, it will be ignored.",
+      "x-priority": "internal"
+    },
+    "ciBuildId": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "description": "A unique identifier for a run to enable grouping or parallelization."
+    },
+    "group": {
+      "type": "string",
+      "description": "A named group for recorded runs in the Cypress dashboard."
+    },
+    "ignoreTestFiles": {
+      "aliases": ["excludeSpecPattern"],
+      "type": "string",
+      "description": "A String or Array of glob patterns used to ignore test files that would otherwise be shown in your list of tests. Cypress uses minimatch with the options: `{dot: true, matchBase: true}`. We suggest using https://globster.xyz to test what files would match."
+    },
+    "reporter": {
+      "type": "string",
+      "description": "The reporter used during cypress run."
+    },
+    "reporterOptions": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "description": "The reporter options used. Supported options depend on the reporter. https://docs.cypress.io/guides/tooling/reporters#Reporter-Options"
+    },
+    "skipServe": {
+      "type": "boolean",
+      "description": "Skip dev-server build.",
+      "default": false
+    },
+    "testingType": {
+      "type": "string",
+      "description": "Specify the type of tests to execute.",
+      "enum": ["component", "e2e"],
+      "default": "e2e"
+    },
+    "tag": {
+      "type": "string",
+      "description": "A comma delimited list to identify a run with.",
+      "aliases": ["t"]
+    },
+    "port": {
+      "oneOf": [
+        {
+          "type": "string",
+          "enum": ["cypress-auto"]
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "description": "Pass a specified port value to the devServerTarget, if the value is 'cypress-auto' a free port will automatically be picked for the devServerTarget."
+    },
+    "quiet": {
+      "aliases": ["q"],
+      "type": "boolean",
+      "description": "If passed, Cypress output will not be printed to stdout. Only output from the configured Mocha reporter will print.",
+      "default": false
+    },
+    "runnerUi": {
+      "type": "boolean",
+      "description": "Displays the Cypress Runner UI. Useful for when Test Replay is enabled and you would still like the Cypress Runner UI to be displayed for screenshots and video."
+    }
+  },
+  "additionalProperties": true,
+  "required": ["cypressConfig"],
+  "examplesFile": "../../../docs/cypress-examples.md"
+}

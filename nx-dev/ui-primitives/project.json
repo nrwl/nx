@@ -1,0 +1,16 @@
+{
+  "name": "nx-dev-ui-primitives",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/ui-primitives/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["nx-dev/ui-primitives/**/*.{ts,tsx,js,jsx}"]
+      }
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "name": "my-test-random-app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "root": "apps/my-test-random-app",
+  "sourceRoot": "apps/my-test-random-app/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@random/something:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/my-test-random-app",
+        "compiler": "babel",
+        "main": "apps/my-test-random-app/src/main.ts",
+        "tsConfig": "apps/my-test-random-app/tsconfig.app.json",
+        "assets": [
+          "apps/my-test-random-app/src/favicon.ico",
+          "apps/my-test-random-app/src/assets"
+        ],
+        "index": "apps/my-test-random-app/src/index.html",
+        "baseHref": "/",
+        "polyfills": "apps/my-test-random-app/src/polyfills.ts",
+        "styles": ["apps/my-test-random-app/src/styles.css"],
+        "scripts": []
+      },
+      "configurations": {
+        "production": {
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "namedChunks": false,
+          "extractLicenses": true,
+          "vendorChunk": false,
+          "fileReplacements": [
+            {
+              "replace": "apps/my-test-random-app/src/environments/environment.ts",
+              "with": "apps/my-test-random-app/src/environments/environment.prod.ts"
+            }
+          ]
+        }
+      }
+    },
+    "serve": {
+      "executor": "@random/something:serve",
+      "options": {
+        "buildTarget": "my-test-random-app:build"
+      },
+      "configurations": {
+        "production": {
+          "buildTarget": "my-test-random-app:build:production"
+        }
+      }
+    },
+    "lint": {
+      "executor": "@random/something:test",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/my-test-random-app/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@random/something:test",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/my-test-random-app/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

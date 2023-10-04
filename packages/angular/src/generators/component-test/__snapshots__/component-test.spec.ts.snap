@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Angular Cypress Component Test Generator should generate a component test 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { MyLibComponent } from './my-lib.component';
+
+describe(MyLibComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(MyLibComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(MyLibComponent, {
+           componentProperties: {
+               type:  'button',
+               style:  'default',
+               age:  0,
+               isOn:  false,
+          }
+       });
+  })
+
+})
+"
+`;
+
+exports[`Angular Cypress Component Test Generator should handle component w/o inputs 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { MyLibComponent } from './my-lib.component';
+
+describe(MyLibComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(MyLibComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(MyLibComponent,);
+  })
+
+})
+"
+`;
+
+exports[`Angular Cypress Component Test Generator should work with standalone components 1`] = `
+"import { TestBed } from '@angular/core/testing';
+import { MyLibComponent } from './my-lib.component';
+
+describe(MyLibComponent.name, () => {
+
+  beforeEach(() => {
+    TestBed.overrideComponent(MyLibComponent, {
+      add: { 
+        imports: [],
+        providers: []
+      }
+    }) 
+  })
+
+  it('renders', () => {
+     cy.mount(MyLibComponent, {
+           componentProperties: {
+               type:  'button',
+               style:  'default',
+               age:  0,
+               isOn:  false,
+          }
+       });
+  })
+
+})
+"
+`;

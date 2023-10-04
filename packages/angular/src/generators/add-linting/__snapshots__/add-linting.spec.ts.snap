@@ -1,0 +1,99 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`addLinting generator should correctly generate the .eslintrc.json file 1`] = `
+{
+  "extends": [
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": [
+    "!**/*",
+  ],
+  "overrides": [
+    {
+      "extends": [
+        "plugin:@nx/angular",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": [
+        "*.ts",
+      ],
+      "rules": {
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "prefix": "my-org",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "prefix": "myOrg",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    {
+      "extends": [
+        "plugin:@nx/angular-template",
+      ],
+      "files": [
+        "*.html",
+      ],
+      "rules": {},
+    },
+  ],
+}
+`;
+
+exports[`addLinting generator support angular v14 should correctly generate the .eslintrc.json file 1`] = `
+{
+  "extends": [
+    "../../.eslintrc.json",
+  ],
+  "ignorePatterns": [
+    "!**/*",
+  ],
+  "overrides": [
+    {
+      "extends": [
+        "plugin:@nx/angular",
+        "plugin:@angular-eslint/template/process-inline-templates",
+      ],
+      "files": [
+        "*.ts",
+      ],
+      "rules": {
+        "@angular-eslint/component-selector": [
+          "error",
+          {
+            "prefix": "my-org",
+            "style": "kebab-case",
+            "type": "element",
+          },
+        ],
+        "@angular-eslint/directive-selector": [
+          "error",
+          {
+            "prefix": "myOrg",
+            "style": "camelCase",
+            "type": "attribute",
+          },
+        ],
+      },
+    },
+    {
+      "extends": [
+        "plugin:@nx/angular-template",
+      ],
+      "files": [
+        "*.html",
+      ],
+      "rules": {},
+    },
+  ],
+}
+`;

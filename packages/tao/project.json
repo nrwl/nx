@@ -1,0 +1,64 @@
+{
+  "name": "tao",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/tao",
+  "projectType": "library",
+  "targets": {
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/tao",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/tao",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/tao",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/tao",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/tao",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/tao"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/tao/index.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js tao"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {}
+  }
+}

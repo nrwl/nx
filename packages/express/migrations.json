@@ -1,0 +1,34 @@
+{
+  "generators": {
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/express with @nx/express",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    }
+  },
+  "packageJsonUpdates": {
+    "13.7.0": {
+      "version": "13.7.0",
+      "packages": {
+        "express": {
+          "version": "4.17.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/express": {
+          "version": "4.17.13",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "14.5.0": {
+      "version": "14.5.0-beta.4",
+      "packages": {
+        "express": {
+          "version": "^4.18.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

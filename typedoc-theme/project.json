@@ -1,0 +1,28 @@
+{
+  "name": "typedoc-theme",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "typedoc-theme/src",
+  "projectType": "library",
+  "targets": {
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/typedoc-theme",
+        "main": "typedoc-theme/src/index.ts",
+        "tsConfig": "typedoc-theme/tsconfig.lib.json",
+        "assets": ["typedoc-theme/*.md"]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "echo 'Building TypeDoc custom theme'"
+      },
+      "outputs": ["{workspaceRoot}/dist/typedoc-theme"]
+    },
+    "lint": {},
+    "test": {}
+  },
+  "tags": []
+}

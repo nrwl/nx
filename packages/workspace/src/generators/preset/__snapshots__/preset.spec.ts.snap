@@ -1,0 +1,97 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`preset should create files (preset = angular-monorepo) 1`] = `
+[
+  "project.json",
+  "src",
+  "tsconfig.app.json",
+  "tsconfig.editor.json",
+  "tsconfig.json",
+  ".eslintrc.json",
+  "jest.config.ts",
+  "tsconfig.spec.json",
+]
+`;
+
+exports[`preset should create files (preset = angular-monorepo) 2`] = `
+[
+  "assets",
+  "favicon.ico",
+  "index.html",
+  "styles.css",
+  "app",
+  "main.ts",
+  "test-setup.ts",
+]
+`;
+
+exports[`preset should create files (preset = angular-monorepo) 3`] = `
+[
+  "app.component.css",
+  "app.component.html",
+  "app.component.spec.ts",
+  "app.component.ts",
+  "app.module.ts",
+  "nx-welcome.component.ts",
+]
+`;
+
+exports[`preset should create files (preset = react-standalone bundler = vite) 1`] = `
+{
+  "configurations": {
+    "development": {
+      "buildTarget": "proj:build:development",
+      "hmr": true,
+    },
+    "production": {
+      "buildTarget": "proj:build:production",
+      "hmr": false,
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nx/vite:dev-server",
+  "options": {
+    "buildTarget": "proj:build",
+  },
+}
+`;
+
+exports[`preset should create files (preset = react-standalone bundler = webpack) 1`] = `
+{
+  "configurations": {
+    "development": {
+      "buildTarget": "proj:build:development",
+    },
+    "production": {
+      "buildTarget": "proj:build:production",
+      "hmr": false,
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nx/webpack:dev-server",
+  "options": {
+    "buildTarget": "proj:build",
+    "hmr": true,
+  },
+}
+`;
+
+exports[`preset should create files (preset = vue-standalone) 1`] = `
+{
+  "configurations": {
+    "development": {
+      "buildTarget": "proj:build:development",
+      "hmr": true,
+    },
+    "production": {
+      "buildTarget": "proj:build:production",
+      "hmr": false,
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nx/vite:dev-server",
+  "options": {
+    "buildTarget": "proj:build",
+  },
+}
+`;

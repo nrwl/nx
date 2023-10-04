@@ -1,0 +1,359 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://nx.dev/reference/nx-json",
+  "title": "JSON schema for Nx configuration",
+  "type": "object",
+  "properties": {
+    "implicitDependencies": {
+      "type": "object",
+      "description": "Map of files to projects that implicitly depend on them.",
+      "deprecated": "Use named inputs instead.  See https://nx.dev/deprecated/global-implicit-dependencies"
+    },
+    "affected": {
+      "type": "object",
+      "description": "Default options for `nx affected`.",
+      "properties": {
+        "defaultBase": {
+          "type": "string",
+          "description": "Default based branch used by affected commands."
+        }
+      },
+      "additionalProperties": false
+    },
+    "npmScope": {
+      "type": "string",
+      "description": "NPM Scope that the workspace uses.",
+      "deprecated": "This is inferred from the package.json in the workspace root instead."
+    },
+    "tasksRunnerOptions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/tasksRunnerOptions"
+      }
+    },
+    "namedInputs": {
+      "type": "object",
+      "description": "Named inputs used by inputs defined in targets",
+      "additionalProperties": {
+        "$ref": "#/definitions/inputs"
+      }
+    },
+    "targetDefaults": {
+      "type": "object",
+      "description": "Target defaults",
+      "additionalProperties": {
+        "$ref": "#/definitions/targetDefaultsConfig"
+      }
+    },
+    "workspaceLayout": {
+      "type": "object",
+      "description": "Where new apps + libs should be placed.",
+      "properties": {
+        "libsDir": {
+          "type": "string",
+          "description": "Default folder name for libs."
+        },
+        "appsDir": {
+          "type": "string",
+          "description": "Default folder name for apps."
+        },
+        "projectNameAndRootFormat": {
+          "type": "string",
+          "description": "Default method of handling arguments for generating projects",
+          "enum": ["as-provided", "derived"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "cli": {
+      "$ref": "#/definitions/cliOptions"
+    },
+    "generators": {
+      "$ref": "#/definitions/generatorOptions"
+    },
+    "plugins": {
+      "type": "array",
+      "description": "Plugins for extending the project graph.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "defaultProject": {
+      "type": "string",
+      "description": "Default project. When project isn't provided, the default project will be used."
+    }
+  },
+  "definitions": {
+    "inputs": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "fileset": {
+                "type": "string",
+                "description": "A glob"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "description": "The project that the targets belong to."
+                  },
+                  {
+                    "type": "array",
+                    "description": "The projects that the targets belong to.",
+                    "items": { "type": "string" }
+                  }
+                ]
+              },
+              "dependencies": {
+                "type": "boolean",
+                "description": "Include files belonging to the input for all the project dependencies of this target."
+              },
+              "input": {
+                "type": "string",
+                "description": "The name of the input."
+              }
+            },
+            "oneOf": [
+              {
+                "required": ["projects", "input"]
+              },
+              {
+                "required": ["dependencies", "input"]
+              },
+              {
+                "required": ["input"],
+                "not": {
+                  "anyOf": [
+                    { "required": ["projects"] },
+                    { "required": ["dependencies"] }
+                  ]
+                }
+              }
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "runtime": {
+                "type": "string",
+                "description": "The command that will be executed and the results of which is added to the hash"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "env": {
+                "type": "string",
+                "description": "The name of the env var which value is added to the hash"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "externalDependencies": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "The list of external dependencies that our target depends on for `nx:run-commands` and community plugins."
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "dependentTasksOutputFiles": {
+                "type": "string",
+                "description": "The glob list of output files that project depends on."
+              },
+              "transitive": {
+                "type": "boolean",
+                "description": "Whether the check for outputs should be recursive or stop at the first level of dependencies."
+              }
+            },
+            "required": ["dependentTasksOutputFiles"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "cliOptions": {
+      "type": "object",
+      "description": "Default generator collection.",
+      "properties": {
+        "packageManager": {
+          "type": "string",
+          "description": "The default package manager to use.",
+          "enum": ["yarn", "pnpm", "npm"]
+        },
+        "defaultCollection": {
+          "type": "string",
+          "description": "The default generator collection to use."
+        }
+      }
+    },
+    "generatorOptions": {
+      "type": "object",
+      "description": "List of default values used by generators."
+    },
+    "tasksRunnerOptions": {
+      "type": "object",
+      "description": "Available Task Runners.",
+      "properties": {
+        "runner": {
+          "type": "string",
+          "description": "Path to resolve the runner."
+        },
+        "options": {
+          "type": "object",
+          "description": "Default options for the runner.",
+          "properties": {
+            "accessToken": {
+              "type": "string"
+            },
+            "captureStderr": {
+              "type": "boolean",
+              "description": "Defines whether the cache captures stderr or just stdout."
+            },
+            "parallel": {
+              "type": "number",
+              "description": "Defines the max number of targets ran in parallel."
+            },
+            "cacheableOperations": {
+              "type": "array",
+              "description": "Defines the list of targets/operations that are cached by Nx.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "cacheDirectory": {
+              "type": "string",
+              "description": "Defines where the local cache is stored."
+            },
+            "skipNxCache": {
+              "type": "boolean",
+              "description": "Defines whether the Nx Cache should be skipped."
+            },
+            "encryptionKey": {
+              "type": "string",
+              "description": "Defines an encryption key to support end-to-end encryption of your cloud cache. You may also provide an environment variable with the key NX_CLOUD_ENCRYPTION_KEY that contains an encryption key as its value. The Nx Cloud task runner normalizes the key length, so any length of key is acceptable."
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "targetDefaultsConfig": {
+      "type": "object",
+      "description": "Target defaults",
+      "properties": {
+        "executor": {
+          "description": "The function that Nx will invoke when you run this target",
+          "type": "string"
+        },
+        "options": {
+          "type": "object"
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "defaultConfiguration": {
+          "type": "string",
+          "description": "The name of a configuration to use as the default if a configuration is not provided"
+        },
+        "configurations": {
+          "type": "object",
+          "description": "provides extra sets of values that will be merged into the options map",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "inputs": {
+          "$ref": "#/definitions/inputs"
+        },
+        "dependsOn": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "projects": {
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "description": "A project name"
+                      },
+                      {
+                        "type": "array",
+                        "description": "An array of project names",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ]
+                  },
+                  "dependencies": {
+                    "type": "boolean"
+                  },
+                  "target": {
+                    "type": "string",
+                    "description": "The name of the target."
+                  },
+                  "params": {
+                    "type": "string",
+                    "description": "Configuration for params handling.",
+                    "enum": ["ignore", "forward"],
+                    "default": "ignore"
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": ["projects", "target"]
+                  },
+                  {
+                    "required": ["dependencies", "target"]
+                  },
+                  {
+                    "required": ["target"],
+                    "not": {
+                      "anyOf": [
+                        { "required": ["projects"] },
+                        { "required": ["dependencies"] }
+                      ]
+                    }
+                  }
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

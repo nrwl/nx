@@ -1,0 +1,71 @@
+<% if (classComponent) { %>
+import { Component } from 'react';
+<% } %>
+
+<% if (routing) { %>
+import { Route, Link } from 'react-router-dom';
+<% } %>
+
+<% if (hasStyles) {
+   if (styledModule && styledModule !== 'styled-jsx') {
+    var wrapper = 'Styled' + className;
+    var extras = '';
+  %>
+  import styled from '<%= styledModule %>';
+  <% } else {
+    var wrapper = 'div';
+    var extras = globalCss || styledModule === 'styled-jsx' ? '' : " className={styles['container']}";
+  %>
+  <%- style !== 'styled-jsx' ? globalCss ? `import './${fileName}.${style}';` : `import styles from './${fileName}.module.${style}';`: '' %>
+  <% }
+} else {
+    var wrapper = 'div';
+    var extras = '';
+} %>
+
+/* eslint-disable-next-line */
+export interface <%= className %>Props {
+}
+
+<% if (styledModule && styledModule !== 'styled-jsx') { %>
+const Styled<%= className %> = styled.div`
+  color: pink;
+`;
+<% }%>
+<% if (classComponent) { %>
+export class <%= className %> extends Component<<%= className %>Props> {
+  override render() {
+    return (
+      <<%= wrapper %><%- extras %>>
+        <%= styledModule === 'styled-jsx' ? `<style jsx>{\`div { color: pink; }\`}</style>` : `` %>
+        <p>Welcome to <%= className %>!</p>
+        <% if (routing) { %>
+          <ul>
+            <li><Link to="/"><%= name %> root</Link></li>
+          </ul>
+          <Route path="/" element={<div>This is the <%= name %> root route.</div>} />
+        <% } %>
+      </<%= wrapper %>>
+    );
+  }
+}
+<% } else { %>
+export function <%= className %>(props: <%= className %>Props) {
+  return (
+    <<%= wrapper %><%- extras %>>
+      <% if (styledModule === 'styled-jsx') { %><style jsx>{`div { color: pink; }`}</style><% } %>
+      <h1>Welcome to <%= className %>!</h1>
+      <% if (routing) { %>
+        <ul>
+          <li><Link to="/"><%= name %> root</Link></li>
+        </ul>
+        <Route path="/" element={<div>This is the <%= name %> root route.</div>} />
+      <% } %>
+    </<%= wrapper %>>
+  );
+};
+<% } %>
+
+export default <%= className %>;
+
+<% if (inSourceTests === true) { %> <%- inSourceVitestTests %> <% } %>

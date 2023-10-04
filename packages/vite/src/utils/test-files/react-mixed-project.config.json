@@ -1,0 +1,52 @@
+{
+  "name": "my-test-mixed-react-app",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "apps/my-test-mixed-react-app",
+  "sourceRoot": "apps/my-test-mixed-react-app/src",
+  "projectType": "application",
+  "targets": {
+    "invalid-build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"]
+    },
+    "valid-build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"]
+    },
+    "serve": {
+      "executor": "@nx/webpack:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "my-test-mixed-react-app:build",
+        "hmr": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "my-test-mixed-react-app:build:development"
+        },
+        "production": {
+          "buildTarget": "my-test-mixed-react-app:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": [
+          "apps/my-test-mixed-react-app/**/*.{ts,tsx,js,jsx}"
+        ]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/my-test-mixed-react-app/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

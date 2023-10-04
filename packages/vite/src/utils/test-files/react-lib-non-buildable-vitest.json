@@ -1,0 +1,25 @@
+{
+  "name": "react-lib-nonb-vitest",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "root": "libs/react-lib-nonb-vitest",
+  "sourceRoot": "libs/react-lib-nonb-vitest/src",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/react-lib-nonb-vitest/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{projectRoot}/coverage"],
+      "options": {
+        "passWithNoTests": true,
+        "reportsDirectory": "{workspaceRoot}/coverage/{projectRoot}"
+      }
+    }
+  },
+  "tags": []
+}

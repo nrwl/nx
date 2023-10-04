@@ -1,0 +1,216 @@
+# Extending the Project Graph of Nx
+
+{% callout type="info" title="Looking for `processProjectGraph`?" %}
+
+Prior to Nx 16.7, a plugin could use `processProjectGraph`, `projectFilePatterns`, and `registerProjectTargets` to modify the project graph. This interface is still supported, but it is deprecated. We recommend using the new interface described below. For documentation on the v1 plugin api, see [here](/deprecated/v1-nx-plugin-api)
+
+{% /callout %}
+
+{% callout type="caution" title="Experimental" %}
+This API is experimental and might change.
+{% /callout %}
+
+The Project Graph is the representation of the source code in your repo. Projects can have files associated with them. Projects can have dependencies on each other.
+
+One of the best features of Nx the ability to construct the project graph automatically by analyzing your source code. Currently, this works best within the JavaScript ecosystem, but it can be extended to other languages and technologies using plugins.
+
+Project graph plugins are able to add new nodes or dependencies to the project graph. This allows you to extend the project graph with new projects and dependencies. The API is defined by two exported members, which are described below:
+
+- [createNodes](#adding-new-nodes-to-the-project-graph): This tuple allows a plugin to tell Nx information about projects that are identified by a given file.
+- [createDependencies](#adding-new-dependencies-to-the-project-graph): This function allows a plugin to tell Nx about dependencies between projects.
+
+## Adding Plugins to Workspace
+
+You can register a plugin by adding it to the plugins array in `nx.json`:
+
+```jsonc {% fileName="nx.json" %}
+{
+  ...,
+  "plugins": [
+    "awesome-plugin"
+  ]
+}
+```
+
+## Adding New Nodes to the Project Graph
+
+You can add nodes to the project graph with [`createNodes`](/nx-api/devkit/documents/CreateNodes). This is the API that Nx uses under the hood to identify Nx projects coming from a `project.json` file or a `package.json` that's listed in a package manager's workspaces section.
+
+### Identifying Projects
+
+Looking at the tuple, you can see that the first element is a file pattern. This is a glob pattern that Nx will use to find files in your workspace. The second element is a function that will be called for each file that matches the pattern. The function will be called with the path to the file and a context object. Your plugin can then return a set of projects and external nodes.
+
+If a plugin identifies a project that is already in the project graph, it will be merged with the information that is already present. The builtin plugins that identify projects from `package.json` files and `project.json` files are ran after any plugins listed in `nx.json`, and as such will overwrite any configuration that was identified by them. In practice, this means that if a project has both a `project.json`, and a file that your plugin identified, the settings the plugin idenfied will be overwritten by the `project.json`'s contents.
+
+Project nodes in the graph are considered to be the same if the project has the same root. If multiple plugins identify a project with the same root, the project will be merged. In doing so, the name that is already present in the graph is kept, and the properties below are shallowly merged. Any other properties are overwritten.
+
+- `targets`
+- `tags`
+- `implicitDependencies`
+- `generators`
+
+Note: This is a shallow merge, so if you have a target with the same name in both plugins, the target from the second plugin will overwrite the target from the first plugin. Options, configurations, or any other properties within the target will be overwritten **_not_** merged.
+
+#### Example
+
+A simplified version of Nx's built-in `project.json` plugin is shown below, which adds a new project to the project graph for each `project.json` file it finds. This should be exported from the entry point of your plugin, which is listed in `nx.json`
+
+```typescript {% fileName="/my-plugin/index.ts" %}
+export const createNodes: CreateNodes = [
+  '**/project.json',
+  (projectConfigurationFile: string, context: CreateNodesContext) => {
+    const projectConfiguration = readJson(projectConfigurationFile);
+    const projectRoot = dirname(projectConfigurationFile);
+    const projectName = projectConfiguration.name;
+
+    return {
+      projects: {
+        [projectName]: {
+          ...projectConfiguration,
+          root: projectRoot,
+        },
+      },
+    };
+  },
+];
+```
+
+### Adding External Nodes
+
+Additionally, plugins can add external nodes to the project graph. External nodes are nodes that are not part of the workspace, but are still part of the project graph. This is useful for things like npm packages, or other external dependencies that are not part of the workspace.
+
+External nodes are identified by a unique name, and if plugins identify an external node with the same name, the external node will be **_overwritten_**. This is different from projects, where the properties are merged, but is handled this way as it should not be as common and there are less useful properties to merge.
+
+## Adding New Dependencies to the Project Graph
+
+It's more common for plugins to create new dependencies. First-party code contained in the workspace is added to the project graph automatically. Whether your project contains TypeScript or say Java, both projects will be created in the same way. However, Nx does not know how to analyze Java sources, and that's what plugins can do.
+
+The shape of the [`createDependencies`](/nx-api/devkit/documents/CreateDependencies) function follows:
+
+```typescript
+export type CreateDependencies = (
+  context: CreateDependenciesContext
+) => CandidateDependency[] | Promise<CandidateDependency[]>;
+```
+
+In the `createDependencies` function, you can analyze the files in the workspace and return a list of dependencies. It's up to the plugin to determine how to analyze the files. This should also be exported from the plugin's entry point, as listed in `nx.json`.
+
+Within the `CreateDependenciesContext`, you have access to the graph's external nodes, the configuration of each project in the workspace, the `nx.json` configuration from the workspace, all files in the workspace, and files that have changed since the last invocation. It's important to utilize the `filesToProcess` parameter, as this will allow Nx to only reanalyze files that have changed since the last invocation, and reuse the information from the previous invocation for files that haven't changed.
+
+`@nx/devkit` exports a function called `validateDependency` which can be used to validate a dependency. This function takes in a `CandidateDependency` and the `CreateDependenciesContext` and throws an error if the dependency is invalid. This function is called when the returned dependencies are merged with the existing project graph, but may be useful to call within your plugin to validate dependencies before returning them when debugging.
+
+The dependencies can be of three types:
+
+- Implicit
+- Static
+- Dynamic
+
+### Implicit Dependencies
+
+An implicit dependency is not associated with any file, and can be created as follows:
+
+```typescript
+{
+  source: 'existing-project',
+  target: 'new-project',
+  dependencyType: DependencyType.implicit,
+}
+```
+
+Because an implicit dependency is not associated with any file, Nx doesn't know when it might change, so it will be recomputed every time.
+
+### Static Dependencies
+
+Nx knows what files have changed since the last invocation. Only those files will be present in the provided `filesToProcess`. You can associate a dependency with a particular file (e.g., if that file contains an import).
+
+```typescript
+{
+  source: 'existing-project',
+  target: 'new-project',
+  sourceFile: 'libs/existing-project/src/index.ts',
+  dependencyType: DependencyType.static,
+}
+```
+
+If a file hasn't changed since the last invocation, it doesn't need to be reanalyzed. Nx knows what dependencies are associated with what files, so it will reuse this information for the files that haven't changed.
+
+### Dynamic Dependencies
+
+Dynamic dependencies are a special type of explicit dependencies. In contrast to standard `explicit` dependencies, they are only imported in the runtime under specific conditions.
+A typical example would be lazy-loaded routes. Having separation between these two allows us to identify situations where static import breaks the lazy-loading.
+
+```typescript
+{
+  source: 'existing-project',
+  target: 'new-project',
+  sourceFile: 'libs/existing-project/src/index.ts',
+  dependencyType: DependencyType.dynamic,
+}
+```
+
+### Example
+
+{% callout type="note" title="More details" %}
+Even though the plugin is written in JavaScript, resolving dependencies of different languages will probably be more easily written in their native language. Therefore, a common approach is to spawn a new process and communicate via IPC or `stdout`.
+{% /callout %}
+
+A small plugin that recognizes dependencies to projects in the current workspace which a referenced in another project's `package.json` file may look like so:
+
+```typescript {% fileName="/my-plugin/index.ts" %}
+export const createNodes: CreateNodes = (ctx) => {
+  const packageJsonProjectMap = new Map();
+  const nxProjects = Object.values(ctx.projectsConfigurations);
+  const results = [];
+  for (const project of nxProjects) {
+    const maybePackageJsonPath = join(project.root, 'package.json');
+    if (existsSync(maybePackageJsonPath)) {
+      const json = JSON.parse(maybePackageJsonPath);
+      packageJsonProjectMap.set(json.name, project.name);
+    }
+  }
+  for (const project of nxProjects) {
+    const maybePackageJsonPath = join(project.root, 'package.json');
+    if (existsSync(maybePackageJsonPath)) {
+      const json = JSON.parse(maybePackageJsonPath);
+      const deps = [...Object.keys(json.dependencies)];
+      for (const dep of deps) {
+        if (packageJsonProjectMap.has(dep)) {
+          const newDependency = {
+            source: project,
+            target: packageJsonProjectMap.get(dep),
+            sourceFile: maybePackageJsonPath,
+            dependencyType: DependencyType.static,
+          };
+        }
+        validateDependency(newDependency, ctx);
+        results.push(newDependency);
+      }
+    }
+  }
+  return results;
+};
+```
+
+Breaking down this example, we can see that it follows this flow:
+
+1. Initializes an array to hold dependencies it locates
+2. Builds a map of all projects in the workspace, mapping the name inside their package.json to their Nx project name.
+3. Looks at the package.json files within the workspace and:
+4. Checks if the dependency is another project
+5. Builds a dependency from this information
+6. Validates the dependency
+7. Pushes it into the located dependency array
+8. Returns the located dependencies
+
+## Visualizing the Project Graph
+
+You can then visualize the project graph as described [here](/core-features/explore-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
+
+It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing.
+
+<!-- TODO (@AgentEnder): update the nx-go-project-graph-plugin to v2 API and re-add this section -->
+<!-- ## Example Project Graph Plugin
+
+The [nrwl/nx-go-project-graph-plugin](https://github.com/nrwl/nx-go-project-graph-plugin) repo contains an example project graph plugin which adds [Go](https://golang.org/) dependencies to the Nx Project Graph! A similar approach can be used for other languages.
+
+{% github-repository url="https://github.com/nrwl/nx-go-project-graph-plugin" /%} -->

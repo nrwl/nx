@@ -1,0 +1,4 @@
+{
+  "extends": ["@nx/expo"],
+  "schematics": {}
+}

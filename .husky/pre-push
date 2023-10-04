@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+pnpm check-lock-files &&
+pnpm check-commit &&
+pnpm documentation &&
+pnpm pretty-quick --check

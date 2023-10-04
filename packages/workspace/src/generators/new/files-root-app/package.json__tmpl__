@@ -1,0 +1,14 @@
+{
+  "name": "<%= formattedNames.fileName %>",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+  },
+  "private": true,
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@nx/workspace": "<%= nxVersion %>",
+    "nx": "<%= nxVersion %>"
+  }
+}

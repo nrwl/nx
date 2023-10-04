@@ -1,0 +1,18 @@
+{
+  "generators": {
+    "update-16-0-0-add-nx-packages": {
+      "cli": "nx",
+      "version": "16.0.0-beta.1",
+      "description": "Replace @nrwl/devkit with @nx/devkit",
+      "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-16-9-0-migrate-mf-usage-to-webpack": {
+      "cli": "nx",
+      "version": "16.9.0-beta.1",
+      "description": "Replace imports of Module Federation utils frm @nx/devkit to @nx/webpack",
+      "implementation": "./src/migrations/update-16-9-0/migrate-mf-util-usage"
+    }
+  },
+  "packageJsonUpdates": {},
+  "version": "0.1"
+}

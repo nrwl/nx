@@ -1,0 +1,7 @@
+import { render } from '@testing-library/react';
+
+import <%= className %> from './<%= fileName %>';
+
+describe('<%= className %>', () => {
+  <%- componentTests %>
+});

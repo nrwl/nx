@@ -1,0 +1,134 @@
+{
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Storybook Builder",
+  "cli": "nx",
+  "description": "Build storybook in production mode.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Default minimum setup",
+      "keys": ["outputDir", "configDir"]
+    }
+  ],
+  "properties": {
+    "outputDir": {
+      "type": "string",
+      "description": "Directory where to store built files.",
+      "x-completion-type": "directory"
+    },
+    "styles": {
+      "type": "array",
+      "description": "Global styles to be included in the build.",
+      "items": {
+        "$ref": "#/definitions/extraEntryPoint"
+      }
+    },
+    "stylePreprocessorOptions": {
+      "type": "object",
+      "description": "Options to pass to style preprocessors.",
+      "properties": {
+        "includePaths": {
+          "type": "array",
+          "description": "The paths to include. Paths will be resolved to workspace root.",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "docsMode": {
+      "type": "boolean",
+      "description": "Build a documentation-only site using addon-docs.",
+      "default": false
+    },
+    "staticDir": {
+      "type": "array",
+      "description": "Directory where to load static files from, array of strings.",
+      "items": {
+        "type": "string"
+      },
+      "x-deprecated": "In Storybook 6.4 the `--static-dir` CLI flag has been replaced with the the `staticDirs` field in `.storybook/main.js`. It will be removed completely in Storybook 7.0."
+    },
+    "configDir": {
+      "type": "string",
+      "description": "Directory where to load Storybook configurations from.",
+      "x-completion-type": "directory",
+      "x-priority": "important"
+    },
+    "loglevel": {
+      "type": "string",
+      "description": "Controls level of logging during build. Can be one of: [silly, verbose, info (default), warn, error, silent].",
+      "pattern": "(silly|verbose|info|warn|silent)"
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppress verbose build output."
+    },
+    "docs": {
+      "type": "boolean",
+      "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation."
+    },
+    "uiFramework": {
+      "type": "string",
+      "description": "Storybook framework npm package.",
+      "enum": [
+        "@storybook/react",
+        "@storybook/html",
+        "@storybook/web-components",
+        "@storybook/vue",
+        "@storybook/vue3",
+        "@storybook/svelte"
+      ],
+      "x-deprecated": "Upgrade to Storybook 7."
+    },
+    "webpackStatsJson": {
+      "type": ["boolean", "string"],
+      "description": "Write Webpack Stats JSON to disk.",
+      "default": false
+    },
+    "debugWebpack": {
+      "type": "boolean",
+      "description": "Display final webpack configurations for debugging purposes."
+    },
+    "disableTelemetry": {
+      "type": "boolean",
+      "description": "Disables Storybook's telemetry."
+    }
+  },
+  "definitions": {
+    "extraEntryPoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "input": {
+              "type": "string",
+              "description": "The file to include.",
+              "x-completion-type": "file"
+            },
+            "bundleName": {
+              "type": "string",
+              "pattern": "^[\\w\\-.]*$",
+              "description": "The bundle name for this extra entry point."
+            },
+            "inject": {
+              "type": "boolean",
+              "description": "If the bundle will be referenced in the HTML file.",
+              "default": true
+            }
+          },
+          "additionalProperties": false,
+          "required": ["input"]
+        },
+        {
+          "type": "string",
+          "description": "The file to include."
+        }
+      ]
+    }
+  },
+  "additionalProperties": true,
+  "required": ["configDir"],
+  "examplesFile": "../../../docs/build-storybook-executor-examples.md"
+}

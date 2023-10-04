@@ -1,0 +1,78 @@
+{
+  "name": "create-nx-workspace",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/create-nx-workspace",
+  "projectType": "library",
+  "targets": {
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "main": "packages/create-nx-workspace/index.ts",
+        "assets": [
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/create-nx-workspace",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/create-nx-workspace"],
+      "options": {
+        "commands": [
+          {
+            "command": "node ./scripts/chmod build/packages/create-nx-workspace/bin/create-nx-workspace.js"
+          },
+          {
+            "command": "node ./scripts/copy-readme.js create-nx-workspace"
+          },
+          {
+            "command": "node ./scripts/replace-versions.js build/packages/create-nx-workspace/bin/create-nx-workspace.js"
+          }
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {}
+  },
+  "implicitDependencies": [
+    "workspace",
+    "js",
+    "react",
+    "expo",
+    "next",
+    "angular",
+    "nest",
+    "express"
+  ]
+}

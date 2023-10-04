@@ -1,0 +1,76 @@
+{
+  "name": "angular",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/angular",
+  "projectType": "library",
+  "targets": {
+    "test": {},
+    "build-ng": {
+      "dependsOn": ["build-base"],
+      "executor": "@nx/angular:package",
+      "options": {
+        "project": "packages/angular/ng-package.json",
+        "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
+      },
+      "outputs": ["{workspaceRoot}/build/packages/angular"]
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/angular",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/creator-files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/angular",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/angular"],
+      "dependsOn": ["build-ng", "build-base", "^build"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js angular",
+        "parallel": false
+      }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js angular @nrwl/angular"
+    },
+    "lint": {}
+  },
+  "implicitDependencies": []
+}

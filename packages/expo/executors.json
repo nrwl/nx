@@ -1,0 +1,126 @@
+{
+  "executors": {
+    "update": {
+      "implementation": "./src/executors/update/update.impl",
+      "schema": "./src/executors/update/schema.json",
+      "description": "Start an EAS update for your expo project"
+    },
+    "build": {
+      "implementation": "./src/executors/build/build.impl",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Start an EAS build for your expo project"
+    },
+    "build-list": {
+      "implementation": "./src/executors/build-list/build-list.impl",
+      "schema": "./src/executors/build-list/schema.json",
+      "description": "List all EAS builds for your Expo project"
+    },
+    "download": {
+      "implementation": "./src/executors/download/download.impl",
+      "schema": "./src/executors/download/schema.json",
+      "description": "Download an EAS build"
+    },
+    "run": {
+      "implementation": "./src/executors/run/run.impl",
+      "schema": "./src/executors/run/schema.json",
+      "description": "Run the Android app binary locally or run the iOS app binary locally"
+    },
+    "start": {
+      "implementation": "./src/executors/start/start.impl",
+      "schema": "./src/executors/start/schema.json",
+      "description": "Start a local dev server for the app or start a Webpack dev server for the web app"
+    },
+    "sync-deps": {
+      "implementation": "./src/executors/sync-deps/sync-deps.impl",
+      "schema": "./src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to package.json (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "./src/executors/ensure-symlink/ensure-symlink.impl",
+      "schema": "./src/executors/ensure-symlink/schema.json",
+      "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    },
+    "prebuild": {
+      "implementation": "./src/executors/prebuild/prebuild.impl",
+      "schema": "./src/executors/prebuild/schema.json",
+      "description": "Create native iOS and Android project files for building natively."
+    },
+    "install": {
+      "implementation": "./src/executors/install/install.impl",
+      "schema": "./src/executors/install/schema.json",
+      "description": "Install a module or other package to a project."
+    },
+    "export": {
+      "implementation": "./src/executors/export/export.impl",
+      "schema": "./src/executors/export/schema.json",
+      "description": "Export the JavaScript and assets for your app using Metro/webpack bundler"
+    },
+    "submit": {
+      "implementation": "./src/executors/submit/submit.impl",
+      "schema": "./src/executors/submit/schema.json",
+      "description": "Submit app binary to App Store and/or Play Store"
+    }
+  },
+  "builders": {
+    "update": {
+      "implementation": "./src/executors/update/compat",
+      "schema": "./src/executors/update/schema.json",
+      "description": "Start an EAS update for your expo project"
+    },
+    "build": {
+      "implementation": "./src/executors/build/compat",
+      "schema": "./src/executors/build/schema.json",
+      "description": "Start an EAS build for your expo project"
+    },
+    "build-list": {
+      "implementation": "./src/executors/build-list/compat",
+      "schema": "./src/executors/build-list/schema.json",
+      "description": "List all EAS builds for your Expo project"
+    },
+    "download": {
+      "implementation": "./src/executors/download/compat",
+      "schema": "./src/executors/download/schema.json",
+      "description": "Download an EAS build"
+    },
+    "run": {
+      "implementation": "./src/executors/run/compat",
+      "schema": "./src/executors/run/schema.json",
+      "description": "Run the Android app binary locally or run the iOS app binary locally"
+    },
+    "start": {
+      "implementation": "./src/executors/start/compat",
+      "schema": "./src/executors/start/schema.json",
+      "description": "Start a local dev server for the app or start a Webpack dev server for the web app"
+    },
+    "sync-deps": {
+      "implementation": "./src/executors/sync-deps/compat",
+      "schema": "./src/executors/sync-deps/schema.json",
+      "description": "Syncs dependencies to package.json (required for autolinking)."
+    },
+    "ensure-symlink": {
+      "implementation": "./src/executors/ensure-symlink/compat",
+      "schema": "./src/executors/ensure-symlink/schema.json",
+      "description": "Ensure workspace node_modules is symlink under app's node_modules folder."
+    },
+    "prebuild": {
+      "implementation": "./src/executors/prebuild/compat",
+      "schema": "./src/executors/prebuild/schema.json",
+      "description": "Create native iOS and Android project files for building natively."
+    },
+    "install": {
+      "implementation": "./src/executors/install/compat",
+      "schema": "./src/executors/install/schema.json",
+      "description": "Install a module or other package to a project."
+    },
+    "export": {
+      "implementation": "./src/executors/export/compat",
+      "schema": "./src/executors/export/schema.json",
+      "description": "Export the JavaScript and assets for your app using Metro/webpack bundler"
+    },
+    "submit": {
+      "implementation": "./src/executors/submit/compat",
+      "schema": "./src/executors/submit/schema.json",
+      "description": "Submit app binary to App Store and/or Play Store"
+    }
+  }
+}
