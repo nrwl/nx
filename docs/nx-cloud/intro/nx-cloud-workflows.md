@@ -7,11 +7,9 @@ width="100%" /%}
 
 ## Powerful CI Capabilities Optimized for Nx monorepos
 
-Nx makes it easy for you to grow and maintain a monorepo.
+Just like Nx and Nx Cloud, Nx Cloud Workflows enables you to offload tedious technical tasks so that you can focus on more mission-critical tasks. With a traditional CI platform, you are responsible for telling the CI platform exactly what commands to execute in which environments and what to do with the artifacts. Nx Cloud by itself can automate parallelizing tasks and sharing build artifacts across machines, but you still have to create agent machines on your CI platform.
 
-Nx Cloud makes it easy to scale your CI pipelines.
-
-Nx Cloud Workflows is the next step in that progression. Instead of having Nx Cloud manage agents on another CI provider, you can have Nx Cloud _be_ your CI provider.
+Nx Cloud Workflows applies the insights that Nx provides to the entire CI process - taking Nx Cloud to its logical conclusion by managing the whole process of CI. Nx Cloud Workflows dynamically provisions agents and then automatically parallelizes tasks and shares build artifacts across them. Because Nx Cloud Workflows can integrate directly with Nx, it has the potential to solve problems that a traditional CI platform has no way of addressing.
 
 ## Better Distributed Task Execution Experience
 
