@@ -22,15 +22,10 @@ defineProps<{
 </script>
 
 <template>
-  <div>
-    <p>Welcome to Vlv!</p>
-  </div>
+  <p>Welcome to Vlv!</p>
 </template>
 
 <style scoped>
-div {
-  color: pink;
-}
 </style>
 `;
 

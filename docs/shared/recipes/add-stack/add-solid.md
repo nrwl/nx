@@ -66,12 +66,12 @@ nx g @nx/web:app my-solid-app --directory=apps/my-solid-app --bundler=vite
 
 The `@nx/web:app` generator will create some files that are unnecessary for our Solid application.
 
-The files to be deleted are:
+The files and folders to be deleted are:
 
-- `apps/my-solid-app/src/public`
-- `apps/my-solid-app/src/app`
-- `apps/my-solid-app/main.ts`
-- `apps/my-solid-app/styles.css`
+- `apps/my-solid-app/public/`
+- `apps/my-solid-app/src/app/`
+- `apps/my-solid-app/src/main.ts`
+- `apps/my-solid-app/src/styles.css`
 - `apps/my-solid-app/.babelrc`
 
 ### Turn the Application into a Solid Application

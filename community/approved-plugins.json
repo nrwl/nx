@@ -413,5 +413,20 @@
     "name": "@jnxplus/nx-maven",
     "description": "Nx plugin to add Maven multi-module project support to Nx workspace",
     "url": "https://github.com/khalilou88/jnxplus/tree/main/packages/nx-maven"
+  },
+  {
+    "name": "@naxodev/nx-cloudflare",
+    "description": "Nx plugin for Cloudflare, in particular Cloudflare workers. It allows to generate build and run Cloudflare workers in your Nx workspace.",
+    "url": "https://github.com/naxodev/oss/tree/main/packages/plugins/nx-cloudflare"
+  },
+  {
+    "name": "@ziacik/azure-func",
+    "description": "Generating, serving and publishing Azure Functions 4 apps.",
+    "url": "https://github.com/ziacik/nx-tools/tree/master/packages/azure-func"
+  },
+  {
+    "name": "@simondotm/nx-firebase",
+    "description": "Nx plugin to support Firebase Apps and Cloud Functions in Nx workspaces",
+    "url": "https://github.com/simondotm/nx-firebase"
   }
 ]

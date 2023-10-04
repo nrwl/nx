@@ -125,6 +125,7 @@ describe('React Module Federation', () => {
   it('should should support generating host and remote apps with the new name and root format', async () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
+    const shellPort = 4200;
 
     runCLI(
       `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive`
@@ -141,6 +142,17 @@ describe('React Module Federation', () => {
     // check default generated host is built successfully
     const buildOutput = runCLI(`run ${shell}:build:development`);
     expect(buildOutput).toContain('Successfully ran target build');
+
+    // check serves devRemotes ok
+    const shellProcess = await runCommandUntil(
+      `serve ${shell} --devRemotes=${remote} --verbose`,
+      (output) => {
+        return output.includes(
+          `All remotes started, server ready at http://localhost:${shellPort}`
+        );
+      }
+    );
+    await killProcessAndPorts(shellProcess.pid, shellPort);
   }, 500_000);
 
   it('should support different versions workspace libs for host and remote', async () => {

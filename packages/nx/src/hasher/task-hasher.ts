@@ -65,6 +65,7 @@ export interface TaskHasher {
    * @param task
    */
   hashTask(task: Task): Promise<Hash>;
+
   hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash>;
 
   /**
@@ -72,6 +73,7 @@ export interface TaskHasher {
    * @param tasks
    */
   hashTasks(tasks: Task[]): Promise<Hash[]>;
+
   hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
 }
 
@@ -742,7 +744,9 @@ class TaskHasherImpl {
   }
 
   private async hashRuntime(runtime: string): Promise<PartialHash> {
-    const mapKey = `runtime:${runtime}`;
+    const env = getHashEnv();
+    const env_key = JSON.stringify(env);
+    const mapKey = `runtime:${runtime}-${env_key}`;
     if (!this.runtimeHashes[mapKey]) {
       this.runtimeHashes[mapKey] = new Promise((res, rej) => {
         exec(
@@ -750,6 +754,7 @@ class TaskHasherImpl {
           {
             windowsHide: true,
             cwd: workspaceRoot,
+            env,
           },
           (err, stdout, stderr) => {
             if (err) {
