@@ -1,4 +1,4 @@
-use crate::native::tasks::types::TaskGraph;
+use crate::native::tasks::{dep_outputs::get_dep_output, types::TaskGraph};
 use crate::native::types::{Input, NxJson};
 use crate::native::{
     project_graph::types::ProjectGraph,
@@ -14,16 +14,18 @@ use crate::native::tasks::utils;
 pub struct HashPlanner {
     nx_json: NxJson,
     project_graph: ProjectGraph,
+    workspace_root: String,
     task_inputs: HashMap<&'static str, Vec<String>>,
 }
 
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
-    pub fn new(nx_json: NxJson, project_graph: ProjectGraph) -> Self {
+    pub fn new(workspace_root: String, nx_json: NxJson, project_graph: ProjectGraph) -> Self {
         Self {
             nx_json,
             project_graph,
+            workspace_root,
             task_inputs: HashMap::new(),
         }
     }
@@ -145,7 +147,7 @@ impl HashPlanner {
             return Ok(self.task_inputs[task.id.as_str()].clone());
         }
 
-        let self_inputs = gather_self_inputs(project_name, &inputs.self_inputs);
+        let self_inputs = self.gather_self_inputs(project_name, &inputs.self_inputs);
         let deps_inputs = self.gather_dependency_inputs(
             task,
             &inputs.deps_inputs,
@@ -153,6 +155,9 @@ impl HashPlanner {
             external_deps_mapped,
             visited,
         )?;
+
+        let deps_out: Vec<String> = vec![];
+        let projects: Vec<String> = vec![];
 
         Ok(self_inputs
             .into_iter()
@@ -225,6 +230,60 @@ impl HashPlanner {
 
         Ok(deps_inputs)
     }
+
+    fn gather_self_inputs(&self, project_name: &str, self_inputs: &[Input]) -> Vec<String> {
+        let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
+            .iter()
+            .filter_map(|input| match input {
+                Input::FileSet(file_set) => Some(file_set),
+                _ => None,
+            })
+            .partition(|file_set| {
+                file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
+            });
+
+        let project_file_set_inputs = project_file_set_inputs(project_name, project_file_sets);
+        let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
+        let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
+            Input::Runtime(runtime) => Some(format!("runtime:{runtime}")),
+            Input::Environment(env) => Some(format!("env:{env}")),
+            _ => None,
+        });
+
+        project_file_set_inputs
+            .into_iter()
+            .chain(workspace_file_set_inputs)
+            .chain(runtime_and_env_inputs)
+            .collect()
+    }
+
+    fn gather_dependency_outputs(
+        &self,
+        task: &Task,
+        task_graph: &TaskGraph,
+        deps_outputs: &[Input],
+    ) -> Vec<String> {
+        if deps_outputs.len() == 0 {
+            return vec![];
+        }
+
+        let mut result: Vec<String> = vec![];
+
+        for dep in deps_outputs {
+            let Input::DepsOutputs { dependent_tasks_output_files, transitive } = dep else {
+                continue;
+            };
+            result.extend(get_dep_output(
+                task,
+                task_graph,
+                &self.project_graph,
+                dependent_tasks_output_files,
+                *transitive,
+            ))
+        }
+
+        todo!()
+    }
 }
 
 fn find_external_dependency_node_name<'a>(
@@ -235,32 +294,6 @@ fn find_external_dependency_node_name<'a>(
         .iter()
         .find(|n| **n == package_name || n.ends_with(package_name))
         .copied()
-}
-
-fn gather_self_inputs(project_name: &str, self_inputs: &[Input]) -> Vec<String> {
-    let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
-        .iter()
-        .filter_map(|input| match input {
-            Input::FileSet(file_set) => Some(file_set),
-            _ => None,
-        })
-        .partition(|file_set| {
-            file_set.starts_with("{projectRoot}/") || file_set.starts_with("!{projectRoot}/")
-        });
-
-    let project_file_set_inputs = project_file_set_inputs(project_name, project_file_sets);
-    let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
-    let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
-        Input::Runtime(runtime) => Some(format!("runtime:{runtime}")),
-        Input::Environment(env) => Some(format!("env:{env}")),
-        _ => None,
-    });
-
-    project_file_set_inputs
-        .into_iter()
-        .chain(workspace_file_set_inputs)
-        .chain(runtime_and_env_inputs)
-        .collect()
 }
 
 fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<String> {

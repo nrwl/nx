@@ -18,6 +18,8 @@ pub struct Target {
     pub executor: Option<String>,
     pub inputs: Option<Vec<JsInputs>>,
     pub outputs: Option<Vec<String>>,
+    pub options: Option<String>,
+    pub configurations: Option<String>,
 }
 
 #[napi(object)]

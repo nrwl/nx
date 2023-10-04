@@ -31,6 +31,8 @@ export interface Target {
   executor?: string
   inputs?: Array<JsInputs>
   outputs?: Array<string>
+  options?: string
+  configurations?: string
 }
 export interface Project {
   root: string
@@ -49,6 +51,7 @@ export const enum TaskErrors {
 export interface Task {
   id: string
   target: TaskTarget
+  overrides: string
   projectRoot?: string
 }
 export interface TaskTarget {
@@ -124,7 +127,7 @@ export class ImportResult {
   staticImportExpressions: Array<string>
 }
 export class HashPlanner {
-  constructor(nxJson: NxJson, projectGraph: ProjectGraph)
+  constructor(workspaceRoot: string, nxJson: NxJson, projectGraph: ProjectGraph)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, Array<string>>
 }
 export class Watcher {
