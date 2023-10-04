@@ -1,9 +1,10 @@
-import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+import { dirname, join } from 'path';
 
+import type { ChangelogRenderOptions } from '../../changelog-renderer';
 import { readJsonFile } from '../utils/fileutils';
-import { workspaceRoot } from '../utils/workspace-root';
 import { PackageManager } from '../utils/package-manager';
+import { workspaceRoot } from '../utils/workspace-root';
 import {
   InputDefinition,
   TargetConfiguration,
@@ -61,22 +62,98 @@ interface NxReleaseVersionConfiguration {
 /**
  * **ALPHA**
  */
+export interface NxReleaseChangelogConfiguration {
+  /**
+   * Optionally create a release containing all relevant changes on a supported version control system, it
+   * is false by default.
+   *
+   * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
+   * "{projectName}@v{version}" to be used for those projects, even when versioning everything together.
+   */
+  createRelease?: 'github' | false;
+  /**
+   * This can either be set to a string value that will be written to the changelog file(s)
+   * at the workspace root and/or within project directories, or set to `false` to specify
+   * that no changelog entry should be made when there are no code changes.
+   *
+   * NOTE: The string value has a sensible default value and supports interpolation of
+   * {projectName} when generating for project level changelogs.
+   *
+   * E.g. for a project level changelog you could customize the message to something like:
+   * "entryWhenNoChanges": "There were no code changes for {projectName}"
+   */
+  entryWhenNoChanges?: string | false;
+  /**
+   * This is either a workspace path where the changelog markdown file will be created and read from,
+   * or set to false to disable file creation altogether (e.g. if only using Github releases).
+   *
+   * Interpolation of {projectName}, {projectRoot} and {workspaceRoot} is supported.
+   *
+   * The defaults are:
+   * - "{workspaceRoot}/CHANGELOG.md" at the workspace level
+   * - "{projectRoot}/CHANGELOG.md" at the project level
+   */
+  file?: string | false;
+  /**
+   * A path to a valid changelog renderer function used to transform commit messages and other metadata into
+   * the final changelog (usually in markdown format). Its output can be modified using the optional `renderOptions`.
+   *
+   * By default, the renderer is set to "nx/changelog-renderer" which nx provides out of the box.
+   */
+  renderer?: string;
+  renderOptions?: ChangelogRenderOptions;
+}
+
+/**
+ * **ALPHA**
+ */
 interface NxReleaseConfiguration {
   /**
    * @note: When no groups are configured at all (the default), all projects in the workspace are treated as
    * if they were in a release group together.
    */
   groups?: Record<
-    string,
+    string, // group name
     {
+      /**
+       * Required list of one or more projects to include in the release group. Any single project can
+       * only be used in a maximum of one release group.
+       */
       projects: string[] | string;
       /**
-       * If no version config is provided for the group, we will assume that @nx/js:release-version
-       * is the desired generator implementation, allowing for terser config for the common case.
+       * Optionally override version configuration for this group.
        */
       version?: NxReleaseVersionConfiguration;
+      /**
+       * Optionally override project changelog configuration for this group.
+       */
+      changelog?: NxReleaseChangelogConfiguration | false;
+      /**
+       * Optionally override the git/release tag pattern to use for this group.
+       */
+      releaseTagPattern?: string;
     }
   >;
+  changelog?: {
+    workspaceChangelog?: NxReleaseChangelogConfiguration | false;
+    projectChangelogs?: NxReleaseChangelogConfiguration | false;
+  };
+  /**
+   * If no version config is provided, we will assume that @nx/js:release-version
+   * is the desired generator implementation, allowing for terser config for the common case.
+   */
+  version?: NxReleaseVersionConfiguration;
+  /**
+   * Optional override the git/release tag pattern to use. This field is the source of truth
+   * for changelog generation and release tagging, as well as for conventional-commits parsing.
+   *
+   * It supports interpolating the version as {version} and (if releasing independently or forcing
+   * project level version control system releases) the project name as {projectName} within the string.
+   *
+   * The default releaseTagPattern for unified releases is: "v{version}"
+   * The default releaseTagPattern for releases at the project level is: "{projectName}@v{version}"
+   */
+  releaseTagPattern?: string;
 }
 
 /**

@@ -39,8 +39,10 @@ export function printChanges(
   isDryRun: boolean,
   diffContextLines = 1,
   shouldPrintDryRunMessage = true,
-  noDiffMessage?: string
+  noDiffMessage?: string,
+  changePredicate?: (f: { path: string; content?: Buffer }) => boolean
 ) {
+  changePredicate = changePredicate || (() => true);
   const changes = tree.listChanges();
 
   console.log('');
@@ -51,7 +53,7 @@ export function printChanges(
   }
 
   // Print the changes
-  changes.forEach((f) => {
+  changes.filter(changePredicate).forEach((f) => {
     if (f.type === 'CREATE') {
       console.error(
         `${chalk.green('CREATE')} ${f.path}${
