@@ -22,7 +22,13 @@ export async function addSsr(
     appName,
     port,
     standalone,
-  }: { appName: string; port: number; standalone: boolean }
+    typescriptConfiguration,
+  }: {
+    appName: string;
+    port: number;
+    standalone: boolean;
+    typescriptConfiguration: boolean;
+  }
 ) {
   let project = readProjectConfiguration(tree, appName);
 
@@ -50,9 +56,11 @@ export async function addSsr(
     'server'
   );
 
+  const pathToTemplateFiles = typescriptConfiguration ? 'base-ts' : 'base';
+
   generateFiles(
     tree,
-    joinPathFragments(__dirname, '../files/base'),
+    joinPathFragments(__dirname, `../files/${pathToTemplateFiles}`),
     project.root,
     {
       appName,
@@ -81,7 +89,10 @@ export async function addSsr(
 
   project.targets.server.executor = '@nx/angular:webpack-server';
   project.targets.server.options.customWebpackConfig = {
-    path: joinPathFragments(project.root, 'webpack.server.config.js'),
+    path: joinPathFragments(
+      project.root,
+      `webpack.server.config.${typescriptConfiguration ? 'ts' : 'js'}`
+    ),
   };
   project.targets['serve-ssr'].options = {
     ...(project.targets['serve-ssr'].options ?? {}),

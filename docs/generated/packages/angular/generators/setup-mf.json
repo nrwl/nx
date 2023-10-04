@@ -73,6 +73,11 @@
         "type": "boolean",
         "description": "Whether the application is a standalone application. _Note: This is only supported in Angular versions >= 14.1.0_",
         "default": false
+      },
+      "typescriptConfiguration": {
+        "type": "boolean",
+        "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+        "default": true
       }
     },
     "required": ["appName", "mfType"],

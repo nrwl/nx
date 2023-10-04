@@ -70,7 +70,7 @@ describe('Angular Module Federation', () => {
       }Module } from '@${proj}/${sharedLib}';
       import { ${
         names(secondaryEntry).className
-      }Module } from '@${proj}/${secondaryEntry}';
+      }Module } from '@${proj}/${sharedLib}/${secondaryEntry}';
       import { AppComponent } from './app.component';
       import { NxWelcomeComponent } from './nx-welcome.component';
       import { RouterModule } from '@angular/router';
@@ -79,7 +79,7 @@ describe('Angular Module Federation', () => {
         declarations: [AppComponent, NxWelcomeComponent],
         imports: [
           BrowserModule,
-          SharedModule,
+          ${names(sharedLib).className}Module,
           RouterModule.forRoot(
             [
               {
@@ -107,14 +107,15 @@ describe('Angular Module Federation', () => {
     import { ${names(sharedLib).className}Module } from '@${proj}/${sharedLib}';
       import { ${
         names(secondaryEntry).className
-      }Module } from '@${proj}/${secondaryEntry}';
+      }Module } from '@${proj}/${sharedLib}/${secondaryEntry}';
     import { RemoteEntryComponent } from './entry.component';
+    import { NxWelcomeComponent } from './nx-welcome.component';
 
     @NgModule({
-      declarations: [RemoteEntryComponent],
+      declarations: [RemoteEntryComponent, NxWelcomeComponent],
       imports: [
         CommonModule,
-        SharedModule,
+        ${names(sharedLib).className}Module,
         RouterModule.forChild([
           {
             path: '',
@@ -131,7 +132,7 @@ describe('Angular Module Federation', () => {
     const process = await runCommandUntil(
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp1}`,
       (output) =>
-        output.includes(`listening on localhost:${remotePort}`) &&
+        !output.includes(`Remote '${remoteApp1}' failed to serve correctly`) &&
         output.includes(`listening on localhost:${hostPort}`)
     );
 
@@ -164,8 +165,8 @@ describe('Angular Module Federation', () => {
     const process = await runCommandUntil(
       `serve ${app1} --dev-remotes=${app2}`,
       (output) =>
-        output.includes(`listening on localhost:${app1Port}`) &&
-        output.includes(`listening on localhost:${app2Port}`)
+        !output.includes(`Remote '${app2}' failed to serve correctly`) &&
+        output.includes(`listening on localhost:${app1Port}`)
     );
 
     // port and process cleanup
@@ -235,7 +236,7 @@ describe('Angular Module Federation', () => {
     const process = await runCommandUntil(
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
       (output) =>
-        output.includes(`listening on localhost:${remotePort}`) &&
+        !output.includes(`Remote '${remoteApp}' failed to serve correctly`) &&
         output.includes(`listening on localhost:${hostPort}`)
     );
 

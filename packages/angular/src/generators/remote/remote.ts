@@ -21,13 +21,18 @@ export async function remote(tree: Tree, options: Schema) {
   });
 }
 
-export async function remoteInternal(tree: Tree, options: Schema) {
+export async function remoteInternal(tree: Tree, schema: Schema) {
   const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
 
-  if (lt(installedAngularVersionInfo.version, '14.1.0') && options.standalone) {
+  if (lt(installedAngularVersionInfo.version, '14.1.0') && schema.standalone) {
     throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
     You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   }
+
+  const { typescriptConfiguration, ...options }: Schema = {
+    ...schema,
+    typescriptConfiguration: schema.typescriptConfiguration ?? true,
+  };
 
   const projects = getProjects(tree);
   if (options.host && !projects.has(options.host)) {
@@ -71,6 +76,7 @@ export async function remoteInternal(tree: Tree, options: Schema) {
     e2eProjectName: skipE2E ? undefined : `${remoteProjectName}-e2e`,
     standalone: options.standalone,
     prefix: options.prefix,
+    typescriptConfiguration,
   });
 
   let installTasks = [appInstallTask];
@@ -78,6 +84,7 @@ export async function remoteInternal(tree: Tree, options: Schema) {
     let ssrInstallTask = await addSsr(tree, {
       appName: remoteProjectName,
       port,
+      typescriptConfiguration,
       standalone: options.standalone,
     });
     installTasks.push(ssrInstallTask);

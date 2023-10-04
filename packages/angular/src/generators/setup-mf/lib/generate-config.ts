@@ -11,7 +11,10 @@ export function generateWebpackConfig(
   if (
     tree.exists(`${appRoot}/module-federation.config.js`) ||
     tree.exists(`${appRoot}/webpack.config.js`) ||
-    tree.exists(`${appRoot}/webpack.prod.config.js`)
+    tree.exists(`${appRoot}/webpack.prod.config.js`) ||
+    tree.exists(`${appRoot}/module-federation.config.ts`) ||
+    tree.exists(`${appRoot}/webpack.config.ts`) ||
+    tree.exists(`${appRoot}/webpack.prod.config.ts`)
   ) {
     logger.warn(
       `NOTE: We encountered an existing webpack config for the app ${options.appName}. We have overwritten this file with the Module Federation Config.\n
@@ -19,9 +22,13 @@ export function generateWebpackConfig(
     );
   }
 
+  const pathToWebpackTemplateFiles = options.typescriptConfiguration
+    ? 'ts-webpack'
+    : 'webpack';
+
   generateFiles(
     tree,
-    joinPathFragments(__dirname, '../files/webpack'),
+    joinPathFragments(__dirname, `../files/${pathToWebpackTemplateFiles}`),
     appRoot,
     {
       tmpl: '',
