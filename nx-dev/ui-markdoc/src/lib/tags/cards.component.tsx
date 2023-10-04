@@ -131,25 +131,29 @@ export function Card({
   const hasYoutubeId = !!youtubeRegex ? youtubeRegex[1] : '';
 
   return (
-    <div
+    <a
       key={title}
-      className="group relative flex rounded-md border border-slate-200 bg-slate-50/40 pr-8 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+      href={url}
+      title={title}
+      className="group no-underline flex flex-col items-stretch rounded-md border border-slate-200 bg-slate-50/40 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
     >
       {!!hasYoutubeId && (
-        <img
-          className="!m-0 rounded-l-md bg-black object-contain"
-          alt="Youtube Link"
-          src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
-        />
+        <div className="max-h-24">
+          <img
+            className="!m-0 rounded-t-md bg-black object-contain !w-full h-full"
+            alt="Youtube Link"
+            src={`https://img.youtube.com/vi/${hasYoutubeId}/default.jpg`}
+          />
+        </div>
       )}
-      <div className="flex flex-col p-3 pr-0">
-        <a href={url} title={title} className="flex items-center font-semibold">
+      <div className="relative flex flex-col p-3 pr-8">
+        <span className="flex items-center font-semibold underline">
           <span className="absolute inset-0" aria-hidden="true"></span>
           {!hasYoutubeId ? iconMap[type] : null}
           {title}
-        </a>
+        </span>
         {description ? (
-          <p className="mt-1.5 w-full text-sm">{description}</p>
+          <p className="mt-1.5 w-full text-sm no-underline">{description}</p>
         ) : null}
 
         {/*HOVER ICON*/}
@@ -157,6 +161,6 @@ export function Card({
           <ArrowRightCircleIcon className="h-5 w-5" />
         </span>
       </div>
-    </div>
+    </a>
   );
 }
