@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use napi::bindgen_prelude::Either8;
 use napi::Either;
 

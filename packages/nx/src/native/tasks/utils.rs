@@ -1,6 +1,7 @@
 use crate::native::project_graph::types::ProjectGraph;
 use hashbrown::HashSet;
 
+// todo(jcammisuli): parallelize this more
 pub(super) fn find_all_project_node_dependencies<'a>(
     parent_node_name: &str,
     project_graph: &'a ProjectGraph,
@@ -16,10 +17,10 @@ pub(super) fn find_all_project_node_dependencies<'a>(
     dependent_node_names.into_iter().collect()
 }
 
-fn collect_dependent_project_node_names<'a, 'b>(
-    project_graph: &'b ProjectGraph,
-    parent_node_name: &'a str,
-    dependent_node_names: &'a mut HashSet<&'b str>,
+fn collect_dependent_project_node_names<'a>(
+    project_graph: &'a ProjectGraph,
+    parent_node_name: &str,
+    dependent_node_names: &mut HashSet<&'a str>,
     exclude_external_dependencies: bool,
 ) {
     let Some( dependencies ) = project_graph.dependencies.get(parent_node_name) else {

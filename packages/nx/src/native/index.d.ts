@@ -124,8 +124,8 @@ export class ImportResult {
   staticImportExpressions: Array<string>
 }
 export class HashPlanner {
-  constructor(nxJson: NxJson, projectGraph: ProjectGraph, taskGraph: TaskGraph)
-  getPlans(taskIds: Array<string>): void
+  constructor(nxJson: NxJson, projectGraph: ProjectGraph)
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, Array<string>>
 }
 export class Watcher {
   origin: string

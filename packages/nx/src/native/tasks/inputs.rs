@@ -1,9 +1,6 @@
 use crate::native::project_graph::types::{Project, ProjectGraph};
-use crate::native::tasks::errors::InternalTaskErrors;
 use crate::native::tasks::types::Task;
 use crate::native::types::{Input, NxJson};
-use once_cell::sync::Lazy;
-use rayon::prelude::*;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -15,7 +12,7 @@ pub(super) struct SplitInputs<'a> {
 }
 
 pub(super) fn get_inputs<'a>(
-    task: &Task,
+    task: &'a Task,
     project_graph: &'a ProjectGraph,
     nx_json: &'a NxJson,
 ) -> anyhow::Result<SplitInputs<'a>> {
@@ -42,6 +39,32 @@ pub(super) fn get_inputs<'a>(
     split_inputs_into_self_and_deps(inputs, named_inputs)
 }
 
+pub(super) fn get_inputs_for_dependency<'a>(
+    project: &'a Project,
+    nx_json: &'a NxJson,
+    named_input: &'a Input,
+) -> anyhow::Result<Option<SplitInputs<'a>>> {
+    let Input::Inputs { input, ..} = named_input else {
+       return Ok(None);
+    };
+
+    let inputs = get_named_inputs(nx_json, project);
+    let (self_inputs, deps_outputs): (Vec<Input>, Vec<Input>) = expand_named_input(input, &inputs)?
+        .into_iter()
+        .partition(|i| !(matches!(i, Input::DepsOutputs { .. })));
+    let deps_inputs = vec![Input::Inputs {
+        input,
+        dependencies: true,
+    }];
+
+    Ok(Some(SplitInputs {
+        deps_outputs,
+        deps_inputs,
+        self_inputs,
+        project_inputs: vec![],
+    }))
+}
+
 fn split_inputs_into_self_and_deps<'a>(
     inputs: Option<Vec<Input<'a>>>,
     named_inputs: HashMap<&str, Vec<Input<'a>>>,
@@ -57,7 +80,6 @@ fn split_inputs_into_self_and_deps<'a>(
     });
 
     let (deps_inputs, self_inputs, project_inputs) = inputs.into_iter().fold(
-        // || {
         (
             // deps_inputs
             Vec::new(),
@@ -66,7 +88,6 @@ fn split_inputs_into_self_and_deps<'a>(
             // project_inputs
             Vec::new(),
         ),
-        // },
         |mut acc, input| {
             match input {
                 Input::Inputs {
@@ -92,16 +113,6 @@ fn split_inputs_into_self_and_deps<'a>(
             acc
         },
     );
-    // .reduce(
-    //     || (Vec::new(), Vec::new(), Vec::new()),
-    //     |mut acc, input| {
-    //         acc.0.extend(input.0);
-    //         acc.1.extend(input.1);
-    //         acc.2.extend(input.2);
-    //
-    //         acc
-    //     },
-    // );
 
     let expanded_inputs = expand_single_project_inputs(&self_inputs, &named_inputs)?;
 
@@ -133,6 +144,7 @@ fn expand_single_project_inputs<'a>(
                 if named_inputs.get(s).is_some() {
                     expanded.extend(expand_named_input(s, named_inputs)?);
                 } else {
+                    validate_file_set(s)?;
                     expanded.push(Input::FileSet(s));
                 }
             }
@@ -140,7 +152,10 @@ fn expand_single_project_inputs<'a>(
                 input,
                 dependencies: false,
             } => expanded.extend(expand_named_input(&input, named_inputs)?),
-            Input::FileSet(fileset) => expanded.push(Input::FileSet(fileset)),
+            Input::FileSet(fileset) => {
+                validate_file_set(fileset)?;
+                expanded.push(Input::FileSet(fileset));
+            }
             Input::Runtime(runtime) => expanded.push(Input::Runtime(runtime)),
             Input::Environment(env) => expanded.push(Input::Environment(env)),
             Input::ExternalDependency(external) => {
@@ -167,36 +182,45 @@ fn expand_single_project_inputs<'a>(
     Ok(expanded)
 }
 
+fn validate_file_set(s: &str) -> anyhow::Result<()> {
+    if !s.starts_with("{projectRoot}")
+        && !s.starts_with("!{projectRoot}")
+        && !s.starts_with("{workspaceRoot}")
+        && !s.starts_with("!{workspaceRoot}")
+    {
+        anyhow::bail!(
+            r#""{file_set}" is an invalid fileset.
+All filesets have to start with either {workspaceRoot} or {projectRoot}.
+For instance: "!{projectRoot}/**/*.spec.ts" or "{workspaceRoot}/package.json".
+If "{file_set}" is a named input, make sure it is defined in nx.json.
+"#,
+            file_set = s,
+            projectRoot = "{projectRoot}",
+            workspaceRoot = "{workspaceRoot}",
+        );
+    } else {
+        Ok(())
+    }
+}
+
 fn expand_named_input<'a>(
     input: &str,
     named_inputs: &HashMap<&str, Vec<Input<'a>>>,
 ) -> anyhow::Result<Vec<Input<'a>>> {
     if named_inputs.get(input).is_none() {
-        anyhow::bail!(
-            "Input '{}' is not defined",
-            input
-        )
+        anyhow::bail!("Input '{}' is not defined", input)
     } else {
         expand_single_project_inputs(&named_inputs[input], named_inputs)
     }
 }
 
-static DEFAULT_NAMED_INPUT: Lazy<(&str, Vec<&str>)> =
-    Lazy::new(|| ("default", vec!["{projectRoot}/**/*"]));
 fn get_named_inputs<'a>(
     nx_json: &'a NxJson,
     project: &'a Project,
 ) -> HashMap<&'a str, Vec<Input<'a>>> {
     let mut collected_named_inputs: HashMap<&str, Vec<Input>> = HashMap::new();
 
-    collected_named_inputs.insert(
-        DEFAULT_NAMED_INPUT.0,
-        DEFAULT_NAMED_INPUT
-            .1
-            .iter()
-            .map(|v| Input::String(v))
-            .collect(),
-    );
+    collected_named_inputs.insert("default", vec![Input::FileSet("{projectRoot}/**/*")]);
 
     let iterable_structs = [&nx_json.named_inputs, &project.named_inputs];
     for named_inputs in iterable_structs.into_iter().flatten() {
