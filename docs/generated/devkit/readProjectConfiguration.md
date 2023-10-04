@@ -4,10 +4,6 @@
 
 Reads a project configuration.
 
-**`Throws`**
-
-If supplied projectName cannot be found
-
 #### Parameters
 
 | Name          | Type                                  | Description                                                             |
@@ -18,3 +14,7 @@ If supplied projectName cannot be found
 #### Returns
 
 [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)
+
+**`Throws`**
+
+If supplied projectName cannot be found

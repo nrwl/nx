@@ -32,10 +32,10 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 
 ▸ **readWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
 
-**`Deprecated`**
-
-Use [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph) instead.
-
 #### Returns
 
 [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+
+**`Deprecated`**
+
+Use [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph) instead.

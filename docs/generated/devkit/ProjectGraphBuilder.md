@@ -109,10 +109,6 @@ Adds dynamic dependency from source project to target project
 
 Add an explicit dependency from a file in source project to target project
 
-**`Deprecated`**
-
-this method will be removed in v17. Use [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency) or [addDynamicDependency](../../devkit/documents/ProjectGraphBuilder#adddynamicdependency) instead
-
 #### Parameters
 
 | Name                | Type     |
@@ -124,6 +120,10 @@ this method will be removed in v17. Use [addStaticDependency](../../devkit/docum
 #### Returns
 
 `void`
+
+**`Deprecated`**
+
+this method will be removed in v17. Use [addStaticDependency](../../devkit/documents/ProjectGraphBuilder#addstaticdependency) or [addDynamicDependency](../../devkit/documents/ProjectGraphBuilder#adddynamicdependency) instead
 
 ---
 
