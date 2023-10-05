@@ -28,7 +28,7 @@ pub(super) fn get_inputs<'a>(
     let target_defaults = nx_json
         .target_defaults
         .as_ref()
-        .map(|td| &td[&task.target.target]);
+        .and_then(|td| td.get(&task.target.target));
 
     let inputs: Option<Vec<Input>> = target_data
         .inputs
