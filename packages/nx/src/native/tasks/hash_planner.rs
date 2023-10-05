@@ -7,8 +7,12 @@ use crate::native::{
 use rayon::prelude::*;
 use std::collections::HashMap;
 
-use crate::native::tasks::inputs::{get_inputs, get_inputs_for_dependency};
+use crate::native::tasks::inputs::{
+    expand_named_input, expand_single_project_inputs, get_inputs, get_inputs_for_dependency,
+    get_named_inputs,
+};
 use crate::native::tasks::utils;
+use crate::native::utils::find_matching_projects;
 
 #[napi]
 pub struct HashPlanner {
@@ -59,7 +63,7 @@ impl HashPlanner {
                     hashbrown::HashSet::new(),
                 )?;
 
-                let inputs: Vec<String> = target
+                let mut inputs: Vec<String> = target
                     .unwrap_or(vec![])
                     .into_iter()
                     .chain(self_inputs.into_iter())
@@ -143,27 +147,29 @@ impl HashPlanner {
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&str>>,
         visited: hashbrown::HashSet<&str>,
     ) -> anyhow::Result<Vec<String>> {
-        if self.task_inputs.contains_key(task.id.as_str()) {
-            return Ok(self.task_inputs[task.id.as_str()].clone());
-        }
-
+        let project_deps = &self.project_graph.dependencies[&task.target.project]
+            .iter()
+            .map(|d| d.as_str())
+            .collect::<Vec<_>>();
         let self_inputs = self.gather_self_inputs(project_name, &inputs.self_inputs);
         let deps_inputs = self.gather_dependency_inputs(
             task,
             &inputs.deps_inputs,
             task_graph,
+            project_deps,
             external_deps_mapped,
             visited,
         )?;
 
         let deps_outputs: Vec<String> =
             self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?;
-        let projects: Vec<String> = vec![];
+        let projects: Vec<String> = self.gather_project_inputs(&inputs.project_inputs)?;
 
         Ok(self_inputs
             .into_iter()
             .chain(deps_inputs.into_iter())
             .chain(deps_outputs.into_iter())
+            .chain(projects.into_iter())
             .collect())
     }
 
@@ -191,40 +197,39 @@ impl HashPlanner {
         task: &Task,
         inputs: &[Input],
         task_graph: &TaskGraph,
+        project_deps: &[&'a str],
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&'a str>>,
         mut visited: hashbrown::HashSet<&'a str>,
     ) -> anyhow::Result<Vec<String>> {
         let mut deps_inputs: Vec<String> = vec![];
-        let project_deps = self.project_graph.dependencies.get(&task.target.project);
-        if let Some(deps) = project_deps {
-            for input in inputs {
-                for dep in deps {
-                    if visited.contains(dep.as_str()) {
-                        continue;
-                    }
-                    visited.insert(dep.as_str());
 
-                    if self.project_graph.nodes.contains_key(dep.as_str()) {
-                        let Some(dep_inputs) = get_inputs_for_dependency(
+        for input in inputs {
+            for dep in project_deps {
+                if visited.contains(dep) {
+                    continue;
+                }
+                visited.insert(dep);
+
+                if self.project_graph.nodes.contains_key(*dep) {
+                    let Some(dep_inputs) = get_inputs_for_dependency(
                             &self.project_graph.nodes[&task.target.project],
                             &self.nx_json,
                             input,
                         )? else {
                             continue;
                         };
-                        deps_inputs.extend(self.self_and_deps_inputs(
-                            dep,
-                            task,
-                            &dep_inputs,
-                            task_graph,
-                            external_deps_mapped,
-                            visited.clone(),
-                        )?);
-                    } else {
-                        // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
-                        if let Some(external_deps) = external_deps_mapped.get(dep.as_str()) {
-                            deps_inputs.extend(external_deps.iter().map(|s| s.to_string()));
-                        }
+                    deps_inputs.extend(self.self_and_deps_inputs(
+                        dep,
+                        task,
+                        &dep_inputs,
+                        task_graph,
+                        external_deps_mapped,
+                        visited.clone(),
+                    )?);
+                } else {
+                    // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
+                    if let Some(external_deps) = external_deps_mapped.get(dep) {
+                        deps_inputs.extend(external_deps.iter().map(|s| s.to_string()));
                     }
                 }
             }
@@ -287,6 +292,29 @@ impl HashPlanner {
 
         Ok(result)
     }
+
+    fn gather_project_inputs(&self, project_inputs: &[Input]) -> anyhow::Result<Vec<String>> {
+        let mut result: Vec<String> = vec![];
+        for project in project_inputs {
+            let Input::Projects {input, projects} = project else {
+                continue;
+            };
+            let projects = find_matching_projects(&projects, &self.project_graph)?;
+            for project in projects {
+                let named_inputs =
+                    get_named_inputs(&self.nx_json, &self.project_graph.nodes[project]);
+                let expanded_input = expand_single_project_inputs(
+                    &vec![Input::Inputs {
+                        input,
+                        dependencies: false,
+                    }],
+                    &named_inputs,
+                )?;
+                result.extend(self.gather_self_inputs(project, &expanded_input))
+            }
+        }
+        Ok(result)
+    }
 }
 
 fn find_external_dependency_node_name<'a>(
@@ -300,12 +328,11 @@ fn find_external_dependency_node_name<'a>(
 }
 
 fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<String> {
-    // let file_set_patterns = file_sets.join(",");
     let project_input = format!("{}:{}", project_name, file_sets.join(","));
     vec![
         project_input,
-        "ProjectConfiguration".to_owned(),
-        "TsConfig".to_owned(),
+        "ProjectConfiguration".into(),
+        "TsConfig".into(),
     ]
 }
 

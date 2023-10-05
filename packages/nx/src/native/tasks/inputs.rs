@@ -105,7 +105,7 @@ fn split_inputs_into_self_and_deps<'a>(
                 | Input::ExternalDependency(_) => {
                     acc.1.push(input);
                 }
-                Input::Projects(_) => {
+                Input::Projects { .. } => {
                     acc.2.push(input);
                 }
             }
@@ -128,7 +128,7 @@ fn split_inputs_into_self_and_deps<'a>(
     })
 }
 
-fn expand_single_project_inputs<'a>(
+pub(super) fn expand_single_project_inputs<'a>(
     inputs: &Vec<Input<'a>>,
     named_inputs: &HashMap<&str, Vec<Input<'a>>>,
 ) -> anyhow::Result<Vec<Input<'a>>> {
@@ -168,7 +168,7 @@ fn expand_single_project_inputs<'a>(
                 transitive: *transitive,
                 dependent_tasks_output_files,
             }),
-            Input::Projects(_)
+            Input::Projects { .. }
             | Input::Inputs {
                 dependencies: true, ..
             } => {
@@ -203,7 +203,7 @@ If "{file_set}" is a named input, make sure it is defined in nx.json.
     }
 }
 
-fn expand_named_input<'a>(
+pub(super) fn expand_named_input<'a>(
     input: &str,
     named_inputs: &HashMap<&str, Vec<Input<'a>>>,
 ) -> anyhow::Result<Vec<Input<'a>>> {
@@ -214,7 +214,7 @@ fn expand_named_input<'a>(
     }
 }
 
-fn get_named_inputs<'a>(
+pub(super) fn get_named_inputs<'a>(
     nx_json: &'a NxJson,
     project: &'a Project,
 ) -> HashMap<&'a str, Vec<Input<'a>>> {

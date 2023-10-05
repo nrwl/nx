@@ -27,19 +27,24 @@ pub(super) fn get_dep_output(
     for task_dep in &task_graph.dependencies[task.id.as_str()] {
         let child_task = &task_graph.tasks[task_dep.as_str()];
 
+        let now = std::time::Instant::now();
         let outputs = get_outputs_for_target_and_configuration(
             child_task,
             &project_graph.nodes[&child_task.target.project],
         )?;
         let output_files = get_files_for_outputs(workspace_root.to_string(), outputs)?;
+        println!(
+            "get_outputs_for_target_and_configuration took {:?}",
+            now.elapsed()
+        );
         let glob = build_glob_set(&[dependent_tasks_output_files])?;
         inputs.extend(
             output_files
                 .into_iter()
-                .filter(|f| f == &dependent_tasks_output_files || glob.is_match(f))
+                .filter(|f| f == dependent_tasks_output_files || glob.is_match(f))
                 .collect::<Vec<_>>(),
         );
-        
+
         if (transitive) {
             inputs.extend(get_dep_output(
                 workspace_root,
@@ -186,7 +191,7 @@ fn interpolate_outputs(template: &str, data: &InterpolateOptions) -> anyhow::Res
                 .trim()
                 .split('.')
                 .collect::<Vec<_>>();
-            let mut current_value = dbg!(&value);
+            let mut current_value = &value;
 
             // Traverse the path
             for key in path.iter() {

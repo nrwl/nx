@@ -37,6 +37,7 @@ export interface Target {
 export interface Project {
   root: string
   namedInputs?: Record<string, Array<JsInputs>>
+  tags?: Array<string>
   targets: Record<string, Target>
 }
 export interface ProjectGraph {
@@ -89,6 +90,7 @@ export interface DepsOutputsInput {
   transitive?: boolean
 }
 export interface ProjectsInput {
+  input: string
   projects: string | Array<string>
 }
 /** Stripped version of the NxJson interface for use in rust */

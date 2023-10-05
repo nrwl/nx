@@ -35,6 +35,7 @@ pub struct DepsOutputsInput {
 
 #[napi(object)]
 pub struct ProjectsInput {
+    pub input: String,
     pub projects: Either<String, Vec<String>>,
 }
 
@@ -76,10 +77,13 @@ impl<'a> From<&'a JsInputs> for Input<'a> {
                 transitive: deps_outputs.transitive.unwrap_or(false),
                 dependent_tasks_output_files: &deps_outputs.dependent_tasks_output_files,
             },
-            Either8::H(projects) => Input::Projects(match &projects.projects {
-                Either::A(string) => vec![string.as_ref()],
-                Either::B(vec) => vec.iter().map(|v| v.as_ref()).collect(),
-            }),
+            Either8::H(projects) => Input::Projects {
+                input: &projects.input,
+                projects: match &projects.projects {
+                    Either::A(string) => vec![string.as_ref()],
+                    Either::B(vec) => vec.iter().map(|v| v.as_ref()).collect(),
+                },
+            },
         }
     }
 }
@@ -99,5 +103,8 @@ pub(crate) enum Input<'a> {
         dependent_tasks_output_files: &'a str,
         transitive: bool,
     },
-    Projects(Vec<&'a str>),
+    Projects {
+        projects: Vec<&'a str>,
+        input: &'a str,
+    },
 }

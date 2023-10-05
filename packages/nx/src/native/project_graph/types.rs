@@ -27,6 +27,7 @@ pub struct Target {
 pub struct Project {
     pub root: String,
     pub named_inputs: Option<HashMap<String, Vec<JsInputs>>>,
+    pub tags: Option<Vec<String>>,
     pub targets: HashMap<String, Target>,
 }
 
