@@ -2,7 +2,10 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../project-graph/project-graph';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { toOldFormat } from './angular-json';
@@ -13,7 +16,21 @@ const originalRequire: NodeRequire = Module.prototype.require;
 
 let patched = false;
 
-const allowedProjectExtensions = [
+// Checks that a given const array has all keys in the union provided as T2,
+// and marks it mutable. In this case, this is useful s.t. we can ensure the
+// arrays we pass to angular for allowedProjectExtensions and allowedWorkspaceExtensions
+// contain all of the keys which we may be passing through.
+type CheckHasKeys<Arr extends readonly unknown[], Keys extends Arr[number]> = {
+  -readonly [P in keyof Arr]: Arr[P];
+};
+
+// If we pass props on a project that angular doesn't know about,
+// it throws a warning that users see. We want to pass them still,
+// so older plugins writtin in Ng Devkit can update these.
+//
+// There are some props in here (root) that angular already knows about,
+// but it doesn't hurt to have them in here as well to help static analysis.
+export const allowedProjectExtensions = [
   'tags',
   'implicitDependencies',
   'configFilePath',
@@ -22,9 +39,18 @@ const allowedProjectExtensions = [
   'namedInputs',
   'name',
   'files',
-];
+  'root',
+  'sourceRoot',
+  'projectType',
+] as const;
 
-const allowedWorkspaceExtensions = [
+// If we pass props on the workspace that angular doesn't know about,
+// it throws a warning that users see. We want to pass them still,
+// so older plugins writtin in Ng Devkit can update these.
+//
+// There are some props in here (root) that angular already knows about,
+// but it doesn't hurt to have them in here as well to help static analysis.
+export const allowedWorkspaceExtensions = [
   'implicitDependencies',
   'affected',
   'npmScope',
@@ -35,7 +61,18 @@ const allowedWorkspaceExtensions = [
   'files',
   'generators',
   'namedInputs',
-];
+  'extends',
+  'cli',
+  'pluginsConfig',
+  'defaultProject',
+  'installation',
+  'release',
+  'nxCloudAccessToken',
+  'nxCloudUrl',
+  'parallel',
+  'cacheDirectory',
+  'useDaemonProcess',
+] as const;
 
 if (!patched) {
   Module.prototype.require = function () {
@@ -93,8 +130,14 @@ function mockReadJsonWorkspace(
     (originalReadJsonWorkspace) => async (path, host, options) => {
       const modifiedOptions = {
         ...options,
-        allowedProjectExtensions,
-        allowedWorkspaceExtensions,
+        allowedProjectExtensions: allowedProjectExtensions as CheckHasKeys<
+          typeof allowedProjectExtensions,
+          keyof Omit<ProjectConfiguration, 'targets' | 'generators'>
+        >,
+        allowedWorkspaceExtensions: allowedWorkspaceExtensions as CheckHasKeys<
+          typeof allowedWorkspaceExtensions,
+          keyof NxJsonConfiguration
+        >,
       };
       try {
         // Attempt angular CLI default behaviour

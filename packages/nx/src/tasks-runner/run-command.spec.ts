@@ -86,14 +86,21 @@ describe('getRunner', () => {
   it('uses nx-cloud when no tasksRunnerOptions are present and accessToken is specified', () => {
     jest.mock('nx-cloud', () => mockRunner);
 
-    const { tasksRunner } = getRunner(
+    const { tasksRunner, runnerOptions } = getRunner(
       {},
       {
         nxCloudAccessToken: 'XXXX-XXX-XXXX',
+        nxCloudUrl: 'https://my-nx-cloud.app',
       }
     );
 
     expect(tasksRunner).toEqual(mockRunner);
+    expect(runnerOptions).toMatchInlineSnapshot(`
+      {
+        "accessToken": "XXXX-XXX-XXXX",
+        "url": "https://my-nx-cloud.app",
+      }
+    `);
   });
 
   it('reads options from base properties if no runner options provided', () => {

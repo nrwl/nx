@@ -82,9 +82,13 @@
       "type": "string",
       "description": "Default project. When project isn't provided, the default project will be used."
     },
-    "accessToken": {
+    "nxCloudAccessToken": {
       "type": "string",
       "description": "The access token to use for nx-cloud. If set, the default tasks runner will be nx-cloud."
+    },
+    "nxCloudUrl": {
+      "type": "string",
+      "description": "Specifies the url pointing to an instance of nx cloud. Used for remote caching and displaying run links."
     },
     "parallel": {
       "type": "number",
