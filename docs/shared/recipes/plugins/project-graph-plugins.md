@@ -80,22 +80,7 @@ export const createNodes: CreateNodes = [
 If you create targets for a project within a plugin's code, the Nx migration generators can not find that target configuration to update it. There are two ways to account for this:
 
 1. Only create dynamic targets using executors that you own. This way you can update the configuration in both places when needed.
-2. If you create a dynamic target for an executor you don't own, only define the `executor` property and instruct your users to define their options in the `targetDefaults` property of `nx.json`. The code would look something like this:
-
-```ts
-export const createNodes = ['**/jest.config.ts', (configFile, ctx) => {
-  const name = // derive name somehow
-  return {
-    projects: {
-      [name]: {
-        test: {
-          executor: '@nx/jest:jest'
-        }
-      }
-    }
-  }
-}]
-```
+2. If you create a dynamic target for an executor you don't own, only define the `executor` property and instruct your users to define their options in the `targetDefaults` property of `nx.json`.
 
 {% /callout %}
 
