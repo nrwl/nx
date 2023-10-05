@@ -114,8 +114,17 @@ describe('React Module Federation', () => {
     );
 
     if (runE2ETests()) {
-      const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
-      expect(e2eResults).toContain('All specs passed!');
+      const e2eResultsSwc = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
+      expect(e2eResultsSwc).toContain('All specs passed!');
+      await killPorts(readPort(shell));
+      await killPorts(readPort(remote1));
+      await killPorts(readPort(remote2));
+      await killPorts(readPort(remote3));
+
+      const e2eResultsTsNode = runCLI(`e2e ${shell}-e2e --no-watch --verbose`, {
+        env: { NX_PREFER_TS_NODE: 'true' },
+      });
+      expect(e2eResultsTsNode).toContain('All specs passed!');
       await killPorts(readPort(shell));
       await killPorts(readPort(remote1));
       await killPorts(readPort(remote2));
@@ -141,11 +150,16 @@ describe('React Module Federation', () => {
     checkFilesExist(`${remote}/module-federation.config.ts`);
 
     // check default generated host is built successfully
-    const buildOutput = runCLI(`run ${shell}:build:development`);
-    expect(buildOutput).toContain('Successfully ran target build');
+    const buildOutputSwc = runCLI(`run ${shell}:build:development`);
+    expect(buildOutputSwc).toContain('Successfully ran target build');
+
+    const buildOutputTsNode = runCLI(`run ${shell}:build:development`, {
+      env: { NX_PREFER_TS_NODE: 'true' },
+    });
+    expect(buildOutputTsNode).toContain('Successfully ran target build');
 
     // check serves devRemotes ok
-    const shellProcess = await runCommandUntil(
+    const shellProcessSwc = await runCommandUntil(
       `serve ${shell} --devRemotes=${remote} --verbose`,
       (output) => {
         return output.includes(
@@ -153,7 +167,20 @@ describe('React Module Federation', () => {
         );
       }
     );
-    await killProcessAndPorts(shellProcess.pid, shellPort);
+    await killProcessAndPorts(shellProcessSwc.pid, shellPort);
+
+    const shellProcessTsNode = await runCommandUntil(
+      `serve ${shell} --devRemotes=${remote} --verbose`,
+      (output) => {
+        return output.includes(
+          `All remotes started, server ready at http://localhost:${shellPort}`
+        );
+      },
+      {
+        env: { NX_PREFER_TS_NODE: 'true' },
+      }
+    );
+    await killProcessAndPorts(shellProcessTsNode.pid, shellPort);
   }, 500_000);
 
   it('should support different versions workspace libs for host and remote', async () => {
@@ -379,11 +406,25 @@ describe('React Module Federation', () => {
     expect(remoteOutput).toContain('Successfully ran target build');
 
     if (runE2ETests()) {
-      const hostE2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
-      const remoteE2eResults = runCLI(`e2e ${remote}-e2e --no-watch --verbose`);
+      const hostE2eResultsSwc = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
+      const remoteE2eResultsSwc = runCLI(
+        `e2e ${remote}-e2e --no-watch --verbose`
+      );
 
-      expect(hostE2eResults).toContain('All specs passed!');
-      expect(remoteE2eResults).toContain('All specs passed!');
+      expect(hostE2eResultsSwc).toContain('All specs passed!');
+      expect(remoteE2eResultsSwc).toContain('All specs passed!');
+
+      const hostE2eResultsTsNode = runCLI(
+        `e2e ${shell}-e2e --no-watch --verbose`,
+        { env: { NX_PREFER_TS_NODE: 'true' } }
+      );
+      const remoteE2eResultsTsNode = runCLI(
+        `e2e ${remote}-e2e --no-watch --verbose`,
+        { env: { NX_PREFER_TS_NODE: 'true' } }
+      );
+
+      expect(hostE2eResultsTsNode).toContain('All specs passed!');
+      expect(remoteE2eResultsTsNode).toContain('All specs passed!');
     }
   }, 500_000);
 
