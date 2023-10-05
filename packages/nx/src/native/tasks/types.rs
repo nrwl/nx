@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 #[napi(object)]
+#[derive(Default)]
 pub struct Task {
     pub id: String,
     pub target: TaskTarget,
@@ -9,6 +10,7 @@ pub struct Task {
 }
 
 #[napi(object)]
+#[derive(Default)]
 pub struct TaskTarget {
     pub project: String,
     pub target: String,

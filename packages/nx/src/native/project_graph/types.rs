@@ -14,6 +14,7 @@ pub struct ExternalNode {
 }
 
 #[napi(object)]
+#[derive(Default)]
 pub struct Target {
     pub executor: Option<String>,
     pub inputs: Option<Vec<JsInputs>>,

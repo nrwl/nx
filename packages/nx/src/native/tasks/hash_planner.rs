@@ -156,12 +156,14 @@ impl HashPlanner {
             visited,
         )?;
 
-        let deps_out: Vec<String> = vec![];
+        let deps_outputs: Vec<String> =
+            self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?;
         let projects: Vec<String> = vec![];
 
         Ok(self_inputs
             .into_iter()
             .chain(deps_inputs.into_iter())
+            .chain(deps_outputs.into_iter())
             .collect())
     }
 
@@ -262,9 +264,9 @@ impl HashPlanner {
         task: &Task,
         task_graph: &TaskGraph,
         deps_outputs: &[Input],
-    ) -> Vec<String> {
-        if deps_outputs.len() == 0 {
-            return vec![];
+    ) -> anyhow::Result<Vec<String>> {
+        if deps_outputs.is_empty() {
+            return Ok(vec![]);
         }
 
         let mut result: Vec<String> = vec![];
@@ -274,15 +276,16 @@ impl HashPlanner {
                 continue;
             };
             result.extend(get_dep_output(
+                &self.workspace_root,
                 task,
                 task_graph,
                 &self.project_graph,
                 dependent_tasks_output_files,
                 *transitive,
-            ))
+            )?);
         }
 
-        todo!()
+        Ok(result)
     }
 }
 
