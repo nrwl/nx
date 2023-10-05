@@ -2,6 +2,7 @@ import { Tree, stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  killPorts,
   killProcessAndPorts,
   newProject,
   readJson,
@@ -111,20 +112,15 @@ describe('React Module Federation', () => {
         });
       `
     );
-    // TODO(caleb): cypress isn't able to find the element and then throws error with an address already in use error.
-    // https://staging.nx.app/runs/ASAokpXhnE/task/e2e-react:e2e
-    // if (runCypressTests()) {
-    //   const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
-    //   expect(e2eResults).toContain('All specs passed!');
-    //   expect(
-    //     await killPorts([
-    //       readPort(shell),
-    //       readPort(remote1),
-    //       readPort(remote2),
-    //       readPort(remote3),
-    //     ])
-    //   ).toBeTruthy();
-    // }
+
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
+      expect(e2eResults).toContain('All specs passed!');
+      await killPorts(readPort(shell));
+      await killPorts(readPort(remote1));
+      await killPorts(readPort(remote2));
+      await killPorts(readPort(remote3));
+    }
   }, 500_000);
 
   it('should should support generating host and remote apps with the new name and root format', async () => {
