@@ -442,9 +442,9 @@ describe('@nx/storybook:init', () => {
         '@nx/js',
         '@nx/storybook',
         '@storybook/addon-essentials',
+        '@storybook/core-server',
         '@swc-node/register',
         '@swc/core',
-        '@storybook/core-server',
         'prettier',
         'typescript',
       ]);
