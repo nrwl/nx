@@ -129,15 +129,23 @@ describe('Angular Module Federation', () => {
     `
     );
 
-    const process = await runCommandUntil(
+    const processSwc = await runCommandUntil(
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp1}`,
       (output) =>
         !output.includes(`Remote '${remoteApp1}' failed to serve correctly`) &&
         output.includes(`listening on localhost:${hostPort}`)
     );
+    await killProcessAndPorts(processSwc.pid, hostPort, remotePort);
 
-    // port and process cleanup
-    await killProcessAndPorts(process.pid, hostPort, remotePort);
+    const processTsNode = await runCommandUntil(
+      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp1}`,
+      (output) =>
+        !output.includes(`Remote '${remoteApp1}' failed to serve correctly`) &&
+        output.includes(`listening on localhost:${hostPort}`),
+      { env: { NX_PREFER_TS_NODE: 'true' } }
+    );
+
+    await killProcessAndPorts(processTsNode.pid, hostPort, remotePort);
   }, 20_000_000);
 
   it('should convert apps to MF successfully', async () => {
@@ -162,15 +170,24 @@ describe('Angular Module Federation', () => {
       `generate @nx/angular:setup-mf ${app2} --mfType=remote --host=${app1} --port=${app2Port} --no-interactive`
     );
 
-    const process = await runCommandUntil(
+    const processSwc = await runCommandUntil(
       `serve ${app1} --dev-remotes=${app2}`,
       (output) =>
         !output.includes(`Remote '${app2}' failed to serve correctly`) &&
         output.includes(`listening on localhost:${app1Port}`)
     );
 
-    // port and process cleanup
-    await killProcessAndPorts(process.pid, app1Port, app2Port);
+    await killProcessAndPorts(processSwc.pid, app1Port, app2Port);
+
+    const processTsNode = await runCommandUntil(
+      `serve ${app1} --dev-remotes=${app2}`,
+      (output) =>
+        !output.includes(`Remote '${app2}' failed to serve correctly`) &&
+        output.includes(`listening on localhost:${app1Port}`),
+      { env: { NX_PREFER_TS_NODE: 'true' } }
+    );
+
+    await killProcessAndPorts(processTsNode.pid, app1Port, app2Port);
   }, 20_000_000);
 
   it('should scaffold MF + SSR setup successfully', async () => {
@@ -190,7 +207,7 @@ describe('Angular Module Federation', () => {
     const remote2Port = readJson(join(remote2, 'project.json')).targets.serve
       .options.port;
 
-    const process = await runCommandUntil(
+    const processSwc = await runCommandUntil(
       `serve-ssr ${host} --port=${hostPort}`,
       (output) =>
         output.includes(
@@ -204,8 +221,34 @@ describe('Angular Module Federation', () => {
         )
     );
 
-    // port and process cleanup
-    await killProcessAndPorts(process.pid, hostPort, remote1Port, remote2Port);
+    await killProcessAndPorts(
+      processSwc.pid,
+      hostPort,
+      remote1Port,
+      remote2Port
+    );
+
+    const processTsNode = await runCommandUntil(
+      `serve-ssr ${host} --port=${hostPort}`,
+      (output) =>
+        output.includes(
+          `Node Express server listening on http://localhost:${remote1Port}`
+        ) &&
+        output.includes(
+          `Node Express server listening on http://localhost:${remote2Port}`
+        ) &&
+        output.includes(
+          `Angular Universal Live Development Server is listening`
+        ),
+      { env: { NX_PREFER_TS_NODE: 'true' } }
+    );
+
+    await killProcessAndPorts(
+      processTsNode.pid,
+      hostPort,
+      remote1Port,
+      remote2Port
+    );
   }, 20_000_000);
 
   it('should should support generating host and remote apps with --project-name-and-root-format=derived', async () => {
@@ -230,17 +273,33 @@ describe('Angular Module Federation', () => {
     );
 
     // check default generated host is built successfully
-    const buildOutput = runCLI(`build ${hostApp}`);
-    expect(buildOutput).toContain('Successfully ran target build');
+    const buildOutputSwc = runCLI(`build ${hostApp}`);
+    expect(buildOutputSwc).toContain('Successfully ran target build');
 
-    const process = await runCommandUntil(
+    const buildOutputTsNode = runCLI(`build ${hostApp}`, {
+      env: { NX_PREFER_TS_NODE: 'true' },
+    });
+    expect(buildOutputTsNode).toContain('Successfully ran target build');
+
+    const processSwc = await runCommandUntil(
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
       (output) =>
         !output.includes(`Remote '${remoteApp}' failed to serve correctly`) &&
         output.includes(`listening on localhost:${hostPort}`)
     );
 
-    // port and process cleanup
-    await killProcessAndPorts(process.pid, hostPort, remotePort);
+    await killProcessAndPorts(processSwc.pid, hostPort, remotePort);
+
+    const processTsNode = await runCommandUntil(
+      `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
+      (output) =>
+        !output.includes(`Remote '${remoteApp}' failed to serve correctly`) &&
+        output.includes(`listening on localhost:${hostPort}`),
+      {
+        env: { NX_PREFER_TS_NODE: 'true' },
+      }
+    );
+
+    await killProcessAndPorts(processTsNode.pid, hostPort, remotePort);
   }, 20_000_000);
 });
