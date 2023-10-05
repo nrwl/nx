@@ -81,6 +81,10 @@ export function getTsNodeTranspiler(
 export function getTranspiler(compilerOptions: CompilerOptions) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
+  if (!ts) {
+    ts = require('typescript');
+  }
+
   compilerOptions.lib = ['es2021'];
   compilerOptions.module = ts.ModuleKind.CommonJS;
   compilerOptions.target = ts.ScriptTarget.ES2021;
