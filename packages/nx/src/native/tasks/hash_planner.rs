@@ -60,7 +60,7 @@ impl HashPlanner {
                     &inputs,
                     &task_graph,
                     &external_deps_mapped,
-                    hashbrown::HashSet::new(),
+                    &mut hashbrown::HashSet::new(),
                 )?;
 
                 let mut inputs: Vec<String> = target
@@ -145,7 +145,7 @@ impl HashPlanner {
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&str>>,
-        visited: hashbrown::HashSet<&str>,
+        visited: &mut hashbrown::HashSet<String>,
     ) -> anyhow::Result<Vec<String>> {
         let project_deps = &self.project_graph.dependencies[&task.target.project]
             .iter()
@@ -199,20 +199,20 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         project_deps: &[&'a str],
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&'a str>>,
-        mut visited: hashbrown::HashSet<&'a str>,
+        visited: &mut hashbrown::HashSet<String>,
     ) -> anyhow::Result<Vec<String>> {
         let mut deps_inputs: Vec<String> = vec![];
 
         for input in inputs {
             for dep in project_deps {
-                if visited.contains(dep) {
+                if visited.contains(*dep) {
                     continue;
                 }
-                visited.insert(dep);
+                visited.insert(dep.to_string());
 
                 if self.project_graph.nodes.contains_key(*dep) {
                     let Some(dep_inputs) = get_inputs_for_dependency(
-                            &self.project_graph.nodes[&task.target.project],
+                            &self.project_graph.nodes[*dep],
                             &self.nx_json,
                             input,
                         )? else {
@@ -224,7 +224,7 @@ impl HashPlanner {
                         &dep_inputs,
                         task_graph,
                         external_deps_mapped,
-                        visited.clone(),
+                        visited,
                     )?);
                 } else {
                     // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
