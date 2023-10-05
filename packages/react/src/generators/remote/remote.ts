@@ -71,7 +71,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
-    typescriptConfiguration: schema.typescriptConfiguration ?? true,
+    typescriptConfiguration: schema.typescriptConfiguration ?? false,
   };
   const initAppTask = await applicationGenerator(host, {
     ...options,
