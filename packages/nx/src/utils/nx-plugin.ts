@@ -395,11 +395,6 @@ export function registerPluginTSTranspiler() {
       experimentalDecorators: true,
       emitDecoratorMetadata: true,
       ...tsConfig.options,
-      lib: ['es2021'],
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2021,
-      inlineSourceMap: true,
-      skipLibCheck: true,
     });
     tsNodeAndPathsUnregisterCallback = () => {
       unregisterTsConfigPaths();
