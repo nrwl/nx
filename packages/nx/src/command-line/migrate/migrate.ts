@@ -1203,16 +1203,17 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let originalPackageJson = existsSync(rootPkgJsonPath)
       ? readJsonFile<PackageJson>(rootPkgJsonPath)
       : null;
-    const originalNxInstallation = readNxJson().installation;
+    const originalNxJson = readNxJson();
     const from =
-      originalNxInstallation?.version ?? readNxVersion(originalPackageJson);
+      originalNxJson.installation?.version ??
+      readNxVersion(originalPackageJson);
 
     try {
       if (
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&
-        !isNxCloudUsed()
+        !isNxCloudUsed(originalNxJson)
       ) {
         const useCloud = await connectToNxCloudCommand(
           messages.getPromptMessage('nxCloudMigration')
@@ -1237,7 +1238,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     const migrator = new Migrator({
       packageJson: originalPackageJson,
-      nxInstallation: originalNxInstallation,
+      nxInstallation: originalNxJson.installation,
       getInstalledPackageVersion: createInstalledPackageVersionsResolver(root),
       fetch: createFetcher(),
       from: opts.from,
