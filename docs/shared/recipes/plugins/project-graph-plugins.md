@@ -40,7 +40,7 @@ You can add nodes to the project graph with [`createNodes`](/nx-api/devkit/docum
 
 Looking at the tuple, you can see that the first element is a file pattern. This is a glob pattern that Nx will use to find files in your workspace. The second element is a function that will be called for each file that matches the pattern. The function will be called with the path to the file and a context object. Your plugin can then return a set of projects and external nodes.
 
-If a plugin identifies a project that is already in the project graph, it will be merged with the information that is already present. The builtin plugins that identify projects from `package.json` files and `project.json` files are ran after any plugins listed in `nx.json`, and as such will overwrite any configuration that was identified by them. In practice, this means that if a project has both a `project.json`, and a file that your plugin identified, the settings the plugin idenfied will be overwritten by the `project.json`'s contents.
+If a plugin identifies a project that is already in the project graph, it will be merged with the information that is already present. The builtin plugins that identify projects from `package.json` files and `project.json` files are ran after any plugins listed in `nx.json`, and as such will overwrite any configuration that was identified by them. In practice, this means that if a project has both a `project.json`, and a file that your plugin identified, the settings the plugin identified will be overwritten by the `project.json`'s contents.
 
 Project nodes in the graph are considered to be the same if the project has the same root. If multiple plugins identify a project with the same root, the project will be merged. In doing so, the name that is already present in the graph is kept, and the properties below are shallowly merged. Any other properties are overwritten.
 
@@ -74,6 +74,15 @@ export const createNodes: CreateNodes = [
   },
 ];
 ```
+
+{% callout type="warning" title="Dynamic target configurations can't be migrated" %}
+
+If you create targets for a project within a plugin's code, the Nx migration generators can not find that target configuration to update it. There are two ways to account for this:
+
+1. Only create dynamic targets using executors that you own. This way you can update the configuration in both places when needed.
+2. If you create a dynamic target for an executor you don't own, only define the `executor` property and instruct your users to define their options in the `targetDefaults` property of `nx.json`.
+
+{% /callout %}
 
 ### Adding External Nodes
 
