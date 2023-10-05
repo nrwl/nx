@@ -57,6 +57,8 @@ pnpm-lock.yaml @nrwl/nx-core-reviewers
 # Vue
 /packages/vue/** @nrwl/nx-vue-reviewers
 /e2e/vue/** @nrwl/nx-vue-reviewers
+/packages/nuxt/** @nrwl/nx-vue-reviewers
+/e2e/nuxt/** @nrwl/nx-vue-reviewers
 
 ## Node
 /docs/generated/packages/node/** @nrwl/nx-node-reviewers @nrwl/nx-docs-reviewers

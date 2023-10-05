@@ -36,6 +36,9 @@ steps:
     script: |
       pnpm install --frozen-lockfile
 
+  - name: Install Cypress
+    script: pnpm exec cypress install
+
   - name: Install Rust
     script: |
       curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y

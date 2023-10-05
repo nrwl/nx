@@ -1,8 +1,9 @@
 <script setup lang="ts">
 <% if (routing) { %>
 import { RouterLink, RouterView } from 'vue-router';
+<% } else { %>
+import NxWelcome from './NxWelcome.vue';
 <% } %>
-import NxWelcome from './components/NxWelcome.vue';
 </script>
 
 <template>

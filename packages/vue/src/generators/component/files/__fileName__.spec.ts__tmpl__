@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 <% } %>
 
 import { mount } from '@vue/test-utils'
-import <%= className %> from '../<%= fileName %>.vue';
+import <%= className %> from './<%= fileName %>.vue';
 
 describe('<%= className %>', () => {
   it('renders properly', () => {

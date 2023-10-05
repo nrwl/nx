@@ -37,8 +37,7 @@ export function findMatchingProjects(
 
   const projectNames = Object.keys(projects);
 
-  const selectedProjects: Set<string> = new Set();
-  const excludedProjects: Set<string> = new Set();
+  const matchedProjects: Set<string> = new Set();
 
   for (const stringPattern of patterns) {
     if (!stringPattern.length) {
@@ -52,9 +51,9 @@ export function findMatchingProjects(
     if (pattern.value === '*') {
       for (const projectName of projectNames) {
         if (pattern.exclude) {
-          excludedProjects.add(projectName);
+          matchedProjects.delete(projectName);
         } else {
-          selectedProjects.add(projectName);
+          matchedProjects.add(projectName);
         }
       }
       continue;
@@ -66,8 +65,7 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          excludedProjects,
-          selectedProjects
+          matchedProjects
         );
         continue;
       }
@@ -76,8 +74,7 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          excludedProjects,
-          selectedProjects
+          matchedProjects
         );
         continue;
       }
@@ -86,8 +83,7 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          excludedProjects,
-          selectedProjects
+          matchedProjects
         );
         continue;
       }
@@ -97,15 +93,14 @@ export function findMatchingProjects(
         // The size of the selected and excluded projects set, before we
         // start updating it with this pattern. If the size changes, we
         // know we found a match and can skip the other types.
-        const originalSize = selectedProjects.size + excludedProjects.size;
+        const originalSize = matchedProjects.size;
         addMatchingProjectsByName(
           projectNames,
           projects,
           pattern,
-          excludedProjects,
-          selectedProjects
+          matchedProjects
         );
-        if (selectedProjects.size + excludedProjects.size > originalSize) {
+        if (matchedProjects.size !== originalSize) {
           // There was some match by name, don't check other types
           continue;
         }
@@ -113,10 +108,9 @@ export function findMatchingProjects(
           projectNames,
           projects,
           pattern,
-          excludedProjects,
-          selectedProjects
+          matchedProjects
         );
-        if (selectedProjects.size + excludedProjects.size > originalSize) {
+        if (matchedProjects.size !== originalSize) {
           // There was some match by directory, don't check other types
           // Note - this doesn't do anything currently, but preps for future
           // types
@@ -126,24 +120,23 @@ export function findMatchingProjects(
     }
   }
 
-  for (const project of excludedProjects) {
-    selectedProjects.delete(project);
-  }
-
-  return Array.from(selectedProjects);
+  return Array.from(matchedProjects);
 }
 
 function addMatchingProjectsByDirectory(
   projectNames: string[],
   projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
-  excludedProjects: Set<string>,
-  selectedProjects: Set<string>
+  matchedProjects: Set<string>
 ) {
   for (const projectName of projectNames) {
     const root = projects[projectName].data.root;
     if (getMatchingStringsWithCache(pattern.value, [root]).length > 0) {
-      (pattern.exclude ? excludedProjects : selectedProjects).add(projectName);
+      if (pattern.exclude) {
+        matchedProjects.delete(projectName);
+      } else {
+        matchedProjects.add(projectName);
+      }
     }
   }
 }
@@ -152,11 +145,14 @@ function addMatchingProjectsByName(
   projectNames: string[],
   projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
-  excludedProjects: Set<string>,
-  selectedProjects: Set<string>
+  matchedProjects: Set<string>
 ) {
   if (projects[pattern.value]) {
-    (pattern.exclude ? excludedProjects : selectedProjects).add(pattern.value);
+    if (pattern.exclude) {
+      matchedProjects.delete(pattern.value);
+    } else {
+      matchedProjects.add(pattern.value);
+    }
     return;
   }
 
@@ -170,9 +166,9 @@ function addMatchingProjectsByName(
   );
   for (const projectName of matchedProjectNames) {
     if (pattern.exclude) {
-      excludedProjects.add(projectName);
+      matchedProjects.delete(projectName);
     } else {
-      selectedProjects.add(projectName);
+      matchedProjects.add(projectName);
     }
   }
 }
@@ -181,14 +177,17 @@ function addMatchingProjectsByTag(
   projectNames: string[],
   projects: Record<string, ProjectGraphProjectNode>,
   pattern: ProjectPattern,
-  excludedProjects: Set<string>,
-  selectedProjects: Set<string>
+  matchedProjects: Set<string>
 ) {
   for (const projectName of projectNames) {
     const tags = projects[projectName].data.tags || [];
 
     if (tags.includes(pattern.value)) {
-      (pattern.exclude ? excludedProjects : selectedProjects).add(projectName);
+      if (pattern.exclude) {
+        matchedProjects.delete(projectName);
+      } else {
+        matchedProjects.add(projectName);
+      }
       continue;
     }
 
@@ -197,7 +196,11 @@ function addMatchingProjectsByTag(
     }
 
     if (getMatchingStringsWithCache(pattern.value, tags).length) {
-      (pattern.exclude ? excludedProjects : selectedProjects).add(projectName);
+      if (pattern.exclude) {
+        matchedProjects.delete(projectName);
+      } else {
+        matchedProjects.add(projectName);
+      }
     }
   }
 }

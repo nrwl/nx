@@ -106,8 +106,12 @@ describe('EsBuild Plugin', () => {
     readFile(`dist/libs/${myPkg}/assets/a.md`).includes('initial a');
     updateFile(`libs/${myPkg}/assets/a.md`, 'updated a');
     await expect(
-      waitUntil(() =>
-        readFile(`dist/libs/${myPkg}/assets/a.md`).includes('updated a')
+      waitUntil(
+        () => readFile(`dist/libs/${myPkg}/assets/a.md`).includes('updated a'),
+        {
+          timeout: 20_000,
+          ms: 500,
+        }
       )
     ).resolves.not.toThrow();
     watchProcess.kill();

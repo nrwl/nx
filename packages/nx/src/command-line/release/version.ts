@@ -33,7 +33,7 @@ import {
   createReleaseGroups,
   handleCreateReleaseGroupsError,
 } from './config/create-release-groups';
-import { printDiff } from './utils/print-diff';
+import { printDiff } from './utils/print-changes';
 import { isRelativeVersionKeyword } from './utils/semver';
 
 // Reexport for use in plugin release-version generator implementations

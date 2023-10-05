@@ -1,4 +1,4 @@
-import { logger, readJson, Tree } from '@nx/devkit';
+import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from './component';
 import { createLib } from '../../utils/test-utils';
@@ -30,17 +30,14 @@ describe('component', () => {
       appTree.exists('my-lib/src/components/hello/hello.vue')
     ).toBeTruthy();
     expect(
-      appTree.exists('my-lib/src/components/hello/__tests__/hello.spec.ts')
+      appTree.exists('my-lib/src/components/hello/hello.spec.ts')
     ).toBeTruthy();
 
     expect(
       appTree.read('my-lib/src/components/hello/hello.vue', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      appTree.read(
-        'my-lib/src/components/hello/__tests__/hello.spec.ts',
-        'utf-8'
-      )
+      appTree.read('my-lib/src/components/hello/hello.spec.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -55,10 +52,7 @@ describe('component', () => {
       appTree.read('my-lib/src/components/hello/hello.vue', 'utf-8')
     ).toMatchSnapshot();
     expect(
-      appTree.read(
-        'my-lib/src/components/hello/__tests__/hello.spec.ts',
-        'utf-8'
-      )
+      appTree.read('my-lib/src/components/hello/hello.spec.ts', 'utf-8')
     ).toMatchSnapshot();
   });
 
@@ -114,7 +108,7 @@ describe('component', () => {
         appTree.exists('my-lib/src/components/hello/Hello.vue')
       ).toBeTruthy();
       expect(
-        appTree.exists('my-lib/src/components/hello/__tests__/Hello.spec.ts')
+        appTree.exists('my-lib/src/components/hello/Hello.spec.ts')
       ).toBeTruthy();
     });
   });
@@ -131,9 +125,7 @@ describe('component', () => {
         appTree.exists('my-lib/src/components/HelloWorld/HelloWorld.vue')
       ).toBeTruthy();
       expect(
-        appTree.exists(
-          'my-lib/src/components/HelloWorld/__tests__/HelloWorld.spec.ts'
-        )
+        appTree.exists('my-lib/src/components/HelloWorld/HelloWorld.spec.ts')
       ).toBeTruthy();
     });
   });

@@ -27,6 +27,8 @@ export type ChangelogOptions = NxReleaseArgs & {
   interactive?: boolean;
   gitRemote?: string;
   tagVersionPrefix?: string;
+  createRelease?: string;
+  file?: string | false;
 };
 
 export type PublishOptions = NxReleaseArgs &
@@ -158,9 +160,32 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
           'Prefix to apply to the version when creating the Github release tag',
         default: 'v',
       })
+      .option('createRelease', {
+        describe:
+          'Create a release for the given version on a supported source control service provider, such as Github.',
+        type: 'string',
+        choices: ['github'],
+      })
+      .option('file', {
+        type: 'string',
+        description:
+          'The name of the file to write the changelog to. It can also be set to `false` to disable file generation. Defaults to CHANGELOG.md.',
+        default: 'CHANGELOG.md',
+        coerce: (file) => {
+          if (file === 'false') {
+            return false;
+          }
+          return file;
+        },
+      })
       .check((argv) => {
         if (!argv.version) {
           throw new Error('A target version must be specified');
+        }
+        if (argv.file === false && argv.createRelease !== 'github') {
+          throw new Error(
+            'The --file option can only be set to false when --create-release is set to github.'
+          );
         }
         return true;
       }),

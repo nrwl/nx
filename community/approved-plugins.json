@@ -423,5 +423,10 @@
     "name": "@ziacik/azure-func",
     "description": "Generating, serving and publishing Azure Functions 4 apps.",
     "url": "https://github.com/ziacik/nx-tools/tree/master/packages/azure-func"
+  },
+  {
+    "name": "@simondotm/nx-firebase",
+    "description": "Nx plugin to support Firebase Apps and Cloud Functions in Nx workspaces",
+    "url": "https://github.com/simondotm/nx-firebase"
   }
 ]

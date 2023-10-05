@@ -168,7 +168,7 @@
     "typescriptConfiguration": {
       "type": "boolean",
       "description": "Whether the module federation configuration and webpack configuration files should use TS.",
-      "default": true
+      "default": false
     }
   },
   "required": ["name"],

@@ -3,13 +3,8 @@ defineProps<{}>()
 </script>
 
 <template>
-  <div>
-    <p>Welcome to <%= className %>!</p>
-  </div>
+  <p>Welcome to <%= className %>!</p>
 </template>
 
 <style scoped>
-div { 
-  color: pink; 
-}
 </style>

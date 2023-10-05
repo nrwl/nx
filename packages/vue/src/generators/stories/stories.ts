@@ -12,9 +12,9 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, join } from 'path';
-import minimatch = require('minimatch');
 import { nxVersion } from '../../utils/versions';
 import { createComponentStories } from './lib/component-story';
+import minimatch = require('minimatch');
 
 export interface StorybookStoriesSchema {
   project: string;
@@ -36,22 +36,28 @@ export async function createAllStories(
 ) {
   const { sourceRoot, root } = projectConfiguration;
   let componentPaths: string[] = [];
-  const projectPath = joinPathFragments(sourceRoot, 'components');
-  visitNotIgnoredFiles(tree, projectPath, (path) => {
-    // Ignore private files starting with "_".
-    if (basename(path).startsWith('_')) return;
-    if (ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
-    if (path.endsWith('.vue')) {
-      // Let's see if the .stories.* file exists
-      const ext = path.slice(path.lastIndexOf('.'));
-      const storyPathJs = `${path.split(ext)[0]}.stories.js`;
-      const storyPathTs = `${path.split(ext)[0]}.stories.ts`;
+  const pathsToCheck = [
+    joinPathFragments(sourceRoot, 'app'), // Default component folder for apps
+    joinPathFragments(sourceRoot, 'components'), // Additional component folder
+  ];
 
-      if (!tree.exists(storyPathJs) && !tree.exists(storyPathTs)) {
-        componentPaths.push(path);
+  for (const p of pathsToCheck) {
+    visitNotIgnoredFiles(tree, p, (path) => {
+      // Ignore private files starting with "_".
+      if (basename(path).startsWith('_')) return;
+      if (ignorePaths?.some((pattern) => minimatch(path, pattern))) return;
+      if (path.endsWith('.vue')) {
+        // Let's see if the .stories.* file exists
+        const ext = path.slice(path.lastIndexOf('.'));
+        const storyPathJs = `${path.split(ext)[0]}.stories.js`;
+        const storyPathTs = `${path.split(ext)[0]}.stories.ts`;
+
+        if (!tree.exists(storyPathJs) && !tree.exists(storyPathTs)) {
+          componentPaths.push(path);
+        }
       }
-    }
-  });
+    });
+  }
 
   await Promise.all(
     componentPaths.map(async (componentPath) => {

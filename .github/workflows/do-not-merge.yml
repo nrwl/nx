@@ -1,4 +1,4 @@
-name: Unmergable Labels Check
+name: Unmergeable Labels Check
 
 on:
   pull_request:

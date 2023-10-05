@@ -1,9 +1,13 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
   cleanupProject,
+  createFile,
+  exists,
   killProcessAndPorts,
   newProject,
+  readFile,
   runCLI,
+  runCommandAsync,
   runCommandUntil,
   uniq,
   updateJson,
@@ -66,6 +70,18 @@ describe('nx release', () => {
   afterAll(() => cleanupProject());
 
   it('should version and publish multiple related npm packages with zero config', async () => {
+    // Normalize git committer information so it is deterministic in snapshots
+    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(`git config user.name "Test"`);
+    // Create a baseline version tag
+    await runCommandAsync(`git tag v0.0.0`);
+
+    // Add an example feature so that we can generate a CHANGELOG.md for it
+    createFile('an-awesome-new-thing.js', 'console.log("Hello world!");');
+    await runCommandAsync(
+      `git add --all && git commit -m "feat: an awesome new feature"`
+    );
+
     const versionOutput = runCLI(`release version 999.9.9`);
 
     /**
@@ -99,6 +115,42 @@ describe('nx release', () => {
         /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
       ).length
     ).toEqual(1);
+
+    // Generate a changelog for the new version
+    expect(exists('CHANGELOG.md')).toEqual(false);
+
+    const changelogOutput = runCLI(`release changelog 999.9.9`);
+    expect(changelogOutput).toMatchInlineSnapshot(`
+
+      >  NX   Generating a CHANGELOG.md entry for v999.9.9
+
+
+      + ## v999.9.9
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature
+      +
+      + ### ❤️  Thank You
+      +
+      + - Test
+
+
+    `);
+
+    expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
+      ## v999.9.9
+
+
+      ### 🚀 Features
+
+      - an awesome new feature
+
+      ### ❤️  Thank You
+
+      - Test
+    `);
 
     // This is the verdaccio instance that the e2e tests themselves are working from
     const e2eRegistryUrl = execSync('npm config get registry')

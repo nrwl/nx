@@ -7,7 +7,7 @@ import { readJsonFile } from '../fileutils';
 import { PackageJson, readModulePackageJson } from '../package-json';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { getNxRequirePaths } from '../installation-directory';
 
 export function findInstalledPlugins(): PackageJson[] {
@@ -56,9 +56,7 @@ function getDependenciesFromPackageJson(
 }
 
 function getDependenciesFromNxJson(): string[] {
-  const { installation } = readJsonFile<NxJsonConfiguration>(
-    join(workspaceRoot, 'nx.json')
-  );
+  const { installation } = readNxJson();
   if (!installation) {
     return [];
   }

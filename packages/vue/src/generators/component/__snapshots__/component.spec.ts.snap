@@ -11,22 +11,16 @@ defineProps<{}>();
 </script>
 
 <template>
-  <div>
-    <p>Welcome to Hello!</p>
-  </div>
+  <p>Welcome to Hello!</p>
 </template>
 
-<style scoped>
-div {
-  color: pink;
-}
-</style>
+<style scoped></style>
 "
 `;
 
 exports[`component should generate files with jest 2`] = `
 "import { mount } from '@vue/test-utils';
-import Hello from '../hello.vue';
+import Hello from './hello.vue';
 
 describe('Hello', () => {
   it('renders properly', () => {
@@ -43,16 +37,10 @@ defineProps<{}>();
 </script>
 
 <template>
-  <div>
-    <p>Welcome to Hello!</p>
-  </div>
+  <p>Welcome to Hello!</p>
 </template>
 
-<style scoped>
-div {
-  color: pink;
-}
-</style>
+<style scoped></style>
 "
 `;
 
@@ -60,7 +48,7 @@ exports[`component should generate files with vitest 2`] = `
 "import { describe, it, expect } from 'vitest';
 
 import { mount } from '@vue/test-utils';
-import Hello from '../hello.vue';
+import Hello from './hello.vue';
 
 describe('Hello', () => {
   it('renders properly', () => {
