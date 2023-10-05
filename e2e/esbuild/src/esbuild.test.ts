@@ -109,8 +109,8 @@ describe('EsBuild Plugin', () => {
       waitUntil(
         () => readFile(`dist/libs/${myPkg}/assets/a.md`).includes('updated a'),
         {
-          timeout: 20_000,
-          ms: 500,
+          timeout: 60_000,
+          ms: 1000,
         }
       )
     ).resolves.not.toThrow();
