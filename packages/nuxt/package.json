@@ -1,0 +1,37 @@
+{
+  "name": "@nx/nuxt",
+  "version": "0.0.1",
+  "private": true,
+  "description": "The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/nuxt"
+  },
+  "keywords": [
+    "Monorepo",
+    "Nuxt",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {}
+}

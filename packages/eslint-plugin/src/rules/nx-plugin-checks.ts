@@ -55,7 +55,40 @@ export default createESLintRule<Options, MessageIds>({
       description: 'Checks common nx-plugin configuration files for validity',
       recommended: 'error',
     },
-    schema: [],
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          generatorsJson: {
+            type: 'string',
+            description:
+              "The path to the project's generators.json file, relative to the project root",
+          },
+          executorsJson: {
+            type: 'string',
+            description:
+              "The path to the project's executors.json file, relative to the project root",
+          },
+          migrationsJson: {
+            type: 'string',
+            description:
+              "The path to the project's migrations.json file, relative to the project root",
+          },
+          packageJson: {
+            type: 'string',
+            description:
+              "The path to the project's package.json file, relative to the project root",
+          },
+          allowedVersionStrings: {
+            type: 'array',
+            description:
+              'A list of specifiers that are valid for versions within package group. Defaults to ["*", "latest", "next"]',
+            items: { type: 'string' },
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
     type: 'problem',
     messages: {
       invalidSchemaPath: 'Schema path should point to a valid file',

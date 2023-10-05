@@ -811,6 +811,12 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
 
+## Migrating to a Monorepo
+
+When you are ready to add another application to the repo, you'll probably want to move `myngapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
+
+You can also go through the full [Angular monorepo tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+
 ## Next Steps
 
 Congrats, you made it!! You now know how to leverage the Nx standalone applications preset to build modular Angular applications.
