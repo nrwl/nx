@@ -1274,9 +1274,9 @@ describe('lib migrator', () => {
 
       await migrator.migrate();
 
-      const { tasksRunnerOptions } = readNxJson(tree);
+      const { targetDefaults } = readNxJson(tree);
       expect(
-        tasksRunnerOptions.default.options.cacheableOperations
+        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
       ).toStrictEqual([
         'build',
         'lint',
@@ -1304,9 +1304,9 @@ describe('lib migrator', () => {
 
       await migrator.migrate();
 
-      const { tasksRunnerOptions } = readNxJson(tree);
+      const { targetDefaults } = readNxJson(tree);
       expect(
-        tasksRunnerOptions.default.options.cacheableOperations
+        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
       ).toStrictEqual(['build', 'lint', 'test', 'e2e', 'myCustomTest']);
     });
   });

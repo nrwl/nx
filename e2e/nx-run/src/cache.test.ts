@@ -125,13 +125,9 @@ describe('cache', () => {
     const originalNxJson = readFile('nx.json');
     updateFile('nx.json', (c) => {
       const nxJson = JSON.parse(c);
-      nxJson.tasksRunnerOptions = {
-        default: {
-          options: {
-            cacheableOperations: [],
-          },
-        },
-      };
+      for (const key in nxJson.targetDefaults ?? {}) {
+        delete nxJson.targetDefaults[key].cache;
+      }
       return JSON.stringify(nxJson, null, 2);
     });
 
@@ -319,9 +315,9 @@ describe('cache', () => {
     const lib = uniq('lib');
     runCLI(`generate @nx/js:lib ${lib}`);
     updateJson(`nx.json`, (c) => {
-      c.tasksRunnerOptions.default.options.cacheableOperations.push('echo');
       c.targetDefaults = {
         echo: {
+          cache: true,
           inputs: [
             {
               env: 'NAME',

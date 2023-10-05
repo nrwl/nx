@@ -101,6 +101,7 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
   },
   "targetDefaults": {
     "build": {
+      "cache": true,
       "dependsOn": [
         "^build",
       ],
@@ -110,12 +111,14 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
       ],
     },
     "e2e": {
+      "cache": true,
       "inputs": [
         "default",
         "^production",
       ],
     },
     "lint": {
+      "cache": true,
       "inputs": [
         "default",
         "{workspaceRoot}/.eslintrc.json",
@@ -123,24 +126,12 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
       ],
     },
     "test": {
+      "cache": true,
       "inputs": [
         "default",
         "^production",
         "{workspaceRoot}/karma.conf.js",
       ],
-    },
-  },
-  "tasksRunnerOptions": {
-    "default": {
-      "options": {
-        "cacheableOperations": [
-          "build",
-          "test",
-          "lint",
-          "e2e",
-        ],
-      },
-      "runner": "nx/tasks-runners/default",
     },
   },
 }

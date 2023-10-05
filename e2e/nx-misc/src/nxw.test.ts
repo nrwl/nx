@@ -40,7 +40,7 @@ describe('nx wrapper / .nx installation', () => {
     );
 
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.tasksRunnerOptions.default.options.cacheableOperations = ['echo'];
+      json.targetDefaults.echo = { cache: true };
       json.installation.plugins = {
         '@nx/js': getPublishedVersion(),
       };

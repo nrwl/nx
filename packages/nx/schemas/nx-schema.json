@@ -371,6 +371,10 @@
               }
             ]
           }
+        },
+        "cache": {
+          "type": "boolean",
+          "description": "Specifies if the given target should be cacheable"
         }
       },
       "additionalProperties": false

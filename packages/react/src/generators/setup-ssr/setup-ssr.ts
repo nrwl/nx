@@ -183,7 +183,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
   const nxJson = readNxJson(tree);
   if (
     nxJson.tasksRunnerOptions?.default &&
-    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
+    !nxJson.tasksRunnerOptions?.default.options.cacheableOperations.includes(
       'server'
     )
   ) {
@@ -192,6 +192,9 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       'server',
     ];
   }
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['server'] ??= {};
+  nxJson.targetDefaults.server.cache = true;
 
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',

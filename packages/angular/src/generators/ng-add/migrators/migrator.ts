@@ -97,8 +97,7 @@ export abstract class Migrator {
 
     const nxJson = readNxJson(this.tree);
 
-    Object.keys(nxJson.tasksRunnerOptions ?? {}).forEach((taskRunnerName) => {
-      const taskRunner = nxJson.tasksRunnerOptions[taskRunnerName];
+    Object.values(nxJson.tasksRunnerOptions ?? {}).forEach((taskRunner) => {
       taskRunner.options.cacheableOperations = Array.from(
         new Set([
           ...(taskRunner.options.cacheableOperations ?? []),
@@ -106,6 +105,12 @@ export abstract class Migrator {
         ])
       );
     });
+
+    nxJson.targetDefaults ??= {};
+    for (const target of targetNames) {
+      nxJson.targetDefaults[target] ??= {};
+      nxJson.targetDefaults[target].cache ??= true;
+    }
 
     updateNxJson(this.tree, nxJson);
   }

@@ -509,7 +509,10 @@ function getRunnerOptions(
   }
 
   if (defaultCacheableOperations.length) {
-    result.cacheableOperations ??= defaultCacheableOperations;
+    result.cacheableOperations ??= [];
+    result.cacheableOperations = result.cacheableOperations.concat(
+      defaultCacheableOperations
+    );
   }
 
   if (nxJson.useDaemonProcess !== undefined) {

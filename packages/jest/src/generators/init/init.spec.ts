@@ -88,6 +88,7 @@ export default {
     expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');
     expect(productionFileSet).toContain('!{projectRoot}/src/test-setup.[jt]s');
     expect(testDefaults).toEqual({
+      cache: true,
       inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
     });
   });

@@ -14,9 +14,9 @@ export async function connectToNxCloudIfExplicitlyAsked(opts: {
 }): Promise<void> {
   if (opts['cloud'] === true) {
     const nxJson = readNxJson();
-    const runners = Object.values(nxJson.tasksRunnerOptions);
+    const runners = Object.values(nxJson.tasksRunnerOptions ?? {});
     const onlyDefaultRunnerIsUsed =
-      runners.length === 1 && runners[0].runner === 'nx/tasks-runners/default';
+      runners.length <= 1 && runners[0].runner === 'nx/tasks-runners/default';
     if (!onlyDefaultRunnerIsUsed) return;
 
     output.log({
