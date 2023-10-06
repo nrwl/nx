@@ -208,6 +208,12 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   nxCloudAccessToken?: string;
 
   /**
+   * Specifies the url pointing to an instance of nx cloud. Used for remote
+   * caching and displaying run links.
+   */
+  nxCloudUrl?: string;
+
+  /**
    * Specifies how many tasks can be run in parallel.
    */
   parallel?: number;

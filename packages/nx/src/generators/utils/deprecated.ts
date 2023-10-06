@@ -44,6 +44,7 @@ export function updateWorkspaceConfiguration(
     cacheDirectory,
     parallel,
     useDaemonProcess,
+    nxCloudUrl,
   } = workspaceConfig;
 
   const nxJson: Required<NxJsonConfiguration> = {
@@ -66,6 +67,7 @@ export function updateWorkspaceConfiguration(
     cacheDirectory,
     parallel,
     useDaemonProcess,
+    nxCloudUrl,
   };
 
   updateNxJson(tree, nxJson);

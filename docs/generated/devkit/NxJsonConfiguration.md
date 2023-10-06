@@ -29,6 +29,7 @@ Nx.json configuration
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
 - [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope): string
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
+- [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
 - [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): string[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record&lt;string, unknown&gt;
@@ -166,6 +167,15 @@ NPM Scope that the workspace uses
 
 If specified Nx will use nx-cloud by default with the given token.
 To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
+
+---
+
+### nxCloudUrl
+
+• `Optional` **nxCloudUrl**: `string`
+
+Specifies the url pointing to an instance of nx cloud. Used for remote
+caching and displaying run links.
 
 ---
 

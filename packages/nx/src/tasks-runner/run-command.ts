@@ -470,6 +470,10 @@ function getRunnerOptions(
     result.accessToken ??= nxJson.nxCloudAccessToken;
   }
 
+  if (nxJson.nxCloudUrl && isCloudDefault) {
+    result.url ??= nxJson.nxCloudUrl;
+  }
+
   if (nxJson.parallel) {
     result.parallel ??= nxJson.parallel;
   }

@@ -27,6 +27,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
 - [npmScope](../../devkit/documents/Workspace#npmscope): string
 - [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
+- [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
 - [parallel](../../devkit/documents/Workspace#parallel): number
 - [plugins](../../devkit/documents/Workspace#plugins): string[]
 - [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, unknown&gt;
@@ -210,6 +211,19 @@ To use a different runner that accepts an access token, define it in [tasksRunne
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken)
+
+---
+
+### nxCloudUrl
+
+• `Optional` **nxCloudUrl**: `string`
+
+Specifies the url pointing to an instance of nx cloud. Used for remote
+caching and displaying run links.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl)
 
 ---
 
