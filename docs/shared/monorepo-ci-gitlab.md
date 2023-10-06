@@ -76,10 +76,6 @@ image: node:18
   script:
     - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
     - yarn nx-cloud start-agent
-  artifacts:
-    expire_in: 5 days
-    paths:
-      - dist
 
 # Creating template for a job running DTE (orchestrator)
 .base-pipeline:
@@ -97,6 +93,10 @@ image: node:18
     - yarn install --cache-folder .yarn-cache --prefer-offline --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+  artifacts:
+    expire_in: 5 days
+    paths:
+      - dist
 
 # Main job running DTE
 nx-dte:
