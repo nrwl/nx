@@ -21,11 +21,11 @@ export function hashFiles(workspaceRoot: string): Record<string, string>
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 export interface ExternalNodeData {
   version: string
-  hash: string
+  hash?: string
 }
 export interface ExternalNode {
   version: string
-  hash: string
+  hash?: string
 }
 export interface Target {
   executor?: string

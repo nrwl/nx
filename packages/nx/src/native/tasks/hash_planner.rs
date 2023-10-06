@@ -41,7 +41,10 @@ impl HashPlanner {
         task_ids
             .par_iter()
             .map(|id| {
-                let task = &task_graph.tasks[*id];
+                let task = &task_graph
+                    .tasks
+                    .get(*id)
+                    .ok_or_else(|| anyhow::anyhow!("Task with id '{id}' not found"))?;
                 let inputs = get_inputs(task, &self.project_graph, &self.nx_json)?;
 
                 let target = self.target_input(
@@ -230,6 +233,7 @@ impl HashPlanner {
                 } else {
                     // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
                     if let Some(external_deps) = external_deps_mapped.get(dep) {
+                        deps_inputs.push(dep.to_string());
                         deps_inputs.extend(external_deps.iter().map(|s| s.to_string()));
                     }
                 }

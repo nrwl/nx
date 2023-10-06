@@ -4,13 +4,13 @@ use std::collections::HashMap;
 #[napi(object)]
 pub struct ExternalNodeData {
     pub version: String,
-    pub hash: String,
+    pub hash: Option<String>,
 }
 
 #[napi(object)]
 pub struct ExternalNode {
     pub version: String,
-    pub hash: String,
+    pub hash: Option<String>,
 }
 
 #[napi(object)]
