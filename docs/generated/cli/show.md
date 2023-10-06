@@ -41,6 +41,12 @@ Show affected projects in the workspace:
  nx show projects --affected
 ```
 
+Show affected apps in the workspace:
+
+```shell
+ nx show projects --affected --type app
+```
+
 Show affected projects in the workspace, excluding end-to-end projects:
 
 ```shell
@@ -132,6 +138,14 @@ Show help
 Type: `string`
 
 Show only projects that match a given pattern.
+
+##### type
+
+Type: `string`
+
+Choices: [app, lib, e2e]
+
+Select only projects of the given type
 
 ##### uncommitted
 
