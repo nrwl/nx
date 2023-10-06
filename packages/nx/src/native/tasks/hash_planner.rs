@@ -8,8 +8,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 
 use crate::native::tasks::inputs::{
-    expand_named_input, expand_single_project_inputs, get_inputs, get_inputs_for_dependency,
-    get_named_inputs,
+    expand_single_project_inputs, get_inputs, get_inputs_for_dependency, get_named_inputs,
 };
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
@@ -19,7 +18,6 @@ pub struct HashPlanner {
     nx_json: NxJson,
     project_graph: ProjectGraph,
     workspace_root: String,
-    task_inputs: HashMap<&'static str, Vec<String>>,
 }
 
 #[napi]
@@ -30,7 +28,6 @@ impl HashPlanner {
             nx_json,
             project_graph,
             workspace_root,
-            task_inputs: HashMap::new(),
         }
     }
 
@@ -54,16 +51,19 @@ impl HashPlanner {
                     &external_deps_mapped,
                 )?;
 
-                let self_inputs = self.self_and_deps_inputs(
+                let mut self_inputs = self.self_and_deps_inputs(
                     &task.target.project,
                     task,
                     &inputs,
                     &task_graph,
                     &external_deps_mapped,
-                    &mut hashbrown::HashSet::new(),
+                    &mut Box::new(hashbrown::HashSet::new()),
                 )?;
 
-                let mut inputs: Vec<String> = target
+                self_inputs.par_sort();
+                self_inputs.dedup();
+
+                let inputs: Vec<String> = target
                     .unwrap_or(vec![])
                     .into_iter()
                     .chain(self_inputs.into_iter())
@@ -145,7 +145,7 @@ impl HashPlanner {
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&str>>,
-        visited: &mut hashbrown::HashSet<String>,
+        visited: &mut Box<hashbrown::HashSet<String>>,
     ) -> anyhow::Result<Vec<String>> {
         let project_deps = &self.project_graph.dependencies[&task.target.project]
             .iter()
@@ -192,6 +192,7 @@ impl HashPlanner {
             .collect()
     }
 
+    // todo(jcammisuli): parallelize this more. This function takes the longest time to run
     fn gather_dependency_inputs<'a>(
         &'a self,
         task: &Task,
@@ -199,7 +200,7 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         project_deps: &[&'a str],
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&'a str>>,
-        visited: &mut hashbrown::HashSet<String>,
+        visited: &mut Box<hashbrown::HashSet<String>>,
     ) -> anyhow::Result<Vec<String>> {
         let mut deps_inputs: Vec<String> = vec![];
 

@@ -45,10 +45,6 @@ export interface ProjectGraph {
   dependencies: Record<string, Array<string>>
   externalNodes: Record<string, ExternalNode>
 }
-export const enum TaskErrors {
-  InputError = 'InputError',
-  MissingExternalDependency = 'MissingExternalDependency'
-}
 export interface Task {
   id: string
   target: TaskTarget

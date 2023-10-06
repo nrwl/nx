@@ -1,7 +1,6 @@
 use crate::native::project_graph::types::ProjectGraph;
 use hashbrown::HashSet;
 
-// todo(jcammisuli): parallelize this more
 pub(super) fn find_all_project_node_dependencies<'a>(
     parent_node_name: &str,
     project_graph: &'a ProjectGraph,

@@ -45,7 +45,7 @@ pub(super) fn get_dep_output(
                 .collect::<Vec<_>>(),
         );
 
-        if (transitive) {
+        if transitive {
             inputs.extend(get_dep_output(
                 workspace_root,
                 child_task,
@@ -110,16 +110,16 @@ fn get_outputs_for_target_and_configuration(
     combined_options.merge(&task_overrides);
 
     //keep backwards compatibility incase `outputs` doesn't exist
-    if let Some(outputPath) = combined_options.get("outputPath") {
-        if outputPath.is_array() {
-            return Ok(outputPath
+    if let Some(output_path) = combined_options.get("outputPath") {
+        if output_path.is_array() {
+            return Ok(output_path
                 .as_array()
                 .unwrap()
                 .iter()
                 .map(|o| o.as_str().unwrap().to_string())
                 .collect());
-        } else if outputPath.is_string() {
-            return Ok(vec![outputPath.as_str().unwrap().to_string()]);
+        } else if output_path.is_string() {
+            return Ok(vec![output_path.as_str().unwrap().to_string()]);
         }
     }
 
@@ -215,12 +215,12 @@ mod tests {
     use super::*;
     use crate::native::project_graph::types::Target;
     use crate::native::tasks::types::TaskTarget;
-    use std::time::{Duration, Instant};
 
     fn get_node(target: Target) -> Project {
         Project {
             root: "myapp".to_string(),
             named_inputs: None,
+            tags: None,
             targets: [("build".to_string(), target)].into(),
         }
     }
