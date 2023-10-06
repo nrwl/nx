@@ -24,6 +24,15 @@ describe('Nx Running Tests', () => {
   beforeAll(() => (proj = newProject()));
   afterAll(() => cleanupProject());
 
+  // Ensures that nx.json is restored to its original state after each test
+  let existingNxJson;
+  beforeEach(() => {
+    existingNxJson = readJson('nx.json');
+  });
+  afterEach(() => {
+    updateFile('nx.json', JSON.stringify(existingNxJson, null, 2));
+  });
+
   describe('running targets', () => {
     describe('(forwarding params)', () => {
       let proj = uniq('proj');

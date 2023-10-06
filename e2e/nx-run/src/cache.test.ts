@@ -258,6 +258,7 @@ describe('cache', () => {
       c.targetDefaults = {
         test: {
           inputs: ['default', '^prod'],
+          cache: true,
         },
       };
       return c;

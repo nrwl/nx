@@ -500,6 +500,10 @@ function getRunnerOptions(
     result.url ??= nxJson.nxCloudUrl;
   }
 
+  if (nxJson.nxCloudEncryptionKey && isCloudDefault) {
+    result.encryptionKey ??= nxJson.nxCloudEncryptionKey;
+  }
+
   if (nxJson.parallel) {
     result.parallel ??= nxJson.parallel;
   }

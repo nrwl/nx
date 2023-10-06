@@ -29,6 +29,7 @@ Nx.json configuration
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
 - [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope): string
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
+- [nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
 - [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
 - [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): string[]
@@ -167,6 +168,14 @@ NPM Scope that the workspace uses
 
 If specified Nx will use nx-cloud by default with the given token.
 To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
+
+---
+
+### nxCloudEncryptionKey
+
+• `Optional` **nxCloudEncryptionKey**: `string`
+
+Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud.
 
 ---
 

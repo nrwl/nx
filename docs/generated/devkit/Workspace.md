@@ -27,6 +27,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
 - [npmScope](../../devkit/documents/Workspace#npmscope): string
 - [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
+- [nxCloudEncryptionKey](../../devkit/documents/Workspace#nxcloudencryptionkey): string
 - [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
 - [parallel](../../devkit/documents/Workspace#parallel): number
 - [plugins](../../devkit/documents/Workspace#plugins): string[]
@@ -211,6 +212,18 @@ To use a different runner that accepts an access token, define it in [tasksRunne
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken)
+
+---
+
+### nxCloudEncryptionKey
+
+• `Optional` **nxCloudEncryptionKey**: `string`
+
+Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey)
 
 ---
 

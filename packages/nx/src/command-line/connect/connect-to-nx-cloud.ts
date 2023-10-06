@@ -35,7 +35,8 @@ export async function connectToNxCloudIfExplicitlyAsked(opts: {
 export async function connectToNxCloudCommand(
   promptOverride?: string
 ): Promise<boolean> {
-  if (isNxCloudUsed(readNxJson())) {
+  const nxJson = readNxJson();
+  if (isNxCloudUsed(nxJson)) {
     output.log({
       title: '✅ This workspace is already connected to Nx Cloud.',
       bodyLines: [
@@ -43,7 +44,9 @@ export async function connectToNxCloudCommand(
         'Go to https://nx.app to learn more.',
         ' ',
         'If you have not done so already, please claim this workspace:',
-        `${getNxCloudUrl()}/orgs/workspace-setup?accessToken=${getNxCloudToken()}`,
+        `${getNxCloudUrl(
+          nxJson
+        )}/orgs/workspace-setup?accessToken=${getNxCloudToken(nxJson)}`,
       ],
     });
     return false;

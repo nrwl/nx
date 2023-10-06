@@ -214,6 +214,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   nxCloudUrl?: string;
 
   /**
+   * Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud.
+   */
+  nxCloudEncryptionKey?: string;
+
+  /**
    * Specifies how many tasks can be run in parallel.
    */
   parallel?: number;
