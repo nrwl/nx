@@ -16,6 +16,7 @@
 
 - [\_delegate](../../devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host&lt;any&gt;
 - [\_root](../../devkit/documents/ngcli_adapter/NxScopedHost#_root): Path
+- [projectGraph](../../devkit/documents/ngcli_adapter/NxScopedHost#projectgraph): ProjectGraph
 - [root](../../devkit/documents/ngcli_adapter/NxScopedHost#root): string
 
 ### Accessors
@@ -44,13 +45,14 @@
 
 ### constructor
 
-• **new NxScopedHost**(`root`)
+• **new NxScopedHost**(`root`, `projectGraph?`)
 
 #### Parameters
 
-| Name   | Type     |
-| :----- | :------- |
-| `root` | `string` |
+| Name            | Type           |
+| :-------------- | :------------- |
+| `root`          | `string`       |
+| `projectGraph?` | `ProjectGraph` |
 
 #### Overrides
 
@@ -78,9 +80,15 @@ virtualFs.ScopedHost.\_root
 
 ---
 
+### projectGraph
+
+• `Private` `Optional` `Readonly` **projectGraph**: `ProjectGraph`
+
+---
+
 ### root
 
-• `Private` **root**: `string`
+• `Private` `Readonly` **root**: `string`
 
 ## Accessors
 

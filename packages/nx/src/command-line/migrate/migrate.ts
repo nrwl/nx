@@ -59,6 +59,7 @@ import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { createProjectGraphAsync } from '../../project-graph/project-graph';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1404,6 +1405,7 @@ export async function executeMigrations(
         const ngCliAdapter = await getNgCompatLayer();
         const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
           root,
+          await createProjectGraphAsync(),
           m.package,
           m.name,
           isVerbose

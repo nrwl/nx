@@ -408,6 +408,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       require('../../adapter/compat');
       return (await import('../../adapter/ngcli-adapter')).generate(
         workspaceRoot,
+        projectGraph,
         {
           ...opts,
           generatorOptions: combinedOpts,
