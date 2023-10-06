@@ -203,6 +203,7 @@ function parseArgs() {
       type: 'string',
       description:
         'The version to publish. This does not need to be passed and can be inferred.',
+      default: 'minor',
     })
     .option('gitRemote', {
       type: 'string',
