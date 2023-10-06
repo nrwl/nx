@@ -114,16 +114,12 @@ describe('TasksSchedule', () => {
         version: '5',
       };
 
-      const hasher = {
-        hashTask: () => 'hash',
-      } as any;
-
       lifeCycle = {
         startTask: jest.fn(),
         endTask: jest.fn(),
         scheduleTask: jest.fn(),
       };
-      taskSchedule = new TasksSchedule(hasher, projectGraph, taskGraph, {
+      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
         lifeCycle,
       });
     });
@@ -329,16 +325,12 @@ describe('TasksSchedule', () => {
         version: '5',
       };
 
-      const hasher = {
-        hashTask: () => 'hash',
-      } as any;
-
       lifeCycle = {
         startTask: jest.fn(),
         endTask: jest.fn(),
         scheduleTask: jest.fn(),
       };
-      taskSchedule = new TasksSchedule(hasher, projectGraph, taskGraph, {
+      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
         lifeCycle,
       });
     });

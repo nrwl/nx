@@ -15,9 +15,14 @@ export default async function run(
     projectGraph: ProjectGraph;
     taskGraph: TaskGraph;
     projectsConfigurations: ProjectsConfigurations;
+    env: NodeJS.ProcessEnv;
   }
 ): Promise<Hash> {
-  const res = await context.hasher.hashTask(task, context.taskGraph);
+  const res = await context.hasher.hashTask(
+    task,
+    context.taskGraph,
+    context.env
+  );
   if (task.overrides['hasTypeAwareRules'] === true) {
     return res;
   }
