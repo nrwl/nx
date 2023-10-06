@@ -178,7 +178,7 @@ function getPluginPathAndName(
 
   // Register the ts-transpiler if we are pointing to a
   // plain ts file that's not part of a plugin project
-  if (extension === '.ts' && !tsNodeAndPathsUnregisterCallback) {
+  if (extension === '.ts') {
     registerPluginTSTranspiler();
   }
 
@@ -369,7 +369,14 @@ export function resolveLocalNxPlugin(
   return localPluginCache[importPath];
 }
 
-let tsNodeAndPathsUnregisterCallback = undefined;
+interface TsNodeAndPathsUnregisterCallback {
+  cleanupCallback: () => void;
+  referenceCount: number;
+}
+
+let tsNodeAndPathsUnregisterCallback:
+  | TsNodeAndPathsUnregisterCallback
+  | undefined = undefined;
 
 /**
  * Register swc-node or ts-node if they are not currently registered
@@ -396,10 +403,15 @@ export function registerPluginTSTranspiler() {
       emitDecoratorMetadata: true,
       ...tsConfig.options,
     });
-    tsNodeAndPathsUnregisterCallback = () => {
-      unregisterTsConfigPaths();
-      unregisterTranspiler();
+    tsNodeAndPathsUnregisterCallback = {
+      cleanupCallback: () => {
+        unregisterTsConfigPaths();
+        unregisterTranspiler();
+      },
+      referenceCount: 1,
     };
+  } else {
+    tsNodeAndPathsUnregisterCallback.referenceCount++;
   }
 }
 
@@ -408,8 +420,12 @@ export function registerPluginTSTranspiler() {
  */
 export function unregisterPluginTSTranspiler() {
   if (tsNodeAndPathsUnregisterCallback) {
-    tsNodeAndPathsUnregisterCallback();
-    tsNodeAndPathsUnregisterCallback = undefined;
+    tsNodeAndPathsUnregisterCallback.referenceCount--;
+
+    if (tsNodeAndPathsUnregisterCallback.referenceCount <= 0) {
+      tsNodeAndPathsUnregisterCallback.cleanupCallback();
+      tsNodeAndPathsUnregisterCallback = undefined;
+    }
   }
 }
 
@@ -420,9 +436,7 @@ function lookupLocalPlugin(importPath: string, root = workspaceRoot) {
     return null;
   }
 
-  if (!tsNodeAndPathsUnregisterCallback) {
-    registerPluginTSTranspiler();
-  }
+  registerPluginTSTranspiler();
 
   const projectConfig: ProjectConfiguration = projects[plugin];
   return { path: path.join(root, projectConfig.root), projectConfig };
