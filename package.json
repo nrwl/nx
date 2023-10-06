@@ -278,7 +278,6 @@
     "ts-node": "10.9.1",
     "tsconfig-paths": "^4.1.2",
     "tsconfig-paths-webpack-plugin": "4.0.0",
-    "tslint-to-eslint-config": "^2.14.0",
     "typedoc": "0.24.8",
     "typedoc-plugin-markdown": "3.15.3",
     "typescript": "~5.1.3",

@@ -168,15 +168,6 @@
         "path": "/nx-api/angular/generators/component-test",
         "type": "generator"
       },
-      "/nx-api/angular/generators/convert-tslint-to-eslint": {
-        "description": "Converts a project from TSLint to ESLint.",
-        "file": "generated/packages/angular/generators/convert-tslint-to-eslint.json",
-        "hidden": false,
-        "name": "convert-tslint-to-eslint",
-        "originalFilePath": "/packages/angular/src/generators/convert-tslint-to-eslint/schema.json",
-        "path": "/nx-api/angular/generators/convert-tslint-to-eslint",
-        "type": "generator"
-      },
       "/nx-api/angular/generators/directive": {
         "description": "Generate an Angular directive.",
         "file": "generated/packages/angular/generators/directive.json",
@@ -1178,15 +1169,6 @@
         "name": "application",
         "originalFilePath": "/packages/nest/src/generators/application/schema.json",
         "path": "/nx-api/nest/generators/application",
-        "type": "generator"
-      },
-      "/nx-api/nest/generators/convert-tslint-to-eslint": {
-        "description": "Convert a project from TSLint to ESLint.",
-        "file": "generated/packages/nest/generators/convert-tslint-to-eslint.json",
-        "hidden": false,
-        "name": "convert-tslint-to-eslint",
-        "originalFilePath": "/packages/nest/src/generators/convert-tslint-to-eslint/schema.json",
-        "path": "/nx-api/nest/generators/convert-tslint-to-eslint",
         "type": "generator"
       },
       "/nx-api/nest/generators/init": {

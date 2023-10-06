@@ -99,13 +99,13 @@ describe('moveProjectConfiguration', () => {
           },
         },
         lint: {
-          executor: '@angular-devkit/build-angular:tslint',
+          executor: '@nx/linter:eslint',
           options: {
-            tsConfig: [
-              'apps/my-source/tsconfig.app.json',
-              'apps/my-source/tsconfig.spec.json',
+            lintFilePatterns: [
+              '{projectRoot}/**/*.{ts,tsx,js,jsx}',
+              '{projectRoot}/**/*.{html,htm}',
+              '{projectRoot}/project.json',
             ],
-            exclude: ['**/node_modules/**', '!apps/my-source/**/*'],
           },
         },
         test: {
@@ -140,10 +140,13 @@ describe('moveProjectConfiguration', () => {
           },
         },
         lint: {
-          executor: '@angular-devkit/build-angular:tslint',
+          executor: '@nx/linter:eslint',
           options: {
-            tsConfig: ['apps/my-source-e2e/tsconfig.e2e.json'],
-            exclude: ['**/node_modules/**', '!apps/my-source-e2e/**/*'],
+            lintFilePatterns: [
+              '{projectRoot}/**/*.{ts,tsx,js,jsx}',
+              '{projectRoot}/**/*.{html,htm}',
+              '{projectRoot}/project.json',
+            ],
           },
         },
       },
