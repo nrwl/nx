@@ -19,6 +19,7 @@ import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
 import { normalizeOptions } from '../webpack/lib/normalize-options';
 import { WebpackExecutorOptions } from '../webpack/schema';
 import { WebDevServerOptions } from './schema';
+import { join } from 'path';
 
 export async function* devServerExecutor(
   serveOptions: WebDevServerOptions,
@@ -62,9 +63,12 @@ export async function* devServerExecutor(
   let config = getDevServerConfig(context, buildOptions, serveOptions);
 
   if (buildOptions.webpackConfig) {
+    let tsconfigPath = buildOptions.tsConfig.startsWith(context.root)
+      ? buildOptions.tsConfig
+      : join(context.root, buildOptions.tsConfig);
     let customWebpack = resolveCustomWebpackConfig(
       buildOptions.webpackConfig,
-      buildOptions.tsConfig
+      tsconfigPath
     );
 
     if (typeof customWebpack.then === 'function') {
