@@ -1,10 +1,11 @@
-use napi::bindgen_prelude::Either8;
+use napi::bindgen_prelude::Either7;
 use napi::Either;
 
 #[napi(object)]
 pub struct InputsInput {
     pub input: String,
     pub dependencies: Option<bool>,
+    pub projects: Option<Either<String, Vec<String>>>,
 }
 
 #[napi(object)]
@@ -33,13 +34,7 @@ pub struct DepsOutputsInput {
     pub transitive: Option<bool>,
 }
 
-#[napi(object)]
-pub struct ProjectsInput {
-    pub input: String,
-    pub projects: Either<String, Vec<String>>,
-}
-
-pub(crate) type JsInputs = Either8<
+pub(crate) type JsInputs = Either7<
     InputsInput,
     String,
     FileSetInput,
@@ -47,42 +42,46 @@ pub(crate) type JsInputs = Either8<
     EnvironmentInput,
     ExternalDependenciesInput,
     DepsOutputsInput,
-    ProjectsInput,
 >;
 
 impl<'a> From<&'a JsInputs> for Input<'a> {
     fn from(value: &'a JsInputs) -> Self {
         match value {
-            Either8::A(inputs) => Input::Inputs {
-                dependencies: inputs.dependencies.unwrap_or(false),
-                input: &inputs.input,
-            },
-            Either8::B(string) => {
-                if string.starts_with("^") {
+            Either7::A(inputs) => {
+                if let Some(projects) = &inputs.projects {
+                    Input::Projects {
+                        input: &inputs.input,
+                        projects: match &projects {
+                            Either::A(string) => vec![string.as_ref()],
+                            Either::B(vec) => vec.iter().map(|v| v.as_ref()).collect(),
+                        },
+                    }
+                } else {
                     Input::Inputs {
-                        input: &string[1..],
+                        input: &inputs.input,
+                        dependencies: inputs.dependencies.unwrap_or(false),
+                    }
+                }
+            }
+            Either7::B(string) => {
+                if let Some(input) = string.strip_prefix('^') {
+                    Input::Inputs {
+                        input,
                         dependencies: true,
                     }
                 } else {
                     Input::String(string)
                 }
             }
-            Either8::C(file_set) => Input::FileSet(&file_set.fileset),
-            Either8::D(runtime) => Input::Runtime(&runtime.runtime),
-            Either8::E(environment) => Input::Environment(&environment.env),
-            Either8::F(external_dependencies) => {
+            Either7::C(file_set) => Input::FileSet(&file_set.fileset),
+            Either7::D(runtime) => Input::Runtime(&runtime.runtime),
+            Either7::E(environment) => Input::Environment(&environment.env),
+            Either7::F(external_dependencies) => {
                 Input::ExternalDependency(&external_dependencies.external_dependencies)
             }
-            Either8::G(deps_outputs) => Input::DepsOutputs {
+            Either7::G(deps_outputs) => Input::DepsOutputs {
                 transitive: deps_outputs.transitive.unwrap_or(false),
                 dependent_tasks_output_files: &deps_outputs.dependent_tasks_output_files,
-            },
-            Either8::H(projects) => Input::Projects {
-                input: &projects.input,
-                projects: match &projects.projects {
-                    Either::A(string) => vec![string.as_ref()],
-                    Either::B(vec) => vec.iter().map(|v| v.as_ref()).collect(),
-                },
             },
         }
     }

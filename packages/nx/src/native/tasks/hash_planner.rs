@@ -57,7 +57,7 @@ impl HashPlanner {
                     &inputs,
                     &task_graph,
                     &external_deps_mapped,
-                    &mut Box::new(hashbrown::HashSet::new()),
+                    &mut Box::new(hashbrown::HashSet::from([task.target.project.to_string()])),
                 )?;
 
                 self_inputs.par_sort();
@@ -300,7 +300,7 @@ impl HashPlanner {
             let Input::Projects {input, projects} = project else {
                 continue;
             };
-            let projects = find_matching_projects(&projects, &self.project_graph)?;
+            let projects = find_matching_projects(projects, &self.project_graph)?;
             for project in projects {
                 let named_inputs =
                     get_named_inputs(&self.nx_json, &self.project_graph.nodes[project]);

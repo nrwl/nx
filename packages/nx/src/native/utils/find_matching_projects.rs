@@ -139,7 +139,7 @@ fn parse_string_pattern<'a>(
         ProjectPattern {
             exclude: is_exclude,
             pattern_type: prefix.into(),
-            value,
+            value: &value[1..],
         }
     }
 }

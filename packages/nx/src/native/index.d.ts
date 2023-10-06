@@ -68,6 +68,7 @@ export interface FileData {
 export interface InputsInput {
   input: string
   dependencies?: boolean
+  projects?: string | Array<string>
 }
 export interface FileSetInput {
   fileset: string
@@ -84,10 +85,6 @@ export interface ExternalDependenciesInput {
 export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
   transitive?: boolean
-}
-export interface ProjectsInput {
-  input: string
-  projects: string | Array<string>
 }
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
