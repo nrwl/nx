@@ -166,7 +166,9 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
 }
 
 function readCompilerOptions(tsConfigPath): CompilerOptions {
-  if (swcNodeInstalled) {
+  const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
+
+  if (swcNodeInstalled && !preferTsNode) {
     const {
       readDefaultTsConfig,
     }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
