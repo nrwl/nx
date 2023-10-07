@@ -270,30 +270,56 @@ export async function invokeTasksRunner({
       nxArgs,
       taskGraph,
       hasher: {
-        hashTask(task: Task, taskGraph_?: TaskGraph) {
+        hashTask(task: Task, taskGraph_?: TaskGraph, env?: NodeJS.ProcessEnv) {
           if (!taskGraph_) {
             output.warn({
-              title: `TaskGraph is now required as an argument to hashTasks`,
+              title: `TaskGraph is now required as an argument to hashTask`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
+                'This will result in an error in Nx 18',
               ],
             });
             taskGraph_ = taskGraph;
           }
-          return hasher.hashTask(task, taskGraph_);
+          if (!env) {
+            output.warn({
+              title: `The environment variables are now required as an argument to hashTask`,
+              bodyLines: [
+                `Please pass the environment variables used when running the task`,
+                'This will result in an error in Nx 18',
+              ],
+            });
+            env = process.env;
+          }
+          return hasher.hashTask(task, taskGraph_, env);
         },
-        hashTasks(task: Task[], taskGraph_?: TaskGraph) {
+        hashTasks(
+          task: Task[],
+          taskGraph_?: TaskGraph,
+          env?: NodeJS.ProcessEnv
+        ) {
           if (!taskGraph_) {
             output.warn({
               title: `TaskGraph is now required as an argument to hashTasks`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
+                'This will result in an error in Nx 18',
               ],
             });
             taskGraph_ = taskGraph;
+          }
+          if (!env) {
+            output.warn({
+              title: `The environment variables are now required as an argument to hashTasks`,
+              bodyLines: [
+                `Please pass the environment variables used when running the tasks`,
+                'This will result in an error in Nx 18',
+              ],
+            });
+            env = process.env;
           }
 
-          return hasher.hashTasks(task, taskGraph_);
+          return hasher.hashTasks(task, taskGraph_, env);
         },
       },
       daemon: daemonClient,

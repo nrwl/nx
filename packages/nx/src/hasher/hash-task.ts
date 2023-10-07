@@ -45,7 +45,8 @@ export async function hashTask(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  task: Task
+  task: Task,
+  env: NodeJS.ProcessEnv
 ) {
   const customHasher = await getCustomHasher(task, projectGraph);
   const projectsConfigurations =
@@ -58,8 +59,9 @@ export async function hashTask(
         workspaceConfig: projectsConfigurations, // to make the change non-breaking. Remove after v18
         projectsConfigurations,
         nxJsonConfiguration: readNxJson(),
+        env,
       } as any)
-    : hasher.hashTask(task, taskGraph));
+    : hasher.hashTask(task, taskGraph, env));
   task.hash = value;
   task.hashDetails = details;
 }
