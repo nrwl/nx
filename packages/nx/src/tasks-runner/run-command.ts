@@ -270,30 +270,56 @@ export async function invokeTasksRunner({
       nxArgs,
       taskGraph,
       hasher: {
-        hashTask(task: Task, taskGraph_?: TaskGraph) {
+        hashTask(task: Task, taskGraph_?: TaskGraph, env?: NodeJS.ProcessEnv) {
           if (!taskGraph_) {
             output.warn({
-              title: `TaskGraph is now required as an argument to hashTasks`,
+              title: `TaskGraph is now required as an argument to hashTask`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
+                'This will result in an error in Nx 18',
               ],
             });
             taskGraph_ = taskGraph;
           }
-          return hasher.hashTask(task, taskGraph_);
+          if (!env) {
+            output.warn({
+              title: `The environment variables are now required as an argument to hashTask`,
+              bodyLines: [
+                `Please pass the environment variables used when running the task`,
+                'This will result in an error in Nx 18',
+              ],
+            });
+            env = process.env;
+          }
+          return hasher.hashTask(task, taskGraph_, env);
         },
-        hashTasks(task: Task[], taskGraph_?: TaskGraph) {
+        hashTasks(
+          task: Task[],
+          taskGraph_?: TaskGraph,
+          env?: NodeJS.ProcessEnv
+        ) {
           if (!taskGraph_) {
             output.warn({
               title: `TaskGraph is now required as an argument to hashTasks`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
+                'This will result in an error in Nx 18',
               ],
             });
             taskGraph_ = taskGraph;
+          }
+          if (!env) {
+            output.warn({
+              title: `The environment variables are now required as an argument to hashTasks`,
+              bodyLines: [
+                `Please pass the environment variables used when running the tasks`,
+                'This will result in an error in Nx 18',
+              ],
+            });
+            env = process.env;
           }
 
-          return hasher.hashTasks(task, taskGraph_);
+          return hasher.hashTasks(task, taskGraph_, env);
         },
       },
       daemon: daemonClient,
@@ -390,7 +416,7 @@ function shouldUseDynamicLifeCycle(
   if (isCI()) return false;
   if (outputStyle === 'static' || outputStyle === 'stream') return false;
 
-  return !tasks.find((t) => shouldStreamOutput(t, null, options));
+  return !tasks.find((t) => shouldStreamOutput(t, null));
 }
 
 export function getRunner(
@@ -402,35 +428,93 @@ export function getRunner(
 } {
   let runner = nxArgs.runner;
   runner = runner || 'default';
-  if (!nxJson.tasksRunnerOptions) {
-    throw new Error(`Could not find any runner configurations in nx.json`);
-  }
-  if (nxJson.tasksRunnerOptions[runner]) {
-    let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
 
-    let tasksRunner;
-    if (modulePath) {
-      if (isRelativePath(modulePath)) {
-        modulePath = join(workspaceRoot, modulePath);
-      }
-
-      tasksRunner = require(modulePath);
-      // to support both babel and ts formats
-      if (tasksRunner.default) {
-        tasksRunner = tasksRunner.default;
-      }
-    } else {
-      tasksRunner = require('./default-tasks-runner').defaultTasksRunner;
-    }
-
-    return {
-      tasksRunner,
-      runnerOptions: {
-        ...nxJson.tasksRunnerOptions[runner].options,
-        ...nxArgs,
-      },
-    };
-  } else {
+  if (runner !== 'default' && !nxJson.tasksRunnerOptions?.[runner]) {
     throw new Error(`Could not find runner configuration for ${runner}`);
   }
+
+  const modulePath: string = getTasksRunnerPath(runner, nxJson);
+
+  let tasksRunner = require(modulePath);
+  // to support both babel and ts formats
+  if (tasksRunner.default) {
+    tasksRunner = tasksRunner.default;
+  }
+
+  return {
+    tasksRunner,
+    runnerOptions: getRunnerOptions(
+      runner,
+      nxJson,
+      nxArgs,
+      modulePath === 'nx-cloud'
+    ),
+  };
+}
+function getTasksRunnerPath(
+  runner: string,
+  nxJson: NxJsonConfiguration<string[] | '*'>
+) {
+  let modulePath: string = nxJson.tasksRunnerOptions?.[runner]?.runner;
+
+  if (modulePath) {
+    if (isRelativePath(modulePath)) {
+      return join(workspaceRoot, modulePath);
+    }
+    return modulePath;
+  }
+
+  const isCloudRunner =
+    // No tasksRunnerOptions for given --runner
+    nxJson.nxCloudAccessToken ||
+    // No runner prop in tasks runner options, check if access token is set.
+    nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken;
+
+  return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
+}
+
+function getRunnerOptions(
+  runner: string,
+  nxJson: NxJsonConfiguration<string[] | '*'>,
+  nxArgs: NxArgs,
+  isCloudDefault: boolean
+): any {
+  const defaultCacheableOperations = [];
+
+  for (const key in nxJson.targetDefaults) {
+    if (nxJson.targetDefaults[key].cache) {
+      defaultCacheableOperations.push(key);
+    }
+  }
+
+  const result = {
+    ...nxJson.tasksRunnerOptions?.[runner]?.options,
+    ...nxArgs,
+  };
+
+  if (nxJson.nxCloudAccessToken && isCloudDefault) {
+    result.accessToken ??= nxJson.nxCloudAccessToken;
+  }
+
+  if (nxJson.nxCloudUrl && isCloudDefault) {
+    result.url ??= nxJson.nxCloudUrl;
+  }
+
+  if (nxJson.parallel) {
+    result.parallel ??= nxJson.parallel;
+  }
+
+  if (nxJson.cacheDirectory) {
+    result.cacheDirectory ??= nxJson.cacheDirectory;
+  }
+
+  if (defaultCacheableOperations.length) {
+    result.cacheableOperations ??= defaultCacheableOperations;
+  }
+
+  if (nxJson.useDaemonProcess !== undefined) {
+    result.useDaemonProcess ??= nxJson.useDaemonProcess;
+  }
+
+  return result;
 }

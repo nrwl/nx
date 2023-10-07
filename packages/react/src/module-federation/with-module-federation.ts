@@ -19,7 +19,6 @@ export async function withModuleFederation(
 
     if (options.library?.type === 'var') {
       config.output.scriptType = 'text/javascript';
-      config.experiments.outputModule = false;
     }
 
     config.optimization = {
@@ -28,7 +27,7 @@ export async function withModuleFederation(
 
     config.experiments = {
       ...config.experiments,
-      outputModule: true,
+      outputModule: !(options.library?.type === 'var'),
     };
 
     config.plugins.push(

@@ -819,6 +819,12 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
 
+## Migrating to a Monorepo
+
+When you are ready to add another application to the repo, you'll probably want to move `myreactapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
+
+You can also go through the full [React monorepo tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+
 ## Next Steps
 
 Here's some more things you can dive into next:
@@ -833,7 +839,7 @@ Here's some more things you can dive into next:
 
 Also, make sure you
 
-- [Join the Official Nx Discord Server](http://go.nx.dev/community) to ask questions and find out the latest news about Nx.
+- [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
 - [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](https://blog.nrwl.io/)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

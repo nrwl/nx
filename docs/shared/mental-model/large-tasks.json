@@ -8189,24 +8189,6 @@
             "hash": "ce0a0a44c5560369c7eccc27cb3397bec7044b84"
           },
           {
-            "file": "packages/angular/src/generators/convert-tslint-to-eslint/__snapshots__/convert-tslint-to-eslint.spec.ts.snap",
-            "hash": "88a46d8d249b5e8cacbcee62b34eaafa179fe072"
-          },
-          {
-            "file": "packages/angular/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint.spec.ts",
-            "hash": "d9ef5aa20defb703c8cd0d007141e973c15ece74",
-            "deps": ["devkit", "linter"]
-          },
-          {
-            "file": "packages/angular/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint.ts",
-            "hash": "cbbde4fcdf3983aafd4d3ec1a7f50cf4b90e22a2",
-            "deps": ["cypress", "devkit", "linter", "npm:eslint"]
-          },
-          {
-            "file": "packages/angular/src/generators/convert-tslint-to-eslint/schema.json",
-            "hash": "c3b47a2dee7b256b9d74c6ae11a24f7fe31bcf18"
-          },
-          {
             "file": "packages/angular/src/generators/cypress-component-configuration/__snapshots__/cypress-component-configuration.spec.ts.snap",
             "hash": "cde7951d23c9c688fae6926d6c72eaeabb30b0f1"
           },
@@ -10643,24 +10625,6 @@
             "hash": "1e62f9dc2fb140c35dd41cde710ecbe39bedb0ea"
           },
           {
-            "file": "packages/cypress/src/generators/convert-tslint-to-eslint/__snapshots__/convert-tslint-to-eslint.spec.ts.snap",
-            "hash": "9eae619b87c6e22815cde69073bc0bb1471355da"
-          },
-          {
-            "file": "packages/cypress/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint.spec.ts",
-            "hash": "6748869ec5c7c6f4e794d75b43308125c364ca2c",
-            "deps": ["devkit", "linter"]
-          },
-          {
-            "file": "packages/cypress/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint.ts",
-            "hash": "da0dd512554fc7ac8e0119675af3093a1e7db20c",
-            "deps": ["devkit", "linter", "npm:eslint"]
-          },
-          {
-            "file": "packages/cypress/src/generators/convert-tslint-to-eslint/schema.json",
-            "hash": "a17853c7974502253b2d0c70644281b896396924"
-          },
-          {
             "file": "packages/cypress/src/generators/cypress-component-project/__snapshots__/cypress-component-project.spec.ts.snap",
             "hash": "36e5eec5d8f46d596590918a7285b17baaa7491b"
           },
@@ -12904,66 +12868,6 @@
             "file": "packages/linter/src/migrations/update-15-0-0/add-eslint-inputs.ts",
             "hash": "c40a4057d319e764fe1036ee11340ab8dc0913c4",
             "deps": ["devkit", "workspace"]
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/__snapshots__/convert-to-eslint-config.spec.ts.snap",
-            "hash": "a2c28519469336f0570d45d89e19b45bb21a246c"
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/__snapshots__/project-converter.spec.ts.snap",
-            "hash": "2977c64472b0117a1dfe68578a364c1e9dd62c25"
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/convert-nx-enforce-module-boundaries-rule.spec.ts",
-            "hash": "044ca66897f1760b5880dbd919f6cb03eea3997a"
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/convert-nx-enforce-module-boundaries-rule.ts",
-            "hash": "fcc7325c70e5f771bbaf57fd941323cdb500191e",
-            "deps": ["npm:tslint-to-eslint-config"]
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/convert-to-eslint-config.spec.ts",
-            "hash": "673ab6bce04f69e7a83c3e61f396f6737f29a04a",
-            "deps": ["devkit"]
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/convert-to-eslint-config.ts",
-            "hash": "3c72b9cba9d5239bd29d85b3558db71c940fe1fb",
-            "deps": [
-              "devkit",
-              "npm:eslint",
-              "npm:tmp",
-              "npm:tslint-to-eslint-config"
-            ]
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/example-tslint-configs.ts",
-            "hash": "2c4123c381aaa6c18eebb53871e346600247d198"
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/index.ts",
-            "hash": "cc95094649634a3a38643aef1808f95c7b1ec24f"
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/project-converter.spec.ts",
-            "hash": "b38af0e8a1a5c83d1bd4938d132b4d1159796471",
-            "deps": ["devkit"]
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/project-converter.ts",
-            "hash": "fb446fabddcfbc205ffd21b879d465f4b966a235",
-            "deps": ["devkit", "npm:eslint"]
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/utils.spec.ts",
-            "hash": "6b1b4492c31d634d109988e63140add48db58ba0",
-            "deps": ["npm:eslint"]
-          },
-          {
-            "file": "packages/linter/src/utils/convert-tslint-to-eslint/utils.ts",
-            "hash": "cbb058ac8381c33b77e769a258d6bdbdb7142e26",
-            "deps": ["devkit", "npm:eslint", "npm:tslint-to-eslint-config"]
           },
           {
             "file": "packages/linter/src/utils/rules-requiring-type-checking.ts",
@@ -18073,24 +17977,6 @@
           {
             "file": "packages/nest/src/generators/controller/schema.json",
             "hash": "a93969679f0b96aaaf2f59207e2c602bfb8df262"
-          },
-          {
-            "file": "packages/nest/src/generators/convert-tslint-to-eslint/__snapshots__/convert-tslint-to-eslint.spec.ts.snap",
-            "hash": "39896d5381137e79eb91c543f9a68e2458e174b3"
-          },
-          {
-            "file": "packages/nest/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint.spec.ts",
-            "hash": "e3aa199189251121c4ddf3a103f9f75339320279",
-            "deps": ["devkit", "linter"]
-          },
-          {
-            "file": "packages/nest/src/generators/convert-tslint-to-eslint/convert-tslint-to-eslint.ts",
-            "hash": "a1751f46b20f03f5bb0c31c8ca03fcbc4eecfe16",
-            "deps": ["devkit", "linter", "node", "workspace", "npm:eslint"]
-          },
-          {
-            "file": "packages/nest/src/generators/convert-tslint-to-eslint/schema.json",
-            "hash": "b728083f6ebb1ea27b7c055df547bebafcbbd8f9"
           },
           {
             "file": "packages/nest/src/generators/decorator/decorator.spec.ts",
@@ -27184,7 +27070,6 @@
               "npm:ts-node",
               "npm:tsconfig-paths",
               "npm:tsconfig-paths-webpack-plugin",
-              "npm:tslint-to-eslint-config",
               "npm:typedoc",
               "npm:typedoc-plugin-markdown",
               "npm:typescript",

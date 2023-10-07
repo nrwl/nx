@@ -334,6 +334,8 @@ export class ProcessTasks {
       target: qualifiedTarget,
       projectRoot: project.data.root,
       overrides: interpolateOverrides(overrides, project.name, project.data),
+      // TODO(v18): Remove cast here after typing is moved back onto TargetConfiguration
+      cache: (project.data.targets[target] as any).cache,
     };
   }
 

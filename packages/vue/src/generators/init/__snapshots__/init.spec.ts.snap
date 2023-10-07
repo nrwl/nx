@@ -10,6 +10,8 @@ exports[`init should add vue dependencies 1`] = `
   "devDependencies": {
     "@nx/js": "0.0.1",
     "@nx/vue": "0.0.1",
+    "@swc-node/register": "~1.6.7",
+    "@swc/core": "~1.3.85",
     "@vitejs/plugin-vue": "^4.3.1",
     "@vue/test-utils": "^2.4.1",
     "@vue/tsconfig": "^0.4.0",

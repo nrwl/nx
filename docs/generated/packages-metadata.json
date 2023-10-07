@@ -164,15 +164,6 @@
         "type": "generator"
       },
       {
-        "description": "Converts a project from TSLint to ESLint.",
-        "file": "generated/packages/angular/generators/convert-tslint-to-eslint.json",
-        "hidden": false,
-        "name": "convert-tslint-to-eslint",
-        "originalFilePath": "/packages/angular/src/generators/convert-tslint-to-eslint/schema.json",
-        "path": "angular/generators/convert-tslint-to-eslint",
-        "type": "generator"
-      },
-      {
         "description": "Generate an Angular directive.",
         "file": "generated/packages/angular/generators/directive.json",
         "hidden": false,
@@ -1163,15 +1154,6 @@
         "type": "generator"
       },
       {
-        "description": "Convert a project from TSLint to ESLint.",
-        "file": "generated/packages/nest/generators/convert-tslint-to-eslint.json",
-        "hidden": false,
-        "name": "convert-tslint-to-eslint",
-        "originalFilePath": "/packages/nest/src/generators/convert-tslint-to-eslint/schema.json",
-        "path": "nest/generators/convert-tslint-to-eslint",
-        "type": "generator"
-      },
-      {
         "description": "Initialize the `@nrwl/nest` plugin.",
         "file": "generated/packages/nest/generators/init.json",
         "hidden": true,
@@ -2157,6 +2139,15 @@
         "name": "setup-ssr",
         "originalFilePath": "/packages/react/src/generators/setup-ssr/schema.json",
         "path": "react/generators/setup-ssr",
+        "type": "generator"
+      },
+      {
+        "description": "Federate a module.",
+        "file": "generated/packages/react/generators/federate-module.json",
+        "hidden": false,
+        "name": "federate-module",
+        "originalFilePath": "/packages/react/src/generators/federate-module/schema.json",
+        "path": "react/generators/federate-module",
         "type": "generator"
       }
     ],

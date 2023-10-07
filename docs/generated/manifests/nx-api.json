@@ -168,15 +168,6 @@
         "path": "/nx-api/angular/generators/component-test",
         "type": "generator"
       },
-      "/nx-api/angular/generators/convert-tslint-to-eslint": {
-        "description": "Converts a project from TSLint to ESLint.",
-        "file": "generated/packages/angular/generators/convert-tslint-to-eslint.json",
-        "hidden": false,
-        "name": "convert-tslint-to-eslint",
-        "originalFilePath": "/packages/angular/src/generators/convert-tslint-to-eslint/schema.json",
-        "path": "/nx-api/angular/generators/convert-tslint-to-eslint",
-        "type": "generator"
-      },
       "/nx-api/angular/generators/directive": {
         "description": "Generate an Angular directive.",
         "file": "generated/packages/angular/generators/directive.json",
@@ -1180,15 +1171,6 @@
         "path": "/nx-api/nest/generators/application",
         "type": "generator"
       },
-      "/nx-api/nest/generators/convert-tslint-to-eslint": {
-        "description": "Convert a project from TSLint to ESLint.",
-        "file": "generated/packages/nest/generators/convert-tslint-to-eslint.json",
-        "hidden": false,
-        "name": "convert-tslint-to-eslint",
-        "originalFilePath": "/packages/nest/src/generators/convert-tslint-to-eslint/schema.json",
-        "path": "/nx-api/nest/generators/convert-tslint-to-eslint",
-        "type": "generator"
-      },
       "/nx-api/nest/generators/init": {
         "description": "Initialize the `@nrwl/nest` plugin.",
         "file": "generated/packages/nest/generators/init.json",
@@ -2181,6 +2163,15 @@
         "name": "setup-ssr",
         "originalFilePath": "/packages/react/src/generators/setup-ssr/schema.json",
         "path": "/nx-api/react/generators/setup-ssr",
+        "type": "generator"
+      },
+      "/nx-api/react/generators/federate-module": {
+        "description": "Federate a module.",
+        "file": "generated/packages/react/generators/federate-module.json",
+        "hidden": false,
+        "name": "federate-module",
+        "originalFilePath": "/packages/react/src/generators/federate-module/schema.json",
+        "path": "/nx-api/react/generators/federate-module",
         "type": "generator"
       }
     },

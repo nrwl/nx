@@ -3,9 +3,10 @@ import { execSync } from 'child_process';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { output } from '../../utils/output';
 import { runNxSync } from '../../utils/child-process';
+import { readNxJson } from '../../config/nx-json';
 
 export async function viewLogs(): Promise<number> {
-  const cloudUsed = isNxCloudUsed();
+  const cloudUsed = isNxCloudUsed(readNxJson());
   if (cloudUsed) {
     output.error({
       title: 'Your workspace is already connected to Nx Cloud',

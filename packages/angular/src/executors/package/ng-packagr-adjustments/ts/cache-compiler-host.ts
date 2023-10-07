@@ -13,6 +13,7 @@ import { Node } from 'ng-packagr/lib/graph/node';
 import { EntryPointNode, fileUrl } from 'ng-packagr/lib/ng-package/nodes';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
 import { NgPackageConfig } from 'ng-packagr/ng-package.schema';
+import * as assert from 'node:assert';
 import * as path from 'path';
 import { gte } from 'semver';
 import * as ts from 'typescript';
@@ -92,6 +93,29 @@ export function cacheCompilerHost(
       onError?: (message: string) => void,
       sourceFiles?: ReadonlyArray<ts.SourceFile>
     ) => {
+      if (fileName.includes('.ngtypecheck.')) {
+        return;
+      }
+
+      if (!sourceFiles?.length && fileName.endsWith('.tsbuildinfo')) {
+        // Save builder info contents to specified location
+        compilerHost.writeFile.call(
+          this,
+          fileName,
+          data,
+          writeByteOrderMark,
+          onError,
+          sourceFiles
+        );
+
+        return;
+      }
+
+      assert(
+        sourceFiles?.length === 1,
+        'Invalid TypeScript program emit for ' + fileName
+      );
+
       if (fileName.endsWith('.d.ts')) {
         if (fileName === flatModuleFileDtsPath) {
           if (hasIndexEntryFile) {

@@ -971,6 +971,23 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "17.0.0-beta.0": {
+      "version": "17.0.0-beta.0",
+      "packages": {
+        "@types/react": {
+          "version": "18.2.24",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "18.2.9",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-is": {
+          "version": "18.2.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

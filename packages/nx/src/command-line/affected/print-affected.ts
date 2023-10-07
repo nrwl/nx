@@ -15,6 +15,7 @@ import { hashTask } from '../../hasher/hash-task';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { printAffectedDeprecationMessage } from './command-object';
 import { logger, NX_PREFIX } from '../../utils/logger';
+import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
 
 /**
  * @deprecated Use showProjectsHandler, generateGraph, or affected (without the print-affected mode) instead.
@@ -76,7 +77,16 @@ async function createTasks(
   const tasks = Object.values(taskGraph.tasks);
 
   await Promise.all(
-    tasks.map((t) => hashTask(hasher, projectGraph, taskGraph, t))
+    tasks.map((t) =>
+      hashTask(
+        hasher,
+        projectGraph,
+        taskGraph,
+        t,
+        // This loads dotenv files for the task
+        getTaskSpecificEnv(t)
+      )
+    )
   );
 
   return tasks.map((task) => ({

@@ -18,13 +18,18 @@ import { TaskMetadata } from './life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DaemonClient } from '../daemon/client/client';
+import { hashTask } from '../hasher/hash-task';
+import {
+  getEnvVariablesForBatchProcess,
+  getEnvVariablesForTask,
+  getTaskSpecificEnv,
+} from './task-env';
 
 export class TaskOrchestrator {
   private cache = new Cache(this.options);
   private forkedProcessTaskRunner = new ForkedProcessTaskRunner(this.options);
 
   private tasksSchedule = new TasksSchedule(
-    this.hasher,
     this.projectGraph,
     this.taskGraph,
     this.options
@@ -177,7 +182,11 @@ export class TaskOrchestrator {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
-    await this.preRunSteps(tasks, { groupId });
+    const env = getEnvVariablesForBatchProcess(
+      this.options.skipNxCache,
+      this.options.captureStderr
+    );
+    await this.preRunSteps(tasks, { groupId }, env);
 
     let results: {
       task: Task;
@@ -192,10 +201,13 @@ export class TaskOrchestrator {
         results.map(({ task }) => task.id)
       );
 
-      const batchResults = await this.runBatch({
-        executorName: batch.executorName,
-        taskGraph: unrunTaskGraph,
-      });
+      const batchResults = await this.runBatch(
+        {
+          executorName: batch.executorName,
+          taskGraph: unrunTaskGraph,
+        },
+        env
+      );
 
       results.push(...batchResults);
     }
@@ -222,11 +234,12 @@ export class TaskOrchestrator {
     }
   }
 
-  private async runBatch(batch: Batch) {
+  private async runBatch(batch: Batch, env: NodeJS.ProcessEnv) {
     try {
       const results = await this.forkedProcessTaskRunner.forkProcessForBatch(
         batch,
-        this.taskGraph
+        this.taskGraph,
+        env
       );
       const batchResultEntries = Object.entries(results);
       return batchResultEntries.map(([taskId, result]) => ({
@@ -255,9 +268,36 @@ export class TaskOrchestrator {
     task: Task,
     groupId: number
   ) {
-    await this.preRunSteps([task], { groupId });
+    const taskSpecificEnv = getTaskSpecificEnv(task);
+    await this.preRunSteps([task], { groupId }, taskSpecificEnv);
 
-    // hash the task here
+    const pipeOutput = await this.pipeOutputCapture(task);
+    // obtain metadata
+    const temporaryOutputPath = this.cache.temporaryOutputPath(task);
+    const streamOutput = shouldStreamOutput(task, this.initiatingProject);
+
+    const env = pipeOutput
+      ? getEnvVariablesForTask(
+          task,
+          taskSpecificEnv,
+          process.env.FORCE_COLOR === undefined
+            ? 'true'
+            : process.env.FORCE_COLOR,
+          this.options.skipNxCache,
+          this.options.captureStderr,
+          null,
+          null
+        )
+      : getEnvVariablesForTask(
+          task,
+          taskSpecificEnv,
+          undefined,
+          this.options.skipNxCache,
+          this.options.captureStderr,
+          temporaryOutputPath,
+          streamOutput
+        );
+
     let results: {
       task: Task;
       status: TaskStatus;
@@ -267,7 +307,13 @@ export class TaskOrchestrator {
     // the task wasn't cached
     if (results.length === 0) {
       // cache prep
-      const { code, terminalOutput } = await this.runTaskInForkedProcess(task);
+      const { code, terminalOutput } = await this.runTaskInForkedProcess(
+        task,
+        env,
+        pipeOutput,
+        temporaryOutputPath,
+        streamOutput
+      );
 
       results.push({
         task,
@@ -278,18 +324,14 @@ export class TaskOrchestrator {
     await this.postRunSteps([task], results, doNotSkipCache, { groupId });
   }
 
-  private async runTaskInForkedProcess(task: Task) {
+  private async runTaskInForkedProcess(
+    task: Task,
+    env: NodeJS.ProcessEnv,
+    pipeOutput: boolean,
+    temporaryOutputPath: string,
+    streamOutput: boolean
+  ) {
     try {
-      // obtain metadata
-      const temporaryOutputPath = this.cache.temporaryOutputPath(task);
-      const streamOutput = shouldStreamOutput(
-        task,
-        this.initiatingProject,
-        this.options
-      );
-
-      const pipeOutput = await this.pipeOutputCapture(task);
-
       // execution
       const { code, terminalOutput } = pipeOutput
         ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
@@ -298,6 +340,7 @@ export class TaskOrchestrator {
               temporaryOutputPath,
               streamOutput,
               taskGraph: this.taskGraph,
+              env,
             }
           )
         : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
@@ -306,6 +349,7 @@ export class TaskOrchestrator {
               temporaryOutputPath,
               streamOutput,
               taskGraph: this.taskGraph,
+              env,
             }
           );
 
@@ -323,7 +367,23 @@ export class TaskOrchestrator {
   // endregion Single Task
 
   // region Lifecycle
-  private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
+  private async preRunSteps(
+    tasks: Task[],
+    metadata: TaskMetadata,
+    env: NodeJS.ProcessEnv
+  ) {
+    for (const task of tasks) {
+      if (!task.hash) {
+        await hashTask(
+          this.hasher,
+          this.projectGraph,
+          this.taskGraph,
+          task,
+          env
+        );
+      }
+    }
+
     this.options.lifeCycle.startTasks(tasks, metadata);
   }
 

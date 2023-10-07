@@ -1,85 +1,9 @@
-import type { Tree } from '@angular-devkit/schematics';
-import {
-  _test_addWorkspaceFile,
-  WorkspaceFormat,
-} from '@angular-devkit/core/src/workspace/core';
-import type { NxJsonConfiguration } from '@nx/devkit';
+import { _test_addWorkspaceFile } from '@angular-devkit/core/src/workspace/core';
 import { Architect, BuilderContext, Target } from '@angular-devkit/architect';
 import { TestingArchitectHost } from '@angular-devkit/architect/testing';
 import { json, JsonObject } from '@angular-devkit/core';
 import { ScheduleOptions } from '@angular-devkit/architect/src/api';
 import { LoggerApi, LogLevel } from '@angular-devkit/core/src/logger';
-
-/**
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. Use tree.read(filePath, 'utf-8') instead.
- */
-export function getFileContent(tree: Tree, path: string): string {
-  const fileEntry = tree.get(path);
-
-  if (!fileEntry) {
-    throw new Error(`The file (${path}) does not exist.`);
-  }
-
-  return fileEntry.content.toString();
-}
-
-/**
- * @deprecated This will be removed in v17. Prefer writing Nx Generators with @nx/devkit. Tests for Generators can use 'createTreeWithEmptyWorkspace()' from @nx/devkit/testing.
- */
-export function createEmptyWorkspace(tree: Tree): Tree {
-  _test_addWorkspaceFile('workspace.json', WorkspaceFormat.JSON);
-
-  tree.create(
-    '/workspace.json',
-    JSON.stringify({ version: 1, projects: {}, newProjectRoot: '' })
-  );
-  tree.create(
-    '/package.json',
-    JSON.stringify({
-      name: 'test-name',
-      dependencies: {},
-      devDependencies: {},
-    })
-  );
-  tree.create(
-    '/nx.json',
-    JSON.stringify(<NxJsonConfiguration>{
-      npmScope: 'proj',
-      projects: {},
-      affected: {
-        defaultBase: 'main',
-      },
-      tasksRunnerOptions: {
-        default: {
-          runner: 'nx/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-          },
-        },
-      },
-    })
-  );
-  tree.create(
-    '/tsconfig.base.json',
-    JSON.stringify({ compilerOptions: { paths: {} } })
-  );
-  tree.create(
-    '/tslint.json',
-    JSON.stringify({
-      rules: {
-        'nx-enforce-module-boundaries': [
-          true,
-          {
-            npmScope: '<%= npmScope %>',
-            lazyLoad: [],
-            allow: [],
-          },
-        ],
-      },
-    })
-  );
-  return tree;
-}
 
 class NoopLogger implements LoggerApi {
   private _log = '';

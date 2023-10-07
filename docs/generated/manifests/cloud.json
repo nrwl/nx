@@ -14,6 +14,16 @@
         "isExternal": false,
         "path": "/nx-cloud/intro/what-is-nx-cloud",
         "tags": []
+      },
+      {
+        "id": "nx-cloud-workflows",
+        "name": "Nx Cloud Workflows",
+        "description": "",
+        "file": "nx-cloud/intro/nx-cloud-workflows",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/intro/nx-cloud-workflows",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -28,6 +38,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/intro/what-is-nx-cloud",
+    "tags": []
+  },
+  "/nx-cloud/intro/nx-cloud-workflows": {
+    "id": "nx-cloud-workflows",
+    "name": "Nx Cloud Workflows",
+    "description": "",
+    "file": "nx-cloud/intro/nx-cloud-workflows",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/intro/nx-cloud-workflows",
     "tags": []
   },
   "/nx-cloud/set-up": {

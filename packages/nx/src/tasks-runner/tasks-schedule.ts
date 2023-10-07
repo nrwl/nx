@@ -8,7 +8,6 @@ import { DefaultTasksRunnerOptions } from './default-tasks-runner';
 import { TaskHasher } from '../hasher/task-hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { hashTask } from '../hasher/hash-task';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 
@@ -27,7 +26,6 @@ export class TasksSchedule {
   private scheduleRequestsExecutionChain = Promise.resolve();
 
   constructor(
-    private readonly hasher: TaskHasher,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions
@@ -85,10 +83,6 @@ export class TasksSchedule {
 
   private async scheduleTask(taskId: string) {
     const task = this.taskGraph.tasks[taskId];
-
-    if (!task.hash) {
-      await hashTask(this.hasher, this.projectGraph, this.taskGraph, task);
-    }
 
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,

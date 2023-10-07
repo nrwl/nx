@@ -25,7 +25,16 @@ export interface NxAffectedConfig {
   defaultBase?: string;
 }
 
-export type TargetDefaults = Record<string, Partial<TargetConfiguration>>;
+export type TargetDefaults = Record<
+  string,
+  Partial<TargetConfiguration> & {
+    /**
+     * Determines if Nx is able to cache a given target.
+     * Currently only supported in `targetDefaults`.
+     */
+    cache?: boolean;
+  }
+>;
 
 export type TargetDependencies = Record<
   string,
@@ -191,6 +200,33 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * **ALPHA**: Configuration for `nx release` (versioning and publishing of applications and libraries)
    */
   release?: NxReleaseConfiguration;
+
+  /**
+   * If specified Nx will use nx-cloud by default with the given token.
+   * To use a different runner that accepts an access token, define it in {@link tasksRunnerOptions}
+   */
+  nxCloudAccessToken?: string;
+
+  /**
+   * Specifies the url pointing to an instance of nx cloud. Used for remote
+   * caching and displaying run links.
+   */
+  nxCloudUrl?: string;
+
+  /**
+   * Specifies how many tasks can be run in parallel.
+   */
+  parallel?: number;
+
+  /**
+   * Changes the directory used by Nx to store its cache.
+   */
+  cacheDirectory?: string;
+
+  /**
+   * Set this to false to disable the daemon.
+   */
+  useDaemonProcess?: boolean;
 }
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {

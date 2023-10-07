@@ -179,6 +179,34 @@ describe('Run Commands', () => {
         )
       ).toEqual('echo one -a=b');
     });
+
+    it("shouldn't add literal `undefined` if arg is not provided", () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo {args.someValue}',
+          {
+            parsedArgs: {},
+            __unparsed__: [],
+          },
+          false
+        )
+      ).not.toContain('undefined');
+    });
+
+    it('should interpolate provided values', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo {args.someValue}',
+          {
+            parsedArgs: {
+              someValue: '"hello world"',
+            },
+            __unparsed__: [],
+          },
+          false
+        )
+      ).toEqual('echo "hello world"');
+    });
   });
 
   describe('--color', () => {

@@ -17,7 +17,7 @@ import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { fork } from 'child_process';
 import { existsSync } from 'fs';
-import { tsNodeRegister } from '@nx/js/src/utils/typescript/tsnode-register';
+import { registerTsProject } from '@nx/js/src/internal';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string | string[];
@@ -53,13 +53,17 @@ function getModuleFederationConfig(
 
   let moduleFederationConfigPath = moduleFederationConfigPathJS;
 
+  // create a no-op so this can be called with issue
+  let cleanupTranspiler = () => {};
   if (existsSync(moduleFederationConfigPathTS)) {
-    tsNodeRegister(moduleFederationConfigPathTS, tsconfigPath);
+    cleanupTranspiler = registerTsProject(join(workspaceRoot, tsconfigPath));
     moduleFederationConfigPath = moduleFederationConfigPathTS;
   }
 
   try {
     const config = require(moduleFederationConfigPath);
+    cleanupTranspiler();
+
     return config.default || config;
   } catch {
     throw new Error(
