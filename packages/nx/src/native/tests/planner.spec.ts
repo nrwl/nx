@@ -60,21 +60,22 @@ describe('task planner', () => {
     ): Record<string, string[]> {
       return hashPlanner.getPlans(
         tasks.map((task) => task.id),
-        taskGraph
+        transformTaskGraphForRust(taskGraph)
       );
     }
 
     const hashes = await taskHasher.hashTasks(task, taskGraph);
-    const plans = getHashPlans(task, transformTaskGraphForRust(taskGraph));
+    const plans = getHashPlans(task, taskGraph);
 
-    let hashNodes = hashes.map((hash) => {
-      return Object.keys(hash.details.nodes).sort();
-    });
+    // hashNodes here are completed in order because this is run with javascript.
+    // we can then map the task id's by their index number with the hash nodes
+    let hashNodes: Record<string, object> = task.reduce((acc, task, index) => {
+      acc[task.id] = Object.keys(hashes[index].details.nodes).sort();
+      return acc;
+    }, {});
 
-    let planNodes = Object.values(plans).map((plan) => plan.sort());
-
-    for (let i = 0; i < hashNodes.length; i++) {
-      expect(planNodes[i]).toEqual(hashNodes[i]);
+    for (let taskId of task.map((task) => task.id)) {
+      expect(plans[taskId]).toEqual(hashNodes[taskId]);
     }
 
     return plans;
