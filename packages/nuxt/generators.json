@@ -1,5 +1,19 @@
 {
   "name": "Nx Nuxt",
   "version": "0.1",
-  "generators": {}
+  "generators": {
+    "init": {
+      "factory": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nx/nuxt` plugin.",
+      "aliases": ["ng-add"],
+      "hidden": true
+    },
+    "application": {
+      "factory": "./src/generators/application/application",
+      "schema": "./src/generators/application/schema.json",
+      "aliases": ["app"],
+      "description": "Create a Nuxt application."
+    }
+  }
 }
