@@ -121,6 +121,7 @@ export async function initGenerator(
         # Add files here to ignore them from prettier formatting
         /dist
         /coverage
+        /.nx/cache
       `
     );
   }
