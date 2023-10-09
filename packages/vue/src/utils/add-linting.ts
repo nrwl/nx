@@ -90,6 +90,9 @@ function editEslintConfigFiles(
           },
         ];
       }
+      json.rules = {
+        'vue/multi-word-component-names': 'off',
+      };
       return json;
     });
   } else {
@@ -112,6 +115,9 @@ function editEslintConfigFiles(
           },
         ];
       }
+      json.rules = {
+        'vue/multi-word-component-names': 'off',
+      };
       return json;
     });
   }
