@@ -243,10 +243,10 @@ export async function addLint(
   tree: Tree,
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
-  const { lintProjectGenerator, mapLintPattern } = ensurePackage(
-    '@nx/linter',
-    nxVersion
-  );
+  const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+  const { mapLintPattern } =
+    // nx-ignore-next-line
+    require('@nx/linter/src/generators/lint-project/lint-project');
   const projectConfiguration = readProjectConfiguration(tree, options.name);
   const task = lintProjectGenerator(tree, {
     project: options.name,
