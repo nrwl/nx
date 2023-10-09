@@ -1,0 +1,17 @@
+import { nxTsPaths } from '@nx/nuxt';
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  /**
+   * Nuxt recommends setting custom alias from a tsconfig here,
+   * instead of in tsconfig since it will override the auto generated tsconfig.
+   * all aliases added here will be added to the auto generated tsconfig.
+   * Other projects generated with Nx will be added to the root level tsconfig.base.json
+   * which might want to be used in this project.
+   *
+   * https://nuxt.com/docs/guide/directory-structure/tsconfig
+   **/
+  alias: nxTsPaths(),
+  devtools: { enabled: true },
+  css: ['~/assets/css/styles.css'],
+});

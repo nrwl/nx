@@ -160,7 +160,7 @@ export default {
     ],
   },
   testEnvironment: 'jsdom',
-  testMatch: ['**/__tests__/**/*.spec.ts?(x)', '**/__tests__/*.ts?(x)'],
+  testMatch: ['**/*.spec.ts?(x)', '**/__tests__/*.ts?(x)'],
 };
 "
 `;

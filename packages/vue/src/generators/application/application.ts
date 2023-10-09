@@ -61,7 +61,12 @@ export async function applicationGenerator(
   tasks.push(await addVite(tree, options));
 
   if (options.unitTestRunner === 'jest')
-    tasks.push(await addJest(tree, options));
+    tasks.push(
+      await addJest(tree, {
+        name: options.name,
+        projectRoot: options.appProjectRoot,
+      })
+    );
 
   tasks.push(await addE2e(tree, options));
 
