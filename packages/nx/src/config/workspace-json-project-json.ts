@@ -181,4 +181,9 @@ export interface TargetConfiguration<T = any> {
    * A default named configuration to use when a target configuration is not provided.
    */
   defaultConfiguration?: string;
+
+  /**
+   * If true, the target will not show up in Nx Console or `nx show`
+   */
+  hidden?: boolean;
 }

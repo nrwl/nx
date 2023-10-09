@@ -148,6 +148,7 @@ export function readTargetsFromPackageJson({ scripts, nx }: PackageJson) {
       dependsOn: ['^nx-release-publish'],
       executor: '@nx/js:release-publish',
       options: {},
+      hidden: true,
     };
   }
 

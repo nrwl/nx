@@ -80,8 +80,9 @@ export async function showProjectHandler(
   } else {
     const chalk = require('chalk') as typeof import('chalk');
     const logIfExists = (label, key: keyof typeof node['data']) => {
-      if (node.data[key]) {
-        console.log(`${chalk.bold(label)}: ${node.data[key]}`);
+      const value = node.data[key];
+      if (value && (!Array.isArray(value) || value.length)) {
+        console.log(`${chalk.bold(label)}: ${value}`);
       }
     };
 
@@ -100,6 +101,8 @@ export async function showProjectHandler(
     if (targets.length > 0) {
       console.log(`${chalk.bold('Targets')}: `);
       for (const [target, targetConfig] of targets) {
+        if (targetConfig.hidden) continue;
+
         console.log(
           `- ${chalk.bold((target + ':').padEnd(maxTargetNameLength + 2))} ${(
             targetConfig?.executor ?? ''

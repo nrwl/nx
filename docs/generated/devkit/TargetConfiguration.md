@@ -17,6 +17,7 @@ Target's configuration
 - [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration): string
 - [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
 - [executor](../../devkit/documents/TargetConfiguration#executor): string
+- [hidden](../../devkit/documents/TargetConfiguration#hidden): boolean
 - [inputs](../../devkit/documents/TargetConfiguration#inputs): (string | InputDefinition)[]
 - [options](../../devkit/documents/TargetConfiguration#options): T
 - [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
@@ -66,6 +67,14 @@ This describes other targets that a target depends on.
 The executor/builder used to implement the target.
 
 Example: '@nx/rollup:rollup'
+
+---
+
+### hidden
+
+• `Optional` **hidden**: `boolean`
+
+If true, the target will not show up in Nx Console or `nx show`
 
 ---
 
