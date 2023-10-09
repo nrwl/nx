@@ -329,6 +329,7 @@ describe('Dependency checks (eslint)', () => {
       "{
         "name": "@mycompany/liba",
         "dependencies": {
+          "external1": "~16.1.2"
         }
       }"
     `);
