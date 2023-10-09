@@ -9,11 +9,6 @@ What are you going to learn?
 - how to leverage code generators to scaffold components
 - how to modularize your codebase and impose architectural constraints for better maintainability
 
-{% callout type="info" title="Looking for Vue monorepos?" %}
-Note, this tutorial sets up a repo with a single application at the root level that breaks out its code into libraries to add structure. If you are looking for a Vue monorepo setup then check out our [Vue monorepo tutorial](/getting-started/tutorials/vue-monorepo-tutorial).
-
-{% /callout %}
-
 Note, while you could easily use Nx together with your manually set up Vue application, we're going to use the `@nx/vue` plugin for this tutorial which provides some nice enhancements when working with Vue. [Visit our "Why Nx" page](/getting-started/why-nx) to learn more about plugins and what role they play in the Nx architecture.
 
 ## Warm Up
