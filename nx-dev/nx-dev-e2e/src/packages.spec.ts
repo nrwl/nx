@@ -172,13 +172,13 @@ const pages: Array<{ title: string; path: string }> = [
   { title: '@nx/eslint', path: '/packages/eslint' },
   {
     title: '@nx/eslint:workspace-rules-project',
-    path: '/packages/linter/generators/workspace-rules-project',
+    path: '/packages/eslint/generators/workspace-rules-project',
   },
   {
     title: '@nx/eslint',
-    path: '/packages/linter/generators/workspace-rule',
+    path: '/packages/eslint/generators/workspace-rule',
   },
-  { title: '@nx/eslint', path: '/packages/linter/executors/eslint' },
+  { title: '@nx/eslint', path: '/packages/eslint/executors/eslint' },
   { title: '@nx/nest', path: '/packages/nest' },
   {
     title: '@nx/nest:application',

@@ -128,7 +128,7 @@ describe('updateEslint', () => {
             baseDirectory: __dirname,
             recommendedConfig: js.configs.recommended,
           });
-
+        
 
       module.exports = [
       {

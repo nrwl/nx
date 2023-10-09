@@ -66,7 +66,7 @@ describe('@nx/eslint:workspace-rule', () => {
        * following generator command and provide your desired rule name:
        *
        * \`\`\`sh
-       * npx nx g @nx/linter:workspace-rule {{ NEW_RULE_NAME }}
+       * npx nx g @nx/eslint:workspace-rule {{ NEW_RULE_NAME }}
        * \`\`\`
        */
 

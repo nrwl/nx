@@ -153,7 +153,7 @@ describe('Linter', () => {
 
         // Generate a new rule (should also scaffold the required workspace project and tests)
         const newRuleName = 'e2e-test-rule-name';
-        runCLI(`generate @nx/linter:workspace-rule ${newRuleName}`);
+        runCLI(`generate @nx/eslint:workspace-rule ${newRuleName}`);
 
         // Ensure that the unit tests for the new rule are runnable
         const unitTestsOutput = runCLI(`test eslint-rules`);
@@ -563,7 +563,7 @@ describe('Linter', () => {
       );
 
       // migrate to flat structure
-      runCLI(`generate @nx/linter:convert-to-flat-config`);
+      runCLI(`generate @nx/eslint:convert-to-flat-config`);
       checkFilesExist(
         'eslint.config.js',
         `apps/${myapp}/eslint.config.js`,
@@ -596,7 +596,7 @@ describe('Linter', () => {
       runCLI(`generate @nx/js:lib ${mylib}`);
 
       // migrate to flat structure
-      runCLI(`generate @nx/linter:convert-to-flat-config`);
+      runCLI(`generate @nx/eslint:convert-to-flat-config`);
       checkFilesExist(
         'eslint.config.js',
         `${mylib}/eslint.config.js`,

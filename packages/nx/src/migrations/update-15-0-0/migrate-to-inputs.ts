@@ -16,7 +16,7 @@ const skippedFiles = [
   'karma.conf.js', // Will be handled by @nx/angular
   'jest.preset.js', // Will be handled by @nx/jest
   '.storybook', // Will be handled by @nx/storybook
-  // Will be handled by @nx/linter
+  // Will be handled by @nx/eslint
   '.eslintrc.json',
   '.eslintrc.js',
 ];

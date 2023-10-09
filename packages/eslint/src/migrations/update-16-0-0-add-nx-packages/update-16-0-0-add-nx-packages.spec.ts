@@ -24,7 +24,7 @@ describe('update-16-0-0-add-nx-packages', () => {
     ).not.toBeDefined();
   });
 
-  it('should add a dependency on @nx/linter', async () => {
+  it('should add a dependency on @nx/eslint', async () => {
     await replacePackage(tree);
 
     const packageJson = readJson(tree, 'package.json');

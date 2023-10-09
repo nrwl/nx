@@ -29,7 +29,7 @@ export function updateEslintConfig(
     output.warn({
       title: `Could not update the eslint config file.`,
       bodyLines: [
-        'The @nx/linter package could not be loaded. Please update the paths in eslint config manually.',
+        'The @nx/eslint package could not be loaded. Please update the paths in eslint config manually.',
       ],
     });
   }

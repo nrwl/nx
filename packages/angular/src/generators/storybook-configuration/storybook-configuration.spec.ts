@@ -1,7 +1,7 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type { Tree } from '@nx/devkit';
 import { writeJson } from '@nx/devkit';
-import { Linter } from 'packages/linter/src/generators/utils/linter';
+import { Linter } from '@nx/eslint/src/generators/utils/linter';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';

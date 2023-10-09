@@ -10,7 +10,7 @@ import {
 
 import type { Linter as ESLint } from 'eslint';
 import { Linter } from '@nx/eslint';
-import { Schema as EsLintExecutorOptions } from '@nx/eslint/src/executors/eslint/schema';
+import { Schema as EsLintExecutorOptions } from '@nx/eslint/src/executors/lint/schema';
 
 import generator from './generator';
 import pluginGenerator from '../plugin/plugin';
