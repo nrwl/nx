@@ -232,7 +232,7 @@ Nx understands and supports both approaches, allowing you to define targets eith
 
 So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to Vue (e.g., `@nx/vue`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
 
-[visit our "Why Nx" page](/getting-started/why-nx) for more deails.
+[Visit our "Why Nx" page](/getting-started/why-nx) for more details.
 
 ## Creating New Components
 
@@ -521,7 +521,7 @@ import { RouterLink, RouterView } from 'vue-router';
 
 If you now navigate to [http://localhost:4200/products](http://localhost:4200/products) you should see the `Products` component being rendered.
 
-![Browser screenshot of navigating to the products route](/shared/images/tutorial-vue-standalone/app-products-route.png)
+![Browser screenshot of navigating to the products route](/shared/images/tutorial-react-standalone/react-tutorial-products-route.png)
 
 Let's do the same process for our `orders` library. Import the `Orders` component into the `main.ts` routes:
 
