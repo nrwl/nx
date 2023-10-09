@@ -6518,6 +6518,65 @@
         "disableCollapsible": false
       },
       {
+        "id": "eslint",
+        "path": "/nx-api/eslint",
+        "name": "eslint",
+        "children": [
+          {
+            "id": "executors",
+            "path": "/nx-api/eslint/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "lint",
+                "path": "/nx-api/eslint/executors/lint",
+                "name": "lint",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/eslint/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "workspace-rules-project",
+                "path": "/nx-api/eslint/generators/workspace-rules-project",
+                "name": "workspace-rules-project",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "workspace-rule",
+                "path": "/nx-api/eslint/generators/workspace-rule",
+                "name": "workspace-rule",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-flat-config",
+                "path": "/nx-api/eslint/generators/convert-to-flat-config",
+                "name": "convert-to-flat-config",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "eslint-plugin",
         "path": "/nx-api/eslint-plugin",
         "name": "eslint-plugin",
@@ -6962,82 +7021,6 @@
                 "id": "setup-build",
                 "path": "/nx-api/js/generators/setup-build",
                 "name": "setup-build",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          }
-        ],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
-        "id": "linter",
-        "path": "/nx-api/linter",
-        "name": "linter",
-        "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/linter/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/nx-api/linter/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "executors",
-            "path": "/nx-api/linter/executors",
-            "name": "executors",
-            "children": [
-              {
-                "id": "eslint",
-                "path": "/nx-api/linter/executors/eslint",
-                "name": "eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "generators",
-            "path": "/nx-api/linter/generators",
-            "name": "generators",
-            "children": [
-              {
-                "id": "workspace-rules-project",
-                "path": "/nx-api/linter/generators/workspace-rules-project",
-                "name": "workspace-rules-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "workspace-rule",
-                "path": "/nx-api/linter/generators/workspace-rule",
-                "name": "workspace-rule",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "convert-to-flat-config",
-                "path": "/nx-api/linter/generators/convert-to-flat-config",
-                "name": "convert-to-flat-config",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

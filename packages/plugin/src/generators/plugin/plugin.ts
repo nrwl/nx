@@ -12,7 +12,7 @@ import {
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import pluginLintCheckGenerator from '../lint-checks/generator';

@@ -22,7 +22,7 @@ import {
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 import { join } from 'path';
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
@@ -247,7 +247,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+    const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,

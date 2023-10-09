@@ -169,16 +169,16 @@ const pages: Array<{ title: string; path: string }> = [
   },
   { title: '@nx/js:tsc', path: '/packages/js/executors/tsc' },
   { title: '@nx/js:swc', path: '/packages/js/executors/swc' },
-  { title: '@nx/linter', path: '/packages/linter' },
+  { title: '@nx/eslint', path: '/packages/eslint' },
   {
-    title: '@nx/linter:workspace-rules-project',
+    title: '@nx/eslint:workspace-rules-project',
     path: '/packages/linter/generators/workspace-rules-project',
   },
   {
-    title: '@nx/linter',
+    title: '@nx/eslint',
     path: '/packages/linter/generators/workspace-rule',
   },
-  { title: '@nx/linter', path: '/packages/linter/executors/eslint' },
+  { title: '@nx/eslint', path: '/packages/linter/executors/eslint' },
   { title: '@nx/nest', path: '/packages/nest' },
   {
     title: '@nx/nest:application',

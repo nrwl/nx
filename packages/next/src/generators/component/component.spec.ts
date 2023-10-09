@@ -3,7 +3,7 @@ import { componentGenerator } from './component';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree } from '@nx/devkit';
 import { libraryGenerator } from '@nx/react';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('component', () => {
   let tree: Tree;

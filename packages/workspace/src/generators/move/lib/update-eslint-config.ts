@@ -19,7 +19,7 @@ export function updateEslintConfig(
     const {
       updateRelativePathsInConfig,
       // nx-ignore-next-line
-    } = require('@nx/linter/src/generators/utils/eslint-file');
+    } = require('@nx/eslint/src/generators/utils/eslint-file');
     updateRelativePathsInConfig(
       tree,
       project.root,

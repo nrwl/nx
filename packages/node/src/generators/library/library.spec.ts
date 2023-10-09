@@ -29,7 +29,7 @@ describe('lib', () => {
       expect(configuration.root).toEqual('my-lib');
       expect(configuration.targets.build).toBeUndefined();
       expect(configuration.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-lib/**/*.ts'],
@@ -229,7 +229,7 @@ describe('lib', () => {
       const project = readProjectConfiguration(tree, 'my-lib');
       expect(project.root).toEqual('my-dir/my-lib');
       expect(project.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-dir/my-lib/**/*.ts'],

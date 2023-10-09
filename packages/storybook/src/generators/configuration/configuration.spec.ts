@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { libraryGenerator } from '@nx/js';
 import { TsConfig } from '../../utils/utilities';
 import { storybookVersion } from '../../utils/versions';

@@ -243,10 +243,10 @@ export async function addLint(
   tree: Tree,
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
-  const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+  const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
   const { mapLintPattern } =
     // nx-ignore-next-line
-    require('@nx/linter/src/generators/lint-project/lint-project');
+    require('@nx/eslint/src/generators/lint-project/lint-project');
   const projectConfiguration = readProjectConfiguration(tree, options.name);
   const task = lintProjectGenerator(tree, {
     project: options.name,
@@ -272,7 +272,7 @@ export async function addLint(
     isEslintConfigSupported,
     updateOverrideInLintConfig,
     // nx-ignore-next-line
-  } = require('@nx/linter/src/generators/utils/eslint-file');
+  } = require('@nx/eslint/src/generators/utils/eslint-file');
 
   // if config is not supported, we don't need to do anything
   if (!isEslintConfigSupported(tree)) {
@@ -583,7 +583,7 @@ async function normalizeOptions(
     options.bundler = 'none';
   }
 
-  const { Linter } = ensurePackage('@nx/linter', nxVersion);
+  const { Linter } = ensurePackage('@nx/eslint', nxVersion);
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
