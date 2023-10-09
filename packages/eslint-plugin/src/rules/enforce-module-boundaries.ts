@@ -26,7 +26,7 @@ import {
   hasBuildExecutor,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  isAngularSecondaryEntrypoint,
+  isSeparateAngularEntryPoint,
   isDirectDependency,
   matchImportWithWildcard,
   onlyLoadChildren,
@@ -351,16 +351,12 @@ export default createESLintRule<Options, MessageIds>({
       }
 
       // we only allow relative paths within the same project
-      // and if it's not a secondary entrypoint in an angular lib
+      // and if it's not a separate entrypoint in an angular lib
       if (sourceProject === targetProject) {
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !isAngularSecondaryEntrypoint(
-            imp,
-            sourceFilePath,
-            sourceProject.data.root
-          )
+          !isSeparateAngularEntryPoint(imp, sourceFilePath)
         ) {
           context.report({
             node,

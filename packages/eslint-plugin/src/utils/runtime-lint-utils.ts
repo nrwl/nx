@@ -12,7 +12,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getPath, pathExists } from './graph-utils';
-import { readFileIfExisting } from 'nx/src/utils/fileutils';
+import { readFileIfExisting, fileExists } from 'nx/src/utils/fileutils';
 import {
   findProjectForPath,
   ProjectRootMappings,
@@ -463,43 +463,67 @@ export function groupImports(
 }
 
 /**
- * Checks if import points to a secondary entry point in Angular project
- * @param targetProjectLocator
- * @param importExpr
- * @returns
+ * Checks if the given import expression belongs to a separate Angular entry point.
+ *
+ * @param importExpr The import expression to check.
+ * @param filePath The file path of the current file.
+ * @returns `true` if the import points to a separate Angular entry point, otherwise `false`.
  */
-export function isAngularSecondaryEntrypoint(
+export function isSeparateAngularEntryPoint(
   importExpr: string,
-  filePath: string,
-  projectRoot: string
+  filePath: string
 ): boolean {
+  // Resolve the module by import expression using the closest tsconfig.json file.
   const resolvedModule = resolveModuleByImport(
     importExpr,
     filePath,
     join(workspaceRoot, getRootTsConfigFileName())
   );
 
-  return (
-    !!resolvedModule && fileIsSecondaryEntryPoint(resolvedModule, projectRoot)
-  );
+  if (resolvedModule) {
+    // Find the closest ng-package.json file for the resolved module.
+    const destNgPackage = findClosestNgPackage(resolvedModule);
+
+    // Find the closest ng-package.json file for the source file.
+    const sourceNgPackage = findClosestNgPackage(filePath);
+
+    // Check if the destination and source ng-package.json files are different,
+    // indicating that the import belongs to a separate Angular entry point.
+    return (
+      destNgPackage !== null &&
+      sourceNgPackage !== null &&
+      destNgPackage !== sourceNgPackage
+    );
+  }
+
+  // If the module cannot be resolved, it's not a separate Angular entry point.
+  return false;
 }
 
-function fileIsSecondaryEntryPoint(file: string, projectRoot: string): boolean {
-  let parent = joinPathFragments(file, '../');
-  while (parent !== `${projectRoot}/`) {
-    // we need to find closest existing ng-package.json
-    // in order to determine if the file matches the secondary entry point
-    const ngPackageContent = readFileIfExisting(
-      joinPathFragments(workspaceRoot, parent, 'ng-package.json')
-    );
-    if (ngPackageContent) {
-      // https://github.com/ng-packagr/ng-packagr/blob/23c718d04eea85e015b4c261310b7bd0c39e5311/src/ng-package.schema.json#L54
-      const entryFile = parseJson(ngPackageContent)?.lib?.entryFile;
-      return entryFile && file === joinPathFragments(parent, entryFile);
+/**
+ * Finds the closest ng-package.json file location or returns null if not found.
+ *
+ * @param file The current file path to start the search from.
+ * @returns The path to the closest ng-package.json file or null if not found.
+ */
+function findClosestNgPackage(file: string): string | null {
+  let parent = joinPathFragments(workspaceRoot, file, '../');
+
+  // Traverse parent directories looking for ng-package.json file.
+  while (parent !== `${workspaceRoot}/`) {
+    const ngPackagePath = joinPathFragments(parent, 'ng-package.json');
+
+    // Check if ng-package.json file exists in the current directory.
+    if (fileExists(ngPackagePath)) {
+      return ngPackagePath;
     }
+
+    // Move up one directory level.
     parent = joinPathFragments(parent, '../');
   }
-  return false;
+
+  // If no ng-package.json file is found in parent directories, return null.
+  return null;
 }
 
 /**

@@ -14,8 +14,8 @@ import {
   hasBannedDependencies,
   hasBannedImport,
   hasNoneOfTheseTags,
-  isAngularSecondaryEntrypoint,
   isTerminalRun,
+  isSeparateAngularEntryPoint,
 } from './runtime-lint-utils';
 import { vol } from 'memfs';
 
@@ -445,7 +445,7 @@ describe('is terminal run', () => {
   });
 });
 
-describe('isAngularSecondaryEntrypoint', () => {
+describe('isSeparateAngularEntryPoint', () => {
   beforeEach(() => {
     const tsConfig = {
       compilerOptions: {
@@ -468,7 +468,11 @@ describe('isAngularSecondaryEntrypoint', () => {
     const fsJson = {
       'tsconfig.base.json': JSON.stringify(tsConfig),
       'apps/app.ts': '',
+      'libs/standard/src/index.ts': 'const bla = "foo"',
       'libs/standard/package.json': '{ "version": "0.0.0" }',
+      'libs/standard/ng-package.json': JSON.stringify({
+        lib: { entryFile: 'src/index.ts' },
+      }),
       'libs/standard/secondary/ng-package.json': JSON.stringify({
         lib: { entryFile: 'src/index.ts' },
       }),
@@ -477,7 +481,11 @@ describe('isAngularSecondaryEntrypoint', () => {
         lib: { entryFile: 'src/public_api.ts' },
       }),
       'libs/standard/tertiary/src/public_api.ts': 'const bla = "foo"',
+      'libs/features/src/index.ts': 'const bla = "foo"',
       'libs/features/package.json': '{ "version": "0.0.0" }',
+      'libs/features/ng-package.json': JSON.stringify({
+        lib: { entryFile: 'src/index.ts' },
+      }),
       'libs/features/secondary/ng-package.json': JSON.stringify({
         lib: { entryFile: 'random/folder/api.ts' },
       }),
@@ -489,47 +497,47 @@ describe('isAngularSecondaryEntrypoint', () => {
     vol.fromJSON(fsJson, '/root');
   });
 
-  it('should return true for secondary entrypoints', () => {
+  it('should return true for separate entrypoints', () => {
     expect(
-      isAngularSecondaryEntrypoint(
+      isSeparateAngularEntryPoint(
         '@project/standard',
-        'apps/app.ts',
-        'libs/standard'
+        'libs/standard/apps/app.ts'
       )
     ).toBe(false);
     expect(
-      isAngularSecondaryEntrypoint(
+      isSeparateAngularEntryPoint(
         '@project/standard/secondary',
-        'apps/app.ts',
-        'libs/standard'
+        'libs/standard/apps/app.ts'
       )
     ).toBe(true);
     expect(
-      isAngularSecondaryEntrypoint(
+      isSeparateAngularEntryPoint(
+        '@project/standard',
+        'libs/standard/secondary/apps/app.ts'
+      )
+    ).toBe(true);
+    expect(
+      isSeparateAngularEntryPoint(
         '@project/standard/tertiary',
-        'apps/app.ts',
-        'libs/standard'
+        'libs/standard/apps/app.ts'
       )
     ).toBe(true);
     expect(
-      isAngularSecondaryEntrypoint(
+      isSeparateAngularEntryPoint(
         '@project/features',
-        'apps/app.ts',
-        'libs/features'
+        'libs/features/apps/app.ts'
       )
     ).toBe(false);
     expect(
-      isAngularSecondaryEntrypoint(
+      isSeparateAngularEntryPoint(
         '@project/features/secondary',
-        'apps/app.ts',
-        'libs/features'
+        'libs/features/apps/app.ts'
       )
     ).toBe(true);
     expect(
-      isAngularSecondaryEntrypoint(
+      isSeparateAngularEntryPoint(
         '@project/buildable',
-        'apps/app.ts',
-        'libs/buildable'
+        'libs/buildable/apps/app.ts'
       )
     ).toBe(false);
   });
