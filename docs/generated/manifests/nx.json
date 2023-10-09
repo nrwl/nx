@@ -102,6 +102,16 @@
             "tags": []
           },
           {
+            "id": "vue-standalone-tutorial",
+            "name": "Vue Standalone",
+            "description": "",
+            "file": "shared/vue-standalone-tutorial/vue-standalone",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/getting-started/tutorials/vue-standalone-tutorial",
+            "tags": []
+          },
+          {
             "id": "node-server-tutorial",
             "name": "Node Standalone",
             "description": "",
@@ -218,6 +228,16 @@
         "tags": []
       },
       {
+        "id": "vue-standalone-tutorial",
+        "name": "Vue Standalone",
+        "description": "",
+        "file": "shared/vue-standalone-tutorial/vue-standalone",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/getting-started/tutorials/vue-standalone-tutorial",
+        "tags": []
+      },
+      {
         "id": "node-server-tutorial",
         "name": "Node Standalone",
         "description": "",
@@ -290,6 +310,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/getting-started/tutorials/angular-monorepo-tutorial",
+    "tags": []
+  },
+  "/getting-started/tutorials/vue-standalone-tutorial": {
+    "id": "vue-standalone-tutorial",
+    "name": "Vue Standalone",
+    "description": "",
+    "file": "shared/vue-standalone-tutorial/vue-standalone",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/getting-started/tutorials/vue-standalone-tutorial",
     "tags": []
   },
   "/getting-started/tutorials/node-server-tutorial": {

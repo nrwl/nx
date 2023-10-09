@@ -64,6 +64,11 @@
                   "file": "shared/angular-tutorial/angular-monorepo"
                 },
                 {
+                  "name": "Vue Standalone",
+                  "id": "vue-standalone-tutorial",
+                  "file": "shared/vue-standalone-tutorial/vue-standalone"
+                },
+                {
                   "name": "Node Standalone",
                   "id": "node-server-tutorial",
                   "file": "shared/node-server-tutorial/1-code-generation"

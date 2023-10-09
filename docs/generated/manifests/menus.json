@@ -87,6 +87,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Vue Standalone",
+                "path": "/getting-started/tutorials/vue-standalone-tutorial",
+                "id": "vue-standalone-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Node Standalone",
                 "path": "/getting-started/tutorials/node-server-tutorial",
                 "id": "node-server-tutorial",
@@ -179,6 +187,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Vue Standalone",
+            "path": "/getting-started/tutorials/vue-standalone-tutorial",
+            "id": "vue-standalone-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Node Standalone",
             "path": "/getting-started/tutorials/node-server-tutorial",
             "id": "node-server-tutorial",
@@ -233,6 +249,14 @@
         "name": "Angular Monorepo",
         "path": "/getting-started/tutorials/angular-monorepo-tutorial",
         "id": "angular-monorepo-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Vue Standalone",
+        "path": "/getting-started/tutorials/vue-standalone-tutorial",
+        "id": "vue-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
