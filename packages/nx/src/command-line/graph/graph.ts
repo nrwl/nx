@@ -28,6 +28,12 @@ import { Server } from 'net';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
+import { NxJsonConfiguration } from '../../config/nx-json';
+import { HashPlanner } from '../../native';
+import {
+  transformNxJsonForRust,
+  transformProjectGraphForRust,
+} from '../../native/transform-objects';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -43,6 +49,7 @@ export interface ProjectGraphClientResponse {
 
 export interface TaskGraphClientResponse {
   taskGraphs: Record<string, TaskGraph>;
+  plans?: Record<string, string[]>;
   errors: Record<string, string>;
 }
 
@@ -619,11 +626,31 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
     await createProjectGraphAsync({ exitOnError: true })
   );
 
+  const nxJson = readNxJson();
+
   performance.mark('task graph generation:start');
-
-  const taskGraphs = getAllTaskGraphsForWorkspace(graph);
-
+  const taskGraphs = getAllTaskGraphsForWorkspace(nxJson, graph);
   performance.mark('task graph generation:end');
+
+  const planner = new HashPlanner(
+    workspaceRoot,
+    transformNxJsonForRust(nxJson),
+    transformProjectGraphForRust(graph)
+  );
+  performance.mark('task hash plan generation:start');
+  const plans: Record<string, string[]> = {};
+  for (const individualTaskGraph of Object.values(taskGraphs.taskGraphs)) {
+    for (const task of Object.values(individualTaskGraph.tasks)) {
+      if (plans[task.id]) {
+        continue;
+      }
+
+      plans[task.id] = planner.getPlans([task.id], individualTaskGraph)[
+        task.id
+      ];
+    }
+  }
+  performance.mark('task hash plan generation:end');
 
   performance.measure(
     'task graph generation',
@@ -631,15 +658,25 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
     'task graph generation:end'
   );
 
-  return taskGraphs;
+  performance.measure(
+    'task hash plan generation',
+    'task hash plan generation:start',
+    'task hash plan generation:end'
+  );
+
+  return {
+    ...taskGraphs,
+    plans,
+  };
 }
 
-function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
+function getAllTaskGraphsForWorkspace(
+  nxJson: NxJsonConfiguration,
+  projectGraph: ProjectGraph
+): {
   taskGraphs: Record<string, TaskGraph>;
   errors: Record<string, string>;
 } {
-  const nxJson = readNxJson();
-
   const defaultDependencyConfigs = mapTargetDefaultsToDependencies(
     nxJson.targetDefaults
   );
@@ -647,6 +684,7 @@ function getAllTaskGraphsForWorkspace(projectGraph: ProjectGraph): {
   const taskGraphs: Record<string, TaskGraph> = {};
   const taskGraphErrors: Record<string, string> = {};
 
+  // TODO(cammisuli): improve performance here. Cache results or something.
   for (const projectName in projectGraph.nodes) {
     const project = projectGraph.nodes[projectName];
     const targets = Object.keys(project.data.targets);

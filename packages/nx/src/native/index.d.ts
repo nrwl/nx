@@ -7,140 +7,168 @@
  * Expands the given entries into a list of existing directories and files.
  * This is used for copying outputs to and from the cache
  */
-export function expandOutputs(directory: string, entries: Array<string>): Array<string>
+export function expandOutputs(
+  directory: string,
+  entries: Array<string>
+): Array<string>;
 /**
  * Expands the given outputs into a list of existing files.
  * This is used when hashing outputs
  */
-export function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
-export function remove(src: string): void
-export function copy(src: string, dest: string): void
-export function hashArray(input: Array<string>): string
-export function hashFile(file: string): string | null
-export function hashFiles(workspaceRoot: string): Record<string, string>
-export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
+export function getFilesForOutputs(
+  directory: string,
+  entries: Array<string>
+): Array<string>;
+export function remove(src: string): void;
+export function copy(src: string, dest: string): void;
+export function hashArray(input: Array<string>): string;
+export function hashFile(file: string): string | null;
+export function hashFiles(workspaceRoot: string): Record<string, string>;
+export function findImports(
+  projectFileMap: Record<string, Array<string>>
+): Array<ImportResult>;
 export interface ExternalNodeData {
-  version: string
-  hash?: string
+  version: string;
+  hash?: string;
 }
 export interface ExternalNode {
-  version: string
-  hash?: string
+  version: string;
+  hash?: string;
 }
 export interface Target {
-  executor?: string
-  inputs?: Array<JsInputs>
-  outputs?: Array<string>
-  options?: string
-  configurations?: string
+  executor?: string;
+  inputs?: Array<JsInputs>;
+  outputs?: Array<string>;
+  options?: string;
+  configurations?: string;
 }
 export interface Project {
-  root: string
-  namedInputs?: Record<string, Array<JsInputs>>
-  tags?: Array<string>
-  targets: Record<string, Target>
+  root: string;
+  namedInputs?: Record<string, Array<JsInputs>>;
+  tags?: Array<string>;
+  targets: Record<string, Target>;
 }
 export interface ProjectGraph {
-  nodes: Record<string, Project>
-  dependencies: Record<string, Array<string>>
-  externalNodes: Record<string, ExternalNode>
+  nodes: Record<string, Project>;
+  dependencies: Record<string, Array<string>>;
+  externalNodes: Record<string, ExternalNode>;
 }
 export interface Task {
-  id: string
-  target: TaskTarget
-  overrides: string
-  projectRoot?: string
+  id: string;
+  target: TaskTarget;
+  overrides: string;
+  projectRoot?: string;
 }
 export interface TaskTarget {
-  project: string
-  target: string
-  configuration?: string
+  project: string;
+  target: string;
+  configuration?: string;
 }
 export interface TaskGraph {
-  roots: Array<string>
-  tasks: Record<string, Task>
-  dependencies: Record<string, Array<string>>
+  roots: Array<string>;
+  tasks: Record<string, Task>;
+  dependencies: Record<string, Array<string>>;
 }
 export interface FileData {
-  file: string
-  hash: string
+  file: string;
+  hash: string;
 }
 export interface InputsInput {
-  input: string
-  dependencies?: boolean
-  projects?: string | Array<string>
+  input: string;
+  dependencies?: boolean;
+  projects?: string | Array<string>;
 }
 export interface FileSetInput {
-  fileset: string
+  fileset: string;
 }
 export interface RuntimeInput {
-  runtime: string
+  runtime: string;
 }
 export interface EnvironmentInput {
-  env: string
+  env: string;
 }
 export interface ExternalDependenciesInput {
-  externalDependencies: Array<string>
+  externalDependencies: Array<string>;
 }
 export interface DepsOutputsInput {
-  dependentTasksOutputFiles: string
-  transitive?: boolean
+  dependentTasksOutputFiles: string;
+  transitive?: boolean;
 }
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
-  namedInputs?: Record<string, Array<JsInputs>>
-  targetDefaults?: Record<string, Target>
+  namedInputs?: Record<string, Array<JsInputs>>;
+  targetDefaults?: Record<string, Target>;
 }
 export const enum EventType {
   delete = 'delete',
   update = 'update',
-  create = 'create'
+  create = 'create',
 }
 export interface WatchEvent {
-  path: string
-  type: EventType
+  path: string;
+  type: EventType;
 }
 /** Public NAPI error codes that are for Node */
 export const enum WorkspaceErrors {
   ParseError = 'ParseError',
-  Generic = 'Generic'
+  Generic = 'Generic',
 }
 export interface ConfigurationParserResult {
-  projectNodes: Record<string, object>
-  externalNodes: Record<string, object>
+  projectNodes: Record<string, object>;
+  externalNodes: Record<string, object>;
 }
 export interface NxWorkspaceFiles {
-  projectFileMap: Record<string, Array<FileData>>
-  globalFiles: Array<FileData>
-  projectConfigurations: Record<string, object>
-  externalNodes: Record<string, object>
+  projectFileMap: Record<string, Array<FileData>>;
+  globalFiles: Array<FileData>;
+  projectConfigurations: Record<string, object>;
+  externalNodes: Record<string, object>;
 }
 export class ImportResult {
-  file: string
-  sourceProject: string
-  dynamicImportExpressions: Array<string>
-  staticImportExpressions: Array<string>
+  file: string;
+  sourceProject: string;
+  dynamicImportExpressions: Array<string>;
+  staticImportExpressions: Array<string>;
 }
 export class HashPlanner {
-  constructor(workspaceRoot: string, nxJson: NxJson, projectGraph: ProjectGraph)
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, Array<string>>
+  constructor(
+    workspaceRoot: string,
+    nxJson: NxJson,
+    projectGraph: ProjectGraph
+  );
+  getPlans(
+    taskIds: Array<string>,
+    taskGraph: TaskGraph
+  ): Record<string, Array<string>>;
 }
 export class Watcher {
-  origin: string
+  origin: string;
   /**
    * Creates a new Watcher instance.
    * If `useIgnore` is set to false, no ignores will be used, even when `additionalGlobs` is set
    */
-  constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
-  watch(callback: (err: string | null, events: WatchEvent[]) => void): void
-  stop(): Promise<void>
+  constructor(
+    origin: string,
+    additionalGlobs?: Array<string> | undefined | null,
+    useIgnore?: boolean | undefined | null
+  );
+  watch(callback: (err: string | null, events: WatchEvent[]) => void): void;
+  stop(): Promise<void>;
 }
 export class WorkspaceContext {
-  workspaceRoot: string
-  constructor(workspaceRoot: string)
-  getWorkspaceFiles(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): NxWorkspaceFiles
-  glob(globs: Array<string>): Array<string>
-  getProjectConfigurations(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): ConfigurationParserResult
-  incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
-  allFileData(): Array<FileData>
+  workspaceRoot: string;
+  constructor(workspaceRoot: string);
+  getWorkspaceFiles(
+    globs: Array<string>,
+    parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult
+  ): NxWorkspaceFiles;
+  glob(globs: Array<string>): Array<string>;
+  getProjectConfigurations(
+    globs: Array<string>,
+    parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult
+  ): ConfigurationParserResult;
+  incrementalUpdate(
+    updatedFiles: Array<string>,
+    deletedFiles: Array<string>
+  ): Record<string, string>;
+  allFileData(): Array<FileData>;
 }
