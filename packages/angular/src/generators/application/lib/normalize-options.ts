@@ -42,7 +42,7 @@ export async function normalizeOptions(
   // Set defaults and then overwrite with user options
   return {
     style: 'css',
-    routing: false,
+    routing: true,
     inlineStyle: false,
     inlineTemplate: false,
     skipTests: options.unitTestRunner === UnitTestRunner.None,

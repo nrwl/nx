@@ -30,9 +30,16 @@ type SupportedTargets =
   | 'prerender'
   | 'serve'
   | 'server'
-  | 'serveSsr';
+  | 'serveSsr'
+  | 'serve-ssr';
 const supportedTargets: Record<SupportedTargets, Target> = {
-  build: { builders: ['@angular-devkit/build-angular:browser'] },
+  build: {
+    builders: [
+      '@angular-devkit/build-angular:application',
+      '@angular-devkit/build-angular:browser',
+      '@angular-devkit/build-angular:browser-esbuild',
+    ],
+  },
   e2e: {
     acceptMultipleDefinitions: true,
     builders: [
@@ -41,10 +48,20 @@ const supportedTargets: Record<SupportedTargets, Target> = {
     ],
   },
   i18n: { builders: ['@angular-devkit/build-angular:extract-i18n'] },
-  prerender: { builders: ['@nguniversal/builders:prerender'] },
+  prerender: {
+    builders: [
+      '@nguniversal/builders:prerender',
+      '@angular-devkit/build-angular:prerender',
+    ],
+  },
   serve: { builders: ['@angular-devkit/build-angular:dev-server'] },
   server: { builders: ['@angular-devkit/build-angular:server'] },
-  serveSsr: { builders: ['@nguniversal/builders:ssr-dev-server'] },
+  serveSsr: {
+    builders: ['@nguniversal/builders:ssr-dev-server'],
+  },
+  'serve-ssr': {
+    builders: ['@angular-devkit/build-angular:ssr-dev-server'],
+  },
 };
 
 // TODO(leo): this will replace `supportedTargets` once the full refactor is done.
@@ -223,10 +240,21 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
         this.project.newRoot,
         this.targetNames.server ? 'browser' : ''
       );
-    buildOptions.index =
-      buildOptions.index && this.convertAsset(buildOptions.index);
+    if (buildOptions.index) {
+      if (typeof buildOptions.index === 'string') {
+        buildOptions.index = this.convertAsset(buildOptions.index);
+      } else {
+        buildOptions.index.input =
+          buildOptions.index.input &&
+          this.convertAsset(buildOptions.index.input);
+      }
+    }
     buildOptions.main =
       buildOptions.main && this.convertAsset(buildOptions.main);
+    buildOptions.browser =
+      buildOptions.browser && this.convertAsset(buildOptions.browser);
+    buildOptions.server =
+      buildOptions.server && this.convertAsset(buildOptions.server);
     buildOptions.polyfills =
       buildOptions.polyfills &&
       (Array.isArray(buildOptions.polyfills)
@@ -250,6 +278,22 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
         replace: this.convertAsset(replacement.replace),
         with: this.convertAsset(replacement.with),
       }));
+    buildOptions.serviceWorker =
+      buildOptions.serviceWorker &&
+      typeof buildOptions.serviceWorker === 'string' &&
+      this.convertAsset(buildOptions.serviceWorker);
+    buildOptions.ngswConfigPath =
+      buildOptions.ngswConfigPath &&
+      this.convertAsset(buildOptions.ngswConfigPath);
+    if (buildOptions.prerender?.routesFile) {
+      buildOptions.prerender.routesFile = this.convertAsset(
+        buildOptions.prerender.routesFile
+      );
+    }
+    buildOptions.ssr =
+      buildOptions.ssr &&
+      typeof buildOptions.ssr === 'string' &&
+      this.convertAsset(buildOptions.ssr);
   }
 
   private convertServerOptions(serverOptions: any): void {
@@ -383,21 +427,24 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
   private updateServeSsrTargetConfiguration(): void {
     if (
-      !this.targetNames.serveSsr ||
-      this.shouldSkipTargetTypeMigration('serveSsr')
+      (!this.targetNames.serveSsr ||
+        this.shouldSkipTargetTypeMigration('serveSsr')) &&
+      (!this.targetNames['serve-ssr'] ||
+        this.shouldSkipTargetTypeMigration('serve-ssr'))
     ) {
       return;
     }
 
-    const serveSsrTarget =
-      this.projectConfig.targets[this.targetNames.serveSsr];
+    const ssrTarget =
+      this.targetNames.serveSsr ?? this.targetNames['serve-ssr'];
+    const serveSsrTarget = this.projectConfig.targets[ssrTarget];
     if (
       !serveSsrTarget.options &&
       (!serveSsrTarget.configurations ||
         !Object.keys(serveSsrTarget.configurations).length)
     ) {
       this.logger.warn(
-        `The target "${this.targetNames.serveSsr}" is not specifying any options or configurations. Skipping updating the target configuration.`
+        `The target "${ssrTarget}" is not specifying any options or configurations. Skipping updating the target configuration.`
       );
       return;
     }
