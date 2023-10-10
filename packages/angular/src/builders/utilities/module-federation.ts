@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { basename, dirname, join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { logger, ProjectConfiguration } from '@nx/devkit';
 import { registerTsProject } from '@nx/js/src/internal';
@@ -92,10 +92,7 @@ function getModuleFederationConfig(
 
   let cleanupTranspiler = () => {};
   if (existsSync(moduleFederationConfigPathTS)) {
-    cleanupTranspiler = registerTsProject(
-      moduleFederationConfigPathTS,
-      tsconfigPath
-    );
+    cleanupTranspiler = registerTsProject(join(workspaceRoot, tsconfigPath));
     moduleFederationConfigPath = moduleFederationConfigPathTS;
   }
 

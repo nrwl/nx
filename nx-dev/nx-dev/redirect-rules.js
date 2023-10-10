@@ -30,8 +30,6 @@ const schemaUrls = {
   '/web/file-server': '/packages/web/executors/file-server',
   '/web/package': '/packages/web/executors/rollup',
   '/angular/application': '/packages/angular/generators/application',
-  '/angular/convert-tslint-to-eslint':
-    '/packages/angular/generators/convert-tslint-to-eslint',
   '/angular/downgrade-module': '/packages/angular/generators/downgrade-module',
   '/angular/karma': '/packages/angular/generators/karma',
   '/angular/karma-project': '/packages/angular/generators/karma-project',
@@ -115,8 +113,6 @@ const schemaUrls = {
   '/nest/resolver': '/packages/nest/generators/resolver',
   '/nest/resource': '/packages/nest/generators/resource',
   '/nest/service': '/packages/nest/generators/service',
-  '/nest/convert-tslint-to-eslint':
-    '/packages/nest/generators/convert-tslint-to-eslint',
   '/next/application': '/packages/next/generators/application',
   '/next/component': '/packages/next/generators/component',
   '/next/page': '/packages/next/generators/page',

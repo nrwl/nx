@@ -35,7 +35,7 @@ export async function connectToNxCloudIfExplicitlyAsked(opts: {
 export async function connectToNxCloudCommand(
   promptOverride?: string
 ): Promise<boolean> {
-  if (isNxCloudUsed()) {
+  if (isNxCloudUsed(readNxJson())) {
     output.log({
       title: '✅ This workspace is already connected to Nx Cloud.',
       bodyLines: [

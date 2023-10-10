@@ -19,6 +19,7 @@ Nx.json configuration
 ### Properties
 
 - [affected](../../devkit/documents/NxJsonConfiguration#affected): NxAffectedConfig
+- [cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory): string
 - [cli](../../devkit/documents/NxJsonConfiguration#cli): Object
 - [defaultProject](../../devkit/documents/NxJsonConfiguration#defaultproject): string
 - [extends](../../devkit/documents/NxJsonConfiguration#extends): string
@@ -27,11 +28,15 @@ Nx.json configuration
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
 - [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope): string
+- [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
+- [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
+- [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
 - [plugins](../../devkit/documents/NxJsonConfiguration#plugins): string[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record&lt;string, unknown&gt;
 - [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions): Object
+- [useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess): boolean
 - [workspaceLayout](../../devkit/documents/NxJsonConfiguration#workspacelayout): Object
 
 ## Properties
@@ -41,6 +46,14 @@ Nx.json configuration
 • `Optional` **affected**: [`NxAffectedConfig`](../../devkit/documents/NxAffectedConfig)
 
 Default options for `nx affected`
+
+---
+
+### cacheDirectory
+
+• `Optional` **cacheDirectory**: `string`
+
+Changes the directory used by Nx to store its cache.
 
 ---
 
@@ -148,6 +161,32 @@ NPM Scope that the workspace uses
 
 ---
 
+### nxCloudAccessToken
+
+• `Optional` **nxCloudAccessToken**: `string`
+
+If specified Nx will use nx-cloud by default with the given token.
+To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
+
+---
+
+### nxCloudUrl
+
+• `Optional` **nxCloudUrl**: `string`
+
+Specifies the url pointing to an instance of nx cloud. Used for remote
+caching and displaying run links.
+
+---
+
+### parallel
+
+• `Optional` **parallel**: `number`
+
+Specifies how many tasks can be run in parallel.
+
+---
+
 ### plugins
 
 • `Optional` **plugins**: `string`[]
@@ -174,7 +213,7 @@ Configuration for Nx Plugins
 
 ### targetDefaults
 
-• `Optional` **targetDefaults**: `TargetDefaults`
+• `Optional` **targetDefaults**: [`TargetDefaults`](../../devkit/documents/TargetDefaults)
 
 Dependencies between different target names across all projects
 
@@ -189,6 +228,14 @@ Available Task Runners
 #### Index signature
 
 ▪ [tasksRunnerName: `string`]: { `options?`: `any` ; `runner`: `string` }
+
+---
+
+### useDaemonProcess
+
+• `Optional` **useDaemonProcess**: `boolean`
+
+Set this to false to disable the daemon.
 
 ---
 

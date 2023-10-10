@@ -22,7 +22,6 @@
         "component-cypress-spec",
         "component-story",
         "component-test",
-        "convert-tslint-to-eslint",
         "downgrade-module",
         "init",
         "karma",
@@ -186,7 +185,6 @@
       "executors": [],
       "generators": [
         "application",
-        "convert-tslint-to-eslint",
         "init",
         "library",
         "class",

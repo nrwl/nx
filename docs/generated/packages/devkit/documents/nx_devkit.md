@@ -83,6 +83,7 @@ It only uses language primitives and immutable objects
 - [RawProjectGraphDependency](../../devkit/documents/RawProjectGraphDependency)
 - [StaticDependency](../../devkit/documents/StaticDependency)
 - [StringChange](../../devkit/documents/StringChange)
+- [TargetDefaults](../../devkit/documents/TargetDefaults)
 - [TaskGraphExecutor](../../devkit/documents/TaskGraphExecutor)
 - [WorkspaceConfiguration](../../devkit/documents/WorkspaceConfiguration)
 - [WorkspaceJsonConfiguration](../../devkit/documents/WorkspaceJsonConfiguration)

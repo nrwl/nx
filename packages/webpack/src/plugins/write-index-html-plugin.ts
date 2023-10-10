@@ -78,7 +78,6 @@ export class WriteIndexHtmlPlugin {
       for (const file of chunk.files) {
         files.push({
           // The id is guaranteed to exist at this point in the compilation process
-          // tslint:disable-next-line: no-non-null-assertion
           id: chunk.id.toString(),
           name: chunk.name,
           file,

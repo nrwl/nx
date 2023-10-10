@@ -328,11 +328,7 @@ export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
 
 export function shouldStreamOutput(
   task: Task,
-  initiatingProject: string | null,
-  options: {
-    cacheableOperations?: string[] | null;
-    cacheableTargets?: string[] | null;
-  }
+  initiatingProject: string | null
 ): boolean {
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
   if (longRunningTask(task)) return true;
@@ -347,6 +343,14 @@ export function isCacheableTask(
     cacheableTargets?: string[] | null;
   }
 ): boolean {
+  if (
+    task.cache !== undefined &&
+    process.env.NX_ALLOW_PROJECT_LEVEL_CACHE === 'true' &&
+    !longRunningTask(task)
+  ) {
+    return task.cache;
+  }
+
   const cacheable = options.cacheableOperations || options.cacheableTargets;
   return (
     cacheable &&

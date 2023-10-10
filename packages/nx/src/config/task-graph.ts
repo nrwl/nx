@@ -66,6 +66,11 @@ export interface Task {
    * Unix timestamp of when a Batch Task ends
    **/
   endTime?: number;
+
+  /**
+   * Determines if a given task should be cacheable.
+   */
+  cache?: boolean;
 }
 
 /**

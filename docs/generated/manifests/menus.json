@@ -5446,6 +5446,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Nx Cloud Workflows",
+            "path": "/nx-cloud/intro/nx-cloud-workflows",
+            "id": "nx-cloud-workflows",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5454,6 +5462,14 @@
         "name": "What is Nx Cloud?",
         "path": "/nx-cloud/intro/what-is-nx-cloud",
         "id": "what-is-nx-cloud",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud Workflows",
+        "path": "/nx-cloud/intro/nx-cloud-workflows",
+        "id": "nx-cloud-workflows",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6027,14 +6043,6 @@
                 "id": "component-test",
                 "path": "/nx-api/angular/generators/component-test",
                 "name": "component-test",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "convert-tslint-to-eslint",
-                "path": "/nx-api/angular/generators/convert-tslint-to-eslint",
-                "name": "convert-tslint-to-eslint",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -7102,14 +7110,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "convert-tslint-to-eslint",
-                "path": "/nx-api/nest/generators/convert-tslint-to-eslint",
-                "name": "convert-tslint-to-eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "init",
                 "path": "/nx-api/nest/generators/init",
                 "name": "init",
@@ -8055,6 +8055,14 @@
                 "id": "setup-ssr",
                 "path": "/nx-api/react/generators/setup-ssr",
                 "name": "setup-ssr",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "federate-module",
+                "path": "/nx-api/react/generators/federate-module",
+                "name": "federate-module",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

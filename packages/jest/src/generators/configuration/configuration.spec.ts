@@ -31,10 +31,8 @@ describe('jestProject', () => {
       sourceRoot: 'libs/lib1/src',
       targets: {
         lint: {
-          executor: '@angular-devkit/build-angular:tslint',
-          options: {
-            tsConfig: [],
-          },
+          executor: '@nx/linter:eslint',
+          options: {},
         },
       },
     });
@@ -95,9 +93,6 @@ describe('jestProject', () => {
         },
       },
     });
-    expect(lib1.targets.lint.options.tsConfig).toContain(
-      'libs/lib1/tsconfig.spec.json'
-    );
   });
 
   it('should create a jest.config.ts', async () => {

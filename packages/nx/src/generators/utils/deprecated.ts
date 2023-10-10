@@ -40,6 +40,11 @@ export function updateWorkspaceConfiguration(
     extends: ext,
     installation,
     release,
+    nxCloudAccessToken,
+    cacheDirectory,
+    parallel,
+    useDaemonProcess,
+    nxCloudUrl,
   } = workspaceConfig;
 
   const nxJson: Required<NxJsonConfiguration> = {
@@ -58,6 +63,11 @@ export function updateWorkspaceConfiguration(
     extends: ext,
     installation,
     release,
+    nxCloudAccessToken,
+    cacheDirectory,
+    parallel,
+    useDaemonProcess,
+    nxCloudUrl,
   };
 
   updateNxJson(tree, nxJson);

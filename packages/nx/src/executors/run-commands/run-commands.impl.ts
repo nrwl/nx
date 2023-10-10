@@ -291,12 +291,14 @@ function processEnv(color: boolean, cwd: string) {
 
 export function interpolateArgsIntoCommand(
   command: string,
-  opts: NormalizedRunCommandsOptions,
+  opts: Pick<NormalizedRunCommandsOptions, 'parsedArgs' | '__unparsed__'>,
   forwardAllArgs: boolean
 ) {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
-    return command.replace(regex, (_, group: string) => opts.parsedArgs[group]);
+    return command.replace(regex, (_, group: string) =>
+      opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
+    );
   } else if (forwardAllArgs) {
     return `${command}${
       opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''

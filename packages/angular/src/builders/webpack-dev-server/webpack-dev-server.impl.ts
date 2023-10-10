@@ -19,6 +19,7 @@ import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { getRootTsConfigPath } from '@nx/js';
+import { join } from 'path';
 
 type BuildTargetOptions = {
   tsConfig: string;

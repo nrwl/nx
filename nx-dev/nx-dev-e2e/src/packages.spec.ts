@@ -23,10 +23,6 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/angular:component-story',
     path: '/packages/angular/generators/component-story',
   },
-  {
-    title: '@nx/angular:convert-tslint-to-eslint',
-    path: '/packages/angular/generators/convert-tslint-to-eslint',
-  },
   { title: '@nx/angular:init', path: '/packages/angular/generators/init' },
   {
     title: '@nx/angular:library',
@@ -187,10 +183,6 @@ const pages: Array<{ title: string; path: string }> = [
   {
     title: '@nx/nest:application',
     path: '/packages/nest/generators/application',
-  },
-  {
-    title: '@nx/nest:convert-tslint-to-eslint',
-    path: '/packages/nest/generators/convert-tslint-to-eslint',
   },
   { title: '@nx/nest:init', path: '/packages/nest/generators/init' },
   { title: '@nx/nest:library', path: '/packages/nest/generators/library' },

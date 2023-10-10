@@ -1,7 +1,8 @@
-import { stripIndents } from '@nx/devkit';
+import { Tree, stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  killPorts,
   killProcessAndPorts,
   newProject,
   readJson,
@@ -14,11 +15,16 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
+import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 
 describe('React Module Federation', () => {
   let proj: string;
+  let tree: Tree;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => {
+    tree = createTreeWithEmptyWorkspace();
+    proj = newProject();
+  });
 
   afterAll(() => cleanupProject());
 
@@ -39,10 +45,10 @@ describe('React Module Federation', () => {
       `generate @nx/react:remote ${remote3} --style=css --host=${shell} --no-interactive`
     );
 
-    checkFilesExist(`apps/${shell}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote1}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote2}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote3}/module-federation.config.ts`);
+    checkFilesExist(`apps/${shell}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote1}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote2}/module-federation.config.js`);
+    checkFilesExist(`apps/${remote3}/module-federation.config.js`);
 
     await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
       combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
@@ -54,15 +60,15 @@ describe('React Module Federation', () => {
     expect(readPort(remote3)).toEqual(4203);
 
     updateFile(
-      `apps/${shell}/webpack.config.ts`,
+      `apps/${shell}/webpack.config.js`,
       stripIndents`
-        import { composePlugins, withNx, ModuleFederationConfig } from '@nx/webpack';
-        import { withReact } from '@nx/react';
-        import { withModuleFederation } from '@nx/react/module-federation');
+        const { composePlugins, withNx, ModuleFederationConfig } = require('@nx/webpack');
+        const { withReact } = require('@nx/react');
+        const { withModuleFederation } = require('@nx/react/module-federation');
         
         const baseConfig = require('./module-federation.config');
         
-        const config: ModuleFederationConfig = {
+        const config = {
           ...baseConfig,
               remotes: [
                 '${remote1}',
@@ -106,20 +112,15 @@ describe('React Module Federation', () => {
         });
       `
     );
-    // TODO(caleb): cypress isn't able to find the element and then throws error with an address already in use error.
-    // https://staging.nx.app/runs/ASAokpXhnE/task/e2e-react:e2e
-    // if (runCypressTests()) {
-    //   const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
-    //   expect(e2eResults).toContain('All specs passed!');
-    //   expect(
-    //     await killPorts([
-    //       readPort(shell),
-    //       readPort(remote1),
-    //       readPort(remote2),
-    //       readPort(remote3),
-    //     ])
-    //   ).toBeTruthy();
-    // }
+
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${shell}-e2e --no-watch --verbose`);
+      expect(e2eResults).toContain('All specs passed!');
+      await killPorts(readPort(shell));
+      await killPorts(readPort(remote1));
+      await killPorts(readPort(remote2));
+      await killPorts(readPort(remote3));
+    }
   }, 500_000);
 
   it('should should support generating host and remote apps with the new name and root format', async () => {
@@ -136,8 +137,8 @@ describe('React Module Federation', () => {
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
-    checkFilesExist(`${shell}/module-federation.config.ts`);
-    checkFilesExist(`${remote}/module-federation.config.ts`);
+    checkFilesExist(`${shell}/module-federation.config.js`);
+    checkFilesExist(`${remote}/module-federation.config.js`);
 
     // check default generated host is built successfully
     const buildOutput = runCLI(`run ${shell}:build:development`);
@@ -304,31 +305,31 @@ describe('React Module Federation', () => {
 
     // update host and remote to use library type var
     updateFile(
-      `${shell}/module-federation.config.ts`,
+      `${shell}/module-federation.config.js`,
       stripIndents`
-      import { ModuleFederationConfig } from '@nx/webpack';
+      const { ModuleFederationConfig } = require('@nx/webpack');
 
-      const config: ModuleFederationConfig = {
+      const config = {
         name: '${shell}',
         library: { type: 'var', name: '${shell}' },
         remotes: ['${remote}'],
       };
 
-      export default config;
+      module.exports = config;
       `
     );
 
     updateFile(
-      `${shell}/webpack.config.prod.ts`,
-      `export { default } from './webpack.config';`
+      `${shell}/webpack.config.prod.js`,
+      `module.exports = require('./webpack.config');`
     );
 
     updateFile(
-      `${remote}/module-federation.config.ts`,
+      `${remote}/module-federation.config.js`,
       stripIndents`
-      import { ModuleFederationConfig } from '@nx/webpack';
+      const { ModuleFederationConfig } = require('@nx/webpack');
 
-      const config: ModuleFederationConfig = {
+      const config = {
         name: '${remote}',
         library: { type: 'var', name: '${remote}' },
         exposes: {
@@ -336,13 +337,13 @@ describe('React Module Federation', () => {
         },
       };
 
-      export default config;
+      module.exports = config;
       `
     );
 
     updateFile(
-      `${remote}/webpack.config.prod.ts`,
-      `export { default } from './webpack.config';`
+      `${remote}/webpack.config.prod.js`,
+      `module.exports = require('./webpack.config');`
     );
 
     // Update host e2e test to check that the remote works with library type var via navigation
@@ -385,6 +386,99 @@ describe('React Module Federation', () => {
       expect(remoteE2eResults).toContain('All specs passed!');
     }
   }, 500_000);
+
+  // Federate Module
+  describe('Federate Module', () => {
+    it('should federate a module from a library and update an existing remote', async () => {
+      const lib = uniq('lib');
+      const remote = uniq('remote');
+      const module = uniq('module');
+      const host = uniq('host');
+
+      runCLI(
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+      );
+
+      runCLI(
+        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
+      );
+
+      // Federate Module
+      runCLI(
+        `generate @nx/react:federate-module ${module} --remote=${remote} --path=${lib}/src/index.ts --no-interactive`
+      );
+
+      updateFile(
+        `${lib}/src/index.ts`,
+        `export { default } from './lib/${lib}';`
+      );
+      updateFile(
+        `${lib}/src/lib/${lib}.ts`,
+        `export default function lib() { return 'Hello from ${lib}'; };`
+      );
+
+      // Update Host to use the module
+      updateFile(
+        `${host}/src/app/app.tsx`,
+        `
+      import * as React from 'react';
+      import NxWelcome from './nx-welcome';
+      import { Link, Route, Routes } from 'react-router-dom';
+      
+      import myLib from '${remote}/${module}';
+
+      export function App() {
+        return (
+          <React.Suspense fallback={null}>
+            <div className='remote'>
+            My Remote Library:  { myLib() }
+            </div>
+            <ul>
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+            </ul>
+            <Routes>
+              <Route path="/" element={<NxWelcome title="Host" />} />
+            </Routes>
+          </React.Suspense>
+        );
+      }
+
+      export default App;
+      `
+      );
+
+      // Update e2e test to check the module
+      updateFile(
+        `${host}-e2e/src/e2e/app.cy.ts`,
+        `
+      describe('${host}', () => {
+        beforeEach(() => cy.visit('/'));
+      
+        it('should display contain the remote library', () => {
+          expect(cy.get('div.remote')).to.exist;
+          expect(cy.get('div.remote').contains('My Remote Library: Hello from ${lib}'));
+        });
+      });
+      
+      `
+      );
+
+      // Build host and remote
+      const buildOutput = runCLI(`build ${host}`);
+      const remoteOutput = runCLI(`build ${remote}`);
+
+      expect(buildOutput).toContain('Successfully ran target build');
+      expect(remoteOutput).toContain('Successfully ran target build');
+
+      if (runE2ETests()) {
+        const hostE2eResults = runCLI(`e2e ${host}-e2e --no-watch --verbose`);
+
+        expect(hostE2eResults).toContain('All specs passed!');
+      }
+    }, 500_000);
+  });
 
   function readPort(appName: string): number {
     const config = readJson(join('apps', appName, 'project.json'));

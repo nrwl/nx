@@ -16,7 +16,6 @@ import { createProjectRootMappings } from '../project-graph/utils/find-project-f
 import { findMatchingProjects } from '../utils/find-matching-projects';
 import { hashArray, hashObject } from './file-hasher';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
-import { getHashEnv } from './set-hash-env';
 import { workspaceRoot } from '../utils/workspace-root';
 import { join, relative } from 'path';
 import { normalizePath } from '../utils/path';
@@ -61,20 +60,38 @@ export interface Hash {
 
 export interface TaskHasher {
   /**
-   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph)
+   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
    * @param task
    */
   hashTask(task: Task): Promise<Hash>;
 
+  /**
+   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
+   */
   hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash>;
 
+  hashTask(
+    task: Task,
+    taskGraph: TaskGraph,
+    env: NodeJS.ProcessEnv
+  ): Promise<Hash>;
+
   /**
-   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph)
+   *  @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
    * @param tasks
    */
   hashTasks(tasks: Task[]): Promise<Hash[]>;
 
+  /**
+   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
+   */
   hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
+
+  hashTasks(
+    tasks: Task[],
+    taskGraph: TaskGraph,
+    env: NodeJS.ProcessEnv
+  ): Promise<Hash[]>;
 }
 
 export type Hasher = TaskHasher;
@@ -85,13 +102,31 @@ export class DaemonBasedTaskHasher implements TaskHasher {
     private readonly runnerOptions: any
   ) {}
 
-  async hashTasks(tasks: Task[], taskGraph?: TaskGraph): Promise<Hash[]> {
-    return this.daemonClient.hashTasks(this.runnerOptions, tasks, taskGraph);
+  async hashTasks(
+    tasks: Task[],
+    taskGraph?: TaskGraph,
+    env?: NodeJS.ProcessEnv
+  ): Promise<Hash[]> {
+    return this.daemonClient.hashTasks(
+      this.runnerOptions,
+      tasks,
+      taskGraph,
+      env ?? process.env
+    );
   }
 
-  async hashTask(task: Task, taskGraph?: TaskGraph): Promise<Hash> {
+  async hashTask(
+    task: Task,
+    taskGraph?: TaskGraph,
+    env?: NodeJS.ProcessEnv
+  ): Promise<Hash> {
     return (
-      await this.daemonClient.hashTasks(this.runnerOptions, [task], taskGraph)
+      await this.daemonClient.hashTasks(
+        this.runnerOptions,
+        [task],
+        taskGraph,
+        env ?? process.env
+      )
     )[0];
   }
 }
@@ -136,14 +171,27 @@ export class InProcessTaskHasher implements TaskHasher {
     );
   }
 
-  async hashTasks(tasks: Task[], taskGraph?: TaskGraph): Promise<Hash[]> {
-    return await Promise.all(tasks.map((t) => this.hashTask(t, taskGraph)));
+  async hashTasks(
+    tasks: Task[],
+    taskGraph?: TaskGraph,
+    env?: NodeJS.ProcessEnv
+  ): Promise<Hash[]> {
+    return await Promise.all(
+      tasks.map((t) => this.hashTask(t, taskGraph, env))
+    );
   }
 
-  async hashTask(task: Task, taskGraph?: TaskGraph): Promise<Hash> {
-    const res = await this.taskHasher.hashTask(task, taskGraph, [
-      task.target.project,
-    ]);
+  async hashTask(
+    task: Task,
+    taskGraph?: TaskGraph,
+    env?: NodeJS.ProcessEnv
+  ): Promise<Hash> {
+    const res = await this.taskHasher.hashTask(
+      task,
+      taskGraph,
+      env ?? process.env,
+      [task.target.project]
+    );
     const command = this.hashCommand(task);
     return {
       value: hashArray([res.value, command]),
@@ -215,6 +263,7 @@ class TaskHasherImpl {
   async hashTask(
     task: Task,
     taskGraph: TaskGraph,
+    env: NodeJS.ProcessEnv,
     visited: string[]
   ): Promise<PartialHash> {
     return Promise.resolve().then(async () => {
@@ -232,6 +281,7 @@ class TaskHasherImpl {
         depsOutputs,
         projectInputs,
         taskGraph,
+        env,
         visited
       );
 
@@ -252,6 +302,7 @@ class TaskHasherImpl {
     task: Task,
     namedInput: string,
     taskGraph: TaskGraph,
+    env: NodeJS.ProcessEnv,
     visited: string[]
   ): Promise<PartialHash> {
     const projectNode = this.projectGraph.nodes[projectName];
@@ -273,6 +324,7 @@ class TaskHasherImpl {
       depsOutputs,
       [],
       taskGraph,
+      env,
       visited
     );
   }
@@ -285,22 +337,28 @@ class TaskHasherImpl {
     depsOutputs: ExpandedDepsOutput[],
     projectInputs: { input: string; projects: string[] }[],
     taskGraph: TaskGraph,
+    env: NodeJS.ProcessEnv,
     visited: string[]
   ) {
     const projectGraphDeps = this.projectGraph.dependencies[projectName] ?? [];
     // we don't want random order of dependencies to change the hash
     projectGraphDeps.sort((a, b) => a.target.localeCompare(b.target));
 
-    const self = await this.hashSingleProjectInputs(projectName, selfInputs);
+    const self = await this.hashSingleProjectInputs(
+      projectName,
+      selfInputs,
+      env
+    );
     const deps = await this.hashDepsInputs(
       task,
       depsInputs,
       projectGraphDeps,
       taskGraph,
+      env,
       visited
     );
     const depsOut = await this.hashDepsOutputs(task, depsOutputs, taskGraph);
-    const projects = await this.hashProjectInputs(projectInputs);
+    const projects = await this.hashProjectInputs(projectInputs, env);
 
     return this.combinePartialHashes([
       ...self,
@@ -330,6 +388,7 @@ class TaskHasherImpl {
     inputs: { input: string }[],
     projectGraphDeps: ProjectGraphDependency[],
     taskGraph: TaskGraph,
+    env: NodeJS.ProcessEnv,
     visited: string[]
   ): Promise<PartialHash[]> {
     return (
@@ -347,6 +406,7 @@ class TaskHasherImpl {
                     task,
                     input.input || 'default',
                     taskGraph,
+                    env,
                     visited
                   );
                 } else {
@@ -578,7 +638,8 @@ class TaskHasherImpl {
 
   private async hashSingleProjectInputs(
     projectName: string,
-    inputs: ExpandedInput[]
+    inputs: ExpandedInput[],
+    env: NodeJS.ProcessEnv
   ): Promise<PartialHash[]> {
     const filesets = extractPatternsFromFileSets(inputs);
 
@@ -629,13 +690,16 @@ class TaskHasherImpl {
         ...this.legacyFilesetInputs.map((r) => r.fileset),
       ].map((fileset) => this.hashRootFileset(fileset)),
       ...[...notFilesets, ...this.legacyRuntimeInputs].map((r) =>
-        r['runtime'] ? this.hashRuntime(r['runtime']) : this.hashEnv(r['env'])
+        r['runtime']
+          ? this.hashRuntime(env, r['runtime'])
+          : this.hashEnv(env, r['env'])
       ),
     ]);
   }
 
   private async hashProjectInputs(
-    projectInputs: { input: string; projects: string[] }[]
+    projectInputs: { input: string; projects: string[] }[],
+    env: NodeJS.ProcessEnv
   ): Promise<PartialHash[]> {
     const partialHashes: Promise<PartialHash[]>[] = [];
     for (const input of projectInputs) {
@@ -653,7 +717,7 @@ class TaskHasherImpl {
           namedInputs
         );
         partialHashes.push(
-          this.hashSingleProjectInputs(project, expandedInput)
+          this.hashSingleProjectInputs(project, expandedInput, env)
         );
       }
     }
@@ -743,8 +807,10 @@ class TaskHasherImpl {
     return this.filesetHashes[mapKey];
   }
 
-  private async hashRuntime(runtime: string): Promise<PartialHash> {
-    const env = getHashEnv();
+  private async hashRuntime(
+    env: NodeJS.ProcessEnv,
+    runtime: string
+  ): Promise<PartialHash> {
     const env_key = JSON.stringify(env);
     const mapKey = `runtime:${runtime}-${env_key}`;
     if (!this.runtimeHashes[mapKey]) {
@@ -777,8 +843,10 @@ class TaskHasherImpl {
     return this.runtimeHashes[mapKey];
   }
 
-  private async hashEnv(envVarName: string): Promise<PartialHash> {
-    let env = getHashEnv();
+  private async hashEnv(
+    env: NodeJS.ProcessEnv,
+    envVarName: string
+  ): Promise<PartialHash> {
     const value = hashArray([env[envVarName] ?? '']);
     return {
       details: { [`env:${envVarName}`]: value },

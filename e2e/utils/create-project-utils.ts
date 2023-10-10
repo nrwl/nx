@@ -81,6 +81,7 @@ export function newProject({
         `@nx/nest`,
         `@nx/next`,
         `@nx/node`,
+        `@nx/nuxt`,
         `@nx/plugin`,
         `@nx/playwright`,
         `@nx/rollup`,

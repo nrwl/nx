@@ -38,7 +38,7 @@ To improve the performance of the worst case CI time, you have to implement some
 
 ```yaml {% fileName="planning-job.yml" %}
 # Get the list of affected projects
-- nx print-affected > affected-projects.json
+- nx show projects --affected --json > affected-projects.json
 # Store the list of affected projects in a PROJECTS environment variable
 # that is accessible to the agent jobs
 - node storeAffectedProjects.js
@@ -109,13 +109,13 @@ This approach fully optimizes the binning strategy so that tasks are optimally d
 
 ### 🎉 Pro: Easy to Scale
 
-If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task.
+If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task. If you want Nx to automatically provision the agents for you, check out [Nx Cloud Workflows](/nx-cloud/intro/nx-cloud-workflows).
 
 ### 🎉 Pro: Build Artifacts
 
 Nx uses the dependency graph to ensure that tasks are executed in the correct order. Nx Cloud then uses the distributed computation cache to make sure that build artifacts from prior tasks are always present for the current task, no matter which agent the tasks were run on. When developing your tasks, you can think of your CI as a single job, even though it is being distributed across an arbitrary number of agents.
 
-### 🎉 Pro: Simple Debugging
+### 🎉 Pro: Simpler Debugging
 
 Because Nx uses distributed computation caching to replay all the tasks back on the main job, every log and build artifact is present on that single job. No matter how many agents are used to speed up the CI time, all the debugging information can be found in a single place.
 

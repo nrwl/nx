@@ -17,6 +17,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 ### Properties
 
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
+- [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
 - [defaultProject](../../devkit/documents/Workspace#defaultproject): string
 - [extends](../../devkit/documents/Workspace#extends): string
@@ -25,12 +26,16 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
 - [npmScope](../../devkit/documents/Workspace#npmscope): string
+- [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
+- [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
+- [parallel](../../devkit/documents/Workspace#parallel): number
 - [plugins](../../devkit/documents/Workspace#plugins): string[]
 - [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, unknown&gt;
 - [projects](../../devkit/documents/Workspace#projects): Record&lt;string, ProjectConfiguration&gt;
 - [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
+- [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
@@ -45,6 +50,18 @@ Default options for `nx affected`
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[affected](../../devkit/documents/NxJsonConfiguration#affected)
+
+---
+
+### cacheDirectory
+
+• `Optional` **cacheDirectory**: `string`
+
+Changes the directory used by Nx to store its cache.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory)
 
 ---
 
@@ -184,6 +201,44 @@ NPM Scope that the workspace uses
 
 ---
 
+### nxCloudAccessToken
+
+• `Optional` **nxCloudAccessToken**: `string`
+
+If specified Nx will use nx-cloud by default with the given token.
+To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken)
+
+---
+
+### nxCloudUrl
+
+• `Optional` **nxCloudUrl**: `string`
+
+Specifies the url pointing to an instance of nx cloud. Used for remote
+caching and displaying run links.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl)
+
+---
+
+### parallel
+
+• `Optional` **parallel**: `number`
+
+Specifies how many tasks can be run in parallel.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[parallel](../../devkit/documents/NxJsonConfiguration#parallel)
+
+---
+
 ### plugins
 
 • `Optional` **plugins**: `string`[]
@@ -234,7 +289,7 @@ Projects' projects
 
 ### targetDefaults
 
-• `Optional` **targetDefaults**: `TargetDefaults`
+• `Optional` **targetDefaults**: [`TargetDefaults`](../../devkit/documents/TargetDefaults)
 
 Dependencies between different target names across all projects
 
@@ -257,6 +312,18 @@ Available Task Runners
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
+
+---
+
+### useDaemonProcess
+
+• `Optional` **useDaemonProcess**: `boolean`
+
+Set this to false to disable the daemon.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess)
 
 ---
 
