@@ -299,14 +299,14 @@ export default createESLintRule<Options, MessageIds>({
               .join(),
           },
           fix: (fixer) => {
-            const dependencies = Object.keys(projPackageJsonDeps)
-              .map((d) => `\n    "${d}": "${projPackageJsonDeps[d]}"`)
-              .join(',');
-
             expectedDependencyNames.sort().reduce((acc, d) => {
               acc[d] = rootPackageJsonDeps[d] || dependencies[d];
               return acc;
             }, projPackageJsonDeps);
+
+            const dependencies = Object.keys(projPackageJsonDeps)
+              .map((d) => `\n    "${d}": "${projPackageJsonDeps[d]}"`)
+              .join(',');
 
             if (!node.properties.length) {
               return fixer.replaceText(
