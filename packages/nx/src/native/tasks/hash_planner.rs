@@ -336,7 +336,7 @@ fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<Stri
     let project_input = format!("{}:{}", project_name, file_sets.join(","));
     vec![
         project_input,
-        "ProjectConfiguration".into(),
+        format!("{project_name}:ProjectConfiguration"),
         "TsConfig".into(),
     ]
 }

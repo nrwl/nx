@@ -762,7 +762,7 @@ class TaskHasherImpl {
     return {
       value: projectConfig,
       details: {
-        ProjectConfiguration: projectConfig,
+        [`${projectName}:ProjectConfiguration`]: projectConfig,
       },
     };
   }

@@ -13,12 +13,6 @@ import {
   transformTaskGraphForRust,
 } from '../transform-objects';
 
-// jest.mock('../../utils/workspace-root', () => {
-//   return {
-//     workspaceRoot: tempFs.tempDir,
-//   };
-// });
-
 describe('task planner', () => {
   const packageJson = {
     name: 'nrwl',

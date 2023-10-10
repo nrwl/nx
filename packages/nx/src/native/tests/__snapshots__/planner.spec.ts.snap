@@ -4,10 +4,11 @@ exports[`task planner should be able to handle multiple filesets per project 1`]
 {
   "parent:test": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
     "child:!{projectRoot}/**/*.spec.ts",
+    "child:ProjectConfiguration",
     "env:MY_TEST_HASH_ENV",
+    "parent:ProjectConfiguration",
     "parent:{projectRoot}/**/*",
     "{workspaceRoot}/.gitignore",
     "{workspaceRoot}/.nxignore",
@@ -22,9 +23,10 @@ exports[`task planner should build plans where the project graph has circular de
 {
   "child:build": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
+    "child:ProjectConfiguration",
     "child:{projectRoot}/**/*",
+    "parent:ProjectConfiguration",
     "parent:{projectRoot}/**/*",
     "{workspaceRoot}/.gitignore",
     "{workspaceRoot}/.nxignore",
@@ -32,9 +34,10 @@ exports[`task planner should build plans where the project graph has circular de
   ],
   "parent:build": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
+    "child:ProjectConfiguration",
     "child:{projectRoot}/**/*",
+    "parent:ProjectConfiguration",
     "parent:{projectRoot}/**/*",
     "{workspaceRoot}/.gitignore",
     "{workspaceRoot}/.nxignore",
@@ -47,8 +50,8 @@ exports[`task planner should include npm projects 1`] = `
 {
   "app:build": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
+    "app:ProjectConfiguration",
     "app:{projectRoot}/**/*",
     "npm:react",
     "{workspaceRoot}/.gitignore",
@@ -62,17 +65,17 @@ exports[`task planner should make a plan with multiple filesets of a project 1`]
 {
   "parent:build": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
     "parent:!{projectRoot}/**/*.spec.ts",
+    "parent:ProjectConfiguration",
     "{workspaceRoot}/.gitignore",
     "{workspaceRoot}/.nxignore",
     "{workspaceRoot}/nx.json",
   ],
   "parent:test": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
+    "parent:ProjectConfiguration",
     "parent:{projectRoot}/**/*",
     "{workspaceRoot}/.gitignore",
     "{workspaceRoot}/.nxignore",
@@ -85,10 +88,11 @@ exports[`task planner should plan non-default filesets 1`] = `
 {
   "parent:build": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
+    "child:ProjectConfiguration",
     "child:{projectRoot}/**/*",
     "parent:!{projectRoot}/**/*.spec.ts",
+    "parent:ProjectConfiguration",
     "{workspaceRoot}/.gitignore",
     "{workspaceRoot}/.nxignore",
     "{workspaceRoot}/nx.json",
@@ -100,9 +104,10 @@ exports[`task planner should plan the task where the project has dependencies 1`
 {
   "parent:build": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
+    "child:ProjectConfiguration",
     "child:{projectRoot}/**/*",
+    "parent:ProjectConfiguration",
     "parent:{projectRoot}/**/*",
     "{workspaceRoot}/.gitignore",
     "{workspaceRoot}/.nxignore",
@@ -115,10 +120,11 @@ exports[`task planner should use targetDefaults from nx.json 1`] = `
 {
   "parent:build": [
     "AllExternalDependencies",
-    "ProjectConfiguration",
     "TsConfig",
     "child:!{projectRoot}/**/*.spec.ts",
+    "child:ProjectConfiguration",
     "parent:!{projectRoot}/**/*.spec.ts",
+    "parent:ProjectConfiguration",
     "{workspaceRoot}/.gitignore",
     "{workspaceRoot}/.nxignore",
     "{workspaceRoot}/nx.json",
