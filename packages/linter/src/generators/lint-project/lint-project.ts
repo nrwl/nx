@@ -52,8 +52,11 @@ export function mapLintPattern(
   extension: string,
   rootProject?: boolean
 ) {
-  const infix = rootProject ? 'src/' : '';
-  return `${projectRoot}/${infix}**/*.${extension}`;
+  if (rootProject && (projectRoot === '.' || projectRoot === '')) {
+    return `${projectRoot}/src/**/*.${extension}`;
+  } else {
+    return `${projectRoot}/**/*.${extension}`;
+  }
 }
 
 export async function lintProjectGenerator(
