@@ -641,10 +641,8 @@ describe('app', () => {
       expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.styl')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.styl')).toBeFalsy();
 
       const content = appTree.read('my-app/src/app/app.tsx').toString();
       expect(content).not.toContain('styled-components');
@@ -653,10 +651,8 @@ describe('app', () => {
       expect(content).not.toContain('<StyledApp>');
 
       //for imports
-      expect(content).not.toContain('app.styl');
       expect(content).not.toContain('app.css');
       expect(content).not.toContain('app.scss');
-      expect(content).not.toContain('app.module.styl');
       expect(content).not.toContain('app.module.css');
       expect(content).not.toContain('app.module.scss');
     });
@@ -1070,7 +1066,6 @@ describe('app', () => {
       style     | pkg
       ${'less'} | ${'less'}
       ${'scss'} | ${'sass'}
-      ${'styl'} | ${'stylus'}
     `(
       'should add style preprocessor when vite is used',
       async ({ style, pkg }) => {

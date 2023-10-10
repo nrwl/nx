@@ -37,35 +37,6 @@ module.exports = withNx(nextConfig);
     expect(result).toMatch(/webpack5: true/);
   });
 
-  it('should fix stylus support', async () => {
-    await applicationGenerator(tree, {
-      style: 'styl',
-      name: 'demo',
-      skipFormat: false,
-    });
-
-    // Config that isn't configured properly
-    tree.write(
-      'apps/demo/next.config.js',
-      `const withNx = require('@nx/next/plugins/with-nx');
-const withStylus = require('@zeit/next-stylus');
-
-const nextConfig = {
-  webpack5: false,
-};
-
-module.exports = withNx(withStylus(nextConfig));
-`
-    );
-
-    await update(tree);
-
-    const result = tree.read('apps/demo/next.config.js').toString();
-
-    expect(result).toMatch(/@nrwl\/next\/plugins\/with-stylus/);
-    expect(result).not.toMatch(/@zeit\/next-stylus/);
-  });
-
   it('should fix less support', async () => {
     await applicationGenerator(tree, {
       style: 'less',

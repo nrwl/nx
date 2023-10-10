@@ -254,23 +254,6 @@ describe('app', () => {
     });
   });
 
-  describe('--style styl', () => {
-    it('should generate styl styles', async () => {
-      const name = uniq();
-      await applicationGenerator(tree, {
-        name,
-        style: 'styl',
-        projectNameAndRootFormat: 'as-provided',
-      });
-
-      expect(tree.exists(`${name}/app/page.module.styl`)).toBeTruthy();
-      expect(tree.exists(`${name}/app/global.styl`)).toBeTruthy();
-
-      const indexContent = tree.read(`${name}/app/page.tsx`, 'utf-8');
-      expect(indexContent).toContain(`import styles from './page.module.styl'`);
-    });
-  });
-
   describe('--style styled-components', () => {
     it('should generate styled-components styles', async () => {
       const name = uniq();

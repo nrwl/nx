@@ -2,7 +2,6 @@ const VALID_STYLES = [
   'css',
   'scss',
   'less',
-  'styl', // @TODO(17): deprecated, going to be removed in Nx 17
   'styled-components',
   '@emotion/styled',
   'styled-jsx',
