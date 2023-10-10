@@ -29,10 +29,7 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
   }
 
-  const { typescriptConfiguration, ...options }: Schema = {
-    ...schema,
-    typescriptConfiguration: schema.typescriptConfiguration ?? true,
-  };
+  const { typescriptConfiguration = true, ...options }: Schema = schema;
 
   const projects = getProjects(tree);
   if (options.host && !projects.has(options.host)) {

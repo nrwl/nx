@@ -45,6 +45,13 @@ export async function addSsr(
     'browser'
   );
 
+  generateFiles(tree, join(__dirname, '../files/common'), project.root, {
+    appName,
+    browserBundleOutput,
+    standalone: options.standalone,
+    tmpl: '',
+  });
+
   const pathToTemplateFiles = typescriptConfiguration ? 'ts' : 'js';
 
   generateFiles(
@@ -52,9 +59,6 @@ export async function addSsr(
     join(__dirname, '../files', pathToTemplateFiles),
     project.root,
     {
-      appName,
-      browserBundleOutput,
-      standalone: options.standalone,
       tmpl: '',
     }
   );
