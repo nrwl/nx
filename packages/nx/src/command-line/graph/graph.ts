@@ -33,6 +33,7 @@ import { HashPlanner } from '../../native';
 import {
   transformNxJsonForRust,
   transformProjectGraphForRust,
+  transformTaskGraphForRust,
 } from '../../native/transform-objects';
 
 export interface ProjectGraphClientResponse {
@@ -645,9 +646,10 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
         continue;
       }
 
-      plans[task.id] = planner.getPlans([task.id], individualTaskGraph)[
-        task.id
-      ];
+      plans[task.id] = planner.getPlans(
+        [task.id],
+        transformTaskGraphForRust(individualTaskGraph)
+      )[task.id];
     }
   }
   performance.mark('task hash plan generation:end');

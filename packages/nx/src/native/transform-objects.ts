@@ -46,7 +46,7 @@ export function transformProjectGraphForRust(
     }
   }
   for (const [projectName, externalNode] of Object.entries(
-    graph.externalNodes
+    graph.externalNodes ?? {}
   )) {
     externalNodes[projectName] = {
       hash: externalNode.data.hash,

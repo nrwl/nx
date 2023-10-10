@@ -1,4 +1,6 @@
 use crate::native::cache::expand_outputs::get_files_for_outputs;
+use crate::native::tasks::utils;
+use crate::native::tasks::utils::InterpolateOptions;
 use crate::native::utils::glob::build_glob_set;
 use crate::native::{
     project_graph::types::{Project, ProjectGraph},
@@ -6,8 +8,6 @@ use crate::native::{
 };
 use json_value_merge::Merge;
 use once_cell::sync::Lazy;
-use regex::Regex;
-use serde::Serialize;
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -60,7 +60,8 @@ pub(super) fn get_dep_output(
     Ok(inputs)
 }
 
-// todo(jcammisuli): migrate the tests for this function
+static OUTPUTS_REGEX: once_cell::sync::Lazy<regex::Regex> =
+    Lazy::new(|| regex::Regex::new(r"\{(projectRoot|workspaceRoot|(options.*))}").unwrap());
 fn get_outputs_for_target_and_configuration(
     task: &Task,
     node: &Project,
@@ -74,23 +75,6 @@ fn get_outputs_for_target_and_configuration(
         .as_ref()
         .and_then(|o| serde_json::from_str(o).ok())
         .unwrap_or_default();
-
-    if let Some(target_outputs) = &target.outputs {
-        validate_outputs(target_outputs)?;
-        return target_outputs
-            .iter()
-            .map(|o| {
-                interpolate_outputs(
-                    o,
-                    &InterpolateOptions {
-                        project_root: &node.root,
-                        project_name: &task.target.project,
-                        options: &target_options,
-                    },
-                )
-            })
-            .collect();
-    }
 
     let mut configurations: HashMap<String, Value> = target
         .configurations
@@ -106,8 +90,33 @@ fn get_outputs_for_target_and_configuration(
     let task_overrides: Value = serde_json::from_str(&task.overrides).unwrap_or_default();
 
     let mut combined_options = target_options;
-    combined_options.merge(&configuration_options);
-    combined_options.merge(&task_overrides);
+    if !configuration_options.is_null() {
+        combined_options.merge(&configuration_options);
+    }
+    if !task_overrides.is_null() {
+        combined_options.merge(&task_overrides);
+    }
+
+    if let Some(target_outputs) = &target.outputs {
+        utils::validate_outputs(target_outputs)?;
+        return target_outputs
+            .iter()
+            .map(|o| {
+                utils::interpolate_outputs(
+                    o,
+                    &InterpolateOptions {
+                        project_root: &node.root,
+                        project_name: &task.target.project,
+                        options: &combined_options,
+                    },
+                )
+            })
+            .filter(|o| {
+                o.as_ref()
+                    .is_ok_and(|output| !OUTPUTS_REGEX.is_match(output))
+            })
+            .collect();
+    }
 
     //keep backwards compatibility incase `outputs` doesn't exist
     if let Some(output_path) = combined_options.get("outputPath") {
@@ -135,86 +144,12 @@ fn get_outputs_for_target_and_configuration(
     Ok(vec![])
 }
 
-static INTERPOLATE_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\{([\s\S]+)}").unwrap());
-fn validate_outputs(options: &Vec<String>) -> anyhow::Result<()> {
-    let invalid_outputs: Vec<String> = options
-        .iter()
-        .map(|o| o.to_string())
-        .filter(|o| !INTERPOLATE_REGEX.is_match(o))
-        .collect();
-    if !invalid_outputs.is_empty() {
-        let invalid_outputs_str = invalid_outputs.join("\n - ");
-        anyhow::bail!(
-            "The following outputs are invalid:\n - {}",
-            invalid_outputs_str
-        );
-    }
-
-    Ok(())
-}
-
-#[derive(Serialize)]
-#[serde(rename_all(serialize = "camelCase"))]
-struct InterpolateOptions<'a> {
-    project_root: &'a str,
-    project_name: &'a str,
-    options: &'a Value,
-}
-
-fn interpolate_outputs(template: &str, data: &InterpolateOptions) -> anyhow::Result<String> {
-    if template[1..].contains("{workspaceRoot}") {
-        anyhow::bail!(
-            "Output {template} is invalid. {} can only be used at the beginning of the expression.",
-            "{workspaceRoot}"
-        );
-    }
-
-    if data.project_root == "." && template[1..].contains("{projectRoot}") {
-        anyhow::bail!(
-            "Output {template} is invalid. When {} is '.', it can only be used at the beginning of the expression.",
-            "{projectRoot}"
-        );
-    }
-
-    let mut res = template.replace("{workspaceRoot}/", "");
-    if data.project_root == "." {
-        res = res.replace("{projectRoot}/", "");
-    }
-
-    let value = serde_json::to_value(data)?;
-    Ok(INTERPOLATE_REGEX
-        .replace(&res, |caps: &regex::Captures| {
-            let path = caps
-                .get(1)
-                .unwrap()
-                .as_str()
-                .trim()
-                .split('.')
-                .collect::<Vec<_>>();
-            let mut current_value = &value;
-
-            // Traverse the path
-            for key in path.iter() {
-                current_value = match current_value.get(*key) {
-                    Some(val) => val,
-                    None => return caps.get(0).unwrap().as_str().to_string(), // If path does not exist
-                };
-            }
-
-            if current_value.is_string() {
-                return current_value.as_str().unwrap().to_string();
-            } else {
-                current_value.to_string()
-            }
-        })
-        .to_string())
-}
-
 #[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::native::project_graph::types::Target;
-    use crate::native::tasks::types::TaskTarget;
+mod get_output_for_target_and_configuration_tests {
+    use crate::native::project_graph::types::{Project, Target};
+    use crate::native::tasks::dep_outputs::get_outputs_for_target_and_configuration;
+    use crate::native::tasks::types::{Task, TaskTarget};
+    use once_cell::sync::Lazy;
 
     fn get_node(target: Target) -> Project {
         Project {
@@ -225,19 +160,34 @@ mod tests {
         }
     }
 
+    static TASK: Lazy<Task> = Lazy::new(|| Task {
+        project_root: None,
+        id: "".into(),
+        target: TaskTarget {
+            project: "myapp".into(),
+            target: "build".into(),
+            configuration: Some("production".into()),
+        },
+        ..Default::default()
+    });
+
+    #[test]
+    fn should_return_empty_arrays() {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &get_node(Target {
+                outputs: Some(vec![]),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+        assert_eq!(outputs, Vec::new() as Vec<String>);
+    }
+
     #[test]
     fn should_interpolate_workspace_root_project_root_and_project_name() {
         let outputs = get_outputs_for_target_and_configuration(
-            &Task {
-                project_root: None,
-                id: "".into(),
-                target: TaskTarget {
-                    project: "myapp".into(),
-                    target: "build".into(),
-                    configuration: Some("production".into()),
-                },
-                ..Default::default()
-            },
+            &TASK,
             &get_node(Target {
                 outputs: Some(vec![
                     "{workspaceRoot}/one".into(),
@@ -250,5 +200,247 @@ mod tests {
         .unwrap();
 
         assert_eq!(outputs, vec!["one", "myapp/two", "myapp/three"]);
+    }
+
+    #[test]
+    fn should_interpolate_project_root_when_it_is_not_at_the_beginning() {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &get_node(Target {
+                outputs: Some(vec!["{workspaceRoot}/dist/{projectRoot}".into()]),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        assert_eq!(outputs, vec!["dist/myapp"]);
+    }
+
+    #[test]
+    fn should_throw_when_workspace_root_is_not_used_at_the_beginning() {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &get_node(Target {
+                outputs: Some(vec!["test/{workspaceRoot}/dist".into()]),
+                ..Default::default()
+            }),
+        );
+
+        assert!(outputs.is_err());
+    }
+
+    #[test]
+    fn should_interpolate_project_root_equals_dot_by_removing_the_slash_after_it() {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &Project {
+                root: ".".to_string(),
+                named_inputs: None,
+                tags: None,
+                targets: [(
+                    "build".to_string(),
+                    Target {
+                        outputs: Some(vec!["{projectRoot}/dist".into()]),
+                        ..Default::default()
+                    },
+                )]
+                .into(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(outputs, vec!["dist"]);
+    }
+
+    #[test]
+    fn should_interpolate_workspace_root_when_project_root_equals_dot_by_removing_the_slash_after_it(
+    ) {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &Project {
+                root: ".".to_string(),
+                named_inputs: None,
+                tags: None,
+                targets: [(
+                    "build".to_string(),
+                    Target {
+                        outputs: Some(vec!["{workspaceRoot}/dist".into()]),
+                        ..Default::default()
+                    },
+                )]
+                .into(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(outputs, vec!["dist"]);
+    }
+
+    #[test]
+    fn should_err_when_project_root_is_not_used_at_the_beginning_and_the_root_is_dot() {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &Project {
+                root: ".".to_string(),
+                named_inputs: None,
+                tags: None,
+                targets: [(
+                    "build".to_string(),
+                    Target {
+                        outputs: Some(vec!["test/{projectRoot}".into()]),
+                        ..Default::default()
+                    },
+                )]
+                .into(),
+            },
+        );
+
+        assert!(outputs.is_err());
+    }
+
+    #[test]
+    fn should_support_options() {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &get_node(Target {
+                outputs: Some(vec!["{options.nested.myVar}".into()]),
+                options: Some(r#"{"nested": {"myVar": "value"}}"#.into()),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        assert_eq!(outputs, vec!["value"]);
+    }
+
+    #[test]
+    fn should_support_non_existing_options() {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &get_node(Target {
+                outputs: Some(vec!["{options.outputFile}".into()]),
+                options: Some(r#"{}"#.into()),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        assert_eq!(outputs, vec![] as Vec<String>);
+    }
+
+    #[test]
+    fn should_support_interpolation_based_on_configuration_specific_options() {
+        let outputs = get_outputs_for_target_and_configuration(
+            &TASK,
+            &get_node(Target {
+                outputs: Some(vec!["{options.myVar}".into()]),
+                options: Some(r#"{"myVar": "value"}"#.into()),
+                configurations: Some(r#"{"production": { "myVar": "value/production" } }"#.into()),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        assert_eq!(outputs, vec!["value/production"]);
+    }
+
+    #[test]
+    fn should_support_interpolation_outputs_from_overrides() {
+        let mut task = TASK.clone();
+        task.overrides = r#"{"myVar": "value/override"}"#.into();
+        let outputs = get_outputs_for_target_and_configuration(
+            &task,
+            &get_node(Target {
+                outputs: Some(vec!["{options.myVar}".into()]),
+                options: Some(r#"{"myVar": "value"}"#.into()),
+                configurations: Some(r#"{"production": { "myVar": "value/production" } }"#.into()),
+                ..Default::default()
+            }),
+        )
+        .unwrap();
+
+        assert_eq!(outputs, vec!["value/override"]);
+    }
+
+    #[cfg(test)]
+    mod missing_outputs_backwards_compatibility {
+
+        #[test]
+        fn should_return_the_output_path_option() {
+            let outputs = super::get_outputs_for_target_and_configuration(
+                &super::TASK,
+                &super::get_node(super::Target {
+                    options: Some(r#"{"outputPath": "dist"}"#.into()),
+                    ..Default::default()
+                }),
+            )
+            .unwrap();
+
+            assert_eq!(outputs, vec!["dist"]);
+        }
+
+        #[test]
+        fn should_handle_output_path_overrides() {
+            let mut task = super::TASK.clone();
+            task.overrides = r#"{"outputPath": "overrideOutputPath"}"#.into();
+            let outputs = super::get_outputs_for_target_and_configuration(
+                &task,
+                &super::get_node(super::Target {
+                    options: Some(r#"{"outputPath": "one"}"#.into()),
+                    ..Default::default()
+                }),
+            )
+            .unwrap();
+
+            assert_eq!(outputs, vec!["overrideOutputPath"]);
+        }
+
+        #[test]
+        fn should_return_configuration_specific_output_path_when_defined() {
+            let outputs = super::get_outputs_for_target_and_configuration(
+                &super::TASK,
+                &super::get_node(super::Target {
+                    options: Some(r#"{"outputPath": "value"}"#.into()),
+                    configurations: Some(
+                        r#"{"production":{"outputPath":"value/production"}}"#.into(),
+                    ),
+                    ..Default::default()
+                }),
+            )
+            .unwrap();
+
+            assert_eq!(outputs, vec!["value/production"]);
+        }
+
+        #[test]
+        fn should_return_configuration_independent_output_path_when_defined() {
+            let outputs = super::get_outputs_for_target_and_configuration(
+                &super::TASK,
+                &super::get_node(super::Target {
+                    options: Some(r#"{"outputPath": "value"}"#.into()),
+                    configurations: Some(r#"{"production":{}"#.into()),
+                    ..Default::default()
+                }),
+            )
+            .unwrap();
+
+            assert_eq!(outputs, vec!["value"]);
+        }
+
+        #[test]
+        fn should_return_default_output_paths_when_nothing_else_is_defined() {
+            let outputs = super::get_outputs_for_target_and_configuration(
+                &super::TASK,
+                &super::get_node(super::Target {
+                    ..Default::default()
+                }),
+            )
+            .unwrap();
+
+            assert_eq!(
+                outputs,
+                vec!["dist/myapp", "myapp/dist", "myapp/build", "myapp/public"]
+            );
+        }
     }
 }
