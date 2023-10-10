@@ -15,11 +15,6 @@
       "schema": "./src/executors/build-list/schema.json",
       "description": "List all EAS builds for your Expo project"
     },
-    "download": {
-      "implementation": "./src/executors/download/download.impl",
-      "schema": "./src/executors/download/schema.json",
-      "description": "Download an EAS build"
-    },
     "run": {
       "implementation": "./src/executors/run/run.impl",
       "schema": "./src/executors/run/schema.json",
@@ -76,11 +71,6 @@
       "implementation": "./src/executors/build-list/compat",
       "schema": "./src/executors/build-list/schema.json",
       "description": "List all EAS builds for your Expo project"
-    },
-    "download": {
-      "implementation": "./src/executors/download/compat",
-      "schema": "./src/executors/download/schema.json",
-      "description": "Download an EAS build"
     },
     "run": {
       "implementation": "./src/executors/run/compat",

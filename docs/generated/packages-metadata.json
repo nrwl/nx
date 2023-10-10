@@ -723,15 +723,6 @@
         "type": "executor"
       },
       {
-        "description": "Download an EAS build",
-        "file": "generated/packages/expo/executors/download.json",
-        "hidden": false,
-        "name": "download",
-        "originalFilePath": "/packages/expo/src/executors/download/schema.json",
-        "path": "expo/executors/download",
-        "type": "executor"
-      },
-      {
         "description": "Run the Android app binary locally or run the iOS app binary locally",
         "file": "generated/packages/expo/executors/run.json",
         "hidden": false,

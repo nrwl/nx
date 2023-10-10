@@ -21,7 +21,7 @@ export default async function* runAndroidExecutor(
     context.projectsConfigurations.projects[context.projectName].root;
   chmodAndroidGradlewFiles(join(projectRoot, 'android'));
 
-  if (options.packager && options.mode !== 'Release') {
+  if (options.mode !== 'Release') {
     const startResults = startExecutor(
       {
         port: options.port,
