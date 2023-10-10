@@ -59,6 +59,12 @@
     "add-extra-dependencies": {
       "command": "node ./scripts/add-dependency-to-build.js next @nrwl/next"
     },
-    "lint": {}
+    "lint": {},
+    "component-test": {
+      "executor": "@nx/cypress:cypress",
+      "options": {
+        "cypressConfig": "cypress-component-test.config.ts"
+      }
+    }
   }
 }
