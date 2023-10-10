@@ -87,7 +87,7 @@ export function updateJestConfigTsFile(tree: Tree, projectRoot: string) {
               ],
             },
             testEnvironment: 'jsdom',
-            testMatch: ['**/__tests__/**/*.spec.ts?(x)', '**/__tests__/*.ts?(x)'],
+            testMatch: ['**/*.spec.ts?(x)', '**/__tests__/*.ts?(x)'],
             `,
         },
       ]);
@@ -117,7 +117,7 @@ function writeNewJestConfig(tree: Tree, projectRoot: string) {
                 ],
               },
               testEnvironment: 'jsdom',
-              testMatch: ['**/__tests__/**/*.spec.ts?(x)', '**/__tests__/*.ts?(x)'],
+              testMatch: ['**/*.spec.ts?(x)', '**/__tests__/*.ts?(x)'],
             };
           `
   );

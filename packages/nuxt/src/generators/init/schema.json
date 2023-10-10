@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxNuxtInit",
+  "title": "Init Nuxt Plugin",
+  "description": "Initialize a Nuxt Plugin.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "rootProject": {
+      "description": "Create a project at the root of the workspace",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "default": "css"
+    }
+  },
+  "required": []
+}
