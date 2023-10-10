@@ -76,6 +76,12 @@
       "schema": "./src/generators/convert-to-with-mf/schema.json",
       "description": "Converts an old micro frontend configuration to use the new `withModuleFederation` helper. It will run successfully if the following conditions are met: \n - Is either a host or remote application \n - Shared npm package configurations have not been modified \n - Name used to identify the Micro Frontend application matches the project name \n\n{% callout type=\"warning\" title=\"Overrides\" %}This generator will overwrite your webpack config. If you have additional custom configuration in your config file, it will be lost!{% /callout %}"
     },
+    "federate-module": {
+      "factory": "./src/generators/federate-module/federate-module.compat",
+      "schema": "./src/generators/federate-module/schema.json",
+      "x-type": "application",
+      "description": "Create a federated module, which is exposed by a remote and can be subsequently loaded by a host."
+    },
     "host": {
       "factory": "./src/generators/host/host.compat",
       "schema": "./src/generators/host/schema.json",
@@ -192,6 +198,12 @@
       "schema": "./src/generators/directive/schema.json",
       "aliases": ["d"],
       "description": "Generate an Angular directive."
+    },
+    "federate-module": {
+      "factory": "./src/generators/federate-module/federate-module",
+      "schema": "./src/generators/federate-module/schema.json",
+      "x-type": "application",
+      "description": "Create a federated module, which is exposed by a remote and can be subsequently loaded by a host."
     },
     "init": {
       "factory": "./src/generators/init/init",

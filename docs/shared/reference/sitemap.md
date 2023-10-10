@@ -315,6 +315,7 @@
       - [component-story](/nx-api/angular/generators/component-story)
       - [component-test](/nx-api/angular/generators/component-test)
       - [directive](/nx-api/angular/generators/directive)
+      - [federate-module](/nx-api/angular/generators/federate-module)
       - [init](/nx-api/angular/generators/init)
       - [library](/nx-api/angular/generators/library)
       - [library-secondary-entry-point](/nx-api/angular/generators/library-secondary-entry-point)
