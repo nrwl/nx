@@ -17,7 +17,6 @@ const pages: Array<{ title: string; path: string }> = [
   { title: 'report', path: '/cli/report' },
   { title: 'list', path: '/cli/list' },
   { title: 'workspace-lint', path: '/cli/workspace-lint' },
-  { title: 'workspace-generator', path: '/cli/workspace-generator' },
   { title: 'connect', path: '/cli/connect-to-nx-cloud' },
   { title: 'reset', path: '/cli/reset' },
   { title: 'Storybook', path: '/storybook/overview-react' },

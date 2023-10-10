@@ -436,10 +436,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/workspace/generators/new',
   },
   {
-    title: '@nx/workspace:workspace-generator',
-    path: '/packages/workspace/generators/workspace-generator',
-  },
-  {
     title: '@nx/workspace:run-command',
     path: '/packages/workspace/generators/run-commands',
   },
