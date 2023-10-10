@@ -58,6 +58,8 @@ export function addToNgModule(
   className: string,
   fileName: string,
   ngModuleProperty: ngModuleDecoratorProperty,
+  // TODO(leo): remove once all consumers are updated
+  // // check if exported in the public api
   isFlat = true,
   isExported = false
 ) {

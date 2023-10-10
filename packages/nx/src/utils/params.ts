@@ -633,6 +633,8 @@ export async function combineOptionsForGenerator(
     schema,
     false
   );
+
+  warnDeprecations(combined, schema);
   convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
@@ -644,9 +646,7 @@ export async function combineOptionsForGenerator(
     combined = await promptForValues(combined, schema, projectsConfigurations);
   }
 
-  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
-
   validateOptsAgainstSchema(combined, schema);
   applyVerbosity(combined, schema, isVerbose);
   return combined;

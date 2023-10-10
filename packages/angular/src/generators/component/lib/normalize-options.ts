@@ -1,21 +1,34 @@
 import type { Tree } from '@nx/devkit';
-import { readProjectConfiguration } from '@nx/devkit';
+import { names, readProjectConfiguration } from '@nx/devkit';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import type { AngularProjectConfiguration } from '../../../utils/types';
-import { normalizeNameAndPaths } from '../../utils/path';
 import { buildSelector } from '../../utils/selector';
 import type { NormalizedSchema, Schema } from '../schema';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   tree: Tree,
   options: Schema
-): NormalizedSchema {
+): Promise<NormalizedSchema> {
   options.type ??= 'component';
-  const { directory, filePath, name, path, root, sourceRoot } =
-    normalizeNameAndPaths(tree, options);
+  const { directory, file, name, project } =
+    await determineArtifactNameAndDirectoryOptions(tree, {
+      artifactName: 'component',
+      callingGenerator: '@nx/angular:component',
+      name: options.name,
+      directory: options.directory ?? options.path,
+      flat: options.flat,
+      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+      project: options.project,
+      suffix: options.type ?? 'component',
+    });
 
-  const { prefix } = readProjectConfiguration(
+  const { className } = names(name);
+  const { className: suffixClassName } = names(options.type);
+  const symbolName = `${className}${suffixClassName}`;
+
+  const { prefix, root, sourceRoot } = readProjectConfiguration(
     tree,
-    options.project
+    project
   ) as AngularProjectConfiguration;
 
   const selector =
@@ -25,12 +38,13 @@ export function normalizeOptions(
   return {
     ...options,
     name,
+    project,
     changeDetection: options.changeDetection ?? 'Default',
     style: options.style ?? 'css',
-    flat: options.flat ?? false,
     directory,
-    filePath,
-    path,
+    fileName: file.name,
+    filePath: file.path,
+    symbolName,
     projectSourceRoot: sourceRoot,
     projectRoot: root,
     selector,

@@ -16,11 +16,11 @@ export function findModuleFromOptions(
   if (!options.module) {
     return normalizePath(findModule(tree, options.directory, projectRoot));
   } else {
-    const modulePath = joinPathFragments(options.path, options.module);
+    const modulePath = joinPathFragments(options.directory, options.module);
     const componentPath = options.directory;
     const moduleBaseName = basename(modulePath);
 
-    const candidateSet = new Set<string>([options.path]);
+    const candidateSet = new Set<string>([options.directory]);
 
     const projectRootParent = dirname(projectRoot);
     for (let dir = modulePath; dir !== projectRootParent; dir = dirname(dir)) {
