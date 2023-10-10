@@ -2,7 +2,7 @@
   "name": "service",
   "factory": "./src/generators/service/service#serviceGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxNestServiceGenerator",
     "title": "Nest Service Options Schema",
     "description": "Nest Service Options Schema.",

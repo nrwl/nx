@@ -2,7 +2,7 @@
   "name": "e2e-project",
   "factory": "./src/generators/e2e-project/e2e#e2eProjectGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxPluginE2E",
     "title": "Create an E2E app for a Nx Plugin",

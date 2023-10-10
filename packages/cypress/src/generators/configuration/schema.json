@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxCypressE2EConfigGenerator",
   "cli": "nx",
   "title": "Add a Cypress Configuration.",

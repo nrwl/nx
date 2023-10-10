@@ -1,7 +1,7 @@
 {
   "cli": "nx",
   "$id": "NxReactNativeInit",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "title": "Add Nx React Native Schematics",
   "description": "Add Nx React native schematics.",
   "type": "object",

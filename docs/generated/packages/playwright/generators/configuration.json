@@ -2,7 +2,7 @@
   "name": "configuration",
   "factory": "./src/generators/configuration/configuration",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxPlaywrightConfiguration",
     "description": "Add a Playwright configuration.",
     "title": "Add a Playwright configuration",

@@ -2,7 +2,7 @@
   "name": "convert-to-monorepo",
   "factory": "./src/generators/convert-to-monorepo/convert-to-monorepo",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxWorkspaceConvertToMonorepo",
     "cli": "nx",
     "title": "Nx Convert to Monorepo",

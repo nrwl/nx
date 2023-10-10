@@ -2,7 +2,7 @@
   "name": "component-cypress-spec",
   "factory": "./src/generators/component-cypress-spec/component-cypress-spec",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxAngularComponentCypressSpecGenerator",
     "type": "object",
     "cli": "nx",

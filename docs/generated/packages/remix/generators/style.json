@@ -2,7 +2,7 @@
   "name": "style",
   "implementation": "/packages/remix/src/generators/style/style.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixRouteStyle",
     "title": "Add style import to a route",
     "description": "Generate a style import and file for a given route.",

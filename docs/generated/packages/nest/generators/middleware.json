@@ -2,7 +2,7 @@
   "name": "middleware",
   "factory": "./src/generators/middleware/middleware#middlewareGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxNestMiddlewareGenerator",
     "title": "Nest Middleware Options Schema",
     "description": "Nest Middleware Options Schema.",
