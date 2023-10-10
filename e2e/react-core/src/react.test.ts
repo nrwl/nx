@@ -275,6 +275,54 @@ describe('React Applications', () => {
   }, 500_000);
 
   describe('React Applications: --style option', () => {
+    it('should support styled-jsx', async () => {
+      const appName = uniq('app');
+      runCLI(
+        `generate @nx/react:app ${appName} --style=styled-jsx --bundler=vite --no-interactive`
+      );
+
+      // update app to use styled-jsx
+      updateFile(
+        `apps/${appName}/src/app/app.tsx`,
+        `
+       import NxWelcome from './nx-welcome';
+
+        export function App() {
+          return (
+            <div>
+              <style jsx>{'h1 { color: red }'}</style>
+
+              <NxWelcome title="${appName}" />
+            </div>
+          );
+        }
+
+        export default App;
+
+       `
+      );
+
+      // update e2e test to check for styled-jsx change
+
+      updateFile(
+        `apps/${appName}-e2e/src/e2e/app.cy.ts`,
+        `
+       describe('react-test', () => {
+        beforeEach(() => cy.visit('/'));
+      
+        it('should have red colour', () => {
+
+          cy.get('h1').should('have.css', 'color', 'rgb(255, 0, 0)');
+        });
+      });
+      
+       `
+      );
+      if (runE2ETests()) {
+        const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch --verbose`);
+        expect(e2eResults).toContain('All specs passed!');
+      }
+    }, 250_000);
     it.each`
       style
       ${'css'}
