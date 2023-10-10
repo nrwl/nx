@@ -10,6 +10,33 @@ exports[`app generated files content - as-provided should add nuxt entries in .g
 .cache"
 `;
 
+exports[`app generated files content - as-provided should configure eslint correctly 1`] = `
+"{
+  "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
+      "rules": {}
+    }
+  ]
+}
+"
+`;
+
+exports[`app generated files content - as-provided should configure nuxt correctly 1`] = `
+"import { NxNuxtModule } from '@nx/nuxt';
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  modules: [NxNuxtModule],
+  srcDir: 'src',
+  devtools: { enabled: true },
+  css: ['~/assets/css/styles.css'],
+});
+"
+`;
+
 exports[`app generated files content - as-provided should configure tsconfig and project.json correctly 1`] = `
 "{
   "name": "my-app",
@@ -86,16 +113,16 @@ exports[`app generated files content - as-provided should create all new files i
   ".prettierignore",
   "my-app/project.json",
   "my-app/.npmrc",
-  "my-app/app.vue",
-  "my-app/assets/css/styles.css",
-  "my-app/components/NxWelcome.vue",
   "my-app/nuxt.config.ts",
-  "my-app/pages/About.vue",
-  "my-app/pages/index.vue",
-  "my-app/public/.gitkeep",
-  "my-app/public/favicon.ico",
-  "my-app/server/api/greet.ts",
-  "my-app/server/tsconfig.json",
+  "my-app/src/app.vue",
+  "my-app/src/assets/css/styles.css",
+  "my-app/src/components/NxWelcome.vue",
+  "my-app/src/pages/about.vue",
+  "my-app/src/pages/index.vue",
+  "my-app/src/public/.gitkeep",
+  "my-app/src/public/favicon.ico",
+  "my-app/src/server/api/greet.ts",
+  "my-app/src/server/tsconfig.json",
   "my-app/tsconfig.json",
   ".gitignore",
   ".eslintrc.json",

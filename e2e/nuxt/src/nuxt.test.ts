@@ -6,17 +6,13 @@ import {
   uniq,
 } from '@nx/e2e/utils';
 
-describe('Vue Plugin', () => {
+describe('Nuxt Plugin', () => {
   let proj: string;
-  const app = uniq('app');
 
   beforeAll(() => {
     proj = newProject({
       unsetProjectNameAndRootFormat: false,
     });
-    runCLI(
-      `generate @nx/vue:app ${app} --unitTestRunner=vitest --e2eTestRunner=playwright`
-    );
   });
 
   afterAll(() => {

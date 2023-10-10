@@ -1,11 +1,21 @@
 import { join, resolve } from 'path';
 import { workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs-extra';
+import { defineNuxtModule } from '@nuxt/kit';
+import { defu } from 'defu';
+import { NuxtModule } from '@nuxt/schema';
+
+export const NxNuxtModule: NuxtModule = defineNuxtModule({
+  meta: { name: '@nx/nuxt/module', configKey: 'nx' },
+  setup(_options, nuxt) {
+    nuxt.options.alias = defu(nuxt.options.alias, nxTsPaths());
+  },
+});
 
 /**
  * read the compilerOptions.paths option from a tsconfig and return as aliases for Nuxt
  **/
-export function nxTsPaths() {
+function nxTsPaths() {
   const tsConfigPath = getTsConfig(join(workspaceRoot, 'tsconfig.base.json'));
   const tsPaths = require(tsConfigPath)?.compilerOptions?.paths as Record<
     string,

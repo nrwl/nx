@@ -14,6 +14,19 @@
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Create a Nuxt application."
+    },
+    "component": {
+      "factory": "./src/generators/component/component",
+      "schema": "./src/generators/component/schema.json",
+      "aliases": ["c"],
+      "x-type": "component",
+      "description": "Create a Vue component for your Nuxt application."
+    },
+    "page": {
+      "factory": "./src/generators/page/page",
+      "schema": "./src/generators/page/schema.json",
+      "x-type": "page",
+      "description": "Create a new page for your Nuxt application."
     }
   }
 }

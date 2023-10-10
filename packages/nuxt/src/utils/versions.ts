@@ -6,4 +6,4 @@ export const nuxtVersion = '^3.7.4';
 export const h3Version = '^1.8.2';
 
 // linting deps
-export const nuxtEslintConfigTypescriptVersion = '12.1.0';
+export const nuxtEslintConfigVersion = '0.2.0';

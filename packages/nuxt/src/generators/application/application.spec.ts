@@ -23,6 +23,14 @@ describe('app', () => {
       expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
     });
 
+    it('should configure nuxt correctly', () => {
+      expect(tree.read('my-app/nuxt.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should configure eslint correctly', () => {
+      expect(tree.read('my-app/.eslintrc.json', 'utf-8')).toMatchSnapshot();
+    });
+
     it('should configure tsconfig and project.json correctly', () => {
       expect(tree.read('my-app/project.json', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();

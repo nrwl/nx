@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`init should add vue dependencies 1`] = `
+exports[`init should add nuxt dependencies 1`] = `
 {
   "dependencies": {},
   "devDependencies": {

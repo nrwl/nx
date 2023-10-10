@@ -10,7 +10,7 @@ const route = useRoute();
             <NuxtLink to="/about">About</NuxtLink>
         </nav>
     </header>
-    <router-view></router-view>
+    <nuxt-page></nuxt-page>
   </main>
 </template>
 
