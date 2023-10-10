@@ -77,7 +77,7 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
   const nxJson = readNxJson(tree);
   if (
     nxJson.tasksRunnerOptions?.default &&
-    !nxJson.tasksRunnerOptions?.default.options.cacheableOperations.includes(
+    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
       'server'
     )
   ) {
@@ -87,11 +87,10 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     ];
     updateNxJson(tree, nxJson);
   }
-  if (nxJson.targetDefaults) {
-    nxJson.targetDefaults.server ??= {};
-    nxJson.targetDefaults.server.cache ??= true;
-    updateNxJson(tree, nxJson);
-  }
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults.server ??= {};
+  nxJson.targetDefaults.server.cache ??= true;
+  updateNxJson(tree, nxJson);
 }
 
 function getServerOptions(

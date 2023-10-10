@@ -13,7 +13,7 @@ export function getNxCloudUrl(nxJson: NxJsonConfiguration): string {
   const cloudRunner = Object.values(nxJson.tasksRunnerOptions ?? {}).find(
     (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
   );
-  if (!cloudRunner && !nxJson.nxCloudUrl)
+  if (!cloudRunner && !nxJson.nxCloudAccessToken)
     throw new Error('nx-cloud runner not found in nx.json');
   return cloudRunner?.options?.url ?? nxJson.nxCloudUrl ?? 'https://nx.app';
 }

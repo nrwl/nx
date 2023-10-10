@@ -8,16 +8,32 @@ import {
   isNxCloudUsed,
 } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
+import { NxJsonConfiguration } from '../../config/nx-json';
+import { NxArgs } from '../../utils/command-line-utils';
 
-export async function connectToNxCloudIfExplicitlyAsked(opts: {
-  [k: string]: any;
-}): Promise<void> {
+export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
+  if (!nxJson.tasksRunnerOptions) {
+    // No tasks runner options:
+    // - If access token defined, uses cloud runner
+    // - If no access token defined, uses default
+    return !nxJson.nxCloudAccessToken;
+  }
+  const defaultRunner = nxJson.tasksRunnerOptions?.default;
+  if (
+    !defaultRunner.runner ||
+    defaultRunner.runner === 'nx/tasks-runners/default'
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export async function connectToNxCloudIfExplicitlyAsked(
+  opts: NxArgs
+): Promise<void> {
   if (opts['cloud'] === true) {
     const nxJson = readNxJson();
-    const runners = Object.values(nxJson.tasksRunnerOptions ?? {});
-    const onlyDefaultRunnerIsUsed =
-      runners.length <= 1 && runners[0].runner === 'nx/tasks-runners/default';
-    if (!onlyDefaultRunnerIsUsed) return;
+    if (!onlyDefaultRunnerIsUsed(nxJson)) return;
 
     output.log({
       title: '--cloud requires the workspace to be connected to Nx Cloud.',

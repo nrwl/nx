@@ -109,10 +109,9 @@ export async function customServerGenerator(
         'build-custom-server'
       );
     }
-    if (json.targetDefaults) {
-      json.targetDefaults['build-custom-server'] ??= {};
-      json.targetDefaults['build-custom-server'].cache ??= true;
-    }
+    json.targetDefaults ??= {};
+    json.targetDefaults['build-custom-server'] ??= {};
+    json.targetDefaults['build-custom-server'].cache ??= true;
     return json;
   });
 }
