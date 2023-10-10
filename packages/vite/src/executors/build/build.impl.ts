@@ -5,7 +5,6 @@ import {
   stripIndents,
   writeJsonFile,
 } from '@nx/devkit';
-import { build, InlineConfig, mergeConfig } from 'vite';
 import {
   getProjectTsConfigPath,
   getViteBuildOptions,
@@ -30,6 +29,11 @@ export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
+  const { mergeConfig, build } = await (Function(
+    'return import("vite")'
+  )() as Promise<typeof import('vite')>);
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
@@ -52,7 +56,7 @@ export async function* viteBuildExecutor(
     });
   }
 
-  const watcherOrOutput = await runInstance(buildConfig);
+  const watcherOrOutput = await build(buildConfig);
 
   const libraryPackageJson = resolve(projectRoot, 'package.json');
   const rootPackageJson = resolve(context.root, 'package.json');
@@ -141,12 +145,6 @@ export async function* viteBuildExecutor(
     const outfile = resolve(normalizedOptions.outputPath, fileName);
     yield { success: true, outfile };
   }
-}
-
-function runInstance(options: InlineConfig) {
-  return build({
-    ...options,
-  });
 }
 
 function normalizeOptions(options: ViteBuildExecutorOptions) {

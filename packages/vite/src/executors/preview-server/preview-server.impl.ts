@@ -1,10 +1,10 @@
 import { ExecutorContext, parseTargetString, runExecutor } from '@nx/devkit';
-import { InlineConfig, mergeConfig, preview, PreviewServer } from 'vite';
+import type { InlineConfig, PreviewServer } from 'vite';
 import {
   getNxTargetOptions,
-  getViteSharedConfig,
   getViteBuildOptions,
   getVitePreviewOptions,
+  getViteSharedConfig,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { VitePreviewServerExecutorOptions } from './schema';
@@ -17,6 +17,11 @@ export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
   context: ExecutorContext
 ) {
+  // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
+  const { mergeConfig, preview } = await (Function(
+    'return import("vite")'
+  )() as Promise<typeof import('vite')>);
+
   const target = parseTargetString(options.buildTarget, context);
   const targetConfiguration =
     context.projectsConfigurations.projects[target.project]?.targets[
