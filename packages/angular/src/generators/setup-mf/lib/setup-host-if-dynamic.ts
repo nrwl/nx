@@ -23,7 +23,7 @@ export function setupHostIfDynamic(tree: Tree, options: Schema) {
 
   const pathToProdWebpackConfig = joinPathFragments(
     project.root,
-    'webpack.prod.config.js'
+    `webpack.prod.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
   );
   if (tree.exists(pathToProdWebpackConfig)) {
     tree.delete(pathToProdWebpackConfig);

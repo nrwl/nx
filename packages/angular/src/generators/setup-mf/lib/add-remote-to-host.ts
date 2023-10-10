@@ -35,8 +35,17 @@ export function addRemoteToHost(tree: Tree, options: Schema) {
       pathToMFManifest
     );
 
+    const isHostUsingTypescriptConfig = tree.exists(
+      joinPathFragments(hostProject.root, 'module-federation.config.ts')
+    );
+
     if (hostFederationType === 'static') {
-      addRemoteToStaticHost(tree, options, hostProject);
+      addRemoteToStaticHost(
+        tree,
+        options,
+        hostProject,
+        isHostUsingTypescriptConfig
+      );
     } else if (hostFederationType === 'dynamic') {
       addRemoteToDynamicHost(tree, options, pathToMFManifest);
     }
@@ -69,16 +78,19 @@ function determineHostFederationType(
 function addRemoteToStaticHost(
   tree: Tree,
   options: Schema,
-  hostProject: ProjectConfiguration
+  hostProject: ProjectConfiguration,
+  isHostUsingTypescrpt: boolean
 ) {
   const hostMFConfigPath = joinPathFragments(
     hostProject.root,
-    'module-federation.config.js'
+    isHostUsingTypescrpt
+      ? 'module-federation.config.ts'
+      : 'module-federation.config.js'
   );
 
   if (!hostMFConfigPath || !tree.exists(hostMFConfigPath)) {
     throw new Error(
-      `The selected host application, ${options.host}, does not contain a module-federation.config.js or module-federation.manifest.json file. Are you sure it has been set up as a host application?`
+      `The selected host application, ${options.host}, does not contain a module-federation.config.{ts,js} or module-federation.manifest.json file. Are you sure it has been set up as a host application?`
     );
   }
 
