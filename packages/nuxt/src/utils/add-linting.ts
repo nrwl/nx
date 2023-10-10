@@ -1,5 +1,5 @@
 import { Tree } from 'nx/src/generators/tree';
-import { lintProjectGenerator, Linter } from '@nx/linter';
+import { lintProjectGenerator, Linter } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   GeneratorCallback,
