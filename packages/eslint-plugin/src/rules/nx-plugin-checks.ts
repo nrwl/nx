@@ -54,7 +54,7 @@ export default createESLintRule<Options, MessageIds>({
   meta: {
     docs: {
       description: 'Checks common nx-plugin configuration files for validity',
-      recommended: 'error',
+      recommended: 'recommended',
     },
     schema: [
       {

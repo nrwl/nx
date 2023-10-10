@@ -40,7 +40,7 @@ export default createESLintRule<Options, MessageIds>({
     type: 'suggestion',
     docs: {
       description: `Checks dependencies in project's package.json for version mismatches`,
-      recommended: 'error',
+      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [
@@ -353,4 +353,4 @@ export default createESLintRule<Options, MessageIds>({
       },
     };
   },
-});
+}) as any;
