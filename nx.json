@@ -99,8 +99,7 @@
       "options": {
         "outputPath": "build/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "main": "{projectRoot}/index.ts",
-        "updateBuildableProjectDepsInPackageJson": false
+        "main": "{projectRoot}/index.ts"
       },
       "outputs": ["{options.outputPath}"]
     },

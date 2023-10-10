@@ -1,4 +1,3 @@
-import { satisfies } from 'semver';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -151,23 +150,6 @@ describe('js:tsc executor', () => {
       return json;
     });
 
-    runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
-
-    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
-      'peerDependencies.tslib'
-    );
-
-    updateJson(`libs/${lib}/tsconfig.json`, (json) => {
-      json.compilerOptions = { ...json.compilerOptions, importHelpers: false };
-      return json;
-    });
-
-    runCLI(`build ${lib}`);
-
-    expect(readJson(`dist/libs/${lib}/package.json`)).not.toHaveProperty(
-      'peerDependencies.tslib'
-    );
-
     // check batch build
     rmDist();
     const batchBuildOutput = runCLI(`build ${parentLib} --skip-nx-cache`, {
@@ -295,22 +277,5 @@ export function ${lib}Wildcard() {
         ${content};
     `;
     });
-
-    updateJson(`libs/${lib}/package.json`, (json) => {
-      // Delete automatically generated helper dependency to test legacy behavior.
-      delete json.dependencies.tslib;
-      return json;
-    });
-
-    runCLI(`build ${lib} --updateBuildableProjectDepsInPackageJson`);
-
-    // Check that only 'react' exists, don't care about version
-    expect(readJson(`dist/libs/${lib}/package.json`).dependencies).toEqual({
-      react: expect.any(String),
-    });
-    expect(readJson(`dist/libs/${lib}/package.json`).peerDependencies).toEqual({
-      tslib: expect.any(String),
-    });
-    checkFilesDoNotExist(`dist/libs/${lib}/${packageManagerLockFile['npm']}`);
   }, 240_000);
 });

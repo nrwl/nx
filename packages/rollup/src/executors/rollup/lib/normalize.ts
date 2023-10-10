@@ -27,10 +27,6 @@ export function normalizeRollupExecutorOptions(
   const projectRoot = dirname(project);
   const outputPath = `${root}/${options.outputPath}`;
 
-  if (options.buildableProjectDepsInPackageJsonType == undefined) {
-    options.buildableProjectDepsInPackageJsonType = 'peerDependencies';
-  }
-
   return {
     ...options,
     // de-dupe formats
