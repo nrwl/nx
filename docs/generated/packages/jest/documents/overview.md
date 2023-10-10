@@ -140,7 +140,7 @@ Nx provides a helper function that you can import within your setup/teardown fil
 
 ```typescript {% fileName="global-setup.ts" %}
 import { registerTsProject } from '@nx/js/src/internal';
-const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
+const cleanupRegisteredPaths = registerTsProject('./tsconfig.base.json');
 
 import { yourFancyFunction } from '@some-org/my-util-library';
 export default async function () {
@@ -184,7 +184,7 @@ export default {
 
 ```typescript {% fileName="global-setup-swc.ts" %}
 import { registerTsProject } from '@nx/js/src/internal';
-const cleanupRegisteredPaths = registerTsProject('.', 'tsconfig.base.json');
+const cleanupRegisteredPaths = registerTsProject('./tsconfig.base.json');
 
 export default async function () {
   // swc will hoist all imports, and we need to make sure the register happens first

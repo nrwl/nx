@@ -8058,6 +8058,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "federate-module",
+                "path": "/nx-api/react/generators/federate-module",
+                "name": "federate-module",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

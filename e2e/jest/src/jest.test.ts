@@ -53,7 +53,7 @@ describe('Jest', () => {
       `libs/${mylib}/setup.ts`,
       stripIndents`
       const { registerTsProject } = require('@nx/js/src/internal');
-      const cleanup = registerTsProject('.', 'tsconfig.base.json');
+      const cleanup = registerTsProject('./tsconfig.base.json');
 
       import {setup} from '@global-fun/globals';
       export default async function() {setup();}
@@ -66,7 +66,7 @@ describe('Jest', () => {
       `libs/${mylib}/teardown.ts`,
       stripIndents`
       const { registerTsProject } = require('@nx/js/src/internal');
-      const cleanup = registerTsProject('.', 'tsconfig.base.json');
+      const cleanup = registerTsProject('./tsconfig.base.json');
 
       import {teardown} from '@global-fun/globals';
       export default async function() {teardown();}

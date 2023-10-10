@@ -1,3 +1,4 @@
+import type { ProjectGraphProjectNode } from '../../config/project-graph';
 import { CommandModule, showHelp } from 'yargs';
 import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options';
 
@@ -13,6 +14,7 @@ export type ShowProjectsOptions = NxShowArgs & {
   base: string;
   head: string;
   affected: boolean;
+  type: ProjectGraphProjectNode['type'];
   projects: string[];
   withTarget: string[];
 };
@@ -75,6 +77,11 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         description: 'Show only projects that have a specific target',
         coerce: parseCSV,
       })
+      .option('type', {
+        type: 'string',
+        description: 'Select only projects of the given type',
+        choices: ['app', 'lib', 'e2e'],
+      })
       .implies('untracked', 'affected')
       .implies('uncommitted', 'affected')
       .implies('files', 'affected')
@@ -91,6 +98,10 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
       .example(
         '$0 show projects --affected',
         'Show affected projects in the workspace'
+      )
+      .example(
+        '$0 show projects --type app --affected',
+        'Show affected apps in the workspace'
       )
       .example(
         '$0 show projects --affected --exclude=*-e2e',

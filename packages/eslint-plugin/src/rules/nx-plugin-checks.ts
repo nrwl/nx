@@ -14,6 +14,7 @@ import * as path from 'path';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { valid } from 'semver';
+import { join } from 'path';
 
 type Options = [
   {
@@ -147,7 +148,7 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     if (!(global as any).tsProjectRegistered) {
-      registerTsProject(workspaceRoot, 'tsconfig.base.json');
+      registerTsProject(join(workspaceRoot, 'tsconfig.base.json'));
       (global as any).tsProjectRegistered = true;
     }
 

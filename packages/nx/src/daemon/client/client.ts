@@ -136,12 +136,13 @@ export class DaemonClient {
   hashTasks(
     runnerOptions: any,
     tasks: Task[],
-    taskGraph: TaskGraph
+    taskGraph: TaskGraph,
+    env: NodeJS.ProcessEnv
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env: process.env,
+      env,
       tasks,
       taskGraph,
     });

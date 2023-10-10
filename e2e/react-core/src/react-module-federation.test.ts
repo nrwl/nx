@@ -1,4 +1,4 @@
-import { stripIndents } from '@nx/devkit';
+import { Tree, stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -15,11 +15,16 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 import { join } from 'path';
+import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 
 describe('React Module Federation', () => {
   let proj: string;
+  let tree: Tree;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => {
+    tree = createTreeWithEmptyWorkspace();
+    proj = newProject();
+  });
 
   afterAll(() => cleanupProject());
 
@@ -381,6 +386,99 @@ describe('React Module Federation', () => {
       expect(remoteE2eResults).toContain('All specs passed!');
     }
   }, 500_000);
+
+  // Federate Module
+  describe('Federate Module', () => {
+    it('should federate a module from a library and update an existing remote', async () => {
+      const lib = uniq('lib');
+      const remote = uniq('remote');
+      const module = uniq('module');
+      const host = uniq('host');
+
+      runCLI(
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+      );
+
+      runCLI(
+        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
+      );
+
+      // Federate Module
+      runCLI(
+        `generate @nx/react:federate-module ${module} --remote=${remote} --path=${lib}/src/index.ts --no-interactive`
+      );
+
+      updateFile(
+        `${lib}/src/index.ts`,
+        `export { default } from './lib/${lib}';`
+      );
+      updateFile(
+        `${lib}/src/lib/${lib}.ts`,
+        `export default function lib() { return 'Hello from ${lib}'; };`
+      );
+
+      // Update Host to use the module
+      updateFile(
+        `${host}/src/app/app.tsx`,
+        `
+      import * as React from 'react';
+      import NxWelcome from './nx-welcome';
+      import { Link, Route, Routes } from 'react-router-dom';
+      
+      import myLib from '${remote}/${module}';
+
+      export function App() {
+        return (
+          <React.Suspense fallback={null}>
+            <div className='remote'>
+            My Remote Library:  { myLib() }
+            </div>
+            <ul>
+              <li>
+                <Link to="/">Home</Link>
+              </li>
+            </ul>
+            <Routes>
+              <Route path="/" element={<NxWelcome title="Host" />} />
+            </Routes>
+          </React.Suspense>
+        );
+      }
+
+      export default App;
+      `
+      );
+
+      // Update e2e test to check the module
+      updateFile(
+        `${host}-e2e/src/e2e/app.cy.ts`,
+        `
+      describe('${host}', () => {
+        beforeEach(() => cy.visit('/'));
+      
+        it('should display contain the remote library', () => {
+          expect(cy.get('div.remote')).to.exist;
+          expect(cy.get('div.remote').contains('My Remote Library: Hello from ${lib}'));
+        });
+      });
+      
+      `
+      );
+
+      // Build host and remote
+      const buildOutput = runCLI(`build ${host}`);
+      const remoteOutput = runCLI(`build ${remote}`);
+
+      expect(buildOutput).toContain('Successfully ran target build');
+      expect(remoteOutput).toContain('Successfully ran target build');
+
+      if (runE2ETests()) {
+        const hostE2eResults = runCLI(`e2e ${host}-e2e --no-watch --verbose`);
+
+        expect(hostE2eResults).toContain('All specs passed!');
+      }
+    }, 500_000);
+  });
 
   function readPort(appName: string): number {
     const config = readJson(join('apps', appName, 'project.json'));

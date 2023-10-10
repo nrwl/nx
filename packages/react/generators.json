@@ -102,6 +102,13 @@
       "schema": "./src/generators/setup-ssr/schema.json",
       "description": "Set up SSR configuration for a project.",
       "hidden": false
+    },
+
+    "federate-module": {
+      "factory": "./src/generators/federate-module/federate-module#federateModuleSchematic",
+      "schema": "./src/generators/federate-module/schema.json",
+      "description": "Federate a module.",
+      "hidden": false
     }
   },
   "generators": {
@@ -217,6 +224,13 @@
       "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
       "schema": "./src/generators/setup-ssr/schema.json",
       "description": "Set up SSR configuration for a project.",
+      "hidden": false
+    },
+
+    "federate-module": {
+      "factory": "./src/generators/federate-module/federate-module#federateModuleGenerator",
+      "schema": "./src/generators/federate-module/schema.json",
+      "description": "Federate a module.",
       "hidden": false
     }
   }

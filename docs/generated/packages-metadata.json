@@ -2140,6 +2140,15 @@
         "originalFilePath": "/packages/react/src/generators/setup-ssr/schema.json",
         "path": "react/generators/setup-ssr",
         "type": "generator"
+      },
+      {
+        "description": "Federate a module.",
+        "file": "generated/packages/react/generators/federate-module.json",
+        "hidden": false,
+        "name": "federate-module",
+        "originalFilePath": "/packages/react/src/generators/federate-module/schema.json",
+        "path": "react/generators/federate-module",
+        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

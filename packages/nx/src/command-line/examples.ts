@@ -350,6 +350,11 @@ export const examples: Record<string, Example[]> = {
     },
 
     {
+      command: 'show projects --affected --type app',
+      description: 'Show affected apps in the workspace',
+    },
+
+    {
       command: 'show projects --affected --exclude=*-e2e',
       description:
         'Show affected projects in the workspace, excluding end-to-end projects',

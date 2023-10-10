@@ -56,10 +56,7 @@ function getModuleFederationConfig(
   // create a no-op so this can be called with issue
   let cleanupTranspiler = () => {};
   if (existsSync(moduleFederationConfigPathTS)) {
-    cleanupTranspiler = registerTsProject(
-      moduleFederationConfigPathTS,
-      tsconfigPath
-    );
+    cleanupTranspiler = registerTsProject(join(workspaceRoot, tsconfigPath));
     moduleFederationConfigPath = moduleFederationConfigPathTS;
   }
 

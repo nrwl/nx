@@ -15,7 +15,7 @@
 
 **`Deprecated`**
 
-use hashTask(task:Task, taskGraph: TaskGraph)
+use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
 
 #### Parameters
 
@@ -29,12 +29,30 @@ use hashTask(task:Task, taskGraph: TaskGraph)
 
 ▸ **hashTask**(`task`, `taskGraph`): `Promise`<[`Hash`](../../devkit/documents/Hash)\>
 
+**`Deprecated`**
+
+use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
+
 #### Parameters
 
 | Name        | Type                                            |
 | :---------- | :---------------------------------------------- |
 | `task`      | [`Task`](../../devkit/documents/Task)           |
 | `taskGraph` | [`TaskGraph`](../../devkit/documents/TaskGraph) |
+
+#### Returns
+
+`Promise`<[`Hash`](../../devkit/documents/Hash)\>
+
+▸ **hashTask**(`task`, `taskGraph`, `env`): `Promise`<[`Hash`](../../devkit/documents/Hash)\>
+
+#### Parameters
+
+| Name        | Type                                            |
+| :---------- | :---------------------------------------------- |
+| `task`      | [`Task`](../../devkit/documents/Task)           |
+| `taskGraph` | [`TaskGraph`](../../devkit/documents/TaskGraph) |
+| `env`       | `ProcessEnv`                                    |
 
 #### Returns
 
@@ -48,7 +66,7 @@ use hashTask(task:Task, taskGraph: TaskGraph)
 
 **`Deprecated`**
 
-use hashTasks(tasks:Task[], taskGraph: TaskGraph)
+use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
 
 #### Parameters
 
@@ -62,12 +80,30 @@ use hashTasks(tasks:Task[], taskGraph: TaskGraph)
 
 ▸ **hashTasks**(`tasks`, `taskGraph`): `Promise`<[`Hash`](../../devkit/documents/Hash)[]\>
 
+**`Deprecated`**
+
+use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
+
 #### Parameters
 
 | Name        | Type                                            |
 | :---------- | :---------------------------------------------- |
 | `tasks`     | [`Task`](../../devkit/documents/Task)[]         |
 | `taskGraph` | [`TaskGraph`](../../devkit/documents/TaskGraph) |
+
+#### Returns
+
+`Promise`<[`Hash`](../../devkit/documents/Hash)[]\>
+
+▸ **hashTasks**(`tasks`, `taskGraph`, `env`): `Promise`<[`Hash`](../../devkit/documents/Hash)[]\>
+
+#### Parameters
+
+| Name        | Type                                            |
+| :---------- | :---------------------------------------------- |
+| `tasks`     | [`Task`](../../devkit/documents/Task)[]         |
+| `taskGraph` | [`TaskGraph`](../../devkit/documents/TaskGraph) |
+| `env`       | `ProcessEnv`                                    |
 
 #### Returns
 

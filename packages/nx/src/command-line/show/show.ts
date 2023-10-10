@@ -1,5 +1,9 @@
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
-import { calculateFileChanges } from '../../project-graph/file-utils';
+import {
+  FileChange,
+  calculateFileChanges,
+} from '../../project-graph/file-utils';
+import { filterNodes } from '../../project-graph/operators';
 import { readNxJson } from '../../config/nx-json';
 import {
   NxArgs,
@@ -30,14 +34,26 @@ export async function showProjectsHandler(
     nxJson
   );
 
+  // Affected touches dependencies so it needs to be processed first.
   if (args.affected) {
-    graph = await getAffectedGraph(nxArgs, nxJson, graph);
+    const touchedFiles = await getTouchedFiles(nxArgs);
+    graph = await getAffectedGraph(touchedFiles, nxJson, graph);
   }
 
+  const filter = filterNodes((node) => {
+    if (args.type && node.type !== args.type) {
+      return false;
+    }
+    return true;
+  });
+  graph = filter(graph);
+
+  // Apply projects filter and get resultant graph
   if (args.projects) {
     graph.nodes = getGraphNodesMatchingPatterns(graph, args.projects);
   }
 
+  // Grab only the nodes with the specified target
   if (args.withTarget) {
     graph.nodes = Object.entries(graph.nodes).reduce((acc, [name, node]) => {
       if (args.withTarget.some((target) => node.data.targets?.[target])) {
@@ -131,14 +147,18 @@ function getGraphNodesMatchingPatterns(
   return nodes;
 }
 
-async function getAffectedGraph(
-  nxArgs: NxArgs,
+function getAffectedGraph(
+  touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration<'*' | string[]>,
   graph: ProjectGraph
 ) {
-  return filterAffected(
-    graph,
-    calculateFileChanges(parseFiles(nxArgs).files, await allFileData(), nxArgs),
-    nxJson
+  return filterAffected(graph, touchedFiles, nxJson);
+}
+
+async function getTouchedFiles(nxArgs: NxArgs): Promise<FileChange[]> {
+  return calculateFileChanges(
+    parseFiles(nxArgs).files,
+    await allFileData(),
+    nxArgs
   );
 }

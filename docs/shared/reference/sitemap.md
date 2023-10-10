@@ -557,6 +557,7 @@
       - [component-test](/nx-api/react/generators/component-test)
       - [setup-tailwind](/nx-api/react/generators/setup-tailwind)
       - [setup-ssr](/nx-api/react/generators/setup-ssr)
+      - [federate-module](/nx-api/react/generators/federate-module)
   - [react-native](/nx-api/react-native)
     - [documents](/nx-api/react-native/documents)
       - [Overview](/nx-api/react-native/documents/overview)
