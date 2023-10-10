@@ -5,8 +5,8 @@ defineProps<{
 </script>
 
 <template>
-  <div className="wrapper">
-    <div className="container">
+  <div class="wrapper">
+    <div class="container">
       <div id="welcome">
         <h1>
           <span> Hello there, </span>
@@ -14,8 +14,8 @@ defineProps<{
         </h1>
       </div>
 
-      <div id="hero" className="rounded">
-        <div className="text-container">
+      <div id="hero" class="rounded">
+        <div class="text-container">
           <h2>
             <svg
               fill="none"
@@ -34,7 +34,7 @@ defineProps<{
           </h2>
           <a href="#commands"> What&apos;s next? </a>
         </div>
-        <div className="logo-container">
+        <div class="logo-container">
           <svg
             fill="currentColor"
             role="img"
@@ -47,13 +47,13 @@ defineProps<{
       </div>
 
       <div id="middle-content">
-        <div id="learning-materials" className="rounded shadow">
+        <div id="learning-materials" class="rounded shadow">
           <h2>Learning materials</h2>
           <a
             href="https://nx.dev/getting-started/intro?utm_source=nx-project"
             target="_blank"
             rel="noreferrer"
-            className="list-item-link"
+            class="list-item-link"
           >
             <svg
               fill="none"
@@ -90,7 +90,7 @@ defineProps<{
             href="https://blog.nrwl.io/?utm_source=nx-project"
             target="_blank"
             rel="noreferrer"
-            className="list-item-link"
+            class="list-item-link"
           >
             <svg
               fill="none"
@@ -127,7 +127,7 @@ defineProps<{
             href="https://www.youtube.com/@NxDevtools/videos?utm_source=nx-project&sub_confirmation=1"
             target="_blank"
             rel="noreferrer"
-            className="list-item-link"
+            class="list-item-link"
           >
             <svg
               role="img"
@@ -160,7 +160,7 @@ defineProps<{
             href="https://nx.dev/react-tutorial/1-code-generation?utm_source=nx-project"
             target="_blank"
             rel="noreferrer"
-            className="list-item-link"
+            class="list-item-link"
           >
             <svg
               fill="none"
@@ -197,7 +197,7 @@ defineProps<{
             href="https://nxplaybook.com/?utm_source=nx-project"
             target="_blank"
             rel="noreferrer"
-            className="list-item-link"
+            class="list-item-link"
           >
             <svg
               fill="none"
@@ -235,7 +235,7 @@ defineProps<{
         </div>
         <div id="other-links">
           <a
-            className="button-pill nx-console rounded shadow"
+            class="button-pill nx-console rounded shadow"
             href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project"
             target="_blank"
             rel="noreferrer"
@@ -255,7 +255,7 @@ defineProps<{
             </span>
           </a>
           <a
-            className="button-pill nx-console rounded shadow"
+            class="button-pill nx-console rounded shadow"
             href="https://plugins.jetbrains.com/plugin/21060-nx-console"
             target="_blank"
             rel="noreferrer"
@@ -276,7 +276,7 @@ defineProps<{
               </span>
             </span>
           </a>
-          <div id="nx-cloud" className="rounded shadow">
+          <div id="nx-cloud" class="rounded shadow">
             <div>
               <svg
                 id="nx-cloud-logo"
@@ -316,7 +316,7 @@ defineProps<{
           </div>
           <a
             id="nx-repo"
-            className="button-pill rounded shadow"
+            class="button-pill rounded shadow"
             href="https://github.com/nrwl/nx?utm_source=nx-project"
             target="_blank"
             rel="noreferrer"
@@ -337,7 +337,7 @@ defineProps<{
         </div>
       </div>
 
-      <div id="commands" className="rounded shadow">
+      <div id="commands" class="rounded shadow">
         <h2>Next steps</h2>
         <p>Here are some things you can do with Nx:</p>
         <details>
