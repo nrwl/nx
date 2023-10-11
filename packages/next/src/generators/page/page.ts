@@ -13,7 +13,7 @@ import { Schema } from './schema';
 
 /*
  * This schematic is basically the React component one, but for Next we need
- * extra dependencies for css, sass, less, styl style options, and make sure
+ * extra dependencies for css, sass, less style options, and make sure
  * it is under `pages` folder.
  */
 export async function pageGenerator(host: Tree, schema: Schema) {

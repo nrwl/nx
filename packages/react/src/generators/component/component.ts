@@ -160,7 +160,7 @@ async function normalizeOptions(
 
   const directory = await getDirectory(host, options);
 
-  const styledModule = /^(css|scss|less|styl|none)$/.test(options.style)
+  const styledModule = /^(css|scss|less|none)$/.test(options.style)
     ? null
     : options.style;
 

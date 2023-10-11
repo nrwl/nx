@@ -45,7 +45,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   const fileName = options.pascalCaseFiles ? 'App' : 'app';
 
-  const styledModule = /^(css|scss|less|styl|none)$/.test(options.style)
+  const styledModule = /^(css|scss|less|none)$/.test(options.style)
     ? null
     : options.style;
 

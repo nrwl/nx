@@ -878,12 +878,6 @@ devDependencies:
   styled-components:
     specifier: 5.3.6
     version: 5.3.6(react-dom@18.2.0)(react-is@18.2.0)(react@18.2.0)
-  stylus:
-    specifier: 0.59.0
-    version: 0.59.0
-  stylus-loader:
-    specifier: 7.1.0
-    version: 7.1.0(stylus@0.59.0)(webpack@5.88.0)
   tar-fs:
     specifier: ^2.1.1
     version: 2.1.1

@@ -328,7 +328,6 @@ describe('React Applications', () => {
       ${'css'}
       ${'scss'}
       ${'less'}
-      ${'styl'}
     `('should support global and css modules', async ({ style }) => {
       const appName = uniq('app');
       runCLI(
