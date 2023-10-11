@@ -364,9 +364,9 @@ export function copyPackageManagerSection(
   rootPackageJson: PackageJson,
   packageJson: PackageJson
 ) {
-  console.log('rootPackageJson', rootPackageJson);
   const packageManagerRegEx = /(npm|pnpm|yarn)@\d+\.\d+\.\d+(-.+)?/;
   const isValid = packageManagerRegEx.test(rootPackageJson?.packageManager);
+
   if (rootPackageJson?.packageManager && !isValid) {
     console.warn('Invalid package manager setting', rootPackageJson.packageManager);
   }
