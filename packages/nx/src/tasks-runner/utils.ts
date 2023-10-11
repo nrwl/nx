@@ -81,9 +81,14 @@ export function expandDependencyConfigSyntaxSugar(
 
 export function getOutputs(
   p: Record<string, ProjectGraphProjectNode>,
-  task: Task
+  target: Task['target'],
+  overrides: Task['overrides']
 ) {
-  return getOutputsForTargetAndConfiguration(task, p[task.target.project]);
+  return getOutputsForTargetAndConfiguration(
+    target,
+    overrides,
+    p[target.project]
+  );
 }
 
 class InvalidOutputsError extends Error {
@@ -133,39 +138,43 @@ export function transformLegacyOutputs(
 }
 
 /**
- * Returns the list of outputs that will be cached.
- * @param task target + overrides
- * @param node ProjectGraphProjectNode object that the task runs against
+ * @deprecated Pass the target and overrides instead. This will be removed in v18.
  */
 export function getOutputsForTargetAndConfiguration(
-  task: Pick<Task, 'target' | 'overrides'>,
+  task: Task,
   node: ProjectGraphProjectNode
+): string[];
+export function getOutputsForTargetAndConfiguration(
+  target: Task['target'] | Task,
+  overrides: Task['overrides'] | ProjectGraphProjectNode,
+  node: ProjectGraphProjectNode
+): string[];
+/**
+ * Returns the list of outputs that will be cached.
+ */
+export function getOutputsForTargetAndConfiguration(
+  taskTargetOrTask: Task['target'] | Task,
+  overridesOrNode: Task['overrides'] | ProjectGraphProjectNode,
+  node?: ProjectGraphProjectNode
 ): string[] {
-  const { target, configuration } = task.target;
+  const taskTarget =
+    'id' in taskTargetOrTask ? taskTargetOrTask.target : taskTargetOrTask;
+  const overrides =
+    'id' in taskTargetOrTask ? taskTargetOrTask.overrides : overridesOrNode;
+  node = 'id' in taskTargetOrTask ? overridesOrNode : node;
+
+  const { target, configuration } = taskTarget;
 
   const targetConfiguration = node.data.targets[target];
 
   const options = {
     ...targetConfiguration.options,
     ...targetConfiguration?.configurations?.[configuration],
-    ...task.overrides,
+    ...overrides,
   };
 
   if (targetConfiguration?.outputs) {
-    try {
-      validateOutputs(targetConfiguration.outputs);
-    } catch (error) {
-      if (error instanceof InvalidOutputsError) {
-        // TODO(@FrozenPandaz): In v17, throw this error and do not transform.
-        console.warn(error.message);
-        targetConfiguration.outputs = transformLegacyOutputs(
-          node.data.root,
-          error
-        );
-      } else {
-        throw error;
-      }
-    }
+    validateOutputs(targetConfiguration.outputs);
 
     return targetConfiguration.outputs
       .map((output: string) => {
