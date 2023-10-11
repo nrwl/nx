@@ -57,7 +57,7 @@ impl HashPlanner {
                     &external_deps_mapped,
                 )?;
 
-                let mut self_inputs = self.self_and_deps_inputs(
+                let self_inputs = self.self_and_deps_inputs(
                     &task.target.project,
                     task,
                     &inputs,
@@ -66,10 +66,7 @@ impl HashPlanner {
                     &mut Box::new(hashbrown::HashSet::from([task.target.project.to_string()])),
                 )?;
 
-                // add default workspace file sets
-                self_inputs.par_sort();
-
-                let inputs = target
+                let mut inputs: Vec<HashInstruction> = target
                     .unwrap_or(vec![])
                     .into_iter()
                     .chain(vec![
@@ -79,6 +76,9 @@ impl HashPlanner {
                     ])
                     .chain(self_inputs.into_iter())
                     .collect();
+
+                inputs.par_sort();
+                inputs.dedup();
 
                 Ok((id.to_string(), inputs))
             })

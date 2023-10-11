@@ -29,58 +29,17 @@ pub struct TaskGraph {
     pub dependencies: HashMap<String, Vec<String>>,
 }
 
-#[derive(PartialEq, PartialOrd, Eq)]
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub enum HashInstruction {
-    AllExternalDependencies,
-    ProjectFileSet(String, String),
     WorkspaceFileSet(String),
     Runtime(String),
     Environment(String),
-    TaskOutput(String),
-    External(String),
+    ProjectFileSet(String, String),
     ProjectConfiguration(String),
     TsConfiguration(String),
-}
-
-impl Ord for HashInstruction {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match (self, other) {
-            (
-                HashInstruction::AllExternalDependencies,
-                HashInstruction::AllExternalDependencies,
-            ) => std::cmp::Ordering::Equal,
-            (HashInstruction::AllExternalDependencies, _) => std::cmp::Ordering::Less,
-            (HashInstruction::ProjectFileSet(a, _), HashInstruction::ProjectFileSet(b, _)) => {
-                a.cmp(b)
-            }
-            (HashInstruction::ProjectFileSet(_, _), _) => std::cmp::Ordering::Greater,
-            (_, HashInstruction::ProjectFileSet(_, _)) => std::cmp::Ordering::Less,
-            (HashInstruction::WorkspaceFileSet(a), HashInstruction::WorkspaceFileSet(b)) => {
-                a.cmp(b)
-            }
-            (HashInstruction::WorkspaceFileSet(_), _) => std::cmp::Ordering::Greater,
-            (_, HashInstruction::WorkspaceFileSet(_)) => std::cmp::Ordering::Less,
-            (HashInstruction::Runtime(a), HashInstruction::Runtime(b)) => a.cmp(b),
-            (HashInstruction::Runtime(_), _) => std::cmp::Ordering::Less,
-            (_, HashInstruction::Runtime(_)) => std::cmp::Ordering::Less,
-            (HashInstruction::Environment(a), HashInstruction::Environment(b)) => a.cmp(b),
-            (HashInstruction::Environment(_), _) => std::cmp::Ordering::Less,
-            (_, HashInstruction::Environment(_)) => std::cmp::Ordering::Less,
-            (HashInstruction::TaskOutput(a), HashInstruction::TaskOutput(b)) => a.cmp(b),
-            (HashInstruction::TaskOutput(_), _) => std::cmp::Ordering::Less,
-            (_, HashInstruction::TaskOutput(_)) => std::cmp::Ordering::Less,
-            (HashInstruction::External(a), HashInstruction::External(b)) => a.cmp(b),
-            (HashInstruction::External(_), _) => std::cmp::Ordering::Less,
-            (_, HashInstruction::External(_)) => std::cmp::Ordering::Less,
-            (
-                HashInstruction::ProjectConfiguration(a),
-                HashInstruction::ProjectConfiguration(b),
-            ) => a.cmp(b),
-            (HashInstruction::ProjectConfiguration(_), _) => std::cmp::Ordering::Greater,
-            (HashInstruction::TsConfiguration(a), HashInstruction::TsConfiguration(b)) => a.cmp(b),
-            (HashInstruction::TsConfiguration(_), _) => std::cmp::Ordering::Greater,
-        }
-    }
+    TaskOutput(String),
+    External(String),
+    AllExternalDependencies,
 }
 
 impl ToNapiValue for HashInstruction {
