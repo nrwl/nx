@@ -178,7 +178,7 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/eslint',
     path: '/packages/eslint/generators/workspace-rule',
   },
-  { title: '@nx/eslint', path: '/packages/eslint/executors/eslint' },
+  { title: '@nx/eslint', path: '/packages/eslint/executors/lint' },
   { title: '@nx/nest', path: '/packages/nest' },
   {
     title: '@nx/nest:application',
