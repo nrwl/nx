@@ -9,7 +9,6 @@ import { NormalizedSchema, Schema } from './schema';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -204,4 +203,3 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 }
 
 export default reduxGenerator;
-export const reduxSchematic = convertNxGenerator(reduxGenerator);

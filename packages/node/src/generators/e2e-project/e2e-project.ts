@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -167,4 +166,3 @@ async function normalizeOptions(
 }
 
 export default e2eProjectGenerator;
-export const e2eProjectSchematic = convertNxGenerator(e2eProjectGenerator);

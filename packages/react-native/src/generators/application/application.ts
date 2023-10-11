@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -76,6 +75,3 @@ export async function reactNativeApplicationGeneratorInternal(
 }
 
 export default reactNativeApplicationGenerator;
-export const reactNativeApplicationSchematic = convertNxGenerator(
-  reactNativeApplicationGenerator
-);

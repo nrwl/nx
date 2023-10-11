@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -24,8 +23,6 @@ export function middlewareGenerator(
 }
 
 export default middlewareGenerator;
-
-export const middlewareSchematic = convertNxGenerator(middlewareGenerator);
 
 function normalizeMiddlewareOptions(
   tree: Tree,

@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   installPackagesTask,
   ProjectConfiguration,
   readJson,
@@ -109,4 +108,3 @@ function checkSwcDependencies(
 }
 
 export default convertToSwcGenerator;
-export const convertToSwcSchematic = convertNxGenerator(convertToSwcGenerator);

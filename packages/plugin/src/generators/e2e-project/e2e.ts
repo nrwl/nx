@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
@@ -215,4 +214,3 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export default e2eProjectGenerator;
-export const e2eProjectSchematic = convertNxGenerator(e2eProjectGenerator);

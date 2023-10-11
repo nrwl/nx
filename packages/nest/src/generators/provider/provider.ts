@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -24,8 +23,6 @@ export function providerGenerator(
 }
 
 export default providerGenerator;
-
-export const providerSchematic = convertNxGenerator(providerGenerator);
 
 function normalizeProviderOptions(
   tree: Tree,

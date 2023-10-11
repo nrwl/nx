@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -220,4 +219,3 @@ function getCoverageProviderDependency(
 }
 
 export default vitestGenerator;
-export const vitestSchematic = convertNxGenerator(vitestGenerator);

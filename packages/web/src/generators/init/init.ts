@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -80,4 +79,3 @@ export async function webInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export default webInitGenerator;
-export const webInitSchematic = convertNxGenerator(webInitGenerator);

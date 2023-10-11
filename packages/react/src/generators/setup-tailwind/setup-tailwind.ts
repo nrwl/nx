@@ -1,7 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   joinPathFragments,
@@ -67,7 +66,3 @@ export async function setupTailwindGenerator(
 }
 
 export default setupTailwindGenerator;
-
-export const setupTailwindSchematic = convertNxGenerator(
-  setupTailwindGenerator
-);

@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -121,7 +120,3 @@ export async function lintWorkspaceRulesProjectGenerator(
 
   return installTask;
 }
-
-export const lintWorkspaceRulesProjectSchematic = convertNxGenerator(
-  lintWorkspaceRulesProjectGenerator
-);

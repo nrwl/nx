@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -151,4 +150,3 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export default pluginGenerator;
-export const pluginSchematic = convertNxGenerator(pluginGenerator);

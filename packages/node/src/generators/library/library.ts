@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -76,7 +75,6 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGenerator);
 
 async function normalizeOptions(
   tree: Tree,

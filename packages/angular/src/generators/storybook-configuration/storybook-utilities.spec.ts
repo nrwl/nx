@@ -1,15 +1,15 @@
 import { joinPathFragments, Tree, writeJson } from '@nx/devkit';
-import {
-  overrideCollectionResolutionForTesting,
-  wrapAngularDevkitSchematic,
-} from '@nx/devkit/ngcli-adapter';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
-} from './utilities';
-import { nxVersion, storybookVersion } from './versions';
-import * as targetVariations from './test-configs/different-target-variations.json';
+} from '@nx/storybook/src/utils/utilities';
+import { nxVersion, storybookVersion } from '@nx/storybook/src/utils/versions';
+import * as targetVariations from '@nx/storybook/src/utils/test-configs/different-target-variations.json';
+import libraryGenerator from '../library/library';
+import componentGenerator from '../component/component';
+import storybookConfigurationGenerator from '../storybook-configuration/storybook-configuration';
+import { Linter } from '@nx/linter';
 
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
@@ -19,38 +19,18 @@ jest.mock('nx/src/project-graph/project-graph', () => ({
     .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
 }));
 
-const componentSchematic = wrapAngularDevkitSchematic(
-  '@schematics/angular',
-  'component'
-);
-const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
-  '@schematics/angular',
-  'library'
-);
-const runAngularStorybookSchematic = wrapAngularDevkitSchematic(
-  '@nx/angular',
-  'storybook-configuration'
-);
-
 describe('testing utilities', () => {
   describe('Test functions that need workspace tree', () => {
     let appTree: Tree;
 
     beforeEach(async () => {
-      overrideCollectionResolutionForTesting({
-        '@nx/storybook': joinPathFragments(
-          __dirname,
-          '../../../../generators.json'
-        ),
-      });
-
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-      await runAngularLibrarySchematic(appTree, {
+      await libraryGenerator(appTree, {
         name: 'test-ui-lib',
       });
 
-      await componentSchematic(appTree, {
+      await componentGenerator(appTree, {
         name: 'button',
         project: 'test-ui-lib',
       });
@@ -64,10 +44,12 @@ describe('testing utilities', () => {
       });
       writeJson(appTree, 'test-ui-lib/tsconfig.json', {});
 
-      await runAngularStorybookSchematic(appTree, {
+      await storybookConfigurationGenerator(appTree, {
         name: 'test-ui-lib',
         configureCypress: true,
         configureStaticServe: false,
+        linter: Linter.EsLint,
+        generateStories: false,
       });
 
       appTree.write(

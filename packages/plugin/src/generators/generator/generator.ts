@@ -4,7 +4,6 @@ import {
   joinPathFragments,
   Tree,
   writeJson,
-  convertNxGenerator,
   generateFiles,
   getWorkspaceLayout,
   names,
@@ -187,4 +186,3 @@ export async function generatorGenerator(host: Tree, schema: Schema) {
 }
 
 export default generatorGenerator;
-export const generatorSchematic = convertNxGenerator(generatorGenerator);

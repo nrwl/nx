@@ -7,11 +7,9 @@ import {
   getUnscopedLibName,
 } from '@nx/cypress/src/utils/project-name';
 import {
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  joinPathFragments,
   readJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -154,6 +152,3 @@ function projectAlreadyHasCypress(tree: Tree): boolean {
 }
 
 export default cypressProjectGenerator;
-export const cypressProjectSchematic = convertNxGenerator(
-  cypressProjectGenerator
-);

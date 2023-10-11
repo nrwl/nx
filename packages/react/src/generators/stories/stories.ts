@@ -6,7 +6,6 @@ import {
 } from '../../utils/ast-utils';
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -203,4 +202,3 @@ export async function storiesGenerator(
 }
 
 export default storiesGenerator;
-export const storiesSchematic = convertNxGenerator(storiesGenerator);

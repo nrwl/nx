@@ -2,7 +2,6 @@ import * as ts from 'typescript';
 import { Schema } from './schema';
 import {
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -83,6 +82,3 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
 }
 
 export default expoComponentGenerator;
-export const expoComponentSchematic = convertNxGenerator(
-  expoComponentGenerator
-);

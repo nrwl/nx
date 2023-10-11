@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -187,6 +186,3 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
 }
 
 export default createPackageGenerator;
-export const createPackageSchematic = convertNxGenerator(
-  createPackageGenerator
-);
