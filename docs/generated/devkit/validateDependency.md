@@ -4,10 +4,6 @@
 
 A function to validate dependencies in a [CreateDependencies](../../devkit/documents/CreateDependencies) function
 
-**`Throws`**
-
-If the dependency is invalid.
-
 #### Parameters
 
 | Name         | Type                                                                            |
@@ -18,3 +14,7 @@ If the dependency is invalid.
 #### Returns
 
 `void`
+
+**`Throws`**
+
+If the dependency is invalid.

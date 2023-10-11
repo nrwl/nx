@@ -6,10 +6,6 @@ Read general workspace configuration such as the default project or cli settings
 
 This does _not_ provide projects configuration, use [readProjectConfiguration](../../devkit/documents/readProjectConfiguration) instead.
 
-**`Deprecated`**
-
-use readNxJson
-
 #### Parameters
 
 | Name   | Type                                  |
@@ -19,3 +15,7 @@ use readNxJson
 #### Returns
 
 [`WorkspaceConfiguration`](../../devkit/documents/WorkspaceConfiguration)
+
+**`Deprecated`**
+
+use readNxJson
