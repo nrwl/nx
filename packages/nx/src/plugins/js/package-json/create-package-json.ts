@@ -20,7 +20,7 @@ import { join } from 'path';
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
   readonly peerDependencies: Record<string, string>;
-  readonly peerDependenciesMeta: Record<string, { optional: boolean }>;
+  readonly peerDependenciesMeta: Record<string, { optional: boolean; }>;
 }
 
 /**
@@ -85,7 +85,7 @@ export function createPackageJson(
         delete packageJson.dependencies;
         delete packageJson.devDependencies;
       }
-    } catch (e) {}
+    } catch (e) { }
   }
 
   const getVersion = (
@@ -177,7 +177,31 @@ export function createPackageJson(
     packageJson.peerDependenciesMeta
   );
 
+  copyPnpmSection(rootPackageJson, packageJson);
+  copyPackageManagerSection(rootPackageJson, packageJson);
+
   return packageJson;
+}
+
+function copyPnpmSection(
+  rootPackageJson: PackageJson,
+  packageJson: PackageJson
+) {
+  if (rootPackageJson.pnpm) {
+    packageJson.pnpm = rootPackageJson.pnpm;
+  }
+}
+
+function copyPackageManagerSection(
+  rootPackageJson: PackageJson,
+  packageJson: PackageJson
+) {
+  const packageManagerRegEx = new RegExp('(npm|pnpm|yarn)@\d+\.\d+\.\d+(-.+)?');
+
+  if (rootPackageJson.packageManager
+    && packageManagerRegEx.test(rootPackageJson.packageManager)) {
+    packageJson.packageManager = rootPackageJson.packageManager;
+  }
 }
 
 export function findProjectsNpmDependencies(
@@ -219,9 +243,9 @@ export function findProjectsNpmDependencies(
   const ignoredDependencies =
     options.isProduction && rootPackageJson.devDependencies
       ? [
-          ...(options.ignoredDependencies || []),
-          ...Object.keys(rootPackageJson.devDependencies),
-        ]
+        ...(options.ignoredDependencies || []),
+        ...Object.keys(rootPackageJson.devDependencies),
+      ]
       : options.ignoredDependencies || [];
 
   findAllNpmDeps(

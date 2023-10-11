@@ -15,14 +15,14 @@ export type PackageJsonTargetConfiguration = Omit<
 export interface NxProjectPackageJsonConfiguration {
   implicitDependencies?: string[];
   tags?: string[];
-  namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
+  namedInputs?: { [inputName: string]: (string | InputDefinition)[]; };
   targets?: Record<string, PackageJsonTargetConfiguration>;
   includedScripts?: string[];
 }
 
-export type ArrayPackageGroup = { package: string; version: string }[];
+export type ArrayPackageGroup = { package: string; version: string; }[];
 export type MixedPackageGroup =
-  | (string | { package: string; version: string })[]
+  | (string | { package: string; version: string; })[]
   | Record<string, string>;
 export type PackageGroup = MixedPackageGroup | ArrayPackageGroup;
 
@@ -31,7 +31,7 @@ export interface NxMigrationsConfiguration {
   packageGroup?: PackageGroup;
 }
 
-type PackageOverride = { [key: string]: string | PackageOverride };
+type PackageOverride = { [key: string]: string | PackageOverride; };
 
 export interface PackageJson {
   // Generic Package.Json Configuration
@@ -45,24 +45,24 @@ export interface PackageJson {
   types?: string;
   module?: string;
   exports?:
-    | string
-    | Record<
-        string,
-        string | { types?: string; require?: string; import?: string }
-      >;
+  | string
+  | Record<
+    string,
+    string | { types?: string; require?: string; import?: string; }
+  >;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
-  peerDependenciesMeta?: Record<string, { optional: boolean }>;
+  peerDependenciesMeta?: Record<string, { optional: boolean; }>;
   resolutions?: Record<string, string>;
   overrides?: PackageOverride;
   bin?: Record<string, string> | string;
   workspaces?:
-    | string[]
-    | {
-        packages: string[];
-      };
+  | string[]
+  | {
+    packages: string[];
+  };
 
   // Nx Project Configuration
   nx?: NxProjectPackageJsonConfiguration;
@@ -74,6 +74,8 @@ export interface PackageJson {
   executors?: string;
   'nx-migrations'?: string | NxMigrationsConfiguration;
   'ng-update'?: string | NxMigrationsConfiguration;
+  pnpm?: Record<string, unknown>;
+  packageManager?: string;
 }
 
 export function normalizePackageGroup(
@@ -81,20 +83,20 @@ export function normalizePackageGroup(
 ): ArrayPackageGroup {
   return Array.isArray(packageGroup)
     ? packageGroup.map((x) =>
-        typeof x === 'string' ? { package: x, version: '*' } : x
-      )
+      typeof x === 'string' ? { package: x, version: '*' } : x
+    )
     : Object.entries(packageGroup).map(([pkg, version]) => ({
-        package: pkg,
-        version,
-      }));
+      package: pkg,
+      version,
+    }));
 }
 
 export function readNxMigrateConfig(
   json: Partial<PackageJson>
-): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } {
+): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup; } {
   const parseNxMigrationsConfig = (
     fromJson?: string | NxMigrationsConfiguration
-  ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup } => {
+  ): NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup; } => {
     if (!fromJson) {
       return {};
     }
