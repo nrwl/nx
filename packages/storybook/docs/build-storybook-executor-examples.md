@@ -74,8 +74,8 @@ This is the default configuration for Angular projects using Storybook. You can 
   "outputs": ["{options.outputDir}"],
   "options": {
     "outputDir": "dist/storybook/ngapp",
-    "configDir": "libs/ui/.storybook",
-    "browserTarget": "ui:build",
+    "configDir": "apps/ngapp/.storybook",
+    "browserTarget": "ngapp:build",
     "compodoc": false
   },
   "configurations": {
@@ -97,8 +97,8 @@ You can set the [`browserTarget`](/deprecated/storybook/angular-browser-target) 
   "outputs": ["{options.outputDir}"],
   "options": {
     "outputDir": "dist/storybook/ngapp",
-    "configDir": "libs/ui/.storybook",
-    "browserTarget": "ui:build-storybook",
+    "configDir": "apps/ngapp/.storybook",
+    "browserTarget": "ngapp:build-storybook",
     "compodoc": false
   },
   "configurations": {
@@ -121,8 +121,8 @@ You can add paths to stylesheets to be included in the Storybook build by using 
   "outputs": ["{options.outputDir}"],
   "options": {
     "outputDir": "dist/storybook/ngapp",
-    "configDir": "libs/ui/.storybook",
-    "browserTarget": "ui:build-storybook",
+    "configDir": "apps/ngapp/.storybook",
+    "browserTarget": "ngapp:build-storybook",
     "compodoc": false,
     "styles": ["some-styles.css"],
     "stylePreprocessorOptions": {

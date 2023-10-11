@@ -10,7 +10,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  // TODO(v18): remove Cypress
+  // TODO(katerina): Nx 18 -> remove Cypress
   ensurePackage('@nx/cypress', nxVersion);
   const { getE2eProjectName } = await import(
     '@nx/cypress/src/utils/project-name'
@@ -62,7 +62,7 @@ export async function storybookConfigurationGenerator(
     tsConfiguration: schema.tsConfiguration ?? true, // default is true
     interactionTests: schema.interactionTests ?? true, // default is true
     configureStaticServe: schema.configureStaticServe,
-    uiFramework: uiFramework as any, // cannot import UiFramework7 type dynamically
+    uiFramework: uiFramework as any, // cannot import UiFramework type dynamically
     skipFormat: true,
   });
 

@@ -22,12 +22,7 @@ Say, for example, that you have a client app, an admin app, and a number of UI l
 happynrwl/
 ├── apps/
 │   ├── client/
-│   ├── client-e2e/
 │   ├── admin/
-│   ├── admin-e2e/
-│   ├── client-ui-header-e2e/
-│   ├── admin-ui-dashboard-e2e/
-│   └── shared-ui-cta-e2e/
 ├── libs/
 │   ├── client/
 │   │   ├── feature/
@@ -75,7 +70,7 @@ happynrwl/
 
 In this case you can see that we have two deployable applications, `client` and `admin`, and we have a number of UI libraries, each associated with a specific app. For example, `client-ui-header` is a UI library associated with the `client` app, and `admin-ui-dashboard` is a UI library associated with the `admin` app. We also have one more library, the `shared-ui-cta` library, which is shared between the two apps. The way we have structured our folders is such that any new library that is related to the `client` app will go in the `libs/client` folder, and in that folder we have a sub-folder to determine if the new library is related to `ui` or anything else. The same applies to the `admin` app. Any library shared between the two apps will live under a subfolder of the `libs/shared` folder.
 
-Notice how we have already generated Storybook configuration and stories for all of our `ui` libraries. We have also generated a `e2e` application for each of these `ui` libraries, which is going to use the corresponding Storybook instance to run end-to-end tests.
+Notice how we have already generated Storybook configuration and stories for all of our `ui` libraries.
 
 ## Setting up the thematic Storybook instances
 
@@ -96,19 +91,31 @@ The commands below uses the `as-provided` directory flag behavior, which is the 
 {% /callout %}
 
 ```shell
-nx g @nx/angular:lib storybook-host-client --directory=libs/storybook-host-client
-nx g @nx/angular:lib storybook-host-admin --directory=libs/storybook-host-admin
-nx g @nx/angular:lib storybook-host-shared --directory=libs/storybook-host-shared
+nx g @nx/angular:lib storybook-host-client --directory=libs/storybook-host-client --projectNameAndRootFormat=as-provided
+```
+
+```shell
+nx g @nx/angular:lib storybook-host-admin --directory=libs/storybook-host-admin --projectNameAndRootFormat=as-provided
+```
+
+```shell
+nx g @nx/angular:lib storybook-host-shared --directory=libs/storybook-host-shared --projectNameAndRootFormat=as-provided
 ```
 
 ### Generate the Storybook configuration for the libraries
 
-Now, we need to generate Storybook configuration for all these new libraries. We don't want to generate `stories` or a new Cypress project for these libraries, so we can run the following commands:
+Now, we need to generate Storybook configuration for all these new libraries. We don't want to generate `stories` for these libraries, so we can run the following commands:
 
 ```shell
-nx g @nx/storybook:configuration storybook-host-client --uiFramework=@storybook/angular
-nx g @nx/storybook:configuration storybook-host-admin --uiFramework=@storybook/angular
-nx g @nx/storybook:configuration storybook-host-shared --uiFramework=@storybook/angular
+nx g @nx/storybook:configuration storybook-host-client --uiFramework=@storybook/angular --interactionTests=true
+```
+
+```shell
+nx g @nx/storybook:configuration storybook-host-admin --uiFramework=@storybook/angular --interactionTests=true
+```
+
+```shell
+nx g @nx/storybook:configuration storybook-host-shared --uiFramework=@storybook/angular --interactionTests=true
 ```
 
 ### Import the stories
@@ -117,14 +124,21 @@ Now that our Storybook configuration is ready for our new libraries, we can go a
 
 Thanks to our folder structure, we can easily configure Storybook to import all the stories under a specific folder, for example, which are associated with a specific scope.
 
-For example, `libs/storybook-host-admin/.storybook/main.js`:
+For example, `libs/storybook-host-admin/.storybook/main.ts`:
 
-```javascript {% fileName="libs/storybook-host-admin/.storybook/main.js" %}
-module.exports = {
-  core: { builder: 'webpack5' },
+```javascript {% fileName="libs/storybook-host-admin/.storybook/main.ts" %}
+import type { StorybookConfig } from '@storybook/angular';
+
+const config: StorybookConfig = {
   stories: ['../../admin/ui/**/src/lib/**/*.stories.ts'],
-  addons: ['@storybook/addon-essentials'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  framework: {
+    name: '@storybook/angular',
+    options: {},
+  },
 };
+
+export default config;
 ```
 
 And don't forget the `libs/storybook-host-admin/.storybook/tsconfig.json`:
@@ -136,7 +150,7 @@ And don't forget the `libs/storybook-host-admin/.storybook/tsconfig.json`:
     "emitDecoratorMetadata": true
   },
   "exclude": ["../**/*.spec.ts"],
-  "include": ["../../admin/ui/**/src/lib/**/*.stories.ts", "*.js"]
+  "include": ["../../admin/ui/**/src/lib/**/*.stories.ts", "*.ts"]
 }
 ```
 
