@@ -7,11 +7,7 @@ import { InProcessTaskHasher } from '../../hasher/task-hasher';
 import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
 import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
-import {
-  transformNxJsonForRust,
-  transformProjectGraphForRust,
-  transformTaskGraphForRust,
-} from '../transform-objects';
+import { transformProjectGraphForRust } from '../transform-objects';
 
 describe('task planner', () => {
   const packageJson = {
@@ -52,9 +48,9 @@ describe('task planner', () => {
       tasks: Task[],
       taskGraph: TaskGraph
     ): Record<string, string[]> {
-      const plans =  hashPlanner.getPlans(
+      const plans = hashPlanner.getPlans(
         tasks.map((task) => task.id),
-        transformTaskGraphForRust(taskGraph)
+        taskGraph
       );
 
       for (const planId of Object.keys(plans)) {
@@ -165,7 +161,7 @@ describe('task planner', () => {
 
       const planner = new HashPlanner(
         tempFs.tempDir,
-        transformNxJsonForRust(nxJson) as any,
+        nxJson as any,
         transformProjectGraphForRust(projectGraph)
       );
 
@@ -231,7 +227,7 @@ describe('task planner', () => {
     );
     const planner = new HashPlanner(
       tempFs.tempDir,
-      transformNxJsonForRust(nxJson) as any,
+      nxJson as any,
       transformProjectGraphForRust(projectGraph)
     );
     const hashPlan = await assertHashPlan(
@@ -308,7 +304,7 @@ describe('task planner', () => {
     );
     const planner = new HashPlanner(
       tempFs.tempDir,
-      transformNxJsonForRust(nxJson) as any,
+      nxJson as any,
       transformProjectGraphForRust(projectGraph)
     );
     let hashPlans = await assertHashPlan(
@@ -371,7 +367,7 @@ describe('task planner', () => {
     );
     const planner = new HashPlanner(
       tempFs.tempDir,
-      transformNxJsonForRust(nxJson) as any,
+      nxJson as any,
       transformProjectGraphForRust(projectGraph)
     );
     const tasks = Object.values(taskGraph.tasks);
@@ -454,7 +450,7 @@ describe('task planner', () => {
 
         const planner = new HashPlanner(
           tempFs.tempDir,
-          transformNxJsonForRust(nxJson) as any,
+          nxJson as any,
           transformProjectGraphForRust(projectGraph)
         );
         const tasks = Object.values(taskGraph.tasks);
@@ -524,7 +520,7 @@ describe('task planner', () => {
 
     const planner = new HashPlanner(
       tempFs.tempDir,
-      transformNxJsonForRust(nxJson) as any,
+      nxJson as any,
       transformProjectGraphForRust(projectGraph)
     );
     let plans = await assertHashPlan(
@@ -579,7 +575,7 @@ describe('task planner', () => {
     );
     const planner = new HashPlanner(
       tempFs.tempDir,
-      transformNxJsonForRust(nxJson) as any,
+      nxJson as any,
       transformProjectGraphForRust(projectGraph)
     );
     let tasks = Object.values(taskGraph.tasks);
@@ -627,11 +623,7 @@ describe('task planner', () => {
       {}
     );
     const transformed = transformProjectGraphForRust(projectGraph);
-    const planner = new HashPlanner(
-      tempFs.tempDir,
-      transformNxJsonForRust(nxJson) as any,
-      transformed
-    );
+    const planner = new HashPlanner(tempFs.tempDir, nxJson as any, transformed);
     let plans = await assertHashPlan(
       taskGraph.tasks['app:build'],
       taskGraph,
