@@ -1,5 +1,9 @@
 # Enterprise Release Notes
 
+### 2308.22.7.patch3
+
+- Fixes a compatibility issue with the latest `nx-cloud` release
+
 ### 2308.22.7.patch2
 
 - Fix: github member invites
