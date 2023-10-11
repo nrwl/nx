@@ -90,6 +90,10 @@
       "type": "string",
       "description": "Specifies the url pointing to an instance of nx cloud. Used for remote caching and displaying run links."
     },
+    "nxCloudEncryptionKey": {
+      "type": "string",
+      "description": "Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud."
+    },
     "parallel": {
       "type": "number",
       "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
@@ -371,6 +375,10 @@
               }
             ]
           }
+        },
+        "cache": {
+          "type": "boolean",
+          "description": "Specifies if the given target should be cacheable"
         }
       },
       "additionalProperties": false

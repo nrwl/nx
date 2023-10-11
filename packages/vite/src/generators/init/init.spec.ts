@@ -89,6 +89,7 @@ describe('@nx/vite:init', () => {
         '!{projectRoot}/tsconfig.spec.json'
       );
       expect(testDefaults).toEqual({
+        cache: true,
         inputs: ['default', '^production'],
       });
     });

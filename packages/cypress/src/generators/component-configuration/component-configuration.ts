@@ -119,25 +119,17 @@ function addTargetToProject(
 
 function updateNxJsonConfiguration(tree: Tree) {
   const nxJson = readNxJson(tree);
-  nxJson.tasksRunnerOptions = {
-    ...nxJson?.tasksRunnerOptions,
-    default: {
-      ...nxJson?.tasksRunnerOptions?.default,
-      options: {
-        ...nxJson?.tasksRunnerOptions?.default?.options,
-        cacheableOperations: Array.from(
-          new Set([
-            ...(nxJson?.tasksRunnerOptions?.default?.options
-              ?.cacheableOperations ?? []),
-            'component-test',
-          ])
-        ),
-      },
-    },
-  };
+
+  const cacheableOperations: string[] | null =
+    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
+  if (cacheableOperations && !cacheableOperations.includes('component-test')) {
+    cacheableOperations.push('component-test');
+  }
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['component-test'] ??= {};
+  nxJson.targetDefaults['component-test'].cache ??= true;
 
   if (nxJson.namedInputs) {
-    nxJson.targetDefaults ??= {};
     const productionFileSet = nxJson.namedInputs?.production;
     if (productionFileSet) {
       nxJson.namedInputs.production = Array.from(

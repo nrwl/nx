@@ -9,7 +9,7 @@ function readCacheDirectoryProperty(root: string): string | undefined {
     const nxJson = readJsonFile<NxJsonConfiguration>(join(root, 'nx.json'));
     return (
       nxJson.cacheDirectory ??
-      nxJson.tasksRunnerOptions.default.options.cacheDirectory
+      nxJson.tasksRunnerOptions?.default.options.cacheDirectory
     );
   } catch {
     return undefined;

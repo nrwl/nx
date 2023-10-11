@@ -142,14 +142,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       affected: {
         defaultBase: 'main',
       },
-      tasksRunnerOptions: {
-        default: {
-          options: {
-            cacheableOperations: ['build', 'test', 'e2e'],
-          },
-          runner: 'nx/tasks-runners/default',
-        },
-      },
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         production: [
@@ -164,12 +156,15 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         build: {
           dependsOn: ['^build'],
           inputs: ['production', '^production'],
+          cache: true,
         },
         e2e: {
           inputs: ['default', '^production'],
+          cache: true,
         },
         test: {
           inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
+          cache: true,
         },
       },
     });

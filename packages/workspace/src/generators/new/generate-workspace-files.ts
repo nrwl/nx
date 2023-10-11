@@ -54,8 +54,6 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
     if (options.preset === Preset.NPM) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
-      delete json.implicitDependencies;
-      delete json.targetDefaults;
     }
     return json;
   });
@@ -69,19 +67,20 @@ function createNxJson(
     affected: {
       defaultBase,
     },
-    tasksRunnerOptions: {
-      default: {
-        runner: 'nx/tasks-runners/default',
-        options: {
-          cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-        },
+    targetDefaults: {
+      build: {
+        cache: true,
+        dependsOn: ['^build'],
       },
-    },
-  };
-
-  nxJson.targetDefaults = {
-    build: {
-      dependsOn: ['^build'],
+      lint: {
+        cache: true,
+      },
+      test: {
+        cache: true,
+      },
+      e2e: {
+        cache: true,
+      },
     },
   };
 
