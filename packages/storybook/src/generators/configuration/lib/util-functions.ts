@@ -26,7 +26,7 @@ import {
   TsConfig,
 } from '../../../utils/utilities';
 import { StorybookConfigureSchema } from '../schema';
-import { UiFramework7 } from '../../../utils/models';
+import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile } from '@nx/linter/src/generators/utils/eslint-file';
 import { useFlatConfig } from '@nx/linter/src/utils/flat-config';
@@ -36,7 +36,7 @@ const DEFAULT_PORT = 4400;
 export function addStorybookTask(
   tree: Tree,
   projectName: string,
-  uiFramework: string,
+  uiFramework: UiFramework,
   interactionTests: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
@@ -160,7 +160,7 @@ export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
 export function createStorybookTsconfigFile(
   tree: Tree,
   projectRoot: string,
-  uiFramework: UiFramework7,
+  uiFramework: UiFramework,
   isRootProject: boolean,
   mainDir: 'components' | 'src'
 ) {
@@ -525,7 +525,7 @@ export function addStorybookToNamedInputs(tree: Tree) {
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
-  uiFramework: UiFramework7,
+  uiFramework: UiFramework,
   js: boolean,
   tsConfiguration: boolean,
   root: string,

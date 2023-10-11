@@ -262,9 +262,10 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
 
 export function pleaseUpgrade(): string {
   return `
-    Storybook 6 is no longer maintained. Please upgrade to Storybook 7.
+    Storybook 6 is no longer maintained, and not supported in Nx. 
+    Please upgrade to Storybook 7.
 
     Here is a guide on how to upgrade:
-    https://nx.dev/packages/storybook/generators/migrate-7
+    https://nx.dev/nx-api/storybook/generators/migrate-7
     `;
 }
