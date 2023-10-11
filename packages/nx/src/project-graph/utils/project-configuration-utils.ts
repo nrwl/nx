@@ -1,5 +1,3 @@
-import { basename } from 'node:path';
-
 import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
@@ -7,30 +5,20 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
-import { NxPluginV2 } from '../../utils/nx-plugin';
+import { LoadedNxPlugin, readPluginsOptions } from '../../utils/nx-plugin';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import minimatch = require('minimatch');
 
 export function mergeProjectConfigurationIntoRootMap(
   projectRootMap: Map<string, ProjectConfiguration>,
-  project: ProjectConfiguration,
-  // project.json is a special case, so we need to detect it.
-  file: string
+  project: ProjectConfiguration
 ): void {
   const matchingProject = projectRootMap.get(project.root);
 
   if (!matchingProject) {
     projectRootMap.set(project.root, project);
     return;
-  } else if (
-    project.name &&
-    project.name !== matchingProject.name &&
-    basename(file) === 'project.json'
-  ) {
-    // `name` inside project.json overrides any names from
-    // inference plugins
-    matchingProject.name = project.name;
   }
 
   // This handles top level properties that are overwritten.
@@ -41,7 +29,6 @@ export function mergeProjectConfigurationIntoRootMap(
   const updatedProjectConfiguration = {
     ...matchingProject,
     ...project,
-    name: matchingProject.name,
   };
 
   // The next blocks handle properties that should be themselves merged (e.g. targets, tags, and implicit dependencies)
@@ -79,7 +66,7 @@ export function mergeProjectConfigurationIntoRootMap(
 export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: NxPluginV2[],
+  plugins: LoadedNxPlugin[],
   root: string = workspaceRoot
 ): {
   projects: Record<string, ProjectConfiguration>;
@@ -87,6 +74,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
 } {
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  const pluginOptions = readPluginsOptions(nxJson);
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const plugin of plugins) {
@@ -97,16 +85,19 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
         const { projects: projectNodes, externalNodes: pluginExternalNodes } =
-          createNodes(file, {
-            nxJsonConfiguration: nxJson,
-            workspaceRoot: root,
-          });
+          createNodes(
+            file,
+            {
+              nxJsonConfiguration: nxJson,
+              workspaceRoot: root,
+            },
+            pluginOptions[plugin.name] ?? {}
+          );
         for (const node in projectNodes) {
           projectNodes[node].name ??= node;
           mergeProjectConfigurationIntoRootMap(
             projectRootMap,
-            projectNodes[node],
-            file
+            projectNodes[node]
           );
         }
         Object.assign(externalNodes, pluginExternalNodes);

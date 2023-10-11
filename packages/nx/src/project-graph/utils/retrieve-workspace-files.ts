@@ -22,6 +22,7 @@ import {
 } from '../../../plugins/package-json-workspaces';
 import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './project-configuration-utils';
 import {
+  LoadedNxPlugin,
   loadNxPlugins,
   loadNxPluginsSync,
   NxPluginV2,
@@ -169,7 +170,7 @@ export function retrieveProjectConfigurationsSync(
 function _retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
-  plugins: NxPluginV2[],
+  plugins: LoadedNxPlugin[],
   globs: string[]
 ): {
   externalNodes: Record<string, ProjectGraphExternalNode>;
@@ -273,7 +274,7 @@ export function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[],
-  plugins: NxPluginV2[]
+  plugins: LoadedNxPlugin[]
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;

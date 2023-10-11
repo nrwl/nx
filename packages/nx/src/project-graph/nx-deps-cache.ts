@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { ensureDirSync, renameSync } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxJsonConfiguration, PluginDefinition } from '../config/nx-json';
 import {
   FileData,
   FileMap,
@@ -17,6 +17,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
+import { PackageJson } from '../utils/package-json';
 import { nxVersion } from '../utils/versions';
 
 export interface FileMapCache {
@@ -24,7 +25,11 @@ export interface FileMapCache {
   nxVersion: string;
   deps: Record<string, string>;
   pathMappings: Record<string, any>;
-  nxJsonPlugins: { name: string; version: string }[];
+  nxJsonPlugins: {
+    name: string;
+    version: string;
+    options?: Record<string, unknown>;
+  }[];
   pluginsConfig?: any;
   fileMap: FileMap;
 }
@@ -111,10 +116,15 @@ export function createProjectFileMapCache(
   fileMap: FileMap,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
 ) {
-  const nxJsonPlugins = (nxJson?.plugins || []).map((p) => ({
-    name: p,
-    version: packageJsonDeps[p],
-  }));
+  const nxJsonPlugins = (nxJson?.plugins || []).map((p) => {
+    const [plugin, options] =
+      typeof p === 'string' ? [p] : [p.plugin, p.options];
+    return {
+      name: plugin,
+      version: packageJsonDeps[plugin],
+      options,
+    };
+  });
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
@@ -213,9 +223,10 @@ export function shouldRecomputeWholeGraph(
   // a plugin has changed
   if (
     (nxJson?.plugins || []).some((t) => {
-      const matchingPlugin = cache.nxJsonPlugins.find((p) => p.name === t);
-      if (!matchingPlugin) return true;
-      return matchingPlugin.version !== packageJsonDeps[t];
+      const matchingPlugin = cache.nxJsonPlugins.find(
+        (p) => p.name === (typeof t === 'string' ? t : t.plugin)
+      );
+      return pluginChanged(t, packageJsonDeps, matchingPlugin);
     })
   ) {
     return true;
@@ -332,4 +343,48 @@ function processProjectNode(
       filesToProcess[projectName].push(f);
     }
   }
+}
+
+function pluginChanged(
+  pluginDefinition: PluginDefinition,
+  packageJsonDeps: PackageJson['dependencies'],
+  cacheEntry: FileMapCache['nxJsonPlugins'][number]
+) {
+  // plugin was just installed
+  if (!cacheEntry) {
+    return true;
+  }
+
+  const [plugin, options] =
+    typeof pluginDefinition === 'string'
+      ? [pluginDefinition]
+      : [pluginDefinition.plugin, pluginDefinition.options];
+
+  // installed version of the plugin changed
+  if (cacheEntry.version !== packageJsonDeps[plugin]) {
+    return true;
+  }
+
+  // Options definitely changed, most likely from not being specified to being specified.
+  if (typeof options !== typeof cacheEntry.options) {
+    return true;
+  }
+
+  // Version is same, neither have options, equivalent config.
+  if (!cacheEntry.options && !options) {
+    return false;
+  }
+
+  const keys = new Set([
+    ...Object.keys(options),
+    ...Object.keys(cacheEntry.options),
+  ]);
+  for (const key of keys) {
+    if (options[key] !== cacheEntry[key]) {
+      // An option changed
+      return true;
+    }
+  }
+  // Nothing changed.
+  return false;
 }

@@ -19,6 +19,7 @@ import {
   isNxPluginV1,
   isNxPluginV2,
   loadNxPlugins,
+  readPluginsOptions,
 } from '../utils/nx-plugin';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
@@ -233,6 +234,7 @@ async function updateProjectGraphWithPlugins(
   initProjectGraph: ProjectGraph
 ) {
   const plugins = await loadNxPlugins(context.nxJsonConfiguration?.plugins);
+  const pluginsOptions = readPluginsOptions(context.nxJsonConfiguration);
   let graph = initProjectGraph;
   for (const plugin of plugins) {
     try {
@@ -285,9 +287,12 @@ async function updateProjectGraphWithPlugins(
   await Promise.all(
     createDependencyPlugins.map(async (plugin) => {
       try {
-        const dependencies = await plugin.createDependencies({
-          ...context,
-        });
+        const dependencies = await plugin.createDependencies(
+          {
+            ...context,
+          },
+          pluginsOptions[plugin.name] ?? {}
+        );
 
         for (const dep of dependencies) {
           builder.addDependency(

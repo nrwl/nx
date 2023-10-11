@@ -1,5 +1,11 @@
-# Type alias: CreateNodes
+# Type alias: CreateNodes<T\>
 
-Ƭ **CreateNodes**: readonly [projectFilePattern: string, createNodesFunction: CreateNodesFunction]
+Ƭ **CreateNodes**<`T`\>: readonly [projectFilePattern: string, createNodesFunction: CreateNodesFunction<T\>]
 
 A pair of file patterns and [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
+
+#### Type parameters
+
+| Name | Type                                                                    |
+| :--- | :---------------------------------------------------------------------- |
+| `T`  | extends `Record`<`string`, `unknown`\> = `Record`<`string`, `unknown`\> |
