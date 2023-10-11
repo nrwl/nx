@@ -110,6 +110,7 @@
       "@nx/webpack": ["packages/webpack"],
       "@nx/webpack/*": ["packages/webpack/*"],
       "@nx/workspace": ["packages/workspace"],
+      "@nx/workspace-plugin": ["tools/workspace-plugin/src/index.ts"],
       "@nx/workspace/*": ["packages/workspace/*"],
       "@nx/workspace/testing": ["packages/workspace/testing"],
       "create-nx-workspace": ["packages/create-nx-workspace/index.ts"],

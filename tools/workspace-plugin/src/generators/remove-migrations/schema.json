@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "RemoveMigrations",
+  "title": "",
+  "type": "object",
+  "properties": {
+    "v": {
+      "type": "number"
+    }
+  },
+  "required": []
+}
