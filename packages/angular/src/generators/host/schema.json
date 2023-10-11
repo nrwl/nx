@@ -173,6 +173,11 @@
       "type": "boolean",
       "default": false,
       "x-priority": "important"
+    },
+    "typescriptConfiguration": {
+      "type": "boolean",
+      "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+      "default": true
     }
   },
   "additionalProperties": false,

@@ -244,6 +244,9 @@ export async function addLint(
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+  const { mapLintPattern } =
+    // nx-ignore-next-line
+    require('@nx/linter/src/generators/lint-project/lint-project');
   const projectConfiguration = readProjectConfiguration(tree, options.name);
   const task = lintProjectGenerator(tree, {
     project: options.name,
@@ -254,7 +257,11 @@ export async function addLint(
     ],
     unitTestRunner: options.unitTestRunner,
     eslintFilePatterns: [
-      `${options.projectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
+      mapLintPattern(
+        options.projectRoot,
+        options.js ? 'js' : 'ts',
+        options.rootProject
+      ),
     ],
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,

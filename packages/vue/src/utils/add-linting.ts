@@ -72,7 +72,7 @@ export async function addLinting(
   }
 }
 
-function editEslintConfigFiles(
+export function editEslintConfigFiles(
   tree: Tree,
   projectRoot: string,
   rootProject?: boolean
