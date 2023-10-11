@@ -478,6 +478,137 @@ describe('React Module Federation', () => {
         expect(hostE2eResults).toContain('All specs passed!');
       }
     }, 500_000);
+
+    describe('Promised based remotes', () => {
+      it('should support promised based remotes', async () => {
+        const remote = uniq('remote');
+        const host = uniq('host');
+
+        runCLI(
+          `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false`
+        );
+
+        // Update remote to be loaded via script
+        updateFile(
+          `${remote}/module-federation.config.js`,
+          stripIndents`
+          module.exports = {
+            name: '${remote}',
+            library: { type: 'var', name: '${remote}' },
+            exposes: {
+              './Module': './src/remote-entry.ts',
+            },
+          };
+          `
+        );
+
+        updateFile(
+          `${remote}/webpack.config.prod.js`,
+          `module.exports = require('./webpack.config');`
+        );
+
+        // Update host to use promise based remote
+        updateFile(
+          `${host}/module-federation.config.js`,
+          `module.exports = {
+          name: '${host}',
+          library: { type: 'var', name: '${host}' },
+          remotes: [
+            [
+              '${remote}',
+              \`promise new Promise(resolve => {
+            const remoteUrl = 'http://localhost:4201/remoteEntry.js';
+            const script = document.createElement('script');
+            script.src = remoteUrl;
+            script.onload = () => {
+              const proxy = {
+                get: (request) => window.${remote}.get(request),
+                init: (arg) => {
+                  try {
+                    window.${remote}.init(arg);
+                  } catch (e) {
+                    console.log('Remote container already initialized');
+                  }
+                }
+              };
+              resolve(proxy);
+            }
+            document.head.appendChild(script);
+          })\`,
+            ],
+          ],
+        };
+        `
+        );
+
+        updateFile(
+          `${host}/webpack.config.prod.js`,
+          `module.exports = require('./webpack.config');`
+        );
+
+        // Update e2e project.json
+        updateJson(`${host}-e2e/project.json`, (json) => {
+          return {
+            ...json,
+            targets: {
+              ...json.targets,
+              e2e: {
+                ...json.targets.e2e,
+                options: {
+                  ...json.targets.e2e.options,
+                  devServerTarget: `${host}:serve-static:production`,
+                },
+              },
+            },
+          };
+        });
+
+        // update e2e
+        updateFile(
+          `${host}-e2e/src/e2e/app.cy.ts`,
+          `
+        import { getGreeting } from '../support/app.po';
+
+        describe('${host}', () => {
+          beforeEach(() => cy.visit('/'));
+
+          it('should display welcome message', () => {
+            getGreeting().contains('Welcome ${host}');
+          });
+
+          it('should navigate to /${remote} from /', () => {
+            cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
+            1
+          )}').click();
+            cy.url().should('include', '/${remote}');
+            getGreeting().contains('Welcome ${remote}');
+          });
+        });
+        `
+        );
+
+        // Build host and remote
+        const buildOutput = runCLI(`build ${host}`);
+        const remoteOutput = runCLI(`build ${remote}`);
+
+        expect(buildOutput).toContain('Successfully ran target build');
+        expect(remoteOutput).toContain('Successfully ran target build');
+
+        if (runE2ETests()) {
+          const remoteProcess = await runCommandUntil(
+            `serve-static ${remote} --no-watch --verbose`,
+            () => {
+              return true;
+            }
+          );
+          const hostE2eResults = runCLI(`e2e ${host}-e2e --no-watch --verbose`);
+          expect(hostE2eResults).toContain('All specs passed!');
+
+          remoteProcess.kill('SIGKILL');
+          await killProcessAndPorts(remoteProcess.pid, 4201);
+        }
+      }, 500_000);
+    });
   });
 
   function readPort(appName: string): number {
