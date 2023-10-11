@@ -4,10 +4,7 @@ import {
   Project,
   Target,
   ProjectGraph as RustProjectGraph,
-  NxJson,
 } from './index';
-import { TaskGraph } from '../config/task-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
 
 export function transformProjectGraphForRust(
   graph: ProjectGraph
@@ -24,12 +21,6 @@ export function transformProjectGraphForRust(
         executor: targetConfig.executor,
         inputs: targetConfig.inputs,
         outputs: targetConfig.outputs,
-        configurations: targetConfig.configurations
-          ? `${JSON.stringify(targetConfig.configurations)}`
-          : undefined,
-        options: targetConfig.options
-          ? `${JSON.stringify(targetConfig.options)}`
-          : undefined,
       };
     }
     nodes[projectName] = {
@@ -67,22 +58,5 @@ export function transformProjectGraphForRust(
   };
 }
 
-export function transformTaskGraphForRust(taskGraph: TaskGraph) {
-  for (const key of Object.keys(taskGraph.tasks)) {
-    const task = taskGraph.tasks[key];
-    if (task.overrides) {
-      task.overrides = JSON.stringify(task.overrides);
-    }
-  }
-  return taskGraph;
-}
 
-export function transformNxJsonForRust(nxJson: NxJsonConfiguration): NxJson {
-  for (const key of Object.keys(nxJson.targetDefaults ?? {})) {
-    const targetDefault = nxJson.targetDefaults[key];
-    if (targetDefault.options) {
-      targetDefault.options = JSON.stringify(targetDefault.options);
-    }
-  }
-  return nxJson as unknown as NxJson;
-}
+

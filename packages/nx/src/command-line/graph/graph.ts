@@ -30,11 +30,7 @@ import { getAffectedGraphNodes } from '../affected/affected';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { HashPlanner } from '../../native';
-import {
-  transformNxJsonForRust,
-  transformProjectGraphForRust,
-  transformTaskGraphForRust,
-} from '../../native/transform-objects';
+import { transformProjectGraphForRust } from '../../native/transform-objects';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -635,7 +631,7 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
 
   const planner = new HashPlanner(
     workspaceRoot,
-    transformNxJsonForRust(nxJson),
+    nxJson,
     transformProjectGraphForRust(graph)
   );
   performance.mark('task hash plan generation:start');
@@ -646,10 +642,9 @@ async function createTaskGraphClientResponse(): Promise<TaskGraphClientResponse>
         continue;
       }
 
-      plans[task.id] = planner.getPlans(
-        [task.id],
-        transformTaskGraphForRust(individualTaskGraph)
-      )[task.id];
+      plans[task.id] = planner.getPlans([task.id], individualTaskGraph)[
+        task.id
+      ];
     }
   }
   performance.mark('task hash plan generation:end');

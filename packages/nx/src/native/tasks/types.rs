@@ -10,7 +10,7 @@ use napi::{
 pub struct Task {
     pub id: String,
     pub target: TaskTarget,
-    pub overrides: String,
+    pub outputs: Vec<String>,
     pub project_root: Option<String>,
 }
 

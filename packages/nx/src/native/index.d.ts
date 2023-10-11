@@ -31,8 +31,6 @@ export interface Target {
   executor?: string
   inputs?: Array<JsInputs>
   outputs?: Array<string>
-  options?: string
-  configurations?: string
 }
 export interface Project {
   root: string
@@ -48,7 +46,7 @@ export interface ProjectGraph {
 export interface Task {
   id: string
   target: TaskTarget
-  overrides: string
+  outputs: Array<string>
   projectRoot?: string
 }
 export interface TaskTarget {
