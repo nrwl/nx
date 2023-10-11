@@ -158,6 +158,18 @@ const LARGE_BUFFER = 1024 * 1000000;
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
     });
+    // execSync(`git rebase master latest`, {
+    //   stdio: [0, 1, 2],
+    //   maxBuffer: LARGE_BUFFER,
+    // });
+    // execSync(`git push`, {
+    //   stdio: [0, 1, 2],
+    //   maxBuffer: LARGE_BUFFER,
+    // });
+    // execSync(`git checkout -`, {
+    //   stdio: [0, 1, 2],
+    //   maxBuffer: LARGE_BUFFER,
+    // });
   }
 
   process.exit(0);

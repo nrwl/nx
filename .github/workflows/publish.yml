@@ -229,6 +229,11 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
+      - name: Trigger Docs Release
+        run: |
+          git rebase $GITHUB_REF_NAME latest
+          git push
+          git checkout -
       - name: Publish
         run: |
           git checkout -b publish/$GITHUB_REF_NAME
