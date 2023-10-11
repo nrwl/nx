@@ -3,7 +3,11 @@ import * as fs from 'fs';
 import * as configModule from '../../../config/configuration';
 import { DependencyType, ProjectGraph } from '../../../config/project-graph';
 import * as hashModule from '../../../hasher/task-hasher';
-import { copyPackageManagerSection, copyPnpmSection, createPackageJson } from './create-package-json';
+import {
+  copyPackageManagerSection,
+  copyPnpmSection,
+  createPackageJson,
+} from './create-package-json';
 import * as fileutilsModule from '../../../utils/fileutils';
 import { PackageJson } from '../../../utils/package-json';
 
@@ -12,12 +16,11 @@ jest.mock('../../../utils/workspace-root', () => ({
 }));
 
 describe('createPackageJson', () => {
-  it('should create a package.json', () => { });
+  it('should create a package.json', () => {});
 });
 
 describe('copyPnpmSection', () => {
   it('should copy pnpm section if it exists', () => {
-
     const rootPackageJson: PackageJson = {
       name: 'root',
       version: '0.0.0',
@@ -26,8 +29,8 @@ describe('copyPnpmSection', () => {
           readPackage: 'echo "readPackage"',
         },
         patchedDependencies: {
-          '@nrwl/workspace@1.2.3': 'patches/@nrwl__workspace@1.2.3.patch'
-        }
+          '@nrwl/workspace@1.2.3': 'patches/@nrwl__workspace@1.2.3.patch',
+        },
       },
     };
 
@@ -46,7 +49,7 @@ describe('copyPnpmSection', () => {
   it('should not create pnpm section if root does not have it', () => {
     const rootPackageJsonWithoutPnpm: PackageJson = {
       name: 'root',
-      version: '0.0.0'
+      version: '0.0.0',
     };
 
     let packageJson = rootPackageJsonWithoutPnpm;
@@ -59,7 +62,6 @@ describe('copyPnpmSection', () => {
 
 describe('copyPackageManagerSection', () => {
   it('should copy packageManager section if it is exists and is valid', () => {
-
     const rootPackageJson: PackageJson = {
       name: 'root',
       version: '0.0.0',
@@ -77,7 +79,6 @@ describe('copyPackageManagerSection', () => {
   });
 
   it('should not copy packageManager section if it is exists but is invalid', () => {
-
     const rootPackageJson: PackageJson = {
       name: 'root',
       version: '0.0.0',
@@ -94,7 +95,6 @@ describe('copyPackageManagerSection', () => {
   });
 
   it('should not create packageManager section if it does not exist', () => {
-
     const rootPackageJson: PackageJson = {
       name: 'root',
       version: '0.0.0',

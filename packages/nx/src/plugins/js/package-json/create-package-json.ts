@@ -20,7 +20,7 @@ import { join } from 'path';
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
   readonly peerDependencies: Record<string, string>;
-  readonly peerDependenciesMeta: Record<string, { optional: boolean; }>;
+  readonly peerDependenciesMeta: Record<string, { optional: boolean }>;
 }
 
 /**
@@ -85,7 +85,7 @@ export function createPackageJson(
         delete packageJson.dependencies;
         delete packageJson.devDependencies;
       }
-    } catch (e) { }
+    } catch (e) {}
   }
 
   const getVersion = (
@@ -222,9 +222,9 @@ export function findProjectsNpmDependencies(
   const ignoredDependencies =
     options.isProduction && rootPackageJson.devDependencies
       ? [
-        ...(options.ignoredDependencies || []),
-        ...Object.keys(rootPackageJson.devDependencies),
-      ]
+          ...(options.ignoredDependencies || []),
+          ...Object.keys(rootPackageJson.devDependencies),
+        ]
       : options.ignoredDependencies || [];
 
   findAllNpmDeps(
@@ -368,7 +368,10 @@ export function copyPackageManagerSection(
   const isValid = packageManagerRegEx.test(rootPackageJson?.packageManager);
 
   if (rootPackageJson?.packageManager && !isValid) {
-    console.warn('Invalid package manager setting', rootPackageJson.packageManager);
+    console.warn(
+      'Invalid package manager setting',
+      rootPackageJson.packageManager
+    );
   }
   if (rootPackageJson.packageManager && isValid) {
     packageJson.packageManager = rootPackageJson.packageManager;
