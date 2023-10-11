@@ -1,7 +1,7 @@
-use crate::native::cache::expand_outputs::get_files_for_outputs;
 use crate::native::tasks::utils;
 use crate::native::tasks::utils::InterpolateOptions;
 use crate::native::utils::glob::build_glob_set;
+use crate::native::{cache::expand_outputs::get_files_for_outputs, tasks::types::HashInstruction};
 use crate::native::{
     project_graph::types::{Project, ProjectGraph},
     tasks::types::{Task, TaskGraph},
@@ -10,6 +10,7 @@ use json_value_merge::Merge;
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use std::collections::HashMap;
+use tracing::trace;
 
 pub(super) fn get_dep_output(
     workspace_root: &str,
@@ -18,12 +19,12 @@ pub(super) fn get_dep_output(
     project_graph: &ProjectGraph,
     dependent_tasks_output_files: &str,
     transitive: bool,
-) -> anyhow::Result<Vec<String>> {
+) -> anyhow::Result<Vec<HashInstruction>> {
     if !task_graph.dependencies.contains_key(task.id.as_str()) {
         return Ok(vec![]);
     }
 
-    let mut inputs: Vec<String> = vec![];
+    let mut inputs: Vec<HashInstruction> = vec![];
     for task_dep in &task_graph.dependencies[task.id.as_str()] {
         let child_task = &task_graph.tasks[task_dep.as_str()];
 
@@ -33,7 +34,7 @@ pub(super) fn get_dep_output(
             &project_graph.nodes[&child_task.target.project],
         )?;
         let output_files = get_files_for_outputs(workspace_root.to_string(), outputs)?;
-        println!(
+        trace!(
             "get_outputs_for_target_and_configuration took {:?}",
             now.elapsed()
         );
@@ -42,6 +43,7 @@ pub(super) fn get_dep_output(
             output_files
                 .into_iter()
                 .filter(|f| f == dependent_tasks_output_files || glob.is_match(f))
+                .map(|f| HashInstruction::TaskOutput(f))
                 .collect::<Vec<_>>(),
         );
 

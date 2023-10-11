@@ -52,10 +52,16 @@ describe('task planner', () => {
       tasks: Task[],
       taskGraph: TaskGraph
     ): Record<string, string[]> {
-      return hashPlanner.getPlans(
+      const plans =  hashPlanner.getPlans(
         tasks.map((task) => task.id),
         transformTaskGraphForRust(taskGraph)
       );
+
+      for (const planId of Object.keys(plans)) {
+        plans[planId] = plans[planId].sort();
+      }
+
+      return plans;
     }
 
     const hashes = await taskHasher.hashTasks(task, taskGraph);

@@ -1,9 +1,13 @@
-use crate::native::tasks::{dep_outputs::get_dep_output, types::TaskGraph};
+use crate::native::tasks::{
+    dep_outputs::get_dep_output,
+    types::{HashInstruction, TaskGraph},
+};
 use crate::native::types::{Input, NxJson};
 use crate::native::{
     project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
 };
+use napi::{Env, JsExternal};
 use rayon::prelude::*;
 use std::collections::HashMap;
 
@@ -31,12 +35,11 @@ impl HashPlanner {
         }
     }
 
-    #[napi]
-    pub fn get_plans(
+    pub fn get_plans_internal(
         &self,
         task_ids: Vec<&str>,
         task_graph: TaskGraph,
-    ) -> anyhow::Result<HashMap<String, Vec<String>>> {
+    ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
         let external_deps_mapped = self.setup_external_deps();
         task_ids
             .par_iter()
@@ -63,12 +66,17 @@ impl HashPlanner {
                     &mut Box::new(hashbrown::HashSet::from([task.target.project.to_string()])),
                 )?;
 
+                // add default workspace file sets
                 self_inputs.par_sort();
-                self_inputs.dedup();
 
-                let inputs: Vec<String> = target
+                let inputs = target
                     .unwrap_or(vec![])
                     .into_iter()
+                    .chain(vec![
+                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/nx.json".to_string()),
+                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/.gitignore".to_string()),
+                        HashInstruction::WorkspaceFileSet("{workspaceRoot}/.nxignore".to_string()),
+                    ])
                     .chain(self_inputs.into_iter())
                     .collect();
 
@@ -77,13 +85,34 @@ impl HashPlanner {
             .collect()
     }
 
+    #[napi(ts_return_type = "Record<string, string[]>")]
+    pub fn get_plans(
+        &self,
+        task_ids: Vec<&str>,
+        task_graph: TaskGraph,
+    ) -> anyhow::Result<HashMap<String, Vec<HashInstruction>>> {
+        self.get_plans_internal(task_ids, task_graph)
+    }
+
+    #[napi]
+    pub fn get_plans_reference(
+        &self,
+        env: Env,
+        task_ids: Vec<&str>,
+        task_graph: TaskGraph,
+    ) -> anyhow::Result<JsExternal> {
+        let plans = self.get_plans_internal(task_ids, task_graph)?;
+        env.create_external(plans, None)
+            .map_err(anyhow::Error::from)
+    }
+
     fn target_input<'a>(
         &'a self,
         project_name: &str,
         target_name: &str,
         self_inputs: &[Input],
         external_deps_map: &hashbrown::HashMap<&str, Vec<&'a str>>,
-    ) -> anyhow::Result<Option<Vec<String>>> {
+    ) -> anyhow::Result<Option<Vec<HashInstruction>>> {
         let project = &self.project_graph.nodes[project_name];
         let Some(target) = project.targets.get(target_name) else {
             return Ok(None)
@@ -113,7 +142,9 @@ impl HashPlanner {
             let existing_package =
                 find_external_dependency_node_name(executor_package, &external_nodes_keys)
                     .expect("Executor package should be in the external nodes");
-            Ok(Some(vec![existing_package.to_string()]))
+            Ok(Some(vec![HashInstruction::External(
+                existing_package.to_string(),
+            )]))
         } else {
             let mut external_deps: Vec<&str> = vec![];
             for input in self_inputs {
@@ -134,9 +165,14 @@ impl HashPlanner {
                 }
             }
             if !external_deps.is_empty() {
-                Ok(Some(external_deps.iter().map(|s| s.to_string()).collect()))
+                Ok(Some(
+                    external_deps
+                        .iter()
+                        .map(|s| HashInstruction::External(s.to_string()))
+                        .collect(),
+                ))
             } else {
-                Ok(Some(vec!["AllExternalDependencies".to_string()]))
+                Ok(Some(vec![HashInstruction::AllExternalDependencies]))
             }
         }
     }
@@ -149,7 +185,7 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&str>>,
         visited: &mut Box<hashbrown::HashSet<String>>,
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_deps = &self.project_graph.dependencies[&task.target.project]
             .iter()
             .map(|d| d.as_str())
@@ -164,9 +200,9 @@ impl HashPlanner {
             visited,
         )?;
 
-        let deps_outputs: Vec<String> =
+        let deps_outputs =
             self.gather_dependency_outputs(task, task_graph, &inputs.deps_outputs)?;
-        let projects: Vec<String> = self.gather_project_inputs(&inputs.project_inputs)?;
+        let projects = self.gather_project_inputs(&inputs.project_inputs)?;
 
         Ok(self_inputs
             .into_iter()
@@ -204,8 +240,8 @@ impl HashPlanner {
         project_deps: &[&'a str],
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&'a str>>,
         visited: &mut Box<hashbrown::HashSet<String>>,
-    ) -> anyhow::Result<Vec<String>> {
-        let mut deps_inputs: Vec<String> = vec![];
+    ) -> anyhow::Result<Vec<HashInstruction>> {
+        let mut deps_inputs: Vec<HashInstruction> = vec![];
 
         for input in inputs {
             for dep in project_deps {
@@ -233,8 +269,12 @@ impl HashPlanner {
                 } else {
                     // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
                     if let Some(external_deps) = external_deps_mapped.get(dep) {
-                        deps_inputs.push(dep.to_string());
-                        deps_inputs.extend(external_deps.iter().map(|s| s.to_string()));
+                        deps_inputs.push(HashInstruction::External(dep.to_string()));
+                        deps_inputs.extend(
+                            external_deps
+                                .iter()
+                                .map(|s| HashInstruction::External(s.to_string())),
+                        );
                     }
                 }
             }
@@ -243,7 +283,11 @@ impl HashPlanner {
         Ok(deps_inputs)
     }
 
-    fn gather_self_inputs(&self, project_name: &str, self_inputs: &[Input]) -> Vec<String> {
+    fn gather_self_inputs(
+        &self,
+        project_name: &str,
+        self_inputs: &[Input],
+    ) -> Vec<HashInstruction> {
         let (project_file_sets, workspace_file_sets): (Vec<&str>, Vec<&str>) = self_inputs
             .iter()
             .filter_map(|input| match input {
@@ -257,8 +301,8 @@ impl HashPlanner {
         let project_file_set_inputs = project_file_set_inputs(project_name, project_file_sets);
         let workspace_file_set_inputs = workspace_file_set_inputs(workspace_file_sets);
         let runtime_and_env_inputs = self_inputs.iter().filter_map(|i| match i {
-            Input::Runtime(runtime) => Some(format!("runtime:{runtime}")),
-            Input::Environment(env) => Some(format!("env:{env}")),
+            Input::Runtime(runtime) => Some(HashInstruction::Runtime(runtime.to_string())),
+            Input::Environment(env) => Some(HashInstruction::Environment(env.to_string())),
             _ => None,
         });
 
@@ -274,12 +318,12 @@ impl HashPlanner {
         task: &Task,
         task_graph: &TaskGraph,
         deps_outputs: &[Input],
-    ) -> anyhow::Result<Vec<String>> {
+    ) -> anyhow::Result<Vec<HashInstruction>> {
         if deps_outputs.is_empty() {
             return Ok(vec![]);
         }
 
-        let mut result: Vec<String> = vec![];
+        let mut result: Vec<HashInstruction> = vec![];
 
         for dep in deps_outputs {
             let Input::DepsOutputs { dependent_tasks_output_files, transitive } = dep else {
@@ -298,8 +342,11 @@ impl HashPlanner {
         Ok(result)
     }
 
-    fn gather_project_inputs(&self, project_inputs: &[Input]) -> anyhow::Result<Vec<String>> {
-        let mut result: Vec<String> = vec![];
+    fn gather_project_inputs(
+        &self,
+        project_inputs: &[Input],
+    ) -> anyhow::Result<Vec<HashInstruction>> {
+        let mut result: Vec<HashInstruction> = vec![];
         for project in project_inputs {
             let Input::Projects {input, projects} = project else {
                 continue;
@@ -332,21 +379,17 @@ fn find_external_dependency_node_name<'a>(
         .copied()
 }
 
-fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<String> {
-    let project_input = format!("{}:{}", project_name, file_sets.join(","));
+fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<HashInstruction> {
     vec![
-        project_input,
-        format!("{project_name}:ProjectConfiguration"),
-        "TsConfig".into(),
+        HashInstruction::ProjectFileSet(project_name.to_string(), file_sets.join(",")),
+        HashInstruction::ProjectConfiguration(project_name.to_string()),
+        HashInstruction::TsConfiguration(project_name.to_string()),
     ]
 }
 
-fn workspace_file_set_inputs(mut file_sets: Vec<&str>) -> Vec<String> {
-    file_sets.extend(vec![
-        "{workspaceRoot}/nx.json",
-        "{workspaceRoot}/.gitignore",
-        "{workspaceRoot}/.nxignore",
-    ]);
-
-    file_sets.into_iter().map(|s| s.to_string()).collect()
+fn workspace_file_set_inputs(file_sets: Vec<&str>) -> Vec<HashInstruction> {
+    file_sets
+        .into_iter()
+        .map(|s| HashInstruction::WorkspaceFileSet(s.to_string()))
+        .collect()
 }

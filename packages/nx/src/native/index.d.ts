@@ -123,7 +123,8 @@ export class ImportResult {
 }
 export class HashPlanner {
   constructor(workspaceRoot: string, nxJson: NxJson, projectGraph: ProjectGraph)
-  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, Array<string>>
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): JsExternal
 }
 export class Watcher {
   origin: string
