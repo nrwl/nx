@@ -141,7 +141,7 @@ impl HashPlanner {
                 .expect("Executors should always have a ':'");
             let existing_package =
                 find_external_dependency_node_name(executor_package, &external_nodes_keys)
-                    .expect("Executor package should be in the external nodes");
+                    .unwrap_or_else(|| executor_package);
             Ok(Some(vec![HashInstruction::External(
                 existing_package.to_string(),
             )]))
