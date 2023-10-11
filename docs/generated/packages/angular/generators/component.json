@@ -19,19 +19,13 @@
       "directory": {
         "type": "string",
         "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-        "aliases": ["dir"],
+        "aliases": ["dir", "path"],
         "x-priority": "important"
       },
       "nameAndDirectoryFormat": {
         "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
         "type": "string",
         "enum": ["as-provided", "derived"]
-      },
-      "path": {
-        "type": "string",
-        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
-        "visible": false,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18."
       },
       "project": {
         "type": "string",

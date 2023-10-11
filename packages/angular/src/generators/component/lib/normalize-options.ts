@@ -10,17 +10,22 @@ export async function normalizeOptions(
   options: Schema
 ): Promise<NormalizedSchema> {
   options.type ??= 'component';
-  const { directory, file, name, project } =
-    await determineArtifactNameAndDirectoryOptions(tree, {
-      artifactName: 'component',
-      callingGenerator: '@nx/angular:component',
-      name: options.name,
-      directory: options.directory ?? options.path,
-      flat: options.flat,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
-      project: options.project,
-      suffix: options.type ?? 'component',
-    });
+  const {
+    artifactName: name,
+    directory,
+    fileName,
+    filePath,
+    project,
+  } = await determineArtifactNameAndDirectoryOptions(tree, {
+    artifactType: 'component',
+    callingGenerator: '@nx/angular:component',
+    name: options.name,
+    directory: options.directory ?? options.path,
+    flat: options.flat,
+    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    project: options.project,
+    suffix: options.type ?? 'component',
+  });
 
   const { className } = names(name);
   const { className: suffixClassName } = names(options.type);
@@ -42,8 +47,8 @@ export async function normalizeOptions(
     changeDetection: options.changeDetection ?? 'Default',
     style: options.style ?? 'css',
     directory,
-    fileName: file.name,
-    filePath: file.path,
+    fileName,
+    filePath,
     symbolName,
     projectSourceRoot: sourceRoot,
     projectRoot: root,

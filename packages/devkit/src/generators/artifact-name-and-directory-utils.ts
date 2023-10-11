@@ -1,10 +1,13 @@
 import { prompt } from 'enquirer';
+import type { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import type { Tree } from 'nx/src/generators/tree';
 import { relative } from 'path';
 import { requireNx } from '../../nx';
 import { names } from '../utils/names';
 
 const {
+  createProjectRootMappingsFromProjectConfigurations,
+  findProjectForPath,
   getProjects,
   joinPathFragments,
   logger,
@@ -15,7 +18,7 @@ const {
 
 export type NameAndDirectoryFormat = 'as-provided' | 'derived';
 export type ArtifactGenerationOptions = {
-  artifactName: string;
+  artifactType: string;
   callingGenerator: string | null;
   name: string;
   directory?: string;
@@ -31,19 +34,31 @@ export type ArtifactGenerationOptions = {
 };
 
 export type NameAndDirectoryOptions = {
+  /**
+   * Normalized artifact name.
+   */
+  artifactName: string;
+  /**
+   * Normalized directory path where the artifact will be generated.
+   */
   directory: string;
-  file: {
-    baseName: string;
-    name: string;
-    path: string;
-  };
-  name: string;
+  /**
+   * Normalized file name of the artifact without the extension.
+   */
+  fileName: string;
+  /**
+   * Normalized full file path of the artifact.
+   */
+  filePath: string;
+  /**
+   * Project name where the artifact will be generated.
+   */
   project: string;
 };
 
 type NameAndDirectoryFormats = {
-  'as-provided': NameAndDirectoryOptions | undefined;
-  derived?: NameAndDirectoryOptions | undefined;
+  'as-provided': NameAndDirectoryOptions;
+  derived: NameAndDirectoryOptions | undefined;
 };
 
 export async function determineArtifactNameAndDirectoryOptions(
@@ -77,21 +92,17 @@ async function determineFormat(
   if (!formats.derived) {
     return 'as-provided';
   }
-  if (!formats['as-provided']) {
-    const deprecationMessage = getDeprecationMessage(options, formats);
-    logger.warn(deprecationMessage);
-
-    return 'derived';
-  }
 
   if (process.env.NX_INTERACTIVE !== 'true' || !isTTY()) {
+    logDeprecationMessage(options, formats);
+
     return 'derived';
   }
 
-  const asProvidedDescription = `As provided: ${formats['as-provided'].file.path}`;
-  const asProvidedSelectedValue = formats['as-provided'].file.path;
-  const derivedDescription = `Derived:     ${formats['derived'].file.path}`;
-  const derivedSelectedValue = formats['derived'].file.path;
+  const asProvidedDescription = `As provided: ${formats['as-provided'].filePath}`;
+  const asProvidedSelectedValue = formats['as-provided'].filePath;
+  const derivedDescription = `Derived:     ${formats['derived'].filePath}`;
+  const derivedSelectedValue = formats['derived'].filePath;
 
   if (asProvidedSelectedValue === derivedSelectedValue) {
     return 'as-provided';
@@ -100,7 +111,7 @@ async function determineFormat(
   const result = await prompt<{ format: NameAndDirectoryFormat }>({
     type: 'select',
     name: 'format',
-    message: `Where should the ${options.artifactName} be generated?`,
+    message: `Where should the ${options.artifactType} be generated?`,
     choices: [
       {
         message: asProvidedDescription,
@@ -117,23 +128,22 @@ async function determineFormat(
   );
 
   if (result === 'derived' && options.callingGenerator) {
-    const deprecationMessage = getDeprecationMessage(options, formats);
-    logger.warn(deprecationMessage);
+    logDeprecationMessage(options, formats);
   }
 
   return result;
 }
 
-function getDeprecationMessage(
+function logDeprecationMessage(
   options: ArtifactGenerationOptions,
   formats: NameAndDirectoryFormats
 ) {
-  return `
-In Nx 18, generating a ${options.artifactName} will no longer support providing a project and deriving the directory.
+  logger.warn(`
+In Nx 18, generating a ${options.artifactType} will no longer support providing a project and deriving the directory.
 Please provide the exact directory in the future.
-Example: nx g ${options.callingGenerator} ${formats['derived'].name} --directory ${formats['derived'].directory}
+Example: nx g ${options.callingGenerator} ${formats['derived'].artifactName} --directory ${formats['derived'].directory}
 NOTE: The example above assumes the command is being run from the workspace root. If the command is being run from a subdirectory, the directory option should be adjusted accordingly.
-`;
+`);
 }
 
 function getNameAndDirectoryOptionFormats(
@@ -181,7 +191,7 @@ function getNameAndDirectoryOptionFormats(
       output.warn({
         title: `The provided name "${options.name}" contains a path and this is not supported by the "${options.callingGenerator}" when using the "derived" format.`,
         bodyLines: [
-          `The generator will try to generate the ${options.artifactName} using the "as-provided" format at "${asProvidedOptions.file.path}".`,
+          `The generator will try to generate the ${options.artifactType} using the "as-provided" format at "${asProvidedOptions.filePath}".`,
         ],
       });
 
@@ -231,20 +241,16 @@ function getAsProvidedOptions(
   const asProvidedFileName =
     options.fileName ??
     (options.suffix ? `${options.name}.${options.suffix}` : options.name);
-  const asProvidedBaseName = `${asProvidedFileName}.${options.fileExtension}`;
   const asProvidedFilePath = joinPathFragments(
     asProvidedDirectory,
-    asProvidedBaseName
+    `${asProvidedFileName}.${options.fileExtension}`
   );
 
   return {
+    artifactName: options.name,
     directory: asProvidedDirectory,
-    file: {
-      baseName: asProvidedBaseName,
-      name: asProvidedFileName,
-      path: asProvidedFilePath,
-    },
-    name: options.name,
+    fileName: asProvidedFileName,
+    filePath: asProvidedFilePath,
     project: asProvidedProject,
   };
 }
@@ -289,8 +295,8 @@ function getDerivedOptions(
       output.warn({
         title: `The provided directory "${options.directory}" is not under the provided project root "${project.root}".`,
         bodyLines: [
-          `The generator will try to generate the ${options.artifactName} using the "as-provided" format.`,
-          `With the "as-provided" format, the "project" option is ignored and the ${options.artifactName} will be generated at "${asProvidedOptions.file.path}" (<cwd>/<provided directory>).`,
+          `The generator will try to generate the ${options.artifactType} using the "as-provided" format.`,
+          `With the "as-provided" format, the "project" option is ignored and the ${options.artifactType} will be generated at "${asProvidedOptions.filePath}" (<cwd>/<provided directory>).`,
         ],
       });
 
@@ -312,17 +318,16 @@ function getDerivedOptions(
       ? names(derivedFileName).className
       : names(derivedFileName).fileName;
   }
-  const derivedBaseName = `${derivedFileName}.${options.fileExtension}`;
-  const derivedFilePath = joinPathFragments(derivedDirectory, derivedBaseName);
+  const derivedFilePath = joinPathFragments(
+    derivedDirectory,
+    `${derivedFileName}.${options.fileExtension}`
+  );
 
   return {
+    artifactName: derivedName,
     directory: derivedDirectory,
-    file: {
-      baseName: derivedBaseName,
-      name: derivedFileName,
-      path: derivedFilePath,
-    },
-    name: derivedName,
+    fileName: derivedFileName,
+    filePath: derivedFilePath,
     project: projectName,
   };
 }
@@ -352,14 +357,15 @@ function validateResolvedProject(
 }
 
 function findProjectFromPath(tree: Tree, path: string): string | null {
+  const projectConfigurations: Record<string, ProjectConfiguration> = {};
   const projects = getProjects(tree);
   for (const [projectName, project] of projects) {
-    if (isDirectoryUnderProjectRoot(path, project.root)) {
-      return projectName;
-    }
+    projectConfigurations[projectName] = project;
   }
+  const projectRootMappings =
+    createProjectRootMappingsFromProjectConfigurations(projectConfigurations);
 
-  return null;
+  return findProjectForPath(path, projectRootMappings);
 }
 
 function isDirectoryUnderProjectRoot(

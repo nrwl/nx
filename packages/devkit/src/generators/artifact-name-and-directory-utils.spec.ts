@@ -57,7 +57,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
     await expect(
       determineArtifactNameAndDirectoryOptions(tree, {
         name: 'myComponent',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -72,7 +72,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       determineArtifactNameAndDirectoryOptions(tree, {
         name: 'myComponent',
         project: 'app1',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -90,7 +90,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       determineArtifactNameAndDirectoryOptions(tree, {
         name: 'apps/app1/foo/bar/myComponent',
         directory: 'foo/bar',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       })
     ).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -109,18 +109,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       const result = await determineArtifactNameAndDirectoryOptions(tree, {
         name: 'myComponent',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1',
-        file: {
-          baseName: 'myComponent.ts',
-          name: 'myComponent',
-          path: 'apps/app1/myComponent.ts',
-        },
+        fileName: 'myComponent',
+        filePath: 'apps/app1/myComponent.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -138,18 +135,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'myComponent',
         directory: 'apps/app1',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1',
-        file: {
-          baseName: 'myComponent.ts',
-          name: 'myComponent',
-          path: 'apps/app1/myComponent.ts',
-        },
+        fileName: 'myComponent',
+        filePath: 'apps/app1/myComponent.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -165,18 +159,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'myComponent',
         directory: 'apps\\app1',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1',
-        file: {
-          baseName: 'myComponent.ts',
-          name: 'myComponent',
-          path: 'apps/app1/myComponent.ts',
-        },
+        fileName: 'myComponent',
+        filePath: 'apps/app1/myComponent.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -197,18 +188,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         project: 'app2',
         directory: 'apps/app1/foo/bar',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/foo/bar',
-        file: {
-          baseName: 'myComponent.ts',
-          name: 'myComponent',
-          path: 'apps/app1/foo/bar/myComponent.ts',
-        },
+        fileName: 'myComponent',
+        filePath: 'apps/app1/foo/bar/myComponent.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -223,18 +211,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       const result = await determineArtifactNameAndDirectoryOptions(tree, {
         name: 'apps/app1/foo/bar/myComponent',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/foo/bar',
-        file: {
-          baseName: 'myComponent.ts',
-          name: 'myComponent',
-          path: 'apps/app1/foo/bar/myComponent.ts',
-        },
+        fileName: 'myComponent',
+        filePath: 'apps/app1/foo/bar/myComponent.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -251,18 +236,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         suffix: 'component',
         directory: 'apps/app1',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1',
-        file: {
-          baseName: 'myComponent.component.ts',
-          name: 'myComponent.component',
-          path: 'apps/app1/myComponent.component.ts',
-        },
+        fileName: 'myComponent.component',
+        filePath: 'apps/app1/myComponent.component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -279,18 +261,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         fileName: 'myComponent.component',
         directory: 'apps/app1',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1',
-        file: {
-          baseName: 'myComponent.component.ts',
-          name: 'myComponent.component',
-          path: 'apps/app1/myComponent.component.ts',
-        },
+        fileName: 'myComponent.component',
+        filePath: 'apps/app1/myComponent.component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -307,18 +286,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         pascalCaseFile: true,
         directory: 'apps/app1',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1',
-        file: {
-          baseName: 'myComponent.ts',
-          name: 'myComponent',
-          path: 'apps/app1/myComponent.ts',
-        },
+        fileName: 'myComponent',
+        filePath: 'apps/app1/myComponent.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -335,18 +311,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         pascalCaseDirectory: true,
         directory: 'apps/app1',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1',
-        file: {
-          baseName: 'myComponent.ts',
-          name: 'myComponent',
-          path: 'apps/app1/myComponent.ts',
-        },
+        fileName: 'myComponent',
+        filePath: 'apps/app1/myComponent.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -363,18 +336,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         fileExtension: 'tsx',
         directory: 'apps/app1',
         nameAndDirectoryFormat: 'as-provided',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1',
-        file: {
-          baseName: 'myComponent.tsx',
-          name: 'myComponent',
-          path: 'apps/app1/myComponent.tsx',
-        },
+        fileName: 'myComponent',
+        filePath: 'apps/app1/myComponent.tsx',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
@@ -392,18 +362,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       const result = await determineArtifactNameAndDirectoryOptions(tree, {
         name: 'myComponent',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app/my-component',
-        file: {
-          baseName: 'my-component.ts',
-          name: 'my-component',
-          path: 'apps/app1/src/app/my-component/my-component.ts',
-        },
+        fileName: 'my-component',
+        filePath: 'apps/app1/src/app/my-component/my-component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -421,18 +388,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'myComponent',
         directory: 'apps/app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/my-component',
-        file: {
-          baseName: 'my-component.ts',
-          name: 'my-component',
-          path: 'apps/app1/my-component/my-component.ts',
-        },
+        fileName: 'my-component',
+        filePath: 'apps/app1/my-component/my-component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -448,18 +412,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'myComponent',
         directory: 'apps\\app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/my-component',
-        file: {
-          baseName: 'my-component.ts',
-          name: 'my-component',
-          path: 'apps/app1/my-component/my-component.ts',
-        },
+        fileName: 'my-component',
+        filePath: 'apps/app1/my-component/my-component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -475,18 +436,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'myComponent',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app/my-component',
-        file: {
-          baseName: 'my-component.ts',
-          name: 'my-component',
-          path: 'apps/app1/src/app/my-component/my-component.ts',
-        },
+        fileName: 'my-component',
+        filePath: 'apps/app1/src/app/my-component/my-component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -504,7 +462,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
           project: 'app1',
           directory: 'foo/bar',
           nameAndDirectoryFormat: 'derived',
-          artifactName: 'component',
+          artifactType: 'component',
           callingGenerator: '@my-org/my-plugin:component',
         })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -522,18 +480,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'foo/bar/myComponent',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app/foo/bar/my-component',
-        file: {
-          baseName: 'my-component.ts',
-          name: 'my-component',
-          path: 'apps/app1/src/app/foo/bar/my-component/my-component.ts',
-        },
+        fileName: 'my-component',
+        filePath: 'apps/app1/src/app/foo/bar/my-component/my-component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -550,7 +505,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
           name: 'apps/app1/foo/bar/myComponent',
           disallowPathInNameForDerived: true,
           nameAndDirectoryFormat: 'derived',
-          artifactName: 'component',
+          artifactType: 'component',
           callingGenerator: '@my-org/my-plugin:component',
         })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
@@ -569,18 +524,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         flat: true,
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app',
-        file: {
-          baseName: 'my-component.ts',
-          name: 'my-component',
-          path: 'apps/app1/src/app/my-component.ts',
-        },
+        fileName: 'my-component',
+        filePath: 'apps/app1/src/app/my-component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -597,18 +549,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         suffix: 'component',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app/my-component',
-        file: {
-          baseName: 'my-component.component.ts',
-          name: 'my-component.component',
-          path: 'apps/app1/src/app/my-component/my-component.component.ts',
-        },
+        fileName: 'my-component.component',
+        filePath: 'apps/app1/src/app/my-component/my-component.component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -625,18 +574,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         fileName: 'myComponent.component',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app/my-component',
-        file: {
-          baseName: 'myComponent.component.ts',
-          name: 'myComponent.component',
-          path: 'apps/app1/src/app/my-component/myComponent.component.ts',
-        },
+        fileName: 'myComponent.component',
+        filePath: 'apps/app1/src/app/my-component/myComponent.component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -653,18 +599,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         pascalCaseFile: true,
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app/my-component',
-        file: {
-          baseName: 'MyComponent.ts',
-          name: 'MyComponent',
-          path: 'apps/app1/src/app/my-component/MyComponent.ts',
-        },
+        fileName: 'MyComponent',
+        filePath: 'apps/app1/src/app/my-component/MyComponent.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -681,18 +624,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         pascalCaseDirectory: true,
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app/MyComponent',
-        file: {
-          baseName: 'my-component.ts',
-          name: 'my-component',
-          path: 'apps/app1/src/app/MyComponent/my-component.ts',
-        },
+        fileName: 'my-component',
+        filePath: 'apps/app1/src/app/MyComponent/my-component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -709,18 +649,15 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         fileExtension: 'tsx',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(result).toStrictEqual({
-        name: 'myComponent',
+        artifactName: 'myComponent',
         directory: 'apps/app1/src/app/my-component',
-        file: {
-          baseName: 'my-component.tsx',
-          name: 'my-component',
-          path: 'apps/app1/src/app/my-component/my-component.tsx',
-        },
+        fileName: 'my-component',
+        filePath: 'apps/app1/src/app/my-component/my-component.tsx',
         project: 'app1',
         nameAndDirectoryFormat: 'derived',
       });
@@ -742,7 +679,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       await determineArtifactNameAndDirectoryOptions(tree, {
         name: 'myComponent',
         project: 'app1',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
@@ -776,7 +713,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
       const result = await determineArtifactNameAndDirectoryOptions(tree, {
         name: 'myComponent',
         project: 'app1',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
@@ -795,7 +732,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'apps/app1/myComponent',
         project: 'app1',
         disallowPathInNameForDerived: true,
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
@@ -818,7 +755,7 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'myComponent',
         project: 'app1',
         directory: 'apps/app2',
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
@@ -839,19 +776,16 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
         name: 'my-component',
         directory: 'src/app',
         flat: true,
-        artifactName: 'component',
+        artifactType: 'component',
         callingGenerator: '@my-org/my-plugin:component',
       });
 
       expect(promptSpy).not.toHaveBeenCalled();
       expect(result).toStrictEqual({
-        name: 'my-component',
+        artifactName: 'my-component',
         directory: 'src/app',
-        file: {
-          baseName: 'my-component.ts',
-          name: 'my-component',
-          path: 'src/app/my-component.ts',
-        },
+        fileName: 'my-component',
+        filePath: 'src/app/my-component.ts',
         project: 'app1',
         nameAndDirectoryFormat: 'as-provided',
       });
