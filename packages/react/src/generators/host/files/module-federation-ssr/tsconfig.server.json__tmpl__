@@ -4,7 +4,9 @@
     "outDir": "../../out-tsc/server",
     "target": "es2019",
     "types": [
-      "node"
+      "node",
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts"
     ]
   },
   "include": [
