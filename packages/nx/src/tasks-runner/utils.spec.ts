@@ -335,7 +335,7 @@ describe('utils', () => {
             task.target,
             task.overrides,
             getNode({
-              outputs: ['dist'],
+              outputs: ['{workspaceRoot}/dist'],
             })
           )
         ).toEqual(['dist']);
@@ -346,7 +346,7 @@ describe('utils', () => {
             task.target,
             task.overrides,
             getNode({
-              outputs: ['dist/{projectRoot}'],
+              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
             })
           )
         ).toEqual(['dist/myapp']);
@@ -358,7 +358,7 @@ describe('utils', () => {
             task.target,
             task.overrides,
             getNode({
-              outputs: ['./sub'],
+              outputs: ['{projectRoot}/sub'],
             })
           )
         ).toEqual(['myapp/sub']);
@@ -370,7 +370,7 @@ describe('utils', () => {
             task.target,
             task.overrides,
             getNode({
-              outputs: ['/dist'],
+              outputs: ['{workspaceRoot}/dist'],
             })
           )
         ).toEqual(['dist']);

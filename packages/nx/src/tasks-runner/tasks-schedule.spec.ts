@@ -13,6 +13,7 @@ function createMockTask(id: string): Task {
       project,
       target,
     },
+    outputs: [],
     overrides: {},
   };
 }
