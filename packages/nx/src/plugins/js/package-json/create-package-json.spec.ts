@@ -3,15 +3,111 @@ import * as fs from 'fs';
 import * as configModule from '../../../config/configuration';
 import { DependencyType, ProjectGraph } from '../../../config/project-graph';
 import * as hashModule from '../../../hasher/task-hasher';
-import { createPackageJson } from './create-package-json';
+import { copyPackageManagerSection, copyPnpmSection, createPackageJson } from './create-package-json';
 import * as fileutilsModule from '../../../utils/fileutils';
+import { PackageJson } from '../../../utils/package-json';
 
 jest.mock('../../../utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
 describe('createPackageJson', () => {
-  it('should create a package.json', () => {});
+  it('should create a package.json', () => { });
+});
+
+describe('copyPnpmSection', () => {
+  it('should copy pnpm section if it exists', () => {
+
+    const rootPackageJson: PackageJson = {
+      name: 'root',
+      version: '0.0.0',
+      pnpm: {
+        hooks: {
+          readPackage: 'echo "readPackage"',
+        },
+        patchedDependencies: {
+          '@nrwl/workspace@1.2.3': 'patches/@nrwl__workspace@1.2.3.patch'
+        }
+      },
+    };
+
+    let packageJson: PackageJson = {
+      name: 'root',
+      version: '0.0.0',
+    };
+
+    copyPnpmSection(rootPackageJson, packageJson);
+    expect(packageJson).toHaveProperty('pnpm');
+    expect(packageJson.pnpm).toHaveProperty('hooks');
+    expect(packageJson.pnpm.hooks).toHaveProperty('readPackage');
+    expect(packageJson.pnpm).toHaveProperty('patchedDependencies');
+  });
+
+  it('should not create pnpm section if root does not have it', () => {
+    const rootPackageJsonWithoutPnpm: PackageJson = {
+      name: 'root',
+      version: '0.0.0'
+    };
+
+    let packageJson = rootPackageJsonWithoutPnpm;
+
+    copyPnpmSection(rootPackageJsonWithoutPnpm, packageJson);
+
+    expect(packageJson).not.toHaveProperty('pnpm');
+  });
+});
+
+describe('copyPackageManagerSection', () => {
+  it('should copy packageManager section if it is exists and is valid', () => {
+
+    const rootPackageJson: PackageJson = {
+      name: 'root',
+      version: '0.0.0',
+      packageManager: 'pnpm@8.9.0',
+    };
+
+    let packageJson: PackageJson = {
+      name: 'root',
+      version: '0.0.0',
+    };
+
+    copyPackageManagerSection(rootPackageJson, packageJson);
+    expect(packageJson).toHaveProperty('packageManager');
+    expect(packageJson.packageManager).toEqual('pnpm@8.9.0');
+  });
+
+  it('should not copy packageManager section if it is exists but is invalid', () => {
+
+    const rootPackageJson: PackageJson = {
+      name: 'root',
+      version: '0.0.0',
+      packageManager: 'pnpm',
+    };
+
+    let packageJson: PackageJson = {
+      name: 'root',
+      version: '0.0.0',
+    };
+
+    copyPackageManagerSection(rootPackageJson, packageJson);
+    expect(packageJson).not.toHaveProperty('packageManager');
+  });
+
+  it('should not create packageManager section if it does not exist', () => {
+
+    const rootPackageJson: PackageJson = {
+      name: 'root',
+      version: '0.0.0',
+    };
+
+    let packageJson: PackageJson = {
+      name: 'root',
+      version: '0.0.0',
+    };
+
+    copyPackageManagerSection(rootPackageJson, packageJson);
+    expect(packageJson).not.toHaveProperty('packageManager');
+  });
 });
 
 // describe('createPackageJson', () => {

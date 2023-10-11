@@ -183,27 +183,6 @@ export function createPackageJson(
   return packageJson;
 }
 
-function copyPnpmSection(
-  rootPackageJson: PackageJson,
-  packageJson: PackageJson
-) {
-  if (rootPackageJson.pnpm) {
-    packageJson.pnpm = rootPackageJson.pnpm;
-  }
-}
-
-function copyPackageManagerSection(
-  rootPackageJson: PackageJson,
-  packageJson: PackageJson
-) {
-  const packageManagerRegEx = new RegExp('(npm|pnpm|yarn)@\d+\.\d+\.\d+(-.+)?');
-
-  if (rootPackageJson.packageManager
-    && packageManagerRegEx.test(rootPackageJson.packageManager)) {
-    packageJson.packageManager = rootPackageJson.packageManager;
-  }
-}
-
 export function findProjectsNpmDependencies(
   projectNode: ProjectGraphProjectNode,
   graph: ProjectGraph,
@@ -369,5 +348,29 @@ function recursivelyCollectPeerDependencies(
     return npmDeps;
   } catch (e) {
     return npmDeps;
+  }
+}
+
+export function copyPnpmSection(
+  rootPackageJson: PackageJson,
+  packageJson: PackageJson
+) {
+  if (rootPackageJson.pnpm) {
+    packageJson.pnpm = rootPackageJson.pnpm;
+  }
+}
+
+export function copyPackageManagerSection(
+  rootPackageJson: PackageJson,
+  packageJson: PackageJson
+) {
+  console.log('rootPackageJson', rootPackageJson);
+  const packageManagerRegEx = /(npm|pnpm|yarn)@\d+\.\d+\.\d+(-.+)?/;
+  const isValid = packageManagerRegEx.test(rootPackageJson?.packageManager);
+  if (rootPackageJson?.packageManager && !isValid) {
+    console.warn('Invalid package manager setting', rootPackageJson.packageManager);
+  }
+  if (rootPackageJson.packageManager && isValid) {
+    packageJson.packageManager = rootPackageJson.packageManager;
   }
 }
