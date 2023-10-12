@@ -4,10 +4,6 @@
   "homepage": "https://nx.dev",
   "private": true,
   "scripts": {
-    "import-nx-cloud": "npm run copy-files && git add . && git commit -am 'feat(core): import nx-cloud code'",
-    "copy-files": "cp -r ../ocean/libs/nx-packages/nx-cloud/bin packages/nx && cp -r ../ocean/libs/nx-packages/nx-cloud/lib/light-client packages/nx/src/nx-cloud && npm run copy-utilities && npm run copy-generators",
-    "copy-utilities": "mkdir packages/nx/src/nx-cloud/utilities && cp ../ocean/libs/nx-packages/nx-cloud/lib/utilities/axios.ts ../ocean/libs/nx-packages/nx-cloud/lib/utilities/get-cloud-options.ts ../ocean/libs/nx-packages/nx-cloud/lib/utilities/environment.ts packages/nx/src/nx-cloud/utilities",
-    "copy-generators": "mkdir packages/nx/src/nx-cloud/generators && cp -r ../ocean/libs/nx-packages/nx-cloud/lib/generators/init packages/nx/src/nx-cloud/generators",
     "build": "nx run-many --target build --parallel 8 --exclude nx-dev,typedoc-theme,tools-documentation-create-embeddings",
     "commit": "czg",
     "check-commit": "node ./scripts/commit-lint.js",
