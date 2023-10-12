@@ -35,6 +35,7 @@ export interface NxArgs {
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
   type?: string;
+  batch?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
@@ -171,6 +172,10 @@ export function splitArgsIntoNxArgsAndOverrides(
 
   if (!nxArgs.skipNxCache) {
     nxArgs.skipNxCache = process.env.NX_SKIP_NX_CACHE === 'true';
+  }
+
+  if (!nxArgs.batch) {
+    nxArgs.batch = process.env.NX_BATCH_MODE === 'false';
   }
 
   normalizeNxArgsRunner(nxArgs, nxJson, options);

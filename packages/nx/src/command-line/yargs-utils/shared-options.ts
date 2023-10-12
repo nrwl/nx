@@ -25,6 +25,7 @@ export interface RunOptions {
   skipNxCache: boolean;
   cloud: boolean;
   dte: boolean;
+  batch: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -89,7 +90,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .options('dte', {
       type: 'boolean',
       hidden: true,
-    }) as Argv<Omit<RunOptions, 'projects' | 'exclude'>> as any;
+    }) as Argv<Omit<RunOptions, 'exclude' | 'batch'>> as any;
 }
 
 export function withTargetAndConfigurationOption(
@@ -114,6 +115,13 @@ export function withConfiguration(yargs: Argv) {
     type: 'string',
     alias: 'c',
   });
+}
+
+export function withBatch(yargs: Argv) {
+  return yargs.options('batch', {
+    type: 'boolean',
+    default: false,
+  }) as any;
 }
 
 export function withAffectedOptions(yargs: Argv) {

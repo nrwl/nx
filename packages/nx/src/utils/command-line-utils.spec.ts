@@ -21,6 +21,7 @@ describe('splitArgs', () => {
       base: 'sha1',
       head: 'sha2',
       skipNxCache: false,
+      batch: false,
     });
   });
 
@@ -52,6 +53,7 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'main',
       skipNxCache: false,
+      batch: false,
     });
   });
 
@@ -69,6 +71,7 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'develop',
       skipNxCache: false,
+      batch: false,
     });
   });
 
@@ -86,6 +89,7 @@ describe('splitArgs', () => {
     ).toEqual({
       base: 'main',
       skipNxCache: false,
+      batch: false,
     });
   });
 
@@ -177,6 +181,7 @@ describe('splitArgs', () => {
     ).toEqual({
       projects: ['aaa', 'bbb'],
       skipNxCache: false,
+      batch: false,
     });
   });
 
@@ -201,6 +206,7 @@ describe('splitArgs', () => {
           base: 'envVarSha1',
           head: 'envVarSha2',
           skipNxCache: false,
+          batch: false,
         });
 
         expect(
@@ -218,6 +224,7 @@ describe('splitArgs', () => {
           base: 'envVarSha1',
           head: 'directlyOnCommandSha1',
           skipNxCache: false,
+          batch: false,
         });
 
         expect(
@@ -235,6 +242,7 @@ describe('splitArgs', () => {
           base: 'directlyOnCommandSha2',
           head: 'envVarSha2',
           skipNxCache: false,
+          batch: false,
         });
       }
     );

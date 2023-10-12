@@ -194,7 +194,11 @@ export async function runCommand(
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
-  if (nxArgs.outputStyle == 'stream' || process.env.NX_BATCH_MODE === 'true') {
+  if (
+    nxArgs.outputStyle == 'stream' ||
+    process.env.NX_BATCH_MODE === 'true' ||
+    nxArgs.batch
+  ) {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
   }
