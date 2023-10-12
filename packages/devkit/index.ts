@@ -11,9 +11,6 @@
  * @module @nx/devkit
  */
 
-// TODO(v17): remove this file, we can use the normally generated index.d.ts from index.ts
-
-/* eslint-disable @typescript-eslint/no-restricted-imports */
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export * from 'nx/src/devkit-exports';
-
 export * from './public-api';
