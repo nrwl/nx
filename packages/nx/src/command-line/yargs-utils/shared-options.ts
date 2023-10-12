@@ -120,6 +120,9 @@ export function withConfiguration(yargs: Argv) {
 export function withBatch(yargs: Argv) {
   return yargs.options('batch', {
     type: 'boolean',
+    coerce: (v) => {
+      return v || process.env.BATCH_MODE === 'true';
+    },
     default: false,
   }) as any;
 }
