@@ -29,7 +29,7 @@
       "description": "Create a generator for an Nx Plugin."
     },
     "executor": {
-      "factory": "./src/generators/executor/executor",
+      "factory": "./src/generators/executor/executor#executorGeneratorInternal",
       "schema": "./src/generators/executor/schema.json",
       "description": "Create an executor for an Nx Plugin."
     },
