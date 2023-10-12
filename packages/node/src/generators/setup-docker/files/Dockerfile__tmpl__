@@ -4,21 +4,36 @@
 # Tip: Modify "docker-build" options in project.json to change docker build args.
 #
 # Run the container with `docker run -p 3000:3000 -t <%= project %>`.
-FROM docker.io/node:lts-alpine
+FROM node:18.16.1-bookworm-slim AS build
 
-ENV HOST=0.0.0.0
-ENV PORT=3000
+RUN apt-get update && apt-get install -y --no-install-recommends dumb-init
 
 WORKDIR /app
 
-RUN addgroup --system <%= project %> && \
-          adduser --system -G <%= project %> <%= project %>
-
 COPY <%= buildLocation %> <%= project %>
-RUN chown -R <%= project %>:<%= project %> .
+
+WORKDIR <%= project %>
 
 # You can remove this install step if you build with `--bundle` option.
 # The bundled output will include external dependencies.
-RUN npm --prefix <%= project %> --omit=dev -f install
+# This assume that a generated lockfile was included with your compiled assets in `dist` and does not include any
+# dev dependencies. If you instead choose to just copy over your root or unpruned lockfile into this docker container
+# make sure to add your package managers equivalent of only installing production dependencies as part of this command.
+RUN <%= packageManager %> install
+
+FROM node:18.16.1-bookworm-slim AS <%= project %>
+
+ENV NODE_ENV production
+ENV HOST=0.0.0.0
+ENV PORT 3000
+EXPOSE 3000
+
+COPY --from=build /usr/bin/dumb-init /usr/bin/dumb-init
+RUN mkdir -p /app
+RUN chown -R node /app
+USER node
+WORKDIR /app
+
+COPY --chown=node:node --from=build /app .
 
 CMD [ "node", "<%= project %>" ]

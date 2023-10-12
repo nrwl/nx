@@ -1,5 +1,6 @@
 import {
   convertNxGenerator,
+  detectPackageManager,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -45,6 +46,7 @@ function addDocker(tree: Tree, options: SetUpDockerOptions) {
       app: project.sourceRoot,
       buildLocation: outputPath,
       project: options.project,
+      packageManager: detectPackageManager(),
     });
   }
 }
