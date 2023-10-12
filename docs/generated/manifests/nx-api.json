@@ -1686,17 +1686,6 @@
         "tags": ["enforce-module-boundaries"],
         "originalFilePath": "generated/cli/workspace-lint"
       },
-      "/nx-api/nx/documents/workspace-generator": {
-        "id": "workspace-generator",
-        "name": "workspace-generator",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/workspace-generator",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/nx/documents/workspace-generator",
-        "tags": [],
-        "originalFilePath": "generated/cli/workspace-generator"
-      },
       "/nx-api/nx/documents/connect-to-nx-cloud": {
         "id": "connect-to-nx-cloud",
         "name": "connect-to-nx-cloud",
@@ -2828,15 +2817,6 @@
         "name": "new",
         "originalFilePath": "/packages/workspace/src/generators/new/schema.json",
         "path": "/nx-api/workspace/generators/new",
-        "type": "generator"
-      },
-      "/nx-api/workspace/generators/workspace-generator": {
-        "description": "Generates a workspace generator.",
-        "file": "generated/packages/workspace/generators/workspace-generator.json",
-        "hidden": false,
-        "name": "workspace-generator",
-        "originalFilePath": "/packages/workspace/src/generators/workspace-generator/schema.json",
-        "path": "/nx-api/workspace/generators/workspace-generator",
         "type": "generator"
       },
       "/nx-api/workspace/generators/run-commands": {

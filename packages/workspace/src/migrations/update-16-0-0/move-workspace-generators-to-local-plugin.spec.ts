@@ -7,7 +7,6 @@ import {
   GeneratorsJson,
   ProjectConfiguration,
   stripIndents,
-  getProjects,
 } from '@nx/devkit';
 
 import generator from './move-workspace-generators-to-local-plugin';

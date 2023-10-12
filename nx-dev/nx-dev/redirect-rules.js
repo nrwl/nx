@@ -8,8 +8,6 @@ const schemaUrls = {
   '/workspace/remove': '/packages/workspace/generators/remove',
   '/workspace/run-commands-generator':
     '/packages/workspace/generators/run-commands',
-  '/workspace/workspace-generator':
-    '/packages/workspace/generators/workspace-generator',
   '/workspace/convert-to-nx-project-generator':
     '/packages/workspace/generators/convert-to-nx-project',
 
@@ -340,7 +338,6 @@ const cliUrls = {
   '/cli/report': '/nx/report',
   '/cli/list': '/nx/list',
   '/cli/workspace-lint': '/nx/workspace-lint',
-  '/cli/workspace-generator': '/nx/workspace-generator',
   '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
   '/cli/reset': '/nx/reset',
 };
