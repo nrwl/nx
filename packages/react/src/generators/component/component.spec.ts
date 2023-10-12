@@ -194,15 +194,11 @@ describe('component', () => {
       ).toBeTruthy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.css')).toBeFalsy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.scss')).toBeFalsy();
-      expect(appTree.exists('my-lib/src/lib/hello/hello.styl')).toBeFalsy();
       expect(
         appTree.exists('my-lib/src/lib/hello/hello.module.css')
       ).toBeFalsy();
       expect(
         appTree.exists('my-lib/src/lib/hello/hello.module.scss')
-      ).toBeFalsy();
-      expect(
-        appTree.exists('my-lib/src/lib/hello/hello.module.styl')
       ).toBeFalsy();
 
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
@@ -212,10 +208,8 @@ describe('component', () => {
       expect(content).not.toContain('<StyledHello>');
 
       //for imports
-      expect(content).not.toContain('hello.styl');
       expect(content).not.toContain('hello.css');
       expect(content).not.toContain('hello.scss');
-      expect(content).not.toContain('hello.module.styl');
       expect(content).not.toContain('hello.module.css');
       expect(content).not.toContain('hello.module.scss');
     });

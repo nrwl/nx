@@ -106,7 +106,7 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
     if (stylesOptimization) {
       minimizer.push(
         new CssMinimizerPlugin({
-          test: /\.(?:css|scss|sass|less|styl)$/,
+          test: /\.(?:css|scss|sass|less)$/,
         })
       );
     }
@@ -199,21 +199,6 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
           },
         ],
       },
-      {
-        test: /\.module\.styl$/,
-        exclude: globalStylePaths,
-        use: [
-          ...getCommonLoadersForCssModules(mergedOptions, includePaths),
-          {
-            loader: require.resolve('stylus-loader'),
-            options: {
-              stylusOptions: {
-                include: includePaths,
-              },
-            },
-          },
-        ],
-      },
     ];
 
     const globalCssRules: RuleSetRule[] = [
@@ -254,22 +239,6 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
               lessOptions: {
                 javascriptEnabled: true,
                 ...lessPathOptions,
-              },
-            },
-          },
-        ],
-      },
-      {
-        test: /\.styl$/,
-        exclude: globalStylePaths,
-        use: [
-          ...getCommonLoadersForGlobalCss(mergedOptions, includePaths),
-          {
-            loader: require.resolve('stylus-loader'),
-            options: {
-              sourceMap: !!mergedOptions.sourceMap,
-              stylusOptions: {
-                include: includePaths,
               },
             },
           },
@@ -320,27 +289,11 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
           },
         ],
       },
-      {
-        test: /\.styl$/,
-        include: globalStylePaths,
-        use: [
-          ...getCommonLoadersForGlobalStyle(mergedOptions, includePaths),
-          {
-            loader: require.resolve('stylus-loader'),
-            options: {
-              sourceMap: !!mergedOptions.sourceMap,
-              stylusOptions: {
-                include: includePaths,
-              },
-            },
-          },
-        ],
-      },
     ];
 
     const rules: RuleSetRule[] = [
       {
-        test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+        test: /\.css$|\.scss$|\.sass$|\.less$/,
         oneOf: [...cssModuleRules, ...globalCssRules, ...globalStyleRules],
       },
     ];

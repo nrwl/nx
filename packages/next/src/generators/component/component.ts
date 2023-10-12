@@ -36,7 +36,7 @@ function getDirectory(host: Tree, options: Schema) {
 
 /*
  * This schematic is basically the React one, but for Next we need
- * extra dependencies for css, sass, less, styl style options.
+ * extra dependencies for css, sass, less style options.
  */
 export async function componentGenerator(host: Tree, options: Schema) {
   const project = readProjectConfiguration(host, options.project);

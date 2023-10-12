@@ -59,10 +59,6 @@
           {
             "value": "none",
             "label": "None"
-          },
-          {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com        ] (DEPRECATED)"
           }
         ]
       }

@@ -54,7 +54,7 @@ export async function normalizeOptions(
 
   const appDir = options.appDir ?? true;
 
-  const styledModule = /^(css|scss|less|styl)$/.test(options.style)
+  const styledModule = /^(css|scss|less)$/.test(options.style)
     ? null
     : options.style;
 

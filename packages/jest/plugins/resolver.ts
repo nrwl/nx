@@ -40,13 +40,7 @@ function getCompilerSetup(rootDir: string) {
 
 module.exports = function (path: string, options: ResolveOptions) {
   const ext = extname(path);
-  if (
-    ext === '.css' ||
-    ext === '.scss' ||
-    ext === '.sass' ||
-    ext === '.less' ||
-    ext === '.styl'
-  ) {
+  if (ext === '.css' || ext === '.scss' || ext === '.sass' || ext === '.less') {
     return require.resolve('identity-obj-proxy');
   }
   try {
