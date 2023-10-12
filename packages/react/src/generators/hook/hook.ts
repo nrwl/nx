@@ -15,6 +15,7 @@ import { Schema } from './schema';
 import { addImport } from '../../utils/ast-utils';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { join } from 'path';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 interface NormalizedSchema extends Schema {
   projectSourceRoot: string;
@@ -24,6 +25,13 @@ interface NormalizedSchema extends Schema {
 }
 
 export async function hookGenerator(host: Tree, schema: Schema) {
+  return hookGeneratorInternal(host, {
+    nameAndDirectoryFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function hookGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   createFiles(host, options);
@@ -33,12 +41,7 @@ export async function hookGenerator(host: Tree, schema: Schema) {
 }
 
 function createFiles(host: Tree, options: NormalizedSchema) {
-  const hookDir = joinPathFragments(
-    options.projectSourceRoot,
-    options.directory
-  );
-
-  generateFiles(host, join(__dirname, './files'), hookDir, {
+  generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
     tmpl: '',
   });
@@ -100,7 +103,27 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   assertValidOptions(options);
 
-  let base = options.name;
+  const {
+    artifactName: name,
+    directory: _directory,
+    fileName: _fileName,
+    nameAndDirectoryFormat,
+    project: projectName,
+  } = await determineArtifactNameAndDirectoryOptions(host, {
+    artifactType: 'hook',
+    callingGenerator: '@nx/react:hook',
+    name: options.name,
+    directory: options.directory,
+    derivedDirectory: options.directory,
+    flat: options.flat,
+    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    project: options.project,
+    fileExtension: 'tsx',
+    pascalCaseFile: options.pascalCaseFiles,
+    pascalCaseDirectory: options.pascalCaseDirectory,
+  });
+
+  let base = _fileName;
   if (base.startsWith('use-')) {
     base = base.substring(4);
   } else if (base.startsWith('use')) {
@@ -108,28 +131,39 @@ async function normalizeOptions(
   }
 
   const { className, fileName } = names(base);
-  const hookFilename = options.pascalCaseFiles
-    ? 'use'.concat(className)
-    : 'use-'.concat(fileName);
+  // If using `as-provided` file and directory, then don't normalize.
+  // Otherwise, support legacy behavior of prefixing filename with `use-`.
+  const hookFilename =
+    nameAndDirectoryFormat === 'as-provided'
+      ? fileName
+      : options.pascalCaseFiles
+      ? 'use'.concat(className)
+      : 'use-'.concat(fileName);
   const hookName = 'use'.concat(className);
   const hookTypeName = 'Use'.concat(className);
   const project = getProjects(host).get(options.project);
 
-  if (!project) {
-    logger.error(
-      `Cannot find the ${options.project} project. Please double check the project name.`
-    );
-    throw new Error();
-  }
-
   const { sourceRoot: projectSourceRoot, projectType } = project;
-
-  const directory = await getDirectory(host, options, base);
 
   if (options.export && projectType === 'application') {
     logger.warn(
       `The "--export" option should not be used with applications and will do nothing.`
     );
+  }
+
+  // Support legacy behavior of derived directory to prefix with `use-`.
+  let directory = _directory;
+  if (nameAndDirectoryFormat === 'derived') {
+    const parts = directory.split('/');
+    parts.pop();
+    if (!options.flat) {
+      parts.push(
+        options.pascalCaseDirectory
+          ? 'use'.concat(className)
+          : 'use-'.concat(fileName)
+      );
+    }
+    directory = parts.join('/');
   }
 
   return {
@@ -140,25 +174,6 @@ async function normalizeOptions(
     fileName: hookFilename,
     projectSourceRoot,
   };
-}
-
-async function getDirectory(host: Tree, options: Schema, baseHookName) {
-  const { className, fileName } = names(baseHookName);
-  const hookFileName =
-    options.pascalCaseDirectory === true
-      ? 'use'.concat(className)
-      : 'use-'.concat(fileName);
-  const workspace = getProjects(host);
-  let baseDir: string;
-  if (options.directory) {
-    baseDir = options.directory;
-  } else {
-    baseDir =
-      workspace.get(options.project).projectType === 'application'
-        ? 'app'
-        : 'lib';
-  }
-  return options.flat ? baseDir : joinPathFragments(baseDir, hookFileName);
 }
 
 function assertValidOptions(options: Schema) {

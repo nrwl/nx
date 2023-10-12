@@ -1,19 +1,15 @@
-import { getProjects, logger, names, Tree } from '@nx/devkit';
-import { Schema } from '../schema';
+import { logger, names, readProjectConfiguration, Tree } from '@nx/devkit';
+
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
-export interface NormalizedSchema extends Schema {
-  projectSourceRoot: string;
-  fileName: string;
-  className: string;
-  filePath: string;
-}
+import { assertValidStyle } from '../../../utils/assertion';
+import { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
-  host: Tree,
+  tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  assertValidOptions(options);
+  assertValidStyle(options.style);
 
   const {
     artifactName: name,
@@ -21,24 +17,30 @@ export async function normalizeOptions(
     fileName,
     filePath,
     project: projectName,
-  } = await determineArtifactNameAndDirectoryOptions(host, {
+  } = await determineArtifactNameAndDirectoryOptions(tree, {
     artifactType: 'component',
-    callingGenerator: '@nx/expo:component',
+    callingGenerator: '@nx/react:component',
     name: options.name,
     directory: options.directory,
-    derivedDirectory: options.directory,
+    derivedDirectory: options.derivedDirectory ?? options.directory,
     flat: options.flat,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
     project: options.project,
     fileExtension: 'tsx',
+    fileName: options.fileName,
     pascalCaseFile: options.pascalCaseFiles,
+    pascalCaseDirectory: options.pascalCaseDirectory,
   });
 
-  const project = getProjects(host).get(projectName);
+  const project = readProjectConfiguration(tree, projectName);
 
   const { className } = names(name);
 
   const { sourceRoot: projectSourceRoot, projectType } = project;
+
+  const styledModule = /^(css|scss|less|none)$/.test(options.style)
+    ? null
+    : options.style;
 
   if (options.export && projectType === 'application') {
     logger.warn(
@@ -47,29 +49,19 @@ export async function normalizeOptions(
   }
 
   options.classComponent = options.classComponent ?? false;
+  options.routing = options.routing ?? false;
+  options.globalCss = options.globalCss ?? false;
+  options.inSourceTests = options.inSourceTests ?? false;
 
   return {
     ...options,
+    project: projectName,
     directory,
+    styledModule,
+    hasStyles: options.style !== 'none',
     className,
     fileName,
     filePath,
     projectSourceRoot,
   };
-}
-
-function assertValidOptions(options: Schema) {
-  const slashes = ['/', '\\'];
-  slashes.forEach((s) => {
-    if (options.name.indexOf(s) !== -1) {
-      const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
-      }
-      throw new Error(
-        `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
-      );
-    }
-  });
 }

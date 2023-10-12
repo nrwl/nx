@@ -4,6 +4,7 @@ export interface Schema {
   directory?: string;
   appProject?: string;
   js?: string;
+  nameAndDirectoryFormat?: 'as-provided' | 'derived';
 }
 
 interface NormalizedSchema extends Schema {
@@ -12,7 +13,6 @@ interface NormalizedSchema extends Schema {
   projectModulePath: string;
   appProjectSourcePath: string;
   appMainFilePath: string;
-  filesPath: string;
   className: string;
   constantName: string;
   propertyName: string;

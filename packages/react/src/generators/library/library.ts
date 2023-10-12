@@ -174,7 +174,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   if (options.component) {
     const componentTask = await componentGenerator(host, {
-      name: options.fileName,
+      nameAndDirectoryFormat: 'as-provided',
+      name: joinPathFragments(options.projectRoot, 'src/lib', options.fileName),
       project: options.name,
       flat: true,
       style: options.style,
