@@ -37,7 +37,7 @@ pub enum HashInstruction {
     ProjectFileSet(String, String),
     ProjectConfiguration(String),
     TsConfiguration(String),
-    TaskOutput(String),
+    TaskOutput(String, Vec<String>),
     External(String),
     AllExternalDependencies,
 }
@@ -72,7 +72,10 @@ impl From<HashInstruction> for String {
             HashInstruction::WorkspaceFileSet(file_set) => file_set,
             HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
             HashInstruction::Environment(env) => format!("env:{}", env),
-            HashInstruction::TaskOutput(task_output) => task_output,
+            HashInstruction::TaskOutput(task_output, dep_outputs) => {
+                let dep_outputs = dep_outputs.join(",");
+                format!("{task_output}:{dep_outputs}")
+            },
             HashInstruction::External(external) => external,
             HashInstruction::ProjectConfiguration(project_name) => {
                 format!("{project_name}:ProjectConfiguration")

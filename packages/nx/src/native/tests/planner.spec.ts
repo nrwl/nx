@@ -632,4 +632,129 @@ describe('task planner', () => {
     );
     expect(plans).toMatchSnapshot();
   });
+
+  describe('dependentTasksOutputFiles', () => {
+    it('should depend on dependent tasks output files', async () => {
+      const projectFileMap = {
+        parent: [
+          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+        ],
+        child: [
+          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+        ],
+        grandchild: [
+          { file: 'libs/grandchild/filec.ts', hash: 'c.hash' },
+          { file: 'libs/grandchild/filec.spec.ts', hash: 'c.spec.hash' },
+        ],
+      };
+
+      let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+      builder.addNode({
+        name: 'parent',
+        type: 'lib',
+        data: {
+          root: 'libs/parent',
+          targets: {
+            build: {
+              dependsOn: ['^build'],
+              inputs: ['prod', 'deps'],
+              executor: 'nx:run-commands',
+              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+            },
+          },
+        },
+      });
+      builder.addNode({
+        name: 'child',
+        type: 'lib',
+        data: {
+          root: 'libs/child',
+          targets: {
+            build: {
+              dependsOn: ['^build'],
+              inputs: ['prod', 'deps'],
+              executor: 'nx:run-commands',
+              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+            },
+          },
+        },
+      });
+
+      builder.addNode({
+        name: 'grandchild',
+        type: 'lib',
+        data: {
+          root: 'libs/grandchild',
+          targets: {
+            build: {
+              dependsOn: ['^build'],
+              inputs: ['prod', 'deps'],
+              executor: 'nx:run-commands',
+              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
+            },
+          },
+        },
+      });
+
+      builder.addStaticDependency('parent', 'child', 'libs/parent/filea.ts');
+      builder.addStaticDependency('child', 'grandchild', 'libs/child/fileb.ts');
+
+      let projectGraph = builder.getUpdatedProjectGraph();
+      let taskGraph = createTaskGraph(
+        projectGraph,
+        { build: ['^build'] },
+        ['parent'],
+        ['build'],
+        undefined,
+        {}
+      );
+
+      let nxJson = {
+        namedInputs: {
+          prod: ['!{projectRoot}/**/*.spec.ts'],
+          deps: [{ dependentTasksOutputFiles: '**/*.d.ts', transitive: true }],
+        },
+        targetDefaults: {
+          build: {
+            dependsOn: ['^build'],
+            inputs: ['prod', 'deps'],
+            executor: 'nx:run-commands',
+            options: {
+              outputPath: 'dist/libs/{projectRoot}',
+            },
+            outputs: ['{options.outputPath}'],
+          },
+        },
+      } as any;
+
+      await tempFs.createFiles({
+        'dist/libs/child/index.d.ts': '',
+        'dist/libs/grandchild/index.d.ts': '',
+      });
+
+      const hasher = new InProcessTaskHasher(
+        projectFileMap,
+        allWorkspaceFiles,
+        projectGraph,
+        nxJson,
+        {}
+      );
+
+      const transformed = transformProjectGraphForRust(projectGraph);
+      const planner = new HashPlanner(
+        tempFs.tempDir,
+        nxJson as any,
+        transformed
+      );
+      let plans = await assertHashPlan(
+        taskGraph.tasks['parent:build'],
+        taskGraph,
+        hasher,
+        planner
+      );
+      expect(plans).toMatchSnapshot();
+    });
+  });
 });

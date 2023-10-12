@@ -1,5 +1,21 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`task planner dependentTasksOutputFiles should depend on dependent tasks output files 1`] = `
+{
+  "parent:build": [
+    "**/*.d.ts:dist/libs/child",
+    "**/*.d.ts:dist/libs/grandchild",
+    "AllExternalDependencies",
+    "parent:!{projectRoot}/**/*.spec.ts",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;
+
 exports[`task planner should be able to handle multiple filesets per project 1`] = `
 {
   "parent:test": [
