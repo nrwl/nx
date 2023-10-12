@@ -1,5 +1,5 @@
 import update from './remove-root-build-option';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing-pre16';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   readProjectConfiguration,
