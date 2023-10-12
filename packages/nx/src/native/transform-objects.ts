@@ -25,7 +25,9 @@ export function transformProjectGraphForRust(
     }
     nodes[projectName] = {
       root: projectNode.data.root,
+      namedInputs: projectNode.data.namedInputs,
       targets,
+      tags: projectNode.data.tags,
     };
     if (graph.dependencies[projectName]) {
       dependencies[projectName] = [];
@@ -35,7 +37,7 @@ export function transformProjectGraphForRust(
     }
   }
   for (const [projectName, externalNode] of Object.entries(
-    graph.externalNodes
+    graph.externalNodes ?? {}
   )) {
     externalNodes[projectName] = {
       hash: externalNode.data.hash,
@@ -55,3 +57,6 @@ export function transformProjectGraphForRust(
     dependencies,
   };
 }
+
+
+

@@ -21,15 +21,52 @@ export function hashFiles(workspaceRoot: string): Record<string, string>
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 export interface ExternalNodeData {
   version: string
-  hash: string
+  hash?: string
 }
 export interface ExternalNode {
   version: string
+  hash?: string
+}
+export interface Target {
+  executor?: string
+  inputs?: Array<JsInputs>
+  outputs?: Array<string>
+}
+export interface Project {
+  root: string
+  namedInputs?: Record<string, Array<JsInputs>>
+  tags?: Array<string>
+  targets: Record<string, Target>
+}
+export interface ProjectGraph {
+  nodes: Record<string, Project>
+  dependencies: Record<string, Array<string>>
+  externalNodes: Record<string, ExternalNode>
+}
+export interface Task {
+  id: string
+  target: TaskTarget
+  outputs: Array<string>
+  projectRoot?: string
+}
+export interface TaskTarget {
+  project: string
+  target: string
+  configuration?: string
+}
+export interface TaskGraph {
+  roots: Array<string>
+  tasks: Record<string, Task>
+  dependencies: Record<string, Array<string>>
+}
+export interface FileData {
+  file: string
   hash: string
 }
 export interface InputsInput {
   input: string
   dependencies?: boolean
+  projects?: string | Array<string>
 }
 export interface FileSetInput {
   fileset: string
@@ -47,27 +84,10 @@ export interface DepsOutputsInput {
   dependentTasksOutputFiles: string
   transitive?: boolean
 }
-export interface ProjectsInput {
-  projects: string | Array<string>
-}
-export interface Target {
-  executor: string
-  inputs?: Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | ProjectsInput>
-  outputs?: Array<string>
-}
-export interface Project {
-  root: string
-  namedInputs?: Record<string, Array<InputsInput | string | FileSetInput | RuntimeInput | EnvironmentInput | ExternalDependenciesInput | DepsOutputsInput | ProjectsInput>>
-  targets: Record<string, Target>
-}
-export interface ProjectGraph {
-  nodes: Record<string, Project>
-  dependencies: Record<string, Array<string>>
-  externalNodes: Record<string, ExternalNode>
-}
-export interface FileData {
-  file: string
-  hash: string
+/** Stripped version of the NxJson interface for use in rust */
+export interface NxJson {
+  namedInputs?: Record<string, Array<JsInputs>>
+  targetDefaults?: Record<string, Target>
 }
 export const enum EventType {
   delete = 'delete',
@@ -98,6 +118,11 @@ export class ImportResult {
   sourceProject: string
   dynamicImportExpressions: Array<string>
   staticImportExpressions: Array<string>
+}
+export class HashPlanner {
+  constructor(workspaceRoot: string, nxJson: NxJson, projectGraph: ProjectGraph)
+  getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
+  getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): JsExternal
 }
 export class Watcher {
   origin: string

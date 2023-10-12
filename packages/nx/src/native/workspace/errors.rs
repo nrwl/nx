@@ -29,10 +29,11 @@ pub enum InternalWorkspaceErrors {
 
 impl From<InternalWorkspaceErrors> for napi::Error<WorkspaceErrors> {
     fn from(value: InternalWorkspaceErrors) -> Self {
-        let msg = value.to_string();
         match value {
-            InternalWorkspaceErrors::ParseError(_) => Error::new(WorkspaceErrors::ParseError, msg),
-            InternalWorkspaceErrors::Generic(_) => Error::new(WorkspaceErrors::Generic, msg),
+            InternalWorkspaceErrors::ParseError(msg) => {
+                Error::new(WorkspaceErrors::ParseError, msg)
+            }
+            InternalWorkspaceErrors::Generic(msg) => Error::new(WorkspaceErrors::Generic, msg),
         }
     }
 }

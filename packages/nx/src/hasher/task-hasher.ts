@@ -477,12 +477,14 @@ class TaskHasherImpl {
         filteredFiles.map((p) => join(workspaceRoot, p))
       )) {
         hashes.push(hash);
-        hashDetails[normalizePath(relative(workspaceRoot, file))] = hash;
       }
 
+      let hash = hashArray(hashes);
       partialHashes.push({
-        value: hashArray(hashes),
-        details: hashDetails,
+        value: hash,
+        details: {
+          [`${dependentTasksOutputFiles}:${outputs.join(',')}`]: hash,
+        },
       });
       if (transitive) {
         partialHashes.push(
@@ -762,7 +764,7 @@ class TaskHasherImpl {
     return {
       value: projectConfig,
       details: {
-        ProjectConfiguration: projectConfig,
+        [`${projectName}:ProjectConfiguration`]: projectConfig,
       },
     };
   }
@@ -775,7 +777,7 @@ class TaskHasherImpl {
     return {
       value: tsConfig,
       details: {
-        TsConfig: tsConfig,
+        [`${projectName}:TsConfig`]: tsConfig,
       },
     };
   }
