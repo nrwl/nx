@@ -80,34 +80,22 @@ stories: [
 ];
 ```
 
-### Import the stories in tsconfig.storybook.json
+### If you're using Angular add the stories in your tsconfig.json
 
-Here is a sample `libs/storybook-host/tsconfig.storybook.json` file:
+Here is a sample `libs/storybook-host/.storybook/tsconfig.json` file:
 
-```json {% fileName="libs/storybook-host/tsconfig.storybook.json" %}
+```json {% fileName="libs/storybook-host/.storybook/tsconfig.json" %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true
   },
-  ...
-  "include": [
-    "../../**/ui/**/src/**/*.stories.ts",
-    "../../**/ui/**/src/**/*.stories.js",
-    "../../**/ui/**/src/**/*.stories.jsx",
-    "../../**/ui/**/src/**/*.stories.tsx",
-    "../../**/ui/**/src/**/*.stories.mdx",
-    ".storybook/*.js",
-    ".storybook/*.ts"
-  ]
+  "exclude": ["../**/*.spec.ts"],
+  "include": ["../../**/ui/**/src/lib/**/*.stories.ts", "*.ts"]
 }
 ```
 
 Notice how in the `include` array we are specifying the paths to our stories, using the same pattern we used in our `.storybook/main.ts`.
-
-{% callout type="note" title="Angular Storybook tsconfig.json" %}
-For Angular, that file is in your project's `.storybook` directory, so in this case it would be under `libs/storybook-host/.storybook/tsconfig.json`.
-{% /callout %}
 
 ### Serve or build your Storybook
 
