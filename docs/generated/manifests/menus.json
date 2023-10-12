@@ -6080,6 +6080,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "federate-module",
+                "path": "/nx-api/angular/generators/federate-module",
+                "name": "federate-module",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "init",
                 "path": "/nx-api/angular/generators/init",
                 "name": "init",

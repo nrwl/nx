@@ -7,6 +7,7 @@ import {
   readJson,
   runCLI,
   runCommandUntil,
+  runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -273,13 +274,19 @@ describe('Angular Module Federation', () => {
     );
 
     // check default generated host is built successfully
-    const buildOutputSwc = runCLI(`build ${hostApp}`);
-    expect(buildOutputSwc).toContain('Successfully ran target build');
+    const buildOutputSwc = await runCommandUntil(`build ${hostApp}`, (output) =>
+      output.includes('Successfully ran target build')
+    );
+    await killProcessAndPorts(buildOutputSwc.pid);
 
-    const buildOutputTsNode = runCLI(`build ${hostApp}`, {
-      env: { NX_PREFER_TS_NODE: 'true' },
-    });
-    expect(buildOutputTsNode).toContain('Successfully ran target build');
+    const buildOutputTsNode = await runCommandUntil(
+      `build ${hostApp}`,
+      (output) => output.includes('Successfully ran target build'),
+      {
+        env: { NX_PREFER_TS_NODE: 'true' },
+      }
+    );
+    await killProcessAndPorts(buildOutputTsNode.pid);
 
     const processSwc = await runCommandUntil(
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp}`,
@@ -302,4 +309,80 @@ describe('Angular Module Federation', () => {
 
     await killProcessAndPorts(processTsNode.pid, hostPort, remotePort);
   }, 20_000_000);
+
+  it('should federate a module from a library and update an existing remote', async () => {
+    const lib = uniq('lib');
+    const remote = uniq('remote');
+    const module = uniq('module');
+    const host = uniq('host');
+
+    runCLI(
+      `generate @nx/angular:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+    );
+
+    runCLI(
+      `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
+    );
+
+    // Federate Module
+    runCLI(
+      `generate @nx/angular:federate-module ${module} --remote=${remote} --path=${lib}/src/index.ts --no-interactive`
+    );
+
+    updateFile(`${lib}/src/index.ts`, `export { isEven } from './lib/${lib}';`);
+    updateFile(
+      `${lib}/src/lib/${lib}.ts`,
+      `export function isEven(num: number) { return num % 2 === 0; }`
+    );
+
+    // Update Host to use the module
+    updateFile(
+      `${host}/src/app/app.component.ts`,
+      `
+      import { Component } from '@angular/core';
+      import { isEven } from '${remote}/${module}';
+
+      @Component({
+        selector: 'proj-root',
+        template: \`<div class="host">{{title}}</div>\`
+      })
+      export class AppComponent {
+        title = \`shell is \${isEven(2) ? 'even' : 'odd'}\`;
+      }`
+    );
+
+    // Update e2e test to check the module
+    updateFile(
+      `${host}-e2e/src/e2e/app.cy.ts`,
+      `
+      describe('${host}', () => {
+        beforeEach(() => cy.visit('/'));
+      
+        it('should display contain the remote library', () => {
+          expect(cy.get('div.host')).to.exist;
+          expect(cy.get('div.host').contains('shell is even'));
+        });
+      });
+      
+      `
+    );
+
+    // Build host and remote
+    const buildOutput = await runCommandUntil(`build ${host}`, (output) =>
+      output.includes('Successfully ran target build')
+    );
+    await killProcessAndPorts(buildOutput.pid);
+    const remoteOutput = await runCommandUntil(`build ${remote}`, (output) =>
+      output.includes('Successfully ran target build')
+    );
+    await killProcessAndPorts(remoteOutput.pid);
+
+    if (runE2ETests()) {
+      const hostE2eResults = await runCommandUntil(
+        `e2e ${host}-e2e --no-watch --verbose`,
+        (output) => output.includes('All specs passed!')
+      );
+      await killProcessAndPorts(hostE2eResults.pid);
+    }
+  }, 500_000);
 });

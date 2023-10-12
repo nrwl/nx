@@ -173,6 +173,15 @@
         "type": "generator"
       },
       {
+        "description": "Create a federated module, which is exposed by a remote and can be subsequently loaded by a host.",
+        "file": "generated/packages/angular/generators/federate-module.json",
+        "hidden": false,
+        "name": "federate-module",
+        "originalFilePath": "/packages/angular/src/generators/federate-module/schema.json",
+        "path": "angular/generators/federate-module",
+        "type": "generator"
+      },
+      {
         "description": "Initializes the `@nrwl/angular` plugin.",
         "file": "generated/packages/angular/generators/init.json",
         "hidden": true,
