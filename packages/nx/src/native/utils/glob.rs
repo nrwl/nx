@@ -108,7 +108,7 @@ fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
                 let capture = caps.get(0);
                 match capture {
                     Some(capture) => {
-                        let char = glob.as_bytes()[capture.end()] as char;
+                        let char = glob.as_bytes()[capture.end() - 1] as char;
                         if char == '*' {
                             "".to_string()
                         } else {
