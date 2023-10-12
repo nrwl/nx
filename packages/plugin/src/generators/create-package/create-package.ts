@@ -1,19 +1,17 @@
 import {
   addDependenciesToPackageJson,
-  readProjectConfiguration,
-  Tree,
-  generateFiles,
-  readJson,
   convertNxGenerator,
   formatFiles,
-  updateProjectConfiguration,
-  updateJson,
+  generateFiles,
   GeneratorCallback,
-  runTasksInSerial,
-  joinPathFragments,
-  getProjects,
-  detectPackageManager,
   getPackageManagerCommand,
+  joinPathFragments,
+  readJson,
+  readProjectConfiguration,
+  runTasksInSerial,
+  Tree,
+  updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { nxVersion } from 'nx/src/utils/versions';
@@ -132,8 +130,6 @@ async function createCliPackage(
     options.projectRoot,
     'bin/index.ts'
   );
-  projectConfiguration.targets.build.options.updateBuildableProjectDepsInPackageJson =
-    false;
   projectConfiguration.implicitDependencies = [options.project];
   updateProjectConfiguration(host, options.projectName, projectConfiguration);
 

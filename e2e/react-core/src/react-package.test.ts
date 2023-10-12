@@ -127,22 +127,7 @@ describe('Build React libraries and apps', () => {
       checkFilesExist(`dist/libs/${childLib2}/README.md`);
 
       /*
-       * 2. With dependencies
-       */
-      runCLI(`build ${parentLib} --updateBuildableProjectDepsInPackageJson`);
-
-      checkFilesExist(`dist/libs/${parentLib}/index.esm.js`);
-
-      const jsonFile = readJson(`dist/libs/${parentLib}/package.json`);
-      expect(jsonFile.peerDependencies).toEqual(
-        expect.objectContaining({
-          [`@${proj}/${childLib}`]: '0.0.1',
-          [`@${proj}/${childLib2}`]: '0.0.1',
-        })
-      );
-
-      /*
-       * 3. With dependencies without existing dist
+       * 2. With dependencies without existing dist
        */
       rmDist();
 
