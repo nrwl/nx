@@ -26,6 +26,7 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
   const tasks: GeneratorCallback[] = [];
   const initTask = await nextInitGenerator(host, {
     ...options,
+    e2eTestRunner: 'none',
     skipFormat: true,
   });
   tasks.push(initTask);
