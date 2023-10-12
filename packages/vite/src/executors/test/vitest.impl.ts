@@ -6,8 +6,7 @@ import {
   stripIndents,
   workspaceRoot,
 } from '@nx/devkit';
-import { CoverageOptions, File, Reporter } from 'vitest';
-import { loadConfigFromFile } from 'vite';
+import type { CoverageOptions, File, Reporter } from 'vitest';
 import { VitestExecutorOptions } from './schema';
 import { join, relative, resolve } from 'path';
 import { existsSync } from 'fs';
@@ -100,6 +99,11 @@ async function getSettings(
   context: ExecutorContext,
   projectRoot: string
 ) {
+  // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
+  const { loadConfigFromFile } = await (Function(
+    'return import("vite")'
+  )() as Promise<typeof import('vite')>);
+
   const packageJsonPath = join(workspaceRoot, 'package.json');
   const packageJson = existsSync(packageJsonPath)
     ? readJsonFile(packageJsonPath)

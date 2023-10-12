@@ -4,10 +4,6 @@
 
 Returns if a project has a standalone configuration (project.json).
 
-**`Deprecated`**
-
-non-standalone projects were deprecated
-
 #### Parameters
 
 | Name      | Type                                  | Description          |
@@ -18,3 +14,7 @@ non-standalone projects were deprecated
 #### Returns
 
 `boolean`
+
+**`Deprecated`**
+
+non-standalone projects were deprecated

@@ -30,6 +30,7 @@ describe('@nx/linter:init', () => {
         });
 
         expect(readJson(tree, 'nx.json').targetDefaults.lint).toEqual({
+          cache: true,
           inputs: [
             'default',
             '{workspaceRoot}/.eslintrc.json',

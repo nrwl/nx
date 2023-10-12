@@ -6,10 +6,6 @@ Update general workspace configuration such as the default project or cli settin
 
 This does _not_ update projects configuration, use [updateProjectConfiguration](../../devkit/documents/updateProjectConfiguration) or [addProjectConfiguration](../../devkit/documents/addProjectConfiguration) instead.
 
-**`Deprecated`**
-
-use updateNxJson
-
 #### Parameters
 
 | Name              | Type                                                                      |
@@ -20,3 +16,7 @@ use updateNxJson
 #### Returns
 
 `void`
+
+**`Deprecated`**
+
+use updateNxJson

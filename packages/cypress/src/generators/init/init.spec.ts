@@ -44,6 +44,7 @@ describe('init', () => {
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.e2e
     ).toEqual({
+      cache: true,
       inputs: ['default', '^production'],
     });
   });

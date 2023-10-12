@@ -358,28 +358,6 @@ describe('Nx Plugin', () => {
     });
   });
 
-  describe('workspace-generator', () => {
-    let custom: string;
-
-    it('should work with generate wrapper', () => {
-      custom = uniq('custom');
-      const project = uniq('generated-project');
-      runCLI(`g @nx/plugin:plugin workspace-plugin --no-interactive`);
-      runCLI(
-        `g @nx/plugin:generator ${custom} --project workspace-plugin --no-interactive`
-      );
-      runCLI(
-        `workspace-generator ${custom} --name ${project} --no-interactive`
-      );
-      expect(() => {
-        checkFilesExist(
-          `libs/${project}/src/index.ts`,
-          `libs/${project}/project.json`
-        );
-      });
-    });
-  });
-
   describe('--directory', () => {
     it('should create a plugin in the specified directory', async () => {
       const plugin = uniq('plugin');

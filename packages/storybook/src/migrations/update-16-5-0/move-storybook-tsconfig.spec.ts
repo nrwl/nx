@@ -4,6 +4,7 @@ import {
   Tree,
   addProjectConfiguration,
   updateJson,
+  readNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as variousProjects from './test-configs/storybook-projects.json';
@@ -61,7 +62,7 @@ describe('Ignore @nx/react/plugins/storybook in Storybook eslint plugin', () => 
   });
 
   it('should update nx.json inputs', () => {
-    expect(tree.read(`nx.json`).toString()).toMatchSnapshot();
+    expect(readNxJson(tree)).toMatchSnapshot();
   });
 });
 

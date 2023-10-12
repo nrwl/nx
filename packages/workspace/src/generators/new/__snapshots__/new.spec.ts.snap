@@ -31,6 +31,7 @@ exports[`new should generate an empty nx.json 1`] = `
   },
   "targetDefaults": {
     "build": {
+      "cache": true,
       "dependsOn": [
         "^build",
       ],
@@ -39,18 +40,14 @@ exports[`new should generate an empty nx.json 1`] = `
         "^production",
       ],
     },
-  },
-  "tasksRunnerOptions": {
-    "default": {
-      "options": {
-        "cacheableOperations": [
-          "build",
-          "lint",
-          "test",
-          "e2e",
-        ],
-      },
-      "runner": "nx/tasks-runners/default",
+    "e2e": {
+      "cache": true,
+    },
+    "lint": {
+      "cache": true,
+    },
+    "test": {
+      "cache": true,
     },
   },
 }

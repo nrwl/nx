@@ -175,13 +175,11 @@ function addMissingDependencies(
       ) {
         const outputs = getOutputsForTargetAndConfiguration(
           {
-            overrides: {},
-            target: {
-              project: projectName,
-              target: targetName,
-              configuration: configurationName,
-            },
+            project: projectName,
+            target: targetName,
+            configuration: configurationName,
           },
+          {},
           entry.node
         );
 

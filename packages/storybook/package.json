@@ -36,8 +36,7 @@
     "@nx/cypress": "file:../cypress",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter",
-    "@nx/workspace": "file:../workspace"
+    "@nx/linter": "file:../linter"
   },
   "publishConfig": {
     "access": "public"

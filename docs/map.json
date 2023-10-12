@@ -1869,11 +1869,6 @@
               "file": "generated/cli/workspace-lint"
             },
             {
-              "name": "workspace-generator",
-              "id": "workspace-generator",
-              "file": "generated/cli/workspace-generator"
-            },
-            {
               "name": "connect-to-nx-cloud",
               "id": "connect-to-nx-cloud",
               "tags": ["cache-task-results", "distribute-task-execution"],

@@ -69,19 +69,6 @@
       "type": "boolean",
       "description": "Starts Storybook in documentation mode. Learn more about it : https://storybook.js.org/docs/react/writing-docs/build-documentation#preview-storybooks-documentation."
     },
-    "uiFramework": {
-      "type": "string",
-      "description": "Storybook framework npm package.",
-      "enum": [
-        "@storybook/react",
-        "@storybook/html",
-        "@storybook/web-components",
-        "@storybook/vue",
-        "@storybook/vue3",
-        "@storybook/svelte"
-      ],
-      "x-deprecated": "Upgrade to Storybook 7."
-    },
     "webpackStatsJson": {
       "type": ["boolean", "string"],
       "description": "Write Webpack Stats JSON to disk.",

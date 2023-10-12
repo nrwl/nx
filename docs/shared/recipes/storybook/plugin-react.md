@@ -19,18 +19,6 @@ You can generate Storybook configuration for an individual React project by usin
 nx g @nx/react:storybook-configuration project-name
 ```
 
-## Nx React Storybook Preset
-
-The [`@nx/react`](/nx-api/react) package ships with a Storybook addon to make sure it uses the very same configuration as your Nx React application. When you generate a Storybook configuration for a project, it'll automatically add the addon to your configuration.
-
-```typescript
-module.exports = {
-  ...
-  addons: ['@storybook/addon-essentials', ..., '@nx/react/plugins/storybook'],
-  ...
-};
-```
-
 ## Auto-generate Stories
 
 The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration) has the option to automatically generate `*.stories.ts|tsx` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
@@ -85,72 +73,69 @@ and the result would be the following:
 
 {% /callout %}
 
-## Cypress tests for Stories
-
-The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration) gives the option to set up an e2e Cypress app that is configured to run against the project's Storybook instance.
-
-To launch Storybook and run the Cypress tests against the iframe inside of Storybook:
-
-```shell
-nx run project-name-e2e:e2e
-```
-
-The url that Cypress points to should look like this:
-
-`'/iframe.html?id=mybutton--primary&args=text:Click+me!;padding;style:default'`
-
-- `buttoncomponent` is a lowercase version of the `Title` in the `*.stories.tsx` file.
-- `primary` is the name of an individual story.
-- `style=default` sets the `style` arg to a value of `default`.
-
-Changing args in the url query parameters allows your Cypress tests to test different configurations of your component. You can [read the documentation](https://storybook.js.org/docs/react/writing-stories/args#setting-args-through-the-url) for more information.
-
 ## Example Files
 
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui` with a component, called `my-button`.
+
+Let's say that your component code looks like this:
+
+```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.tsx" %}
+export interface MyButtonProps {
+  text: string;
+  padding: number;
+  disabled: boolean;
+}
+
+export function MyButton(props: MyButtonProps) {
+  return (
+    <button disabled={props.disabled} style={{ padding: props.padding }}>
+      {props.text}
+    </button>
+  );
+}
+
+export default MyButton;
+```
 
 ### Story file
 
 The [`@nx/react:storybook-configuration` generator](/nx-api/react/generators/storybook-configuration) would generate a Story file that looks like this:
 
 ```typescript {% fileName="libs/feature/ui/src/lib/my-button/my-button.stories.tsx" %}
-import type { Meta } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { MyButton } from './my-button';
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
 
-const Story: Meta<typeof MyButton> = {
+const meta: Meta<typeof MyButton> = {
   component: MyButton,
   title: 'MyButton',
 };
-export default Story;
+export default meta;
+type Story = StoryObj<typeof MyButton>;
 
 export const Primary = {
   args: {
-    text: 'Click me!',
-    padding: 10,
-    disabled: true,
+    text: '',
+    padding: 0,
+    disabled: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    text: '',
+    padding: 0,
+    disabled: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to MyButton!/gi)).toBeTruthy();
   },
 };
 ```
 
-### Cypress test file
-
-For the library described above, Nx would generate an E2E project called `feature-ui-e2e` with a Cypress test file that looks like this:
-
-```typescript {% fileName="apps/feature-ui-e2e/src/e2e/my-button/my-button.cy.ts" %}
-describe('feature-ui: MyButton component', () => {
-  beforeEach(() =>
-    cy.visit(
-      '/iframe.html?id=mybutton--primary&args=text:Click+me!;padding;style:default'
-    )
-  );
-
-  it('should contain the right text', () => {
-    cy.get('button').should('contain', 'Click me!');
-  });
-});
-```
-
-Depending on your Cypress version, the file will end with `.spec.ts` or `.cy.ts`.
+Notice the interaction test on the second story, inside the `play` function. This just tests if the default text that appears on generated components exists in the rendered component. You can edit this test to suit your needs. You can read more about interaction tests [here](https://storybook.js.org/docs/react/writing-tests/interaction-testing).
 
 ## More Documentation
 

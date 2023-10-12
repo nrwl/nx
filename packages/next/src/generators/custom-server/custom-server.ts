@@ -102,15 +102,16 @@ export async function customServerGenerator(
     if (
       !json.tasksRunnerOptions?.default?.options?.cacheableOperations?.includes(
         'build-custom-server'
-      )
+      ) &&
+      json.tasksRunnerOptions?.default?.options?.cacheableOperations
     ) {
-      json.tasksRunnerOptions ??= {};
-      json.tasksRunnerOptions.default ??= { options: {} };
-      json.tasksRunnerOptions.default.options.cacheableOperations = [
-        ...json.tasksRunnerOptions.default.options.cacheableOperations,
-        'build-custom-server',
-      ];
+      json.tasksRunnerOptions.default.options.cacheableOperations.push(
+        'build-custom-server'
+      );
     }
+    json.targetDefaults ??= {};
+    json.targetDefaults['build-custom-server'] ??= {};
+    json.targetDefaults['build-custom-server'].cache ??= true;
     return json;
   });
 }

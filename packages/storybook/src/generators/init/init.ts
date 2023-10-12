@@ -134,30 +134,19 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
 function addCacheableOperation(tree: Tree) {
   const nxJson = readNxJson(tree);
-  if (
-    !nxJson.tasksRunnerOptions ||
-    !nxJson.tasksRunnerOptions.default ||
-    (nxJson.tasksRunnerOptions.default.runner !==
-      '@nx/workspace/tasks-runners/default' &&
-      nxJson.tasksRunnerOptions.default.runner !== 'nx/tasks-runners/default')
-  ) {
-    return;
-  }
+  const cacheableOperations: string[] | null =
+    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
 
-  nxJson.tasksRunnerOptions.default.options =
-    nxJson.tasksRunnerOptions.default.options || {};
-
-  nxJson.tasksRunnerOptions.default.options.cacheableOperations =
-    nxJson.tasksRunnerOptions.default.options.cacheableOperations || [];
-  if (
-    !nxJson.tasksRunnerOptions.default.options.cacheableOperations?.includes(
-      'build-storybook'
-    )
-  ) {
+  if (cacheableOperations && cacheableOperations.includes('build-storybook')) {
     nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
       'build-storybook'
     );
   }
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['build-storybook'] ??= {};
+  nxJson.targetDefaults['build-storybook'].cache = true;
+
   updateNxJson(tree, nxJson);
 }
 

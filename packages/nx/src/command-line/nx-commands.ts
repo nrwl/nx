@@ -21,10 +21,7 @@ import {
   yargsFormatCheckCommand,
   yargsFormatWriteCommand,
 } from './format/command-object';
-import {
-  yargsGenerateCommand,
-  yargsWorkspaceGeneratorCommand,
-} from './generate/command-object';
+import { yargsGenerateCommand } from './generate/command-object';
 import { yargsInitCommand } from './init/command-object';
 import { yargsListCommand } from './list/command-object';
 import {
@@ -88,7 +85,6 @@ export const commandsObject = yargs
   .command(yargsShowCommand)
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
-  .command(yargsWorkspaceGeneratorCommand)
   .command(yargsWorkspaceLintCommand)
   .scriptName('nx')
   .help()

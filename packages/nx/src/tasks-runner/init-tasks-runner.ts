@@ -6,6 +6,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { invokeTasksRunner } from './run-command';
 import { InvokeRunnerTerminalOutputLifeCycle } from './life-cycles/invoke-runner-terminal-output-life-cycle';
 import { performance } from 'perf_hooks';
+import { getOutputs } from './utils';
 
 export async function initTasksRunner(nxArgs: NxArgs) {
   performance.mark('init-local');
@@ -21,6 +22,14 @@ export async function initTasksRunner(nxArgs: NxArgs) {
       parallel: number;
     }): Promise<{ status: number; taskGraph: TaskGraph }> => {
       performance.mark('code-loading:end');
+
+      // TODO: This polyfills the outputs if someone doesn't pass a task with outputs. Remove this in Nx 18
+      opts.tasks.forEach((t) => {
+        if (!t.outputs) {
+          t.outputs = getOutputs(projectGraph.nodes, t.target, t.overrides);
+        }
+      });
+
       const lifeCycle = new InvokeRunnerTerminalOutputLifeCycle(opts.tasks);
 
       const taskGraph = {

@@ -7583,14 +7583,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "workspace-generator",
-                "path": "/nx-api/nx/documents/workspace-generator",
-                "id": "workspace-generator",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "connect-to-nx-cloud",
                 "path": "/nx-api/nx/documents/connect-to-nx-cloud",
                 "id": "connect-to-nx-cloud",
@@ -8778,14 +8770,6 @@
                 "id": "new",
                 "path": "/nx-api/workspace/generators/new",
                 "name": "new",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "workspace-generator",
-                "path": "/nx-api/workspace/generators/workspace-generator",
-                "name": "workspace-generator",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

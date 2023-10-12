@@ -52,19 +52,6 @@ export function createNxJson(
     affected: {
       defaultBase: options.defaultBase ?? deduceDefaultBase(),
     },
-    tasksRunnerOptions: {
-      default: {
-        runner: 'nx/tasks-runners/default',
-        options: {
-          cacheableOperations: [
-            'build',
-            targets.test ? 'test' : undefined,
-            targets.lint ? 'lint' : undefined,
-            targets.e2e ? 'e2e' : undefined,
-          ].filter(Boolean),
-        },
-      },
-    },
     namedInputs: {
       sharedGlobals: [],
       default: ['{projectRoot}/**/*', 'sharedGlobals'],
@@ -86,10 +73,12 @@ export function createNxJson(
       build: {
         dependsOn: ['^build'],
         inputs: ['production', '^production'],
+        cache: true,
       },
       test: targets.test
         ? {
             inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
+            cache: true,
           }
         : undefined,
       lint: targets.lint
@@ -99,11 +88,13 @@ export function createNxJson(
               '{workspaceRoot}/.eslintrc.json',
               '{workspaceRoot}/eslint.config.js',
             ],
+            cache: true,
           }
         : undefined,
       e2e: targets.e2e
         ? {
             inputs: ['default', '^production'],
+            cache: true,
           }
         : undefined,
     },

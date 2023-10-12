@@ -1,15 +1,4 @@
-export interface CommonNxStorybookConfig {
-  uiFramework?:
-    | '@storybook/angular'
-    | '@storybook/react'
-    | '@storybook/html'
-    | '@storybook/web-components'
-    | '@storybook/vue'
-    | '@storybook/vue3'
-    | '@storybook/svelte'; // TODO(katerina): Remove when Storybook 7
-}
-
-export type UiFramework7 =
+export type UiFramework =
   | '@storybook/angular'
   | '@storybook/html-webpack5'
   | '@storybook/nextjs'

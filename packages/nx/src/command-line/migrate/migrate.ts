@@ -47,7 +47,10 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/params';
-import { connectToNxCloudCommand } from '../connect/connect-to-nx-cloud';
+import {
+  connectToNxCloudCommand,
+  onlyDefaultRunnerIsUsed,
+} from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
 import { messages, recordStat } from '../../utils/ab-testing';
 import { nxVersion } from '../../utils/versions';
@@ -1333,14 +1336,8 @@ function addSplitConfigurationMigrationIfAvailable(
 
 function showConnectToCloudMessage() {
   try {
-    const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
-    const defaultRunnerIsUsed =
-      !nxJson.tasksRunnerOptions ||
-      Object.values(nxJson.tasksRunnerOptions).find(
-        (r: any) =>
-          r.runner == '@nrwl/workspace/tasks-runners/default' ||
-          r.runner == 'nx/tasks-runners/default'
-      );
+    const nxJson = readNxJson();
+    const defaultRunnerIsUsed = onlyDefaultRunnerIsUsed(nxJson);
     return !!defaultRunnerIsUsed;
   } catch {
     return false;

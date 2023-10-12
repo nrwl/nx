@@ -22,7 +22,7 @@ export default async function (tree: Tree) {
 
   const nxJson = readNxJson(tree);
   if (!nxJson) return;
-  for (let opts of Object.values(nxJson.tasksRunnerOptions)) {
+  for (let opts of Object.values(nxJson.tasksRunnerOptions ?? {})) {
     if (opts.runner === '@nrwl/nx-cloud') {
       opts.runner = 'nx-cloud';
     }

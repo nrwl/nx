@@ -14,7 +14,7 @@
     },
     "update-16-3-3-add-babel-upward-root-mode-flag": {
       "cli": "nx",
-      "version": "16-3-3-beta.0",
+      "version": "16.3.3-beta.0",
       "description": "Add babelUpwardRootMode if not already defined",
       "implementation": "./src/migrations/update-16-3-3-add-babel-upward-root-mode-flag/update-16-3-3-add-babel-upward-root-mode-flag"
     },

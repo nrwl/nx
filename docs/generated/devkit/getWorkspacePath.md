@@ -2,10 +2,6 @@
 
 ▸ **getWorkspacePath**(`tree`): `"angular.json"` \| `"workspace.json"`
 
-**`Deprecated`**
-
-all projects are configured using project.json
-
 #### Parameters
 
 | Name   | Type                                  |
@@ -15,3 +11,7 @@ all projects are configured using project.json
 #### Returns
 
 `"angular.json"` \| `"workspace.json"`
+
+**`Deprecated`**
+
+all projects are configured using project.json

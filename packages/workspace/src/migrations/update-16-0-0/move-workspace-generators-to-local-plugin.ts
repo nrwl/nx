@@ -11,7 +11,6 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-  writeJson,
 } from '@nx/devkit';
 // nx-ignore-next-line
 import * as path from 'path';

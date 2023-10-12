@@ -37,12 +37,18 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
       affected: {
         defaultBase: 'main',
       },
-      tasksRunnerOptions: {
-        default: {
-          runner: 'nx/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-          },
+      targetDefaults: {
+        build: {
+          cache: true,
+        },
+        lint: {
+          cache: true,
+        },
+        test: {
+          cache: true,
+        },
+        e2e: {
+          cache: true,
         },
       },
     })

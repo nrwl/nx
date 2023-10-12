@@ -1,6 +1,6 @@
-import { UiFramework7 } from '../../utils/models';
+import { UiFramework } from '../../utils/models';
 
 export interface Schema {
-  uiFramework: UiFramework7;
+  uiFramework: UiFramework;
   js?: boolean;
 }
