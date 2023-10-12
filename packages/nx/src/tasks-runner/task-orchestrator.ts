@@ -8,7 +8,6 @@ import { TaskStatus } from './tasks-runner';
 import {
   calculateReverseDeps,
   getExecutorForTask,
-  getOutputs,
   isCacheableTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
@@ -147,7 +146,7 @@ export class TaskOrchestrator {
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
-    const outputs = getOutputs(this.projectGraph.nodes, task);
+    const outputs = task.outputs;
     const shouldCopyOutputsFromCache =
       !!outputs.length &&
       (await this.shouldCopyOutputsFromCache(outputs, task.hash));
@@ -422,7 +421,7 @@ export class TaskOrchestrator {
               result.status === 'success'
                 ? 0
                 : 1,
-            outputs: getOutputs(this.projectGraph.nodes, result.task),
+            outputs: result.task.outputs,
           }))
           .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
           .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
@@ -551,10 +550,7 @@ export class TaskOrchestrator {
 
   private async recordOutputsHash(task: Task) {
     if (this.daemon?.enabled()) {
-      return this.daemon.recordOutputsHash(
-        getOutputs(this.projectGraph.nodes, task),
-        task.hash
-      );
+      return this.daemon.recordOutputsHash(task.outputs, task.hash);
     }
   }
 

@@ -13,7 +13,8 @@ describe('<%=propertyName%>Hasher', () => {
                 project: 'proj',
                 target: 'target'
             },
-            overrides: {}
+            overrides: {},
+            outputs: []
         }, {
             hasher: mockHasher
         } as unknown as HasherContext)

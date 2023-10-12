@@ -459,7 +459,8 @@ class TaskHasherImpl {
     for (const d of taskGraph.dependencies[task.id]) {
       const childTask = taskGraph.tasks[d];
       const outputs = getOutputsForTargetAndConfiguration(
-        childTask,
+        childTask.target,
+        childTask.overrides,
         this.projectGraph.nodes[childTask.target.project]
       );
       const { getFilesForOutputs } =

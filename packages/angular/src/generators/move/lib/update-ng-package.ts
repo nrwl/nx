@@ -26,12 +26,10 @@ export function updateNgPackage(tree: Tree, schema: MoveImplOptions): void {
   );
   const outputs = getOutputsForTargetAndConfiguration(
     {
-      target: {
-        project: schema.newProjectName,
-        target: 'build',
-      },
-      overrides: {},
+      project: schema.newProjectName,
+      target: 'build',
     },
+    {},
     {
       name: schema.newProjectName,
       type: 'lib',

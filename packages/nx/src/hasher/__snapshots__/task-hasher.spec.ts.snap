@@ -7,7 +7,7 @@ exports[`TaskHasher dependentTasksOutputFiles should depend on dependent tasks o
     "implicitDeps": {},
     "nodes": {
       "AllExternalDependencies": "3244421341483603138",
-      "ProjectConfiguration": "12802727827024321009",
+      "ProjectConfiguration": "16743571606168248002",
       "TsConfig": "8767608672024750088",
       "dist/libs/child/index.d.ts": "3244421341483603138",
       "dist/libs/grandchild/index.d.ts": "3244421341483603138",
@@ -18,7 +18,7 @@ exports[`TaskHasher dependentTasksOutputFiles should depend on dependent tasks o
     },
     "runtime": {},
   },
-  "value": "15526362704205124469",
+  "value": "14131423056691033336",
 }
 `;
 
@@ -29,7 +29,7 @@ exports[`TaskHasher dependentTasksOutputFiles should work with dependent tasks w
     "implicitDeps": {},
     "nodes": {
       "AllExternalDependencies": "3244421341483603138",
-      "ProjectConfiguration": "12802727827024321009",
+      "ProjectConfiguration": "16743571606168248002",
       "TsConfig": "8767608672024750088",
       "dist/libs/child/index.d.ts": "3244421341483603138",
       "dist/libs/grandchild/index.d.ts": "3244421341483603138",
@@ -40,7 +40,7 @@ exports[`TaskHasher dependentTasksOutputFiles should work with dependent tasks w
     },
     "runtime": {},
   },
-  "value": "15526362704205124469",
+  "value": "14131423056691033336",
 }
 `;
 

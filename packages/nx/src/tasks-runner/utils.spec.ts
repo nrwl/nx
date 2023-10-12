@@ -33,7 +33,8 @@ describe('utils', () => {
     it('should return empty arrays', () => {
       expect(
         getOutputsForTargetAndConfiguration(
-          task,
+          task.target,
+          task.overrides,
           getNode({
             outputs: [],
           })
@@ -44,7 +45,8 @@ describe('utils', () => {
     it('should interpolate {workspaceRoot}, {projectRoot} and {projectName}', () => {
       expect(
         getOutputsForTargetAndConfiguration(
-          task,
+          task.target,
+          task.overrides,
           getNode({
             outputs: [
               '{workspaceRoot}/one',
@@ -59,7 +61,8 @@ describe('utils', () => {
     it('should interpolate {projectRoot} when it is not at the beginning', () => {
       expect(
         getOutputsForTargetAndConfiguration(
-          task,
+          task.target,
+          task.overrides,
           getNode({
             outputs: ['{workspaceRoot}/dist/{projectRoot}'],
           })
@@ -70,7 +73,8 @@ describe('utils', () => {
     it('should throw when {workspaceRoot} is used not at the beginning', () => {
       expect(() =>
         getOutputsForTargetAndConfiguration(
-          task,
+          task.target,
+          task.overrides,
           getNode({
             outputs: ['test/{workspaceRoot}/dist'],
           })
@@ -92,9 +96,13 @@ describe('utils', () => {
           files: [],
         },
       };
-      expect(getOutputsForTargetAndConfiguration(task, data as any)).toEqual([
-        'dist',
-      ]);
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual(['dist']);
     });
 
     it('should interpolate {workspaceRoot} when {projectRoot} = . by removing the slash after it', () => {
@@ -111,9 +119,13 @@ describe('utils', () => {
           files: [],
         },
       };
-      expect(getOutputsForTargetAndConfiguration(task, data as any)).toEqual([
-        'dist',
-      ]);
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual(['dist']);
     });
 
     it('should throw when {projectRoot} is used not at the beginning and the value is .', () => {
@@ -131,14 +143,19 @@ describe('utils', () => {
         },
       };
       expect(() =>
-        getOutputsForTargetAndConfiguration(task, data as any)
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
       ).toThrow();
     });
 
     it('should support interpolation based on options', () => {
       expect(
         getOutputsForTargetAndConfiguration(
-          task,
+          task.target,
+          task.overrides,
           getNode({
             outputs: ['{workspaceRoot}/path/{options.myVar}'],
             options: {
@@ -152,7 +169,8 @@ describe('utils', () => {
     it('should support nested interpolation based on options', () => {
       expect(
         getOutputsForTargetAndConfiguration(
-          task,
+          task.target,
+          task.overrides,
           getNode({
             outputs: ['{options.nested.myVar}'],
             options: {
@@ -168,7 +186,8 @@ describe('utils', () => {
     it('should support interpolation for non-existing options', () => {
       expect(
         getOutputsForTargetAndConfiguration(
-          task,
+          task.target,
+          task.overrides,
           getNode({
             outputs: ['{options.outputFile}'],
             options: {},
@@ -180,7 +199,8 @@ describe('utils', () => {
     it('should support interpolation based on configuration-specific options', () => {
       expect(
         getOutputsForTargetAndConfiguration(
-          task,
+          task.target,
+          task.overrides,
           getNode({
             outputs: ['{options.myVar}'],
             options: {
@@ -199,11 +219,9 @@ describe('utils', () => {
     it('should support interpolation outputs from overrides', () => {
       expect(
         getOutputsForTargetAndConfiguration(
+          task.target,
           {
-            ...task,
-            overrides: {
-              myVar: 'value/override',
-            },
+            myVar: 'value/override',
           },
           getNode({
             outputs: ['{options.myVar}'],
@@ -224,7 +242,8 @@ describe('utils', () => {
       it('should return the outputPath option', () => {
         expect(
           getOutputsForTargetAndConfiguration(
-            task,
+            task.target,
+            task.overrides,
             getNode({
               options: {
                 outputPath: 'value',
@@ -237,11 +256,9 @@ describe('utils', () => {
       it('should handle outputPath overrides', () => {
         expect(
           getOutputsForTargetAndConfiguration(
+            task.target,
             {
-              ...task,
-              overrides: {
-                outputPath: 'overrideOutputPath',
-              },
+              outputPath: 'overrideOutputPath',
             },
             getNode({
               options: {
@@ -255,7 +272,8 @@ describe('utils', () => {
       it('should return configuration-specific outputPath when defined', () => {
         expect(
           getOutputsForTargetAndConfiguration(
-            task,
+            task.target,
+            task.overrides,
             getNode({
               options: {
                 outputPath: 'value',
@@ -273,7 +291,8 @@ describe('utils', () => {
       it('should return configuration-independent outputPath when defined', () => {
         expect(
           getOutputsForTargetAndConfiguration(
-            task,
+            task.target,
+            task.overrides,
             getNode({
               options: {
                 outputPath: 'value',
@@ -288,7 +307,7 @@ describe('utils', () => {
 
       it('should return default output paths when nothing else is defined', () => {
         expect(
-          getOutputsForTargetAndConfiguration(task, {
+          getOutputsForTargetAndConfiguration(task.target, task.overrides, {
             name: 'myapp',
             type: 'app',
             data: {
@@ -313,9 +332,10 @@ describe('utils', () => {
       it('should transform non-prefixed paths', () => {
         expect(
           getOutputsForTargetAndConfiguration(
-            task,
+            task.target,
+            task.overrides,
             getNode({
-              outputs: ['dist'],
+              outputs: ['{workspaceRoot}/dist'],
             })
           )
         ).toEqual(['dist']);
@@ -323,9 +343,10 @@ describe('utils', () => {
       it('should transform non-prefixed paths that use interpolation', () => {
         expect(
           getOutputsForTargetAndConfiguration(
-            task,
+            task.target,
+            task.overrides,
             getNode({
-              outputs: ['dist/{projectRoot}'],
+              outputs: ['{workspaceRoot}/dist/{projectRoot}'],
             })
           )
         ).toEqual(['dist/myapp']);
@@ -334,9 +355,10 @@ describe('utils', () => {
       it('should transform relative paths', () => {
         expect(
           getOutputsForTargetAndConfiguration(
-            task,
+            task.target,
+            task.overrides,
             getNode({
-              outputs: ['./sub'],
+              outputs: ['{projectRoot}/sub'],
             })
           )
         ).toEqual(['myapp/sub']);
@@ -345,9 +367,10 @@ describe('utils', () => {
       it('should transform unix-absolute paths', () => {
         expect(
           getOutputsForTargetAndConfiguration(
-            task,
+            task.target,
+            task.overrides,
             getNode({
-              outputs: ['/dist'],
+              outputs: ['{workspaceRoot}/dist'],
             })
           )
         ).toEqual(['dist']);

@@ -27,6 +27,11 @@ export interface Task {
    * Overrides for the configured options of the target
    */
   overrides: any;
+
+  /**
+   * The outputs the task may produce
+   */
+  outputs: string[];
   /**
    * Root of the project the task belongs to
    */

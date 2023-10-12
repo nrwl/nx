@@ -11,6 +11,7 @@ A representation of the invocation of an Executor
 - [hash](../../devkit/documents/Task#hash): string
 - [hashDetails](../../devkit/documents/Task#hashdetails): Object
 - [id](../../devkit/documents/Task#id): string
+- [outputs](../../devkit/documents/Task#outputs): string[]
 - [overrides](../../devkit/documents/Task#overrides): any
 - [projectRoot](../../devkit/documents/Task#projectroot): string
 - [startTime](../../devkit/documents/Task#starttime): number
@@ -64,6 +65,14 @@ Details about the composition of the hash
 • **id**: `string`
 
 Unique ID
+
+---
+
+### outputs
+
+• **outputs**: `string`[]
+
+The outputs the task may produce
 
 ---
 
