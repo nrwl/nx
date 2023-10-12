@@ -97,6 +97,11 @@ function checkLinkIsForPrivatePackage(link: string) {
   }
   const pathSegments = link.split('/').filter(Boolean);
   if (pathSegments[0] === 'nx-api') {
+    // TODO(v17): Remove this once vue is public or once this logic is fixed
+    if (pathSegments[1] === 'vue') {
+      return true;
+    }
+
     const packageJsonPath = join(
       workspaceRoot,
       'packages',
@@ -119,6 +124,7 @@ const sitemapLinks = readSiteMapIndex(
 const errors: Array<{ file: string; link: string }> = [];
 for (let file in documentLinks) {
   for (let link of documentLinks[file]) {
+    // TODO(@isaacplmann): This ignores errors which are links TO private packages. It allows links FROM public packages (public docs) TO private packages (404 links)
     if (
       !sitemapLinks.includes(['https://nx.dev', link].join('')) &&
       !checkLinkIsForPrivatePackage(link)
