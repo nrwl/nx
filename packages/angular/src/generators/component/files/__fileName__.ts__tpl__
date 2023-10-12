@@ -5,8 +5,8 @@ import { CommonModule } from '@angular/common';<% } %>
   selector: '<%= selector %>',<%}%><% if(standalone) {%>
   standalone: true,
   imports: [CommonModule],<%}%><% if(inlineTemplate) { %>
-  template: `<p><%= fileName %> works!</p>`<% } else { %>
-  templateUrl: './<%= fileName %><%= type ? '.' + type : '' %>.html'<% } if(inlineStyle) { %>,
+  template: `<p><%= name %> works!</p>`<% } else { %>
+  templateUrl: './<%= fileName %>.html'<% } if(inlineStyle) { %>,
   styles: [<% if(displayBlock){ %>
     `
       :host {
@@ -14,8 +14,8 @@ import { CommonModule } from '@angular/common';<% } %>
       }
     `<% } %>
   ]<% } else if (style !== 'none') { %>,
-  styleUrls: ['./<%= fileName %><%= type ? '.' + type : '' %>.<%= style %>']<% } %><% if(!!viewEncapsulation) { %>,
+  styleUrls: ['./<%= fileName %>.<%= style %>']<% } %><% if(!!viewEncapsulation) { %>,
   encapsulation: ViewEncapsulation.<%= viewEncapsulation %><% } if (changeDetection !== 'Default') { %>,
   changeDetection: ChangeDetectionStrategy.<%= changeDetection %><% } %>
 })
-export class <%= className %><%= typeClassName %> {}
+export class <%= symbolName %> {}

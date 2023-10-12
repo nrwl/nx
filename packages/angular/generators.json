@@ -165,7 +165,7 @@
       "description": "Creates an Angular application."
     },
     "component": {
-      "factory": "./src/generators/component/component",
+      "factory": "./src/generators/component/component#componentGeneratorInternal",
       "schema": "./src/generators/component/schema.json",
       "aliases": ["c"],
       "description": "Generate an Angular Component."

@@ -14,3 +14,7 @@ export { sortObjectByKeys } from './utils/object-sort';
 export { stripIndent } from './utils/logger';
 export { readModulePackageJson } from './utils/package-json';
 export { splitByColons } from './utils/split-target';
+export {
+  createProjectRootMappingsFromProjectConfigurations,
+  findProjectForPath,
+} from './project-graph/utils/find-project-for-path';

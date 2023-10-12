@@ -1,32 +1,38 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component",
+  "factory": "./src/generators/component/component#componentGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "SchematicsAngularComponent",
     "title": "Angular Component Schema",
     "cli": "nx",
     "type": "object",
-    "description": "Creates a new, generic Angular component definition in the given or default project.",
+    "description": "Creates a new Angular component.",
     "additionalProperties": false,
     "properties": {
-      "path": {
-        "type": "string",
-        "format": "path",
-        "description": "The path at which to create the component file, relative to the current workspace. Default is a folder with the same name as the component in the project root.",
-        "visible": false
-      },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "$default": { "$source": "projectName" },
-        "x-dropdown": "projects"
-      },
       "name": {
         "type": "string",
         "description": "The name of the component.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the component?"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+        "aliases": ["dir", "path"],
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "projectName" },
+        "x-dropdown": "projects",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
       },
       "prefix": {
         "type": "string",
@@ -89,7 +95,8 @@
       "flat": {
         "type": "boolean",
         "description": "Create the new files at the top level of the current project.",
-        "default": false
+        "default": false,
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18."
       },
       "skipImport": {
         "type": "boolean",
@@ -124,13 +131,13 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name", "project"],
+    "required": ["name"],
     "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `my-component`:\n\n```bash\nnx g @nx/angular:component my-component\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone Component\" %}\n\nCreate a standalone component named `my-component`:\n\n```bash\nnx g @nx/angular:component my-component --standalone\n```\n\n{% /tab %}\n\n{% tab label=\"Single File Component\" %}\n\nCreate a component named `my-component` with inline styles and inline template:\n\n```bash\nnx g @nx/angular:component my-component --inlineStyle --inlineTemplate\n```\n\n{% /tab %}\n\n{% tab label=\"Component with OnPush Change Detection Strategy\" %}\n\nCreate a component named `my-component` with OnPush Change Detection Strategy:\n\n```bash\nnx g @nx/angular:component my-component --changeDetection=OnPush\n```\n\n{% /tab %}\n",
     "presets": []
   },
   "aliases": ["c"],
   "description": "Generate an Angular Component.",
-  "implementation": "/packages/angular/src/generators/component/component.ts",
+  "implementation": "/packages/angular/src/generators/component/component#componentGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/angular/src/generators/component/schema.json",
   "type": "generator"
