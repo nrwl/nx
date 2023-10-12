@@ -1,4 +1,5 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
+import { ProjectConfiguration } from '@nx/devkit';
 import {
   newProject,
   runCLI,
@@ -7,6 +8,7 @@ import {
   updateFile,
   expectJestTestsToPass,
   cleanupProject,
+  updateJson,
 } from '@nx/e2e/utils';
 
 describe('Jest', () => {
@@ -151,4 +153,34 @@ describe('Jest', () => {
       'Test Suites: 1 passed, 1 total'
     );
   }, 90000);
+
+  it('should test in batch mode', async () => {
+    const lib1 = uniq('lib1');
+    runCLI(`generate @nx/js:lib ${lib1} --bundler=none --no-interactive`);
+
+    const lib2 = uniq('lib2');
+    runCLI(`generate @nx/js:lib ${lib2} --bundler=none --no-interactive`);
+
+    [lib1, lib2].forEach((lib) => {
+      updateJson(
+        `libs/${lib}/project.json`,
+        (projectJson: ProjectConfiguration) => {
+          projectJson.targets.test.executor = `@nx/jest:batchJest`;
+          return projectJson;
+        }
+      );
+    });
+    let testResult = await runCLIAsync(`test ${lib1} --no-watch`);
+    expect(testResult.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+    testResult = await runCLIAsync(`test ${lib2} --no-watch`);
+    expect(testResult.combinedOutput).toContain(
+      'Test Suites: 1 passed, 1 total'
+    );
+    testResult = await runCLIAsync(`run-many --target=test --skip-nx-cache`);
+    expect(testResult.combinedOutput).toContain(
+      'Ran all test suites in 2 projects'
+    );
+  });
 });

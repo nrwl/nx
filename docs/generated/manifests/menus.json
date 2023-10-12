@@ -7122,6 +7122,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "batchJest",
+                "path": "/nx-api/jest/executors/batchJest",
+                "name": "batchJest",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,

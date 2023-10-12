@@ -28,7 +28,7 @@ export async function* tscBatchExecutor(
   overrides: ExecutorOptions,
   context: ExecutorContext
 ) {
-  const tasksOptions = normalizeTasksOptions(inputs, context);
+  const tasksOptions = normalizeTasksOptions(inputs, context, overrides);
 
   let shouldWatch = false;
   Object.values(tasksOptions).forEach((taskOptions) => {

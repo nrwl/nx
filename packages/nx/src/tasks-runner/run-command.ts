@@ -4,7 +4,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 import { NxArgs } from '../utils/command-line-utils';
 import { isRelativePath } from '../utils/fileutils';
 import { output } from '../utils/output';
-import { shouldStreamOutput } from './utils';
+import { getExecutorForTask, shouldStreamOutput } from './utils';
 import { CompositeLifeCycle, LifeCycle } from './life-cycle';
 import { StaticRunManyTerminalOutputLifeCycle } from './life-cycles/static-run-many-terminal-output-life-cycle';
 import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-one-terminal-output-life-cycle';
@@ -41,14 +41,17 @@ async function getTerminalOutputLifeCycle(
   tasks: Task[],
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration,
-  overrides: Record<string, unknown>
+  overrides: Record<string, unknown>,
+  projectGraph: ProjectGraph
 ): Promise<{ lifeCycle: LifeCycle; renderIsDone: Promise<void> }> {
   const { runnerOptions } = getRunner(nxArgs, nxJson);
   const isRunOne = initiatingProject != null;
-  const useDynamicOutput = shouldUseDynamicLifeCycle(
+  const useDynamicOutput = await shouldUseDynamicLifeCycle(
     tasks,
     runnerOptions,
-    nxArgs.outputStyle
+    nxArgs.outputStyle,
+    nxArgs.batch,
+    projectGraph
   );
 
   const overridesWithoutHidden = { ...overrides };
@@ -170,7 +173,8 @@ export async function runCommand(
         tasks,
         nxArgs,
         nxJson,
-        overrides
+        overrides,
+        projectGraph
       );
 
       const status = await invokeTasksRunner({
@@ -193,11 +197,27 @@ export async function runCommand(
   return status;
 }
 
-function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
+async function setEnvVarsBasedOnArgs(
+  nxArgs: NxArgs,
+  loadDotEnvFiles: boolean,
+  tasks: Task[],
+  projectGraph: ProjectGraph
+) {
+  const hasBatchImplementation: boolean = (
+    await Promise.all(
+      tasks.map(async (task) => {
+        const { batchImplementationFactory } = await getExecutorForTask(
+          task,
+          projectGraph
+        );
+        return batchImplementationFactory;
+      })
+    )
+  ).some((batchImplementationFactory) => !!batchImplementationFactory);
+
   if (
     nxArgs.outputStyle == 'stream' ||
-    process.env.NX_BATCH_MODE === 'true' ||
-    nxArgs.batch
+    (hasBatchImplementation && nxArgs.batch)
   ) {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
@@ -229,7 +249,7 @@ export async function invokeTasksRunner({
   loadDotEnvFiles: boolean;
   initiatingProject: string | null;
 }) {
-  setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles);
+  await setEnvVarsBasedOnArgs(nxArgs, loadDotEnvFiles, tasks, projectGraph);
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
@@ -404,15 +424,28 @@ async function anyFailuresInObservable(obs: any) {
   });
 }
 
-function shouldUseDynamicLifeCycle(
+async function shouldUseDynamicLifeCycle(
   tasks: Task[],
   options: any,
-  outputStyle: string
+  outputStyle: string,
+  batch: boolean,
+  projectGraph
 ) {
+  const hasBatchImplementation: boolean = (
+    await Promise.all(
+      tasks.map(async (task) => {
+        const { batchImplementationFactory } = await getExecutorForTask(
+          task,
+          projectGraph
+        );
+        return batchImplementationFactory;
+      })
+    )
+  ).some((batchImplementationFactory) => !!batchImplementationFactory);
   if (
-    process.env.NX_BATCH_MODE === 'true' ||
     process.env.NX_VERBOSE_LOGGING === 'true' ||
-    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT === 'false'
+    process.env.NX_TASKS_RUNNER_DYNAMIC_OUTPUT === 'false' ||
+    (hasBatchImplementation && batch)
   ) {
     return false;
   }

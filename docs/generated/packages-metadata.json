@@ -975,6 +975,15 @@
         "originalFilePath": "/packages/jest/src/executors/jest/schema.json",
         "path": "jest/executors/jest",
         "type": "executor"
+      },
+      {
+        "description": "Run Jest unit tests in batch mode.",
+        "file": "generated/packages/jest/executors/batchJest.json",
+        "hidden": false,
+        "name": "batchJest",
+        "originalFilePath": "/packages/jest/src/executors/jest/schema.json",
+        "path": "jest/executors/batchJest",
+        "type": "executor"
       }
     ],
     "generators": [

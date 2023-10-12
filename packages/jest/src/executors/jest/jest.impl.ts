@@ -8,6 +8,7 @@ import { JestExecutorOptions } from './schema';
 import { Config } from '@jest/types';
 import {
   ExecutorContext,
+  logger,
   stripIndents,
   TaskGraph,
   workspaceRoot,
@@ -161,6 +162,17 @@ export async function batchJest(
   let selectedProjects: string[] = [];
   let projectsWithNoName: [string, string][] = [];
   for (const task of taskGraph.roots) {
+    const inputsForTask = Object.keys(inputs[task]).filter(
+      (input) => input !== 'jestConfig'
+    );
+    if (inputsForTask.length) {
+      logger.warn(
+        stripIndents`Task ${task} in Jest Batch Mode will ignore option(s): ${inputsForTask.join(
+          ', '
+        )}.`
+      );
+    }
+
     let configPath = path.resolve(context.root, inputs[task].jestConfig);
     configPaths.push(configPath);
 

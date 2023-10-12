@@ -85,7 +85,7 @@ Default: `true`
 
 Type: `boolean`
 
-Default: `false`
+Default: `true`
 
 Run task(s) in batches for executors which support batches
 

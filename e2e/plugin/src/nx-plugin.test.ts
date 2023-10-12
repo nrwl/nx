@@ -440,7 +440,7 @@ describe('Nx Plugin', () => {
       `dist/libs/${createAppName}/bin/index.js`
     );
 
-    runCLI(`e2e ${plugin}-e2e`);
+    expect(() => runCLI(`e2e ${plugin}-e2e`)).not.toThrow();
   });
 
   it('should throw an error when run create-package for an invalid plugin ', async () => {

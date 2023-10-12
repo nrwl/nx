@@ -428,6 +428,7 @@
       - [Overview](/nx-api/jest/documents/overview)
     - [executors](/nx-api/jest/executors)
       - [jest](/nx-api/jest/executors/jest)
+      - [batchJest](/nx-api/jest/executors/batchJest)
     - [generators](/nx-api/jest/generators)
       - [init](/nx-api/jest/generators/init)
       - [configuration](/nx-api/jest/generators/configuration)
