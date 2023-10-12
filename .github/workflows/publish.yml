@@ -229,16 +229,16 @@ jobs:
       - name: List artifacts
         run: ls -R artifacts
         shell: bash
-      - name: Trigger Docs Release
-        run: |
-          git rebase $GITHUB_REF_NAME latest
-          git push
-          git checkout -
       - name: Publish
         run: |
           git checkout -b publish/$GITHUB_REF_NAME
           npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
           pnpm nx-release --local=false $GITHUB_REF_NAME
+      - name: Trigger Docs Release
+        if: "!github.event.release.prerelease"
+        run: |
+          git branch -f latest
+          git push -f origin latest
     env:
       GH_TOKEN: ${{ github.token }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
