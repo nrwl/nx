@@ -13,13 +13,11 @@ const knownLocations = [
   // Plain React
   'src/styles.css',
   'src/styles.scss',
-  'src/styles.styl',
   'src/styles.less',
 
   // Next.js
   'pages/styles.css',
   'pages/styles.scss',
-  'pages/styles.styl',
   'pages/styles.less',
 ];
 

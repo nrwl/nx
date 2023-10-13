@@ -66,6 +66,11 @@ describe('vue:storybook-configuration', () => {
 
   it('should generate stories for components', async () => {
     appTree = await createTestUILib('test-ui-lib');
+    appTree.write(
+      'test-ui-lib/src/components/my-component/my-component.vue',
+      componentContent
+    );
+
     await storybookConfigurationGenerator(appTree, {
       name: 'test-ui-lib',
       generateStories: true,
@@ -74,6 +79,12 @@ describe('vue:storybook-configuration', () => {
     expect(
       appTree.exists('test-ui-lib/src/components/test-ui-lib.stories.ts')
     ).toBeTruthy();
+    expect(
+      appTree.read(
+        'test-ui-lib/src/components/my-component/my-component.stories.ts',
+        'utf-8'
+      )
+    ).toMatchSnapshot();
   });
 
   it('should configure everything at once', async () => {
@@ -86,8 +97,12 @@ describe('vue:storybook-configuration', () => {
     expect(appTree.exists('test-ui-app/tsconfig.storybook.json')).toBeTruthy();
   });
 
-  it('should generate stories for components', async () => {
+  it('should generate stories for components for app', async () => {
     appTree = await createTestAppLib('test-ui-app');
+    appTree.write(
+      'test-ui-app/src/components/my-component/my-component.vue',
+      componentContent
+    );
     await storybookConfigurationGenerator(appTree, {
       name: 'test-ui-app',
       generateStories: true,
@@ -103,6 +118,10 @@ describe('vue:storybook-configuration', () => {
 
   it('should generate stories for components without interaction tests', async () => {
     appTree = await createTestAppLib('test-ui-app');
+    appTree.write(
+      'test-ui-app/src/components/my-component/my-component.vue',
+      componentContent
+    );
     await storybookConfigurationGenerator(appTree, {
       name: 'test-ui-app',
       generateStories: true,

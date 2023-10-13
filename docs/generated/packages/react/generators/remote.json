@@ -58,10 +58,6 @@
               "value": "styled-jsx",
               "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
             },
-            {
-              "value": "styl",
-              "label": "DEPRECATD: Stylus(.styl) [ http://stylus-lang.com            ]"
-            },
             { "value": "none", "label": "None" }
           ]
         }
@@ -162,7 +158,7 @@
       "typescriptConfiguration": {
         "type": "boolean",
         "description": "Whether the module federation configuration and webpack configuration files should use TS.",
-        "default": false
+        "default": true
       }
     },
     "required": ["name"],

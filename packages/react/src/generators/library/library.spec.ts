@@ -367,10 +367,8 @@ describe('lib', () => {
       expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.scss')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.styl')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.module.styl')).toBeFalsy();
 
       const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
       expect(content).not.toContain('styled-components');
@@ -379,10 +377,8 @@ describe('lib', () => {
       expect(content).not.toContain('<StyledApp>');
 
       //for imports
-      expect(content).not.toContain('app.styl');
       expect(content).not.toContain('app.css');
       expect(content).not.toContain('app.scss');
-      expect(content).not.toContain('app.module.styl');
       expect(content).not.toContain('app.module.css');
       expect(content).not.toContain('app.module.scss');
     });
@@ -797,7 +793,6 @@ describe('lib', () => {
     style     | pkg
     ${'less'} | ${'less'}
     ${'scss'} | ${'sass'}
-    ${'styl'} | ${'stylus'}
   `(
     'should add style preprocessor when vite is used',
     async ({ style, pkg }) => {

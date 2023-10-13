@@ -1,4 +1,5 @@
 import {
+  checkFilesExist,
   cleanupProject,
   killPorts,
   newProject,
@@ -8,11 +9,13 @@ import {
 
 describe('Nuxt Plugin', () => {
   let proj: string;
+  const app = uniq('app');
 
   beforeAll(() => {
     proj = newProject({
       unsetProjectNameAndRootFormat: false,
     });
+    runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=none`);
   });
 
   afterAll(() => {
@@ -21,13 +24,17 @@ describe('Nuxt Plugin', () => {
   });
 
   it('should build application', async () => {
-    const app = uniq('app');
-
-    runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=none`);
-
     const result = runCLI(`build ${app}`);
     expect(result).toContain(
       `Successfully ran target build for project ${app}`
     );
   });
+
+  it('should build storybook for app', () => {
+    runCLI(
+      `generate @nx/vue:storybook-configuration ${app} --generateStories --no-interactive`
+    );
+    runCLI(`run ${app}:build-storybook --verbose`);
+    checkFilesExist(`dist/storybook/${app}/index.html`);
+  }, 300_000);
 });

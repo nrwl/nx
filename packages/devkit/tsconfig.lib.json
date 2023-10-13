@@ -14,6 +14,5 @@
     "internal-testing-utils.ts",
     "jest.config.ts"
   ],
-  "files": ["./index.d.ts"],
   "include": ["**/*.ts"]
 }

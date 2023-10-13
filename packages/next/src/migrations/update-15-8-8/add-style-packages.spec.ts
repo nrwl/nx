@@ -2,7 +2,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { writeJson, readJson, Tree, addProjectConfiguration } from '@nx/devkit';
 import update from './add-style-packages';
 
-describe('Add less and stylus if needed', () => {
+describe('Add less if needed', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -36,34 +36,7 @@ describe('Add less and stylus if needed', () => {
     });
   });
 
-  it('should add stylus if used', async () => {
-    writeJson(tree, 'package.json', {
-      dependencies: {},
-      devDependencies: {},
-    });
-    addProjectConfiguration(tree, 'myapp', {
-      root: 'myapp',
-      targets: {
-        build: {
-          executor: '@nrwl/next:build',
-        },
-      },
-    });
-    tree.write(
-      `myapp/next.config.js`,
-      `require('@nrwl/next/plugins/with-stylus')`
-    );
-
-    await update(tree);
-
-    const packageJson = readJson(tree, 'package.json');
-    expect(packageJson).toEqual({
-      dependencies: {},
-      devDependencies: { stylus: '^0.55.0' },
-    });
-  });
-
-  it('should not add anything if less/stylus not used by Next.js app', async () => {
+  it('should not add anything if less not used by Next.js app', async () => {
     writeJson(tree, 'package.json', {
       dependencies: {},
       devDependencies: {},

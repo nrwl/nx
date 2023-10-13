@@ -327,6 +327,7 @@ The scope must be one of the following:
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., Jest or Cypress)
 - vite - anything Vite specific
+- vue - anything Vue specific
 - web - anything Web specific
 - webpack - anything Webpack specific
 - misc - misc stuff

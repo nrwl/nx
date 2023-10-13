@@ -1712,6 +1712,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Set up Storybook for Angular Projects",
+                "path": "/recipes/storybook/overview-angular",
+                "id": "overview-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Set up Storybook for Vue Projects",
                 "path": "/recipes/storybook/overview-vue",
                 "id": "overview-vue",
@@ -1720,9 +1728,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Set up Storybook for Angular Projects",
-                "path": "/recipes/storybook/overview-angular",
-                "id": "overview-angular",
+                "name": "Set up Storybook for Nuxt Projects",
+                "path": "/recipes/storybook/overview-nuxt",
+                "id": "overview-nuxt",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2909,6 +2917,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Set up Storybook for Angular Projects",
+            "path": "/recipes/storybook/overview-angular",
+            "id": "overview-angular",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Set up Storybook for Vue Projects",
             "path": "/recipes/storybook/overview-vue",
             "id": "overview-vue",
@@ -2917,9 +2933,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Set up Storybook for Angular Projects",
-            "path": "/recipes/storybook/overview-angular",
-            "id": "overview-angular",
+            "name": "Set up Storybook for Nuxt Projects",
+            "path": "/recipes/storybook/overview-nuxt",
+            "id": "overview-nuxt",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3008,6 +3024,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Set up Storybook for Angular Projects",
+        "path": "/recipes/storybook/overview-angular",
+        "id": "overview-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Set up Storybook for Vue Projects",
         "path": "/recipes/storybook/overview-vue",
         "id": "overview-vue",
@@ -3016,9 +3040,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Set up Storybook for Angular Projects",
-        "path": "/recipes/storybook/overview-angular",
-        "id": "overview-angular",
+        "name": "Set up Storybook for Nuxt Projects",
+        "path": "/recipes/storybook/overview-nuxt",
+        "id": "overview-nuxt",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6051,6 +6075,14 @@
                 "id": "directive",
                 "path": "/nx-api/angular/generators/directive",
                 "name": "directive",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "federate-module",
+                "path": "/nx-api/angular/generators/federate-module",
+                "name": "federate-module",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

@@ -5,7 +5,6 @@ import {
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-  updateBuildableProjectPackageJsonDependencies,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
@@ -91,28 +90,10 @@ export function createLibraryExecutor(
       return Promise.resolve({ success: false });
     }
 
-    function updatePackageJson(): void {
-      if (
-        topLevelDependencies.length > 0 &&
-        options.updateBuildableProjectDepsInPackageJson
-      ) {
-        updateBuildableProjectPackageJsonDependencies(
-          context.root,
-          context.projectName,
-          context.targetName,
-          context.configurationName,
-          target,
-          topLevelDependencies,
-          options.buildableProjectDepsInPackageJsonType
-        );
-      }
-    }
-
     if (options.watch) {
       return yield* eachValueFrom(
         from(initializeNgPackagr(options, context, dependencies)).pipe(
           switchMap((packagr) => packagr.watch()),
-          tap(() => updatePackageJson()),
           mapTo({ success: true })
         )
       );
@@ -121,7 +102,6 @@ export function createLibraryExecutor(
     return from(initializeNgPackagr(options, context, dependencies))
       .pipe(
         switchMap((packagr) => packagr.build()),
-        tap(() => updatePackageJson()),
         mapTo({ success: true })
       )
       .toPromise();

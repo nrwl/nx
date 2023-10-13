@@ -45,10 +45,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     styleContent: createStyleRules(),
     pageStyleContent: `.page {}`,
 
-    stylesExt:
-      options.style === 'less' || options.style === 'styl'
-        ? options.style
-        : 'css',
+    stylesExt: options.style === 'less' ? options.style : 'css',
   };
 
   generateFiles(

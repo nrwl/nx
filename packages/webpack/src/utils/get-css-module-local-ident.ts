@@ -9,7 +9,7 @@ export function getCSSModuleLocalIdent(
 ) {
   // Use the filename or folder name, based on some uses the index.js / index.module.(css|scss|sass) project style
   const fileNameOrFolder = ctx.resourcePath.match(
-    /index\.module\.(css|scss|sass|styl)$/
+    /index\.module\.(css|scss|sass)$/
   )
     ? '[folder]'
     : '[name]';

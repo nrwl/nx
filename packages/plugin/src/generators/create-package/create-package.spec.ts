@@ -54,7 +54,6 @@ describe('NxPlugin Create Package Generator', () => {
         tsConfig: 'libs/create-a-workspace/tsconfig.lib.json',
         main: 'libs/create-a-workspace/bin/index.ts',
         assets: ['libs/create-a-workspace/*.md'],
-        updateBuildableProjectDepsInPackageJson: false,
       },
     });
   });

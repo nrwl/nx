@@ -46,38 +46,6 @@ describe('js:swc executor', () => {
     expect(tsconfig.compilerOptions.paths).toEqual({
       [`@${scope}/${lib}`]: [`libs/${lib}/src/index.ts`],
     });
-
-    // Legacy behavior (updateBuildableProjectDepsInPackageJson): add @swc/helpers if externalHelpers is true
-    // TODO(v17):  Remove this test
-    updateJson(`libs/${lib}/package.json`, (json) => {
-      delete json.dependencies['@swc/helpers'];
-      return json;
-    });
-    runCLI(
-      `build ${lib} --generateLockfile=true --updateBuildableProjectDepsInPackageJson`
-    );
-    checkFilesExist(
-      `dist/libs/${lib}/package.json`,
-      `dist/libs/${lib}/${
-        packageManagerLockFile[detectPackageManager(tmpProjPath())]
-      }`
-    );
-    expect(readJson(`dist/libs/${lib}/package.json`)).toHaveProperty(
-      'peerDependencies.@swc/helpers'
-    );
-
-    // Legacy behavior (updateBuildableProjectDepsInPackageJson): don't add @swc/helpers if externalHelpers is false
-    // TODO(v17):  Remove this test
-    updateJson(`libs/${lib}/.swcrc`, (json) => {
-      json.jsc.externalHelpers = false;
-      return json;
-    });
-
-    runCLI(`build ${lib}`);
-
-    expect(readJson(`dist/libs/${lib}/package.json`)).not.toHaveProperty(
-      'peerDependencies.@swc/helpers'
-    );
   }, 240_000);
 
   it('should handle swcrc path mappings', async () => {

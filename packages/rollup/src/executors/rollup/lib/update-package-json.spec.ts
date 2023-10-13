@@ -14,15 +14,6 @@ describe('updatePackageJson', () => {
     rollupConfig: [],
   };
 
-  const sharedContext = {
-    isVerbose: false,
-    projectsConfigurations: { version: 2, projects: {} },
-    nxJsonConfiguration: {},
-    root: '',
-    cwd: '',
-  };
-
-  // TODO(jack): In Nx 15 we want this field to always generate.
   describe('generateExportsField: true', () => {
     it('should support ESM', () => {
       const spy = jest.spyOn(utils, 'writeJsonFile');
@@ -33,9 +24,6 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['esm'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
@@ -61,9 +49,6 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['cjs'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
@@ -88,9 +73,6 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['esm', 'cjs'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
@@ -119,9 +101,6 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['esm'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {
           exports: {
             './foo': './foo.esm.js',
@@ -154,9 +133,6 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['esm'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
@@ -177,9 +153,6 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['cjs'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
@@ -199,9 +172,6 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['esm', 'cjs'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
@@ -221,9 +191,6 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['esm'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {
           exports: {
             './foo': './foo.esm.js',

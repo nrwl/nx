@@ -92,13 +92,7 @@ export async function* rollupExecutor(
           if (data.code === 'START') {
             logger.info(`Bundling ${context.projectName}...`);
           } else if (data.code === 'END') {
-            updatePackageJson(
-              options,
-              context,
-              target,
-              dependencies,
-              packageJson
-            );
+            updatePackageJson(options, packageJson);
             logger.info('Bundle complete. Watching for file changes...');
             obs.next({ success: true, outfile });
           } else if (data.code === 'ERROR') {
@@ -146,13 +140,7 @@ export async function* rollupExecutor(
                 2
               )}s`;
 
-              updatePackageJson(
-                options,
-                context,
-                target,
-                dependencies,
-                packageJson
-              );
+              updatePackageJson(options, packageJson);
               logger.info(`⚡ Done in ${duration}`);
             } else {
               logger.error(`Bundle failed: ${context.projectName}`);

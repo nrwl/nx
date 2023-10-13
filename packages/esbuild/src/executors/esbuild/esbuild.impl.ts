@@ -87,7 +87,6 @@ export async function* esbuildExecutor(
       generateLockfile: true,
       outputFileExtensionForCjs: getOutExtension('cjs', options),
       excludeLibsInPackageJson: !options.thirdParty,
-      updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
     };
 
     // If we're bundling third-party packages, then any extra deps from external should be the only deps in package.json

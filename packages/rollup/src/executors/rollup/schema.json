@@ -76,19 +76,6 @@
       "description": "Enable re-building when files change.",
       "default": false
     },
-    "updateBuildableProjectDepsInPackageJson": {
-      "type": "boolean",
-      "description": "Update buildable project dependencies in `package.json`.",
-      "default": false,
-      "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
-    },
-    "buildableProjectDepsInPackageJsonType": {
-      "type": "string",
-      "description": "When `updateBuildableProjectDepsInPackageJson` is `true`, this adds dependencies to either `peerDependencies` or `dependencies`.",
-      "enum": ["dependencies", "peerDependencies"],
-      "default": "peerDependencies",
-      "x-deprecated": "Configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks). It will be removed in v17."
-    },
     "rollupConfig": {
       "oneOf": [
         {

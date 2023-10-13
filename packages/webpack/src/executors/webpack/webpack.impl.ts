@@ -32,6 +32,7 @@ import { normalizeOptions } from './lib/normalize-options';
 
 async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
+  projectRoot: string,
   context: ExecutorContext
 ): Promise<Configuration | Configuration[]> {
   if (options.isolatedConfig && !options.webpackConfig) {
@@ -41,11 +42,12 @@ async function getWebpackConfigs(
   }
 
   let customWebpack = null;
-
   if (options.webpackConfig) {
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
-      options.tsConfig
+      options.tsConfig.startsWith(context.root)
+        ? options.tsConfig
+        : join(context.root, options.tsConfig)
     );
 
     if (typeof customWebpack.then === 'function') {
@@ -153,7 +155,7 @@ export async function* webpackExecutor(
     );
   }
 
-  const configs = await getWebpackConfigs(options, context);
+  const configs = await getWebpackConfigs(options, metadata.root, context);
 
   return yield* eachValueFrom(
     of(configs).pipe(

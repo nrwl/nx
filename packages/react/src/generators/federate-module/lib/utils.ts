@@ -32,7 +32,9 @@ export function addPathToExposes(
 ) {
   const moduleFederationConfigPath = joinPathFragments(
     projectPath,
-    'module-federation.config.js'
+    tree.exists(joinPathFragments(projectPath, 'module-federation.config.ts'))
+      ? 'module-federation.config.ts'
+      : 'module-federation.config.js'
   );
 
   updateExposesProperty(
@@ -51,9 +53,11 @@ export function addPathToExposes(
 export function checkRemoteExists(tree: Tree, remoteName: string) {
   const remote = getRemote(tree, remoteName);
   if (!remote) return false;
-  const hasModuleFederationConfig = tree.exists(
-    joinPathFragments(remote.root, 'module-federation.config.js')
-  );
+  const hasModuleFederationConfig =
+    tree.exists(
+      joinPathFragments(remote.root, 'module-federation.config.js')
+    ) ||
+    tree.exists(joinPathFragments(remote.root, 'module-federation.config.ts'));
 
   return hasModuleFederationConfig ? remote : false;
 }
