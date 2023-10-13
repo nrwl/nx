@@ -1,7 +1,6 @@
 import { Schema } from './schema';
 import {
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -55,6 +54,7 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
 }
 
 let tsModule: typeof import('typescript');
+
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -88,6 +88,3 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
 }
 
 export default reactNativeComponentGenerator;
-export const reactNativeComponentSchematic = convertNxGenerator(
-  reactNativeComponentGenerator
-);

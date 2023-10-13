@@ -1,20 +1,6 @@
 {
   "name": "Nx rollup",
   "version": "0.1",
-  "schematics": {
-    "init": {
-      "factory": "./src/generators/init/init#rollupInitSchematic",
-      "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/rollup` plugin.",
-      "hidden": true
-    },
-    "configuration": {
-      "aliases": ["rollup-project"],
-      "factory": "./src/generators/configuration/configuration#compat",
-      "schema": "./src/generators/configuration/schema.json",
-      "description": "Add rollup configuration to a project."
-    }
-  },
   "generators": {
     "init": {
       "factory": "./src/generators/init/init#rollupInitGenerator",

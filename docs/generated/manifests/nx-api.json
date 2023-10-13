@@ -744,15 +744,6 @@
         "path": "/nx-api/expo/executors/build-list",
         "type": "executor"
       },
-      "/nx-api/expo/executors/download": {
-        "description": "Download an EAS build",
-        "file": "generated/packages/expo/executors/download.json",
-        "hidden": false,
-        "name": "download",
-        "originalFilePath": "/packages/expo/src/executors/download/schema.json",
-        "path": "/nx-api/expo/executors/download",
-        "type": "executor"
-      },
       "/nx-api/expo/executors/run": {
         "description": "Run the Android app binary locally or run the iOS app binary locally",
         "file": "generated/packages/expo/executors/run.json",
@@ -1815,7 +1806,17 @@
         "type": "executor"
       }
     },
-    "generators": {},
+    "generators": {
+      "/nx-api/nx/generators/connect-to-nx-cloud": {
+        "description": "Connect a workspace to Nx Cloud",
+        "file": "generated/packages/nx/generators/connect-to-nx-cloud.json",
+        "hidden": false,
+        "name": "connect-to-nx-cloud",
+        "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
+        "path": "/nx-api/nx/generators/connect-to-nx-cloud",
+        "type": "generator"
+      }
+    },
     "path": "/nx-api/nx"
   },
   "playwright": {

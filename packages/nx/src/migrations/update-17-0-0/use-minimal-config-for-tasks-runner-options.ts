@@ -1,6 +1,8 @@
 import { updateJson } from '../../generators/utils/json';
 import { Tree } from '../../generators/tree';
 import { NxJsonConfiguration } from '../../config/nx-json';
+import { PackageJson } from '../../utils/package-json';
+import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 
 export default async function migrate(tree: Tree) {
   if (!tree.exists('nx.json')) {
@@ -33,6 +35,19 @@ export default async function migrate(tree: Tree) {
       if (options.url) {
         nxJson.nxCloudUrl = options.url;
         delete options.url;
+
+        if (
+          [
+            'https://nx.app',
+            'https://cloud.nx.app',
+            'https://staging.nx.app',
+            'https://snapshot.nx.app',
+          ].includes(nxJson.nxCloudUrl)
+        ) {
+          removeNxCloudDependency(tree);
+        }
+      } else {
+        removeNxCloudDependency(tree);
       }
       if (options.encryptionKey) {
         nxJson.nxCloudEncryptionKey = options.encryptionKey;
@@ -69,4 +84,18 @@ export default async function migrate(tree: Tree) {
     }
     return nxJson;
   });
+
+  await formatChangedFilesWithPrettierIfAvailable(tree);
+}
+
+function removeNxCloudDependency(tree: Tree) {
+  if (tree.exists('package.json')) {
+    updateJson<PackageJson>(tree, 'package.json', (packageJson) => {
+      delete packageJson.dependencies?.['nx-cloud'];
+      delete packageJson.devDependencies?.['nx-cloud'];
+      delete packageJson.dependencies?.['@nrwl/nx-cloud'];
+      delete packageJson.devDependencies?.['@nrwl/nx-cloud'];
+      return packageJson;
+    });
+  }
 }

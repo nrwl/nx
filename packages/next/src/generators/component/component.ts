@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   getProjects,
   joinPathFragments,
@@ -61,4 +60,3 @@ export async function componentGenerator(host: Tree, options: Schema) {
 }
 
 export default componentGenerator;
-export const componentSchematic = convertNxGenerator(componentGenerator);

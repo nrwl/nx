@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -81,4 +80,3 @@ export async function setupDockerGenerator(
 }
 
 export default setupDockerGenerator;
-export const setupDockerSchematic = convertNxGenerator(setupDockerGenerator);

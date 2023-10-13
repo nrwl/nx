@@ -30,6 +30,7 @@ describe('convertComponentToScam', () => {
       export: false,
       inlineScam: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -83,6 +84,7 @@ describe('convertComponentToScam', () => {
       export: false,
       inlineScam: false,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -132,6 +134,7 @@ describe('convertComponentToScam', () => {
       inlineScam: true,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -187,6 +190,7 @@ describe('convertComponentToScam', () => {
       inlineScam: false,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -238,6 +242,7 @@ describe('convertComponentToScam', () => {
       flat: true,
       type: 'random',
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleRandom',
     });
 
     // ASSERT
@@ -295,6 +300,7 @@ describe('convertComponentToScam', () => {
       flat: true,
       type: 'random',
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleRandom',
     });
 
     // ASSERT
@@ -345,6 +351,7 @@ describe('convertComponentToScam', () => {
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -401,6 +408,7 @@ describe('convertComponentToScam', () => {
       flat: true,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT

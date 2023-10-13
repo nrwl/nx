@@ -23,7 +23,8 @@
     "CLI"
   ],
   "bin": {
-    "nx": "./bin/nx.js"
+    "nx": "./bin/nx.js",
+    "nx-cloud": "./bin/nx-cloud.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -153,6 +154,7 @@
       }
     ]
   },
+  "generators": "./generators.json",
   "executors": "./executors.json",
   "builders": "./executors.json",
   "publishConfig": {

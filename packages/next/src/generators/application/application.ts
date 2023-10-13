@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -76,5 +75,3 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   return runTasksInSerial(...tasks);
 }
-
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

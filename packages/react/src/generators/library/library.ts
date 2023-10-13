@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -229,4 +228,3 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGenerator);

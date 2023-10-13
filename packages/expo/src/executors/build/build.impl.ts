@@ -1,12 +1,8 @@
-import { ExecutorContext, names, output } from '@nx/devkit';
-import { normalize, sep, resolve as pathResolve, dirname } from 'path';
+import { ExecutorContext, names } from '@nx/devkit';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
-import { unzipBuild } from '../download/download.impl';
-
 import { ExpoEasBuildOptions } from './schema';
-import { removeSync } from 'fs-extra';
 
 export interface ReactNativeBuildOutput {
   success: boolean;
@@ -22,22 +18,7 @@ export default async function* buildExecutor(
     context.projectsConfigurations.projects[context.projectName].root;
 
   try {
-    // remove the output app if it already existed
-    if (options.local && options.output) {
-      removeSync(options.output);
-      if (options.output.endsWith('.tar.gz')) {
-        // remove unzipped app if it already existed
-        removeSync(options.output.replace('.tar.gz', '.app'));
-      }
-    }
-
     await runCliBuild(context.root, projectRoot, options);
-
-    // unzip the build if it's a tar.gz
-    if (options.local && options.output && options.output.endsWith('.tar.gz')) {
-      const outputDirectory = dirname(options.output);
-      await unzipBuild(options.output, outputDirectory);
-    }
     yield { success: true };
   } finally {
     if (childProcess) {

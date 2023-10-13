@@ -113,14 +113,11 @@ function deduceDefaultBase() {
   }
 }
 
-export function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
+export function addDepsToPackageJson(repoRoot: string) {
   const path = joinPathFragments(repoRoot, `package.json`);
   const json = readJsonFile(path);
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = nxVersion;
-  if (useCloud) {
-    json.devDependencies['nx-cloud'] = 'latest';
-  }
   writeJsonFile(path, json);
 }
 
@@ -140,10 +137,13 @@ export function initCloud(
     | 'nx-init-nest'
     | 'nx-init-npm-repo'
 ) {
-  runNxSync(`g nx-cloud:init --installationSource=${installationSource}`, {
-    stdio: [0, 1, 2],
-    cwd: repoRoot,
-  });
+  runNxSync(
+    `g nx:connect-to-nx-cloud --installationSource=${installationSource} --quiet --no-interactive`,
+    {
+      stdio: [0, 1, 2],
+      cwd: repoRoot,
+    }
+  );
 }
 
 export function addVsCodeRecommendedExtensions(

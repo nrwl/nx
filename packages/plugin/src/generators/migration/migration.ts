@@ -1,7 +1,6 @@
 import {
   readProjectConfiguration,
   names,
-  convertNxGenerator,
   generateFiles,
   updateProjectConfiguration,
   updateJson,
@@ -16,6 +15,7 @@ import * as path from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../utils/versions';
+
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
@@ -166,4 +166,3 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
 }
 
 export default migrationGenerator;
-export const migrationSchematic = convertNxGenerator(migrationGenerator);

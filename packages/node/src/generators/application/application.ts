@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -494,4 +493,3 @@ async function normalizeOptions(
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

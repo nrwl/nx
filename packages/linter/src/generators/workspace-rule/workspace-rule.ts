@@ -1,7 +1,6 @@
 import {
   applyChangesToString,
   ChangeType,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   joinPathFragments,
@@ -115,7 +114,3 @@ export async function lintWorkspaceRuleGenerator(
 
   return projectGeneratorCallback;
 }
-
-export const lintWorkspaceRuleSchematic = convertNxGenerator(
-  lintWorkspaceRuleGenerator
-);

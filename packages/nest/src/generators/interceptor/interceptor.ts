@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -24,8 +23,6 @@ export function interceptorGenerator(
 }
 
 export default interceptorGenerator;
-
-export const interceptorSchematic = convertNxGenerator(interceptorGenerator);
 
 function normalizeInterceptorOptions(
   tree: Tree,

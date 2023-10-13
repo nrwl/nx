@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -266,6 +265,3 @@ async function normalizeOptions(
 }
 
 export default cypressProjectGenerator;
-export const cypressProjectSchematic = convertNxGenerator(
-  cypressProjectGenerator
-);
