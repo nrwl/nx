@@ -67,6 +67,7 @@
             "graph/client/src/assets/task-graphs/",
             "graph/client/src/assets/generated-project-graphs/",
             "graph/client/src/assets/generated-task-graphs/",
+            "graph/client/src/assets/generated-task-inputs/",
             {
               "input": "graph/client/src/assets/dev",
               "output": "/",

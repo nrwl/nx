@@ -7,6 +7,7 @@ let graphService: GraphService;
 
 export function getGraphService(): GraphService {
   const environment = getEnvironmentConfig();
+
   if (!graphService) {
     const projectDataService = getProjectGraphDataService();
     graphService = new GraphService(
@@ -14,7 +15,7 @@ export function getGraphService(): GraphService {
       selectValueByThemeStatic('dark', 'light'),
       environment.environment === 'nx-console' ? 'nx-console' : undefined,
       'TB',
-      projectDataService.getExpandedTaskInputs
+      (taskId: string) => projectDataService.getExpandedTaskInputs(taskId)
     );
   }
 

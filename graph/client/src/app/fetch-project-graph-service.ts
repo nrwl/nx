@@ -8,6 +8,8 @@ import type {
 import { ProjectGraphService } from './interfaces';
 
 export class FetchProjectGraphService implements ProjectGraphService {
+  private taskInputsUrl: string;
+
   async getHash(): Promise<string> {
     const request = new Request('currentHash', { mode: 'no-cors' });
 
@@ -32,14 +34,21 @@ export class FetchProjectGraphService implements ProjectGraphService {
     return response.json();
   }
 
+  setTaskInputsUrl(url: string) {
+    this.taskInputsUrl = url;
+  }
+
   async getExpandedTaskInputs(
     taskId: string
   ): Promise<Record<string, string[]>> {
-    const request = new Request(`task-inputs.json?taskId=${taskId}`, {
+    if (!this.taskInputsUrl) {
+      return {};
+    }
+    const request = new Request(`${this.taskInputsUrl}?taskId=${taskId}`, {
       mode: 'no-cors',
     });
 
     const response = await fetch(request);
-    return await response.json();
+    return (await response.json())[taskId];
   }
 }

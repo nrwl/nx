@@ -108,7 +108,8 @@ function buildEnvironmentJs(
         id: 'local',
         label: 'local',
         projectGraphUrl: 'project-graph.json',
-        taskGraphUrl: 'task-graph.json'
+        taskGraphUrl: 'task-graph.json',
+        taskInputsUrl: 'task-inputs.json',
       }
     ],
     defaultWorkspaceId: 'local',
@@ -131,6 +132,7 @@ function buildEnvironmentJs(
   } else {
     environmentJs += `window.projectGraphResponse = null;`;
     environmentJs += `window.taskGraphResponse = null;`;
+    environmentJs += `window.expandedTaskInputsResponse = null;`;
   }
 
   return environmentJs;
@@ -503,7 +505,7 @@ async function startServer(
       const inputs = await getExpandedTaskInputs(taskId);
       performance.mark('task input generation:end');
 
-      res.end(JSON.stringify(inputs));
+      res.end(JSON.stringify({ [taskId]: inputs }));
       performance.measure(
         'task input generation',
         'task input generation:start',
