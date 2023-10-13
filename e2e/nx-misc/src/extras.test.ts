@@ -347,26 +347,21 @@ describe('Extra Nx Misc Tests', () => {
         .toMatchInlineSnapshot(`
         {
           "external": [
-            "external:@nx/js",
+            "npm:@nx/js",
+            "npm:tslib",
           ],
           "general": [
-            "nx.json",
             ".gitignore",
-            "libs/lib-base-123/package.json",
-            "tsconfig.base.json",
+            "nx.json",
           ],
           "lib-base-123": [
-            "libs/lib-base-123/.eslintrc.json",
             "libs/lib-base-123/README.md",
-            "libs/lib-base-123/jest.config.ts",
             "libs/lib-base-123/package.json",
             "libs/lib-base-123/project.json",
             "libs/lib-base-123/src/index.ts",
-            "libs/lib-base-123/src/lib/lib-base-123.spec.ts",
             "libs/lib-base-123/src/lib/lib-base-123.ts",
             "libs/lib-base-123/tsconfig.json",
             "libs/lib-base-123/tsconfig.lib.json",
-            "libs/lib-base-123/tsconfig.spec.json",
           ],
         }
       `);
@@ -376,7 +371,7 @@ describe('Extra Nx Misc Tests', () => {
       const dependentLib = 'lib-dependent-123';
       runCLI(`generate @nx/js:lib ${dependentLib}`);
 
-      updateJson(join(baseLib, 'project.json'), (config) => {
+      updateJson(join('libs', baseLib, 'project.json'), (config) => {
         config.targets['build'].inputs = ['default', '^default'];
         config.implicitDependencies = [dependentLib];
         return config;
@@ -395,13 +390,12 @@ describe('Extra Nx Misc Tests', () => {
         .toMatchInlineSnapshot(`
         {
           "external": [
-            "external:@nx/js",
+            "npm:@nx/js",
+            "npm:tslib",
           ],
           "general": [
-            "nx.json",
             ".gitignore",
-            "libs/lib-base-123/package.json",
-            "tsconfig.base.json",
+            "nx.json",
           ],
           "lib-base-123": [
             "libs/lib-base-123/.eslintrc.json",
