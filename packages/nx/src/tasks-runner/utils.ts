@@ -26,10 +26,10 @@ export function getDependencyConfigs(
     // This is passed into `run-command` from programmatic invocations
     extraTargetDependencies[target] ??
     []
-  ).map((config) =>
+  ).flatMap((config) =>
     typeof config === 'string'
-      ? expandDependencyConfigSyntaxSugar(config, projectGraph)
-      : config
+      ? expandDependencyConfigSyntaxSugar(config, project, projectGraph)
+      : [config]
   );
   for (const dependencyConfig of dependencyConfigs) {
     if (dependencyConfig.projects && dependencyConfig.dependencies) {
@@ -47,8 +47,9 @@ export function getDependencyConfigs(
 
 export function expandDependencyConfigSyntaxSugar(
   dependencyConfigString: string,
+  currentProject: string,
   graph: ProjectGraph
-): TargetDependencyConfig {
+): TargetDependencyConfig[] {
   const [dependencies, targetString] = dependencyConfigString.startsWith('^')
     ? [true, dependencyConfigString.substring(1)]
     : [false, dependencyConfigString];
@@ -56,28 +57,56 @@ export function expandDependencyConfigSyntaxSugar(
   // Support for `project:target` syntax doesn't make sense for
   // dependencies, so we only support `target` syntax for dependencies.
   if (dependencies) {
-    return {
-      target: targetString,
-      dependencies: true,
-    };
+    return [
+      {
+        target: targetString,
+        dependencies: true,
+      },
+    ];
   }
 
   // Support for both `project:target` and `target:with:colons` syntax
   const [maybeProject, ...segments] = splitByColons(targetString);
 
-  // if no additional segments are provided, then the string references
-  // a target of the same project
+  let target, projects;
   if (!segments.length) {
-    return { target: maybeProject };
-  }
-
-  return {
+    // if no additional segments are provided, then the string references
+    // a target of the same project
+    target = maybeProject;
+  } else if (maybeProject in graph.nodes) {
     // Only the first segment could be a project. If it is, the rest is a target.
     // If its not, then the whole targetString was a target with colons in its name.
-    target: maybeProject in graph.nodes ? segments.join(':') : targetString,
+    target = segments.join(':');
+    projects = [maybeProject];
+  } else {
     // If the first segment is a project, then we have a specific project. Otherwise, we don't.
-    projects: maybeProject in graph.nodes ? [maybeProject] : undefined,
-  };
+    target = targetString;
+  }
+
+  // handle target wildcards
+  if (target.indexOf('*') >= 0) {
+    const matches: TargetDependencyConfig[] = [];
+    const targetMatch = new RegExp('^' + target.replaceAll('*', '.*') + '$');
+    const projectsToCheck = projects ? projects : [currentProject];
+    for (const project of projectsToCheck) {
+      const projectTargets = graph.nodes[project].data?.targets;
+      if (projectTargets) {
+        for (const target in projectTargets) {
+          if (target.match(targetMatch)) {
+            matches.push({ target, projects: [project] });
+          }
+        }
+      }
+    }
+    return matches;
+  }
+
+  return [
+    {
+      target,
+      projects,
+    },
+  ];
 }
 
 export function getOutputs(
