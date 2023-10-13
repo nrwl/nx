@@ -23,10 +23,10 @@ And create a new consumer.
 Give the app a name. The callback URL is the important bit. It needs to be in this form:
 
 ```
-[your-nx-cloud-url]/auth/bitbucket/callback
+[your-nx-cloud-url]/auth-callback
 
 # for example
-https://my-private-cloud-url:8080/auth/bitbucket/callback
+https://my.nx-enterprise.url:8080/auth-callback
 ```
 
 **Important:** Ensure there is **no backslash at the end of the "Callback URL"** (i.e. it matches the above pattern)
@@ -45,7 +45,11 @@ Once you create, keep a note of the Key and the Secret:
 
 ## Connect your Nx Cloud installation to your new app
 
-Provide the following env variables to the `nx-cloud-api` container:
+Provide the following env variables to the `nx-cloud-frontend` container:
 
 - `BITBUCKET_APP_ID`
 - `BITBUCKET_APP_SECRET`
+
+{% callout title="Helm Chart Environment Variables" %}
+If you are using our Helm chart, you can find all the information you need about env variables in [the Helm chart repository](https://github.com/nrwl/nx-cloud-helm/blob/main/AUTH-GUIDE.md).
+{% /callout %}
