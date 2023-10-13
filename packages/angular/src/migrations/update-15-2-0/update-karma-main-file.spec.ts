@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { addProjectConfiguration, stripIndents } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing-pre16';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 import updateKarmaMainFile from './update-karma-main-file';
 

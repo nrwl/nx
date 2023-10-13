@@ -54,7 +54,7 @@ export async function addNxToAngularCliRepo(options: Options) {
     options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
 
   output.log({ title: '📦 Installing dependencies' });
-  installDependencies(useNxCloud);
+  installDependencies();
 
   output.log({ title: '📝 Setting up workspace' });
   await setupWorkspace(cacheableOperations, options.integrated);
@@ -107,8 +107,8 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
   return cacheableOperations;
 }
 
-function installDependencies(useNxCloud: boolean): void {
-  addDepsToPackageJson(repoRoot, useNxCloud);
+function installDependencies(): void {
+  addDepsToPackageJson(repoRoot);
   addPluginDependencies();
   runInstall(repoRoot);
 }

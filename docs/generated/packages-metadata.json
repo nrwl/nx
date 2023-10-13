@@ -173,6 +173,15 @@
         "type": "generator"
       },
       {
+        "description": "Create a federated module, which is exposed by a remote and can be subsequently loaded by a host.",
+        "file": "generated/packages/angular/generators/federate-module.json",
+        "hidden": false,
+        "name": "federate-module",
+        "originalFilePath": "/packages/angular/src/generators/federate-module/schema.json",
+        "path": "angular/generators/federate-module",
+        "type": "generator"
+      },
+      {
         "description": "Initializes the `@nrwl/angular` plugin.",
         "file": "generated/packages/angular/generators/init.json",
         "hidden": true,
@@ -720,15 +729,6 @@
         "name": "build-list",
         "originalFilePath": "/packages/expo/src/executors/build-list/schema.json",
         "path": "expo/executors/build-list",
-        "type": "executor"
-      },
-      {
-        "description": "Download an EAS build",
-        "file": "generated/packages/expo/executors/download.json",
-        "hidden": false,
-        "name": "download",
-        "originalFilePath": "/packages/expo/src/executors/download/schema.json",
-        "path": "expo/executors/download",
         "type": "executor"
       },
       {
@@ -1785,7 +1785,17 @@
         "type": "executor"
       }
     ],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Connect a workspace to Nx Cloud",
+        "file": "generated/packages/nx/generators/connect-to-nx-cloud.json",
+        "hidden": false,
+        "name": "connect-to-nx-cloud",
+        "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
+        "path": "nx/generators/connect-to-nx-cloud",
+        "type": "generator"
+      }
+    ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nx",
     "packageName": "nx",

@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing-pre16';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './remove-render-module-platform-server-exports';
 
 describe('remove-render-module-platform-server-exports migration', () => {

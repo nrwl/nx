@@ -410,11 +410,10 @@ async function determineStack(
           name: `react`,
           message: `React:         Configures a React application with your framework of choice.`,
         },
-        // TODO(v17): Enable when @nx/vue is released.
-        // {
-        //   name: `vue`,
-        //   message: `Vue:           Configures a Vue application with modern tooling.`,
-        // },
+        {
+          name: `vue`,
+          message: `Vue:           Configures a Vue application with modern tooling.`,
+        },
         {
           name: `angular`,
           message: `Angular:       Configures a Angular application with modern tooling.`,

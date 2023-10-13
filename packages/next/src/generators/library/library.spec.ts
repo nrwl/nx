@@ -95,4 +95,26 @@ describe('next library', () => {
       '@proj/my-lib/server': ['my-lib/src/server.ts'],
     });
   });
+
+  it('should not add cypress dependencies', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      name: 'myLib',
+      linter: Linter.EsLint,
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: false,
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    expect(
+      readJson(appTree, 'package.json').devDependencies['@nx/cypress']
+    ).toBeUndefined();
+    expect(
+      readJson(appTree, 'package.json').devDependencies['cypress']
+    ).toBeUndefined();
+  });
 });

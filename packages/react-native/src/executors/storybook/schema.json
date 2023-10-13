@@ -23,12 +23,6 @@
       "type": "string",
       "description": "The pattern of files to look at. It can be a specific file, or any valid glob. Note: if using the CLI, globs with `**/*...` must be escaped with quotes",
       "default": "**/*.stories.@(js|jsx|ts|tsx|md)"
-    },
-    "silent": {
-      "type": "boolean",
-      "description": "Silences output.",
-      "default": false,
-      "x-deprecated": "No longer used. It will be silent as default."
     }
   },
   "required": ["searchDir", "outputFile", "pattern"]

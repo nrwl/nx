@@ -13,7 +13,7 @@ export async function setupNxCloud(
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
-      `${pmc.exec} nx g nx-cloud:init --no-analytics --installationSource=create-nx-workspace`,
+      `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
       directory
     );
     nxCloudSpinner.succeed('NxCloud has been set up successfully');

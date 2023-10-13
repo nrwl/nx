@@ -423,6 +423,27 @@ function shouldUseDynamicLifeCycle(
   return !tasks.find((t) => shouldStreamOutput(t, null));
 }
 
+function loadTasksRunner(modulePath: string) {
+  try {
+    const maybeTasksRunner = require(modulePath) as
+      | TasksRunner
+      | { default: TasksRunner };
+    // to support both babel and ts formats
+    return 'default' in maybeTasksRunner
+      ? maybeTasksRunner.default
+      : maybeTasksRunner;
+  } catch (e) {
+    if (
+      e.code === 'MODULE_NOT_FOUND' &&
+      (modulePath === 'nx-cloud' || modulePath === '@nrwl/nx-cloud')
+    ) {
+      return require('../nx-cloud/nx-cloud-tasks-runner-shell')
+        .nxCloudTasksRunnerShell;
+    }
+    throw e;
+  }
+}
+
 export function getRunner(
   nxArgs: NxArgs,
   nxJson: NxJsonConfiguration
@@ -439,21 +460,21 @@ export function getRunner(
 
   const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
-  let tasksRunner = require(modulePath);
-  // to support both babel and ts formats
-  if (tasksRunner.default) {
-    tasksRunner = tasksRunner.default;
-  }
+  try {
+    const tasksRunner = loadTasksRunner(modulePath);
 
-  return {
-    tasksRunner,
-    runnerOptions: getRunnerOptions(
-      runner,
-      nxJson,
-      nxArgs,
-      modulePath === 'nx-cloud'
-    ),
-  };
+    return {
+      tasksRunner,
+      runnerOptions: getRunnerOptions(
+        runner,
+        nxJson,
+        nxArgs,
+        modulePath === 'nx-cloud'
+      ),
+    };
+  } catch {
+    throw new Error(`Could not find runner configuration for ${runner}`);
+  }
 }
 function getTasksRunnerPath(
   runner: string,
@@ -477,7 +498,7 @@ function getTasksRunnerPath(
   return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
 }
 
-function getRunnerOptions(
+export function getRunnerOptions(
   runner: string,
   nxJson: NxJsonConfiguration<string[] | '*'>,
   nxArgs: NxArgs,

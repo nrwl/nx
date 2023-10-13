@@ -1720,22 +1720,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Set up Storybook for Vue Projects",
-                "path": "/recipes/storybook/overview-vue",
-                "id": "overview-vue",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Set up Storybook for Nuxt Projects",
-                "path": "/recipes/storybook/overview-nuxt",
-                "id": "overview-nuxt",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Configuring Storybook on Nx",
                 "path": "/recipes/storybook/configuring-storybook",
                 "id": "configuring-storybook",
@@ -2925,22 +2909,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Set up Storybook for Vue Projects",
-            "path": "/recipes/storybook/overview-vue",
-            "id": "overview-vue",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Set up Storybook for Nuxt Projects",
-            "path": "/recipes/storybook/overview-nuxt",
-            "id": "overview-nuxt",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Configuring Storybook on Nx",
             "path": "/recipes/storybook/configuring-storybook",
             "id": "configuring-storybook",
@@ -3027,22 +2995,6 @@
         "name": "Set up Storybook for Angular Projects",
         "path": "/recipes/storybook/overview-angular",
         "id": "overview-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Set up Storybook for Vue Projects",
-        "path": "/recipes/storybook/overview-vue",
-        "id": "overview-vue",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Set up Storybook for Nuxt Projects",
-        "path": "/recipes/storybook/overview-nuxt",
-        "id": "overview-nuxt",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6080,6 +6032,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "federate-module",
+                "path": "/nx-api/angular/generators/federate-module",
+                "name": "federate-module",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "init",
                 "path": "/nx-api/angular/generators/init",
                 "name": "init",
@@ -6646,14 +6606,6 @@
                 "id": "build-list",
                 "path": "/nx-api/expo/executors/build-list",
                 "name": "build-list",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "download",
-                "path": "/nx-api/expo/executors/download",
-                "name": "download",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -7699,6 +7651,23 @@
                 "id": "run-script",
                 "path": "/nx-api/nx/executors/run-script",
                 "name": "run-script",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/nx/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "connect-to-nx-cloud",
+                "path": "/nx-api/nx/generators/connect-to-nx-cloud",
+                "name": "connect-to-nx-cloud",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
