@@ -37,7 +37,7 @@ export async function createAllStories(
   let componentPaths: string[] = [];
   const pathsToCheck = [
     joinPathFragments(sourceRoot, 'app'), // Default component folder for apps
-    joinPathFragments(sourceRoot, 'components'), // Additional component folder
+    joinPathFragments(sourceRoot, 'lib'), // Default component folder for libs
   ];
 
   for (const p of pathsToCheck) {

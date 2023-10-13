@@ -6,8 +6,8 @@ import { Linter } from '@nx/eslint';
 
 describe('vue:component-story', () => {
   let appTree: Tree;
-  let cmpPath = 'test-ui-lib/src/components/test-ui-lib.vue';
-  let storyFilePath = 'test-ui-lib/src/components/test-ui-lib.stories.ts';
+  let cmpPath = 'test-ui-lib/src/lib/test-ui-lib.vue';
+  let storyFilePath = 'test-ui-lib/src/lib/test-ui-lib.stories.ts';
 
   describe('default setup', () => {
     beforeEach(async () => {
@@ -22,7 +22,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'components/test-ui-lib.vue'
+          'lib/test-ui-lib.vue'
         );
       });
 
@@ -58,7 +58,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'components/test-ui-lib.vue'
+          'lib/test-ui-lib.vue'
         );
       });
 
@@ -97,7 +97,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'components/test-ui-lib.vue'
+          'lib/test-ui-lib.vue'
         );
       });
 

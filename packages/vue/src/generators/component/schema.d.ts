@@ -13,10 +13,12 @@ export interface Schema {
   inSourceTests?: boolean;
   skipFormat?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
+  nameAndDirectoryFormat?: 'as-provided' | 'derived';
 }
 
 export interface NormalizedSchema extends Schema {
   projectSourceRoot: string;
   fileName: string;
   className: string;
+  filePath: string;
 }

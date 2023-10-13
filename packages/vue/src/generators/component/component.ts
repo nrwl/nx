@@ -2,7 +2,6 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  joinPathFragments,
   runTasksInSerial,
   toJS,
   Tree,
@@ -12,6 +11,13 @@ import { join } from 'path';
 import { addExportsToBarrel, normalizeOptions } from './lib/utils';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
+  return componentGeneratorInternal(host, {
+    nameAndDirectoryFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function componentGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   createComponentFiles(host, options);
@@ -28,12 +34,7 @@ export async function componentGenerator(host: Tree, schema: Schema) {
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
-  const componentDir = joinPathFragments(
-    options.projectSourceRoot,
-    options.directory
-  );
-
-  generateFiles(host, join(__dirname, './files'), componentDir, {
+  generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
     tmpl: '',
     unitTestRunner: options.unitTestRunner,

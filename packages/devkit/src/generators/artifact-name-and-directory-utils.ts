@@ -23,7 +23,7 @@ export type ArtifactGenerationOptions = {
   name: string;
   directory?: string;
   disallowPathInNameForDerived?: boolean;
-  fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx';
+  fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
   fileName?: string;
   flat?: boolean;
   nameAndDirectoryFormat?: NameAndDirectoryFormat;
