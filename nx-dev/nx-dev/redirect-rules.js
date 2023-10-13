@@ -895,10 +895,11 @@ const aiChat = {
 };
 
 // rename nx/linter to eslint
+// TODO(v17) invert these redirects
 const eslintRename = {
-  '/nx-api/linter': '/nx-api/eslint',
-  '/packages/linter': '/packages/eslint',
-  '/nx-api/linter/executors/eslint': '/nx-api/eslint/executors/lint',
+  '/nx-api/eslint': '/nx-api/linter',
+  '/packages/eslint': '/packages/linter',
+  '/nx-api/eslint/executors/lint': '/nx-api/linter/executors/eslint',
 };
 
 /**

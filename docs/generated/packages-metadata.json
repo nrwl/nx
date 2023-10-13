@@ -649,46 +649,46 @@
     "executors": [
       {
         "description": "Run ESLint on a project.",
-        "file": "generated/packages/eslint/executors/lint.json",
+        "file": "generated/packages/linter/executors/eslint.json",
         "hidden": false,
-        "name": "lint",
+        "name": "eslint",
         "originalFilePath": "/packages/eslint/src/executors/lint/schema.json",
-        "path": "eslint/executors/lint",
+        "path": "linter/executors/eslint",
         "type": "executor"
       }
     ],
     "generators": [
       {
         "description": "Create the Workspace Lint Rules Project.",
-        "file": "generated/packages/eslint/generators/workspace-rules-project.json",
+        "file": "generated/packages/linter/generators/workspace-rules-project.json",
         "hidden": true,
         "name": "workspace-rules-project",
         "originalFilePath": "/packages/eslint/src/generators/workspace-rules-project/schema.json",
-        "path": "eslint/generators/workspace-rules-project",
+        "path": "linter/generators/workspace-rules-project",
         "type": "generator"
       },
       {
         "description": "Create a new Workspace ESLint rule.",
-        "file": "generated/packages/eslint/generators/workspace-rule.json",
+        "file": "generated/packages/linter/generators/workspace-rule.json",
         "hidden": false,
         "name": "workspace-rule",
         "originalFilePath": "/packages/eslint/src/generators/workspace-rule/schema.json",
-        "path": "eslint/generators/workspace-rule",
+        "path": "linter/generators/workspace-rule",
         "type": "generator"
       },
       {
         "description": "Convert an Nx workspace's ESLint configs to use Flat Config.",
-        "file": "generated/packages/eslint/generators/convert-to-flat-config.json",
+        "file": "generated/packages/linter/generators/convert-to-flat-config.json",
         "hidden": false,
         "name": "convert-to-flat-config",
         "originalFilePath": "/packages/eslint/src/generators/convert-to-flat-config/schema.json",
-        "path": "eslint/generators/convert-to-flat-config",
+        "path": "linter/generators/convert-to-flat-config",
         "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "eslint",
-    "packageName": "@nx/eslint",
+    "name": "linter",
+    "packageName": "@nx/linter",
     "root": "/packages/eslint",
     "source": "/packages/eslint/src"
   },

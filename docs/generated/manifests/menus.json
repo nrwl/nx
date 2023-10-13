@@ -6518,19 +6518,19 @@
         "disableCollapsible": false
       },
       {
-        "id": "eslint",
-        "path": "/nx-api/eslint",
-        "name": "eslint",
+        "id": "linter",
+        "path": "/nx-api/linter",
+        "name": "linter",
         "children": [
           {
             "id": "executors",
-            "path": "/nx-api/eslint/executors",
+            "path": "/nx-api/linter/executors",
             "name": "executors",
             "children": [
               {
-                "id": "lint",
-                "path": "/nx-api/eslint/executors/lint",
-                "name": "lint",
+                "id": "eslint",
+                "path": "/nx-api/linter/executors/eslint",
+                "name": "eslint",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -6541,12 +6541,12 @@
           },
           {
             "id": "generators",
-            "path": "/nx-api/eslint/generators",
+            "path": "/nx-api/linter/generators",
             "name": "generators",
             "children": [
               {
                 "id": "workspace-rules-project",
-                "path": "/nx-api/eslint/generators/workspace-rules-project",
+                "path": "/nx-api/linter/generators/workspace-rules-project",
                 "name": "workspace-rules-project",
                 "children": [],
                 "isExternal": false,
@@ -6554,7 +6554,7 @@
               },
               {
                 "id": "workspace-rule",
-                "path": "/nx-api/eslint/generators/workspace-rule",
+                "path": "/nx-api/linter/generators/workspace-rule",
                 "name": "workspace-rule",
                 "children": [],
                 "isExternal": false,
@@ -6562,7 +6562,7 @@
               },
               {
                 "id": "convert-to-flat-config",
-                "path": "/nx-api/eslint/generators/convert-to-flat-config",
+                "path": "/nx-api/linter/generators/convert-to-flat-config",
                 "name": "convert-to-flat-config",
                 "children": [],
                 "isExternal": false,

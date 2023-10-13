@@ -195,7 +195,7 @@ export async function scheduleTarget(
     tap(
       (output) =>
         (lastOutputError = !output.success ? output.error : undefined),
-      (error) => { }, // do nothing, this could be an intentional error
+      (error) => {}, // do nothing, this could be an intentional error
       () => {
         lastOutputError ? logger.error(lastOutputError) : 0;
       }
@@ -253,9 +253,10 @@ async function createRecorder(
     if (event.kind === 'error') {
       record.error = true;
       logger.warn(
-        `ERROR! ${eventPath} ${event.description == 'alreadyExist'
-          ? 'already exists'
-          : 'does not exist.'
+        `ERROR! ${eventPath} ${
+          event.description == 'alreadyExist'
+            ? 'already exists'
+            : 'does not exist.'
         }.`
       );
     } else if (event.kind === 'update') {
@@ -512,8 +513,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         concatMap((r) =>
           r
             ? super
-              .read(path as any)
-              .pipe(map((r) => parseJson(arrayBufferToString(r))))
+                .read(path as any)
+                .pipe(map((r) => parseJson(arrayBufferToString(r))))
             : of(null)
         )
       );
@@ -847,12 +848,12 @@ export function wrapAngularDevkitSchematic(
     }
 
     const emptyLogger = {
-      log: (e) => { },
-      info: (e) => { },
-      warn: (e) => { },
-      debug: () => { },
-      error: (e) => { },
-      fatal: (e) => { },
+      log: (e) => {},
+      info: (e) => {},
+      warn: (e) => {},
+      debug: () => {},
+      error: (e) => {},
+      fatal: (e) => {},
     } as any;
     emptyLogger.createChild = () => emptyLogger;
 
@@ -1083,16 +1084,16 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
 
         const batchImplementationFactory = executorConfig.batchImplementation
           ? this.getImplementationFactory<TaskGraphExecutor>(
-            executorConfig.batchImplementation,
-            executorsDir
-          )
+              executorConfig.batchImplementation,
+              executorsDir
+            )
           : null;
 
         const hasherFactory = executorConfig.hasher
           ? this.getImplementationFactory<CustomHasher>(
-            executorConfig.hasher,
-            executorsDir
-          )
+              executorConfig.hasher,
+              executorsDir
+            )
           : null;
 
         return {
