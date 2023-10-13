@@ -1,10 +1,10 @@
 import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: '<%= pipePropertyName %>'<% if(standalone) {%>,
+  name: '<%= selector %>'<% if(standalone) {%>,
   standalone: true<%}%>
 })
-export class <%= pipeClassName %>Pipe implements PipeTransform {
+export class <%= symbolName %> implements PipeTransform {
 
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;

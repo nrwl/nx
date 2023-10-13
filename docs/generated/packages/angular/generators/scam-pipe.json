@@ -16,24 +16,30 @@
     "description": "Creates a new, generic Angular pipe definition in the given or default project.",
     "additionalProperties": false,
     "properties": {
-      "path": {
-        "type": "string",
-        "format": "path",
-        "description": "The path at which to create the pipe file, relative to the current workspace. Default is a folder with the same name as the pipe in the project root.",
-        "visible": false
-      },
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "$default": { "$source": "projectName" },
-        "x-dropdown": "projects"
-      },
       "name": {
         "type": "string",
         "description": "The name of the pipe.",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the pipe?",
         "x-priority": "important"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+        "aliases": ["dir", "path"],
+        "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "$default": { "$source": "projectName" },
+        "x-dropdown": "projects",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
       },
       "skipTests": {
         "type": "boolean",
@@ -49,7 +55,8 @@
       "flat": {
         "type": "boolean",
         "description": "Create the new files at the top level of the current project.",
-        "default": true
+        "default": true,
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18."
       },
       "export": {
         "type": "boolean",
@@ -58,7 +65,7 @@
         "x-priority": "important"
       }
     },
-    "required": ["name", "project"],
+    "required": ["name"],
     "presets": []
   },
   "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM).",
