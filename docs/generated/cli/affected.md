@@ -79,6 +79,12 @@ Type: `string`
 
 Base of the current branch (usually main)
 
+### batch
+
+Type: `boolean`
+
+Default: `false`
+
 ### configuration
 
 Type: `string`

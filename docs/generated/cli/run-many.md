@@ -81,6 +81,12 @@ Default: `true`
 
 [deprecated] `run-many` runs all targets on all projects in the workspace if no projects are provided. This option is no longer required.
 
+### batch
+
+Type: `boolean`
+
+Default: `false`
+
 ### configuration
 
 Type: `string`
