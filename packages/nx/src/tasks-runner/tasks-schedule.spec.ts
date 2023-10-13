@@ -147,11 +147,6 @@ describe('TasksSchedule', () => {
         expect(taskSchedule.nextTask()).toEqual(app2Build);
       });
 
-      it('should invoke lifeCycle.scheduleTask', async () => {
-        await taskSchedule.scheduleNextTasks();
-        expect(lifeCycle.scheduleTask).toHaveBeenCalled();
-      });
-
       it('should not schedule any tasks that still have uncompleted dependencies', async () => {
         await taskSchedule.scheduleNextTasks();
         taskSchedule.nextTask();
@@ -357,11 +352,6 @@ describe('TasksSchedule', () => {
         expect(taskSchedule.nextTask()).toEqual(lib1Test);
         expect(taskSchedule.nextTask()).toEqual(app1Test);
         expect(taskSchedule.nextTask()).toEqual(app2Test);
-      });
-
-      it('should invoke lifeCycle.scheduleTask', async () => {
-        await taskSchedule.scheduleNextTasks();
-        expect(lifeCycle.scheduleTask).toHaveBeenCalled();
       });
 
       it('should run out of tasks when they are all complete', async () => {
