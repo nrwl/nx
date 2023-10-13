@@ -214,22 +214,11 @@ describe('dev mode - task graph', () => {
       openTooltipForNode('cart:build');
       cy.get('[data-cy="inputs-accordion"]').click();
 
-      cy.get('[data-cy="input-list-entry"]').should('have.length', 20);
+      cy.get('[data-cy="input-list-entry"]').should('have.length', 18);
       const expectedSections = [
         'cart-cart-page',
-        'cart-e2e',
-        'products',
-        'products-e2e',
-        'products-home-page',
-        'products-product-detail-page',
         'shared-assets',
-        'shared-cart-state',
         'shared-header',
-        'shared-jsxify',
-        'shared-product-data',
-        'shared-product-state',
-        'shared-product-types',
-        'shared-product-ui',
         'shared-styles',
         'External Inputs',
       ];

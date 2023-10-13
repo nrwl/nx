@@ -766,7 +766,7 @@ function getAllTaskGraphsForWorkspace(
   // TODO(cammisuli): improve performance here. Cache results or something.
   for (const projectName in projectGraph.nodes) {
     const project = projectGraph.nodes[projectName];
-    const targets = Object.keys(project.data.targets);
+    const targets = Object.keys(project.data.targets ?? {});
 
     targets.forEach((target) => {
       const taskId = createTaskId(projectName, target);

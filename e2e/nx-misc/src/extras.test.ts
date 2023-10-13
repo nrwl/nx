@@ -376,7 +376,7 @@ describe('Extra Nx Misc Tests', () => {
       const dependentLib = 'lib-dependent-123';
       runCLI(`generate @nx/js:lib ${dependentLib}`);
 
-      updateProjectConfig(baseLib, (config) => {
+      updateJson(join(baseLib, 'project.json'), (config) => {
         config.targets['build'].inputs = ['default', '^default'];
         config.implicitDependencies = [dependentLib];
         return config;
