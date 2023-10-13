@@ -1720,22 +1720,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Set up Storybook for Vue Projects",
-                "path": "/recipes/storybook/overview-vue",
-                "id": "overview-vue",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Set up Storybook for Nuxt Projects",
-                "path": "/recipes/storybook/overview-nuxt",
-                "id": "overview-nuxt",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Configuring Storybook on Nx",
                 "path": "/recipes/storybook/configuring-storybook",
                 "id": "configuring-storybook",
@@ -2925,22 +2909,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Set up Storybook for Vue Projects",
-            "path": "/recipes/storybook/overview-vue",
-            "id": "overview-vue",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Set up Storybook for Nuxt Projects",
-            "path": "/recipes/storybook/overview-nuxt",
-            "id": "overview-nuxt",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Configuring Storybook on Nx",
             "path": "/recipes/storybook/configuring-storybook",
             "id": "configuring-storybook",
@@ -3027,22 +2995,6 @@
         "name": "Set up Storybook for Angular Projects",
         "path": "/recipes/storybook/overview-angular",
         "id": "overview-angular",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Set up Storybook for Vue Projects",
-        "path": "/recipes/storybook/overview-vue",
-        "id": "overview-vue",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Set up Storybook for Nuxt Projects",
-        "path": "/recipes/storybook/overview-nuxt",
-        "id": "overview-nuxt",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
