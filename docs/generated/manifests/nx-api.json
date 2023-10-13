@@ -1815,7 +1815,17 @@
         "type": "executor"
       }
     },
-    "generators": {},
+    "generators": {
+      "/nx-api/nx/generators/connect-to-nx-cloud": {
+        "description": "Connect a workspace to Nx Cloud",
+        "file": "generated/packages/nx/generators/connect-to-nx-cloud.json",
+        "hidden": false,
+        "name": "connect-to-nx-cloud",
+        "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
+        "path": "/nx-api/nx/generators/connect-to-nx-cloud",
+        "type": "generator"
+      }
+    },
     "path": "/nx-api/nx"
   },
   "playwright": {

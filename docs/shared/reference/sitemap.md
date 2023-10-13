@@ -511,6 +511,8 @@
       - [noop](/nx-api/nx/executors/noop)
       - [run-commands](/nx-api/nx/executors/run-commands)
       - [run-script](/nx-api/nx/executors/run-script)
+    - [generators](/nx-api/nx/generators)
+      - [connect-to-nx-cloud](/nx-api/nx/generators/connect-to-nx-cloud)
   - [playwright](/nx-api/playwright)
     - [documents](/nx-api/playwright/documents)
       - [Overview](/nx-api/playwright/documents/overview)

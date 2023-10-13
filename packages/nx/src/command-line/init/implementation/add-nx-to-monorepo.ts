@@ -88,7 +88,7 @@ export async function addNxToMonorepo(options: Options) {
     scriptOutputs
   );
 
-  addDepsToPackageJson(repoRoot, useNxCloud);
+  addDepsToPackageJson(repoRoot);
 
   output.log({ title: '📦 Installing dependencies' });
   runInstall(repoRoot);

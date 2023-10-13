@@ -1,0 +1,10 @@
+{
+  "generators": {
+    "connect-to-nx-cloud": {
+      "factory": "./src/nx-cloud/generators/connect-to-nx-cloud/connect-to-nx-cloud",
+      "schema": "./src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
+      "description": "Connect a workspace to Nx Cloud",
+      "x-hidden": true
+    }
+  }
+}

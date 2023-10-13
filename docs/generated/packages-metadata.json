@@ -1794,7 +1794,17 @@
         "type": "executor"
       }
     ],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Connect a workspace to Nx Cloud",
+        "file": "generated/packages/nx/generators/connect-to-nx-cloud.json",
+        "hidden": false,
+        "name": "connect-to-nx-cloud",
+        "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
+        "path": "nx/generators/connect-to-nx-cloud",
+        "type": "generator"
+      }
+    ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nx",
     "packageName": "nx",
