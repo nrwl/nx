@@ -744,15 +744,6 @@
         "path": "/nx-api/expo/executors/build-list",
         "type": "executor"
       },
-      "/nx-api/expo/executors/download": {
-        "description": "Download an EAS build",
-        "file": "generated/packages/expo/executors/download.json",
-        "hidden": false,
-        "name": "download",
-        "originalFilePath": "/packages/expo/src/executors/download/schema.json",
-        "path": "/nx-api/expo/executors/download",
-        "type": "executor"
-      },
       "/nx-api/expo/executors/run": {
         "description": "Run the Android app binary locally or run the iOS app binary locally",
         "file": "generated/packages/expo/executors/run.json",

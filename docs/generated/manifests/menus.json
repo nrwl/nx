@@ -6611,14 +6611,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "download",
-                "path": "/nx-api/expo/executors/download",
-                "name": "download",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "run",
                 "path": "/nx-api/expo/executors/run",
                 "name": "run",

@@ -383,7 +383,6 @@
       - [update](/nx-api/expo/executors/update)
       - [build](/nx-api/expo/executors/build)
       - [build-list](/nx-api/expo/executors/build-list)
-      - [download](/nx-api/expo/executors/download)
       - [run](/nx-api/expo/executors/run)
       - [start](/nx-api/expo/executors/start)
       - [sync-deps](/nx-api/expo/executors/sync-deps)
