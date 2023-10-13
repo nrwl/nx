@@ -1,6 +1,6 @@
 {
   "name": "executor",
-  "factory": "./src/generators/executor/executor",
+  "factory": "./src/generators/executor/executor#executorGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -20,9 +20,7 @@
         "type": "string",
         "description": "The name of the project.",
         "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-prompt": "What is the name of the project for the executor?",
-        "x-priority": "important"
+        "$default": { "$source": "projectName" }
       },
       "name": {
         "type": "string",
@@ -30,6 +28,11 @@
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use for the executor?",
         "x-priority": "important"
+      },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the executor file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+        "aliases": ["dir"]
       },
       "description": {
         "type": "string",
@@ -51,6 +54,11 @@
         "default": false,
         "description": "Do not add an eslint configuration for plugin json files."
       },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
       "skipFormat": {
         "type": "boolean",
         "description": "Skip formatting files.",
@@ -58,12 +66,12 @@
         "x-priority": "internal"
       }
     },
-    "required": ["project", "name"],
+    "required": ["name"],
     "additionalProperties": false,
     "presets": []
   },
   "description": "Create an executor for an Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/executor/executor.ts",
+  "implementation": "/packages/plugin/src/generators/executor/executor#executorGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/executor/schema.json",
