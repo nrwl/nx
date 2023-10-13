@@ -19,7 +19,7 @@ If you are using Angular, React, Next.js, Vue or React Native in your project, i
 
 - [Angular Storybook Configuration Generator](/nx-api/angular/generators/storybook-configuration)
 
-- [Vue Storybook Configuration Generator](/nx-api/vue/generators/storybook-configuration)
+<!-- TODO(katerina): uncomment - [Vue Storybook Configuration Generator](/nx-api/vue/generators/storybook-configuration) -->
 
 <!-- TODO(katerina): uncomment when Nuxt is in - [Nuxt Storybook Configuration Generator](/nx-api/nuxt/generators/storybook-configuration) -->
 

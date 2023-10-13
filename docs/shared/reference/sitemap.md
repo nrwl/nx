@@ -113,8 +113,6 @@
     - [Storybook](/recipes/storybook)
       - [Set up Storybook for React Projects](/recipes/storybook/overview-react)
       - [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
-      - [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
-      - [Set up Storybook for Nuxt Projects](/recipes/storybook/overview-nuxt)
       - [Configuring Storybook on Nx](/recipes/storybook/configuring-storybook)
       - [One main Storybook instance for all projects](/recipes/storybook/one-storybook-for-all)
       - [One Storybook instance per scope](/recipes/storybook/one-storybook-per-scope)
