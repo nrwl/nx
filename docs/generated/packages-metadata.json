@@ -1657,17 +1657,6 @@
         "originalFilePath": "generated/cli/list"
       },
       {
-        "id": "workspace-lint",
-        "name": "workspace-lint",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/workspace-lint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "nx/documents/workspace-lint",
-        "tags": ["enforce-module-boundaries"],
-        "originalFilePath": "generated/cli/workspace-lint"
-      },
-      {
         "id": "connect-to-nx-cloud",
         "name": "connect-to-nx-cloud",
         "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

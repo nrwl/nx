@@ -7551,14 +7551,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "workspace-lint",
-                "path": "/nx-api/nx/documents/workspace-lint",
-                "id": "workspace-lint",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "connect-to-nx-cloud",
                 "path": "/nx-api/nx/documents/connect-to-nx-cloud",
                 "id": "connect-to-nx-cloud",

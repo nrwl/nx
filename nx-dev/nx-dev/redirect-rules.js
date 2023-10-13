@@ -337,7 +337,6 @@ const cliUrls = {
   '/cli/migrate': '/nx/migrate',
   '/cli/report': '/nx/report',
   '/cli/list': '/nx/list',
-  '/cli/workspace-lint': '/nx/workspace-lint',
   '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
   '/cli/reset': '/nx/reset',
 };
@@ -576,7 +575,6 @@ const packagesDocuments = {
   '/nx/migrate': '/packages/nx/documents/migrate',
   '/nx/report': '/packages/nx/documents/report',
   '/nx/list': '/packages/nx/documents/list',
-  '/nx/workspace-lint': '/packages/nx/documents/workspace-lint',
   '/nx/workspace-generator': '/packages/nx/documents/workspace-generator',
   '/nx/connect-to-nx-cloud': '/packages/nx/documents/connect-to-nx-cloud',
   '/nx/reset': '/packages/nx/documents/reset',

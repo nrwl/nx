@@ -1856,12 +1856,6 @@
               "file": "generated/cli/list"
             },
             {
-              "name": "workspace-lint",
-              "id": "workspace-lint",
-              "tags": ["enforce-module-boundaries"],
-              "file": "generated/cli/workspace-lint"
-            },
-            {
               "name": "connect-to-nx-cloud",
               "id": "connect-to-nx-cloud",
               "tags": ["cache-task-results", "distribute-task-execution"],
