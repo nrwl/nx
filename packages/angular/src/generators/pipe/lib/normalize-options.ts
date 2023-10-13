@@ -1,20 +1,40 @@
 import type { Tree } from '@nx/devkit';
-import { normalizeNameAndPaths } from '../../utils/path';
 import type { NormalizedSchema, Schema } from '../schema';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { names } from '@nx/devkit';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   tree: Tree,
   options: Schema
-): NormalizedSchema {
-  const { directory, name, path } = normalizeNameAndPaths(tree, {
-    ...options,
-    type: 'pipe',
+): Promise<NormalizedSchema> {
+  const {
+    artifactName: name,
+    directory,
+    fileName,
+    filePath,
+    project,
+  } = await determineArtifactNameAndDirectoryOptions(tree, {
+    artifactType: 'pipe',
+    callingGenerator: '@nx/angular:pipe',
+    name: options.name,
+    directory: options.directory ?? options.path,
+    flat: options.flat,
+    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    project: options.project,
+    suffix: 'pipe',
   });
+
+  const { className } = names(name);
+  const { className: suffixClassName } = names('pipe');
+  const symbolName = `${className}${suffixClassName}`;
 
   return {
     ...options,
-    directory,
+    project,
     name,
-    path,
+    directory,
+    fileName,
+    filePath,
+    symbolName,
   };
 }
