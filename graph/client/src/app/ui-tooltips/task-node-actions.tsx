@@ -32,6 +32,7 @@ export function TaskNodeActions(props: TaskNodeTooltipProps) {
         {Object.entries(props.inputs ?? {})
           .sort(compareInputSectionKeys(project))
           .map(([key, inputs]) => {
+            if (!inputs.length) return undefined;
             if (key === 'general' || key === project) {
               return renderInputs(inputs);
             }
