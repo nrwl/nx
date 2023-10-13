@@ -42,18 +42,12 @@ If your project is not configured yet, check out one of these guides:
 - [Set up Storybook for React Projects](/recipes/storybook/overview-react)
 
 - [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
-<!-- - TODO(katerina):uncomment [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
-- TODO(katerina):uncomment [Set up Storybook for Nuxt Projects](/recipes/storybook/overview-nuxt) -->
 
 If your project is [already configured](/nx-api/storybook), you can use the `stories` generator:
 
 - [React (and Next.js) stories generator](/nx-api/react/generators/stories)
 
 - [React Native stories generator](/nx-api/react-native/generators/stories)
-
-<!-- - TODO(katerina):uncomment [Vue stories generator](/nx-api/vue/generators/stories) -->
-
-<!-- - TODO(katerina):uncomment [Nuxt stories generator](/nx-api/nuxt/generators/stories) -->
 
 - [Angular stories generator](/nx-api/angular/generators/stories)
 

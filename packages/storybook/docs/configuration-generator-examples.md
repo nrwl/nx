@@ -19,10 +19,6 @@ If you are using Angular, React, Next.js, Vue or React Native in your project, i
 
 - [Angular Storybook Configuration Generator](/nx-api/angular/generators/storybook-configuration)
 
-<!-- TODO(katerina): uncomment - [Vue Storybook Configuration Generator](/nx-api/vue/generators/storybook-configuration) -->
-
-<!-- TODO(katerina): uncomment when Nuxt is in - [Nuxt Storybook Configuration Generator](/nx-api/nuxt/generators/storybook-configuration) -->
-
 - [React Native Storybook Configuration Generator](/nx-api/react-native/generators/storybook-configuration)
 
 If you are not using one of the framework-specific generators mentioned above, when running this generator you will be prompted to provide the following:

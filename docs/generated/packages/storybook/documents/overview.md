@@ -217,8 +217,6 @@ You can find dedicated information for React and Angular:
 
 - [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
 - [Set up Storybook for React Projects](/recipes/storybook/overview-react)
-<!-- - TODO(katerina):uncomment [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
-- TODO(katerina):uncomment [Set up Storybook for Nuxt Projects](/recipes/storybook/overview-nuxt) -->
 
 You can find all Storybook-related Nx documentation in the [Storybook recipes section](/recipes/storybook).
 
