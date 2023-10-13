@@ -28,7 +28,6 @@ import { workspaceRoot } from '../../utils/workspace-root';
 
 import { Server } from 'net';
 
-import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 import { FileData } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
@@ -46,6 +45,7 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { HashPlanner } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
+import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 
 export interface ProjectGraphClientResponse {
   hash: string;
