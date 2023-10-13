@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NormalizedOptions,
@@ -21,8 +20,6 @@ export function moduleGenerator(
 }
 
 export default moduleGenerator;
-
-export const moduleSchematic = convertNxGenerator(moduleGenerator);
 
 function normalizeModuleOptions(
   tree: Tree,

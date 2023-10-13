@@ -1,7 +1,6 @@
 import {
   readProjectConfiguration,
   names,
-  convertNxGenerator,
   generateFiles,
   updateJson,
   getWorkspaceLayout,
@@ -197,4 +196,3 @@ export async function executorGenerator(host: Tree, schema: Schema) {
 }
 
 export default executorGenerator;
-export const executorSchematic = convertNxGenerator(executorGenerator);

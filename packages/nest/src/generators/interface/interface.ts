@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type { NestGeneratorOptions } from '../utils';
 import { normalizeOptions, runNestSchematic } from '../utils';
 
@@ -15,5 +14,3 @@ export function interfaceGenerator(
 }
 
 export default interfaceGenerator;
-
-export const interfaceSchematic = convertNxGenerator(interfaceGenerator);

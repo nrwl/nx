@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   detectPackageManager,
   formatFiles,
   GeneratorCallback,
@@ -125,6 +124,3 @@ function moveDependency(host: Tree) {
 }
 
 export default reactNativeInitGenerator;
-export const reactNativeInitSchematic = convertNxGenerator(
-  reactNativeInitGenerator
-);

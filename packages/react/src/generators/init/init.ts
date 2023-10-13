@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   GeneratorCallback,
   readNxJson,
@@ -94,5 +93,3 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
 }
 
 export default reactInitGenerator;
-
-export const reactInitSchematic = convertNxGenerator(reactInitGenerator);
