@@ -44,8 +44,8 @@ pub(super) fn get_inputs_for_dependency<'a>(
     nx_json: &'a NxJson,
     named_input: &'a Input,
 ) -> anyhow::Result<Option<SplitInputs<'a>>> {
-    let Input::Inputs { input, ..} = named_input else {
-       return Ok(None);
+    let Input::Inputs { input, .. } = named_input else {
+        return Ok(None);
     };
 
     let inputs = get_named_inputs(nx_json, project);
@@ -151,7 +151,7 @@ pub(super) fn expand_single_project_inputs<'a>(
             Input::Inputs {
                 input,
                 dependencies: false,
-            } => expanded.extend(expand_named_input(&input, named_inputs)?),
+            } => expanded.extend(expand_named_input(input, named_inputs)?),
             Input::FileSet(fileset) => {
                 validate_file_set(fileset)?;
                 expanded.push(Input::FileSet(fileset));

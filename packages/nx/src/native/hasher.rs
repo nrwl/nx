@@ -1,4 +1,4 @@
-use crate::native::utils::path::Normalize;
+use crate::native::utils::Normalize;
 use crate::native::walker::nx_walker;
 use std::collections::HashMap;
 use xxhash_rust::xxh3;

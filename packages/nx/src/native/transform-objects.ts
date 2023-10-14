@@ -4,7 +4,9 @@ import {
   Project,
   Target,
   ProjectGraph as RustProjectGraph,
+  NxJson,
 } from './index';
+import { NxJsonConfiguration } from '../config/nx-json';
 
 export function transformProjectGraphForRust(
   graph: ProjectGraph
@@ -21,6 +23,8 @@ export function transformProjectGraphForRust(
         executor: targetConfig.executor,
         inputs: targetConfig.inputs,
         outputs: targetConfig.outputs,
+        options: JSON.stringify(targetConfig.options),
+        configurations: JSON.stringify(targetConfig.configurations),
       };
     }
     nodes[projectName] = {
@@ -58,5 +62,18 @@ export function transformProjectGraphForRust(
   };
 }
 
-
-
+export function transformNxJsonForRust(nxJson: NxJsonConfiguration): NxJson {
+  for (let [target, configuration] of Object.entries(
+    nxJson.targetDefaults ?? {}
+  )) {
+    if (configuration.options) {
+      configuration.options = JSON.stringify(configuration.options);
+    }
+    if (configuration.configurations) {
+      configuration.configurations = JSON.stringify(
+        configuration.configurations
+      ) as any;
+    }
+  }
+  return nxJson as unknown as NxJson;
+}

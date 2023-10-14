@@ -72,7 +72,14 @@ async function createTasks(
     nxArgs.configuration,
     overrides
   );
-  const hasher = new InProcessTaskHasher({}, [], projectGraph, nxJson, {});
+  const hasher = new InProcessTaskHasher(
+    {},
+    [],
+    projectGraph,
+    nxJson,
+    null,
+    {}
+  );
   const execCommand = getPackageManagerCommand().exec;
   const tasks = Object.values(taskGraph.tasks);
 

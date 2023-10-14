@@ -5,16 +5,12 @@ import {
   ProjectsConfigurations,
 } from '../../config/workspace-json-project-json';
 import {
-  NxAngularJsonPlugin,
   NX_ANGULAR_JSON_PLUGIN_NAME,
+  NxAngularJsonPlugin,
   shouldMergeAngularProjects,
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
-import {
-  FileData,
-  ProjectFileMap,
-  ProjectGraphExternalNode,
-} from '../../config/project-graph';
+import { ProjectGraphExternalNode } from '../../config/project-graph';
 import type { NxWorkspaceFiles } from '../../native';
 import { getNxPackageJsonWorkspacesPlugin } from '../../../plugins/package-json-workspaces';
 import {
@@ -28,10 +24,11 @@ import {
 } from '../../utils/nx-plugin';
 import { CreateProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
 import {
-  globWithWorkspaceContext,
-  getProjectConfigurationsFromContext,
   getNxWorkspaceFilesFromContext,
+  getProjectConfigurationsFromContext,
+  globWithWorkspaceContext,
 } from '../../utils/workspace-context';
+import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 
 /**
  * Walks the workspace directory to create the `projectFileMap`, `ProjectConfigurations` and `allWorkspaceFiles`
@@ -62,16 +59,17 @@ export async function retrieveWorkspaceFiles(
   let externalNodes: Record<string, ProjectGraphExternalNode>;
   let sourceMaps: ConfigurationSourceMaps;
 
-  const { projectFileMap, globalFiles } = (await getNxWorkspaceFilesFromContext(
-    workspaceRoot,
-    globs,
-    async (configs: string[]) => {
-      const projectConfigurations = await createProjectConfigurations(
-        workspaceRoot,
-        nxJson,
-        configs,
-        plugins
-      );
+  const { projectFileMap, globalFiles, externalReferences } =
+    (await getNxWorkspaceFilesFromContext(
+      workspaceRoot,
+      globs,
+      async (configs: string[]) => {
+        const projectConfigurations = await createProjectConfigurations(
+          workspaceRoot,
+          nxJson,
+          configs,
+          plugins
+        );
 
       projects = projectConfigurations.projects;
       sourceMaps = projectConfigurations.sourceMaps;
@@ -99,6 +97,7 @@ export async function retrieveWorkspaceFiles(
     } as ProjectsConfigurations,
     externalNodes,
     sourceMaps,
+    rustReferences: externalReferences,
   };
 }
 
@@ -237,25 +236,6 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   projectsWithoutPluginCache.set(cacheKey, projects);
 
   return projects;
-}
-
-function buildAllWorkspaceFiles(
-  projectFileMap: ProjectFileMap,
-  globalFiles: FileData[]
-): FileData[] {
-  performance.mark('get-all-workspace-files:start');
-  let fileData: FileData[] = Object.values(projectFileMap).flat();
-  fileData = fileData
-    .concat(globalFiles)
-    .sort((a, b) => a.file.localeCompare(b.file));
-  performance.mark('get-all-workspace-files:end');
-  performance.measure(
-    'get-all-workspace-files',
-    'get-all-workspace-files:start',
-    'get-all-workspace-files:end'
-  );
-
-  return fileData;
 }
 
 export async function createProjectConfigurations(
