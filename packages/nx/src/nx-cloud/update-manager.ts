@@ -214,12 +214,13 @@ async function verifyCurrentBundle(
   axios: AxiosInstance,
   currentBundle: CloudBundleInstall | null
 ): Promise<AxiosResponse<VerifyClientBundleResponse>> {
-  const contentHash = getBundleContentHash(currentBundle);
   return axios.get('/nx-cloud/client/verify', {
-    params: {
-      version: currentBundle.version,
-      contentHash: contentHash,
-    },
+    params: currentBundle
+      ? {
+          version: currentBundle.version,
+          contentHash: getBundleContentHash(currentBundle),
+        }
+      : {},
   });
 }
 
