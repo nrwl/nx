@@ -4,6 +4,7 @@ import { executorGenerator } from './executor';
 import { pluginGenerator } from '../plugin/plugin';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { setCwd } from '@nx/devkit/internal-testing-utils';
+import { Linter } from '@nx/linter';
 
 describe('NxPlugin Executor Generator', () => {
   let tree: Tree;
@@ -16,7 +17,11 @@ describe('NxPlugin Executor Generator', () => {
 
     await pluginGenerator(tree, {
       name: projectName,
-    } as any);
+      unitTestRunner: 'jest',
+      linter: Linter.EsLint,
+      compiler: 'tsc',
+      projectNameAndRootFormat: 'as-provided',
+    });
   });
 
   it('should generate files', async () => {

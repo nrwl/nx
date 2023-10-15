@@ -74,9 +74,10 @@ async function addPresetGenerator(
   if (!hasGenerator(host, schema.project, 'preset')) {
     await generatorGenerator(host, {
       name: 'preset',
-      project: schema.project,
+      directory: join(projectRoot, 'src/generators/preset'),
       unitTestRunner: schema.unitTestRunner,
       skipFormat: true,
+      nameAndDirectoryFormat: 'as-provided',
     });
   }
 

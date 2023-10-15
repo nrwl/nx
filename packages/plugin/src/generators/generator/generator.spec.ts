@@ -8,6 +8,8 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { pluginGenerator } from '../plugin/plugin';
 import { generatorGenerator } from './generator';
+import { Linter } from '@nx/linter';
+import { setCwd } from '@nx/devkit/internal-testing-utils';
 
 describe('NxPlugin Generator Generator', () => {
   let tree: Tree;
@@ -15,13 +17,70 @@ describe('NxPlugin Generator Generator', () => {
 
   beforeEach(async () => {
     projectName = 'my-plugin';
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
+    setCwd('');
     await pluginGenerator(tree, {
       name: projectName,
-    } as any);
+      projectNameAndRootFormat: 'as-provided',
+      unitTestRunner: 'jest',
+      linter: Linter.EsLint,
+      compiler: 'tsc',
+    });
   });
 
   it('should generate files', async () => {
+    await generatorGenerator(tree, {
+      name: 'my-generator',
+      directory: 'my-plugin/src/generators/my-generator',
+      unitTestRunner: 'jest',
+      nameAndDirectoryFormat: 'as-provided',
+    });
+
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/schema.json')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/generator.ts')
+    ).toBeTruthy();
+    expect(
+      tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
+    ).toBeTruthy();
+  });
+
+  it('should generate files relative to cwd', async () => {
+    setCwd('my-plugin/src/nx-integrations/generators/my-generator');
+    await generatorGenerator(tree, {
+      name: 'my-generator',
+      unitTestRunner: 'jest',
+      nameAndDirectoryFormat: 'as-provided',
+    });
+
+    expect(
+      tree.exists(
+        'my-plugin/src/nx-integrations/generators/my-generator/schema.d.ts'
+      )
+    ).toBeTruthy();
+    expect(
+      tree.exists(
+        'my-plugin/src/nx-integrations/generators/my-generator/schema.json'
+      )
+    ).toBeTruthy();
+    expect(
+      tree.exists(
+        'my-plugin/src/nx-integrations/generators/my-generator/generator.ts'
+      )
+    ).toBeTruthy();
+    expect(
+      tree.exists(
+        'my-plugin/src/nx-integrations/generators/my-generator/generator.spec.ts'
+      )
+    ).toBeTruthy();
+  });
+
+  it('should generate files for derived', async () => {
     await generatorGenerator(tree, {
       project: projectName,
       name: 'my-generator',
@@ -29,30 +88,28 @@ describe('NxPlugin Generator Generator', () => {
     });
 
     expect(
-      tree.exists('libs/my-plugin/src/generators/my-generator/schema.d.ts')
+      tree.exists('my-plugin/src/generators/my-generator/schema.d.ts')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/generators/my-generator/schema.json')
+      tree.exists('my-plugin/src/generators/my-generator/schema.json')
     ).toBeTruthy();
     expect(
-      tree.exists('libs/my-plugin/src/generators/my-generator/generator.ts')
+      tree.exists('my-plugin/src/generators/my-generator/generator.ts')
     ).toBeTruthy();
     expect(
-      tree.exists(
-        'libs/my-plugin/src/generators/my-generator/generator.spec.ts'
-      )
+      tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
     ).toBeTruthy();
   });
 
   it('should update generators.json', async () => {
     await generatorGenerator(tree, {
-      project: projectName,
       name: 'my-generator',
-      description: 'my-generator description',
+      directory: 'my-plugin/src/generators/my-generator',
       unitTestRunner: 'jest',
+      nameAndDirectoryFormat: 'as-provided',
     });
 
-    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
+    const generatorJson = readJson(tree, 'my-plugin/generators.json');
 
     expect(generatorJson.generators['my-generator'].factory).toEqual(
       './src/generators/my-generator/generator'
@@ -61,15 +118,36 @@ describe('NxPlugin Generator Generator', () => {
       './src/generators/my-generator/schema.json'
     );
     expect(generatorJson.generators['my-generator'].description).toEqual(
-      'my-generator description'
+      'my-generator generator'
+    );
+  });
+
+  it('should update generators.json for derived', async () => {
+    await generatorGenerator(tree, {
+      project: projectName,
+      name: 'my-generator',
+      unitTestRunner: 'jest',
+    });
+
+    const generatorJson = readJson(tree, 'my-plugin/generators.json');
+
+    expect(generatorJson.generators['my-generator'].factory).toEqual(
+      './src/generators/my-generator/generator'
+    );
+    expect(generatorJson.generators['my-generator'].schema).toEqual(
+      './src/generators/my-generator/schema.json'
+    );
+    expect(generatorJson.generators['my-generator'].description).toEqual(
+      'my-generator generator'
     );
   });
 
   it('should throw if recreating an existing generator', async () => {
     await generatorGenerator(tree, {
-      project: projectName,
       name: 'my-generator',
+      directory: 'my-plugin/src/generators/my-generator',
       unitTestRunner: 'jest',
+      nameAndDirectoryFormat: 'as-provided',
     });
     expect(
       generatorGenerator(tree, {
@@ -85,18 +163,17 @@ describe('NxPlugin Generator Generator', () => {
     const generatorFileName = 'my-generator';
 
     await generatorGenerator(tree, {
-      project: projectName,
       name: generatorName,
-      description: 'my-generator description',
+      directory: 'my-plugin/src/generators/my-generator',
       unitTestRunner: 'jest',
+      description: 'my-generator description',
+      nameAndDirectoryFormat: 'as-provided',
     });
 
-    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
+    const generatorJson = readJson(tree, 'my-plugin/generators.json');
 
     expect(
-      tree.exists(
-        `libs/my-plugin/src/generators/${generatorFileName}/schema.d.ts`
-      )
+      tree.exists(`my-plugin/src/generators/${generatorFileName}/schema.d.ts`)
     ).toBeTruthy();
 
     expect(generatorJson.generators[generatorName].factory).toEqual(
@@ -114,12 +191,14 @@ describe('NxPlugin Generator Generator', () => {
     await jsLibraryGenerator(tree, {
       name: 'test-js-lib',
       bundler: 'tsc',
+      projectNameAndRootFormat: 'as-provided',
     });
     const libConfig = readProjectConfiguration(tree, 'test-js-lib');
     await generatorGenerator(tree, {
-      project: 'test-js-lib',
       name: 'test-generator',
+      directory: 'test-js-lib/src/generators/test-generator',
       unitTestRunner: 'jest',
+      nameAndDirectoryFormat: 'as-provided',
     });
 
     expect(() =>
@@ -130,29 +209,16 @@ describe('NxPlugin Generator Generator', () => {
     );
   });
 
-  it('should generate default description', async () => {
-    await generatorGenerator(tree, {
-      project: projectName,
-      name: 'my-generator',
-      unitTestRunner: 'jest',
-    });
-
-    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
-
-    expect(generatorJson.generators['my-generator'].description).toEqual(
-      'my-generator generator'
-    );
-  });
-
   it('should generate custom description', async () => {
     await generatorGenerator(tree, {
-      project: projectName,
       name: 'my-generator',
+      directory: 'my-plugin/src/generators/my-generator',
       description: 'my-generator custom description',
       unitTestRunner: 'jest',
+      nameAndDirectoryFormat: 'as-provided',
     });
 
-    const generatorJson = readJson(tree, 'libs/my-plugin/generators.json');
+    const generatorJson = readJson(tree, 'my-plugin/generators.json');
 
     expect(generatorJson.generators['my-generator'].description).toEqual(
       'my-generator custom description'
@@ -163,19 +229,17 @@ describe('NxPlugin Generator Generator', () => {
     describe('none', () => {
       it('should not generate files', async () => {
         await generatorGenerator(tree, {
-          project: projectName,
           name: 'my-generator',
-          description: 'my-generator custom description',
+          directory: 'my-plugin/src/generators/my-generator',
           unitTestRunner: 'none',
+          nameAndDirectoryFormat: 'as-provided',
         });
 
         expect(
-          tree.exists('libs/my-plugin/src/generators/my-generator/generator.ts')
+          tree.exists('my-plugin/src/generators/my-generator/generator.ts')
         ).toBeTruthy();
         expect(
-          tree.exists(
-            'libs/my-plugin/src/generators/my-generator/generator.spec.ts'
-          )
+          tree.exists('my-plugin/src/generators/my-generator/generator.spec.ts')
         ).toBeFalsy();
       });
     });
@@ -191,7 +255,7 @@ describe('NxPlugin Generator Generator', () => {
 
       const generatorJson = readJson<GeneratorsJson>(
         tree,
-        'libs/my-plugin/generators.json'
+        'my-plugin/generators.json'
       );
 
       expect(
