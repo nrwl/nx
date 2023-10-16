@@ -358,9 +358,8 @@ describe('app', () => {
 
   describe('routing', () => {
     it('should include RouterTestingModule', async () => {
-      await generateApp(appTree, 'my-app', {
+      await generateApp(appTree, 'myApp', {
         directory: 'my-dir/my-app',
-        routing: true,
       });
       expect(
         appTree.read('my-dir/my-app/src/app/app.module.ts', 'utf-8')
@@ -371,9 +370,8 @@ describe('app', () => {
     });
 
     it('should not modify tests when --skip-tests is set', async () => {
-      await generateApp(appTree, 'my-app', {
+      await generateApp(appTree, 'myApp', {
         directory: 'my-dir/my-app',
-        routing: true,
         skipTests: true,
       });
       expect(
@@ -748,7 +746,6 @@ describe('app', () => {
       // ACT
       await generateApp(appTree, 'standalone', {
         standalone: true,
-        routing: true,
       });
 
       // ASSERT
@@ -902,7 +899,7 @@ describe('app', () => {
 
   describe('--minimal', () => {
     it('should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing', async () => {
-      await generateApp(appTree, 'plain', { minimal: true });
+      await generateApp(appTree, 'plain', { minimal: true, routing: false });
 
       expect(
         appTree.exists('plain/src/app/nx-welcome.component.ts')
@@ -922,7 +919,7 @@ describe('app', () => {
     });
 
     it('should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing', async () => {
-      await generateApp(appTree, 'plain', { minimal: true, routing: true });
+      await generateApp(appTree, 'plain', { minimal: true });
 
       expect(
         appTree.exists('plain/src/app/nx-welcome.component.ts')
@@ -942,7 +939,11 @@ describe('app', () => {
     });
 
     it('should skip "nx-welcome.component.ts" file and references for standalone apps without routing', async () => {
-      await generateApp(appTree, 'plain', { minimal: true, standalone: true });
+      await generateApp(appTree, 'plain', {
+        minimal: true,
+        standalone: true,
+        routing: false,
+      });
 
       expect(
         appTree.exists('plain/src/app/nx-welcome.component.ts')
@@ -962,7 +963,6 @@ describe('app', () => {
       await generateApp(appTree, 'plain', {
         minimal: true,
         standalone: true,
-        routing: true,
       });
 
       expect(
@@ -981,7 +981,6 @@ describe('app', () => {
 
     it('should generate a correct build target for --bundler=esbuild', async () => {
       await generateApp(appTree, 'ngesbuild', {
-        routing: true,
         bundler: 'esbuild',
       });
 

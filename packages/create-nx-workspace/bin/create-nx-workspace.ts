@@ -678,7 +678,8 @@ async function determineAngularOptions(
   let appName: string;
   let standaloneApi: boolean;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let routing: boolean;
+
+  const routing = parsedArgs.routing;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Angular) {
     preset = parsedArgs.preset;
@@ -751,29 +752,6 @@ async function determineAngularOptions(
       },
     ]);
     standaloneApi = reply.standaloneApi === 'Yes';
-  }
-
-  if (parsedArgs.routing !== undefined) {
-    routing = parsedArgs.routing;
-  } else {
-    const reply = await enquirer.prompt<{ routing: 'Yes' | 'No' }>([
-      {
-        name: 'routing',
-        message: 'Would you like to add routing?',
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-          },
-
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
-      },
-    ]);
-    routing = reply.routing === 'Yes';
   }
 
   return { preset, style, appName, standaloneApi, routing, e2eTestRunner };

@@ -65,12 +65,18 @@ describe('Angular Projects', () => {
       `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
-        import { ${names(lib1).className}Module } from '@${proj}/${lib1}';
+        import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
         import { NxWelcomeComponent } from './nx-welcome.component';
+        import { ${names(lib1).className}Module } from '@${proj}/${lib1}';
 
         @NgModule({
-          imports: [BrowserModule, ${names(lib1).className}Module],
+          imports: [
+            BrowserModule,
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+            ${names(lib1).className}Module
+          ],
           declarations: [AppComponent, NxWelcomeComponent],
           bootstrap: [AppComponent]
         })
@@ -91,7 +97,7 @@ describe('Angular Projects', () => {
     console.log(
       `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
     );
-    expect(es2015BundleSize).toBeLessThanOrEqual(160000);
+    expect(es2015BundleSize).toBeLessThanOrEqual(210000);
 
     // check unit tests
     runCLI(
@@ -212,18 +218,23 @@ describe('Angular Projects', () => {
     updateFile(
       `${app1}/src/app/app.module.ts`,
       `
-        import { BrowserModule } from '@angular/platform-browser';
         import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
         import {${
           names(buildableLib).className
         }Module} from '@${proj}/${buildableLib}';
 
-        import { AppComponent } from './app.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
-          imports: [BrowserModule, ${names(buildableLib).className}Module],
+          imports: [
+            BrowserModule,
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+            ${names(buildableLib).className}Module
+          ],
           providers: [],
           bootstrap: [AppComponent],
         })
@@ -233,18 +244,23 @@ describe('Angular Projects', () => {
     updateFile(
       `${esbuildApp}/src/app/app.module.ts`,
       `
-        import { BrowserModule } from '@angular/platform-browser';
         import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
         import {${
           names(buildableLib).className
         }Module} from '@${proj}/${buildableLib}';
 
-        import { AppComponent } from './app.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
-          imports: [BrowserModule, ${names(buildableLib).className}Module],
+          imports: [
+            BrowserModule,
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+            ${names(buildableLib).className}Module
+          ],
           providers: [],
           bootstrap: [AppComponent],
         })
