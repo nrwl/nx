@@ -9,7 +9,7 @@ import * as targetVariations from '@nx/storybook/src/utils/test-configs/differen
 import libraryGenerator from '../library/library';
 import componentGenerator from '../component/component';
 import storybookConfigurationGenerator from '../storybook-configuration/storybook-configuration';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 // nested code imports graph from the repo, which might have innacurate graph version
 jest.mock('nx/src/project-graph/project-graph', () => ({
@@ -75,13 +75,13 @@ describe('testing utilities', () => {
         `
         import type { Meta } from '@storybook/react';
         import { Button } from './button';
-        
+
         const Story: Meta<typeof Button> = {
           component: Button,
           title: 'Layout/Texts/Button',
         };
         export default Story;
-        
+
         export const Primary = {
           args: {},
         };

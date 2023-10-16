@@ -4,7 +4,7 @@ import { executorGenerator } from './executor';
 import { pluginGenerator } from '../plugin/plugin';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { setCwd } from '@nx/devkit/internal-testing-utils';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('NxPlugin Executor Generator', () => {
   let tree: Tree;
