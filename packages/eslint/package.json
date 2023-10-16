@@ -36,7 +36,7 @@
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "typescript": "~5.1.3"
+    "typescript": "~5.2.2"
   },
   "peerDependenciesMeta": {
     "eslint": {

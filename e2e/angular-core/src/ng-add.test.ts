@@ -114,7 +114,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       '.vscode/extensions.json',
       '.prettierrc',
       `apps/${project}/src/main.ts`,
-      `apps/${project}/src/app/app.module.ts`
+      `apps/${project}/src/app/app.config.ts`,
+      `apps/${project}/src/app/app.component.ts`,
+      `apps/${project}/src/app/app.routes.ts`
     );
 
     // check the right VSCode extensions are recommended
@@ -178,11 +180,11 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.sourceRoot).toEqual(`apps/${project}/src`);
     expect(projectConfig.targets.build).toStrictEqual({
-      executor: '@angular-devkit/build-angular:browser',
+      executor: '@angular-devkit/build-angular:application',
       options: {
         outputPath: `dist/apps/${project}`,
         index: `apps/${project}/src/index.html`,
-        main: `apps/${project}/src/main.ts`,
+        browser: `apps/${project}/src/main.ts`,
         polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
         assets: [
@@ -209,12 +211,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
           outputHashing: 'all',
         },
         development: {
-          buildOptimizer: false,
           optimization: false,
-          vendorChunk: true,
           extractLicenses: false,
           sourceMap: true,
-          namedChunks: true,
         },
       },
       defaultConfiguration: 'production',
