@@ -5,7 +5,7 @@ You can migrate with to v10 via the [migrate-to-cypress-10 generator](/packages/
 
 This generator is for Cypress based component testing.
 
-If you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/packages/angular/generators/storybook-configuration)
+If you want to test components via Storybook with Cypress, then check out the [storybook-configuration generator docs](/nx-api/angular/generators/storybook-configuration). However, this functionality is deprecated, and will be removed on Nx version 18.
 {% /callout %}
 
 This generator is designed to get your Angular project up and running with Cypress Component Testing.
