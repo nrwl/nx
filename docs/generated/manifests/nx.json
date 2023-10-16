@@ -2384,6 +2384,27 @@
         "tags": []
       },
       {
+        "id": "module-federation",
+        "name": "Module Federation",
+        "description": "Advanced guides to utilize Module Federation with Nx.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "create-a-host",
+            "name": "How to create a Module Federation Host Application",
+            "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+            "file": "shared/recipes/module-federation/creating-a-host",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/create-a-host",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/module-federation",
+        "tags": []
+      },
+      {
         "id": "enforce-module-boundaries",
         "name": "Enforce Module Boundaries",
         "description": "Configuring the enforce module boundaries rule",
@@ -4064,6 +4085,37 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/webpack/webpack-plugins",
+    "tags": []
+  },
+  "/recipes/module-federation": {
+    "id": "module-federation",
+    "name": "Module Federation",
+    "description": "Advanced guides to utilize Module Federation with Nx.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "create-a-host",
+        "name": "How to create a Module Federation Host Application",
+        "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+        "file": "shared/recipes/module-federation/creating-a-host",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/create-a-host",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/module-federation",
+    "tags": []
+  },
+  "/recipes/module-federation/create-a-host": {
+    "id": "create-a-host",
+    "name": "How to create a Module Federation Host Application",
+    "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+    "file": "shared/recipes/module-federation/creating-a-host",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/create-a-host",
     "tags": []
   },
   "/recipes/enforce-module-boundaries": {

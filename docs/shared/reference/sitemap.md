@@ -136,6 +136,8 @@
     - [Webpack](/recipes/webpack)
       - [How to configure webpack on your Nx workspace](/recipes/webpack/webpack-config-setup)
       - [Webpack plugins](/recipes/webpack/webpack-plugins)
+    - [Module Federation](/recipes/module-federation)
+      - [How to create a Module Federation Host Application](/recipes/module-federation/create-a-host)
     - [Enforce Module Boundaries](/recipes/enforce-module-boundaries)
       - [Ban Dependencies with Certain Tags](/recipes/enforce-module-boundaries/ban-dependencies-with-tags)
       - [Tag in Multiple Dimensions](/recipes/enforce-module-boundaries/tag-multiple-dimensions)

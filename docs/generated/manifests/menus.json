@@ -1912,6 +1912,23 @@
             "disableCollapsible": false
           },
           {
+            "name": "Module Federation",
+            "path": "/recipes/module-federation",
+            "id": "module-federation",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "How to create a Module Federation Host Application",
+                "path": "/recipes/module-federation/create-a-host",
+                "id": "create-a-host",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Enforce Module Boundaries",
             "path": "/recipes/enforce-module-boundaries",
             "id": "enforce-module-boundaries",
@@ -3256,6 +3273,31 @@
         "name": "Webpack plugins",
         "path": "/recipes/webpack/webpack-plugins",
         "id": "webpack-plugins",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Module Federation",
+        "path": "/recipes/module-federation",
+        "id": "module-federation",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "How to create a Module Federation Host Application",
+            "path": "/recipes/module-federation/create-a-host",
+            "id": "create-a-host",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to create a Module Federation Host Application",
+        "path": "/recipes/module-federation/create-a-host",
+        "id": "create-a-host",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
