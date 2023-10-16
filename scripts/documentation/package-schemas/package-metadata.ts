@@ -139,8 +139,13 @@ export function findPackageMetadataList(
         ? null
         : {
             githubRoot: 'https://github.com/nrwl/nx/blob/master',
-            name: folderName,
-            packageName: packageJson.name,
+            // TODO(v17): Remove this replace
+            name: folderName === 'eslint' ? 'linter' : folderName,
+            // TODO(v17): Remove this replace
+            packageName:
+              packageJson.name === '@nx/eslint'
+                ? '@nx/linter'
+                : packageJson.name,
             description: packageJson.description,
             root: relativeFolderPath,
             source: join(relativeFolderPath, '/src'),
@@ -152,7 +157,7 @@ export function findPackageMetadataList(
                   content: readFileSync(
                     join('docs', item.file + '.md'),
                     'utf8'
-                  ),
+                  ).replace('@nx/eslint', '@nx/linter'),
                 }))
               : [],
             generators: getSchemaList(
@@ -172,7 +177,14 @@ export function findPackageMetadataList(
               },
               'executors.json',
               ['executors', 'builders']
-            ),
+            )
+              // TODO(v17): Remove this remapping
+              .map((schema) => {
+                if (folderName === 'eslint' && schema.name === 'lint') {
+                  schema.name = 'eslint';
+                }
+                return schema;
+              }),
           };
     })
     .filter(Boolean);

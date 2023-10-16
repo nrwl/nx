@@ -5,7 +5,7 @@ import {
   readProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { reactNativeApplicationGenerator } from './application';
 
 describe('app', () => {

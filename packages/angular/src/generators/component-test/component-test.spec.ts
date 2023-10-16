@@ -1,7 +1,7 @@
 import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { componentGenerator } from '../component/component';
 import { generateTestLibrary } from '../utils/testing';
@@ -73,7 +73,7 @@ export class MyLibComponent implements OnInit {
   @Input() message: string | undefined;
   @Input() anotherProp: any;
   @Input() anotherNeverProp: never;
-  
+
   constructor() { }
 
   ngOnInit(): void {
@@ -186,11 +186,11 @@ describe(MyLibComponent.name, () => {
 
   beforeEach(() => {
     TestBed.overrideComponent(MyLibComponent, {
-      add: { 
+      add: {
         imports: [],
         providers: []
       }
-    }) 
+    })
   })
 
   it('renders', () => {

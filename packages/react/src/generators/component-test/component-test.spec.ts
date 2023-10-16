@@ -1,7 +1,7 @@
 import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import libraryGenerator from '../library/library';
 import { componentTestGenerator } from './component-test';
 

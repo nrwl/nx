@@ -8,7 +8,7 @@ import {
   GeneratorCallback,
   names,
 } from '@nx/devkit';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from '../plugin/plugin';
 import { PresetGeneratorSchema } from './schema';

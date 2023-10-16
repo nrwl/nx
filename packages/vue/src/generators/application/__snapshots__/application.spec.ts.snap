@@ -83,7 +83,7 @@ exports[`application generator should set up project correctly with given option
   "sourceRoot": "test/src",
   "targets": {
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["test/**/*.{ts,tsx,js,jsx,vue}"]

@@ -21,8 +21,8 @@ import {
 } from '@nx/devkit';
 
 import reactInitGenerator from '../init/init';
-import { Linter, lintProjectGenerator } from '@nx/linter';
-import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 import {
   babelLoaderVersion,
   nxRspackVersion,
@@ -37,7 +37,7 @@ import { addE2e } from './lib/add-e2e';
 import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
-} from '@nx/linter/src/generators/utils/eslint-file';
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];

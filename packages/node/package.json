@@ -34,7 +34,7 @@
     "@nx/devkit": "file:../devkit",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter"
+    "@nx/eslint": "file:../eslint"
   },
   "publishConfig": {
     "access": "public"

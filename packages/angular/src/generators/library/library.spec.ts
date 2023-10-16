@@ -9,7 +9,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
@@ -1128,7 +1128,7 @@ describe('lib', () => {
         expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
           .toMatchInlineSnapshot(`
           {
-            "executor": "@nx/linter:eslint",
+            "executor": "@nx/eslint:lint",
             "options": {
               "lintFilePatterns": [
                 "my-lib/**/*.ts",

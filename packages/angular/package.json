@@ -62,7 +62,7 @@
     "@nx/cypress": "file:../cypress",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter",
+    "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
     "@nx/workspace": "file:../workspace"
   },

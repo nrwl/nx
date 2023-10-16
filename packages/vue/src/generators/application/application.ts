@@ -6,7 +6,7 @@ import {
   toJS,
   Tree,
 } from '@nx/devkit';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';

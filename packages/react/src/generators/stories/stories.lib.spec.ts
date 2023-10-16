@@ -2,7 +2,7 @@ import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import libraryGenerator from '../library/library';
 
 describe('react:stories for libraries', () => {
@@ -92,12 +92,12 @@ describe('react:stories for libraries', () => {
       appTree.write(
         'test-ui-lib/src/lib/test-path/ignore-it/another-one.tsx',
         `import React from 'react';
-  
+
     export interface IgnoreProps {
       name: string;
       displayAge: boolean;
     }
-  
+
     export const Ignored = (props: IgnoreProps) => {
       return (
         <div>
@@ -105,7 +105,7 @@ describe('react:stories for libraries', () => {
         </div>
       );
     };
-  
+
     export default Ignored;
     `
       );
@@ -113,12 +113,12 @@ describe('react:stories for libraries', () => {
       appTree.write(
         'test-ui-lib/src/lib/anothercmp/another-cmp.skip.tsx',
         `import React from 'react';
-    
+
     export interface OtherTestProps {
       name: string;
       displayAge: boolean;
     }
-  
+
     export const OtherTest = (props: OtherTestProps) => {
       return (
         <div>
@@ -126,7 +126,7 @@ describe('react:stories for libraries', () => {
         </div>
       );
     };
-  
+
     export default OtherTest;
     `
       );

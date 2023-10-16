@@ -168,7 +168,7 @@ async function createNewPlugin(tree: Tree) {
     require('@nx/plugin/src/generators/plugin/plugin');
 
   // nx-ignore-next-line
-  const { Linter } = ensurePackage('@nx/linter', nxVersion);
+  const { Linter } = ensurePackage('@nx/eslint', nxVersion);
 
   const { npmScope } = getWorkspaceLayout(tree);
   const importPath = npmScope ? `@${npmScope}/${PROJECT_NAME}` : PROJECT_NAME;

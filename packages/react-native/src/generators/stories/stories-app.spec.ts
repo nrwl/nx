@@ -2,7 +2,7 @@ import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { reactNativeComponentGenerator } from '../component/component';
 
 describe('react:stories for applications', () => {

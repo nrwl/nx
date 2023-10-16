@@ -650,6 +650,56 @@
     },
     "path": "/nx-api/esbuild"
   },
+  "linter": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "linter",
+    "packageName": "@nx/linter",
+    "description": "The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
+    "documents": {},
+    "root": "/packages/eslint",
+    "source": "/packages/eslint/src",
+    "executors": {
+      "/nx-api/linter/executors/eslint": {
+        "description": "Run ESLint on a project.",
+        "file": "generated/packages/linter/executors/eslint.json",
+        "hidden": false,
+        "name": "eslint",
+        "originalFilePath": "/packages/eslint/src/executors/lint/schema.json",
+        "path": "/nx-api/linter/executors/eslint",
+        "type": "executor"
+      }
+    },
+    "generators": {
+      "/nx-api/linter/generators/workspace-rules-project": {
+        "description": "Create the Workspace Lint Rules Project.",
+        "file": "generated/packages/linter/generators/workspace-rules-project.json",
+        "hidden": true,
+        "name": "workspace-rules-project",
+        "originalFilePath": "/packages/eslint/src/generators/workspace-rules-project/schema.json",
+        "path": "/nx-api/linter/generators/workspace-rules-project",
+        "type": "generator"
+      },
+      "/nx-api/linter/generators/workspace-rule": {
+        "description": "Create a new Workspace ESLint rule.",
+        "file": "generated/packages/linter/generators/workspace-rule.json",
+        "hidden": false,
+        "name": "workspace-rule",
+        "originalFilePath": "/packages/eslint/src/generators/workspace-rule/schema.json",
+        "path": "/nx-api/linter/generators/workspace-rule",
+        "type": "generator"
+      },
+      "/nx-api/linter/generators/convert-to-flat-config": {
+        "description": "Convert an Nx workspace's ESLint configs to use Flat Config.",
+        "file": "generated/packages/linter/generators/convert-to-flat-config.json",
+        "hidden": false,
+        "name": "convert-to-flat-config",
+        "originalFilePath": "/packages/eslint/src/generators/convert-to-flat-config/schema.json",
+        "path": "/nx-api/linter/generators/convert-to-flat-config",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/linter"
+  },
   "eslint-plugin": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "eslint-plugin",
@@ -1077,68 +1127,6 @@
       }
     },
     "path": "/nx-api/js"
-  },
-  "linter": {
-    "githubRoot": "https://github.com/nrwl/nx/blob/master",
-    "name": "linter",
-    "packageName": "@nx/linter",
-    "description": "The Linter plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
-    "documents": {
-      "/nx-api/linter/documents/overview": {
-        "id": "overview",
-        "name": "Overview",
-        "description": "The Linter plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
-        "file": "generated/packages/linter/documents/overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/linter/documents/overview",
-        "tags": [],
-        "originalFilePath": "shared/packages/linter/linter-plugin"
-      }
-    },
-    "root": "/packages/linter",
-    "source": "/packages/linter/src",
-    "executors": {
-      "/nx-api/linter/executors/eslint": {
-        "description": "Run ESLint on a project.",
-        "file": "generated/packages/linter/executors/eslint.json",
-        "hidden": false,
-        "name": "eslint",
-        "originalFilePath": "/packages/linter/src/executors/eslint/schema.json",
-        "path": "/nx-api/linter/executors/eslint",
-        "type": "executor"
-      }
-    },
-    "generators": {
-      "/nx-api/linter/generators/workspace-rules-project": {
-        "description": "Create the Workspace Lint Rules Project.",
-        "file": "generated/packages/linter/generators/workspace-rules-project.json",
-        "hidden": true,
-        "name": "workspace-rules-project",
-        "originalFilePath": "/packages/linter/src/generators/workspace-rules-project/schema.json",
-        "path": "/nx-api/linter/generators/workspace-rules-project",
-        "type": "generator"
-      },
-      "/nx-api/linter/generators/workspace-rule": {
-        "description": "Create a new Workspace ESLint rule.",
-        "file": "generated/packages/linter/generators/workspace-rule.json",
-        "hidden": false,
-        "name": "workspace-rule",
-        "originalFilePath": "/packages/linter/src/generators/workspace-rule/schema.json",
-        "path": "/nx-api/linter/generators/workspace-rule",
-        "type": "generator"
-      },
-      "/nx-api/linter/generators/convert-to-flat-config": {
-        "description": "Convert an Nx workspace's ESLint configs to use Flat Config.",
-        "file": "generated/packages/linter/generators/convert-to-flat-config.json",
-        "hidden": false,
-        "name": "convert-to-flat-config",
-        "originalFilePath": "/packages/linter/src/generators/convert-to-flat-config/schema.json",
-        "path": "/nx-api/linter/generators/convert-to-flat-config",
-        "type": "generator"
-      }
-    },
-    "path": "/nx-api/linter"
   },
   "nest": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

@@ -26,11 +26,15 @@ The following packages were not simply rescoped `@nrwl` to `@nx`.
 | @nrwl/eslint-plugin-nx | @nx/eslint-plugin |
 | @nrwl/nx-plugin        | @nx/plugin        |
 
+| Nx 15 and lower | Nx 16      | Nx 17      |
+| --------------- | ---------- | ---------- |
+| @nrwl/linter    | @nx/linter | @nx/eslint |
+
 ### Rescope Only
 
 All other packages keep the same name, but change scope from `@nrwl` to `@nx`.
 
-| Nx 15 and lower    | Nx 16 and higher |
+| Nx 15 and lower    | Nx 16            |
 | ------------------ | ---------------- |
 | @nrwl/angular      | @nx/angular      |
 | @nrwl/aws-lambda   | @nx/aws-lambda   |
@@ -44,7 +48,6 @@ All other packages keep the same name, but change scope from `@nrwl` to `@nx`.
 | @nrwl/gatsby       | @nx/gatsby       |
 | @nrwl/jest         | @nx/jest         |
 | @nrwl/js           | @nx/js           |
-| @nrwl/linter       | @nx/linter       |
 | @nrwl/nest         | @nx/nest         |
 | @nrwl/netlify      | @nx/netlify      |
 | @nrwl/next         | @nx/next         |

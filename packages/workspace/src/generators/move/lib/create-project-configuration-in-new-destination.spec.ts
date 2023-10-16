@@ -99,7 +99,7 @@ describe('moveProjectConfiguration', () => {
           },
         },
         lint: {
-          executor: '@nx/linter:eslint',
+          executor: '@nx/eslint:lint',
           options: {
             lintFilePatterns: [
               '{projectRoot}/**/*.{ts,tsx,js,jsx}',
@@ -140,7 +140,7 @@ describe('moveProjectConfiguration', () => {
           },
         },
         lint: {
-          executor: '@nx/linter:eslint',
+          executor: '@nx/eslint:lint',
           options: {
             lintFilePatterns: [
               '{projectRoot}/**/*.{ts,tsx,js,jsx}',

@@ -2,7 +2,7 @@ import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../../library/library';
 import { createComponentStories } from './component-story';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('vue:component-story', () => {
   let appTree: Tree;
@@ -42,11 +42,11 @@ describe('vue:component-story', () => {
             age: number;
           }>();
           </script>
-          
+
           <template>
             <p>Welcome to Vlv!</p>
           </template>
-          
+
           <style scoped>
           </style>
           `
@@ -81,11 +81,11 @@ describe('vue:component-story', () => {
               }
             }
             </script>
-          
+
           <template>
             <p>Welcome to Vlv!</p>
           </template>
-          
+
           <style scoped>
           </style>
           `

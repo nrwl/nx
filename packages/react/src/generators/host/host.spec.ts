@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import hostGenerator from './host';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('hostGenerator', () => {
   let tree: Tree;

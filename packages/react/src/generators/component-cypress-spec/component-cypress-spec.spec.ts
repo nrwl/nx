@@ -1,6 +1,6 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { formatFile } from '../../utils/format-file';
 import applicationGenerator from '../application/application';
 import libraryGenerator from '../library/library';
@@ -13,14 +13,14 @@ describe('react:component-cypress-spec', () => {
     {
       plainJS: false,
       testCmpSrcWithProps: `import React from 'react';
-    
+
       import './test.scss';
-      
+
       export interface TestProps {
         name: string;
         displayAge: boolean;
       }
-      
+
       export const Test = (props: TestProps) => {
         return (
           <div>
@@ -28,13 +28,13 @@ describe('react:component-cypress-spec', () => {
           </div>
         );
       };
-      
-      export default Test;        
+
+      export default Test;
       `,
       testCmpSrcWithoutProps: `import React from 'react';
-    
+
       import './test.scss';
-      
+
       export const Test = () => {
         return (
           <div>
@@ -42,15 +42,15 @@ describe('react:component-cypress-spec', () => {
           </div>
         );
       };
-      
-      export default Test;        
+
+      export default Test;
       `,
     },
     {
       plainJS: true,
       testCmpSrcWithProps: `import React from 'react';
-    
-      import './test.scss';      
+
+      import './test.scss';
       export const Test = (props: TestProps) => {
         return (
           <div>
@@ -58,8 +58,8 @@ describe('react:component-cypress-spec', () => {
           </div>
         );
       };
-      
-      export default Test;        
+
+      export default Test;
       `,
       testCmpSrcWithoutProps: `import React from 'react';
       import './test.scss';
@@ -70,8 +70,8 @@ describe('react:component-cypress-spec', () => {
           </div>
         );
       };
-      
-      export default Test;        
+
+      export default Test;
       `,
     },
   ].forEach((testConfig) => {
@@ -106,7 +106,7 @@ describe('react:component-cypress-spec', () => {
             )
               .toContain(formatFile`describe('test-ui-lib: Test component', () => {
         beforeEach(() => cy.visit('/iframe.html?id=test--primary&args=name;displayAge:false;'));
-        
+
         it('should render the component', () => {
           cy.get('h1').should('contain', 'Welcome to Test!');
         });
@@ -133,7 +133,7 @@ describe('react:component-cypress-spec', () => {
           expect(formatFile`${appTree.read(cypressStorySpecFilePath, 'utf-8')}`)
             .toContain(formatFile`describe('test-ui-lib: Test component', () => {
       beforeEach(() => cy.visit('/iframe.html?id=test--primary'));
-      
+
       it('should render the component', () => {
         cy.get('h1').should('contain', 'Welcome to Test!');
       });

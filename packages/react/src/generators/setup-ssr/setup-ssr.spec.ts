@@ -2,7 +2,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readJson, Tree } from '@nx/devkit';
 import applicationGenerator from '../application/application';
 import setupSsrGenerator from './setup-ssr';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('setupSsrGenerator', () => {
   let tree: Tree;

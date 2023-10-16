@@ -31,7 +31,7 @@ describe('jestProject', () => {
       sourceRoot: 'libs/lib1/src',
       targets: {
         lint: {
-          executor: '@nx/linter:eslint',
+          executor: '@nx/eslint:lint',
           options: {},
         },
       },

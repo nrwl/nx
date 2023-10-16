@@ -235,7 +235,7 @@ function createProjectJson(
 
     // lint
     json.targets['lint'] = {
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['src/**/*.ts', 'test/**/*.ts'],

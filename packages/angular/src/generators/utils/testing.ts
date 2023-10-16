@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularDevkitVersion } from '../../utils/versions';
 import { applicationGenerator } from '../application/application';
@@ -216,9 +216,9 @@ import { VariableSpreadDeclareButtonComponent } from './variable-spread-declare-
 import { VariableSpreadDeclareViewComponent } from './variable-spread-declare-view/variable-spread-declare-view.component';
 import { VariableSpreadDeclareAnotherviewComponent } from './variable-spread-declare-anotherview/variable-spread-declare-anotherview.component';
 
-const COMPONENTS = [ 
-  VariableSpreadDeclareButtonComponent, 
-  VariableSpreadDeclareViewComponent 
+const COMPONENTS = [
+  VariableSpreadDeclareButtonComponent,
+  VariableSpreadDeclareViewComponent
 ]
 
 @NgModule({
@@ -319,7 +319,7 @@ function generateModule(
     moduleFilePath,
     `import { NgModule } from '@angular/core';
   import { CommonModule } from '@angular/common';
-  
+
   @NgModule({
     declarations: [],
     imports: [CommonModule],

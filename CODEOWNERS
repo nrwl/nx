@@ -116,8 +116,8 @@ rust-toolchain @nrwl/nx-native-reviewers
 /docs/generated/packages/linter/** @nrwl/nx-linter-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/linter/** @nrwl/nx-linter-reviewers @nrwl/nx-docs-reviewers
 /packages/eslint-plugin/** @nrwl/nx-linter-reviewers
-/packages/linter/** @nrwl/nx-linter-reviewers
-/e2e/linter/** @nrwl/nx-linter-reviewers
+/packages/eslint/** @nrwl/nx-linter-reviewers
+/e2e/eslint/** @nrwl/nx-linter-reviewers
 .eslint* @nrwl/nx-linter-reviewers
 
 # Storybook

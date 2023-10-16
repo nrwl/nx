@@ -482,7 +482,7 @@ describe('lib', () => {
 
       const packageJson = readJson(tree, 'package.json');
       expect(packageJson.devDependencies['eslint']).toBeDefined();
-      expect(packageJson.devDependencies['@nx/linter']).toBeDefined();
+      expect(packageJson.devDependencies['@nx/eslint']).toBeDefined();
       expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     });
 
@@ -494,7 +494,7 @@ describe('lib', () => {
           projectNameAndRootFormat: 'as-provided',
         });
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
-          executor: '@nx/linter:eslint',
+          executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
           options: {
             lintFilePatterns: ['my-lib/**/*.ts', 'my-lib/package.json'],
@@ -567,7 +567,7 @@ describe('lib', () => {
         });
 
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
-          executor: '@nx/linter:eslint',
+          executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
           options: {
             lintFilePatterns: [
