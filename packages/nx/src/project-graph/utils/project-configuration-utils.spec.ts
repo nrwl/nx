@@ -371,19 +371,15 @@ describe('mergeProjectConfigurationIntoRootMap', () => {
         },
       })
       .getRootMap();
-    mergeProjectConfigurationIntoRootMap(
-      rootMap,
-      {
-        root: 'libs/lib-a',
-        name: 'lib-a',
-        targets: {
-          build: {
-            command: 'tsc',
-          },
+    mergeProjectConfigurationIntoRootMap(rootMap, {
+      root: 'libs/lib-a',
+      name: 'lib-a',
+      targets: {
+        build: {
+          command: 'tsc',
         },
       },
-      'inferred-project-config-file.ts'
-    );
+    });
     expect(rootMap.get('libs/lib-a')).toMatchInlineSnapshot(`
       {
         "name": "lib-a",
@@ -398,33 +394,6 @@ describe('mergeProjectConfigurationIntoRootMap', () => {
         },
       }
     `);
-  });
-
-  it("shouldn't overwrite project name, unless merging project from project.json", () => {
-    const rootMap = new RootMapBuilder()
-      .addProject({
-        name: 'bad-name',
-        root: 'libs/lib-a',
-      })
-      .getRootMap();
-    mergeProjectConfigurationIntoRootMap(
-      rootMap,
-      {
-        name: 'other-bad-name',
-        root: 'libs/lib-a',
-      },
-      'libs/lib-a/package.json'
-    );
-    expect(rootMap.get('libs/lib-a').name).toEqual('bad-name');
-    mergeProjectConfigurationIntoRootMap(
-      rootMap,
-      {
-        name: 'lib-a',
-        root: 'libs/lib-a',
-      },
-      'libs/lib-a/project.json'
-    );
-    expect(rootMap.get('libs/lib-a').name).toEqual('lib-a');
   });
 });
 

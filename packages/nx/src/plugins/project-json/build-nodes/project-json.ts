@@ -17,7 +17,7 @@ export const CreateProjectJsonProjectsPlugin: NxPluginV2 = {
   name: 'nx-core-build-project-json-nodes',
   createNodes: [
     '{project.json,**/project.json}',
-    (file, context) => {
+    (file, _, context) => {
       const root = context.workspaceRoot;
       const json = readJsonFile<ProjectConfiguration>(join(root, file));
       const project = buildProjectFromProjectJson(json, file);

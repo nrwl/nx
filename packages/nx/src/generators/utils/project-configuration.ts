@@ -213,7 +213,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     if (basename(projectFile) === 'project.json') {
       const json = readJson(tree, projectFile);
       const config = buildProjectFromProjectJson(json, projectFile);
-      mergeProjectConfigurationIntoRootMap(rootMap, config, projectFile);
+      mergeProjectConfigurationIntoRootMap(rootMap, config);
     } else {
       const packageJson = readJson<PackageJson>(tree, projectFile);
       const config = buildProjectConfigurationFromPackageJson(
@@ -228,8 +228,7 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
         {
           name: config.name,
           root: config.root,
-        },
-        projectFile
+        }
       );
     }
   }

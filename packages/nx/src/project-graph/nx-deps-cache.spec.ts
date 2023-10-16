@@ -111,7 +111,7 @@ describe('nx deps utils', () => {
           createCache({}),
           createPackageJsonDeps({ plugin: '2.0.0' }),
           createProjectsConfiguration({}),
-          createNxJson({ pluginsConfig: { one: 1 } }),
+          createNxJson({ pluginsConfig: { somePlugin: { one: 1 } } }),
           createTsConfigJson()
         )
       ).toEqual(true);

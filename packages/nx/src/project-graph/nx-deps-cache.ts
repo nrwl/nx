@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { ensureDirSync, renameSync } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration } from '../config/nx-json';
+import { NxJsonConfiguration, PluginDefinition } from '../config/nx-json';
 import {
   FileData,
   FileMap,
@@ -17,6 +17,7 @@ import {
   readJsonFile,
   writeJsonFile,
 } from '../utils/fileutils';
+import { PackageJson } from '../utils/package-json';
 import { nxVersion } from '../utils/versions';
 
 export interface FileMapCache {
@@ -24,7 +25,7 @@ export interface FileMapCache {
   nxVersion: string;
   deps: Record<string, string>;
   pathMappings: Record<string, any>;
-  nxJsonPlugins: { name: string; version: string }[];
+  nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
   fileMap: FileMap;
 }
@@ -111,10 +112,7 @@ export function createProjectFileMapCache(
   fileMap: FileMap,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
 ) {
-  const nxJsonPlugins = (nxJson?.plugins || []).map((p) => ({
-    name: p,
-    version: packageJsonDeps[p],
-  }));
+  const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
@@ -207,16 +205,9 @@ export function shouldRecomputeWholeGraph(
   }
 
   // a new plugin has been added
-  if ((nxJson?.plugins || []).length !== cache.nxJsonPlugins.length)
-    return true;
-
-  // a plugin has changed
   if (
-    (nxJson?.plugins || []).some((t) => {
-      const matchingPlugin = cache.nxJsonPlugins.find((p) => p.name === t);
-      if (!matchingPlugin) return true;
-      return matchingPlugin.version !== packageJsonDeps[t];
-    })
+    JSON.stringify(getNxJsonPluginsData(nxJson, packageJsonDeps)) !==
+    JSON.stringify(cache.nxJsonPlugins)
   ) {
     return true;
   }
@@ -332,4 +323,25 @@ function processProjectNode(
       filesToProcess[projectName].push(f);
     }
   }
+}
+
+type PluginData = {
+  name: string;
+  version: string;
+  options?: Record<string, unknown>;
+};
+
+function getNxJsonPluginsData(
+  nxJson: NxJsonConfiguration,
+  packageJsonDeps: Record<string, string>
+): PluginData[] {
+  return (nxJson?.plugins || []).map((p) => {
+    const [plugin, options] =
+      typeof p === 'string' ? [p] : [p.plugin, p.options];
+    return {
+      name: plugin,
+      version: packageJsonDeps[plugin],
+      options,
+    };
+  });
 }

@@ -367,7 +367,7 @@ function addNrwlJsPluginsConfig(repoRoot: string) {
     json.pluginsConfig = {
       '@nx/js': {
         analyzeSourceFiles: true,
-      } as NrwlJsPluginConfig,
+      },
     };
   }
 

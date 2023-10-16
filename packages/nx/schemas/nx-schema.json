@@ -70,7 +70,7 @@
       "type": "array",
       "description": "Plugins for extending the project graph.",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/plugins"
       }
     },
     "defaultProject": {
@@ -377,6 +377,27 @@
         }
       },
       "additionalProperties": false
+    },
+    "plugins": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "A plugin module to load with default options"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "plugin": {
+              "type": "string",
+              "description": "The plugin module to load"
+            },
+            "options": {
+              "type": "object",
+              "description": "The options passed to the plugin when creating nodes and dependencies"
+            }
+          }
+        }
+      ]
     }
   }
 }
