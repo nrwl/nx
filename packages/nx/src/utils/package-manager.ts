@@ -9,7 +9,6 @@ import { readModulePackageJson } from './package-json';
 import { gte, lt } from 'semver';
 import { workspaceRoot } from './workspace-root';
 import { readNxJson } from '../config/configuration';
-import { homedir } from 'os';
 
 const execAsync = promisify(exec);
 
@@ -137,8 +136,6 @@ export function getPackageManagerVersion(
 /**
  * Checks for a project level npmrc file by crawling up the file tree until
  * hitting a package.json file, as this is how npm finds them as well.
- *
- * The exception to the above is the home directory, which is checked as well.
  */
 export function findFileInPackageJsonDirectory(
   file: string,
@@ -204,12 +201,6 @@ export function copyPackageManagerConfigurationFiles(
   root: string,
   destination: string
 ) {
-  const homeDir = homedir();
-  // copy .npmrc file from user's home directory
-  if (existsSync(join(homeDir, '.npmrc'))) {
-    copyFileSync(join(homeDir, '.npmrc'), join(root, '.npmrc'));
-  }
-
   for (const packageManagerConfigFile of ['.npmrc', '.yarnrc', '.yarnrc.yml']) {
     // f is an absolute path, including the {workspaceRoot}.
     const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);
