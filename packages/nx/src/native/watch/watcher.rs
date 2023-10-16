@@ -50,7 +50,11 @@ impl Watcher {
         globs.push("node_modules/".into());
 
         Ok(Watcher {
-            origin,
+            origin: if cfg!(window) {
+                origin.replace("/", "\\")
+            } else {
+                origin
+            },
             watch_exec,
             additional_globs: globs,
             use_ignore: use_ignore.unwrap_or(true),
