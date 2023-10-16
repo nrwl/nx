@@ -278,6 +278,24 @@
       },
       "description": "Update the @angular/cli package version to ~16.2.0.",
       "factory": "./src/migrations/update-16-7-0/update-angular-cli"
+    },
+    "update-angular-cli-version-17-0-0-rc-3": {
+      "cli": "nx",
+      "version": "17.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=17.0.0-rc.2"
+      },
+      "description": "Update the @angular/cli package version to ~17.0.0-rc.3.",
+      "factory": "./src/migrations/update-17-1-0/update-angular-cli"
+    },
+    "rename-browser-target-to-build-target": {
+      "cli": "nx",
+      "version": "17.1.0-beta.1",
+      "requires": {
+        "@angular/core": ">=17.0.0-rc.2"
+      },
+      "description": "Rename 'browserTarget' to 'buildTarget'.",
+      "factory": "./src/migrations/update-17-1-0/browser-target-to-build-target"
     }
   },
   "packageJsonUpdates": {
@@ -1351,6 +1369,55 @@
       "packages": {
         "esbuild": {
           "version": "^0.19.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.1.0": {
+      "version": "17.1.0-beta.1",
+      "x-prompt": "Do you want to update the Angular version to v17?",
+      "requires": {
+        "@angular/core": ">=16.2.0 <17.0.0-rc.2"
+      },
+      "packages": {
+        "@angular-devkit/architect": {
+          "version": "~0.1700.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-angular": {
+          "version": "~17.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1700.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~17.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~17.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~17.0.0-rc.2",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~17.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~17.0.0-rc.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~17.0.0-rc.3",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~17.0.0-rc.1",
           "alwaysAddToPackageJson": false
         }
       }
