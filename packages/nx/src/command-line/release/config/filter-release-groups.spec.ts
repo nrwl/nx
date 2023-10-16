@@ -1,6 +1,5 @@
 import { type ProjectGraph } from '../../../devkit-exports';
-import { NxReleaseConfig } from './config';
-import { CATCH_ALL_RELEASE_GROUP } from './create-release-groups';
+import { CATCH_ALL_RELEASE_GROUP, NxReleaseConfig } from './config';
 import { filterReleaseGroups } from './filter-release-groups';
 
 describe('filterReleaseGroups()', () => {
