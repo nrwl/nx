@@ -58,7 +58,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   if (options.component) {
     tasks.push(
       await componentGenerator(tree, {
-        name: options.fileName,
+        name: options.name,
         project: options.name,
         flat: true,
         skipTests:
