@@ -18,7 +18,7 @@ exports[`@nx/storybook:init dependencies for package.json should add angular rel
     "@swc/core": "~1.3.85",
     "existing": "1.0.0",
     "prettier": "^2.6.2",
-    "typescript": "~5.1.3",
+    "typescript": "~5.2.2",
   },
   "name": "@proj/source",
 }
