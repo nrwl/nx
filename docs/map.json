@@ -818,6 +818,19 @@
               ]
             },
             {
+              "name": "Module Federation",
+              "id": "module-federation",
+              "description": "Advanced guides to utilize Module Federation with Nx.",
+              "itemList": [
+                {
+                  "id": "create-a-host",
+                  "name": "How to create a Module Federation Host Application",
+                  "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+                  "file": "shared/recipes/module-federation/creating-a-host"
+                }
+              ]
+            },
+            {
               "name": "Enforce Module Boundaries",
               "id": "enforce-module-boundaries",
               "description": "Configuring the enforce module boundaries rule",
