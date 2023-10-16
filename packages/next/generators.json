@@ -17,12 +17,12 @@
       "description": "Create an application."
     },
     "page": {
-      "factory": "./src/generators/page/page#pageGenerator",
+      "factory": "./src/generators/page/page#pageGeneratorInternal",
       "schema": "./src/generators/page/schema.json",
       "description": "Create a page."
     },
     "component": {
-      "factory": "./src/generators/component/component#componentGenerator",
+      "factory": "./src/generators/component/component#componentGeneratorInternal",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a component."
     },

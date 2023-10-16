@@ -11,9 +11,19 @@ import {
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
-import { join } from 'path';
+import { dirname, join, parse, relative } from 'path';
 
 export async function reactNativeComponentGenerator(
+  host: Tree,
+  schema: Schema
+) {
+  return reactNativeComponentGeneratorInternal(host, {
+    nameAndDirectoryFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function reactNativeComponentGeneratorInternal(
   host: Tree,
   schema: Schema
 ) {
@@ -26,12 +36,7 @@ export async function reactNativeComponentGenerator(
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
-  const componentDir = joinPathFragments(
-    options.projectSourceRoot,
-    options.directory
-  );
-
-  generateFiles(host, join(__dirname, './files'), componentDir, {
+  generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
     tmpl: '',
   });
@@ -75,16 +80,24 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
         tsModule.ScriptTarget.Latest,
         true
       );
+
+      const relativePathFromIndex = getRelativeImportToFile(
+        indexFilePath,
+        options.filePath
+      );
       const changes = applyChangesToString(
         indexSource,
-        addImport(
-          indexSourceFile,
-          `export * from './${options.directory}/${options.fileName}';`
-        )
+        addImport(indexSourceFile, `export * from '${relativePathFromIndex}';`)
       );
       host.write(indexFilePath, changes);
     }
   }
+}
+
+function getRelativeImportToFile(indexPath: string, filePath: string) {
+  const { name, dir } = parse(filePath);
+  const relativeDirToTarget = relative(dirname(indexPath), dir);
+  return `./${joinPathFragments(relativeDirToTarget, name)}`;
 }
 
 export default reactNativeComponentGenerator;

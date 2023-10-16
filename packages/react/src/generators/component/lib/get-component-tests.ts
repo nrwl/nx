@@ -1,4 +1,4 @@
-import { NormalizedSchema } from './noramlized-schema';
+import { NormalizedSchema } from '../schema';
 
 export function getComponentTests(schema: NormalizedSchema) {
   return `
