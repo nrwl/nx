@@ -100,9 +100,7 @@ describe('vue:stories for libraries', () => {
       });
 
       expect(
-        appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts'
-        )
+        appTree.exists('test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts')
       ).toBeTruthy();
 
       expect(
@@ -128,9 +126,7 @@ describe('vue:stories for libraries', () => {
       });
 
       expect(
-        appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts'
-        )
+        appTree.exists('test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts')
       ).toBeFalsy();
 
       expect(
@@ -156,9 +152,7 @@ describe('vue:stories for libraries', () => {
       });
 
       expect(
-        appTree.exists(
-          'test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts'
-        )
+        appTree.exists('test-ui-lib/src/lib/another-cmp/another-cmp.stories.ts')
       ).toBeTruthy();
 
       expect(
