@@ -63,7 +63,7 @@ interface NxInstallationConfiguration {
  * **ALPHA**
  */
 interface NxReleaseVersionConfiguration {
-  generator: string;
+  generator?: string;
   generatorOptions?: Record<string, unknown>;
 }
 
