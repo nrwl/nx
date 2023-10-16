@@ -6,12 +6,13 @@ import {
   ProjectEdgeNodeTooltipProps,
 } from '@nx/graph/ui-tooltips';
 import { TooltipEvent } from './interfaces';
+import { GraphInteractionEvents } from './graph-interaction-events';
 
 export class GraphTooltipService {
   private subscribers: Set<Function> = new Set();
 
   constructor(graph: GraphService) {
-    graph.listen((event) => {
+    graph.listen((event: GraphInteractionEvents) => {
       switch (event.type) {
         case 'GraphRegenerated':
           this.hideAll();
@@ -49,6 +50,20 @@ export class GraphTooltipService {
             ...event.data,
             runTaskCallback,
           });
+          if (graph.getTaskInputs) {
+            graph.getTaskInputs(event.data.id).then((inputs) => {
+              if (
+                this.currentTooltip.type === 'taskNode' &&
+                this.currentTooltip.props.id === event.data.id
+              ) {
+                this.openTaskNodeTooltip(event.ref, {
+                  ...event.data,
+                  runTaskCallback,
+                  inputs,
+                });
+              }
+            });
+          }
           break;
         case 'EdgeClick':
           const callback =
