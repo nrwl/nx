@@ -197,31 +197,33 @@ export async function viteConfigurationGenerator(
     });
   }
 
-  if (schema.uiFramework === 'react') {
-    createOrEditViteConfig(
-      tree,
-      {
-        project: schema.project,
-        includeLib: schema.includeLib,
-        includeVitest: schema.includeVitest,
-        inSourceTests: schema.inSourceTests,
-        rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
-        ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
-        imports: [
-          schema.compiler === 'swc'
-            ? `import react from '@vitejs/plugin-react-swc'`
-            : `import react from '@vitejs/plugin-react'`,
-        ],
-        plugins: ['react()'],
-      },
-      false
-    );
-  } else {
-    createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);
+  if (!schema.newProject) {
+    // We are converting existing project to use Vite
+    if (schema.uiFramework === 'react') {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: schema.project,
+          includeLib: schema.includeLib,
+          includeVitest: schema.includeVitest,
+          inSourceTests: schema.inSourceTests,
+          rollupOptionsExternal: [
+            "'react'",
+            "'react-dom'",
+            "'react/jsx-runtime'",
+          ],
+          imports: [
+            schema.compiler === 'swc'
+              ? `import react from '@vitejs/plugin-react-swc'`
+              : `import react from '@vitejs/plugin-react'`,
+          ],
+          plugins: ['react()'],
+        },
+        false
+      );
+    } else {
+      createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);
+    }
   }
 
   if (schema.includeVitest) {

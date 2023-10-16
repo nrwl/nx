@@ -1,8 +1,34 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`lib --bundler=vite should add build and test targets with vite and vitest 1`] = `
+exports[`lib --bundler none, unit test runner vitest should configure vite 1`] = `
+"import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+
+export default defineConfig({
+  cacheDir: '../node_modules/.vite/my-lib',
+
+  plugins: [react(), nxViteTsPaths()],
+
+  // Uncomment this if you are using workers.
+  // worker: {
+  //  plugins: [ nxViteTsPaths() ],
+  // },
+
+  test: {
+    globals: true,
+    cache: { dir: '../node_modules/.vitest' },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+  },
+});
+"
+`;
+
+exports[`lib should add vite types to tsconfigs 1`] = `
 "/// <reference types='vitest' />
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
@@ -11,6 +37,7 @@ export default defineConfig({
   cacheDir: '../node_modules/.vite/my-lib',
 
   plugins: [
+    react(),
     nxViteTsPaths(),
     dts({
       entryRoot: 'src',
@@ -38,7 +65,7 @@ export default defineConfig({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: [],
+      external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
   },
 
@@ -51,39 +78,5 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   },
 });
-"
-`;
-
-exports[`lib --unit-test-runner jest should generate test configuration with swc and js 1`] = `
-"/* eslint-disable */
-const { readFileSync } = require('fs');
-
-// Reading the SWC compilation config and remove the "exclude"
-// for the test files to be compiled by SWC
-const { exclude: _, ...swcJestConfig } = JSON.parse(
-  readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8')
-);
-
-// disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
-// If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
-if (swcJestConfig.swcrc === undefined) {
-  swcJestConfig.swcrc = false;
-}
-
-// Uncomment if using global setup/teardown files being transformed via swc
-// https://nx.dev/packages/jest/documents/overview#global-setup/teardown-with-nx-libraries
-// jest needs EsModule Interop to find the default exported setup/teardown functions
-// swcJestConfig.module.noInterop = false;
-
-module.exports = {
-  displayName: 'my-lib',
-  preset: '../jest.preset.js',
-  transform: {
-    '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
-  },
-  moduleFileExtensions: ['ts', 'js', 'html'],
-  testEnvironment: 'jsdom',
-  coverageDirectory: '../coverage/my-lib',
-};
 "
 `;
