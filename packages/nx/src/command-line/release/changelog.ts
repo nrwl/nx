@@ -107,7 +107,7 @@ export async function changelogHandler(args: ChangelogOptions): Promise<void> {
     releaseTagPattern: nxReleaseConfig.releaseTagPattern,
   });
 
-  const from = args.from || (await getLastGitTag());
+  const from = args.from || (await getLastGitTag(tagMatchingPattern));
   if (!from) {
     output.error({
       title: `Unable to determine the previous git tag, please provide an explicit git reference using --from`,

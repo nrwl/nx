@@ -28,13 +28,25 @@ export interface GitCommit extends RawGitCommit {
   references: Reference[];
   authors: GitCommitAuthor[];
   isBreaking: boolean;
+  affectedFiles: string[];
 }
 
-export async function getLastGitTag() {
-  const r = await execCommand('git', ['describe', '--tags', '--abbrev=0'])
-    .then((r) => r.split('\n').filter(Boolean))
-    .catch(() => []);
-  return r.at(-1);
+export async function getLastGitTag(matchingPattern: string) {
+  const matchingTags = await execCommand('git', [
+    'tag',
+    '-l',
+    matchingPattern,
+    '--sort',
+    '-v:refname',
+  ]).then((r) =>
+    r
+      .trim()
+      .split('\n')
+      .map((t) => t.trim())
+      .filter(Boolean)
+  );
+
+  return matchingTags.length ? matchingTags[0] : null;
 }
 
 export async function getGitDiff(
@@ -77,6 +89,7 @@ const ConventionalCommitRegex =
 const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 const IssueRE = /(#\d+)/gm;
+const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 
 export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const match = commit.message.match(ConventionalCommitRegex);
@@ -115,6 +128,19 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     });
   }
 
+  // Extract file changes from commit body
+  const affectedFiles = Array.from(
+    commit.body.matchAll(ChangedFileRegex)
+  ).reduce(
+    (
+      prev,
+      [fullLine, changeType, file1, file2]: [string, string, string, string?]
+    ) =>
+      // file2 only exists for some change types, such as renames
+      file2 ? [...prev, file1, file2] : [...prev, file1],
+    [] as string[]
+  );
+
   return {
     ...commit,
     authors,
@@ -123,6 +149,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     scope,
     references,
     isBreaking,
+    affectedFiles,
   };
 }
 

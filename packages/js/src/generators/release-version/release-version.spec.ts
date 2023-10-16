@@ -58,6 +58,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: 'major',
       currentVersionResolver: 'disk',
+      releaseGroupName: 'default',
     });
     expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual('1.0.0');
 
@@ -66,6 +67,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: 'minor',
       currentVersionResolver: 'disk',
+      releaseGroupName: 'default',
     });
     expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual('1.1.0');
 
@@ -74,6 +76,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: 'patch',
       currentVersionResolver: 'disk',
+      releaseGroupName: 'default',
     });
     expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual('1.1.1');
 
@@ -82,6 +85,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: '1.2.3', // exact version
       currentVersionResolver: 'disk',
+      releaseGroupName: 'default',
     });
     expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual('1.2.3');
   });
@@ -92,6 +96,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: 'major',
       currentVersionResolver: 'disk',
+      releaseGroupName: 'default',
     });
 
     expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
@@ -137,6 +142,7 @@ describe('release-version', () => {
           projectGraph,
           specifier: 'major',
           currentVersionResolver: 'disk',
+          releaseGroupName: 'default',
         })
       ).rejects.toThrowErrorMatchingInlineSnapshot(`
         "The project "my-lib" does not have a package.json available at libs/my-lib/package.json.

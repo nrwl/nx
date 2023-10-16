@@ -9,10 +9,17 @@ import {
 } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
+import { getLastGitTag } from 'nx/src/command-line/release/utils/git';
+import {
+  resolveSemverSpecifierFromConventionalCommits,
+  resolveSemverSpecifierFromPrompt,
+} from 'nx/src/command-line/release/utils/resolve-semver-specifier';
+import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
 import { deriveNewSemverVersion } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { relative } from 'path';
+import { prerelease } from 'semver';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
 
@@ -20,6 +27,13 @@ export async function releaseVersionGenerator(
   tree: Tree,
   options: ReleaseVersionGeneratorSchema
 ) {
+  // If the user provided a specifier, validate it
+  if (options.specifier && !isValidSemverSpecifier(options.specifier)) {
+    throw new Error(
+      `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`
+    );
+  }
+
   const projects = options.projects;
 
   // Resolve any custom package roots for each project upfront as they will need to be reused during dependency resolution
@@ -39,6 +53,14 @@ export async function releaseVersionGenerator(
   }
 
   let currentVersion: string;
+
+  // only used for options.currentVersionResolver === 'git-tag', but
+  // must be declared here in order to reuse it for additional projects
+  let lastMatchingGitTag: string;
+
+  // if specifier is undefined, then we haven't resolved it yet
+  // if specifier is null, then it has been resolved and no changes are necessary
+  let specifier = options.specifier ? options.specifier : undefined;
 
   for (const project of projects) {
     const projectName = project.name;
@@ -79,7 +101,10 @@ To fix this you will either need to add a package.json file at that location, or
     switch (options.currentVersionResolver) {
       case 'registry': {
         const metadata = options.currentVersionResolverMetadata;
-        const registry = metadata?.registry ?? 'https://registry.npmjs.org';
+        const registry =
+          metadata?.registry ??
+          (await getNpmRegistry()) ??
+          'https://registry.npmjs.org';
         const tag = metadata?.tag ?? 'latest';
 
         // If the currentVersionResolver is set to registry, we only want to make the request once for the whole batch of projects
@@ -127,10 +152,86 @@ To fix this you will either need to add a package.json file at that location, or
           `📄 Resolved the current version as ${currentVersion} from ${packageJsonPath}`
         );
         break;
+      case 'git-tag': {
+        if (!currentVersion) {
+          const tagVersionPrefix =
+            (options.currentVersionResolverMetadata
+              ?.tagVersionPrefix as string) ?? 'v';
+          const matchingPattern = `${tagVersionPrefix}*.*.*`;
+          lastMatchingGitTag = await getLastGitTag(matchingPattern);
+
+          if (!lastMatchingGitTag) {
+            throw new Error(
+              `No git tags matching pattern "${matchingPattern}" were found.`
+            );
+          }
+
+          currentVersion = lastMatchingGitTag.replace(tagVersionPrefix, '');
+          log(
+            `📄 Resolved the current version as ${currentVersion} from git tag "${lastMatchingGitTag}".`
+          );
+        } else {
+          log(
+            `📄 Using the current version ${currentVersion} already resolved from git tag "${lastMatchingGitTag}".`
+          );
+        }
+        break;
+      }
       default:
         throw new Error(
           `Invalid value for options.currentVersionResolver: ${options.currentVersionResolver}`
         );
+    }
+
+    // if specifier is null, then we determined previously via conventional commits that no changes are necessary
+    if (specifier === undefined) {
+      const specifierSource = options.specifierSource;
+      switch (specifierSource) {
+        case 'conventional-commits':
+          if (options.currentVersionResolver !== 'git-tag') {
+            throw new Error(
+              `Invalid currentVersionResolver "${options.currentVersionResolver}" provided for release group "${options.releaseGroupName}". Must be "git-tag" when "specifierSource" is "conventional-commits"`
+            );
+          }
+
+          // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
+          // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
+          if (prerelease(currentVersion)) {
+            specifier = 'prerelease';
+            log(
+              `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease.`
+            );
+            break;
+          }
+
+          specifier = await resolveSemverSpecifierFromConventionalCommits(
+            lastMatchingGitTag,
+            options.projectGraph,
+            projects.map((p) => p.name)
+          );
+
+          log(
+            `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`
+          );
+          break;
+        case 'prompt':
+          specifier = await resolveSemverSpecifierFromPrompt(
+            `What kind of change is this for the ${projects.length} matched projects(s) within release group "${options.releaseGroupName}"?`,
+            `What is the exact version for the ${projects.length} matched project(s) within release group "${options.releaseGroupName}"?`
+          );
+          break;
+        default:
+          throw new Error(
+            `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt" or "conventional-commits"`
+          );
+      }
+    }
+
+    if (!specifier) {
+      log(
+        `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`
+      );
+      continue;
     }
 
     // Resolve any local package dependencies for this project (before applying the new version)
@@ -143,7 +244,7 @@ To fix this you will either need to add a package.json file at that location, or
 
     const newVersion = deriveNewSemverVersion(
       currentVersion,
-      options.specifier,
+      specifier,
       options.preid
     );
 
@@ -216,4 +317,19 @@ function getColor(projectName: string) {
   const colorIndex = code % colors.length;
 
   return colors[colorIndex];
+}
+
+async function getNpmRegistry() {
+  // Must be non-blocking async to allow spinner to render
+  return await new Promise<string>((resolve, reject) => {
+    exec('npm config get registry', (error, stdout, stderr) => {
+      if (error) {
+        return reject(error);
+      }
+      if (stderr) {
+        return reject(stderr);
+      }
+      return resolve(stdout.trim());
+    });
+  });
 }
