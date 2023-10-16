@@ -89,6 +89,8 @@ export function versions(tree: Tree) {
       return backwardCompatibleVersions.angularV14;
     case 15:
       return backwardCompatibleVersions.angularV15;
+    case 16:
+      return backwardCompatibleVersions.angularV16;
     default:
       return latestVersions;
   }
