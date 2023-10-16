@@ -142,7 +142,7 @@ export default async function* moduleFederationSsrDevServer(
             const remoteServerOutput = join(
               workspaceRoot,
               remoteProject.targets.server.options.outputPath,
-              'main.js'
+              remoteProject.targets.server.options.outputFileName
             );
             const pm = getPackageManagerCommand();
             execSync(

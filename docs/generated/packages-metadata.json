@@ -732,15 +732,6 @@
         "type": "executor"
       },
       {
-        "description": "Download an EAS build",
-        "file": "generated/packages/expo/executors/download.json",
-        "hidden": false,
-        "name": "download",
-        "originalFilePath": "/packages/expo/src/executors/download/schema.json",
-        "path": "expo/executors/download",
-        "type": "executor"
-      },
-      {
         "description": "Run the Android app binary locally or run the iOS app binary locally",
         "file": "generated/packages/expo/executors/run.json",
         "hidden": false,
@@ -1666,17 +1657,6 @@
         "originalFilePath": "generated/cli/list"
       },
       {
-        "id": "workspace-lint",
-        "name": "workspace-lint",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/workspace-lint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "nx/documents/workspace-lint",
-        "tags": ["enforce-module-boundaries"],
-        "originalFilePath": "generated/cli/workspace-lint"
-      },
-      {
         "id": "connect-to-nx-cloud",
         "name": "connect-to-nx-cloud",
         "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -1794,7 +1774,17 @@
         "type": "executor"
       }
     ],
-    "generators": [],
+    "generators": [
+      {
+        "description": "Connect a workspace to Nx Cloud",
+        "file": "generated/packages/nx/generators/connect-to-nx-cloud.json",
+        "hidden": false,
+        "name": "connect-to-nx-cloud",
+        "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
+        "path": "nx/generators/connect-to-nx-cloud",
+        "type": "generator"
+      }
+    ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nx",
     "packageName": "nx",

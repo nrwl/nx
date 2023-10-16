@@ -1,6 +1,4 @@
 import { output } from '../../utils/output';
-import { getPackageManagerCommand } from '../../utils/package-manager';
-import { execSync } from 'child_process';
 import { readNxJson } from '../../config/configuration';
 import {
   getNxCloudToken,
@@ -48,9 +46,15 @@ export async function connectToNxCloudIfExplicitlyAsked(
   }
 }
 
-export async function connectToNxCloudCommand(
-  promptOverride?: string
-): Promise<boolean> {
+export interface ConnectToNxCloudOptions {
+  interactive: boolean;
+  promptOverride?: string;
+}
+
+export async function connectToNxCloudCommand({
+  promptOverride,
+  interactive,
+}: ConnectToNxCloudOptions): Promise<boolean> {
   const nxJson = readNxJson();
   if (isNxCloudUsed(nxJson)) {
     output.log({
@@ -68,21 +72,9 @@ export async function connectToNxCloudCommand(
     return false;
   }
 
-  const res = await connectToNxCloudPrompt(promptOverride);
+  const res = interactive ? await connectToNxCloudPrompt(promptOverride) : true;
   if (!res) return false;
-  const pmc = getPackageManagerCommand();
-  if (pmc) {
-    execSync(`${pmc.addDev} nx-cloud@latest`);
-  } else {
-    const nxJson = readNxJson();
-    if (nxJson.installation) {
-      nxJson.installation.plugins ??= {};
-      nxJson.installation.plugins['nx-cloud'] = execSync(
-        `npm view nx-cloud@latest version`
-      ).toString();
-    }
-  }
-  runNxSync(`g nx-cloud:init`, {
+  runNxSync(`g nx:connect-to-nx-cloud --quiet --no-interactive`, {
     stdio: [0, 1, 2],
   });
   return true;

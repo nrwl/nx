@@ -13,10 +13,6 @@ export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
     );
   }
 
-  const componentNames = names(options.name);
-  const typeNames = names(options.type ?? 'component');
-  const componentClassName = `${componentNames.className}${typeNames.className}`;
-
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
@@ -47,7 +43,7 @@ export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
 
     let updatedComponentSource = source.getText();
     updatedComponentSource = `${updatedComponentSource}${getNgModuleDeclaration(
-      componentClassName
+      options.symbolName
     )}`;
 
     tree.write(options.filePath, updatedComponentSource);
@@ -56,12 +52,12 @@ export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
 
   const moduleFilePath = joinPathFragments(
     options.directory,
-    `${componentNames.fileName}.module.ts`
+    `${options.name}.module.ts`
   );
 
   tree.write(
     moduleFilePath,
-    getModuleFileContent(componentClassName, options.fileName)
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 

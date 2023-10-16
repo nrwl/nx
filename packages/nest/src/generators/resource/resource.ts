@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithResourceOption,
@@ -26,8 +25,6 @@ export function resourceGenerator(
 }
 
 export default resourceGenerator;
-
-export const resourceSchematic = convertNxGenerator(resourceGenerator);
 
 function normalizeResourceOptions(
   tree: Tree,

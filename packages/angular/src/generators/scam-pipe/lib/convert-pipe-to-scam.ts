@@ -16,10 +16,6 @@ export function convertPipeToScam(tree: Tree, options: NormalizedSchema) {
     tsModule = ensureTypescript();
   }
 
-  const pipeNames = names(options.name);
-  const typeNames = names('pipe');
-  const pipeClassName = `${pipeNames.className}${typeNames.className}`;
-
   if (options.inlineScam) {
     const currentPipeContents = tree.read(options.filePath, 'utf-8');
     let source = tsModule.createSourceFile(
@@ -46,7 +42,7 @@ export function convertPipeToScam(tree: Tree, options: NormalizedSchema) {
 
     let updatedPipeSource = source.getText();
     updatedPipeSource = `${updatedPipeSource}${getNgModuleDeclaration(
-      pipeClassName
+      options.symbolName
     )}`;
 
     tree.write(options.filePath, updatedPipeSource);
@@ -55,12 +51,12 @@ export function convertPipeToScam(tree: Tree, options: NormalizedSchema) {
 
   const scamFilePath = joinPathFragments(
     options.directory,
-    `${pipeNames.fileName}.module.ts`
+    `${options.name}.module.ts`
   );
 
   tree.write(
     scamFilePath,
-    getModuleFileContent(pipeClassName, options.fileName)
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 

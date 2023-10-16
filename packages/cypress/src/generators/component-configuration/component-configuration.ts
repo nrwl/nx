@@ -11,7 +11,6 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateNxJson,
-  convertNxGenerator,
 } from '@nx/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -210,4 +209,3 @@ export function updateTsConfigForComponentTesting(
 }
 
 export default componentConfigurationGenerator;
-export const compat = convertNxGenerator(componentConfigurationGenerator);

@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
@@ -112,4 +111,3 @@ function moveDependency(host: Tree) {
 }
 
 export default expoInitGenerator;
-export const expoInitSchematic = convertNxGenerator(expoInitGenerator);

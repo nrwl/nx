@@ -35,13 +35,6 @@
       "description": "Device name or UDID to build the app on. The value is not required if you have a single device connected.",
       "alias": "d"
     },
-    "sync": {
-      "type": "boolean",
-      "description": "Syncs npm dependencies to package.json (for React Native autolink).",
-      "default": true,
-      "x-deprecated": "Add sync-deps to dependsOn in project.json for this target instead",
-      "x-priority": "internal"
-    },
     "port": {
       "type": "number",
       "description": "Port to start the Metro bundler on",

@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   GeneratorCallback,
   runTasksInSerial,
   Tree,
@@ -63,4 +62,3 @@ export async function nuxtInitGenerator(host: Tree, schema: InitSchema) {
 }
 
 export default nuxtInitGenerator;
-export const nuxtInitSchematic = convertNxGenerator(nuxtInitGenerator);

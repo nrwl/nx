@@ -1,5 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { convertNxGenerator, formatFiles } from '@nx/devkit';
+import { formatFiles } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addDependencies } from '../init/lib';
 import {
@@ -44,5 +44,3 @@ export async function libraryGeneratorInternal(
 }
 
 export default libraryGenerator;
-
-export const librarySchematic = convertNxGenerator(libraryGenerator);

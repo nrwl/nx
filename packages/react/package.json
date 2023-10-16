@@ -24,8 +24,8 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "builders": "./executors.json",
-  "schematics": "./generators.json",
+  "executors": "./executors.json",
+  "generators": "./generators.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"

@@ -140,14 +140,6 @@ async function installDependencies(
     json.devDependencies[`${pkgInfo.pkgScope}/tao`] = pkgInfo.pkgVersion;
   }
 
-  if (useNxCloud) {
-    // get the latest nx-cloud version compatible with the Nx major
-    // version being installed
-    json.devDependencies['nx-cloud'] = await resolvePackageVersion(
-      'nx-cloud',
-      `^${major(pkgInfo.pkgVersion)}.0.0`
-    );
-  }
   json.devDependencies = sortObjectByKeys(json.devDependencies);
 
   if (pkgInfo.unscopedPkgName === 'angular') {

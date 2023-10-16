@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -239,6 +238,7 @@ export type AddLintOptions = Pick<
   | 'rootProject'
   | 'bundler'
 >;
+
 export async function addLint(
   tree: Tree,
   options: AddLintOptions
@@ -813,4 +813,3 @@ function determineEntryFields(
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGenerator);

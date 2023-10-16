@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -177,6 +176,3 @@ function findPropsAndGenerateFileForCypress(
 }
 
 export default componentCypressGenerator;
-export const componentCypressSchematic = convertNxGenerator(
-  componentCypressGenerator
-);

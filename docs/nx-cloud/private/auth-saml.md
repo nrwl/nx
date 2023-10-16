@@ -39,7 +39,7 @@ if you are interested.
 7. Add these configuration options
 
    1. Configure the Identifier **exactly** as `nx-private-cloud`
-   2. For the **Reply URL**, it should point to your Private Cloud instance URL. Make sure it ends with `/auth/saml/callback`
+   2. For the **Reply URL**, it should point to your Private Cloud instance URL. Make sure it ends with `/auth-callback`
 
    ![Step 8](/nx-cloud/private/images/saml/azure_8.png)
 

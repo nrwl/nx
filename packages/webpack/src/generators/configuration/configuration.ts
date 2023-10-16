@@ -1,6 +1,5 @@
 import type { Tree } from '@nx/devkit';
 import {
-  convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -154,5 +153,3 @@ function addServeTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
 }
 
 export default configurationGenerator;
-
-export const compat = convertNxGenerator(configurationGenerator);

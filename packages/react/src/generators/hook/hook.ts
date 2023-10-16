@@ -1,7 +1,6 @@
 // TODO(jack): Remove inline renderHook function when RTL releases with its own version
 import {
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -62,6 +61,7 @@ function createFiles(host: Tree, options: NormalizedSchema) {
 }
 
 let tsModule: typeof import('typescript');
+
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
     tsModule = ensureTypescript();
@@ -178,5 +178,3 @@ function assertValidOptions(options: Schema) {
 }
 
 export default hookGenerator;
-
-export const hookSchematic = convertNxGenerator(hookGenerator);

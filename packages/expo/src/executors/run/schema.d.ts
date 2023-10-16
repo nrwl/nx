@@ -6,10 +6,6 @@
 export interface ExpoRunOptions {
   // nx options
   platform: 'ios' | 'android';
-  /**
-   * @deprecated TODO(v17) Add sync-deps to dependsOn in project.json for this target instead
-   */
-  sync: boolean; // default is true
   install?: boolean; // default is true
   clean?: boolean; // default is false
 

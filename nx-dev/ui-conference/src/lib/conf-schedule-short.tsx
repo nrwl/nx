@@ -42,8 +42,7 @@ export function ConfScheduleShort(): JSX.Element {
       title: 'Keynote',
       description: '',
       speakers: ['Juri Strumpflohner', 'Victor Savkin'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=250',
+      videoUrl: 'https://youtu.be/WSqivWlEDFw',
     },
     {
       type: 'event',
@@ -52,8 +51,7 @@ export function ConfScheduleShort(): JSX.Element {
         'Nx Cloud Workflows: Next-Gen CI with First-Class Monorepo Support',
       description: `We're excited to provide an exclusive preview of Nx Cloud Workflows. In our first foray into delivering CI as part of Nx Cloud, we'll demonstrate how Workflows can simplify distributed executions as part of a typical CI pipeline, before talking about our long-term vision for the product.`,
       speakers: ['Simon Critchley'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=3369',
+      videoUrl: 'https://youtu.be/JG1FWfZFByM',
     },
     {
       type: 'event',
@@ -64,8 +62,7 @@ export function ConfScheduleShort(): JSX.Element {
  
       This talk covers the tactics we apply to avoid interrupting the teams' workflow and onboard them to Nx and a monorepo workflow. An important part is what we call the Migration Toolkit. This custom Nx plugin helps teams prepare their repo by identifying the minimum requirements for migrating to the Nx monorepo workspace and offering custom Nx migration generators.`,
       speakers: ['Michael Hladky'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=5027',
+      videoUrl: 'https://youtu.be/i0UdoImryJQ',
     },
     {
       type: 'break',
@@ -82,8 +79,7 @@ export function ConfScheduleShort(): JSX.Element {
       title: 'Redefining Projects with Nx: A Dive into the New Inference API',
       description: `In a continuous strive for improvement, we have revamped the project inference API, aiming to provide greater flexibility and power in defining and managing projects. This talk will walk through the evolution of the project inference API, highlighting the transition from a 1:1 file-to-project mapping to a more nuanced approach that handles complex project configurations. We'll explore the key advantages of the new API, including the ability to define multiple projects within a single file and set more comprehensive project properties. Join us to learn about these exciting changes and understand how they can enhance your work with Nx.`,
       speakers: ['Craigory Coppola'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=8514',
+      videoUrl: 'https://youtu.be/bnjOu7iOrMg',
     },
     {
       type: 'event',
@@ -93,8 +89,7 @@ export function ConfScheduleShort(): JSX.Element {
 
       Starting from a package-based repo, we'll enforce module boundaries, create and use code generators and, finally, use task executors and automate updating dependencies.  Together, these improvements add up to one giant leap forward in developer experience.`,
       speakers: ['Isaac Mann'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=9966',
+      videoUrl: 'https://youtu.be/nY0_o7zWBLM',
     },
     {
       type: 'event',
@@ -103,8 +98,7 @@ export function ConfScheduleShort(): JSX.Element {
       description:
         'In this talk we will dig into practical examples of various approaches to versioning and publishing packages from an Nx workspace.',
       speakers: ['James Henry'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=11515',
+      videoUrl: 'https://youtu.be/p5qW5-2nKqI',
     },
     {
       type: 'break',
@@ -121,8 +115,7 @@ export function ConfScheduleShort(): JSX.Element {
         'Lightning Talk: What if your stories were - already - your e2e tests?',
       description: `Storybook interaction tests allow developers to verify the functional aspects of UI components by simulating user behavior and checking UI and state updates. They integrate with Storybook's existing stories, utilizing a 'play' function to recreate user interactions, effectively transforming these stories into comprehensive e2e tests. Nx enhances the testing process by providing generators for Storybook interaction tests. This means that you don't need third-party tools for e2e tests if you're already using Storybook. What's awesome is that everything is fully integrated into your project right off the bat, with zero extra setup needed. So you can focus on what matters: building amazing UIs, with the peace of mind that testing is taken care of.`,
       speakers: ['Katerina Skroumpelou'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=20443',
+      videoUrl: 'https://youtu.be/SWlvsDNXCsQ',
     },
     {
       type: 'event',
@@ -130,8 +123,7 @@ export function ConfScheduleShort(): JSX.Element {
       title: 'Lightning Talk: Nx Cloud Demo',
       description: `We're going to take a tour through some of the features of our latest release of Nx Cloud. We'll show you some of the latest analytics, organization management tools and ways that Nx Cloud can help you figure out what's really going on in CI without digging through endless logs.`,
       speakers: ['Johanna Pearce'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=21381',
+      videoUrl: 'https://youtu.be/xc6fJpwk4Lo',
     },
     {
       type: 'event',
@@ -139,8 +131,7 @@ export function ConfScheduleShort(): JSX.Element {
       title: 'From DIY to DTE - An Enterprise Experience',
       description: `Nobody likes a slow CI/CD pipeline. When working in a monorepo with hundreds of projects, it can be difficult to optimize your CI/CD for performance and efficiency. Sure, you can DIY a crafty solution for it, but why DIY when you can DTE? Nx distributed task execution (DTE) is designed to fully optimize your CI/CD performance. Although configuring DTE for large monorepos can be challenging, it's not impossible. In this talk, we'll explore an enterprise experience, where we start with a DIY solution for CI/CD performance, realize its limitations, and embark on a bumpy but promising journey towards Nx DTE.`,
       speakers: ['Adrian Baran'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=22493',
+      videoUrl: 'https://youtu.be/MsUN0wQHPAs',
     },
     {
       type: 'event',
@@ -150,8 +141,7 @@ export function ConfScheduleShort(): JSX.Element {
 
       This talk will take us on an epic journey with Nx and the powerful monorepo wizardry to show us how good tooling eventually defeats even the scariest of dev ops monsters.`,
       speakers: ['Miroslav Jonas'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=23948',
+      videoUrl: 'https://youtu.be/jGF8vo2ChfI',
     },
     {
       type: 'break',
@@ -167,8 +157,7 @@ export function ConfScheduleShort(): JSX.Element {
       title: 'Optimizing your OSS infrastructure with Nx Plugins',
       description: `When building and maintaining open source projects, offloading maintenance is vital to continue working on the features you want to ship. Building, testing, distribution are all part of maintaining an open source project. This talk shows how to optimize your open source workflow through an Nx Plugin.`,
       speakers: ['Brandon Roberts'],
-      videoUrl:
-        'https://www.youtube.com/live/IQ5YyEYZw68?si=TQRfAG7CtNbd3Xu4&t=27725',
+      videoUrl: 'https://youtu.be/bNuXH25CTO0',
     },
     {
       type: 'event',
@@ -179,7 +168,7 @@ export function ConfScheduleShort(): JSX.Element {
       We will dive into the key features of Nx Console and demonstrate how it enhances code generation and boosts your ability to navigate and understand complex codebases. Leverage the full potential of Nx Console in your daily development workflow!
       `,
       speakers: ['Jonathan Cammisuli', 'Max Kless'],
-      videoUrl: 'https://www.youtube.com/watch?v=IQ5YyEYZw68&t=9967s',
+      videoUrl: 'https://youtu.be/TTjVcWCdwVY',
     },
     {
       type: 'event',

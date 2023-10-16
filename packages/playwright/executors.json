@@ -1,11 +1,4 @@
 {
-  "builders": {
-    "playwright": {
-      "implementation": "./src/executors/playwright/compat",
-      "schema": "./src/executors/playwright/schema.json",
-      "description": "Run Playwright tests."
-    }
-  },
   "executors": {
     "playwright": {
       "implementation": "./src/executors/playwright/playwright",

@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NormalizedOptions,
@@ -18,8 +17,6 @@ export function decoratorGenerator(
 }
 
 export default decoratorGenerator;
-
-export const decoratorSchematic = convertNxGenerator(decoratorGenerator);
 
 function normalizeDecoratorOptions(
   tree: Tree,

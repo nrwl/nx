@@ -1,7 +1,6 @@
 import { StorybookConfigureSchema } from './schema';
 import storiesGenerator from '../stories/stories';
 import {
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   readProjectConfiguration,
@@ -76,6 +75,3 @@ export async function storybookConfigurationGenerator(
 }
 
 export default storybookConfigurationGenerator;
-export const storybookConfigurationSchematic = convertNxGenerator(
-  storybookConfigurationGenerator
-);

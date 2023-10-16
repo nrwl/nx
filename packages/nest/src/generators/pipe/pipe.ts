@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -24,8 +23,6 @@ export function pipeGenerator(
 }
 
 export default pipeGenerator;
-
-export const pipeSchematic = convertNxGenerator(pipeGenerator);
 
 function normalizePipeOptions(
   tree: Tree,

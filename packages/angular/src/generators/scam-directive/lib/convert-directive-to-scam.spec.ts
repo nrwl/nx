@@ -32,6 +32,7 @@ describe('convertDirectiveToScam', () => {
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -87,6 +88,7 @@ describe('convertDirectiveToScam', () => {
       flat: false,
       inlineScam: false,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -136,6 +138,7 @@ describe('convertDirectiveToScam', () => {
       inlineScam: true,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -191,6 +194,7 @@ describe('convertDirectiveToScam', () => {
       inlineScam: false,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -241,6 +245,7 @@ describe('convertDirectiveToScam', () => {
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -297,6 +302,7 @@ describe('convertDirectiveToScam', () => {
       flat: true,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT

@@ -744,15 +744,6 @@
         "path": "/nx-api/expo/executors/build-list",
         "type": "executor"
       },
-      "/nx-api/expo/executors/download": {
-        "description": "Download an EAS build",
-        "file": "generated/packages/expo/executors/download.json",
-        "hidden": false,
-        "name": "download",
-        "originalFilePath": "/packages/expo/src/executors/download/schema.json",
-        "path": "/nx-api/expo/executors/download",
-        "type": "executor"
-      },
       "/nx-api/expo/executors/run": {
         "description": "Run the Android app binary locally or run the iOS app binary locally",
         "file": "generated/packages/expo/executors/run.json",
@@ -1684,17 +1675,6 @@
         "tags": [],
         "originalFilePath": "generated/cli/list"
       },
-      "/nx-api/nx/documents/workspace-lint": {
-        "id": "workspace-lint",
-        "name": "workspace-lint",
-        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-        "file": "generated/packages/nx/documents/workspace-lint",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/nx/documents/workspace-lint",
-        "tags": ["enforce-module-boundaries"],
-        "originalFilePath": "generated/cli/workspace-lint"
-      },
       "/nx-api/nx/documents/connect-to-nx-cloud": {
         "id": "connect-to-nx-cloud",
         "name": "connect-to-nx-cloud",
@@ -1815,7 +1795,17 @@
         "type": "executor"
       }
     },
-    "generators": {},
+    "generators": {
+      "/nx-api/nx/generators/connect-to-nx-cloud": {
+        "description": "Connect a workspace to Nx Cloud",
+        "file": "generated/packages/nx/generators/connect-to-nx-cloud.json",
+        "hidden": false,
+        "name": "connect-to-nx-cloud",
+        "originalFilePath": "/packages/nx/src/nx-cloud/generators/connect-to-nx-cloud/schema.json",
+        "path": "/nx-api/nx/generators/connect-to-nx-cloud",
+        "type": "generator"
+      }
+    },
     "path": "/nx-api/nx"
   },
   "playwright": {

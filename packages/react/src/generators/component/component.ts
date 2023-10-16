@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -224,5 +223,3 @@ function assertValidOptions(options: Schema) {
 }
 
 export default componentGenerator;
-
-export const componentSchematic = convertNxGenerator(componentGenerator);

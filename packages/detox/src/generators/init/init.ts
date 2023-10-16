@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
@@ -54,4 +53,3 @@ function moveDependency(host: Tree) {
 }
 
 export default detoxInitGenerator;
-export const detoxInitSchematic = convertNxGenerator(detoxInitGenerator);

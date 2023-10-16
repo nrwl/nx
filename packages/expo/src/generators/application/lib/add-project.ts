@@ -73,16 +73,6 @@ function getTargets(options: NormalizedSchema) {
     options: {},
   };
 
-  /**
-   * @deprecated TODO(v17) this executor is no longer used, to be removed in v17
-   */
-  architect['download'] = {
-    executor: '@nx/expo:download',
-    options: {
-      output: `${options.appProjectRoot}/dist`,
-    },
-  };
-
   architect['sync-deps'] = {
     executor: '@nx/expo:sync-deps',
     options: {},

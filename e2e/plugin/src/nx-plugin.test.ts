@@ -75,7 +75,7 @@ describe('Nx Plugin', () => {
       generators: expect.objectContaining({
         [`update-${version}`]: {
           version,
-          description: `update-${version}`,
+          description: `Migration for v1.0.0`,
           implementation: `./src/migrations/update-${version}/update-${version}`,
         },
       }),

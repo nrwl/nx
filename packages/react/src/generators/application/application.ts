@@ -10,7 +10,6 @@ import { setDefaults } from './lib/set-defaults';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -305,4 +304,3 @@ export async function applicationGeneratorInternal(
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

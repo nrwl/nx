@@ -1,5 +1,6 @@
 import { CommandModule } from 'yargs';
 import {
+  withBatch,
   withOverrides,
   withRunOneOptions,
 } from '../yargs-utils/shared-options';
@@ -13,7 +14,7 @@ export const yargsRunCommand: CommandModule = {
     (e.g., nx serve myapp --configuration=production)
 
     You can skip the use of Nx cache by using the --skip-nx-cache option.`,
-  builder: (yargs) => withRunOneOptions(yargs),
+  builder: (yargs) => withRunOneOptions(withBatch(yargs)),
   handler: async (args) =>
     (await import('./run-one')).runOne(process.cwd(), withOverrides(args)),
 };

@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   getPackageManagerCommand,
   installPackagesTask,
   joinPathFragments,
@@ -21,7 +20,6 @@ interface Schema {
   appName?: string;
   skipInstall?: boolean;
   style?: string;
-  nxCloud?: boolean;
   preset: string;
   defaultBase: string;
   framework?: string;
@@ -49,8 +47,6 @@ export async function newGenerator(tree: Tree, opts: Schema) {
 
   addPresetDependencies(tree, options);
 
-  addCloudDependencies(tree, options);
-
   return async () => {
     const pmc = getPackageManagerCommand(options.packageManager);
     if (pmc.preInstall) {
@@ -77,9 +73,6 @@ function validateOptions(options: Schema, host: Tree) {
     options.preset !== Preset.NPM
   ) {
     throw new Error(`Cannot select a preset when skipInstall is set to true.`);
-  }
-  if (options.skipInstall && options.nxCloud) {
-    throw new Error(`Cannot select nxCloud when skipInstall is set to true.`);
   }
 
   if (
@@ -143,15 +136,4 @@ function normalizeOptions(options: Schema): NormalizedSchema {
   );
 
   return normalized as NormalizedSchema;
-}
-
-function addCloudDependencies(host: Tree, options: Schema) {
-  if (options.nxCloud) {
-    return addDependenciesToPackageJson(
-      host,
-      {},
-      { 'nx-cloud': 'latest' },
-      join(options.directory, 'package.json')
-    );
-  }
 }

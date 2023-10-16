@@ -2,7 +2,6 @@ import {
   Tree,
   names,
   generateFiles,
-  joinPathFragments,
   getPackageManagerCommand,
   readJson,
   NxJsonConfiguration,

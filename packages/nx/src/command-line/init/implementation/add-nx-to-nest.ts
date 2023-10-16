@@ -117,7 +117,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
   const pmc = getPackageManagerCommand();
 
-  addDepsToPackageJson(repoRoot, useNxCloud);
+  addDepsToPackageJson(repoRoot);
   addNestPluginToPackageJson(repoRoot);
   markRootPackageJsonAsNxProject(
     repoRoot,

@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -37,6 +36,7 @@ export interface CypressE2EConfigSchema {
   linter?: Linter;
   port?: number | 'cypress-auto';
 }
+
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
 
 export async function configurationGenerator(
@@ -221,4 +221,3 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
 }
 
 export default configurationGenerator;
-export const compat = convertNxGenerator(configurationGenerator);

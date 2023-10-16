@@ -51,7 +51,7 @@ export async function* ssrDevServerExecutor(
   let nodeStarted = false;
   const combined = combineAsyncIterables(runBrowser, runServer);
 
-  process.env['port'] = `${options.port}`;
+  process.env['PORT'] = `${options.port}`;
 
   for await (const output of combined) {
     if (!output.success) throw new Error('Could not build application');

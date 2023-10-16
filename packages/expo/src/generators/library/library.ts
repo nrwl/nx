@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -220,4 +219,3 @@ function maybeJs(options: NormalizedSchema, path: string): string {
 }
 
 export default expoLibraryGenerator;
-export const expoLibrarySchematic = convertNxGenerator(expoLibraryGenerator);

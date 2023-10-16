@@ -1,11 +1,4 @@
 {
-  "builders": {
-    "eslint": {
-      "implementation": "./src/executors/eslint/compat",
-      "schema": "./src/executors/eslint/schema.json",
-      "description": "Run ESLint on a project."
-    }
-  },
   "executors": {
     "eslint": {
       "implementation": "./src/executors/eslint/lint.impl",

@@ -22,13 +22,6 @@
     }
   ],
   "properties": {
-    "xcodeConfiguration": {
-      "type": "string",
-      "description": "Explicitly set the Xcode configuration to use.",
-      "default": "Debug",
-      "examples": ["Debug", "Release"],
-      "x-deprecated": "Use `mode` instead. Deprecated from @react-native-community/cli. Will be removed in Nx 17."
-    },
     "simulator": {
       "type": "string",
       "description": "Explicitly set simulator to use. Optionally include iOS version between parenthesis at the end to match an exact version: \"iPhone 6 (10.0)\"",

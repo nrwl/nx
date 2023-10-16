@@ -1,6 +1,5 @@
 import type { Tree } from '@nx/devkit';
 import {
-  convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -114,5 +113,3 @@ function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
 }
 
 export default configurationGenerator;
-
-export const compat = convertNxGenerator(configurationGenerator);

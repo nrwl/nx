@@ -4,6 +4,7 @@
 
 ### Properties
 
+- [batch](../../devkit/documents/DefaultTasksRunnerOptions#batch): boolean
 - [cacheDirectory](../../devkit/documents/DefaultTasksRunnerOptions#cachedirectory): string
 - [cacheableOperations](../../devkit/documents/DefaultTasksRunnerOptions#cacheableoperations): string[]
 - [cacheableTargets](../../devkit/documents/DefaultTasksRunnerOptions#cacheabletargets): string[]
@@ -15,6 +16,12 @@
 - [skipNxCache](../../devkit/documents/DefaultTasksRunnerOptions#skipnxcache): boolean
 
 ## Properties
+
+### batch
+
+• `Optional` **batch**: `boolean`
+
+---
 
 ### cacheDirectory
 

@@ -1,0 +1,8 @@
+import { <%= symbolName %> } from './<%= fileName %>';
+
+describe('<%= symbolName %>', () => {
+  it('should create an instance', () => {
+    const directive = new <%= symbolName %>();
+    expect(directive).toBeTruthy();
+  });
+});

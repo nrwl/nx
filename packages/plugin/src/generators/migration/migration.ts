@@ -1,7 +1,6 @@
 import {
   readProjectConfiguration,
   names,
-  convertNxGenerator,
   generateFiles,
   updateProjectConfiguration,
   updateJson,
@@ -9,6 +8,7 @@ import {
   writeJson,
   joinPathFragments,
   formatFiles,
+  normalizePath,
 } from '@nx/devkit';
 import type { Tree } from '@nx/devkit';
 import type { Schema } from './schema';
@@ -16,12 +16,18 @@ import * as path from 'path';
 import { addMigrationJsonChecks } from '../lint-checks/generator';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../utils/versions';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { join, relative } from 'path';
+
 interface NormalizedSchema extends Schema {
   projectRoot: string;
   projectSourceRoot: string;
 }
 
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
+async function normalizeOptions(
+  tree: Tree,
+  options: Schema
+): Promise<NormalizedSchema> {
   let name: string;
   if (options.name) {
     name = names(options.name).fileName;
@@ -29,14 +35,34 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
     name = names(`update-${options.packageVersion}`).fileName;
   }
 
-  const description: string = options.description ?? name;
+  const { project, fileName, artifactName, filePath, directory } =
+    await determineArtifactNameAndDirectoryOptions(tree, {
+      artifactType: 'migration',
+      callingGenerator: '@nx/plugin:migration',
+      name: name,
+      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+      project: options.project,
+      directory: options.directory,
+      fileName: name,
+      derivedDirectory: 'migrations',
+    });
+
+  const { className, propertyName } = names(artifactName);
 
   const { root: projectRoot, sourceRoot: projectSourceRoot } =
-    readProjectConfiguration(host, options.project);
+    readProjectConfiguration(tree, project);
+
+  const description: string =
+    options.description ?? `Migration for v${options.packageVersion}`;
+
+  // const { root: projectRoot, sourceRoot: projectSourceRoot } =
+  //   readProjectConfiguration(host, options.project);
 
   const normalized: NormalizedSchema = {
     ...options,
-    name,
+    project,
+    name: artifactName,
+    directory,
     description,
     projectRoot,
     projectSourceRoot,
@@ -49,7 +75,7 @@ function addFiles(host: Tree, options: NormalizedSchema) {
   generateFiles(
     host,
     path.join(__dirname, 'files/migration'),
-    `${options.projectSourceRoot}/migrations`,
+    options.directory,
     { ...options, tmpl: '' }
   );
 }
@@ -73,7 +99,10 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
   generators[options.name] = {
     version: options.packageVersion,
     description: options.description,
-    implementation: `./src/migrations/${options.name}/${options.name}`,
+    implementation: `./${joinPathFragments(
+      relative(options.projectRoot, options.directory),
+      options.name
+    )}`,
   };
   migrations.generators = generators;
 
@@ -119,7 +148,7 @@ function updatePackageJson(host: Tree, options: NormalizedSchema) {
   );
 }
 
-function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
+function updateProjectConfig(host: Tree, options: NormalizedSchema) {
   const project = readProjectConfiguration(host, options.project);
 
   const assets = project.targets.build?.options?.assets;
@@ -139,12 +168,19 @@ function updateWorkspaceJson(host: Tree, options: NormalizedSchema) {
   }
 }
 
-export async function migrationGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
+export async function migrationGenerator(tree: Tree, rawOptions: Schema) {
+  await migrationGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function migrationGeneratorInternal(host: Tree, schema: Schema) {
+  const options = await normalizeOptions(host, schema);
 
   addFiles(host, options);
   updateMigrationsJson(host, options);
-  updateWorkspaceJson(host, options);
+  updateProjectConfig(host, options);
   updateMigrationsJson(host, options);
   updatePackageJson(host, options);
 
@@ -155,7 +191,7 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
     );
     addMigrationJsonChecks(
       host,
-      { projectName: schema.project },
+      { projectName: options.project },
       readJson<PackageJson>(host, packageJsonPath)
     );
   }
@@ -166,4 +202,3 @@ export async function migrationGenerator(host: Tree, schema: Schema) {
 }
 
 export default migrationGenerator;
-export const migrationSchematic = convertNxGenerator(migrationGenerator);

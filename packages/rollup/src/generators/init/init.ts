@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   Tree,
@@ -12,7 +11,6 @@ import {
   swcLoaderVersion,
   tsLibVersion,
 } from '../../utils/versions';
-import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback;
@@ -47,5 +45,3 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export default rollupInitGenerator;
-
-export const rollupInitSchematic = convertNxGenerator(rollupInitGenerator);

@@ -81,6 +81,12 @@ describe('use-minimal-config-for-tasks-runner-options migration', () => {
         },
       },
     });
+    writeJson(tree, 'package.json', {
+      devDependencies: {
+        'nx-cloud': 'latest',
+        nx: 'latest',
+      },
+    });
 
     await migrate(tree);
 
@@ -89,6 +95,10 @@ describe('use-minimal-config-for-tasks-runner-options migration', () => {
     expect(nxJson.nxCloudUrl).toEqual('https://nx.app');
     expect(nxJson.nxCloudEncryptionKey).toEqual('secret');
     expect(nxJson.tasksRunnerOptions).not.toBeDefined();
+
+    expect(readJson(tree, 'package.json').devDependencies).toEqual({
+      nx: 'latest',
+    });
   });
 
   it('should move nxCloudAccessToken and nxCloudUrl for @nrwl/nx-cloud', async () => {

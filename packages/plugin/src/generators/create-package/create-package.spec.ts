@@ -10,11 +10,13 @@ import { PackageJson } from 'nx/src/utils/package-json';
 import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
 import { CreatePackageSchema } from './schema';
+import { setCwd } from '@nx/devkit/internal-testing-utils';
 
 const getSchema: (
   overrides?: Partial<CreatePackageSchema>
 ) => CreatePackageSchema = (overrides = {}) => ({
   name: 'create-a-workspace',
+  directory: 'packages/create-a-workspace',
   project: 'my-plugin',
   compiler: 'tsc',
   skipTsConfig: false,
@@ -22,6 +24,7 @@ const getSchema: (
   skipLintChecks: false,
   linter: Linter.EsLint,
   unitTestRunner: 'jest',
+  projectNameAndRootFormat: 'as-provided',
   ...overrides,
 });
 
@@ -29,31 +32,34 @@ describe('NxPlugin Create Package Generator', () => {
   let tree: Tree;
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
+    setCwd('');
     await pluginGenerator(tree, {
       name: 'my-plugin',
+      directory: 'packages/my-plugin',
       compiler: 'tsc',
       skipTsConfig: false,
       skipFormat: false,
       skipLintChecks: false,
       linter: Linter.EsLint,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     });
   });
 
   it('should update the project.json file', async () => {
     await createPackageGenerator(tree, getSchema());
     const project = readProjectConfiguration(tree, 'create-a-workspace');
-    expect(project.root).toEqual('libs/create-a-workspace');
-    expect(project.sourceRoot).toEqual('libs/create-a-workspace/bin');
+    expect(project.root).toEqual('packages/create-a-workspace');
+    expect(project.sourceRoot).toEqual('packages/create-a-workspace/bin');
     expect(project.targets.build).toEqual({
       executor: '@nx/js:tsc',
       outputs: ['{options.outputPath}'],
       options: {
-        outputPath: 'dist/libs/create-a-workspace',
-        tsConfig: 'libs/create-a-workspace/tsconfig.lib.json',
-        main: 'libs/create-a-workspace/bin/index.ts',
-        assets: ['libs/create-a-workspace/*.md'],
+        outputPath: 'dist/packages/create-a-workspace',
+        tsConfig: 'packages/create-a-workspace/tsconfig.lib.json',
+        main: 'packages/create-a-workspace/bin/index.ts',
+        assets: ['packages/create-a-workspace/*.md'],
       },
     });
   });
@@ -62,14 +68,19 @@ describe('NxPlugin Create Package Generator', () => {
     await createPackageGenerator(
       tree,
       getSchema({
-        directory: 'plugins',
+        directory: 'clis/create-a-workspace',
       } as Partial<CreatePackageSchema>)
     );
-    const project = readProjectConfiguration(
-      tree,
-      'plugins-create-a-workspace'
-    );
-    expect(project.root).toEqual('libs/plugins/create-a-workspace');
+    const project = readProjectConfiguration(tree, 'create-a-workspace');
+    expect(project.root).toEqual('clis/create-a-workspace');
+  });
+
+  it('should create a preset generator in the plugin', async () => {
+    await createPackageGenerator(tree, getSchema());
+
+    expect(
+      tree.exists('packages/my-plugin/src/generators/preset/generator.ts')
+    ).toBeTruthy();
   });
 
   it('should specify tsc as compiler', async () => {

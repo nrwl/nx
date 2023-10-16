@@ -1,6 +1,5 @@
 import type { Tree } from '@nx/devkit';
 import {
-  convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -130,7 +129,5 @@ function getTsConfigFile(tree: Tree, options: EsBuildProjectSchema) {
   }
   return options.tsConfig;
 }
-
-export const compat = convertNxGenerator(configurationGenerator);
 
 export default configurationGenerator;

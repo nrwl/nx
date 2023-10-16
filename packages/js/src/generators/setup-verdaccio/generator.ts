@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   ProjectConfiguration,
@@ -75,4 +74,3 @@ export async function setupVerdaccio(
 }
 
 export default setupVerdaccio;
-export const setupVerdaccioSchematic = convertNxGenerator(setupVerdaccio);

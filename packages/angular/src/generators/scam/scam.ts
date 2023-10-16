@@ -21,7 +21,7 @@ export async function scamGenerator(tree: Tree, rawOptions: Schema) {
     skipFormat: true,
   });
 
-  const options = normalizeOptions(tree, rawOptions);
+  const options = await normalizeOptions(tree, rawOptions);
   convertComponentToScam(tree, options);
   exportScam(tree, options);
 

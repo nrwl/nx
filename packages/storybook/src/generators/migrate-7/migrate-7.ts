@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   readJson,
@@ -107,4 +106,3 @@ export async function migrate7Generator(tree: Tree, schema: Schema) {
 }
 
 export default migrate7Generator;
-export const migrate7Schematic = convertNxGenerator(migrate7Generator);

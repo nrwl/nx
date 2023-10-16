@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -148,6 +147,3 @@ export async function componentStoryGenerator(
 }
 
 export default componentStoryGenerator;
-export const componentStorySchematic = convertNxGenerator(
-  componentStoryGenerator
-);

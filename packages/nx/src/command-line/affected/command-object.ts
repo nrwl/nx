@@ -2,6 +2,7 @@ import { boolean, CommandModule, middleware } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import {
   withAffectedOptions,
+  withBatch,
   withConfiguration,
   withDepGraphOptions,
   withOutputStyleOption,
@@ -17,7 +18,9 @@ export const yargsAffectedCommand: CommandModule = {
     linkToNxDevAndExamples(
       withAffectedOptions(
         withRunOptions(
-          withOutputStyleOption(withTargetAndConfigurationOption(yargs))
+          withOutputStyleOption(
+            withTargetAndConfigurationOption(withBatch(yargs))
+          )
         )
       )
         .option('all', {

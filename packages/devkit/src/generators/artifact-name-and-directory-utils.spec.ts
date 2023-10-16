@@ -2,9 +2,10 @@ import * as enquirer from 'enquirer';
 import { addProjectConfiguration } from 'nx/src/devkit-exports';
 import { createTreeWithEmptyWorkspace } from 'nx/src/generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from 'nx/src/generators/tree';
-import { workspaceRoot } from 'nx/src/utils/workspace-root';
-import { join } from 'path';
-import { determineArtifactNameAndDirectoryOptions } from './artifact-name-and-directory-utils';
+import {
+  determineArtifactNameAndDirectoryOptions,
+  setCwd,
+} from './artifact-name-and-directory-utils';
 
 describe('determineArtifactNameAndDirectoryOptions', () => {
   let tree: Tree;
@@ -25,10 +26,6 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
     process.stdout.isTTY = originalIsTTYValue;
   }
 
-  function setCwd(path: string) {
-    process.env.INIT_CWD = join(workspaceRoot, path);
-  }
-
   function restoreCwd() {
     if (originalInitCwd === undefined) {
       delete process.env.INIT_CWD;
@@ -39,12 +36,56 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    setCwd('');
     jest.clearAllMocks();
 
     originalInteractiveValue = process.env.NX_INTERACTIVE;
     originalCIValue = process.env.CI;
     originalIsTTYValue = process.stdout.isTTY;
     originalInitCwd = process.env.INIT_CWD;
+  });
+
+  it('should accept a derivedDirectory which is relative to the project source root', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      sourceRoot: 'apps/app1/src',
+      projectType: 'application',
+    });
+
+    const res = await determineArtifactNameAndDirectoryOptions(tree, {
+      name: 'myComponent',
+      artifactType: 'component',
+      callingGenerator: '@my-org/my-plugin:component',
+      directory: 'components',
+      derivedDirectory: 'components',
+      project: 'app1',
+      nameAndDirectoryFormat: 'derived',
+    });
+
+    expect(res.filePath).toEqual(
+      'apps/app1/src/components/my-component/my-component.ts'
+    );
+  });
+
+  it('should accept a derivedDirectory which is relative to the project root', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+    });
+
+    const res = await determineArtifactNameAndDirectoryOptions(tree, {
+      name: 'myComponent',
+      artifactType: 'component',
+      callingGenerator: '@my-org/my-plugin:component',
+      directory: 'components',
+      derivedDirectory: 'components',
+      project: 'app1',
+      nameAndDirectoryFormat: 'derived',
+    });
+
+    expect(res.filePath).toEqual(
+      'apps/app1/components/my-component/my-component.ts'
+    );
   });
 
   it('should throw an error when the resolver directory is not under any project root', async () => {

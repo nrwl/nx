@@ -17,7 +17,7 @@ export async function scamPipeGenerator(tree: Tree, rawOptions: Schema) {
     skipFormat: true,
   });
 
-  const options = normalizeOptions(tree, rawOptions);
+  const options = await normalizeOptions(tree, rawOptions);
   convertPipeToScam(tree, options);
   exportScam(tree, options);
 

@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -24,8 +23,6 @@ export function resolverGenerator(
 }
 
 export default resolverGenerator;
-
-export const resolverSchematic = convertNxGenerator(resolverGenerator);
 
 function normalizeResolverOptions(
   tree: Tree,

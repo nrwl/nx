@@ -27,8 +27,8 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "builders": "./executors.json",
-  "schematics": "./generators.json",
+  "executors": "./executors.json",
+  "generators": "./generators.json",
   "peerDependencies": {
     "eslint": "^8.0.0"
   },

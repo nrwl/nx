@@ -42,26 +42,17 @@ export async function viewLogs(): Promise<number> {
   if (!installCloud) return;
 
   const pmc = getPackageManagerCommand();
-  try {
-    output.log({
-      title: 'Installing nx-cloud',
-    });
-    execSync(`${pmc.addDev} nx-cloud@latest`, { stdio: 'ignore' });
-  } catch (e) {
-    output.log({
-      title: 'Installation failed',
-    });
-    console.log(e);
-    return 1;
-  }
 
   try {
     output.log({
       title: 'Connecting to Nx Cloud',
     });
-    runNxSync(`g nx-cloud:init --installation-source=view-logs`, {
-      stdio: 'ignore',
-    });
+    runNxSync(
+      `g nx:connect-to-nx-cloud --installation-source=view-logs --quiet --no-interactive`,
+      {
+        stdio: 'ignore',
+      }
+    );
   } catch (e) {
     output.log({
       title: 'Failed to connect to Nx Cloud',

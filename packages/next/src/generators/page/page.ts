@@ -1,6 +1,5 @@
 import { componentGenerator as reactComponentGenerator } from '@nx/react';
 import {
-  convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -56,4 +55,3 @@ function normalizeOptions(host: Tree, options: Schema) {
 }
 
 export default pageGenerator;
-export const pageSchematic = convertNxGenerator(pageGenerator);

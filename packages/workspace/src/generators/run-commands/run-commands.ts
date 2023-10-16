@@ -1,6 +1,5 @@
 import { Schema } from './schema';
 import {
-  convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -30,5 +29,3 @@ export async function runCommandsGenerator(host: Tree, schema: Schema) {
 }
 
 export default runCommandsGenerator;
-
-export const runCommandsSchematic = convertNxGenerator(runCommandsGenerator);

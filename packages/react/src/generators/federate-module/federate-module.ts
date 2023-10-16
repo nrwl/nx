@@ -1,7 +1,6 @@
 import {
   GeneratorCallback,
   Tree,
-  convertNxGenerator,
   formatFiles,
   logger,
   readJson,
@@ -73,7 +72,3 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
 }
 
 export default federateModuleGenerator;
-
-export const federateModuleSchematic = convertNxGenerator(
-  federateModuleGenerator
-);

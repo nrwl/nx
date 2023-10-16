@@ -1218,9 +1218,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         !isCI() &&
         !isNxCloudUsed(originalNxJson)
       ) {
-        const useCloud = await connectToNxCloudCommand(
-          messages.getPromptMessage('nxCloudMigration')
-        );
+        const useCloud = await connectToNxCloudCommand({
+          promptOverride: messages.getPromptMessage('nxCloudMigration'),
+          interactive: true,
+        });
         await recordStat({
           command: 'migrate',
           nxVersion,

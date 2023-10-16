@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -27,8 +26,6 @@ export function controllerGenerator(
 }
 
 export default controllerGenerator;
-
-export const controllerSchematic = convertNxGenerator(controllerGenerator);
 
 function normalizeControllerOptions(
   tree: Tree,

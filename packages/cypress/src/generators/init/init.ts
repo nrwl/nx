@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
@@ -70,4 +69,3 @@ export async function cypressInitGenerator(tree: Tree, options: Schema) {
 }
 
 export default cypressInitGenerator;
-export const cypressInitSchematic = convertNxGenerator(cypressInitGenerator);

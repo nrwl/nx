@@ -18,6 +18,12 @@
         ],
         "parallel": false
       },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/tsconfig.scripts.json",
+        "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
+      ],
       "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
     },
     "sitemap": {

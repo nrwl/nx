@@ -1,11 +1,6 @@
 import { StorybookConfigureSchema } from './schema';
 import storiesGenerator from '../stories/stories';
-import {
-  convertNxGenerator,
-  ensurePackage,
-  formatFiles,
-  Tree,
-} from '@nx/devkit';
+import { ensurePackage, formatFiles, Tree } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
@@ -47,6 +42,3 @@ export async function storybookConfigurationGenerator(
 }
 
 export default storybookConfigurationGenerator;
-export const storybookConfigurationSchematic = convertNxGenerator(
-  storybookConfigurationGenerator
-);

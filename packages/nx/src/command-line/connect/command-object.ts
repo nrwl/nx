@@ -1,13 +1,24 @@
 import { CommandModule } from 'yargs';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
+import type { ConnectToNxCloudOptions } from './connect-to-nx-cloud';
 
-export const yargsConnectCommand: CommandModule = {
+export const yargsConnectCommand: CommandModule<{}, ConnectToNxCloudOptions> = {
   command: 'connect',
   aliases: ['connect-to-nx-cloud'],
   describe: `Connect workspace to Nx Cloud`,
-  builder: (yargs) => linkToNxDevAndExamples(yargs, 'connect-to-nx-cloud'),
-  handler: async () => {
-    await (await import('./connect-to-nx-cloud')).connectToNxCloudCommand();
+  builder: (yargs) =>
+    linkToNxDevAndExamples(
+      yargs.option('interactive', {
+        type: 'boolean',
+        description: 'Prompt for confirmation',
+        default: true,
+      }),
+      'connect-to-nx-cloud'
+    ),
+  handler: async (options) => {
+    await (
+      await import('./connect-to-nx-cloud')
+    ).connectToNxCloudCommand(options);
     process.exit(0);
   },
 };

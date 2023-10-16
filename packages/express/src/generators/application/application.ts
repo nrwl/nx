@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator, formatFiles, toJS, updateJson } from '@nx/devkit';
+import { formatFiles, toJS, updateJson } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { join } from 'path';
@@ -83,7 +83,6 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);
 
 async function normalizeOptions(
   host: Tree,

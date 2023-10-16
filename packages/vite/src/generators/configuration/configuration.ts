@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -246,6 +245,3 @@ export async function viteConfigurationGenerator(
 }
 
 export default viteConfigurationGenerator;
-export const configurationSchematic = convertNxGenerator(
-  viteConfigurationGenerator
-);

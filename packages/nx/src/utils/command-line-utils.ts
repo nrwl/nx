@@ -35,6 +35,7 @@ export interface NxArgs {
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
   type?: string;
+  batch?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {

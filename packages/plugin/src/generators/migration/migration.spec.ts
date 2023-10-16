@@ -1,7 +1,9 @@
-import { Tree, readProjectConfiguration, readJson } from '@nx/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { migrationGenerator } from './migration';
 import { pluginGenerator } from '../plugin/plugin';
+import { setCwd } from '@nx/devkit/internal-testing-utils';
+import { Linter } from '@nx/linter';
 
 describe('NxPlugin migration generator', () => {
   let tree: Tree;
@@ -9,11 +11,17 @@ describe('NxPlugin migration generator', () => {
 
   beforeEach(async () => {
     projectName = 'my-plugin';
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
+    setCwd('');
 
     await pluginGenerator(tree, {
       name: projectName,
-    } as any);
+      directory: 'packages/my-plugin',
+      projectNameAndRootFormat: 'as-provided',
+      unitTestRunner: 'jest',
+      linter: Linter.EsLint,
+      compiler: 'tsc',
+    });
   });
 
   it('should update the workspace.json file', async () => {
@@ -23,9 +31,9 @@ describe('NxPlugin migration generator', () => {
     });
 
     const project = readProjectConfiguration(tree, projectName);
-    expect(project.root).toEqual('libs/my-plugin');
+    expect(project.root).toEqual('packages/my-plugin');
     expect(project.targets.build.options.assets).toContainEqual({
-      input: './libs/my-plugin',
+      input: './packages/my-plugin',
       glob: 'migrations.json',
       output: '.',
     });
@@ -33,17 +41,48 @@ describe('NxPlugin migration generator', () => {
 
   it('should generate files', async () => {
     await migrationGenerator(tree, {
+      name: 'my-migration',
+      directory: 'packages/my-plugin/migrations/1.0.0',
+      packageVersion: '1.0.0',
+      nameAndDirectoryFormat: 'as-provided',
+    });
+
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
+    const packageJson = readJson(tree, 'packages/my-plugin/package.json');
+
+    expect(
+      tree.exists('packages/my-plugin/migrations/1.0.0/my-migration.ts')
+    ).toBeTruthy();
+
+    expect(migrationsJson.generators['my-migration'].version).toEqual('1.0.0');
+    expect(migrationsJson.generators['my-migration'].description).toEqual(
+      'Migration for v1.0.0'
+    );
+    expect(migrationsJson.generators['my-migration'].implementation).toEqual(
+      './migrations/1.0.0/my-migration'
+    );
+    expect(migrationsJson.packageJsonUpdates).toBeFalsy();
+
+    expect(packageJson['nx-migrations'].migrations).toEqual(
+      './migrations.json'
+    );
+  });
+
+  it('should generate files for derived', async () => {
+    await migrationGenerator(tree, {
       project: projectName,
       name: 'my-migration',
       description: 'my-migration description',
       packageVersion: '1.0.0',
     });
 
-    const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
-    const packageJson = readJson(tree, 'libs/my-plugin/package.json');
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
+    const packageJson = readJson(tree, 'packages/my-plugin/package.json');
 
     expect(
-      tree.exists('libs/my-plugin/src/migrations/my-migration/my-migration.ts')
+      tree.exists(
+        'packages/my-plugin/src/migrations/my-migration/my-migration.ts'
+      )
     ).toBeTruthy();
 
     expect(migrationsJson.generators['my-migration'].version).toEqual('1.0.0');
@@ -62,15 +101,38 @@ describe('NxPlugin migration generator', () => {
 
   it('should generate files with default name', async () => {
     await migrationGenerator(tree, {
+      description: 'my-migration description',
+      directory: 'packages/my-plugin/src/migrations/update-1.0.0',
+      packageVersion: '1.0.0',
+      nameAndDirectoryFormat: 'as-provided',
+    });
+
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
+
+    expect(
+      tree.exists(
+        'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts'
+      )
+    ).toBeTruthy();
+
+    expect(migrationsJson.generators['update-1.0.0'].implementation).toEqual(
+      './src/migrations/update-1.0.0/update-1.0.0'
+    );
+  });
+
+  it('should generate files with default name for derived', async () => {
+    await migrationGenerator(tree, {
       project: projectName,
       description: 'my-migration description',
       packageVersion: '1.0.0',
     });
 
-    const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
 
     expect(
-      tree.exists('libs/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts')
+      tree.exists(
+        'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0.ts'
+      )
     ).toBeTruthy();
 
     expect(migrationsJson.generators['update-1.0.0'].implementation).toEqual(
@@ -80,27 +142,29 @@ describe('NxPlugin migration generator', () => {
 
   it('should generate files with default description', async () => {
     await migrationGenerator(tree, {
-      project: projectName,
       name: 'my-migration',
+      directory: 'packages/my-plugin/src/migrations/update-1.0.0',
       packageVersion: '1.0.0',
+      nameAndDirectoryFormat: 'as-provided',
     });
 
-    const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
 
     expect(migrationsJson.generators['my-migration'].description).toEqual(
-      'my-migration'
+      'Migration for v1.0.0'
     );
   });
 
   it('should generate files with package.json updates', async () => {
     await migrationGenerator(tree, {
-      project: projectName,
       name: 'my-migration',
+      directory: 'packages/my-plugin/src/migrations/update-1.0.0',
       packageVersion: '1.0.0',
       packageJsonUpdates: true,
+      nameAndDirectoryFormat: 'as-provided',
     });
 
-    const migrationsJson = readJson(tree, 'libs/my-plugin/migrations.json');
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
 
     expect(migrationsJson.packageJsonUpdates).toEqual({
       ['1.0.0']: {

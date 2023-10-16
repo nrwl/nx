@@ -32,6 +32,7 @@ describe('convertPipeToScam', () => {
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -89,6 +90,7 @@ describe('convertPipeToScam', () => {
       flat: false,
       inlineScam: false,
       path: 'apps/app1/src/app',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -138,6 +140,7 @@ describe('convertPipeToScam', () => {
       inlineScam: true,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -192,6 +195,7 @@ describe('convertPipeToScam', () => {
       inlineScam: false,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -242,6 +246,7 @@ describe('convertPipeToScam', () => {
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -300,6 +305,7 @@ describe('convertPipeToScam', () => {
       flat: true,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT

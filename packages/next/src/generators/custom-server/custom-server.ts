@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import {
   updateJson,
-  convertNxGenerator,
   generateFiles,
   logger,
   offsetFromRoot,
@@ -115,5 +114,3 @@ export async function customServerGenerator(
     return json;
   });
 }
-
-export const customServerSchematic = convertNxGenerator(customServerGenerator);

@@ -8,10 +8,6 @@ import { getResolveRequest } from './metro-resolver';
 interface WithNxOptions {
   debug?: boolean;
   extensions?: string[];
-  /**
-   * @deprecated TODO(v17) in the metro.config.js, pass in to the getDefaultConfig instead: getDefaultConfig(__dirname)
-   */
-  projectRoot?: string;
   watchFolders?: string[];
 }
 

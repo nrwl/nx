@@ -1,10 +1,8 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   GeneratorCallback,
   getProjects,
   readNxJson,
-  readProjectConfiguration,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   stripIndents,
@@ -233,5 +231,3 @@ function normalizeOptions(options: JestInitSchema) {
 }
 
 export default jestInitGenerator;
-
-export const jestInitSchematic = convertNxGenerator(jestInitGenerator);

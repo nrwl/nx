@@ -9,5 +9,4 @@
 ### Functions
 
 - [mockSchematicsForTesting](../../devkit/documents/ngcli_adapter/mockSchematicsForTesting)
-- [overrideCollectionResolutionForTesting](../../devkit/documents/ngcli_adapter/overrideCollectionResolutionForTesting)
 - [wrapAngularDevkitSchematic](../../devkit/documents/ngcli_adapter/wrapAngularDevkitSchematic)

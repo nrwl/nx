@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   logger,
   readJson,
   readNxJson,
@@ -120,4 +119,3 @@ export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
 }
 
 export default initGenerator;
-export const initSchematic = convertNxGenerator(initGenerator);

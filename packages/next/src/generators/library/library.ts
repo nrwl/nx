@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -119,4 +118,3 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGenerator);

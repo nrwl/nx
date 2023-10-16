@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   getPackageManagerCommand,
@@ -72,4 +71,3 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
 }
 
 export default initGenerator;
-export const initSchematic = convertNxGenerator(initGenerator);

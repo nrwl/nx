@@ -4,7 +4,7 @@
   "cli": "nx",
   "title": "Nx Angular Directive Options Schema",
   "type": "object",
-  "description": "Creates a new, generic directive definition in the given project.",
+  "description": "Creates a new Angular directive.",
   "additionalProperties": false,
   "properties": {
     "name": {
@@ -16,14 +16,16 @@
       },
       "x-prompt": "What name would you like to use for the directive?"
     },
-    "path": {
+    "directory": {
       "type": "string",
-      "format": "path",
-      "$default": {
-        "$source": "workingDirectory"
-      },
-      "description": "The path at which to create the interface that defines the directive, relative to the workspace root.",
-      "visible": false
+      "description": "The directory at which to create the directive file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+      "aliases": ["dir", "path"],
+      "x-priority": "important"
+    },
+    "nameAndDirectoryFormat": {
+      "description": "Whether to generate the directive in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "project": {
       "type": "string",
@@ -31,7 +33,8 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-dropdown": "projects"
+      "x-dropdown": "projects",
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
     },
     "prefix": {
       "type": "string",
@@ -70,7 +73,8 @@
     "flat": {
       "type": "boolean",
       "description": "When true (the default), creates the new files at the top level of the current project.",
-      "default": true
+      "default": true,
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18."
     },
     "module": {
       "type": "string",
@@ -88,5 +92,5 @@
       "description": "Skip formatting of files."
     }
   },
-  "required": ["name", "project"]
+  "required": ["name"]
 }

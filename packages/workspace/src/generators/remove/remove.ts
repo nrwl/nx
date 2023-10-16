@@ -1,9 +1,4 @@
-import {
-  convertNxGenerator,
-  formatFiles,
-  readProjectConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { formatFiles, readProjectConfiguration, Tree } from '@nx/devkit';
 
 import { checkProjectIsSafeToRemove } from './lib/check-project-is-safe-to-remove';
 import { checkDependencies } from './lib/check-dependencies';
@@ -29,5 +24,3 @@ export async function removeGenerator(tree: Tree, schema: Schema) {
 }
 
 export default removeGenerator;
-
-export const removeSchematic = convertNxGenerator(removeGenerator);

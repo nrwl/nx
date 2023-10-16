@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   GeneratorCallback,
   runTasksInSerial,
@@ -91,4 +90,3 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
 }
 
 export default nextInitGenerator;
-export const nextInitSchematic = convertNxGenerator(nextInitGenerator);

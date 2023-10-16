@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   getProjects,
   joinPathFragments,
   ProjectConfiguration,
@@ -52,5 +51,3 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
 }
 
 export default monorepoGenerator;
-
-export const monorepoSchematic = convertNxGenerator(monorepoGenerator);

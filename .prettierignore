@@ -34,3 +34,5 @@ graph/client/src/assets/generated-task-graphs
 /dist
 /.env
 CODEOWNERS
+
+/.nx/cache

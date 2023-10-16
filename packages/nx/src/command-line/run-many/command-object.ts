@@ -5,6 +5,7 @@ import {
   withOutputStyleOption,
   withTargetAndConfigurationOption,
   withOverrides,
+  withBatch,
 } from '../yargs-utils/shared-options';
 
 export const yargsRunManyCommand: CommandModule = {
@@ -13,7 +14,9 @@ export const yargsRunManyCommand: CommandModule = {
   builder: (yargs) =>
     linkToNxDevAndExamples(
       withRunManyOptions(
-        withOutputStyleOption(withTargetAndConfigurationOption(yargs))
+        withOutputStyleOption(
+          withTargetAndConfigurationOption(withBatch(yargs))
+        )
       ),
       'run-many'
     ),

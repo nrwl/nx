@@ -26,33 +26,12 @@
     }
   ],
   "properties": {
-    "apk": {
-      "type": "boolean",
-      "description": "Generate apk file(s) rather than a bundle (`.aab`).",
-      "x-deprecated": "Use `tasks` option instead, e.g. `tasks=['bundleRelease']` to generate aab, `tasks=['assembleDebug']` to generate apk. Will be removed in Nx 17."
-    },
-    "debug": {
-      "type": "boolean",
-      "description": "Generate a debug build instead of a release build.",
-      "x-deprecated": "Use `mode` option instead, e.g. `mode='debug'`. Deprecated from @react-native-community/cli. Will be removed in Nx 17."
-    },
-    "gradleTask": {
-      "type": "string",
-      "description": "Override default gradle task incase of multi build variants",
-      "x-deprecated": "Use `tasks` option instead, e.g. `tasks=['assembleDebug']`. Will be removed in Nx 17."
-    },
     "mode": {
       "type": "string",
       "description": "Specify your app's build variant",
       "default": "debug",
       "examples": ["debug", "release"],
       "x-priority": "important"
-    },
-    "packager": {
-      "type": "boolean",
-      "description": "Launch packager while building",
-      "default": true,
-      "x-deprecated": "Run `nx run <project>:start` instead. Will be removed in Nx 17."
     },
     "port": {
       "type": "number",
@@ -90,12 +69,6 @@
     "interactive": {
       "type": "boolean",
       "description": "Explicitly select build type and flavour to use before running a build"
-    },
-    "sync": {
-      "type": "boolean",
-      "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
-      "default": true,
-      "x-deprecated": "Add sync-deps to dependsOn instead"
     },
     "resetCache": {
       "type": "boolean",

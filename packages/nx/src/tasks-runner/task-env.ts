@@ -6,7 +6,7 @@ import { workspaceRoot } from '../utils/workspace-root';
 export function getEnvVariablesForBatchProcess(
   skipNxCache: boolean,
   captureStderr: boolean
-) {
+): NodeJS.ProcessEnv {
   return {
     // User Process Env Variables override Dotenv Variables
     ...process.env,

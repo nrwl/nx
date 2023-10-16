@@ -16,11 +16,7 @@ env:
   NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
 steps:
   - name: Git Clone
-    script: |
-      git init .
-      git remote add origin $GIT_REPOSITORY_URL
-      git fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +{{nxCommitSha}}:{{nxCommitRef}}
-      git checkout --progress --force -B {{nxBranch}} {{nxCommitRef}}
+    uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
 
   - name: Restore cache
     script: |

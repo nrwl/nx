@@ -72,7 +72,7 @@ export async function addNxToNpmRepo(options: Options) {
 
   const pmc = getPackageManagerCommand();
 
-  addDepsToPackageJson(repoRoot, useNxCloud);
+  addDepsToPackageJson(repoRoot);
   markRootPackageJsonAsNxProject(
     repoRoot,
     cacheableOperations,
