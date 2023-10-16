@@ -833,6 +833,12 @@
                   "name": "How to create a Module Federation Remote Application",
                   "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
                   "file": "shared/recipes/module-federation/creating-a-remote"
+                },
+                {
+                  "id": "federate-a-module",
+                  "name": "How to Federate a Module",
+                  "description": "A guide on how to federate a module in your Nx workspace",
+                  "file": "shared/recipes/module-federation/federate-a-module"
                 }
               ]
             },

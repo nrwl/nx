@@ -139,6 +139,7 @@
     - [Module Federation](/recipes/module-federation)
       - [How to create a Module Federation Host Application](/recipes/module-federation/create-a-host)
       - [How to create a Module Federation Remote Application](/recipes/module-federation/create-a-remote)
+      - [How to Federate a Module](/recipes/module-federation/federate-a-module)
     - [Enforce Module Boundaries](/recipes/enforce-module-boundaries)
       - [Ban Dependencies with Certain Tags](/recipes/enforce-module-boundaries/ban-dependencies-with-tags)
       - [Tag in Multiple Dimensions](/recipes/enforce-module-boundaries/tag-multiple-dimensions)
