@@ -231,6 +231,26 @@ export async function compileSourceFiles(
 
   const transformers = angularCompiler.prepareEmit().transformers;
 
+  if ('getSemanticDiagnosticsOfNextAffectedFile' in builder) {
+    while (
+      builder.emitNextAffectedFile(
+        (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
+          if (fileName.endsWith('.tsbuildinfo')) {
+            tsCompilerHost.writeFile(
+              fileName,
+              data,
+              writeByteOrderMark,
+              onError,
+              sourceFiles
+            );
+          }
+        }
+      )
+    ) {
+      // empty
+    }
+  }
+
   const angularVersion = getInstalledAngularVersionInfo();
   const incrementalCompilation: typeof angularCompiler.incrementalCompilation =
     angularVersion.major < 16

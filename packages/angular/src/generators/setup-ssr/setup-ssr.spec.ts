@@ -75,12 +75,17 @@ describe('setupSSR', () => {
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
+      import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
+      import { appRoutes } from './app.routes';
       import { NxWelcomeComponent } from './nx-welcome.component';
 
       @NgModule({
         declarations: [AppComponent, NxWelcomeComponent],
-        imports: [BrowserModule],
+        imports: [
+          BrowserModule,
+          RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+        ],
         providers: [],
         bootstrap: [AppComponent],
       })
@@ -256,12 +261,17 @@ describe('setupSSR', () => {
         BrowserModule,
         provideClientHydration,
       } from '@angular/platform-browser';
+      import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
+      import { appRoutes } from './app.routes';
       import { NxWelcomeComponent } from './nx-welcome.component';
 
       @NgModule({
         declarations: [AppComponent, NxWelcomeComponent],
-        imports: [BrowserModule],
+        imports: [
+          BrowserModule,
+          RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+        ],
         providers: [provideClientHydration()],
         bootstrap: [AppComponent],
       })
@@ -286,10 +296,18 @@ describe('setupSSR', () => {
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ApplicationConfig } from '@angular/core';
+      import {
+        provideRouter,
+        withEnabledBlockingInitialNavigation,
+      } from '@angular/router';
+      import { appRoutes } from './app.routes';
       import { provideClientHydration } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration()],
+        providers: [
+          provideClientHydration(),
+          provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+        ],
       };
       "
     `);
@@ -391,20 +409,25 @@ describe('setupSSR', () => {
       // ASSERT
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-              "import { NgModule } from '@angular/core';
-              import { BrowserModule } from '@angular/platform-browser';
-              import { AppComponent } from './app.component';
-              import { NxWelcomeComponent } from './nx-welcome.component';
+        "import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
 
-              @NgModule({
-                declarations: [AppComponent, NxWelcomeComponent],
-                imports: [BrowserModule.withServerTransition({ appId: 'serverApp' })],
-                providers: [],
-                bootstrap: [AppComponent],
-              })
-              export class AppModule {}
-              "
-          `);
+        @NgModule({
+          declarations: [AppComponent, NxWelcomeComponent],
+          imports: [
+            BrowserModule.withServerTransition({ appId: 'serverApp' }),
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+          ],
+          providers: [],
+          bootstrap: [AppComponent],
+        })
+        export class AppModule {}
+        "
+      `);
     });
 
     it('should wrap bootstrap call for Angular versions lower than 15.2', async () => {

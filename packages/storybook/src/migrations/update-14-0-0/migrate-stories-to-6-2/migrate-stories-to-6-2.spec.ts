@@ -55,11 +55,13 @@ describe('migrate-stories-to-6-2 schematic', () => {
 
       await runAngularLibrarySchematic(appTree, {
         name: 'test-ui-lib',
+        standalone: false,
       });
 
       await componentSchematic(appTree, {
         name: 'test-button',
         project: 'test-ui-lib',
+        standalone: false,
       });
 
       writeJson(appTree, 'package.json', {
