@@ -144,11 +144,10 @@ export async function applicationGeneratorInternal(
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [
           options.compiler === 'swc'
             ? `import react from '@vitejs/plugin-react-swc'`
@@ -207,11 +206,10 @@ export async function applicationGeneratorInternal(
         includeVitest: true,
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [
           options.compiler === 'swc'
             ? `import react from '@vitejs/plugin-react-swc'`

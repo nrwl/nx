@@ -82,6 +82,7 @@ describe('lib', () => {
       'node',
       'vitest',
     ]);
+    expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should update tags', async () => {
@@ -428,6 +429,18 @@ describe('lib', () => {
     });
   });
 
+  describe('--bundler none, unit test runner vitest', () => {
+    it('should configure vite', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        unitTestRunner: 'vitest',
+        bundler: 'none',
+      });
+
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+  });
+
   describe('--appProject', () => {
     it('should add new route to existing routing code', async () => {
       await applicationGenerator(tree, {
@@ -496,7 +509,6 @@ describe('lib', () => {
       });
 
       const projectsConfigurations = getProjects(tree);
-
       expect(projectsConfigurations.get('my-lib').targets.build).toBeDefined();
     });
   });

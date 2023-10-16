@@ -81,7 +81,8 @@ export async function libraryGeneratorInternal(
   }
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage('@nx/vite', nxVersion);
+    const { viteConfigurationGenerator, createOrEditViteConfig } =
+      ensurePackage('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(tree, {
       project: options.name,
       newProject: true,
@@ -92,6 +93,15 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
     });
     tasks.push(viteTask);
+    createOrEditViteConfig(
+      tree,
+      {
+        project: options.name,
+        includeLib: true,
+        includeVitest: options.unitTestRunner === 'vitest',
+      },
+      false
+    );
   }
   if (options.linter !== 'none') {
     const lintCallback = await addLint(tree, options);
@@ -108,7 +118,10 @@ export async function libraryGeneratorInternal(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { vitestGenerator } = ensurePackage('@nx/vite', nxVersion);
+    const { vitestGenerator, createOrEditViteConfig } = ensurePackage(
+      '@nx/vite',
+      nxVersion
+    );
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
@@ -117,6 +130,15 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
     });
     tasks.push(vitestTask);
+    createOrEditViteConfig(
+      tree,
+      {
+        project: options.name,
+        includeLib: false,
+        includeVitest: true,
+      },
+      true
+    );
   }
 
   if (!schema.skipTsConfig) {

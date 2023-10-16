@@ -1193,7 +1193,7 @@ describe('lib', () => {
       expect(project.targets.test).toMatchObject({
         executor: '@nx/vite:test',
       });
-      expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',
