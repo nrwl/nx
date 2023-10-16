@@ -5,7 +5,7 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
-import { LoadedNxPlugin, readPluginsOptions } from '../../utils/nx-plugin';
+import { LoadedNxPlugin } from '../../utils/nx-plugin';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import minimatch = require('minimatch');
@@ -74,10 +74,9 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
 } {
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
-  const pluginOptions = readPluginsOptions(nxJson);
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
-  for (const plugin of plugins) {
+  for (const { plugin, options } of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
     if (!pattern) {
       continue;
@@ -85,14 +84,10 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
         const { projects: projectNodes, externalNodes: pluginExternalNodes } =
-          createNodes(
-            file,
-            {
-              nxJsonConfiguration: nxJson,
-              workspaceRoot: root,
-            },
-            pluginOptions[plugin.name] ?? {}
-          );
+          createNodes(file, options, {
+            nxJsonConfiguration: nxJson,
+            workspaceRoot: root,
+          });
         for (const node in projectNodes) {
           projectNodes[node].name ??= node;
           mergeProjectConfigurationIntoRootMap(

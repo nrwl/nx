@@ -25,11 +25,7 @@ export interface FileMapCache {
   nxVersion: string;
   deps: Record<string, string>;
   pathMappings: Record<string, any>;
-  nxJsonPlugins: {
-    name: string;
-    version: string;
-    options?: Record<string, unknown>;
-  }[];
+  nxJsonPlugins: PluginData[];
   pluginsConfig?: any;
   fileMap: FileMap;
 }
@@ -116,15 +112,7 @@ export function createProjectFileMapCache(
   fileMap: FileMap,
   tsConfig: { compilerOptions?: { paths?: { [p: string]: any } } }
 ) {
-  const nxJsonPlugins = (nxJson?.plugins || []).map((p) => {
-    const [plugin, options] =
-      typeof p === 'string' ? [p] : [p.plugin, p.options];
-    return {
-      name: plugin,
-      version: packageJsonDeps[plugin],
-      options,
-    };
-  });
+  const nxJsonPlugins = getNxJsonPluginsData(nxJson, packageJsonDeps);
   const newValue: FileMapCache = {
     version: '6.0',
     nxVersion: nxVersion,
@@ -217,17 +205,9 @@ export function shouldRecomputeWholeGraph(
   }
 
   // a new plugin has been added
-  if ((nxJson?.plugins || []).length !== cache.nxJsonPlugins.length)
-    return true;
-
-  // a plugin has changed
   if (
-    (nxJson?.plugins || []).some((t) => {
-      const matchingPlugin = cache.nxJsonPlugins.find(
-        (p) => p.name === (typeof t === 'string' ? t : t.plugin)
-      );
-      return pluginChanged(t, packageJsonDeps, matchingPlugin);
-    })
+    JSON.stringify(getNxJsonPluginsData(nxJson, packageJsonDeps)) !==
+    JSON.stringify(cache.nxJsonPlugins)
   ) {
     return true;
   }
@@ -345,46 +325,23 @@ function processProjectNode(
   }
 }
 
-function pluginChanged(
-  pluginDefinition: PluginDefinition,
-  packageJsonDeps: PackageJson['dependencies'],
-  cacheEntry: FileMapCache['nxJsonPlugins'][number]
-) {
-  // plugin was just installed
-  if (!cacheEntry) {
-    return true;
-  }
+type PluginData = {
+  name: string;
+  version: string;
+  options?: Record<string, unknown>;
+};
 
-  const [plugin, options] =
-    typeof pluginDefinition === 'string'
-      ? [pluginDefinition]
-      : [pluginDefinition.plugin, pluginDefinition.options];
-
-  // installed version of the plugin changed
-  if (cacheEntry.version !== packageJsonDeps[plugin]) {
-    return true;
-  }
-
-  // Options definitely changed, most likely from not being specified to being specified.
-  if (typeof options !== typeof cacheEntry.options) {
-    return true;
-  }
-
-  // Version is same, neither have options, equivalent config.
-  if (!cacheEntry.options && !options) {
-    return false;
-  }
-
-  const keys = new Set([
-    ...Object.keys(options),
-    ...Object.keys(cacheEntry.options),
-  ]);
-  for (const key of keys) {
-    if (options[key] !== cacheEntry[key]) {
-      // An option changed
-      return true;
-    }
-  }
-  // Nothing changed.
-  return false;
+function getNxJsonPluginsData(
+  nxJson: NxJsonConfiguration,
+  packageJsonDeps: Record<string, string>
+): PluginData[] {
+  return (nxJson?.plugins || []).map((p) => {
+    const [plugin, options] =
+      typeof p === 'string' ? [p] : [p.plugin, p.options];
+    return {
+      name: plugin,
+      version: packageJsonDeps[plugin],
+      options,
+    };
+  });
 }

@@ -28,7 +28,7 @@ type PluginOptions = {
 
 export const createNodes: CreateNodes<PluginOptions> = [
     "**/my-project-file",
-    (f, ctx, options) => {
+    (f, options, ctx) => {
         // f = path/to/my/file/my-project-file
         const root = dirname(f);
         // root = path/to/my/file

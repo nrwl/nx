@@ -10,7 +10,7 @@ export const NxAngularJsonPlugin: NxPluginV2 = {
   name: NX_ANGULAR_JSON_PLUGIN_NAME,
   createNodes: [
     'angular.json',
-    (f, ctx) => ({
+    (f, _, ctx) => ({
       projects: readAngularJson(ctx.workspaceRoot),
     }),
   ],

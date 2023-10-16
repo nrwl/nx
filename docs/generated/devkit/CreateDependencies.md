@@ -1,6 +1,6 @@
 # Type alias: CreateDependencies<T\>
 
-Ƭ **CreateDependencies**<`T`\>: (`context`: [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext), `pluginConfig`: `T`) => [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
+Ƭ **CreateDependencies**<`T`\>: (`options`: `T` \| `undefined`, `context`: [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext)) => [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
 
 #### Type parameters
 
@@ -10,17 +10,17 @@
 
 #### Type declaration
 
-▸ (`context`, `pluginConfig`): [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
+▸ (`options`, `context`): [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
 
 A function which parses files in the workspace to create dependencies in the [ProjectGraph](../../devkit/documents/ProjectGraph)
 Use [validateDependency](../../devkit/documents/validateDependency) to validate dependencies
 
 ##### Parameters
 
-| Name           | Type                                                                            |
-| :------------- | :------------------------------------------------------------------------------ |
-| `context`      | [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext) |
-| `pluginConfig` | `T`                                                                             |
+| Name      | Type                                                                            |
+| :-------- | :------------------------------------------------------------------------------ |
+| `options` | `T` \| `undefined`                                                              |
+| `context` | [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext) |
 
 ##### Returns
 

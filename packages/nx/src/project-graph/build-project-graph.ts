@@ -15,11 +15,9 @@ import { applyImplicitDependencies } from './utils/implicit-project-dependencies
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
 import {
   CreateDependenciesContext,
-  CreateNodesContext,
   isNxPluginV1,
   isNxPluginV2,
   loadNxPlugins,
-  readPluginsOptions,
 } from '../utils/nx-plugin';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
@@ -234,9 +232,8 @@ async function updateProjectGraphWithPlugins(
   initProjectGraph: ProjectGraph
 ) {
   const plugins = await loadNxPlugins(context.nxJsonConfiguration?.plugins);
-  const pluginsOptions = readPluginsOptions(context.nxJsonConfiguration);
   let graph = initProjectGraph;
-  for (const plugin of plugins) {
+  for (const { plugin } of plugins) {
     try {
       if (
         isNxPluginV1(plugin) &&
@@ -282,17 +279,14 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
+    ({ plugin }) => isNxPluginV2(plugin) && plugin.createDependencies
   );
   await Promise.all(
-    createDependencyPlugins.map(async (plugin) => {
+    createDependencyPlugins.map(async ({ plugin, options }) => {
       try {
-        const dependencies = await plugin.createDependencies(
-          {
-            ...context,
-          },
-          pluginsOptions[plugin.name] ?? {}
-        );
+        const dependencies = await plugin.createDependencies(options, {
+          ...context,
+        });
 
         for (const dep of dependencies) {
           builder.addDependency(
