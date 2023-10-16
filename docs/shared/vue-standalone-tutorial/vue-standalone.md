@@ -220,7 +220,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can mark all targets of a certain type as cacheable by setting `cache` to `true` in the `targetDefaults` of the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
 
 ## Nx Plugins? Why?
 
@@ -268,8 +268,8 @@ Run the following command to generate a new "hello-world" component. Note how we
 ```{% command="npx nx g @nx/vue:component hello-world --no-export --unit-test-runner=vitest --dry-run" path="myvueapp" %}
 >  NX  Generating @nx/vue:component
 
+CREATE src/components/hello-world/hello-world.spec.ts
 CREATE src/components/hello-world/hello-world.vue
-CREATE src/components/hello-world/__tests__/hello-world.spec.ts
 
 NOTE: The "dryRun" flag means no changes were made.
 ```
@@ -282,7 +282,7 @@ defineProps<{}>();
 </script>
 
 <template>
-  <p>Welcome to HelloWorld!</p>
+  <p>Welcome to AppHelloWorld!</p>
 </template>
 
 <style scoped></style>
@@ -300,13 +300,13 @@ If you're ready and want to ship your application, you can build it using
 vite v4.3.9 building for production...
 ✓ 15 modules transformed.
 dist/myvueapp/index.html                  0.43 kB │ gzip:  0.29 kB
-dist/myvueapp/assets/index-5056d525.css   7.90 kB │ gzip:  1.78 kB
-dist/myvueapp/assets/index-a94ce881.js   62.46 kB │ gzip: 24.36 kB
-✓ built in 534ms
+dist/myvueapp/assets/index-a0201bbf.css   7.90 kB │ gzip:  1.78 kB
+dist/myvueapp/assets/index-46a11b5f.js   62.39 kB │ gzip: 24.35 kB
+✓ built in 502ms
 
- ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project myvueapp (1s)
+ >  NX   Successfully ran target build for project myvueapp (957ms)
 ```
 
 All the required files will be placed in the `dist/myvueapp` folder and can be deployed to your favorite hosting provider.
@@ -380,6 +380,7 @@ Running the above commands should lead to the following directory structure:
    │  │  ├─ .eslintrc.json
    │  │  ├─ README.md
    │  │  ├─ vite.config.ts
+   │  │  ├─ package.json
    │  │  ├─ project.json
    │  │  ├─ src
    │  │  │  ├─ index.ts
@@ -432,8 +433,8 @@ All libraries that we generate automatically have aliases created in the root-le
   "compilerOptions": {
     ...
     "paths": {
-      "products": ["modules/products/src/index.ts"],
       "orders": ["modules/orders/src/index.ts"],
+      "products": ["modules/products/src/index.ts"],
       "shared-ui": ["modules/shared/ui/src/index.ts"]
     },
     ...
@@ -441,7 +442,7 @@ All libraries that we generate automatically have aliases created in the root-le
 }
 ```
 
-Hence we can easily import them into other libraries and our Vue application. For example: let's use our existing `Products` component in `modules/products/src/components/products.vue`:
+Hence we can easily import them into other libraries and our Vue application. For example: let's use our existing `ProductsProducts` component in `modules/products/src/components/products.vue`:
 
 ```vue {% fileName="modules/products/src/components/products.vue" %}
 <script setup lang="ts">
@@ -455,10 +456,10 @@ defineProps<{}>();
 <style scoped></style>
 ```
 
-Make sure the `Products` component is exported via the `index.ts` file of our `products` library (which it should already be). The `modules/products/src/index.ts` file is the public API for the `products` library with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+Make sure the `ProductsProducts` component is exported via the `index.ts` file of our `products` library (which it should already be). The `modules/products/src/index.ts` file is the public API for the `products` library with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts {% fileName="modules/products/src/index.ts" %}
-export { default as Products } from './components/products.vue';
+export { default as ProductsProducts } from './components/products.vue';
 ```
 
 We're ready to import it into our main application now. First, let's set up the Vue Router.
@@ -481,7 +482,7 @@ const routes = [
   { path: '/', component: NxWelcome },
   {
     path: '/products',
-    component: () => import('products').then((m) => m.Products),
+    component: () => import('products').then((m) => m.ProductsProducts),
   },
 ];
 
@@ -519,11 +520,11 @@ import { RouterLink, RouterView } from 'vue-router';
 </template>
 ```
 
-If you now navigate to [http://localhost:4200/products](http://localhost:4200/products) you should see the `Products` component being rendered.
+If you now navigate to [http://localhost:4200/products](http://localhost:4200/products) you should see the `ProductsProducts` component being rendered.
 
-![Browser screenshot of navigating to the products route](/shared/images/tutorial-react-standalone/react-tutorial-products-route.png)
+![Browser screenshot of navigating to the products route](/shared/images/tutorial-vue-standalone/vue-tutorial-products-route.png)
 
-Let's do the same process for our `orders` library. Import the `Orders` component into the `main.ts` routes:
+Let's do the same process for our `orders` library. Import the `OrdersOrders` component into the `main.ts` routes:
 
 ```ts {% fileName="src/app/main.ts" %}
 import './styles.css';
@@ -537,9 +538,12 @@ const routes = [
   { path: '/', component: NxWelcome },
   {
     path: '/products',
-    component: () => import('products').then((m) => m.Products),
+    component: () => import('products').then((m) => m.ProductsProducts),
   },
-  { path: '/orders', component: () => import('orders').then((m) => m.Orders) },
+  {
+    path: '/orders',
+    component: () => import('orders').then((m) => m.OrdersOrders),
+  },
 ];
 
 const router = VueRouter.createRouter({
@@ -579,9 +583,9 @@ import { RouterLink, RouterView } from 'vue-router';
 </template>
 ```
 
-Similarly, navigating to [http://localhost:4200/orders](http://localhost:4200/orders) should now render the `Orders` component.
+Similarly, navigating to [http://localhost:4200/orders](http://localhost:4200/orders) should now render the `OrdersOrders` component.
 
-Note that both the `Products` component and `Orders` component are lazy loaded so the initial bundle size will be smaller.
+Note that both the `ProductsProducts` component and `OrdersOrders` component are lazy loaded so the initial bundle size will be smaller.
 
 ## Visualizing your Project Structure
 
@@ -769,18 +773,18 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `modules/products/src/components/products.vue` file and import the `Orders` component from the `orders` project:
+To test it, go to your `modules/products/src/components/products.vue` file and import the `OrdersOrders` component from the `orders` project:
 
 ```tsx {% fileName="modules/products/src/components/products.vue" %}
 <script setup lang="ts">
 defineProps<{}>();
 
 // 👇 this import is not allowed
-import { Orders } from 'orders';
+import { OrdersOrders } from 'orders';
 </script>
 
 <template>
-  <p>Welcome to Products!</p>
+  <p>Welcome to ProductsProducts!</p>
 </template>
 
 <style scoped></style>
@@ -814,10 +818,6 @@ If you lint your workspace you'll get an error now:
          - nx run products:lint
 
 ```
-
-If you have the ESLint plugin installed in your IDE you should immediately see an error:
-
-![ESLint module boundary error](/shared/images/tutorial-vue-standalone/boundary-rule-violation-vscode.png)
 
 Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
 
