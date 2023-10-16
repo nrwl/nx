@@ -365,6 +365,26 @@ More advanced patterns can be used to exclude files and folders in a single line
 }
 ```
 
+#### Cache
+
+In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
+
+```json {% fileName="project.json" %}
+{
+  "targets": {
+    "test": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% callout type="warning" title="Per Project Caching + DTE" %}
+
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will not be distributable currently.
+
+{% /callout %}
+
 ### dependsOn
 
 Targets can depend on other targets. This is the relevant portion of the configuration file:

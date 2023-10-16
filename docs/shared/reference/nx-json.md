@@ -37,7 +37,8 @@ The following is an expanded example showing all options. Your `nx.json` will li
       "executor": "@nrwl/js:tsc",
       "options": {
         "main": "{projectRoot}/src/index.ts"
-      }
+      },
+      "cache": true
     }
   }
 }
@@ -205,7 +206,8 @@ When defining any options or configurations inside of a target default, you may 
     },
     "build": {
       "inputs": ["prod"],
-      "outputs": ["{workspaceRoot}/{projectRoot}"]
+      "outputs": ["{workspaceRoot}/{projectRoot}"],
+      "cache": true
     }
   }
 }
@@ -213,6 +215,26 @@ When defining any options or configurations inside of a target default, you may 
 
 {% callout type="note" title="Target Default Priority" %}
 Note that the inputs and outputs are respecified on the @nx/js:tsc default configuration. This is **required**, as when reading target defaults Nx will only ever look at one key. If there is a default configuration based on the executor used, it will be read first. If not, Nx will fall back to looking at the configuration based on target name. For instance, running `nx build project` will read the options from `targetDefaults[@nx/js:tsc]` if the target configuration for build uses the @nx/js:tsc executor. It **would not** read any of the configuration from the `build` target default configuration unless the executor does not match.
+{% /callout %}
+
+#### Cache
+
+In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "test": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% callout type="warning" title="Per Project Caching + DTE" %}
+
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will not be distributable currently.
+
 {% /callout %}
 
 ### Generators
