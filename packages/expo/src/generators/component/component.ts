@@ -2,7 +2,6 @@ import * as ts from 'typescript';
 import { Schema } from './schema';
 import {
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -12,9 +11,19 @@ import {
 } from '@nx/devkit';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
-import { join } from 'path';
+import { dirname, join, parse, relative } from 'path';
 
 export async function expoComponentGenerator(host: Tree, schema: Schema) {
+  return expoComponentGeneratorInternal(host, {
+    nameAndDirectoryFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function expoComponentGeneratorInternal(
+  host: Tree,
+  schema: Schema
+) {
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
 
@@ -26,12 +35,7 @@ export async function expoComponentGenerator(host: Tree, schema: Schema) {
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
-  const componentDir = joinPathFragments(
-    options.projectSourceRoot,
-    options.directory
-  );
-
-  generateFiles(host, join(__dirname, './files'), componentDir, {
+  generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
     tmpl: '',
   });
@@ -70,19 +74,23 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
         ts.ScriptTarget.Latest,
         true
       );
+      const relativePathFromIndex = getRelativeImportToFile(
+        indexFilePath,
+        options.filePath
+      );
       const changes = applyChangesToString(
         indexSource,
-        addImport(
-          indexSourceFile,
-          `export * from './${options.directory}/${options.fileName}';`
-        )
+        addImport(indexSourceFile, `export * from '${relativePathFromIndex}';`)
       );
       host.write(indexFilePath, changes);
     }
   }
 }
 
+function getRelativeImportToFile(indexPath: string, filePath: string) {
+  const { name, dir } = parse(filePath);
+  const relativeDirToTarget = relative(dirname(indexPath), dir);
+  return `./${joinPathFragments(relativeDirToTarget, name)}`;
+}
+
 export default expoComponentGenerator;
-export const expoComponentSchematic = convertNxGenerator(
-  expoComponentGenerator
-);

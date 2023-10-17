@@ -2,7 +2,6 @@ import type * as ts from 'typescript';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   joinPathFragments,
@@ -241,5 +240,3 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
 }
 
 export default setupSsrGenerator;
-
-export const setupSsrSchematic = convertNxGenerator(setupSsrGenerator);

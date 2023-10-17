@@ -361,13 +361,6 @@
       "id": "format-write",
       "name": "format:write",
       "path": "/nx-api/nx/documents/format-write"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/workspace-lint",
-      "id": "workspace-lint",
-      "name": "workspace-lint",
-      "path": "/nx-api/nx/documents/workspace-lint"
     }
   ],
   "integrate-with-editors": [
@@ -898,20 +891,6 @@
       "id": "overview-angular",
       "name": "Set up Storybook for Angular Projects",
       "path": "/recipes/storybook/overview-angular"
-    },
-    {
-      "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
-      "file": "shared/recipes/storybook/plugin-vue",
-      "id": "overview-vue",
-      "name": "Set up Storybook for Vue Projects",
-      "path": "/recipes/storybook/overview-vue"
-    },
-    {
-      "description": "This guide explains how to set up Storybook for Nuxt projects in your Nx workspace.",
-      "file": "shared/recipes/storybook/plugin-nuxt",
-      "id": "overview-nuxt",
-      "name": "Set up Storybook for Nuxt Projects",
-      "path": "/recipes/storybook/overview-nuxt"
     },
     {
       "description": "This guide explains how Storybook is configured on your Nx workspace.",

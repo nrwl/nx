@@ -4,7 +4,6 @@
  */
 
 import {
-  convertNxGenerator,
   GeneratorCallback,
   joinPathFragments,
   readProjectConfiguration,
@@ -51,6 +50,3 @@ export async function reactNativeUpgradeNativeGenerator(
 }
 
 export default reactNativeUpgradeNativeGenerator;
-export const reactNativeUpgradeNativeSchematic = convertNxGenerator(
-  reactNativeUpgradeNativeGenerator
-);

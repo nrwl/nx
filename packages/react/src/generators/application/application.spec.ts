@@ -8,7 +8,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
@@ -463,7 +463,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     expect(projectsConfigurations.get('my-app').targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['my-app/**/*.{ts,tsx,js,jsx}'],
@@ -487,7 +487,7 @@ describe('app', () => {
       expect(projectsConfigurations.get('my-app').targets.lint)
         .toMatchInlineSnapshot(`
         {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "options": {
             "lintFilePatterns": [
               "my-app/**/*.{ts,tsx,js,jsx}",
@@ -570,7 +570,7 @@ describe('app', () => {
     const packageJson = readJson(appTree, '/package.json');
 
     expect(packageJson.devDependencies.eslint).toBeDefined();
-    expect(packageJson.devDependencies['@nx/linter']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/eslint']).toBeDefined();
     expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     expect(packageJson.devDependencies['eslint-plugin-react']).toBeDefined();
     expect(

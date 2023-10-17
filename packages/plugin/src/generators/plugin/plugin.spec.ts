@@ -6,7 +6,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from './plugin';
 import { Schema } from './schema';
@@ -68,7 +68,7 @@ describe('NxPlugin Plugin Generator', () => {
       },
     });
     expect(project.targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: expect.arrayContaining([

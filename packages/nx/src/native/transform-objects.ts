@@ -15,7 +15,7 @@ export function transformProjectGraphForRust(
   for (const [projectName, projectNode] of Object.entries(graph.nodes)) {
     const targets: Record<string, Target> = {};
     for (const [targetName, targetConfig] of Object.entries(
-      projectNode.data.targets
+      projectNode.data.targets ?? {}
     )) {
       targets[targetName] = {
         executor: targetConfig.executor,

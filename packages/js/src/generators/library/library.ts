@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -82,7 +81,8 @@ export async function libraryGeneratorInternal(
   }
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage('@nx/vite', nxVersion);
+    const { viteConfigurationGenerator, createOrEditViteConfig } =
+      ensurePackage('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(tree, {
       project: options.name,
       newProject: true,
@@ -93,6 +93,15 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
     });
     tasks.push(viteTask);
+    createOrEditViteConfig(
+      tree,
+      {
+        project: options.name,
+        includeLib: true,
+        includeVitest: options.unitTestRunner === 'vitest',
+      },
+      false
+    );
   }
   if (options.linter !== 'none') {
     const lintCallback = await addLint(tree, options);
@@ -109,7 +118,10 @@ export async function libraryGeneratorInternal(
     options.unitTestRunner === 'vitest' &&
     options.bundler !== 'vite' // Test would have been set up already
   ) {
-    const { vitestGenerator } = ensurePackage('@nx/vite', nxVersion);
+    const { vitestGenerator, createOrEditViteConfig } = ensurePackage(
+      '@nx/vite',
+      nxVersion
+    );
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
@@ -118,6 +130,15 @@ export async function libraryGeneratorInternal(
       testEnvironment: options.testEnvironment,
     });
     tasks.push(vitestTask);
+    createOrEditViteConfig(
+      tree,
+      {
+        project: options.name,
+        includeLib: false,
+        includeVitest: true,
+      },
+      true
+    );
   }
 
   if (!schema.skipTsConfig) {
@@ -239,14 +260,15 @@ export type AddLintOptions = Pick<
   | 'rootProject'
   | 'bundler'
 >;
+
 export async function addLint(
   tree: Tree,
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
-  const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+  const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
   const { mapLintPattern } =
     // nx-ignore-next-line
-    require('@nx/linter/src/generators/lint-project/lint-project');
+    require('@nx/eslint/src/generators/lint-project/lint-project');
   const projectConfiguration = readProjectConfiguration(tree, options.name);
   const task = lintProjectGenerator(tree, {
     project: options.name,
@@ -272,7 +294,7 @@ export async function addLint(
     isEslintConfigSupported,
     updateOverrideInLintConfig,
     // nx-ignore-next-line
-  } = require('@nx/linter/src/generators/utils/eslint-file');
+  } = require('@nx/eslint/src/generators/utils/eslint-file');
 
   // if config is not supported, we don't need to do anything
   if (!isEslintConfigSupported(tree)) {
@@ -583,7 +605,7 @@ async function normalizeOptions(
     options.bundler = 'none';
   }
 
-  const { Linter } = ensurePackage('@nx/linter', nxVersion);
+  const { Linter } = ensurePackage('@nx/eslint', nxVersion);
   if (options.config === 'npm-scripts') {
     options.unitTestRunner = 'none';
     options.linter = Linter.None;
@@ -813,4 +835,3 @@ function determineEntryFields(
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGenerator);

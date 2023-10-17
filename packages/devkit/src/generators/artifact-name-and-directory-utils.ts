@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import type { ProjectConfiguration } from 'nx/src/config/workspace-json-project-json';
 import type { Tree } from 'nx/src/generators/tree';
-import { relative } from 'path';
+import { join, relative } from 'path';
 import { requireNx } from '../../nx';
 import { names } from '../utils/names';
 
@@ -31,6 +31,7 @@ export type ArtifactGenerationOptions = {
   pascalCaseFile?: boolean;
   project?: string;
   suffix?: string;
+  derivedDirectory?: string;
 };
 
 export type NameAndDirectoryOptions = {
@@ -74,6 +75,7 @@ export async function determineArtifactNameAndDirectoryOptions(
     options.nameAndDirectoryFormat ?? (await determineFormat(formats, options));
 
   validateResolvedProject(
+    tree,
     formats[format]?.project,
     options,
     formats[format]?.directory
@@ -173,6 +175,7 @@ function getNameAndDirectoryOptionFormats(
 
   if (!options.project) {
     validateResolvedProject(
+      tree,
       asProvidedOptions.project,
       options,
       asProvidedOptions.directory
@@ -278,14 +281,25 @@ function getDerivedOptions(
         project.projectType === 'application' ? 'app' : 'lib',
         extractedDirectory ?? ''
       );
-  const derivedDirectory = options.flat
-    ? normalizePath(baseDirectory)
-    : joinPathFragments(
-        baseDirectory,
-        options.pascalCaseDirectory
-          ? names(derivedName).className
-          : names(derivedName).fileName
-      );
+  const derivedDirectory =
+    typeof options.derivedDirectory === 'string'
+      ? joinPathFragments(
+          project.sourceRoot ?? project.root,
+          options.derivedDirectory,
+          options.flat
+            ? ''
+            : options.pascalCaseDirectory
+            ? names(derivedName).className
+            : names(derivedName).fileName
+        )
+      : options.flat
+      ? normalizePath(baseDirectory)
+      : joinPathFragments(
+          baseDirectory,
+          options.pascalCaseDirectory
+            ? names(derivedName).className
+            : names(derivedName).fileName
+        );
 
   if (
     options.directory &&
@@ -333,6 +347,7 @@ function getDerivedOptions(
 }
 
 function validateResolvedProject(
+  tree: Tree,
   project: string | undefined,
   options: ArtifactGenerationOptions,
   normalizedDirectory: string
@@ -390,6 +405,13 @@ function isTTY(): boolean {
 
 function getRelativeCwd(): string {
   return normalizePath(relative(workspaceRoot, getCwd()));
+}
+
+/**
+ * Function for setting cwd during testing
+ */
+export function setCwd(path: string): void {
+  process.env.INIT_CWD = join(workspaceRoot, path);
 }
 
 function getCwd(): string {

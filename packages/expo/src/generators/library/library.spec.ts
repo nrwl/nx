@@ -6,7 +6,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 import { expoLibraryGenerator } from './library';
 import { Schema } from './schema';
@@ -40,7 +40,7 @@ describe('lib', () => {
       expect(projectConfiguration.root).toEqual('my-lib');
       expect(projectConfiguration.targets.build).toBeUndefined();
       expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -149,7 +149,7 @@ describe('lib', () => {
         'my-dir-my-lib'
       );
       expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -199,7 +199,7 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchObject({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         options: {
           lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
         },

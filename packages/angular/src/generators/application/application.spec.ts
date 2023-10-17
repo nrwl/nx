@@ -11,7 +11,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import * as enquirer from 'enquirer';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -471,7 +471,7 @@ describe('app', () => {
         expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
           .toMatchInlineSnapshot(`
           {
-            "executor": "@nx/linter:eslint",
+            "executor": "@nx/eslint:lint",
             "options": {
               "lintFilePatterns": [
                 "my-app/**/*.ts",
@@ -486,7 +486,7 @@ describe('app', () => {
         expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
           .toMatchInlineSnapshot(`
           {
-            "executor": "@nx/linter:eslint",
+            "executor": "@nx/eslint:lint",
             "options": {
               "lintFilePatterns": [
                 "my-app-e2e/**/*.{js,ts}",

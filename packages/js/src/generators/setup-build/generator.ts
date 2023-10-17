@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   type GeneratorCallback,
@@ -161,4 +160,3 @@ export async function setupBuildGenerator(
 }
 
 export default setupBuildGenerator;
-export const setupBuildSchematic = convertNxGenerator(setupBuildGenerator);

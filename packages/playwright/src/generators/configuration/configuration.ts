@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -101,6 +100,3 @@ Rename or remove the existing e2e target.`);
 }
 
 export default configurationGenerator;
-export const configurationSchematic = convertNxGenerator(
-  configurationGenerator
-);

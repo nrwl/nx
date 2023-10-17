@@ -6,7 +6,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -42,7 +42,7 @@ describe('lib', () => {
     expect(project.root).toEqual('my-lib');
     expect(project.targets.build).toBeUndefined();
     expect(project.targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx,vue}'],
@@ -214,7 +214,7 @@ describe('lib', () => {
 
       expect(config.root).toEqual('my-dir/my-lib');
       expect(config.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-dir/my-lib/**/*.{ts,tsx,js,jsx,vue}'],
@@ -261,7 +261,7 @@ describe('lib', () => {
       expect(config.targets.test).toBeUndefined();
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "options": {
             "lintFilePatterns": [
               "my-lib/**/*.{ts,tsx,js,jsx,vue}",

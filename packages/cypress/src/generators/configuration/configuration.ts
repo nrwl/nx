@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -15,7 +14,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
@@ -37,6 +36,7 @@ export interface CypressE2EConfigSchema {
   linter?: Linter;
   port?: number | 'cypress-auto';
 }
+
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
 
 export async function configurationGenerator(
@@ -221,4 +221,3 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
 }
 
 export default configurationGenerator;
-export const compat = convertNxGenerator(configurationGenerator);

@@ -664,20 +664,6 @@
                   "file": "shared/recipes/storybook/plugin-angular"
                 },
                 {
-                  "name": "Set up Storybook for Vue Projects",
-                  "id": "overview-vue",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
-                  "file": "shared/recipes/storybook/plugin-vue"
-                },
-                {
-                  "name": "Set up Storybook for Nuxt Projects",
-                  "id": "overview-nuxt",
-                  "tags": ["storybook"],
-                  "description": "This guide explains how to set up Storybook for Nuxt projects in your Nx workspace.",
-                  "file": "shared/recipes/storybook/plugin-nuxt"
-                },
-                {
                   "name": "Configuring Storybook on Nx",
                   "id": "configuring-storybook",
                   "tags": ["storybook"],
@@ -828,6 +814,19 @@
                   "name": "Webpack plugins",
                   "description": "Webpack plugins",
                   "file": "shared/packages/webpack/webpack-plugins"
+                }
+              ]
+            },
+            {
+              "name": "Module Federation",
+              "id": "module-federation",
+              "description": "Advanced guides to utilize Module Federation with Nx.",
+              "itemList": [
+                {
+                  "id": "create-a-host",
+                  "name": "How to create a Module Federation Host Application",
+                  "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+                  "file": "shared/recipes/module-federation/creating-a-host"
                 }
               ]
             },
@@ -1868,12 +1867,6 @@
               "name": "list",
               "id": "list",
               "file": "generated/cli/list"
-            },
-            {
-              "name": "workspace-lint",
-              "id": "workspace-lint",
-              "tags": ["enforce-module-boundaries"],
-              "file": "generated/cli/workspace-lint"
             },
             {
               "name": "connect-to-nx-cloud",

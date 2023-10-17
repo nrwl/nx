@@ -63,7 +63,7 @@ interface NxInstallationConfiguration {
  * **ALPHA**
  */
 interface NxReleaseVersionConfiguration {
-  generator: string;
+  generator?: string;
   generatorOptions?: Record<string, unknown>;
 }
 
@@ -176,12 +176,12 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
    * Plugins for extending the project graph
    */
-  plugins?: string[];
+  plugins?: PluginDefinition[];
 
   /**
    * Configuration for Nx Plugins
    */
-  pluginsConfig?: Record<string, unknown>;
+  pluginsConfig?: Record<string, Record<string, unknown>>;
 
   /**
    * Default project. When project isn't provided, the default project
@@ -233,6 +233,10 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   useDaemonProcess?: boolean;
 }
+
+export type PluginDefinition =
+  | string
+  | { plugin: string; options?: Record<string, unknown> };
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   const nxJson = join(root, 'nx.json');

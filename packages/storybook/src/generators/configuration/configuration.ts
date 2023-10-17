@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   logger,
@@ -29,7 +28,7 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   pleaseUpgrade,
@@ -70,14 +69,14 @@ export async function configurationGenerator(
   if (viteBuildTarget) {
     if (schema.uiFramework === '@storybook/react-webpack5') {
       logger.info(
-        `Your project ${schema.name} uses Vite as a bundler. 
+        `Your project ${schema.name} uses Vite as a bundler.
         Nx will configure Storybook for this project to use Vite as well.`
       );
       schema.uiFramework = '@storybook/react-vite';
     }
     if (schema.uiFramework === '@storybook/web-components-webpack5') {
       logger.info(
-        `Your project ${schema.name} uses Vite as a bundler. 
+        `Your project ${schema.name} uses Vite as a bundler.
         Nx will configure Storybook for this project to use Vite as well.`
       );
       schema.uiFramework = '@storybook/web-components-vite';
@@ -229,6 +228,3 @@ function normalizeSchema(
 }
 
 export default configurationGenerator;
-export const configurationSchematic = convertNxGenerator(
-  configurationGenerator
-);

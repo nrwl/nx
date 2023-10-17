@@ -17,7 +17,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import { angularDevkitVersion, angularVersion } from '../../utils/versions';

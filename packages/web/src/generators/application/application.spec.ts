@@ -435,7 +435,7 @@ describe('app', () => {
       projectNameAndRootFormat: 'as-provided',
     });
     expect(readProjectConfiguration(tree, 'my-app').targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['my-app/**/*.ts'],
@@ -473,7 +473,7 @@ describe('app', () => {
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "options": {
             "lintFilePatterns": [
               "my-app/**/*.ts",

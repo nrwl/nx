@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -23,7 +22,7 @@ import {
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 import { join } from 'path';
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
@@ -199,9 +198,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   await addProject(host, options);
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
+    const { viteConfigurationGenerator, createOrEditViteConfig } =
+      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -221,13 +219,22 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(viteTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: options.unitTestRunner === 'vitest',
+        inSourceTests: options.inSourceTests,
+      },
+      false
+    );
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
-      '@nx/vite',
-      nxVersion
-    );
+    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
@@ -236,6 +243,16 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(vitestTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: true,
+        inSourceTests: options.inSourceTests,
+      },
+      true
+    );
   }
 
   if (
@@ -248,7 +265,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+    const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -398,4 +415,3 @@ async function normalizeOptions(
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   getProjects,
@@ -82,4 +81,3 @@ export async function storiesGenerator(
 }
 
 export default storiesGenerator;
-export const storiesSchematic = convertNxGenerator(storiesGenerator);

@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addLinting } from './add-linting';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { NormalizedSchema } from './normalize-options';
 
 describe('updateEslint', () => {

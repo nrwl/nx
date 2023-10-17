@@ -9,7 +9,7 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
-import { Linter, lintInitGenerator } from '@nx/linter';
+import { Linter, lintInitGenerator } from '@nx/eslint';
 import {
   getRootTsConfigPathInTree,
   initGenerator as jsInitGenerator,

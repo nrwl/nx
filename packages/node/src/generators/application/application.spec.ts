@@ -69,7 +69,7 @@ describe('app', () => {
         })
       );
       expect(project.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-node-app/**/*.ts'],
@@ -193,7 +193,7 @@ describe('app', () => {
       expect(project.root).toEqual('my-dir/my-node-app');
 
       expect(project.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-dir/my-node-app/**/*.ts'],
@@ -283,7 +283,7 @@ describe('app', () => {
       expect(project.targets.test).toBeUndefined();
       expect(project.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "options": {
             "lintFilePatterns": [
               "my-node-app/**/*.ts",

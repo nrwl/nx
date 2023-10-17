@@ -86,9 +86,8 @@ const schemaUrls = {
   '/storybook/executors-storybook': '/packages/storybook/executors/storybook',
   '/storybook/extra-topics-for-angular-projects':
     '/storybook/overview-angular#more-documentation',
-  '/linter/eslint': '/packages/linter/executors/eslint',
-  '/linter/lint': '/packages/linter/executors/lint',
-  '/linter/workspace-rule': '/packages/linter/generators/workspace-rule',
+  '/linter/eslint': '/packages/eslint/executors/lint',
+  '/linter/workspace-rule': '/packages/eslint/generators/workspace-rule',
   '/node/application': '/packages/node/generators/application',
   '/node/library': '/packages/node/generators/library',
   '/node/webpack': '/packages/node/executors/webpack',
@@ -307,7 +306,7 @@ const overviewUrls = {
   '/react/overview': '/packages/react',
   '/jest/overview': '/packages/jest',
   '/cypress/overview': '/packages/cypress',
-  '/linter/overview': '/packages/linter',
+  '/linter/overview': '/packages/eslint',
   '/node/overview': '/packages/node',
   '/express/overview': '/packages/express',
   '/nest/overview': '/packages/nest',
@@ -337,7 +336,6 @@ const cliUrls = {
   '/cli/migrate': '/nx/migrate',
   '/cli/report': '/nx/report',
   '/cli/list': '/nx/list',
-  '/cli/workspace-lint': '/nx/workspace-lint',
   '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
   '/cli/reset': '/nx/reset',
 };
@@ -541,7 +539,7 @@ const packagesIndexes = {
   '/express': '/packages/express',
   '/jest': '/packages/jest',
   '/js': '/packages/js',
-  '/linter': '/packages/linter',
+  '/linter': '/packages/eslint',
   '/nest': '/packages/nest',
   '/next': '/packages/next',
   '/node': '/packages/node',
@@ -576,7 +574,6 @@ const packagesDocuments = {
   '/nx/migrate': '/packages/nx/documents/migrate',
   '/nx/report': '/packages/nx/documents/report',
   '/nx/list': '/packages/nx/documents/list',
-  '/nx/workspace-lint': '/packages/nx/documents/workspace-lint',
   '/nx/workspace-generator': '/packages/nx/documents/workspace-generator',
   '/nx/connect-to-nx-cloud': '/packages/nx/documents/connect-to-nx-cloud',
   '/nx/reset': '/packages/nx/documents/reset',
@@ -647,7 +644,7 @@ const packagesDocuments = {
     '/deprecated/storybook/upgrade-storybook-v6-react',
   '/packages/storybook/documents/migrate-storybook-7':
     '/packages/storybook/generators/migrate-7',
-  '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
+  '/linter/eslint-plugin-nx': '/packages/eslint/documents/eslint-plugin-nx',
   '/packages/add-nx-to-monorepo': '/packages/nx/documents/init',
   '/packages/cra-to-nx': '/packages/nx/documents/init',
   '/packages/make-angular-cli-faster': '/packages/nx/documents/init',
@@ -897,6 +894,14 @@ const aiChat = {
   '/ai': '/ai-chat',
 };
 
+// rename nx/linter to eslint
+// TODO(v17) invert these redirects
+const eslintRename = {
+  '/nx-api/eslint': '/nx-api/linter',
+  '/packages/eslint': '/packages/linter',
+  '/nx-api/eslint/executors/lint': '/nx-api/linter/executors/eslint',
+};
+
 /**
  * Public export API
  */
@@ -923,4 +928,5 @@ module.exports = {
   latestRecipesRefactoring,
   coreFeatureRefactoring,
   aiChat,
+  eslintRename,
 };

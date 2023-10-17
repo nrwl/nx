@@ -2,7 +2,10 @@ import chalk = require('chalk');
 import yargs = require('yargs');
 import { examples } from '../examples';
 
-export function linkToNxDevAndExamples(yargs: yargs.Argv, command: string) {
+export function linkToNxDevAndExamples<T>(
+  yargs: yargs.Argv<T>,
+  command: string
+) {
   (examples[command] || []).forEach((t) => {
     yargs = yargs.example(t.command, t.description);
   });

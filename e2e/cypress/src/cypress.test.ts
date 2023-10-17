@@ -160,6 +160,7 @@ describe('env vars', () => {
     async () => {
       // ensure ports are free before running tests
       await killPort(4200);
+      await killPort(4201);
 
       const ngAppName = uniq('ng-app');
       runCLI(

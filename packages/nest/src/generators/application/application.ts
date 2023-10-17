@@ -1,5 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { convertNxGenerator, formatFiles, runTasksInSerial } from '@nx/devkit';
+import { formatFiles, runTasksInSerial } from '@nx/devkit';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 
 import { initGenerator } from '../init/init';
@@ -46,5 +46,3 @@ export async function applicationGeneratorInternal(
 }
 
 export default applicationGenerator;
-
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

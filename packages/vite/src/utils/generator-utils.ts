@@ -483,7 +483,6 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  rollupOptionsExternalString?: string;
   rollupOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];

@@ -67,7 +67,7 @@ exports[`app generated files content - as-provided should configure tsconfig and
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["my-app/**/*.{ts,tsx,js,jsx,vue}"]

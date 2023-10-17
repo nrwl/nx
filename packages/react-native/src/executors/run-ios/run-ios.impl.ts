@@ -21,7 +21,7 @@ export default async function* runIosExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  if (options.packager && options.mode !== 'Release') {
+  if (options.mode !== 'Release') {
     const startResults = startExecutor(
       {
         port: options.port,

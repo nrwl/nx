@@ -7,7 +7,6 @@ import { JestProjectSchema, NormalizedJestProjectSchema } from './schema';
 import {
   formatFiles,
   Tree,
-  convertNxGenerator,
   GeneratorCallback,
   readProjectConfiguration,
 } from '@nx/devkit';
@@ -75,5 +74,3 @@ export async function configurationGenerator(
 }
 
 export default configurationGenerator;
-
-export const compat = convertNxGenerator(configurationGenerator);

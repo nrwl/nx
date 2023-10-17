@@ -19,10 +19,6 @@ export function convertDirectiveToScam(
     tsModule = ensureTypescript();
   }
 
-  const directiveNames = names(options.name);
-  const typeNames = names('directive');
-  const directiveClassName = `${directiveNames.className}${typeNames.className}`;
-
   if (options.inlineScam) {
     const currentDirectiveContents = tree.read(options.filePath, 'utf-8');
     let source = tsModule.createSourceFile(
@@ -49,7 +45,7 @@ export function convertDirectiveToScam(
 
     let updatedDirectiveSource = source.getText();
     updatedDirectiveSource = `${updatedDirectiveSource}${getNgModuleDeclaration(
-      directiveClassName
+      options.symbolName
     )}`;
 
     tree.write(options.filePath, updatedDirectiveSource);
@@ -58,12 +54,12 @@ export function convertDirectiveToScam(
 
   const scamFilePath = joinPathFragments(
     options.directory,
-    `${directiveNames.fileName}.module.ts`
+    `${options.name}.module.ts`
   );
 
   tree.write(
     scamFilePath,
-    getModuleFileContent(directiveClassName, options.fileName)
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 

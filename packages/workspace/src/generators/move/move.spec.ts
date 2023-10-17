@@ -135,7 +135,7 @@ describe('move', () => {
           },
         },
         lint: {
-          executor: '@nx/linter:eslint',
+          executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
           options: {
             lintFilePatterns: ['my-lib/src/**/*.ts', 'my-lib/package.json'],

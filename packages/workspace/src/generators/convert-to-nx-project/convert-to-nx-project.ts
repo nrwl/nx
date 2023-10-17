@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   readJson,
   Tree,
@@ -101,7 +100,3 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
 }
 
 export default convertToNxProjectGenerator;
-
-export const convertToNxProjectSchematic = convertNxGenerator(
-  convertToNxProjectGenerator
-);

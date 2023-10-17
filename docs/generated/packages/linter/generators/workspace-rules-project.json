@@ -10,7 +10,7 @@
     "type": "object",
     "examples": [
       {
-        "command": "nx g @nx/linter:workspace-rules-project",
+        "command": "nx g @nx/eslint:workspace-rules-project",
         "description": "Create the Workspace Lint Rules Project"
       }
     ],
@@ -27,8 +27,8 @@
   },
   "description": "Create the Workspace Lint Rules Project.",
   "hidden": true,
-  "implementation": "/packages/linter/src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectGenerator.ts",
+  "implementation": "/packages/eslint/src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectGenerator.ts",
   "aliases": [],
-  "path": "/packages/linter/src/generators/workspace-rules-project/schema.json",
+  "path": "/packages/eslint/src/generators/workspace-rules-project/schema.json",
   "type": "generator"
 }

@@ -2,6 +2,7 @@ import { TasksRunner } from './tasks-runner';
 import { getRunner } from './run-command';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { join } from 'path';
+import { nxCloudTasksRunnerShell } from '../nx-cloud/nx-cloud-tasks-runner-shell';
 
 describe('getRunner', () => {
   let nxJson: NxJsonConfiguration;
@@ -84,8 +85,6 @@ describe('getRunner', () => {
   });
 
   it('uses nx-cloud when no tasksRunnerOptions are present and accessToken is specified', () => {
-    jest.mock('nx-cloud', () => mockRunner);
-
     const { tasksRunner, runnerOptions } = getRunner(
       {},
       {
@@ -94,7 +93,7 @@ describe('getRunner', () => {
       }
     );
 
-    expect(tasksRunner).toEqual(mockRunner);
+    expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
     expect(runnerOptions).toMatchInlineSnapshot(`
       {
         "accessToken": "XXXX-XXX-XXXX",

@@ -30,8 +30,8 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [nxCloudEncryptionKey](../../devkit/documents/Workspace#nxcloudencryptionkey): string
 - [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
 - [parallel](../../devkit/documents/Workspace#parallel): number
-- [plugins](../../devkit/documents/Workspace#plugins): string[]
-- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, unknown&gt;
+- [plugins](../../devkit/documents/Workspace#plugins): PluginDefinition[]
+- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, Record&lt;string, unknown&gt;&gt;
 - [projects](../../devkit/documents/Workspace#projects): Record&lt;string, ProjectConfiguration&gt;
 - [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
@@ -254,7 +254,7 @@ Specifies how many tasks can be run in parallel.
 
 ### plugins
 
-• `Optional` **plugins**: `string`[]
+• `Optional` **plugins**: `PluginDefinition`[]
 
 Plugins for extending the project graph
 
@@ -266,7 +266,7 @@ Plugins for extending the project graph
 
 ### pluginsConfig
 
-• `Optional` **pluginsConfig**: `Record`<`string`, `unknown`\>
+• `Optional` **pluginsConfig**: `Record`<`string`, `Record`<`string`, `unknown`\>\>
 
 Configuration for Nx Plugins
 

@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   runTasksInSerial,
@@ -59,5 +58,3 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export default webpackInitGenerator;
-
-export const webpackInitSchematic = convertNxGenerator(webpackInitGenerator);

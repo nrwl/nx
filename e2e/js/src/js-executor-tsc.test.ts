@@ -152,7 +152,7 @@ describe('js:tsc executor', () => {
 
     // check batch build
     rmDist();
-    const batchBuildOutput = runCLI(`build ${parentLib} --skip-nx-cache`, {
+    let batchBuildOutput = runCLI(`build ${parentLib} --skip-nx-cache`, {
       env: { NX_BATCH_MODE: 'true' },
     });
 
@@ -172,6 +172,9 @@ describe('js:tsc executor', () => {
     expect(batchBuildOutput).toContain(
       `Successfully ran target build for project ${parentLib} and 1 task it depends on`
     );
+
+    batchBuildOutput = runCLI(`build ${parentLib} --skip-nx-cache --batch`);
+    expect(batchBuildOutput).toContain(`Running 2 tasks with @nx/js:tsc`);
 
     checkFilesExist(
       // parent

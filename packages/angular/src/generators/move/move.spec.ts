@@ -1,7 +1,7 @@
 import * as devkit from '@nx/devkit';
 import { ProjectGraph, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { generateTestLibrary } from '../utils/testing';

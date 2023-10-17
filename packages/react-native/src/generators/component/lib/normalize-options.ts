@@ -1,16 +1,12 @@
-import {
-  getProjects,
-  joinPathFragments,
-  logger,
-  names,
-  Tree,
-} from '@nx/devkit';
+import { getProjects, logger, names, Tree } from '@nx/devkit';
 import { Schema } from '../schema';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 export interface NormalizedSchema extends Schema {
   projectSourceRoot: string;
   fileName: string;
   className: string;
+  filePath: string;
 }
 
 export async function normalizeOptions(
@@ -19,20 +15,30 @@ export async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   assertValidOptions(options);
 
-  const { className, fileName } = names(options.name);
-  const componentFileName = options.pascalCaseFiles ? className : fileName;
-  const project = getProjects(host).get(options.project);
+  const {
+    artifactName: name,
+    directory,
+    fileName,
+    filePath,
+    project: projectName,
+  } = await determineArtifactNameAndDirectoryOptions(host, {
+    artifactType: 'component',
+    callingGenerator: '@nx/react-native:component',
+    name: options.name,
+    directory: options.directory,
+    derivedDirectory: options.directory,
+    flat: options.flat,
+    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    project: options.project,
+    fileExtension: 'tsx',
+    pascalCaseFile: options.pascalCaseFiles,
+  });
 
-  if (!project) {
-    logger.error(
-      `Cannot find the ${options.project} project. Please double check the project name.`
-    );
-    throw new Error();
-  }
+  const project = getProjects(host).get(projectName);
+
+  const { className } = names(name);
 
   const { sourceRoot: projectSourceRoot, projectType } = project;
-
-  const directory = await getDirectory(host, options);
 
   if (options.export && projectType === 'application') {
     logger.warn(
@@ -46,24 +52,10 @@ export async function normalizeOptions(
     ...options,
     directory,
     className,
-    fileName: componentFileName,
+    fileName,
+    filePath,
     projectSourceRoot,
   };
-}
-
-async function getDirectory(host: Tree, options: Schema) {
-  const fileName = names(options.name).fileName;
-  const workspace = getProjects(host);
-  let baseDir: string;
-  if (options.directory) {
-    baseDir = options.directory;
-  } else {
-    baseDir =
-      workspace.get(options.project).projectType === 'application'
-        ? 'app'
-        : 'lib';
-  }
-  return options.flat ? baseDir : joinPathFragments(baseDir, fileName);
 }
 
 function assertValidOptions(options: Schema) {

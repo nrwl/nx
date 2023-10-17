@@ -3,36 +3,6 @@
   "affected": {
     "defaultBase": "master"
   },
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx-cloud",
-      "options": {
-        "accessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
-        "cacheableOperations": [
-          "build",
-          "lint",
-          "lint-base",
-          "build-ng",
-          "build-base",
-          "build-native",
-          "build-client",
-          "e2e",
-          "e2e-macos",
-          "test",
-          "test-native",
-          "sitemap",
-          "build-storybook",
-          "copy-docs"
-        ],
-        "cacheDirectory": "/tmp/nx-cache",
-        "parallel": 1,
-        "url": "https://staging.nx.app"
-      }
-    }
-  },
-  "workspaceLayout": {
-    "projectNameAndRootFormat": "as-provided"
-  },
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
@@ -86,10 +56,12 @@
         {
           "dependentTasksOutputFiles": "**/*.node"
         }
-      ]
+      ],
+      "cache": true
     },
     "build-native": {
-      "inputs": ["native"]
+      "inputs": ["native"],
+      "cache": true
     },
     "build-base": {
       "dependsOn": ["^build-base", "build-native"],
@@ -100,12 +72,14 @@
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
         "main": "{projectRoot}/index.ts"
       },
-      "outputs": ["{options.outputPath}"]
+      "outputs": ["{options.outputPath}"],
+      "cache": true
     },
     "test-native": {
       "inputs": ["native"],
       "executor": "@monodon/rust:test",
-      "options": {}
+      "options": {},
+      "cache": true
     },
     "test": {
       "dependsOn": ["test-native", "build-native", "^build-native"],
@@ -115,7 +89,8 @@
         "jestConfig": "{projectRoot}/jest.config.ts",
         "passWithNoTests": true
       },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "cache": true
     },
     "lint": {
       "dependsOn": ["build-native", "^build-native"],
@@ -137,7 +112,8 @@
           "{projectRoot}/migrations.json"
         ]
       },
-      "outputs": ["{options.outputFile}"]
+      "outputs": ["{options.outputFile}"],
+      "cache": true
     },
     "e2e": {
       "inputs": [
@@ -164,7 +140,8 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "cache": true
     },
     "e2e-macos": {
       "inputs": [
@@ -188,7 +165,8 @@
         "passWithNoTests": true,
         "runInBand": true
       },
-      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "cache": true
     },
     "e2e-base": {
       "inputs": ["default", "^production"]
@@ -200,8 +178,28 @@
         "{workspaceRoot}/.storybook/**/*",
         "{projectRoot}/.storybook/**/*",
         "{projectRoot}/tsconfig.storybook.json"
-      ]
+      ],
+      "cache": true
+    },
+    "lint-base": {
+      "cache": true
+    },
+    "build-ng": {
+      "cache": true
+    },
+    "build-client": {
+      "cache": true
+    },
+    "sitemap": {
+      "cache": true
+    },
+    "copy-docs": {
+      "cache": true
     }
   },
-  "plugins": ["@monodon/rust"]
+  "plugins": ["@monodon/rust"],
+  "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
+  "nxCloudUrl": "https://staging.nx.app",
+  "parallel": 1,
+  "cacheDirectory": "/tmp/nx-cache"
 }

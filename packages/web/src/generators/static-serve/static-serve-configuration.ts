@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   logger,
   parseTargetString,
   readProjectConfiguration,
@@ -9,6 +8,7 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { Schema as FileServerExecutorSchema } from '../../executors/file-server/schema.d';
+
 interface WebStaticServeSchema {
   buildTarget: string;
   outputPath?: string;
@@ -108,5 +108,4 @@ function addStaticConfig(tree: Tree, opts: NormalizedWebStaticServeSchema) {
   updateProjectConfiguration(tree, opts.projectName, projectConfig);
 }
 
-export const compat = convertNxGenerator(webStaticServeGenerator);
 export default webStaticServeGenerator;

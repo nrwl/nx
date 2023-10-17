@@ -2144,26 +2144,6 @@
             "tags": ["storybook"]
           },
           {
-            "id": "overview-vue",
-            "name": "Set up Storybook for Vue Projects",
-            "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
-            "file": "shared/recipes/storybook/plugin-vue",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/storybook/overview-vue",
-            "tags": ["storybook"]
-          },
-          {
-            "id": "overview-nuxt",
-            "name": "Set up Storybook for Nuxt Projects",
-            "description": "This guide explains how to set up Storybook for Nuxt projects in your Nx workspace.",
-            "file": "shared/recipes/storybook/plugin-nuxt",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/storybook/overview-nuxt",
-            "tags": ["storybook"]
-          },
-          {
             "id": "configuring-storybook",
             "name": "Configuring Storybook on Nx",
             "description": "This guide explains how Storybook is configured on your Nx workspace.",
@@ -2401,6 +2381,27 @@
         ],
         "isExternal": false,
         "path": "/recipes/webpack",
+        "tags": []
+      },
+      {
+        "id": "module-federation",
+        "name": "Module Federation",
+        "description": "Advanced guides to utilize Module Federation with Nx.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "create-a-host",
+            "name": "How to create a Module Federation Host Application",
+            "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+            "file": "shared/recipes/module-federation/creating-a-host",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/create-a-host",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/module-federation",
         "tags": []
       },
       {
@@ -3647,26 +3648,6 @@
         "tags": ["storybook"]
       },
       {
-        "id": "overview-vue",
-        "name": "Set up Storybook for Vue Projects",
-        "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
-        "file": "shared/recipes/storybook/plugin-vue",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/storybook/overview-vue",
-        "tags": ["storybook"]
-      },
-      {
-        "id": "overview-nuxt",
-        "name": "Set up Storybook for Nuxt Projects",
-        "description": "This guide explains how to set up Storybook for Nuxt projects in your Nx workspace.",
-        "file": "shared/recipes/storybook/plugin-nuxt",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/storybook/overview-nuxt",
-        "tags": ["storybook"]
-      },
-      {
         "id": "configuring-storybook",
         "name": "Configuring Storybook on Nx",
         "description": "This guide explains how Storybook is configured on your Nx workspace.",
@@ -3779,26 +3760,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/storybook/overview-angular",
-    "tags": ["storybook"]
-  },
-  "/recipes/storybook/overview-vue": {
-    "id": "overview-vue",
-    "name": "Set up Storybook for Vue Projects",
-    "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
-    "file": "shared/recipes/storybook/plugin-vue",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/storybook/overview-vue",
-    "tags": ["storybook"]
-  },
-  "/recipes/storybook/overview-nuxt": {
-    "id": "overview-nuxt",
-    "name": "Set up Storybook for Nuxt Projects",
-    "description": "This guide explains how to set up Storybook for Nuxt projects in your Nx workspace.",
-    "file": "shared/recipes/storybook/plugin-nuxt",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/storybook/overview-nuxt",
     "tags": ["storybook"]
   },
   "/recipes/storybook/configuring-storybook": {
@@ -4124,6 +4085,37 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/webpack/webpack-plugins",
+    "tags": []
+  },
+  "/recipes/module-federation": {
+    "id": "module-federation",
+    "name": "Module Federation",
+    "description": "Advanced guides to utilize Module Federation with Nx.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "create-a-host",
+        "name": "How to create a Module Federation Host Application",
+        "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+        "file": "shared/recipes/module-federation/creating-a-host",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/create-a-host",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/module-federation",
+    "tags": []
+  },
+  "/recipes/module-federation/create-a-host": {
+    "id": "create-a-host",
+    "name": "How to create a Module Federation Host Application",
+    "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+    "file": "shared/recipes/module-federation/creating-a-host",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/create-a-host",
     "tags": []
   },
   "/recipes/enforce-module-boundaries": {

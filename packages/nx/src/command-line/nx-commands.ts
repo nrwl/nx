@@ -35,7 +35,6 @@ import { yargsRunCommand } from './run/command-object';
 import { yargsRunManyCommand } from './run-many/command-object';
 import { yargsShowCommand } from './show/command-object';
 import { yargsWatchCommand } from './watch/command-object';
-import { yargsWorkspaceLintCommand } from './workspace-lint/command-object';
 import { yargsResetCommand } from './reset/command-object';
 import { yargsReleaseCommand } from './release/command-object';
 
@@ -85,7 +84,6 @@ export const commandsObject = yargs
   .command(yargsShowCommand)
   .command(yargsViewLogsCommand)
   .command(yargsWatchCommand)
-  .command(yargsWorkspaceLintCommand)
   .scriptName('nx')
   .help()
   // NOTE: we handle --version in nx.ts, this just tells yargs that the option exists
