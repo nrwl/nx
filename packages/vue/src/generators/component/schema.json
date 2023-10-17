@@ -22,7 +22,8 @@
       "alias": "p",
       "$default": {
         "$source": "projectName"
-      }
+      },
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
     },
     "name": {
       "type": "string",
@@ -52,7 +53,7 @@
     },
     "directory": {
       "type": "string",
-      "description": "Create the component under this directory (can be nested).",
+      "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
       "alias": "dir",
       "x-priority": "important"
     },
@@ -73,13 +74,15 @@
       "type": "boolean",
       "description": "Use pascal case component file name (e.g. `App.tsx`).",
       "alias": "P",
-      "default": false
+      "default": false,
+      "x-deprecated": "Provide the desired `name` option instead and use the `as-provided` format. It will be removed in Nx v18."
     },
     "pascalCaseDirectory": {
       "type": "boolean",
       "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
       "alias": "R",
-      "default": false
+      "default": false,
+      "x-deprecated": "Provide the desired `directory` option instead and use the `as-provided` format. It will be removed in Nx v18."
     },
     "routing": {
       "type": "boolean",

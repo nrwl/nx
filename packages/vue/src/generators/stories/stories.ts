@@ -38,6 +38,7 @@ export async function createAllStories(
   const pathsToCheck = [
     joinPathFragments(sourceRoot, 'app'), // Default component folder for apps
     joinPathFragments(sourceRoot, 'lib'), // Default component folder for libs
+    joinPathFragments(sourceRoot, 'components'), // Additional component folder used by Nuxt
   ];
 
   for (const p of pathsToCheck) {

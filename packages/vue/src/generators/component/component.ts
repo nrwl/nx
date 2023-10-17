@@ -1,14 +1,7 @@
-import {
-  formatFiles,
-  generateFiles,
-  GeneratorCallback,
-  runTasksInSerial,
-  toJS,
-  Tree,
-} from '@nx/devkit';
-import { NormalizedSchema, Schema } from './schema';
+import { formatFiles, generateFiles, toJS, Tree } from '@nx/devkit';
 import { join } from 'path';
 import { addExportsToBarrel, normalizeOptions } from './lib/utils';
+import { NormalizedSchema, Schema } from './schema';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
   return componentGeneratorInternal(host, {
@@ -21,16 +14,11 @@ export async function componentGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   createComponentFiles(host, options);
-
-  const tasks: GeneratorCallback[] = [];
-
   addExportsToBarrel(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
-
-  return runTasksInSerial(...tasks);
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
