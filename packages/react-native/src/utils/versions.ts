@@ -1,15 +1,15 @@
 export const nxVersion = require('../../package.json').version;
 
-export const reactNativeVersion = '0.72.4';
+export const reactNativeVersion = '0.72.6';
 
 export const typesNodeVersion = '18.14.4';
 
-export const metroVersion = '0.76.7';
+export const metroVersion = '0.76.8';
 export const reactNativeMetroConfigVersion = '^0.72.11';
 
-export const reactNativeCommunityCli = '11.3.6';
-export const reactNativeCommunityCliIos = '11.3.6';
-export const reactNativeCommunityCliAndroid = '11.3.6';
+export const reactNativeCommunityCli = '11.3.7';
+export const reactNativeCommunityCliIos = '11.3.7';
+export const reactNativeCommunityCliAndroid = '11.3.7';
 
 export const reactVersion = '18.2.0';
 export const reactDomVersion = '18.2.0';
