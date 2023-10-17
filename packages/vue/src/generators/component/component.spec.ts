@@ -162,9 +162,7 @@ describe('component', () => {
         export: true,
       });
 
-      expect(
-        appTree.read(`${appName}/src/index.ts`, 'utf-8')
-      ).toMatchInlineSnapshot(`null`);
+      expect(appTree.exists(`${appName}/src/index.ts`)).toBe(false);
     });
   });
 
