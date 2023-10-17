@@ -276,13 +276,13 @@ NOTE: The "dryRun" flag means no changes were made.
 
 As you can see it generates a new component in the `app/hello-world/` folder. If you want to actually run the generator, remove the `--dry-run` flag.
 
-```ts {% fileName="src/app/hello-world/hello-world.vue" %}
+```ts {% fileName="src/components/hello-world/hello-world.vue" %}
 <script setup lang="ts">
 defineProps<{}>();
 </script>
 
 <template>
-  <p>Welcome to AppHelloWorld!</p>
+  <p>Welcome to HelloWorld!</p>
 </template>
 
 <style scoped></style>
@@ -442,7 +442,7 @@ All libraries that we generate automatically have aliases created in the root-le
 }
 ```
 
-Hence we can easily import them into other libraries and our Vue application. For example: let's use our existing `ProductsProducts` component in `modules/products/src/components/products.vue`:
+Hence we can easily import them into other libraries and our Vue application. For example: let's use our existing `Products` component in `modules/products/src/components/products.vue`:
 
 ```vue {% fileName="modules/products/src/components/products.vue" %}
 <script setup lang="ts">
@@ -456,10 +456,10 @@ defineProps<{}>();
 <style scoped></style>
 ```
 
-Make sure the `ProductsProducts` component is exported via the `index.ts` file of our `products` library (which it should already be). The `modules/products/src/index.ts` file is the public API for the `products` library with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
+Make sure the `Products` component is exported via the `index.ts` file of our `products` library (which it should already be). The `modules/products/src/index.ts` file is the public API for the `products` library with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts {% fileName="modules/products/src/index.ts" %}
-export { default as ProductsProducts } from './components/products.vue';
+export { default as Products } from './components/products.vue';
 ```
 
 We're ready to import it into our main application now. First, let's set up the Vue Router.
@@ -482,7 +482,7 @@ const routes = [
   { path: '/', component: NxWelcome },
   {
     path: '/products',
-    component: () => import('products').then((m) => m.ProductsProducts),
+    component: () => import('products').then((m) => m.Products),
   },
 ];
 
@@ -499,7 +499,7 @@ app.mount('#root');
 
 Then we can set up navigation links and the `RouterView` in the main `App` component.
 
-```vue {% fileName="src/App.vue" %}
+```vue {% fileName="src/app/App.vue" %}
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router';
 </script>
@@ -520,13 +520,13 @@ import { RouterLink, RouterView } from 'vue-router';
 </template>
 ```
 
-If you now navigate to [http://localhost:4200/products](http://localhost:4200/products) you should see the `ProductsProducts` component being rendered.
+If you now navigate to [http://localhost:4200/products](http://localhost:4200/products) you should see the `Products` component being rendered.
 
 ![Browser screenshot of navigating to the products route](/shared/images/tutorial-vue-standalone/vue-tutorial-products-route.png)
 
-Let's do the same process for our `orders` library. Import the `OrdersOrders` component into the `main.ts` routes:
+Let's do the same process for our `orders` library. Import the `Orders` component into the `main.ts` routes:
 
-```ts {% fileName="src/app/main.ts" %}
+```ts {% fileName="src/main.ts" %}
 import './styles.css';
 
 import { createApp } from 'vue';
@@ -538,11 +538,11 @@ const routes = [
   { path: '/', component: NxWelcome },
   {
     path: '/products',
-    component: () => import('products').then((m) => m.ProductsProducts),
+    component: () => import('products').then((m) => m.Products),
   },
   {
     path: '/orders',
-    component: () => import('orders').then((m) => m.OrdersOrders),
+    component: () => import('orders').then((m) => m.Orders),
   },
 ];
 
@@ -559,7 +559,7 @@ app.mount('#root');
 
 And update the navigation links:
 
-```vue {% fileName="src/App.vue" %}
+```vue {% fileName="src/app/App.vue" %}
 <script setup lang="ts">
 import { RouterLink, RouterView } from 'vue-router';
 </script>
@@ -583,9 +583,9 @@ import { RouterLink, RouterView } from 'vue-router';
 </template>
 ```
 
-Similarly, navigating to [http://localhost:4200/orders](http://localhost:4200/orders) should now render the `OrdersOrders` component.
+Similarly, navigating to [http://localhost:4200/orders](http://localhost:4200/orders) should now render the `Orders` component.
 
-Note that both the `ProductsProducts` component and `OrdersOrders` component are lazy loaded so the initial bundle size will be smaller.
+Note that both the `Products` component and `Orders` component are lazy loaded so the initial bundle size will be smaller.
 
 ## Visualizing your Project Structure
 
@@ -645,8 +645,8 @@ You should be able to see something similar to the following in your browser (hi
   ],
   "dependencies": {
     "myvueapp": [
-      { "source": "myvueapp", "target": "orders", "type": "dynamic" },
-      { "source": "myvueapp", "target": "products", "type": "dynamic" }
+      { "source": "myvueapp", "target": "orders" },
+      { "source": "myvueapp", "target": "products" }
     ],
     "e2e": [{ "source": "e2e", "target": "myvueapp", "type": "implicit" }],
     "shared-ui": [],
@@ -773,18 +773,18 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `modules/products/src/components/products.vue` file and import the `OrdersOrders` component from the `orders` project:
+To test it, go to your `modules/products/src/components/products.vue` file and import the `Orders` component from the `orders` project:
 
 ```tsx {% fileName="modules/products/src/components/products.vue" %}
 <script setup lang="ts">
 defineProps<{}>();
 
 // 👇 this import is not allowed
-import { OrdersOrders } from 'orders';
+import { Orders } from 'orders';
 </script>
 
 <template>
-  <p>Welcome to ProductsProducts!</p>
+  <p>Welcome to Products!</p>
 </template>
 
 <style scoped></style>
@@ -793,26 +793,31 @@ import { OrdersOrders } from 'orders';
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
+ >  NX   Running target lint for 5 projects
     ✖  nx run products:lint
        Linting "products"...
 
        /Users/isaac/Documents/code/nx-recipes/vue-standalone/modules/products/src/components/products.vue
-         5:1  error  A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+         5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
+         5:10  warning  'Orders' is defined but never used                                                                           @typescript-eslint/no-unused-vars
 
-       ✖ 1 problem (1 error, 0 warnings)
+       ✖ 2 problems (1 error, 1 warning)
+
+       Lint warnings found in the listed files.
 
        Lint errors found in the listed files.
 
-    ✔  nx run orders:lint (1s)
-    ✔  nx run myvueapp:lint (1s)
-    ✔  nx run e2e:lint (682ms)
-    ✔  nx run shared-ui:lint (797ms)
 
- —————————————————————————————————————————————————————————————————————
+    ✔  nx run orders:lint (913ms)
+    ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
+    ✔  nx run myvueapp:lint (870ms)
+    ✔  nx run shared-ui:lint (688ms)
+
+ ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
  >  NX   Ran target lint for 5 projects (2s)
 
-    ✔    4/5 succeeded [0 read from cache]
+    ✔    4/5 succeeded [1 read from cache]
 
     ✖    1/5 targets failed, including the following:
          - nx run products:lint
