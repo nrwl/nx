@@ -146,15 +146,6 @@
         "type": "generator"
       },
       {
-        "description": "Creates a stories.ts file for a component.",
-        "file": "generated/packages/angular/generators/component-story.json",
-        "hidden": true,
-        "name": "component-story",
-        "originalFilePath": "/packages/angular/src/generators/component-story/schema.json",
-        "path": "angular/generators/component-story",
-        "type": "generator"
-      },
-      {
         "description": "Creates a cypress component test file for a component.",
         "file": "generated/packages/angular/generators/component-test.json",
         "hidden": false,
@@ -2028,15 +2019,6 @@
         "type": "generator"
       },
       {
-        "description": "Generate storybook story for a React component",
-        "file": "generated/packages/react/generators/component-story.json",
-        "hidden": false,
-        "name": "component-story",
-        "originalFilePath": "/packages/react/src/generators/component-story/schema.json",
-        "path": "react/generators/component-story",
-        "type": "generator"
-      },
-      {
         "description": "Create stories/specs for all components declared in an app or library.",
         "file": "generated/packages/react/generators/stories.json",
         "hidden": false,
@@ -2284,15 +2266,6 @@
         "name": "storybook-configuration",
         "originalFilePath": "/packages/react-native/src/generators/storybook-configuration/schema.json",
         "path": "react-native/generators/storybook-configuration",
-        "type": "generator"
-      },
-      {
-        "description": "Generate Storybook story for a React-native component.",
-        "file": "generated/packages/react-native/generators/component-story.json",
-        "hidden": false,
-        "name": "component-story",
-        "originalFilePath": "/packages/react-native/src/generators/component-story/schema.json",
-        "path": "react-native/generators/component-story",
         "type": "generator"
       },
       {

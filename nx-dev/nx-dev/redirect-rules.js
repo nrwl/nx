@@ -66,6 +66,8 @@ const schemaUrls = {
   '/react/component-cypress-spec':
     '/packages/react/generators/component-cypress-spec',
   '/react/component-story': '/packages/react/generators/component-story',
+  '/packages/react/generators/component-story':
+    '/packages/react/generators/stories',
   '/react/library': '/packages/react/generators/library',
   '/react/redux': '/packages/react/generators/redux',
   '/react/stories': '/packages/react/generators/stories',
@@ -124,6 +126,8 @@ const schemaUrls = {
   '/react-native/library': '/packages/react-native/generators/library',
   '/react-native/component-story':
     '/packages/react-native/generators/component-story',
+  '/packages/react-native/generators/component-story':
+    '/packages/react-native/generators/stories',
   '/react-native/stories': '/packages/react-native/generators/stories',
   '/react-native/storybook-configuration':
     '/packages/react-native/generators/storybook-configuration',

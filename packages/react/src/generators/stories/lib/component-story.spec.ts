@@ -1,8 +1,8 @@
 import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import libraryGenerator from '../library/library';
-import componentStoryGenerator from './component-story';
+import libraryGenerator from '../../library/library';
 import { Linter } from '@nx/eslint';
+import { createComponentStory } from './component-story';
 
 describe('react:component-story', () => {
   let appTree: Tree;
@@ -24,7 +24,7 @@ describe('react:component-story', () => {
 
       it('should fail with a descriptive error message', async () => {
         try {
-          await componentStoryGenerator(appTree, {
+          await createComponentStory(appTree, {
             componentPath: 'lib/test-ui-lib.tsx',
             project: 'test-ui-lib',
             interactionTests: true,
@@ -39,7 +39,7 @@ describe('react:component-story', () => {
 
     describe('default component setup', () => {
       beforeEach(async () => {
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-lib.tsx',
           project: 'test-ui-lib',
         });
@@ -77,7 +77,7 @@ describe('react:component-story', () => {
           `
         );
 
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-libplain.jsx',
           project: 'test-ui-lib',
         });
@@ -112,7 +112,7 @@ describe('react:component-story', () => {
           `
         );
 
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-lib.tsx',
           project: 'test-ui-lib',
         });
@@ -148,7 +148,7 @@ describe('react:component-story', () => {
           `
         );
 
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-lib.tsx',
           project: 'test-ui-lib',
         });
@@ -189,7 +189,7 @@ describe('react:component-story', () => {
           `
         );
 
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-lib.tsx',
           project: 'test-ui-lib',
         });
@@ -332,7 +332,7 @@ describe('react:component-story', () => {
             `
               );
 
-              await componentStoryGenerator(appTree, {
+              await createComponentStory(appTree, {
                 componentPath: 'lib/test-ui-lib.tsx',
                 project: 'test-ui-lib',
               });
@@ -447,7 +447,7 @@ describe('react:component-story', () => {
               `
               );
 
-              await componentStoryGenerator(appTree, {
+              await createComponentStory(appTree, {
                 componentPath: 'lib/test-ui-lib.tsx',
                 project: 'test-ui-lib',
               });
@@ -488,7 +488,7 @@ describe('react:component-story', () => {
             `
           );
 
-          await componentStoryGenerator(appTree, {
+          await createComponentStory(appTree, {
             componentPath: 'lib/test-ui-lib.tsx',
             project: 'test-ui-lib',
           });
@@ -510,7 +510,7 @@ describe('react:component-story', () => {
   describe('using eslint - not using interaction tests', () => {
     beforeEach(async () => {
       appTree = await createTestUILib('test-ui-lib');
-      await componentStoryGenerator(appTree, {
+      await createComponentStory(appTree, {
         componentPath: 'lib/test-ui-lib.tsx',
         project: 'test-ui-lib',
         interactionTests: false,

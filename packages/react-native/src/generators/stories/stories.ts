@@ -6,7 +6,6 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { join } from 'path';
-import componentStoryGenerator from '../component-story/component-story';
 import { StorybookStoriesSchema } from './schema';
 import {
   containsComponentDeclaration,
@@ -14,6 +13,7 @@ import {
 } from '@nx/react/src/generators/stories/stories';
 import minimatch = require('minimatch');
 import { nxVersion } from '../../utils/versions';
+import { createComponentStory } from './lib/component-story';
 
 export async function createAllStories(
   tree: Tree,
@@ -60,7 +60,7 @@ export async function createAllStories(
         return;
       }
 
-      await componentStoryGenerator(tree, {
+      await createComponentStory(tree, {
         componentPath: relativeCmpDir,
         project: projectName,
         skipFormat: true,

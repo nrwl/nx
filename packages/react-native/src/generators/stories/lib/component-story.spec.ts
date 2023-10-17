@@ -1,12 +1,10 @@
 import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import componentStoryGenerator from './component-story';
 import { Linter } from '@nx/eslint';
-
-import { formatFile } from '../../utils/format-file';
-import libraryGenerator from '../library/library';
-import componentGenerator from '../component/component';
-
+import { formatFile } from '../../../utils/format-file';
+import libraryGenerator from '../../library/library';
+import componentGenerator from '../../component/component';
+import { createComponentStory } from './component-story';
 describe('react-native:component-story', () => {
   let appTree: Tree;
   let cmpPath = 'test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx';
@@ -27,7 +25,7 @@ describe('react-native:component-story', () => {
 
       it('should fail with a descriptive error message', async () => {
         try {
-          await componentStoryGenerator(appTree, {
+          await createComponentStory(appTree, {
             componentPath: 'lib/test-ui-lib/test-ui-lib.tsx',
             project: 'test-ui-lib',
           });
@@ -41,7 +39,7 @@ describe('react-native:component-story', () => {
 
     describe('default component setup', () => {
       beforeEach(async () => {
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-lib/test-ui-lib.tsx',
           project: 'test-ui-lib',
         });
@@ -90,7 +88,7 @@ describe('react-native:component-story', () => {
           `
         );
 
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-libplain.jsx',
           project: 'test-ui-lib',
         });
@@ -129,7 +127,7 @@ describe('react-native:component-story', () => {
           export default Test;
           `
         );
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-lib/test-ui-lib.tsx',
           project: 'test-ui-lib',
         });
@@ -149,7 +147,7 @@ describe('react-native:component-story', () => {
 
     describe('component with props', () => {
       beforeEach(async () => {
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-lib/test-ui-lib.tsx',
           project: 'test-ui-lib',
         });
@@ -199,7 +197,7 @@ describe('react-native:component-story', () => {
           `
         );
 
-        await componentStoryGenerator(appTree, {
+        await createComponentStory(appTree, {
           componentPath: 'lib/test-ui-lib/test-ui-lib.tsx',
           project: 'test-ui-lib',
         });
@@ -347,7 +345,7 @@ describe('react-native:component-story', () => {
             `
           );
 
-          await componentStoryGenerator(appTree, {
+          await createComponentStory(appTree, {
             componentPath: 'lib/test-ui-lib/test-ui-lib.tsx',
             project: 'test-ui-lib',
           });
@@ -376,7 +374,7 @@ describe('react-native:component-story', () => {
         project: 'test-ui-lib',
         export: true,
       });
-      await componentStoryGenerator(appTree, {
+      await createComponentStory(appTree, {
         componentPath: 'lib/test-ui-lib/test-ui-lib.tsx',
         project: 'test-ui-lib',
       });

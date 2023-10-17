@@ -19,10 +19,6 @@ const pages: Array<{ title: string; path: string }> = [
     title: '@nx/angular:component-cypress-spec',
     path: '/packages/angular/generators/component-cypress-spec',
   },
-  {
-    title: '@nx/angular:component-story',
-    path: '/packages/angular/generators/component-story',
-  },
   { title: '@nx/angular:init', path: '/packages/angular/generators/init' },
   {
     title: '@nx/angular:library',
@@ -296,10 +292,6 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/packages/react/generators/storybook-configuration',
   },
   {
-    title: '@nx/react:component-story',
-    path: '/packages/react/generators/component-story',
-  },
-  {
     title: '@nx/react:stories',
     path: '/packages/react/generators/stories',
   },
@@ -334,10 +326,6 @@ const pages: Array<{ title: string; path: string }> = [
   {
     title: '@nx/',
     path: '/packages/react-native/generators/storybook-configuration',
-  },
-  {
-    title: '@nx/react-native:component-story',
-    path: '/packages/react-native/generators/component-story',
   },
   {
     title: '@nx/react-native:stories',

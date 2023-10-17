@@ -150,15 +150,6 @@
         "path": "/nx-api/angular/generators/component-cypress-spec",
         "type": "generator"
       },
-      "/nx-api/angular/generators/component-story": {
-        "description": "Creates a stories.ts file for a component.",
-        "file": "generated/packages/angular/generators/component-story.json",
-        "hidden": true,
-        "name": "component-story",
-        "originalFilePath": "/packages/angular/src/generators/component-story/schema.json",
-        "path": "/nx-api/angular/generators/component-story",
-        "type": "generator"
-      },
       "/nx-api/angular/generators/component-test": {
         "description": "Creates a cypress component test file for a component.",
         "file": "generated/packages/angular/generators/component-test.json",
@@ -2051,15 +2042,6 @@
         "path": "/nx-api/react/generators/storybook-configuration",
         "type": "generator"
       },
-      "/nx-api/react/generators/component-story": {
-        "description": "Generate storybook story for a React component",
-        "file": "generated/packages/react/generators/component-story.json",
-        "hidden": false,
-        "name": "component-story",
-        "originalFilePath": "/packages/react/src/generators/component-story/schema.json",
-        "path": "/nx-api/react/generators/component-story",
-        "type": "generator"
-      },
       "/nx-api/react/generators/stories": {
         "description": "Create stories/specs for all components declared in an app or library.",
         "file": "generated/packages/react/generators/stories.json",
@@ -2309,15 +2291,6 @@
         "name": "storybook-configuration",
         "originalFilePath": "/packages/react-native/src/generators/storybook-configuration/schema.json",
         "path": "/nx-api/react-native/generators/storybook-configuration",
-        "type": "generator"
-      },
-      "/nx-api/react-native/generators/component-story": {
-        "description": "Generate Storybook story for a React-native component.",
-        "file": "generated/packages/react-native/generators/component-story.json",
-        "hidden": false,
-        "name": "component-story",
-        "originalFilePath": "/packages/react-native/src/generators/component-story/schema.json",
-        "path": "/nx-api/react-native/generators/component-story",
         "type": "generator"
       },
       "/nx-api/react-native/generators/stories": {

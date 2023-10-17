@@ -28,12 +28,6 @@
       "description": "Creates a Cypress spec for a UI component that has a story.",
       "hidden": true
     },
-    "component-story": {
-      "factory": "./src/generators/component-story/component-story",
-      "schema": "./src/generators/component-story/schema.json",
-      "description": "Creates a stories.ts file for a component.",
-      "hidden": true
-    },
     "component-test": {
       "factory": "./src/generators/component-test/component-test",
       "schema": "./src/generators/component-test/schema.json",

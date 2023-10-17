@@ -1,4 +1,3 @@
-import componentStoryGenerator from '../component-story/component-story';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
 import {
   findExportDeclarationsForJsx,
@@ -21,6 +20,7 @@ import { basename, join } from 'path';
 import minimatch = require('minimatch');
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { nxVersion } from '../../utils/versions';
+import { createComponentStory } from './lib/component-story';
 
 let tsModule: typeof import('typescript');
 
@@ -145,7 +145,7 @@ export async function createAllStories(
         return;
       }
 
-      await componentStoryGenerator(tree, {
+      await createComponentStory(tree, {
         componentPath: relativeCmpDir,
         project: projectName,
         skipFormat: true,

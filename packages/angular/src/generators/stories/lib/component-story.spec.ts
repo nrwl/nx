@@ -1,10 +1,10 @@
 import type { Tree } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { componentGenerator } from '../component/component';
-import * as storybookUtils from '../utils/storybook-ast/storybook-inputs';
-import { generateTestLibrary } from '../utils/testing';
-import { componentStoryGenerator } from './component-story';
+import { componentGenerator } from '../../component/component';
+import * as storybookUtils from '../../utils/storybook-ast/storybook-inputs';
+import { generateTestLibrary } from '../../utils/testing';
+import { createComponentStory } from './component-story';
 
 describe('componentStory generator', () => {
   let tree: Tree;
@@ -48,7 +48,7 @@ describe('componentStory generator', () => {
     jest.spyOn(devkit, 'generateFiles');
     tree.write(storyFile, '');
 
-    await componentStoryGenerator(tree, {
+    await createComponentStory(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `src/lib/test-button`,
@@ -61,7 +61,7 @@ describe('componentStory generator', () => {
   });
 
   it('should generate the component stories file', async () => {
-    await componentStoryGenerator(tree, {
+    await createComponentStory(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `src/lib/test-button`,
@@ -72,7 +72,7 @@ describe('componentStory generator', () => {
   });
 
   it('should generate the right props', async () => {
-    await componentStoryGenerator(tree, {
+    await createComponentStory(tree, {
       componentFileName: 'test-button.component',
       componentName: 'TestButtonComponent',
       componentPath: `src/lib/test-button`,

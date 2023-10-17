@@ -6050,14 +6050,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "component-story",
-                "path": "/nx-api/angular/generators/component-story",
-                "name": "component-story",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "component-test",
                 "path": "/nx-api/angular/generators/component-test",
                 "name": "component-test",
@@ -7982,14 +7974,6 @@
                 "disableCollapsible": false
               },
               {
-                "id": "component-story",
-                "path": "/nx-api/react/generators/component-story",
-                "name": "component-story",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
                 "id": "stories",
                 "path": "/nx-api/react/generators/stories",
                 "name": "stories",
@@ -8229,14 +8213,6 @@
                 "id": "storybook-configuration",
                 "path": "/nx-api/react-native/generators/storybook-configuration",
                 "name": "storybook-configuration",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "component-story",
-                "path": "/nx-api/react-native/generators/component-story",
-                "name": "component-story",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

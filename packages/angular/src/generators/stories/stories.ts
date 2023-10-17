@@ -10,7 +10,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import componentCypressSpecGenerator from '../component-cypress-spec/component-cypress-spec';
-import componentStoryGenerator from '../component-story/component-story';
+import { createComponentStory } from './lib/component-story';
 import type { ComponentInfo } from '../utils/storybook-ast/component-info';
 import {
   getComponentsInfo,
@@ -65,7 +65,7 @@ export async function angularStoriesGenerator(
       continue;
     }
 
-    await componentStoryGenerator(tree, {
+    await createComponentStory(tree, {
       projectPath: info.moduleFolderPath,
       componentName: info.name,
       componentPath: info.path,

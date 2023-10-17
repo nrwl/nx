@@ -35,12 +35,6 @@
       "description": "Set up Storybook for a React-native application or library.",
       "hidden": false
     },
-    "component-story": {
-      "factory": "./src/generators/component-story/component-story#componentStoryGenerator",
-      "schema": "./src/generators/component-story/schema.json",
-      "description": "Generate Storybook story for a React-native component.",
-      "hidden": false
-    },
     "stories": {
       "factory": "./src/generators/stories/stories#storiesGenerator",
       "schema": "./src/generators/stories/schema.json",

@@ -1,11 +1,19 @@
 import type { Tree } from '@nx/devkit';
 import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
-import { getComponentProps } from '../utils/storybook-ast/storybook-inputs';
-import type { ComponentStoryGeneratorOptions } from './schema';
+import { getComponentProps } from '../../utils/storybook-ast/storybook-inputs';
 
-export async function componentStoryGenerator(
+export interface ComponentStoryOptions {
+  projectPath: string;
+  interactionTests?: boolean;
+  componentName: string;
+  componentPath: string;
+  componentFileName: string;
+  skipFormat?: boolean;
+}
+
+export async function createComponentStory(
   tree: Tree,
-  options: ComponentStoryGeneratorOptions
+  options: ComponentStoryOptions
 ): Promise<void> {
   const { componentFileName, componentName, componentPath, projectPath } =
     options;
@@ -39,5 +47,3 @@ export async function componentStoryGenerator(
     await formatFiles(tree);
   }
 }
-
-export default componentStoryGenerator;
