@@ -897,8 +897,18 @@ const aiChat = {
 // rename nx/linter to eslint
 const eslintRename = {
   '/nx-api/linter': '/nx-api/eslint',
-  '/packages/linter': '/packages/eslint',
+  '/nx-api/linter/documents': '/nx-api/eslint/documents',
+  '/nx-api/linter/documents/overview': '/nx-api/eslint/documents/overview',
+  '/nx-api/linter/executors': '/nx-api/eslint/executors',
   '/nx-api/linter/executors/eslint': '/nx-api/eslint/executors/lint',
+  '/nx-api/linter/generators': '/nx-api/eslint/generators',
+  '/nx-api/linter/generators/convert-to-flat-config':
+    '/nx-api/eslint/generators/convert-to-flat-config',
+  '/nx-api/linter/generators/workspace-rule':
+    '/nx-api/eslint/generators/workspace-rule',
+  '/nx-api/linter/generators/workspace-rules-project':
+    '/nx-api/eslint/generators/workspace-rules-project',
+  '/packages/linter': '/packages/eslint',
 };
 
 /**
