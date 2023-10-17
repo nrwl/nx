@@ -327,9 +327,15 @@
                   "name": "Micro Frontend Architecture",
                   "id": "micro-frontend-architecture",
                   "file": "shared/guides/module-federation/micro-frontend-architecture"
+                },
+                {
+                  "name": "Manage Library Versions with Module Federation",
+                  "id": "manage-library-versions-with-module-federation",
+                  "file": "shared/guides/module-federation/manage-library-versions-with-module-federation"
                 }
               ]
             },
+
             {
               "name": "More Concepts",
               "id": "more-concepts",

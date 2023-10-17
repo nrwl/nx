@@ -830,6 +830,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Manage Library Versions with Module Federation",
+                "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
+                "id": "manage-library-versions-with-module-federation",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1083,6 +1091,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Manage Library Versions with Module Federation",
+            "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
+            "id": "manage-library-versions-with-module-federation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -1099,6 +1115,14 @@
         "name": "Micro Frontend Architecture",
         "path": "/concepts/module-federation/micro-frontend-architecture",
         "id": "micro-frontend-architecture",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Manage Library Versions with Module Federation",
+        "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
+        "id": "manage-library-versions-with-module-federation",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
