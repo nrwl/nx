@@ -38,7 +38,9 @@ export async function applicationGenerator(
     })
   );
 
-  extractTsConfigBase(tree);
+  if (!options.rootProject) {
+    extractTsConfigBase(tree);
+  }
 
   createApplicationFiles(tree, options);
 

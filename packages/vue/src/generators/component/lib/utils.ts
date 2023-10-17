@@ -19,8 +19,6 @@ export async function normalizeOptions(
   host: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  assertValidOptions(options);
-
   const {
     artifactName: name,
     directory,
@@ -106,20 +104,4 @@ function getRelativeImportToFile(indexPath: string, filePath: string) {
   const { base, dir } = parse(filePath);
   const relativeDirToTarget = relative(dirname(indexPath), dir);
   return `./${joinPathFragments(relativeDirToTarget, base)}`;
-}
-
-export function assertValidOptions(options: Schema) {
-  const slashes = ['/', '\\'];
-  slashes.forEach((s) => {
-    if (options.name.indexOf(s) !== -1) {
-      const [name, ...rest] = options.name.split(s).reverse();
-      let suggestion = rest.map((x) => x.toLowerCase()).join(s);
-      if (options.directory) {
-        suggestion = `${options.directory}${s}${suggestion}`;
-      }
-      throw new Error(
-        `Found "${s}" in the component name. Did you mean to use the --directory option (e.g. \`nx g c ${name} --directory ${suggestion}\`)?`
-      );
-    }
-  });
 }

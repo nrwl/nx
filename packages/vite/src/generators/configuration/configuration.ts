@@ -159,6 +159,7 @@ export async function viteConfigurationGenerator(
     includeLib: schema.includeLib,
     compiler: schema.compiler,
     testEnvironment: schema.testEnvironment,
+    rootProject: root === '.',
   });
   tasks.push(initTask);
 
