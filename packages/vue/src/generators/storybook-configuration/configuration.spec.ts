@@ -67,7 +67,7 @@ describe('vue:storybook-configuration', () => {
   it('should generate stories for components', async () => {
     appTree = await createTestUILib('test-ui-lib');
     appTree.write(
-      'test-ui-lib/src/components/my-component/my-component.vue',
+      'test-ui-lib/src/lib/my-component/my-component.vue',
       componentContent
     );
 
@@ -77,11 +77,11 @@ describe('vue:storybook-configuration', () => {
     });
 
     expect(
-      appTree.exists('test-ui-lib/src/components/test-ui-lib.stories.ts')
+      appTree.exists('test-ui-lib/src/lib/test-ui-lib.stories.ts')
     ).toBeTruthy();
     expect(
       appTree.read(
-        'test-ui-lib/src/components/my-component/my-component.stories.ts',
+        'test-ui-lib/src/lib/my-component/my-component.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -100,7 +100,7 @@ describe('vue:storybook-configuration', () => {
   it('should generate stories for components for app', async () => {
     appTree = await createTestAppLib('test-ui-app');
     appTree.write(
-      'test-ui-app/src/components/my-component/my-component.vue',
+      'test-ui-app/src/app/my-component/my-component.vue',
       componentContent
     );
     await storybookConfigurationGenerator(appTree, {
@@ -110,7 +110,7 @@ describe('vue:storybook-configuration', () => {
 
     expect(
       appTree.read(
-        'test-ui-app/src/components/my-component/my-component.stories.ts',
+        'test-ui-app/src/app/my-component/my-component.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -119,7 +119,7 @@ describe('vue:storybook-configuration', () => {
   it('should generate stories for components without interaction tests', async () => {
     appTree = await createTestAppLib('test-ui-app');
     appTree.write(
-      'test-ui-app/src/components/my-component/my-component.vue',
+      'test-ui-app/src/app/my-component/my-component.vue',
       componentContent
     );
     await storybookConfigurationGenerator(appTree, {
@@ -130,7 +130,7 @@ describe('vue:storybook-configuration', () => {
 
     expect(
       appTree.read(
-        'test-ui-app/src/components/my-component/my-component.stories.ts',
+        'test-ui-app/src/app/my-component/my-component.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();

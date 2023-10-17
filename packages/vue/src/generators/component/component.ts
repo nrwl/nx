@@ -1,39 +1,28 @@
-import {
-  formatFiles,
-  generateFiles,
-  GeneratorCallback,
-  joinPathFragments,
-  runTasksInSerial,
-  toJS,
-  Tree,
-} from '@nx/devkit';
-import { NormalizedSchema, Schema } from './schema';
+import { formatFiles, generateFiles, toJS, Tree } from '@nx/devkit';
 import { join } from 'path';
 import { addExportsToBarrel, normalizeOptions } from './lib/utils';
+import { NormalizedSchema, Schema } from './schema';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
+  return componentGeneratorInternal(host, {
+    nameAndDirectoryFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function componentGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
 
   createComponentFiles(host, options);
-
-  const tasks: GeneratorCallback[] = [];
-
   addExportsToBarrel(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
-
-  return runTasksInSerial(...tasks);
 }
 
 function createComponentFiles(host: Tree, options: NormalizedSchema) {
-  const componentDir = joinPathFragments(
-    options.projectSourceRoot,
-    options.directory
-  );
-
-  generateFiles(host, join(__dirname, './files'), componentDir, {
+  generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
     tmpl: '',
     unitTestRunner: options.unitTestRunner,
