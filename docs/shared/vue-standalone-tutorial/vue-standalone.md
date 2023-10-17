@@ -38,7 +38,7 @@ Create a new Vue application with the following command:
    Nx will run "npm install" several times. Please wait.
 ```
 
-You can choose any test runner or stylesheet format you like. In this tutorial we're going to use Cypress and css. The above command generates the following structure:
+You can also choose [Playwright](/nx-api/playwright) for your e2e tests or a different stylesheet format. In this tutorial we're going to use Cypress and css. The above command generates the following structure:
 
 ```
 └─ myvueapp
@@ -60,10 +60,7 @@ You can choose any test runner or stylesheet format you like. In this tutorial w
    │  ├─ main.ts
    │  └─ styles.css
    ├─ index.html
-   ├─ jest.config.ts
-   ├─ jest.preset.js
    ├─ nx.json
-   ├─ package-lock.json
    ├─ package.json
    ├─ project.json
    ├─ README.md
@@ -520,7 +517,7 @@ import { RouterLink, RouterView } from 'vue-router';
 </template>
 ```
 
-If you now navigate to [http://localhost:4200/products](http://localhost:4200/products) you should see the `Products` component being rendered.
+If you now navigate to [http://localhost:4200/#/products](http://localhost:4200/#/products) you should see the `Products` component being rendered.
 
 ![Browser screenshot of navigating to the products route](/shared/images/tutorial-vue-standalone/vue-tutorial-products-route.png)
 
@@ -583,7 +580,7 @@ import { RouterLink, RouterView } from 'vue-router';
 </template>
 ```
 
-Similarly, navigating to [http://localhost:4200/orders](http://localhost:4200/orders) should now render the `Orders` component.
+Similarly, navigating to [http://localhost:4200/#/orders](http://localhost:4200/#/orders) should now render the `Orders` component.
 
 Note that both the `Products` component and `Orders` component are lazy loaded so the initial bundle size will be smaller.
 
@@ -825,6 +822,10 @@ If you lint your workspace you'll get an error now:
 ```
 
 Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
+
+## Migrating to a Monorepo
+
+When you are ready to add another application to the repo, you'll probably want to move `myvueapp` to its own folder. To do this, you can run the [`convert-to-monorepo` generator](/nx-api/workspace/generators/convert-to-monorepo) or [manually move the configuration files](/recipes/tips-n-tricks/standalone-to-integrated).
 
 ## Next Steps
 
