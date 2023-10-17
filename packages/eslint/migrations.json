@@ -74,6 +74,23 @@
           "version": "^5.60.1"
         }
       }
+    },
+    "17.0.0": {
+      "version": "17.0.0-beta.9",
+      "packages": {
+        "eslint": {
+          "version": "~8.51.0"
+        },
+        "@typescript-eslint/parser": {
+          "version": "^6.8.0"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^6.8.0"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^6.8.0"
+        }
+      }
     }
   }
 }
