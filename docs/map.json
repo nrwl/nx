@@ -2140,15 +2140,15 @@
           ]
         },
         {
-          "name": "linter",
-          "id": "linter",
+          "name": "eslint",
+          "id": "eslint",
           "description": "Linter package.",
           "itemList": [
             {
               "id": "overview",
               "name": "Overview",
-              "path": "/nx-api/linter",
-              "file": "shared/packages/linter/linter-plugin"
+              "path": "/nx-api/eslint",
+              "file": "shared/packages/eslint/eslint"
             }
           ]
         },
@@ -2161,19 +2161,19 @@
               "id": "overview",
               "name": "Overview",
               "path": "/nx-api/eslint-plugin",
-              "file": "shared/packages/linter/eslint-plugin"
+              "file": "shared/packages/eslint/eslint-plugin"
             },
             {
               "id": "enforce-module-boundaries",
               "name": "The `enforce-module-boundaries` rule",
               "path": "/nx-api/eslint-plugin",
-              "file": "shared/packages/linter/enforce-module-boundaries"
+              "file": "shared/packages/eslint/enforce-module-boundaries"
             },
             {
               "id": "dependency-checks",
               "name": "The `dependency-checks` rule",
               "path": "/nx-api/eslint-plugin",
-              "file": "shared/packages/linter/dependency-checks"
+              "file": "shared/packages/eslint/dependency-checks"
             }
           ]
         },
