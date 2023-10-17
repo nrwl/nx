@@ -13,23 +13,39 @@ import {
 export type MiddlewareGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;
 
-export function middlewareGenerator(
+export async function middlewareGenerator(
+  tree: Tree,
+  rawOptions: MiddlewareGeneratorOptions
+) {
+  await middlewareGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function middlewareGeneratorInternal(
   tree: Tree,
   rawOptions: MiddlewareGeneratorOptions
 ): Promise<any> {
-  const options = normalizeMiddlewareOptions(tree, rawOptions);
+  const options = await normalizeMiddlewareOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'middleware', options);
 }
 
 export default middlewareGenerator;
 
-function normalizeMiddlewareOptions(
+async function normalizeMiddlewareOptions(
   tree: Tree,
   options: MiddlewareGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'middleware',
+    '@nx/nest:middleware',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
   };
