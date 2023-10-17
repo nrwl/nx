@@ -22,6 +22,7 @@ export async function normalizeOptions(
       project: options.project,
       flat: options.flat,
       nameAndDirectoryFormat: options.nameAndDirectoryFormat ?? 'derived',
+      derivedDirectory: options.directory,
     });
 
   const normalizedOptions: NormalizedOptions = {
