@@ -18,6 +18,7 @@ import {
   storybookVersion,
   storybookReactNativeVersion,
   viteVersion,
+  reactRefreshVersion,
 } from '../../utils/versions';
 import { Schema } from './schema';
 import {
@@ -116,6 +117,15 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
         storybookReactNativeVersion;
       devDependencies['@storybook/addon-ondevice-notes'] =
         storybookReactNativeVersion;
+    }
+
+    if (schema.uiFramework === '@storybook/nextjs') {
+      if (
+        !packageJson.dependencies['react-refresh'] &&
+        !packageJson.devDependencies['react-refresh']
+      ) {
+        devDependencies['react-refresh'] = reactRefreshVersion;
+      }
     }
 
     if (schema.uiFramework.endsWith('-vite')) {

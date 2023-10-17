@@ -11,4 +11,6 @@ export const storybookVersion = '^7.2.1';
 export const reactVersion = '^18.2.0';
 export const viteVersion = '~4.3.9';
 
+export const reactRefreshVersion = '^0.14.0';
+
 export const coreJsVersion = '^3.6.5';
