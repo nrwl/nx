@@ -25,7 +25,6 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
   generateFiles(host, join(__dirname, './files'), options.directory, {
     ...options,
     tmpl: '',
-    unitTestRunner: options.unitTestRunner,
   });
 
   for (const c of host.listChanges()) {
