@@ -99,7 +99,7 @@
     "isInitialHost": {
       "type": "boolean",
       "description": "Whether the host that is running this executor is the first in the project tree to do so.",
-      "default": false,
+      "default": true,
       "x-priority": "internal"
     }
   }

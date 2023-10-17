@@ -8,18 +8,16 @@ import {
 import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { WebDevServerOptions } from '@nx/webpack/src/executors/dev-server/schema';
-import { join } from 'path';
+import {
+  getModuleFederationConfig,
+  getRemotes,
+} from '@nx/webpack/src/utils/module-federation';
 import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
-import * as chalk from 'chalk';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { fork } from 'child_process';
-import { existsSync } from 'fs';
-import { registerTsProject } from '@nx/js/src/internal';
-import { type ModuleFederationConfig } from '@nx/webpack';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
   devRemotes?: string[];
@@ -36,130 +34,6 @@ function getBuildOptions(buildTarget: string, context: ExecutorContext) {
   return {
     ...buildOptions,
   };
-}
-
-function extractRemoteProjectsFromConfig(config: ModuleFederationConfig) {
-  return config.remotes?.map((r) => (Array.isArray(r) ? r[0] : r)) ?? [];
-}
-
-function collectRemoteProjects(
-  remote: string,
-  collected: Set<string>,
-  context: ExecutorContext
-) {
-  const remoteProject = context.projectGraph.nodes[remote]?.data;
-  if (!context.projectGraph.nodes[remote] || collected.has(remote)) {
-    return;
-  }
-
-  collected.add(remote);
-
-  const remoteProjectRoot = remoteProject.root;
-  const remoteProjectTsConfig = remoteProject.targets['build'].options.tsConfig;
-  const remoteProjectConfig = getModuleFederationConfig(
-    remoteProjectTsConfig,
-    context.root,
-    remoteProjectRoot
-  );
-  const remoteProjectRemotes =
-    extractRemoteProjectsFromConfig(remoteProjectConfig);
-
-  remoteProjectRemotes.forEach((r) =>
-    collectRemoteProjects(r, collected, context)
-  );
-}
-
-function getRemotes(
-  devRemotes: string[],
-  skipRemotes: string[],
-  config: ModuleFederationConfig,
-  context: ExecutorContext
-) {
-  const collectedRemotes = new Set<string>();
-  const remotes = extractRemoteProjectsFromConfig(config);
-  remotes.forEach((r) => collectRemoteProjects(r, collectedRemotes, context));
-  const remotesToSkip = new Set(
-    findMatchingProjects(skipRemotes, context.projectGraph.nodes) ?? []
-  );
-
-  if (remotesToSkip.size > 0) {
-    logger.info(
-      `Remotes not served automatically: ${[...remotesToSkip.values()].join(
-        ', '
-      )}`
-    );
-  }
-
-  const knownRemotes = Array.from(collectedRemotes).filter(
-    (r) => !remotesToSkip.has(r)
-  );
-
-  logger.info(
-    `NX Starting module federation dev-server for ${chalk.bold(
-      context.projectName
-    )} with ${knownRemotes.length} remotes`
-  );
-
-  const devServeApps = new Set(
-    !devRemotes
-      ? []
-      : Array.isArray(devRemotes)
-      ? findMatchingProjects(devRemotes, context.projectGraph.nodes)
-      : findMatchingProjects([devRemotes], context.projectGraph.nodes)
-  );
-
-  const staticRemotes = knownRemotes.filter((r) => !devServeApps.has(r));
-  const devServeRemotes = knownRemotes.filter((r) => devServeApps.has(r));
-  const remotePorts = knownRemotes.map(
-    (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
-  );
-
-  return {
-    staticRemotes,
-    devRemotes: devServeRemotes,
-    remotePorts,
-  };
-}
-
-function getModuleFederationConfig(
-  tsconfigPath: string,
-  workspaceRoot: string,
-  projectRoot: string
-) {
-  const moduleFederationConfigPathJS = join(
-    workspaceRoot,
-    projectRoot,
-    'module-federation.config.js'
-  );
-
-  const moduleFederationConfigPathTS = join(
-    workspaceRoot,
-    projectRoot,
-    'module-federation.config.ts'
-  );
-
-  let moduleFederationConfigPath = moduleFederationConfigPathJS;
-
-  // create a no-op so this can be called with issue
-  const fullTSconfigPath = tsconfigPath.startsWith(workspaceRoot)
-    ? tsconfigPath
-    : join(workspaceRoot, tsconfigPath);
-  let cleanupTranspiler = () => {};
-  if (existsSync(moduleFederationConfigPathTS)) {
-    cleanupTranspiler = registerTsProject(fullTSconfigPath);
-    moduleFederationConfigPath = moduleFederationConfigPathTS;
-  }
-
-  try {
-    const config = require(moduleFederationConfigPath);
-    cleanupTranspiler();
-
-    return config.default || config;
-  } catch {
-    throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/concepts/more-concepts/faster-builds-with-module-federation`
-    );
-  }
 }
 
 export default async function* moduleFederationDevServer(
@@ -183,21 +57,30 @@ export default async function* moduleFederationDevServer(
   const p = context.projectsConfigurations.projects[context.projectName];
   const buildOptions = getBuildOptions(options.buildTarget, context);
 
+  if (!options.isInitialHost) {
+    return yield* currIter;
+  }
+
   const moduleFederationConfig = getModuleFederationConfig(
     buildOptions.tsConfig,
     context.root,
-    p.root
+    p.root,
+    'react'
   );
 
   const remotes = getRemotes(
     options.devRemotes,
     options.skipRemotes,
     moduleFederationConfig,
-    context
+    {
+      projectName: context.projectName,
+      projectGraph: context.projectGraph,
+      root: context.root,
+    }
   );
 
-  const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
   let isCollectingStaticRemoteOutput = true;
+  const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
 
   for (const app of remotes.devRemotes) {
     const remoteProjectServeTarget =
@@ -272,6 +155,10 @@ export default async function* moduleFederationDevServer(
     ...devRemoteIters,
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
+        if (!options.isInitialHost) {
+          done();
+          return;
+        }
         if (remotes.remotePorts.length === 0) {
           done();
           return;

@@ -385,4 +385,97 @@ describe('Angular Module Federation', () => {
       await killProcessAndPorts(hostE2eResults.pid);
     }
   }, 500_000);
+
+  it('should federate a module from a library and create a remote that is served recursively', async () => {
+    const lib = uniq('lib');
+    const remote = uniq('remote');
+    const childRemote = uniq('childremote');
+    const module = uniq('module');
+    const host = uniq('host');
+
+    runCLI(
+      `generate @nx/angular:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+    );
+
+    runCLI(
+      `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
+    );
+
+    // Federate Module
+    runCLI(
+      `generate @nx/angular:federate-module ${module} --remote=${childRemote} --path=${lib}/src/index.ts --no-interactive`
+    );
+
+    updateFile(`${lib}/src/index.ts`, `export { isEven } from './lib/${lib}';`);
+    updateFile(
+      `${lib}/src/lib/${lib}.ts`,
+      `export function isEven(num: number) { return num % 2 === 0; }`
+    );
+
+    // Update Host to use the module
+    updateFile(
+      `${remote}/src/app/remote-entry/entry.component.ts`,
+      `
+      import { Component } from '@angular/core';
+      import { isEven } from '${childRemote}/${module}';
+
+      @Component({
+        selector: 'proj-${remote}-entry',
+        template: \`<div class="childremote">{{title}}</div>\`
+      })
+      export class RemoteEntryComponent {
+        title = \`shell is \${isEven(2) ? 'even' : 'odd'}\`;
+      }`
+    );
+
+    updateFile(
+      `${remote}/module-federation.config.ts`,
+      `
+      import { ModuleFederationConfig } from '@nx/webpack';
+
+      const config: ModuleFederationConfig = {
+        name: '${remote}',
+        remotes: ['${childRemote}'],
+        exposes: {
+          './Module': '${remote}/src/app/remote-entry/entry.module.ts',
+        },
+      };
+
+      export default config;`
+    );
+
+    // Update e2e test to check the module
+    updateFile(
+      `${host}-e2e/src/e2e/app.cy.ts`,
+      `
+      describe('${host}', () => {
+        beforeEach(() => cy.visit('/${remote}'));
+      
+        it('should display contain the remote library', () => {
+          expect(cy.get('div.childremote')).to.exist;
+          expect(cy.get('div.childremote').contains('shell is even'));
+        });
+      });
+      
+      `
+    );
+
+    // Build host and remote
+    const buildOutput = await runCommandUntil(`build ${host}`, (output) =>
+      output.includes('Successfully ran target build')
+    );
+    await killProcessAndPorts(buildOutput.pid);
+    const remoteOutput = await runCommandUntil(`build ${remote}`, (output) =>
+      output.includes('Successfully ran target build')
+    );
+    await killProcessAndPorts(remoteOutput.pid);
+
+    if (runE2ETests()) {
+      const hostE2eResults = await runCommandUntil(
+        `e2e ${host}-e2e --no-watch --verbose`,
+        (output) => output.includes('All specs passed!')
+      );
+      await killProcessAndPorts(hostE2eResults.pid);
+    }
+  }, 500_000);
 });

@@ -549,6 +549,89 @@ describe('React Module Federation', () => {
       }
     }, 500_000);
 
+    it('should federate a module from a library and create a remote and serve it recursively', async () => {
+      const lib = uniq('lib');
+      const remote = uniq('remote');
+      const childRemote = uniq('childremote');
+      const module = uniq('module');
+      const host = uniq('host');
+
+      runCLI(
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+      );
+
+      runCLI(
+        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
+      );
+
+      // Federate Module
+      runCLI(
+        `generate @nx/react:federate-module ${module} --remote=${childRemote} --path=${lib}/src/index.ts --no-interactive`
+      );
+
+      updateFile(
+        `${lib}/src/index.ts`,
+        `export { default } from './lib/${lib}';`
+      );
+      updateFile(
+        `${lib}/src/lib/${lib}.ts`,
+        `export default function lib() { return 'Hello from ${lib}'; };`
+      );
+
+      // Update Host to use the module
+      updateFile(
+        `${remote}/src/app/app.tsx`,
+        `
+      import * as React from 'react';
+      import NxWelcome from './nx-welcome';
+      
+      import myLib from '${childRemote}/${module}';
+
+      export function App() {
+        return (
+          <React.Suspense fallback={null}>
+            <div className='remote'>
+            My Remote Library:  { myLib() }
+            </div>
+            <NxWelcome title="Host" />
+          </React.Suspense>
+        );
+      }
+
+      export default App;
+      `
+      );
+
+      // Update e2e test to check the module
+      updateFile(
+        `${host}-e2e/src/e2e/app.cy.ts`,
+        `
+      describe('${host}', () => {
+        beforeEach(() => cy.visit('/${remote}'));
+      
+        it('should display contain the remote library', () => {
+          expect(cy.get('div.remote')).to.exist;
+          expect(cy.get('div.remote').contains('My Remote Library: Hello from ${lib}'));
+        });
+      });
+      
+      `
+      );
+
+      // Build host and remote
+      const buildOutput = runCLI(`build ${host}`);
+      const remoteOutput = runCLI(`build ${remote}`);
+
+      expect(buildOutput).toContain('Successfully ran target build');
+      expect(remoteOutput).toContain('Successfully ran target build');
+
+      if (runE2ETests()) {
+        const hostE2eResults = runCLI(`e2e ${host}-e2e --no-watch --verbose`);
+
+        expect(hostE2eResults).toContain('All specs passed!');
+      }
+    }, 500_000);
+
     describe('Promised based remotes', () => {
       it('should support promised based remotes', async () => {
         const remote = uniq('remote');

@@ -64,6 +64,7 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
+    "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {
