@@ -2398,6 +2398,16 @@
             "isExternal": false,
             "path": "/recipes/module-federation/create-a-host",
             "tags": []
+          },
+          {
+            "id": "create-a-remote",
+            "name": "How to create a Module Federation Remote Application",
+            "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+            "file": "shared/recipes/module-federation/creating-a-remote",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/create-a-remote",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -4102,6 +4112,16 @@
         "isExternal": false,
         "path": "/recipes/module-federation/create-a-host",
         "tags": []
+      },
+      {
+        "id": "create-a-remote",
+        "name": "How to create a Module Federation Remote Application",
+        "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+        "file": "shared/recipes/module-federation/creating-a-remote",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/create-a-remote",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -4116,6 +4136,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/module-federation/create-a-host",
+    "tags": []
+  },
+  "/recipes/module-federation/create-a-remote": {
+    "id": "create-a-remote",
+    "name": "How to create a Module Federation Remote Application",
+    "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+    "file": "shared/recipes/module-federation/creating-a-remote",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/create-a-remote",
     "tags": []
   },
   "/recipes/enforce-module-boundaries": {
