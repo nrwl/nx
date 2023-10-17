@@ -13,23 +13,29 @@ import {
 export type GatewayGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;
 
-export function gatewayGenerator(
+export async function gatewayGenerator(
   tree: Tree,
   rawOptions: GatewayGeneratorOptions
 ): Promise<any> {
-  const options = normalizeGatewayOptions(tree, rawOptions);
+  const options = await normalizeGatewayOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'gateway', options);
 }
 
 export default gatewayGenerator;
 
-function normalizeGatewayOptions(
+async function normalizeGatewayOptions(
   tree: Tree,
   options: GatewayGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'gateway',
+    '@nx/nest:gateway',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
   };

@@ -10,23 +10,29 @@ export type ModuleGeneratorOptions = NestGeneratorWithLanguageOption & {
   skipImport?: boolean;
 };
 
-export function moduleGenerator(
+export async function moduleGenerator(
   tree: Tree,
   rawOptions: ModuleGeneratorOptions
 ): Promise<any> {
-  const options = normalizeModuleOptions(tree, rawOptions);
+  const options = await normalizeModuleOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'module', options);
 }
 
 export default moduleGenerator;
 
-function normalizeModuleOptions(
+async function normalizeModuleOptions(
   tree: Tree,
   options: ModuleGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOption = await normalizeOptions(
+    tree,
+    'module',
+    '@nx/nest:module',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOption,
     language: options.language,
     module: options.module,
     skipImport: options.skipImport,

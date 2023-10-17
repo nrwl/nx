@@ -5,21 +5,38 @@ import type {
   NormalizedOptions,
   UnitTestRunner,
 } from './types';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   tree: Tree,
+  artifactType: string,
+  callingGenerator: string,
   options: NestGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
   const { sourceRoot } = readProjectConfiguration(tree, options.project);
+
+  const { directory, fileName, nameAndDirectoryFormat } =
+    await determineArtifactNameAndDirectoryOptions(tree, {
+      callingGenerator,
+      artifactType,
+      name: options.name,
+      directory: options.directory,
+      project: options.project,
+      flat: options.flat,
+      nameAndDirectoryFormat: options.nameAndDirectoryFormat ?? 'derived',
+    });
+
+  console.log({ directory, fileName });
 
   const normalizedOptions: NormalizedOptions = {
     ...options,
-    flat: options.flat,
-    name: names(options.name).fileName,
-    path: options.directory,
+    flat: true,
+    name: fileName,
     skipFormat: options.skipFormat,
-    sourceRoot,
+    sourceRoot: directory,
   };
+
+  console.log({ normalizedOptions });
 
   return normalizedOptions;
 }
