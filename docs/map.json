@@ -827,6 +827,12 @@
                   "name": "How to create a Module Federation Host Application",
                   "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
                   "file": "shared/recipes/module-federation/creating-a-host"
+                },
+                {
+                  "id": "create-a-remote",
+                  "name": "How to create a Module Federation Remote Application",
+                  "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+                  "file": "shared/recipes/module-federation/creating-a-remote"
                 }
               ]
             },
