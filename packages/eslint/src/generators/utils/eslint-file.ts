@@ -299,7 +299,11 @@ export function addExtendsToLintConfig(
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
     updateJson(tree, fileName, (json) => {
-      json.extends = [...plugins, ...(json.extends ?? [])];
+      json.extends ??= [];
+      json.extends = [
+        ...plugins,
+        ...(Array.isArray(json.extends) ? json.extends : [json.extends]),
+      ];
       return json;
     });
   }
