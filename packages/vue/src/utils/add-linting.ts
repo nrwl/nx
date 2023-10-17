@@ -93,7 +93,7 @@ export function editEslintConfigFiles(
         json.overrides = [
           {
             files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: {},
+            rules: { 'vue/multi-word-component-names': 'off' },
           },
         ];
       }
@@ -115,7 +115,7 @@ export function editEslintConfigFiles(
         json.overrides = [
           {
             files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: {},
+            rules: { 'vue/multi-word-component-names': 'off' },
           },
         ];
       }

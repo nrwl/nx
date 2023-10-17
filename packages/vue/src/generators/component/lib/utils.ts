@@ -14,12 +14,11 @@ let tsModule: typeof import('typescript');
 
 export async function normalizeOptions(
   host: Tree,
-  options: Schema,
-  isApp: boolean
+  options: Schema
 ): Promise<NormalizedSchema> {
   assertValidOptions(options);
 
-  let { className, fileName } = names(options.name);
+  const { className, fileName } = names(options.name);
   const componentFileName =
     options.fileName ?? (options.pascalCaseFiles ? className : fileName);
   const project = getProjects(host).get(options.project);
@@ -31,13 +30,6 @@ export async function normalizeOptions(
   }
 
   const { sourceRoot: projectSourceRoot, projectType } = project;
-
-  className = getComponentClassName(
-    className,
-    isApp,
-    options.project,
-    options.directory
-  );
 
   const directory = await getDirectory(options);
 
@@ -59,39 +51,12 @@ export async function normalizeOptions(
   };
 }
 
-export function getComponentClassName(
-  componentName: string,
-  isApp: boolean,
-  projectName: string,
-  directory?: string
-): string {
-  const { className } = names(projectName);
-
-  let prefix = isApp ? 'App' : className;
-
-  if (directory?.length > 0) {
-    prefix = directory
-      .split('/')
-      .map((segment) =>
-        segment
-          .split('-')
-          .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-          .join('')
-      )
-      .join('');
-  }
-
-  return `${prefix}${componentName}`;
-}
-
-export function addExportsToBarrel(
-  host: Tree,
-  options: NormalizedSchema,
-  isApp: boolean
-) {
+export function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
+  const workspace = getProjects(host);
+  const isApp = workspace.get(options.project).projectType === 'application';
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
