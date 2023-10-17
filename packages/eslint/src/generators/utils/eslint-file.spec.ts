@@ -1,11 +1,12 @@
 import {
+  addExtendsToLintConfig,
   baseEsLintConfigFile,
   eslintConfigFileWhitelist,
   findEslintFile,
   lintConfigHasOverride,
 } from './eslint-file';
 
-import { Tree } from '@nx/devkit';
+import { Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('@nx/eslint:lint-file', () => {
@@ -71,6 +72,50 @@ describe('@nx/eslint:lint-file', () => {
           false
         )
       ).toBe(false);
+    });
+  });
+
+  describe('addExtendsToLintConfig', () => {
+    it('should update string extends property to array', () => {
+      tree.write(
+        'apps/demo/.eslintrc.json',
+        JSON.stringify({
+          extends: '../../.eslintrc',
+          rules: {},
+          overrides: [
+            {
+              files: ['**/*.ts', '**/*.tsx'],
+              rules: {
+                '@typescript-eslint/no-unused-vars': 'off',
+              },
+            },
+            {
+              files: ['./package.json'],
+              parser: 'jsonc-eslint-parser',
+              rules: {
+                '@nx/dependency-checks': [
+                  'error',
+                  {
+                    buildTargets: ['build'],
+                    includeTransitiveDependencies: true,
+                    ignoredFiles: [
+                      '{projectRoot}/remix.config.js',
+                      '{projectRoot}/tailwind.config.js',
+                    ],
+                    ignoredDependencies: ['saslprep'],
+                  },
+                ],
+              },
+            },
+          ],
+          ignorePatterns: ['!**/*', 'build/**/*'],
+        })
+      );
+      addExtendsToLintConfig(tree, 'apps/demo', 'plugin:playwright/recommend');
+      expect(readJson(tree, 'apps/demo/.eslintrc.json').extends).toEqual([
+        'plugin:playwright/recommend',
+        '../../.eslintrc',
+      ]);
     });
   });
 });
