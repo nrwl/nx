@@ -10,6 +10,16 @@ export type DecoratorGeneratorOptions = NestGeneratorWithLanguageOption;
 export async function decoratorGenerator(
   tree: Tree,
   rawOptions: DecoratorGeneratorOptions
+) {
+  await decoratorGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function decoratorGeneratorInternal(
+  tree: Tree,
+  rawOptions: DecoratorGeneratorOptions
 ): Promise<any> {
   const options = await normalizeDecoratorOptions(tree, rawOptions);
 

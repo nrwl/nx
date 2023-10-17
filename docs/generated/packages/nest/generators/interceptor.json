@@ -1,6 +1,6 @@
 {
   "name": "interceptor",
-  "factory": "./src/generators/interceptor/interceptor",
+  "factory": "./src/generators/interceptor/interceptor#interceptorGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestInterceptorGenerator",
@@ -61,7 +61,7 @@
     "presets": []
   },
   "description": "Run the `interceptor` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/interceptor/interceptor.ts",
+  "implementation": "/packages/nest/src/generators/interceptor/interceptor#interceptorGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/interceptor/schema.json",

@@ -16,6 +16,16 @@ export type GatewayGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function gatewayGenerator(
   tree: Tree,
   rawOptions: GatewayGeneratorOptions
+) {
+  await gatewayGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function gatewayGeneratorInternal(
+  tree: Tree,
+  rawOptions: GatewayGeneratorOptions
 ): Promise<any> {
   const options = await normalizeGatewayOptions(tree, rawOptions);
 

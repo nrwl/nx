@@ -1,6 +1,6 @@
 {
   "name": "filter",
-  "factory": "./src/generators/filter/filter",
+  "factory": "./src/generators/filter/filter#filterGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestFilterGenerator",
@@ -61,7 +61,7 @@
     "presets": []
   },
   "description": "Run the `filter` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/filter/filter.ts",
+  "implementation": "/packages/nest/src/generators/filter/filter#filterGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/filter/schema.json",

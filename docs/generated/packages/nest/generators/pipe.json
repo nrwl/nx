@@ -1,6 +1,6 @@
 {
   "name": "pipe",
-  "factory": "./src/generators/pipe/pipe",
+  "factory": "./src/generators/pipe/pipe#pipeGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestPipeGenerator",
@@ -61,7 +61,7 @@
     "presets": []
   },
   "description": "Run the `pipe` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/pipe/pipe.ts",
+  "implementation": "/packages/nest/src/generators/pipe/pipe#pipeGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/pipe/schema.json",

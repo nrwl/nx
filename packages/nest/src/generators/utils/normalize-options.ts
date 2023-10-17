@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { names, readProjectConfiguration } from '@nx/devkit';
 import type {
   NestGeneratorOptions,
   NormalizedOptions,
@@ -13,7 +12,7 @@ export async function normalizeOptions(
   callingGenerator: string,
   options: NestGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const { directory, fileName, nameAndDirectoryFormat } =
+  const { directory, fileName } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       callingGenerator,
       artifactType,
@@ -21,19 +20,17 @@ export async function normalizeOptions(
       directory: options.directory,
       project: options.project,
       flat: options.flat,
-      nameAndDirectoryFormat: options.nameAndDirectoryFormat ?? 'derived',
       derivedDirectory: options.directory,
+      nameAndDirectoryFormat: options.nameAndDirectoryFormat,
     });
 
-  const normalizedOptions: NormalizedOptions = {
+  return {
     ...options,
     flat: true,
     name: fileName,
     skipFormat: options.skipFormat,
     sourceRoot: directory,
   };
-
-  return normalizedOptions;
 }
 
 export function unitTestRunnerToSpec(

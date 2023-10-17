@@ -13,6 +13,16 @@ export type ModuleGeneratorOptions = NestGeneratorWithLanguageOption & {
 export async function moduleGenerator(
   tree: Tree,
   rawOptions: ModuleGeneratorOptions
+) {
+  await moduleGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function moduleGeneratorInternal(
+  tree: Tree,
+  rawOptions: ModuleGeneratorOptions
 ): Promise<any> {
   const options = await normalizeModuleOptions(tree, rawOptions);
 

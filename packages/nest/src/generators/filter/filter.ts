@@ -16,6 +16,16 @@ export type FilterGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function filterGenerator(
   tree: Tree,
   rawOptions: FilterGeneratorOptions
+) {
+  await filterGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function filterGeneratorInternal(
+  tree: Tree,
+  rawOptions: FilterGeneratorOptions
 ): Promise<any> {
   const options = await normalizeFilterOptions(tree, rawOptions);
 

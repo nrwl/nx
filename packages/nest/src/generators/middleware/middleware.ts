@@ -16,6 +16,16 @@ export type MiddlewareGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function middlewareGenerator(
   tree: Tree,
   rawOptions: MiddlewareGeneratorOptions
+) {
+  await middlewareGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function middlewareGeneratorInternal(
+  tree: Tree,
+  rawOptions: MiddlewareGeneratorOptions
 ): Promise<any> {
   const options = await normalizeMiddlewareOptions(tree, rawOptions);
 

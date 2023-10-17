@@ -16,6 +16,16 @@ export type ServiceGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function serviceGenerator(
   tree: Tree,
   rawOptions: ServiceGeneratorOptions
+) {
+  await serviceGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function serviceGeneratorInternal(
+  tree: Tree,
+  rawOptions: ServiceGeneratorOptions
 ): Promise<any> {
   const options = await normalizeServiceOptions(tree, rawOptions);
 

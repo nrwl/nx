@@ -16,6 +16,16 @@ export type ResolverGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function resolverGenerator(
   tree: Tree,
   rawOptions: ResolverGeneratorOptions
+) {
+  await resolverGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function resolverGeneratorInternal(
+  tree: Tree,
+  rawOptions: ResolverGeneratorOptions
 ): Promise<any> {
   const options = await normalizeResolverOptions(tree, rawOptions);
 

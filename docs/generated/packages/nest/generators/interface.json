@@ -1,6 +1,6 @@
 {
   "name": "interface",
-  "factory": "./src/generators/interface/interface",
+  "factory": "./src/generators/interface/interface#interfaceGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestInterfaceGenerator",
@@ -50,7 +50,7 @@
     "presets": []
   },
   "description": "Run the `interface` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/interface/interface.ts",
+  "implementation": "/packages/nest/src/generators/interface/interface#interfaceGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/interface/schema.json",

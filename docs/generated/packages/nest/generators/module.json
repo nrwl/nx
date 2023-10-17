@@ -1,6 +1,6 @@
 {
   "name": "module",
-  "factory": "./src/generators/module/module",
+  "factory": "./src/generators/module/module#moduleGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestModuleGenerator",
@@ -65,7 +65,7 @@
     "presets": []
   },
   "description": "Run the `module` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/module/module.ts",
+  "implementation": "/packages/nest/src/generators/module/module#moduleGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/module/schema.json",

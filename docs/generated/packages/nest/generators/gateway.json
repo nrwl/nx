@@ -1,6 +1,6 @@
 {
   "name": "gateway",
-  "factory": "./src/generators/gateway/gateway",
+  "factory": "./src/generators/gateway/gateway#gatewayGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestGatewayGenerator",
@@ -61,7 +61,7 @@
     "presets": []
   },
   "description": "Run the `gateway` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/gateway/gateway.ts",
+  "implementation": "/packages/nest/src/generators/gateway/gateway#gatewayGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/gateway/schema.json",

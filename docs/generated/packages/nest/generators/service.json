@@ -1,6 +1,6 @@
 {
   "name": "service",
-  "factory": "./src/generators/service/service",
+  "factory": "./src/generators/service/service#serviceGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestServiceGenerator",
@@ -61,7 +61,7 @@
     "presets": []
   },
   "description": "Run the `service` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/service/service.ts",
+  "implementation": "/packages/nest/src/generators/service/service#serviceGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/service/schema.json",

@@ -1,6 +1,6 @@
 {
   "name": "controller",
-  "factory": "./src/generators/controller/controller",
+  "factory": "./src/generators/controller/controller#controllerGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestControllerGenerator",
@@ -70,7 +70,7 @@
     "presets": []
   },
   "description": "Run the `controller` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/controller/controller.ts",
+  "implementation": "/packages/nest/src/generators/controller/controller#controllerGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/controller/schema.json",

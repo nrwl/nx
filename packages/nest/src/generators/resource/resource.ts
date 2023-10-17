@@ -18,6 +18,16 @@ export type ResourceGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function resourceGenerator(
   tree: Tree,
   rawOptions: ResourceGeneratorOptions
+) {
+  await resourceGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function resourceGeneratorInternal(
+  tree: Tree,
+  rawOptions: ResourceGeneratorOptions
 ): Promise<any> {
   const options = await normalizeResourceOptions(tree, rawOptions);
 

@@ -16,6 +16,16 @@ export type GuardGeneratorOptions = NestGeneratorWithLanguageOption &
 export async function guardGenerator(
   tree: Tree,
   rawOptions: GuardGeneratorOptions
+) {
+  await guardGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function guardGeneratorInternal(
+  tree: Tree,
+  rawOptions: GuardGeneratorOptions
 ): Promise<any> {
   const options = await normalizeGuardOptions(tree, rawOptions);
 
