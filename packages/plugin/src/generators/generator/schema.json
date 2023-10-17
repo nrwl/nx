@@ -31,7 +31,6 @@
     "description": {
       "type": "string",
       "description": "Generator description.",
-      "alias": "d",
       "x-priority": "important"
     },
     "unitTestRunner": {

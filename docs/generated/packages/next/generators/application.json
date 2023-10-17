@@ -20,7 +20,7 @@
       "directory": {
         "description": "The directory of the new application.",
         "type": "string",
-        "alias": "d",
+        "alias": "dir",
         "x-priority": "important"
       },
       "projectNameAndRootFormat": {
