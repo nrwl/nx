@@ -12,7 +12,7 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await applicationGenerator(appTree, {
-      name: 'myNodeApp',
+      name: 'my-node-app',
       projectNameAndRootFormat: 'as-provided',
     } as Schema);
 
@@ -79,7 +79,7 @@ describe('app', () => {
 
   it('should add types to the tsconfig.app.json', async () => {
     await applicationGenerator(appTree, {
-      name: 'myNodeApp',
+      name: 'my-node-app',
       projectNameAndRootFormat: 'as-provided',
     } as Schema);
     const tsconfig = readJson(appTree, 'my-node-app/tsconfig.app.json');
@@ -110,7 +110,7 @@ describe('app', () => {
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await applicationGenerator(appTree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         js: true,
         projectNameAndRootFormat: 'as-provided',
       } as Schema);

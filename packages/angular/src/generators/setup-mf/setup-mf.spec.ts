@@ -411,7 +411,7 @@ describe('Init MF', () => {
   it('should modify the associated cypress project to add the workaround correctly', async () => {
     // ARRANGE
     await generateTestApplication(tree, {
-      name: 'testApp',
+      name: 'test-app',
       routing: true,
     });
 

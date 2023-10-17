@@ -28,7 +28,7 @@ describe('app', () => {
   describe('not nested', () => {
     it('should update configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         projectNameAndRootFormat: 'as-provided',
       });
       expect(readProjectConfiguration(tree, 'my-app').root).toEqual('my-app');
@@ -39,7 +39,7 @@ describe('app', () => {
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         tags: 'one,two',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -57,7 +57,7 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists('my-app/src/main.ts')).toBeTruthy();
@@ -165,7 +165,7 @@ describe('app', () => {
 
     it('should generate files if bundler is vite', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         bundler: 'vite',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -199,7 +199,7 @@ describe('app', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -211,7 +211,7 @@ describe('app', () => {
   describe('nested', () => {
     it('should update configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -225,7 +225,7 @@ describe('app', () => {
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         directory: 'my-dir/my-app',
         tags: 'one,two',
         projectNameAndRootFormat: 'as-provided',
@@ -249,7 +249,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -286,7 +286,7 @@ describe('app', () => {
 
     it('should extend from root tsconfig.base.json', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -299,7 +299,7 @@ describe('app', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -310,7 +310,7 @@ describe('app', () => {
 
     it('should create Nx specific template', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -326,7 +326,7 @@ describe('app', () => {
   describe('--style scss', () => {
     it('should generate scss styles', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         style: 'scss',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -336,7 +336,7 @@ describe('app', () => {
 
   it('should setup jest without serializers', async () => {
     await applicationGenerator(tree, {
-      name: 'my-App',
+      name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
     });
 
@@ -347,7 +347,7 @@ describe('app', () => {
 
   it('should setup the nrwl web build builder', async () => {
     await applicationGenerator(tree, {
-      name: 'my-App',
+      name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
@@ -383,7 +383,7 @@ describe('app', () => {
 
   it('should setup the nrwl web dev server builder', async () => {
     await applicationGenerator(tree, {
-      name: 'my-App',
+      name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
     });
     const targets = readProjectConfiguration(tree, 'my-app').targets;
@@ -398,7 +398,7 @@ describe('app', () => {
 
   it('should setup the nrwl vite:build builder if bundler is vite', async () => {
     await applicationGenerator(tree, {
-      name: 'my-App',
+      name: 'my-app',
 
       bundler: 'vite',
       projectNameAndRootFormat: 'as-provided',
@@ -413,7 +413,7 @@ describe('app', () => {
 
   it('should setup the nrwl vite:dev-server builder if bundler is vite', async () => {
     await applicationGenerator(tree, {
-      name: 'my-App',
+      name: 'my-app',
 
       bundler: 'vite',
       projectNameAndRootFormat: 'as-provided',
@@ -431,7 +431,7 @@ describe('app', () => {
 
   it('should setup the eslint builder', async () => {
     await applicationGenerator(tree, {
-      name: 'my-App',
+      name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
     });
     expect(readProjectConfiguration(tree, 'my-app').targets.lint).toEqual({
@@ -446,7 +446,7 @@ describe('app', () => {
   describe('--prefix', () => {
     it('should use the prefix in the index.html', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         prefix: 'prefix',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -460,7 +460,7 @@ describe('app', () => {
   describe('--unit-test-runner', () => {
     it('--unit-test-runner=none', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         unitTestRunner: 'none',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -564,7 +564,7 @@ describe('app', () => {
   describe('--e2e-test-runner none', () => {
     it('should not generate test configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         e2eTestRunner: 'none',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -575,7 +575,7 @@ describe('app', () => {
   describe('--compiler', () => {
     it('should support babel compiler', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         compiler: 'babel',
         projectNameAndRootFormat: 'as-provided',
       } as Schema);
@@ -602,7 +602,7 @@ describe('app', () => {
 
     it('should support swc compiler', async () => {
       await applicationGenerator(tree, {
-        name: 'myApp',
+        name: 'my-app',
         compiler: 'swc',
         projectNameAndRootFormat: 'as-provided',
       } as Schema);
@@ -633,7 +633,7 @@ describe('app', () => {
     beforeAll(async () => {
       viteAppTree = createTreeWithEmptyWorkspace();
       await applicationGenerator(viteAppTree, {
-        name: 'myApp',
+        name: 'my-app',
         bundler: 'vite',
         projectNameAndRootFormat: 'as-provided',
       });
