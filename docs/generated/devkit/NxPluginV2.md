@@ -6,9 +6,9 @@ A plugin for Nx which creates nodes and dependencies for the [ProjectGraph](../.
 
 #### Type parameters
 
-| Name | Type                                                                    |
-| :--- | :---------------------------------------------------------------------- |
-| `T`  | extends `Record`<`string`, `unknown`\> = `Record`<`string`, `unknown`\> |
+| Name | Type      |
+| :--- | :-------- |
+| `T`  | `unknown` |
 
 #### Type declaration
 

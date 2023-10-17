@@ -4,9 +4,9 @@
 
 #### Type parameters
 
-| Name | Type                                                                    |
-| :--- | :---------------------------------------------------------------------- |
-| `T`  | extends `Record`<`string`, `unknown`\> = `Record`<`string`, `unknown`\> |
+| Name | Type      |
+| :--- | :-------- |
+| `T`  | `unknown` |
 
 #### Type declaration
 
