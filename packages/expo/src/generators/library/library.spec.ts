@@ -15,7 +15,7 @@ describe('lib', () => {
   let appTree: Tree;
 
   const defaultSchema: Schema = {
-    name: 'myLib',
+    name: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -109,7 +109,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         projectNameAndRootFormat: 'derived',
-        directory: 'myDir',
+        directory: 'my-dir',
         tags: 'one',
       });
 
@@ -123,8 +123,8 @@ describe('lib', () => {
 
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
-        name: 'myLib2',
-        directory: 'myDir',
+        name: 'my-lib2',
+        directory: 'my-dir',
         tags: 'one,two',
         projectNameAndRootFormat: 'derived',
       });
@@ -141,7 +141,7 @@ describe('lib', () => {
     it('should update project.json', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
-        directory: 'myDir',
+        directory: 'my-dir',
         projectNameAndRootFormat: 'derived',
       });
       const projectConfiguration = readProjectConfiguration(
@@ -160,7 +160,7 @@ describe('lib', () => {
     it('should update tsconfig.base.json', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
-        directory: 'myDir',
+        directory: 'my-dir',
       });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
@@ -172,7 +172,7 @@ describe('lib', () => {
     it('should create a local tsconfig.json', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
-        directory: 'myDir',
+        directory: 'my-dir',
       });
 
       const tsconfigJson = readJson(appTree, 'my-dir/tsconfig.json');
@@ -251,7 +251,7 @@ describe('lib', () => {
       try {
         await expoLibraryGenerator(appTree, {
           ...defaultSchema,
-          directory: 'myDir',
+          directory: 'my-dir',
           publishable: true,
         });
       } catch (e) {
@@ -290,7 +290,7 @@ describe('lib', () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
-        directory: 'myDir',
+        directory: 'my-dir',
         importPath: '@myorg/lib',
       });
       const packageJson = readJson(appTree, 'my-dir/package.json');
@@ -305,7 +305,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await expoLibraryGenerator(appTree, {
         ...defaultSchema,
-        name: 'myLib1',
+        name: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -313,7 +313,7 @@ describe('lib', () => {
       try {
         await expoLibraryGenerator(appTree, {
           ...defaultSchema,
-          name: 'myLib2',
+          name: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });

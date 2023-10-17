@@ -20,7 +20,7 @@ describe('app', () => {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: false,
-    name: 'myApp',
+    name: 'my-app',
     linter: Linter.EsLint,
     style: 'css',
     strict: true,

@@ -16,112 +16,106 @@ describe('Normalize Options', () => {
       name: 'my-app',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
+      install: false,
       projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'MyApp',
+      iosProjectRoot: 'my-app/ios',
       lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
       projectNameAndRootFormat: 'as-provided',
       linter: Linter.EsLint,
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
-      skipFormat: false,
-      js: true,
+      install: false,
     });
   });
 
   it('should normalize options with name in camel case', async () => {
     const schema: Schema = {
       name: 'myApp',
-      linter: Linter.EsLint,
       e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
+      install: false,
       projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      appProjectRoot: 'my-app',
+      androidProjectRoot: 'myApp/android',
+      appProjectRoot: 'myApp',
       className: 'MyApp',
       displayName: 'MyApp',
+      iosProjectRoot: 'myApp/ios',
       lowerCaseName: 'myapp',
-      name: 'my-app',
+      name: 'myApp',
       parsedTags: [],
-      projectName: 'my-app',
+      projectName: 'myApp',
       projectNameAndRootFormat: 'as-provided',
-      linter: Linter.EsLint,
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
       unitTestRunner: 'jest',
+      install: false,
     });
   });
 
   it('should normalize options with directory', async () => {
     const schema: Schema = {
       name: 'my-app',
-      directory: 'directory',
-      linter: Linter.EsLint,
+      directory: 'directory/my-app',
       e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
+      install: false,
       projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
-      appProjectRoot: 'directory',
+      androidProjectRoot: 'directory/my-app/android',
+      appProjectRoot: 'directory/my-app',
       className: 'MyApp',
       displayName: 'MyApp',
+      iosProjectRoot: 'directory/my-app/ios',
       lowerCaseName: 'myapp',
       name: 'my-app',
-      directory: 'directory',
+      directory: 'directory/my-app',
       parsedTags: [],
       projectName: 'my-app',
       projectNameAndRootFormat: 'as-provided',
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
-      linter: Linter.EsLint,
-      skipFormat: false,
-      js: true,
+      install: false,
     });
   });
 
   it('should normalize options that has directory in its name', async () => {
     const schema: Schema = {
       name: 'directory/my-app',
-      linter: Linter.EsLint,
       e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
+      install: false,
       projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
       className: 'DirectoryMyApp',
       displayName: 'DirectoryMyApp',
+      iosProjectRoot: 'directory/my-app/ios',
       lowerCaseName: 'directorymyapp',
       name: 'directory/my-app',
       parsedTags: [],
       projectName: 'directory/my-app',
       projectNameAndRootFormat: 'as-provided',
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
-      linter: Linter.EsLint,
-      skipFormat: false,
-      js: true,
+      install: false,
     });
   });
 
@@ -129,28 +123,26 @@ describe('Normalize Options', () => {
     const schema: Schema = {
       name: 'my-app',
       displayName: 'My App',
-      linter: Linter.EsLint,
       e2eTestRunner: 'none',
-      skipFormat: false,
-      js: true,
-      unitTestRunner: 'jest',
+      install: false,
       projectNameAndRootFormat: 'as-provided',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'My App',
+      iosProjectRoot: 'my-app/ios',
       lowerCaseName: 'myapp',
       name: 'my-app',
       parsedTags: [],
       projectName: 'my-app',
       projectNameAndRootFormat: 'as-provided',
+      entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
       unitTestRunner: 'jest',
-      linter: Linter.EsLint,
-      skipFormat: false,
-      js: true,
+      install: false,
     });
   });
 });
