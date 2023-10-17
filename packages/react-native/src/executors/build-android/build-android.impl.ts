@@ -66,14 +66,8 @@ function runCliBuild(
   });
 }
 
-const nxOptions = ['sync', 'packager'];
 const startOptions = ['port', 'resetCache'];
-const deprecatedOptions = ['apk', 'debug', 'gradleTask'];
 
 function createBuildAndroidOptions(options: ReactNativeBuildAndroidOptions) {
-  return getCliOptions<ReactNativeBuildAndroidOptions>(options, [
-    ...nxOptions,
-    ...startOptions,
-    ...deprecatedOptions,
-  ]);
+  return getCliOptions<ReactNativeBuildAndroidOptions>(options, startOptions);
 }

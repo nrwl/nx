@@ -88,7 +88,7 @@ function runCliRun(
   });
 }
 
-const nxOptions = ['sync', 'platform', 'install', 'clean'];
+const nxOptions = ['platform', 'clean'];
 const iOSOptions = ['xcodeConfiguration', 'schema'];
 const androidOptions = ['variant'];
 /*
