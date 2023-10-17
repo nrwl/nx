@@ -26,44 +26,6 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       project: libName,
-      unitTestRunner: 'vitest',
-    });
-
-    expect(appTree.read(`${libName}/src/lib/hello/hello.vue`, 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "<script setup lang="ts">
-      defineProps<{}>();
-      </script>
-
-      <template>
-        <p>Welcome to Hello!</p>
-      </template>
-
-      <style scoped></style>
-      "
-    `);
-    expect(appTree.read(`${libName}/src/lib/hello/hello.spec.ts`, 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { describe, it, expect } from 'vitest';
-
-      import { mount } from '@vue/test-utils';
-      import Hello from './hello.vue';
-
-      describe('Hello', () => {
-        it('renders properly', () => {
-          const wrapper = mount(Hello, {});
-          expect(wrapper.text()).toContain('Welcome to Hello');
-        });
-      });
-      "
-    `);
-  });
-
-  it('should generate files with jest', async () => {
-    await componentGenerator(appTree, {
-      name: 'hello',
-      project: libName,
-      unitTestRunner: 'jest',
     });
 
     expect(appTree.read(`${libName}/src/lib/hello/hello.vue`, 'utf-8'))
@@ -98,7 +60,6 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello-world',
       project: libName,
-      unitTestRunner: 'none',
       directory: 'foo/bar',
     });
 
@@ -114,7 +75,6 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'helloWorld',
       project: libName,
-      unitTestRunner: 'none',
       directory: 'foo/bar-baz',
     });
 
@@ -130,7 +90,6 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       project: appName,
-      unitTestRunner: 'vitest',
     });
 
     expect(

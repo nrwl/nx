@@ -8,7 +8,6 @@ export interface Schema {
   fileName?: string;
   inSourceTests?: boolean;
   skipFormat?: boolean;
-  unitTestRunner?: 'jest' | 'vitest' | 'none';
   nameAndDirectoryFormat?: 'as-provided' | 'derived';
 
   /**
