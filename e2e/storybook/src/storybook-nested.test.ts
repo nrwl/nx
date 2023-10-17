@@ -80,7 +80,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
       writeFileSync(
         tmpProjPath(`src/app/test-button.tsx`),
         `
-          import { MyLib } from 'my-lib';
+          import { MyLib } from '@${appName}/my-lib';
 
           export function TestButton() {
             return (
