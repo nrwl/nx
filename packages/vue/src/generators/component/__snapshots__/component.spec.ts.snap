@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`component --export should add to index.ts barrel 1`] = `
-"export { default as MyLibHello } from './components/hello/hello.vue';
+"export { default as Hello } from './components/hello/hello.vue';
 "
 `;
 
@@ -13,7 +13,7 @@ defineProps<{}>();
 </script>
 
 <template>
-  <p>Welcome to MyLibHello!</p>
+  <p>Welcome to Hello!</p>
 </template>
 
 <style scoped></style>
@@ -22,12 +22,12 @@ defineProps<{}>();
 
 exports[`component should generate files with jest 2`] = `
 "import { mount } from '@vue/test-utils';
-import MyLibHello from './hello.vue';
+import Hello from './hello.vue';
 
-describe('MyLibHello', () => {
+describe('Hello', () => {
   it('renders properly', () => {
-    const wrapper = mount(MyLibHello, {});
-    expect(wrapper.text()).toContain('Welcome to MyLibHello');
+    const wrapper = mount(Hello, {});
+    expect(wrapper.text()).toContain('Welcome to Hello');
   });
 });
 "
@@ -39,7 +39,7 @@ defineProps<{}>();
 </script>
 
 <template>
-  <p>Welcome to MyLibHello!</p>
+  <p>Welcome to Hello!</p>
 </template>
 
 <style scoped></style>
@@ -50,12 +50,12 @@ exports[`component should generate files with vitest 2`] = `
 "import { describe, it, expect } from 'vitest';
 
 import { mount } from '@vue/test-utils';
-import MyLibHello from './hello.vue';
+import Hello from './hello.vue';
 
-describe('MyLibHello', () => {
+describe('Hello', () => {
   it('renders properly', () => {
-    const wrapper = mount(MyLibHello, {});
-    expect(wrapper.text()).toContain('Welcome to MyLibHello');
+    const wrapper = mount(Hello, {});
+    expect(wrapper.text()).toContain('Welcome to Hello');
   });
 });
 "

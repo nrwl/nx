@@ -2,7 +2,6 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getProjects,
   joinPathFragments,
   runTasksInSerial,
   toJS,
@@ -13,16 +12,13 @@ import { join } from 'path';
 import { addExportsToBarrel, normalizeOptions } from './lib/utils';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
-  const workspace = getProjects(host);
-  const isApp = workspace.get(schema.project).projectType === 'application';
-
-  const options = await normalizeOptions(host, schema, isApp);
+  const options = await normalizeOptions(host, schema);
 
   createComponentFiles(host, options);
 
   const tasks: GeneratorCallback[] = [];
 
-  addExportsToBarrel(host, options, isApp);
+  addExportsToBarrel(host, options);
 
   if (!options.skipFormat) {
     await formatFiles(host);

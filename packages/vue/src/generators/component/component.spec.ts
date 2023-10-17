@@ -62,7 +62,7 @@ describe('component', () => {
 
     expect(
       appTree.read(`${libName}/src/foo/bar/hello-world.vue`, 'utf-8')
-    ).toContain('FooBarHelloWorld');
+    ).toContain('HelloWorld');
   });
 
   it('should not append Component if component name is two words - camelCase', async () => {
@@ -75,7 +75,7 @@ describe('component', () => {
 
     expect(
       appTree.read(`${libName}/src/foo/bar-baz/hello-world.vue`, 'utf-8')
-    ).toContain('FooBarBazHelloWorld');
+    ).toContain('HelloWorld');
   });
 
   it('should generate files for an app', async () => {
@@ -87,7 +87,7 @@ describe('component', () => {
 
     expect(
       appTree.read(`${appName}/src/components/hello/hello.vue`, 'utf-8')
-    ).toContain('AppHello');
+    ).toContain('Hello');
     expect(
       appTree.exists(`${appName}/src/components/hello/hello.spec.ts`)
     ).toBeTruthy();
@@ -128,7 +128,7 @@ describe('component', () => {
       });
       expect(
         appTree.read(`${libName}/src/foo/bar/Hello.vue`, 'utf-8')
-      ).toContain('FooBarHello');
+      ).toContain('Hello');
       expect(
         appTree.exists(`${libName}/src/foo/bar/Hello.spec.ts`)
       ).toBeTruthy();
