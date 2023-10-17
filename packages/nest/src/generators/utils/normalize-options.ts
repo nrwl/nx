@@ -13,8 +13,6 @@ export async function normalizeOptions(
   callingGenerator: string,
   options: NestGeneratorOptions
 ): Promise<NormalizedOptions> {
-  const { sourceRoot } = readProjectConfiguration(tree, options.project);
-
   const { directory, fileName, nameAndDirectoryFormat } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       callingGenerator,
@@ -26,8 +24,6 @@ export async function normalizeOptions(
       nameAndDirectoryFormat: options.nameAndDirectoryFormat ?? 'derived',
     });
 
-  console.log({ directory, fileName });
-
   const normalizedOptions: NormalizedOptions = {
     ...options,
     flat: true,
@@ -35,8 +31,6 @@ export async function normalizeOptions(
     skipFormat: options.skipFormat,
     sourceRoot: directory,
   };
-
-  console.log({ normalizedOptions });
 
   return normalizedOptions;
 }

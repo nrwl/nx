@@ -51,7 +51,7 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name", "project"],
+    "required": ["name"],
     "presets": []
   },
   "description": "Run the `decorator` NestJS generator with Nx project support.",

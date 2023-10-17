@@ -66,7 +66,7 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name", "project"],
+    "required": ["name"],
     "presets": []
   },
   "description": "Run the `controller` NestJS generator with Nx project support.",

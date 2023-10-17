@@ -53,5 +53,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["name", "project"]
+  "required": ["name"]
 }
