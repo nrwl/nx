@@ -2408,6 +2408,16 @@
             "isExternal": false,
             "path": "/recipes/module-federation/create-a-remote",
             "tags": []
+          },
+          {
+            "id": "federate-a-module",
+            "name": "How to Federate a Module",
+            "description": "A guide on how to federate a module in your Nx workspace",
+            "file": "shared/recipes/module-federation/federate-a-module",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/federate-a-module",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -4122,6 +4132,16 @@
         "isExternal": false,
         "path": "/recipes/module-federation/create-a-remote",
         "tags": []
+      },
+      {
+        "id": "federate-a-module",
+        "name": "How to Federate a Module",
+        "description": "A guide on how to federate a module in your Nx workspace",
+        "file": "shared/recipes/module-federation/federate-a-module",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/federate-a-module",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -4146,6 +4166,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/module-federation/create-a-remote",
+    "tags": []
+  },
+  "/recipes/module-federation/federate-a-module": {
+    "id": "federate-a-module",
+    "name": "How to Federate a Module",
+    "description": "A guide on how to federate a module in your Nx workspace",
+    "file": "shared/recipes/module-federation/federate-a-module",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/federate-a-module",
     "tags": []
   },
   "/recipes/enforce-module-boundaries": {
