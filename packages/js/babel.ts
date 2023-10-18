@@ -30,7 +30,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
     (caller) => caller?.emitDecoratorMetadata ?? true
   );
 
-  // Determine settings  for `@babel/plugin-proposal-class-properties`,
+  // Determine settings  for `@babel/plugin-transform-class-properties`,
   // so that we can sync the `loose` option with `@babel/preset-env`.
   const classProperties = options.classProperties ?? { loose: true };
 
@@ -54,7 +54,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
               bugfixes: true,
               // Exclude transforms that make all code slower
               exclude: ['transform-typeof-symbol'],
-              // This must match the setting for `@babel/plugin-proposal-class-properties`
+              // This must match the setting for `@babel/plugin-proposal-transform-properties`
               loose: classProperties.loose,
             },
       ],
@@ -90,7 +90,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
         options.decorators ?? { legacy: true },
       ],
       [
-        require.resolve('@babel/plugin-proposal-class-properties'),
+        require.resolve('@babel/plugin-transform-class-properties'),
         classProperties,
       ],
     ].filter(Boolean),
