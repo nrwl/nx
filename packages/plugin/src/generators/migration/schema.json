@@ -56,6 +56,11 @@
       "type": "boolean",
       "default": false,
       "description": "Do not eslint configuration for plugin json files."
+    },
+    "nameAndDirectoryFormat": {
+      "description": "Whether to generate the migration in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     }
   },
   "required": ["packageVersion"],
