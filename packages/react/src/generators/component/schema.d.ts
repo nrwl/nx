@@ -5,7 +5,7 @@ export interface Schema {
   /**
    * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18.
    */
-  project: string;
+  project?: string;
   style: SupportedStyles;
   skipTests?: boolean;
   directory?: string;
@@ -37,6 +37,7 @@ export interface Schema {
 
 export interface NormalizedSchema extends Schema {
   projectSourceRoot: string;
+  projectName: string;
   fileName: string;
   filePath: string;
   className: string;

@@ -7,6 +7,7 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   className: string;
   filePath: string;
+  projectName: string;
 }
 
 export async function normalizeOptions(
@@ -55,6 +56,7 @@ export async function normalizeOptions(
     fileName,
     filePath,
     projectSourceRoot,
+    projectName,
   };
 }
 

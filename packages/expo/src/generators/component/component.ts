@@ -59,7 +59,8 @@ function createComponentFiles(host: Tree, options: NormalizedSchema) {
 
 function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
   const workspace = getProjects(host);
-  const isApp = workspace.get(options.project).projectType === 'application';
+  const isApp =
+    workspace.get(options.projectName).projectType === 'application';
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
