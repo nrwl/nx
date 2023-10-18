@@ -25,16 +25,7 @@ export interface NxAffectedConfig {
   defaultBase?: string;
 }
 
-export type TargetDefaults = Record<
-  string,
-  Partial<TargetConfiguration> & {
-    /**
-     * Determines if Nx is able to cache a given target.
-     * Currently only supported in `targetDefaults`.
-     */
-    cache?: boolean;
-  }
->;
+export type TargetDefaults = Record<string, Partial<TargetConfiguration>>;
 
 export type TargetDependencies = Record<
   string,
