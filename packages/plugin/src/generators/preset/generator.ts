@@ -1,12 +1,10 @@
 import {
-  Tree,
-  updateJson,
-  updateNxJson,
-  readNxJson,
   formatFiles,
-  runTasksInSerial,
   GeneratorCallback,
   names,
+  runTasksInSerial,
+  Tree,
+  updateJson,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -43,7 +41,6 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
   });
   tasks.push(pluginTask);
 
-  removeNpmScope(tree);
   moveNxPluginToDevDeps(tree);
 
   if (options.createPackageName) {
@@ -65,11 +62,6 @@ export default async function (tree: Tree, options: PresetGeneratorSchema) {
 
   return runTasksInSerial(...tasks);
 }
-
-function removeNpmScope(tree: Tree) {
-  updateNxJson(tree, { ...readNxJson(tree), npmScope: undefined });
-}
-
 function moveNxPluginToDevDeps(tree: Tree) {
   updateJson<PackageJson>(tree, 'package.json', (json) => {
     const nxPluginEntry = json.dependencies['@nx/plugin'];

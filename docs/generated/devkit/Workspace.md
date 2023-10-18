@@ -25,7 +25,6 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry&lt;string[] | &quot;\*&quot;&gt;
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
-- [npmScope](../../devkit/documents/Workspace#npmscope): string
 - [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
 - [nxCloudEncryptionKey](../../devkit/documents/Workspace#nxcloudencryptionkey): string
 - [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
@@ -74,11 +73,10 @@ Default generator collection. It is used when no collection is provided.
 
 #### Type declaration
 
-| Name                  | Type                                                      | Description                                                            |
-| :-------------------- | :-------------------------------------------------------- | :--------------------------------------------------------------------- |
-| `defaultCollection?`  | `string`                                                  | **`Deprecated`** - defaultCollection is deprecated and will be removed |
-| `defaultProjectName?` | `string`                                                  | -                                                                      |
-| `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) | -                                                                      |
+| Name                  | Type                                                      |
+| :-------------------- | :-------------------------------------------------------- |
+| `defaultProjectName?` | `string`                                                  |
+| `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) |
 
 #### Inherited from
 
@@ -184,21 +182,6 @@ Named inputs targets can refer to reduce duplication
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs)
-
----
-
-### npmScope
-
-• `Optional` **npmScope**: `string`
-
-**`Deprecated`**
-
-This is inferred from the package.json in the workspace root. Please use getNpmScope instead.
-NPM Scope that the workspace uses
-
-#### Inherited from
-
-[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[npmScope](../../devkit/documents/NxJsonConfiguration#npmscope)
 
 ---
 

@@ -127,17 +127,6 @@ export { glob } from './generators/utils/glob';
  * @category Generators
  */
 export {
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-  isStandaloneProject,
-  WorkspaceConfiguration,
-  getWorkspacePath,
-} from './generators/utils/deprecated';
-
-/**
- * @category Generators
- */
-export {
   readNxJson,
   updateNxJson,
 } from './generators/utils/project-configuration';

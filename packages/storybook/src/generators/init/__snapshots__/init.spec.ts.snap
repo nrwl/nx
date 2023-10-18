@@ -20,6 +20,6 @@ exports[`@nx/storybook:init dependencies for package.json should add angular rel
     "prettier": "^2.6.2",
     "typescript": "~5.1.3",
   },
-  "name": "test-name",
+  "name": "@proj/source",
 }
 `;

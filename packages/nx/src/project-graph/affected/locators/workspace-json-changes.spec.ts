@@ -13,9 +13,7 @@ describe('getTouchedProjectsInWorkspaceJson', () => {
         },
       ],
       {},
-      {
-        npmScope: 'proj',
-      }
+      {}
     );
     expect(result).toEqual([]);
   });

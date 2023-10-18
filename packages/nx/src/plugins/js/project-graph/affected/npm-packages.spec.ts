@@ -16,9 +16,7 @@ describe('getTouchedNpmPackages', () => {
         proj2: {},
       },
     };
-    nxJson = {
-      npmScope: 'scope',
-    };
+    nxJson = {};
     projectGraph = {
       nodes: {
         proj1: {

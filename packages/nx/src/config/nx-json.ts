@@ -103,11 +103,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   targetDefaults?: TargetDefaults;
   /**
-   * @deprecated This is inferred from the package.json in the workspace root. Please use {@link getNpmScope} instead.
-   * NPM Scope that the workspace uses
-   */
-  npmScope?: string;
-  /**
    * Default options for `nx affected`
    */
   affected?: NxAffectedConfig;
@@ -158,10 +153,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   cli?: {
     packageManager?: PackageManager;
 
-    /**
-     * @deprecated - defaultCollection is deprecated and will be removed
-     */
-    defaultCollection?: string;
     defaultProjectName?: string;
   };
   /**

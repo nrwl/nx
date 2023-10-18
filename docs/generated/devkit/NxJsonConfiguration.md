@@ -27,7 +27,6 @@ Nx.json configuration
 - [implicitDependencies](../../devkit/documents/NxJsonConfiguration#implicitdependencies): ImplicitDependencyEntry&lt;T&gt;
 - [installation](../../devkit/documents/NxJsonConfiguration#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/NxJsonConfiguration#namedinputs): Object
-- [npmScope](../../devkit/documents/NxJsonConfiguration#npmscope): string
 - [nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken): string
 - [nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
 - [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
@@ -66,11 +65,10 @@ Default generator collection. It is used when no collection is provided.
 
 #### Type declaration
 
-| Name                  | Type                                                      | Description                                                            |
-| :-------------------- | :-------------------------------------------------------- | :--------------------------------------------------------------------- |
-| `defaultCollection?`  | `string`                                                  | **`Deprecated`** - defaultCollection is deprecated and will be removed |
-| `defaultProjectName?` | `string`                                                  | -                                                                      |
-| `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) | -                                                                      |
+| Name                  | Type                                                      |
+| :-------------------- | :-------------------------------------------------------- |
+| `defaultProjectName?` | `string`                                                  |
+| `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) |
 
 ---
 
@@ -148,17 +146,6 @@ Named inputs targets can refer to reduce duplication
 #### Index signature
 
 ▪ [inputName: `string`]: (`string` \| `InputDefinition`)[]
-
----
-
-### npmScope
-
-• `Optional` **npmScope**: `string`
-
-**`Deprecated`**
-
-This is inferred from the package.json in the workspace root. Please use getNpmScope instead.
-NPM Scope that the workspace uses
 
 ---
 

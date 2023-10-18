@@ -26,13 +26,6 @@ import type { Tree } from '../tree';
 import minimatch = require('minimatch');
 
 export { readNxJson, updateNxJson } from './nx-json';
-export {
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-  isStandaloneProject,
-  getWorkspacePath,
-  WorkspaceConfiguration,
-} from './deprecated';
 
 /**
  * Adds project configuration to the Nx workspace.
