@@ -1,13 +1,11 @@
 # Run Root-Level NPM Scripts with Nx
 
-There are often tasks in a codebase that apply to the whole codebase rather than a single project. With version 15.3.0 of Nx, you can run npm scripts directly from the root `package.json`.
-
 {% youtube
 src="https://www.youtube.com/embed/PRURABLaS8s"
 title="Run root-level NPM scripts with Nx"
 /%}
 
-## Example
+There are often tasks in a codebase that apply to the whole codebase rather than a single project. Starting with version 15.3.0 of Nx, you can run npm scripts directly from the root `package.json`.
 
 Let's say your root `package.json` looks like this:
 
@@ -20,7 +18,7 @@ Let's say your root `package.json` looks like this:
 }
 ```
 
-We want to be able to run the `docs` script using Nx.
+We want to be able to run the `docs` script using Nx to get caching and other benefits.
 
 ## Setup
 

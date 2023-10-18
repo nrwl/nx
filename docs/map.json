@@ -266,28 +266,22 @@
           "description": "Learn about all the different concepts Nx uses to manage your tasks and enhance your productivity.",
           "itemList": [
             {
-              "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-              "tags": ["intro", "repository-types"],
-              "id": "integrated-vs-package-based",
-              "file": "shared/concepts/integrated-vs-package-based"
-            },
-            {
               "name": "Mental Model",
               "tags": ["intro"],
               "id": "mental-model",
               "file": "shared/mental-model"
             },
             {
-              "name": "Types of Configuration",
-              "tags": [],
-              "id": "types-of-configuration",
-              "file": "shared/concepts/types-of-configuration"
-            },
-            {
               "name": "How Caching Works",
               "tags": ["cache-task-results"],
               "id": "how-caching-works",
               "file": "shared/concepts/how-caching-works"
+            },
+            {
+              "name": "Types of Configuration",
+              "tags": [],
+              "id": "types-of-configuration",
+              "file": "shared/concepts/types-of-configuration"
             },
             {
               "name": "Improve Worst Case CI Times",
@@ -306,6 +300,12 @@
               "tags": ["run-tasks"],
               "id": "affected",
               "file": "shared/using-nx/affected"
+            },
+            {
+              "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+              "tags": ["intro", "repository-types"],
+              "id": "integrated-vs-package-based",
+              "file": "shared/concepts/integrated-vs-package-based"
             },
             {
               "name": "Module Federation",
@@ -470,6 +470,30 @@
                   "id": "defining-task-pipeline",
                   "tags": ["run-tasks"],
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
+                },
+                {
+                  "name": "Running Custom Commands",
+                  "id": "run-commands-executor",
+                  "tags": ["run-tasks", "use-task-executors"],
+                  "file": "shared/recipes/running-tasks/running-custom-commands"
+                },
+                {
+                  "name": "Run Root-Level NPM Scripts with Nx",
+                  "id": "root-level-scripts",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/root-level-scripts"
+                },
+                {
+                  "name": "Workspace Watching",
+                  "id": "workspace-watching",
+                  "tags": ["run-tasks", "workspace-watching"],
+                  "file": "shared/recipes/running-tasks/workspace-watching"
+                },
+                {
+                  "name": "Reduce Repetitive Configuration",
+                  "id": "reduce-repetitive-configuration",
+                  "tags": [],
+                  "file": "shared/recipes/running-tasks/reduce-repetitive-configuration"
                 }
               ]
             },
@@ -1027,28 +1051,10 @@
                   "file": "shared/recipes/identify-dependencies-between-folders"
                 },
                 {
-                  "name": "Reduce Repetitive Configuration",
-                  "id": "reduce-repetitive-configuration",
-                  "tags": [],
-                  "file": "shared/recipes/reduce-repetitive-configuration"
-                },
-                {
-                  "name": "Run Root-Level NPM Scripts with Nx",
-                  "id": "root-level-scripts",
-                  "tags": ["run-tasks"],
-                  "file": "shared/recipes/root-level-scripts"
-                },
-                {
                   "name": "Disable Graph Links Created from Analyzing Source Files",
                   "id": "analyze-source-files",
                   "tags": ["explore-graph"],
                   "file": "shared/recipes/analyze-source-files"
-                },
-                {
-                  "name": "Workspace Watching",
-                  "id": "workspace-watching",
-                  "tags": ["workspace-watching"],
-                  "file": "shared/recipes/workspace-watching"
                 },
                 {
                   "name": "Use JavaScript instead TypeScript",
@@ -1060,12 +1066,6 @@
                   "id": "advanced-update",
                   "tags": ["automate-updating-dependencies"],
                   "file": "shared/recipes/advanced-update"
-                },
-                {
-                  "name": "Running Custom Commands",
-                  "id": "run-commands-executor",
-                  "tags": ["use-task-executors"],
-                  "file": "shared/running-custom-commands"
                 },
                 {
                   "name": "Using Yarn PnP",

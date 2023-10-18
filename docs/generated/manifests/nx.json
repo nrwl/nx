@@ -935,16 +935,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "integrated-vs-package-based",
-        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-        "description": "",
-        "file": "shared/concepts/integrated-vs-package-based",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/integrated-vs-package-based",
-        "tags": ["intro", "repository-types"]
-      },
-      {
         "id": "mental-model",
         "name": "Mental Model",
         "description": "",
@@ -955,16 +945,6 @@
         "tags": ["intro"]
       },
       {
-        "id": "types-of-configuration",
-        "name": "Types of Configuration",
-        "description": "",
-        "file": "shared/concepts/types-of-configuration",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/types-of-configuration",
-        "tags": []
-      },
-      {
         "id": "how-caching-works",
         "name": "How Caching Works",
         "description": "",
@@ -973,6 +953,16 @@
         "isExternal": false,
         "path": "/concepts/how-caching-works",
         "tags": ["cache-task-results"]
+      },
+      {
+        "id": "types-of-configuration",
+        "name": "Types of Configuration",
+        "description": "",
+        "file": "shared/concepts/types-of-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/types-of-configuration",
+        "tags": []
       },
       {
         "id": "dte",
@@ -1003,6 +993,16 @@
         "isExternal": false,
         "path": "/concepts/affected",
         "tags": ["run-tasks"]
+      },
+      {
+        "id": "integrated-vs-package-based",
+        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+        "description": "",
+        "file": "shared/concepts/integrated-vs-package-based",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/integrated-vs-package-based",
+        "tags": ["intro", "repository-types"]
       },
       {
         "id": "module-federation",
@@ -1256,16 +1256,6 @@
     "path": "/concepts",
     "tags": []
   },
-  "/concepts/integrated-vs-package-based": {
-    "id": "integrated-vs-package-based",
-    "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-    "description": "",
-    "file": "shared/concepts/integrated-vs-package-based",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/integrated-vs-package-based",
-    "tags": ["intro", "repository-types"]
-  },
   "/concepts/mental-model": {
     "id": "mental-model",
     "name": "Mental Model",
@@ -1276,16 +1266,6 @@
     "path": "/concepts/mental-model",
     "tags": ["intro"]
   },
-  "/concepts/types-of-configuration": {
-    "id": "types-of-configuration",
-    "name": "Types of Configuration",
-    "description": "",
-    "file": "shared/concepts/types-of-configuration",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/types-of-configuration",
-    "tags": []
-  },
   "/concepts/how-caching-works": {
     "id": "how-caching-works",
     "name": "How Caching Works",
@@ -1295,6 +1275,16 @@
     "isExternal": false,
     "path": "/concepts/how-caching-works",
     "tags": ["cache-task-results"]
+  },
+  "/concepts/types-of-configuration": {
+    "id": "types-of-configuration",
+    "name": "Types of Configuration",
+    "description": "",
+    "file": "shared/concepts/types-of-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/types-of-configuration",
+    "tags": []
   },
   "/concepts/dte": {
     "id": "dte",
@@ -1325,6 +1315,16 @@
     "isExternal": false,
     "path": "/concepts/affected",
     "tags": ["run-tasks"]
+  },
+  "/concepts/integrated-vs-package-based": {
+    "id": "integrated-vs-package-based",
+    "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+    "description": "",
+    "file": "shared/concepts/integrated-vs-package-based",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/integrated-vs-package-based",
+    "tags": ["intro", "repository-types"]
   },
   "/concepts/module-federation": {
     "id": "module-federation",
@@ -1819,6 +1819,46 @@
             "isExternal": false,
             "path": "/recipes/running-tasks/defining-task-pipeline",
             "tags": ["run-tasks"]
+          },
+          {
+            "id": "run-commands-executor",
+            "name": "Running Custom Commands",
+            "description": "",
+            "file": "shared/recipes/running-tasks/running-custom-commands",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/run-commands-executor",
+            "tags": ["run-tasks", "use-task-executors"]
+          },
+          {
+            "id": "root-level-scripts",
+            "name": "Run Root-Level NPM Scripts with Nx",
+            "description": "",
+            "file": "shared/recipes/running-tasks/root-level-scripts",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/root-level-scripts",
+            "tags": ["run-tasks"]
+          },
+          {
+            "id": "workspace-watching",
+            "name": "Workspace Watching",
+            "description": "",
+            "file": "shared/recipes/running-tasks/workspace-watching",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/workspace-watching",
+            "tags": ["run-tasks", "workspace-watching"]
+          },
+          {
+            "id": "reduce-repetitive-configuration",
+            "name": "Reduce Repetitive Configuration",
+            "description": "",
+            "file": "shared/recipes/running-tasks/reduce-repetitive-configuration",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/reduce-repetitive-configuration",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -2756,26 +2796,6 @@
             "tags": []
           },
           {
-            "id": "reduce-repetitive-configuration",
-            "name": "Reduce Repetitive Configuration",
-            "description": "",
-            "file": "shared/recipes/reduce-repetitive-configuration",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
-            "tags": []
-          },
-          {
-            "id": "root-level-scripts",
-            "name": "Run Root-Level NPM Scripts with Nx",
-            "description": "",
-            "file": "shared/recipes/root-level-scripts",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/root-level-scripts",
-            "tags": ["run-tasks"]
-          },
-          {
             "id": "analyze-source-files",
             "name": "Disable Graph Links Created from Analyzing Source Files",
             "description": "",
@@ -2784,16 +2804,6 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/analyze-source-files",
             "tags": ["explore-graph"]
-          },
-          {
-            "id": "workspace-watching",
-            "name": "Workspace Watching",
-            "description": "",
-            "file": "shared/recipes/workspace-watching",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/workspace-watching",
-            "tags": ["workspace-watching"]
           },
           {
             "id": "js-and-ts",
@@ -2814,16 +2824,6 @@
             "isExternal": false,
             "path": "/recipes/tips-n-tricks/advanced-update",
             "tags": ["automate-updating-dependencies"]
-          },
-          {
-            "id": "run-commands-executor",
-            "name": "Running Custom Commands",
-            "description": "",
-            "file": "shared/running-custom-commands",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/run-commands-executor",
-            "tags": ["use-task-executors"]
           },
           {
             "id": "yarn-pnp",
@@ -3043,6 +3043,46 @@
         "isExternal": false,
         "path": "/recipes/running-tasks/defining-task-pipeline",
         "tags": ["run-tasks"]
+      },
+      {
+        "id": "run-commands-executor",
+        "name": "Running Custom Commands",
+        "description": "",
+        "file": "shared/recipes/running-tasks/running-custom-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/run-commands-executor",
+        "tags": ["run-tasks", "use-task-executors"]
+      },
+      {
+        "id": "root-level-scripts",
+        "name": "Run Root-Level NPM Scripts with Nx",
+        "description": "",
+        "file": "shared/recipes/running-tasks/root-level-scripts",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/root-level-scripts",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "workspace-watching",
+        "name": "Workspace Watching",
+        "description": "",
+        "file": "shared/recipes/running-tasks/workspace-watching",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/workspace-watching",
+        "tags": ["run-tasks", "workspace-watching"]
+      },
+      {
+        "id": "reduce-repetitive-configuration",
+        "name": "Reduce Repetitive Configuration",
+        "description": "",
+        "file": "shared/recipes/running-tasks/reduce-repetitive-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/reduce-repetitive-configuration",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -3068,6 +3108,46 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/run-commands-executor": {
+    "id": "run-commands-executor",
+    "name": "Running Custom Commands",
+    "description": "",
+    "file": "shared/recipes/running-tasks/running-custom-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/run-commands-executor",
+    "tags": ["run-tasks", "use-task-executors"]
+  },
+  "/recipes/running-tasks/root-level-scripts": {
+    "id": "root-level-scripts",
+    "name": "Run Root-Level NPM Scripts with Nx",
+    "description": "",
+    "file": "shared/recipes/running-tasks/root-level-scripts",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/root-level-scripts",
+    "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/workspace-watching": {
+    "id": "workspace-watching",
+    "name": "Workspace Watching",
+    "description": "",
+    "file": "shared/recipes/running-tasks/workspace-watching",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/workspace-watching",
+    "tags": ["run-tasks", "workspace-watching"]
+  },
+  "/recipes/running-tasks/reduce-repetitive-configuration": {
+    "id": "reduce-repetitive-configuration",
+    "name": "Reduce Repetitive Configuration",
+    "description": "",
+    "file": "shared/recipes/running-tasks/reduce-repetitive-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/reduce-repetitive-configuration",
+    "tags": []
   },
   "/recipes/adopting-nx": {
     "id": "adopting-nx",
@@ -4691,26 +4771,6 @@
         "tags": []
       },
       {
-        "id": "reduce-repetitive-configuration",
-        "name": "Reduce Repetitive Configuration",
-        "description": "",
-        "file": "shared/recipes/reduce-repetitive-configuration",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
-        "tags": []
-      },
-      {
-        "id": "root-level-scripts",
-        "name": "Run Root-Level NPM Scripts with Nx",
-        "description": "",
-        "file": "shared/recipes/root-level-scripts",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/root-level-scripts",
-        "tags": ["run-tasks"]
-      },
-      {
         "id": "analyze-source-files",
         "name": "Disable Graph Links Created from Analyzing Source Files",
         "description": "",
@@ -4719,16 +4779,6 @@
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/analyze-source-files",
         "tags": ["explore-graph"]
-      },
-      {
-        "id": "workspace-watching",
-        "name": "Workspace Watching",
-        "description": "",
-        "file": "shared/recipes/workspace-watching",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/workspace-watching",
-        "tags": ["workspace-watching"]
       },
       {
         "id": "js-and-ts",
@@ -4749,16 +4799,6 @@
         "isExternal": false,
         "path": "/recipes/tips-n-tricks/advanced-update",
         "tags": ["automate-updating-dependencies"]
-      },
-      {
-        "id": "run-commands-executor",
-        "name": "Running Custom Commands",
-        "description": "",
-        "file": "shared/running-custom-commands",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/run-commands-executor",
-        "tags": ["use-task-executors"]
       },
       {
         "id": "yarn-pnp",
@@ -4915,26 +4955,6 @@
     "path": "/recipes/tips-n-tricks/identify-dependencies-between-folders",
     "tags": []
   },
-  "/recipes/tips-n-tricks/reduce-repetitive-configuration": {
-    "id": "reduce-repetitive-configuration",
-    "name": "Reduce Repetitive Configuration",
-    "description": "",
-    "file": "shared/recipes/reduce-repetitive-configuration",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
-    "tags": []
-  },
-  "/recipes/tips-n-tricks/root-level-scripts": {
-    "id": "root-level-scripts",
-    "name": "Run Root-Level NPM Scripts with Nx",
-    "description": "",
-    "file": "shared/recipes/root-level-scripts",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/root-level-scripts",
-    "tags": ["run-tasks"]
-  },
   "/recipes/tips-n-tricks/analyze-source-files": {
     "id": "analyze-source-files",
     "name": "Disable Graph Links Created from Analyzing Source Files",
@@ -4944,16 +4964,6 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/analyze-source-files",
     "tags": ["explore-graph"]
-  },
-  "/recipes/tips-n-tricks/workspace-watching": {
-    "id": "workspace-watching",
-    "name": "Workspace Watching",
-    "description": "",
-    "file": "shared/recipes/workspace-watching",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/workspace-watching",
-    "tags": ["workspace-watching"]
   },
   "/recipes/tips-n-tricks/js-and-ts": {
     "id": "js-and-ts",
@@ -4974,16 +4984,6 @@
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/advanced-update",
     "tags": ["automate-updating-dependencies"]
-  },
-  "/recipes/tips-n-tricks/run-commands-executor": {
-    "id": "run-commands-executor",
-    "name": "Running Custom Commands",
-    "description": "",
-    "file": "shared/running-custom-commands",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/run-commands-executor",
-    "tags": ["use-task-executors"]
   },
   "/recipes/tips-n-tricks/yarn-pnp": {
     "id": "yarn-pnp",
