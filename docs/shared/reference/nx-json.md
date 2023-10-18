@@ -53,7 +53,7 @@ The `npmScope` property of the `nx.json` file is deprecated as of version 16.2.0
 
 In Nx 16, if the `npmScope` property is present, it will be used as a prefix. If the `npmScope` property is not present, the `name` property of the root `package.json` file will be used to infer the prefix.
 
-In Nx 17, the `npmScope` property will be ignored.
+In Nx 17, the `npmScope` property is ignored.
 
 ### Affected
 

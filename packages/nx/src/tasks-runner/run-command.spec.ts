@@ -10,9 +10,7 @@ describe('getRunner', () => {
   let overrides: any;
 
   beforeEach(() => {
-    nxJson = {
-      npmScope: 'proj',
-    };
+    nxJson = {};
     mockRunner = jest.fn();
   });
 

@@ -23,10 +23,10 @@ import {
 import { join } from 'path';
 
 describe('Nx Plugin', () => {
-  let npmScope: string;
+  let workspaceName: string;
 
   beforeAll(() => {
-    npmScope = newProject();
+    workspaceName = newProject();
   });
 
   afterAll(() => cleanupProject());
@@ -292,7 +292,7 @@ describe('Nx Plugin', () => {
       // Register plugin in nx.json (required for inference)
       updateFile(`nx.json`, (nxJson) => {
         const nx = JSON.parse(nxJson);
-        nx.plugins = [`@${npmScope}/${plugin}`];
+        nx.plugins = [`@${workspaceName}/${plugin}`];
         return JSON.stringify(nx, null, 2);
       });
 
@@ -315,7 +315,7 @@ describe('Nx Plugin', () => {
         const nx = JSON.parse(nxJson);
         nx.plugins = [
           {
-            plugin: `@${npmScope}/${plugin}`,
+            plugin: `@${workspaceName}/${plugin}`,
             options: { inferredTags: ['my-tag'] },
           },
         ];
@@ -351,13 +351,13 @@ describe('Nx Plugin', () => {
       );
 
       runCLI(
-        `generate @${npmScope}/${plugin}:${generator} --name ${generatedProject}`
+        `generate @${workspaceName}/${plugin}:${generator} --name ${generatedProject}`
       );
 
       updateFile(`libs/${generatedProject}/project.json`, (f) => {
         const project: ProjectConfiguration = JSON.parse(f);
         project.targets['execute'] = {
-          executor: `@${npmScope}/${plugin}:${executor}`,
+          executor: `@${workspaceName}/${plugin}:${executor}`,
         };
         return JSON.stringify(project, null, 2);
       });
@@ -383,7 +383,9 @@ describe('Nx Plugin', () => {
         );
 
         runCLI(
-          `generate @${npmScope}/${plugin}:${generator} --name ${uniq('test')}`
+          `generate @${workspaceName}/${plugin}:${generator} --name ${uniq(
+            'test'
+          )}`
         );
       }).not.toThrow();
       updateFile('package.json', JSON.stringify(oldPackageJson, null, 2));

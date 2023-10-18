@@ -3,10 +3,6 @@ import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import type { Styles } from '../utils/types';
 
 export interface GeneratorOptions {
-  /**
-   * @deprecated This should be inferred with {@link getNpmScope}
-   */
-  npmScope?: string;
   defaultBase?: string;
 
   unitTestRunner?: UnitTestRunner;

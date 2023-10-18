@@ -22,8 +22,6 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
-import type { Arguments } from 'yargs';
-import { output } from '../../utils/output';
 import { getGeneratorInformation } from './generator-utils';
 
 export interface GenerateOptions {
@@ -204,7 +202,6 @@ export function parseGeneratorString(value: string): {
 
 async function convertToGenerateOptions(
   generatorOptions: { [p: string]: any },
-  defaultCollectionName: string,
   mode: 'generate' | 'new',
   projectsConfiguration?: ProjectsConfigurations
 ): Promise<GenerateOptions> {
@@ -219,7 +216,7 @@ async function convertToGenerateOptions(
     if (collection) {
       collectionName = collection;
       generatorName = generator;
-    } else if (!defaultCollectionName) {
+    } else {
       const generatorString = await promptForCollection(
         generatorDescriptor,
         interactive,
@@ -228,9 +225,6 @@ async function convertToGenerateOptions(
       const parsedGeneratorString = parseGeneratorString(generatorString);
       collectionName = parsedGeneratorString.collection;
       generatorName = parsedGeneratorString.generator;
-    } else {
-      collectionName = defaultCollectionName;
-      generatorName = generatorDescriptor;
     }
   } else {
     collectionName = generatorOptions.collection as string;
@@ -270,11 +264,6 @@ function throwInvalidInvocation(availableGenerators: string[]) {
     )})`
   );
 }
-
-function readDefaultCollection(nxConfig: NxJsonConfiguration) {
-  return nxConfig.cli ? nxConfig.cli.defaultCollection : null;
-}
-
 export function printGenHelp(
   opts: GenerateOptions,
   schema: Schema,
@@ -310,7 +299,6 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
   return handleErrors(verbose, async () => {
     const opts = await convertToGenerateOptions(
       args,
-      readDefaultCollection(nxJsonConfiguration),
       'generate',
       projectsConfigurations
     );

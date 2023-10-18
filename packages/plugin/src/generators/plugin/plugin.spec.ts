@@ -4,6 +4,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
@@ -242,10 +243,10 @@ describe('NxPlugin Plugin Generator', () => {
     });
 
     it('should correctly setup npmScope less workspaces', async () => {
-      // remove the npmScope from nx.json
-      const nxJson = JSON.parse(tree.read('nx.json')!.toString());
-      delete nxJson.npmScope;
-      tree.write('nx.json', JSON.stringify(nxJson));
+      updateJson(tree, 'package.json', (j) => {
+        j.name = 'source';
+        return j;
+      });
 
       await pluginGenerator(tree, getSchema());
 
