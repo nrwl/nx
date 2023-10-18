@@ -28,3 +28,11 @@ nx g @nx/angular:stories ui --ignorePaths=libs/ui/src/not-stories/**,**/**/src/*
 This will generate stories for all the components in the `ui` project, except for the ones in the `libs/ui/src/not-stories` directory, and also for components that their file name is of the pattern `*.other.*`.
 
 This is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.
+
+By default, Nx will ignore the following paths:
+
+```text
+*.stories.ts, *.stories.tsx, *.stories.js, *.stories.jsx, *.stories.mdx
+```
+
+but you can change this behaviour easily, as explained above.
