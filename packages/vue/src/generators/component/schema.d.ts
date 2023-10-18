@@ -29,6 +29,7 @@ export interface Schema {
 }
 
 export interface NormalizedSchema extends Schema {
+  projectName: string;
   projectSourceRoot: string;
   fileName: string;
   className: string;
