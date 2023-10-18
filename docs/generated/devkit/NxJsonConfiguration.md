@@ -32,7 +32,7 @@ Nx.json configuration
 - [nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey): string
 - [nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl): string
 - [parallel](../../devkit/documents/NxJsonConfiguration#parallel): number
-- [plugins](../../devkit/documents/NxJsonConfiguration#plugins): PluginDefinition[]
+- [plugins](../../devkit/documents/NxJsonConfiguration#plugins): PluginConfiguration[]
 - [pluginsConfig](../../devkit/documents/NxJsonConfiguration#pluginsconfig): Record&lt;string, Record&lt;string, unknown&gt;&gt;
 - [release](../../devkit/documents/NxJsonConfiguration#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/NxJsonConfiguration#targetdefaults): TargetDefaults
@@ -198,7 +198,7 @@ Specifies how many tasks can be run in parallel.
 
 ### plugins
 
-• `Optional` **plugins**: `PluginDefinition`[]
+• `Optional` **plugins**: [`PluginConfiguration`](../../devkit/documents/PluginConfiguration)[]
 
 Plugins for extending the project graph
 
