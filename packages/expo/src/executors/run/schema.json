@@ -32,8 +32,7 @@
     },
     "device": {
       "type": "string",
-      "description": "Device name or UDID to build the app on. The value is not required if you have a single device connected.",
-      "alias": "d"
+      "description": "Device name or UDID to build the app on. The value is not required if you have a single device connected."
     },
     "port": {
       "type": "number",

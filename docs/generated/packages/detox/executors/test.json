@@ -59,8 +59,7 @@
       },
       "debugSynchronization": {
         "type": "boolean",
-        "description": "Customize how long an action/expectation can take to complete before Detox starts querying the app why it is busy. By default, the app status will be printed if the action takes more than 10s to complete.",
-        "alias": "d"
+        "description": "Customize how long an action/expectation can take to complete before Detox starts querying the app why it is busy. By default, the app status will be printed if the action takes more than 10s to complete."
       },
       "artifactsLocation": {
         "type": "string",
