@@ -20,6 +20,9 @@
         "type": "array",
         "description": "Paths to ignore when looking for components.",
         "items": { "type": "string", "description": "Path to ignore." },
+        "default": [
+          "*.stories.ts,*.stories.tsx,*.stories.js,*.stories.jsx,*.stories.mdx"
+        ],
         "examples": [
           "apps/my-app/src/not-stories/**",
           "**/**/src/**/not-stories/**",
