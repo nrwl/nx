@@ -440,7 +440,8 @@ first before building the remotes.
 
 ## Summary
 
-You could use Module Federation to implement [micro frontends](/concepts/more-concepts/micro-frontend-architecture), but this
+You could use Module Federation to implement [micro frontends](/concepts/module-federation/micro-frontend-architecture),
+but this
 guide showed how to use it to speed up your builds.
 
 Module Federation allows you to split a single build process into multiple processes which can run in parallel or even

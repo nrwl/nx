@@ -810,6 +810,31 @@
             "disableCollapsible": false
           },
           {
+            "name": "Module Federation",
+            "path": "/concepts/module-federation",
+            "id": "module-federation",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Faster Builds with Module Federation",
+                "path": "/concepts/module-federation/faster-builds-with-module-federation",
+                "id": "faster-builds-with-module-federation",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Micro Frontend Architecture",
+                "path": "/concepts/module-federation/micro-frontend-architecture",
+                "id": "micro-frontend-architecture",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "More Concepts",
             "path": "/concepts/more-concepts",
             "id": "more-concepts",
@@ -907,22 +932,6 @@
                 "name": "Nx Devkit and Angular Devkit",
                 "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
                 "id": "nx-devkit-angular-devkit",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Micro Frontend Architecture",
-                "path": "/concepts/more-concepts/micro-frontend-architecture",
-                "id": "micro-frontend-architecture",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Faster Builds with Module Federation",
-                "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-                "id": "faster-builds-with-module-federation",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1054,6 +1063,47 @@
         "disableCollapsible": false
       },
       {
+        "name": "Module Federation",
+        "path": "/concepts/module-federation",
+        "id": "module-federation",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Faster Builds with Module Federation",
+            "path": "/concepts/module-federation/faster-builds-with-module-federation",
+            "id": "faster-builds-with-module-federation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Micro Frontend Architecture",
+            "path": "/concepts/module-federation/micro-frontend-architecture",
+            "id": "micro-frontend-architecture",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Faster Builds with Module Federation",
+        "path": "/concepts/module-federation/faster-builds-with-module-federation",
+        "id": "faster-builds-with-module-federation",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Micro Frontend Architecture",
+        "path": "/concepts/module-federation/micro-frontend-architecture",
+        "id": "micro-frontend-architecture",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "More Concepts",
         "path": "/concepts/more-concepts",
         "id": "more-concepts",
@@ -1151,22 +1201,6 @@
             "name": "Nx Devkit and Angular Devkit",
             "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
             "id": "nx-devkit-angular-devkit",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Micro Frontend Architecture",
-            "path": "/concepts/more-concepts/micro-frontend-architecture",
-            "id": "micro-frontend-architecture",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Faster Builds with Module Federation",
-            "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-            "id": "faster-builds-with-module-federation",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1330,22 +1364,6 @@
         "name": "Nx Devkit and Angular Devkit",
         "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
         "id": "nx-devkit-angular-devkit",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Micro Frontend Architecture",
-        "path": "/concepts/more-concepts/micro-frontend-architecture",
-        "id": "micro-frontend-architecture",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Faster Builds with Module Federation",
-        "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-        "id": "faster-builds-with-module-federation",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

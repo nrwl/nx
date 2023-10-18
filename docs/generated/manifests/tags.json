@@ -431,17 +431,17 @@
     },
     {
       "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/module-federation/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
       "file": "shared/incremental-builds",
       "id": "incremental-builds",
       "name": "Incremental Builds",
       "path": "/concepts/more-concepts/incremental-builds"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds-with-module-federation",
-      "name": "Faster Builds with Module Federation",
-      "path": "/concepts/more-concepts/faster-builds-with-module-federation"
     },
     {
       "description": "",
@@ -632,6 +632,75 @@
       "path": "/recipes/tips-n-tricks/standalone-to-integrated"
     }
   ],
+  "module-federation": [
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/module-federation/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/recipes/react/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for Angular",
+      "path": "/recipes/angular/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "id": "dynamic-module-federation-with-angular",
+      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+    }
+  ],
+  "angular": [
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/module-federation/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for Angular",
+      "path": "/recipes/angular/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "id": "dynamic-module-federation-with-angular",
+      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+    }
+  ],
+  "react": [
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/module-federation/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/recipes/react/module-federation-with-ssr"
+    }
+  ],
   "create-your-own-plugin": [
     {
       "description": "",
@@ -667,75 +736,6 @@
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
       "path": "/extending-nx/recipes/project-graph-plugins"
-    }
-  ],
-  "module-federation": [
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds-with-module-federation",
-      "name": "Faster Builds with Module Federation",
-      "path": "/concepts/more-concepts/faster-builds-with-module-federation"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
-      "id": "dynamic-module-federation-with-angular",
-      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
-    }
-  ],
-  "angular": [
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds-with-module-federation",
-      "name": "Faster Builds with Module Federation",
-      "path": "/concepts/more-concepts/faster-builds-with-module-federation"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
-      "id": "dynamic-module-federation-with-angular",
-      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
-    }
-  ],
-  "react": [
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds-with-module-federation",
-      "name": "Faster Builds with Module Federation",
-      "path": "/concepts/more-concepts/faster-builds-with-module-federation"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
     }
   ],
   "environment-variables": [
