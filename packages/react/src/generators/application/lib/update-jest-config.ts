@@ -1,6 +1,6 @@
 import { updateJestConfigContent } from '../../../utils/jest-utils';
 import { NormalizedSchema } from '../schema';
-import { offsetFromRoot, Tree, updateJson } from '@nx/devkit';
+import { Tree, updateJson } from '@nx/devkit';
 
 export function updateSpecConfig(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner === 'none') {

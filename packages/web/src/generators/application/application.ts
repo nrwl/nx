@@ -381,7 +381,6 @@ async function normalizeOptions(
     callingGenerator: '@nx/web:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
 
@@ -391,7 +390,7 @@ async function normalizeOptions(
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  if (options.bundler === 'vite' && !options.unitTestRunner) {
+  if (options.bundler === 'vite' && options.unitTestRunner !== 'none') {
     options.unitTestRunner = 'vitest';
   }
 
