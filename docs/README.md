@@ -89,6 +89,18 @@ For example:
 [This will highlight the first group.](#first)
 ```
 
+You can also statically highlight a set of lines (the user won't be able to change what is highlighted):
+
+````
+‎```javascript {% highlightLines=[2,3] %}
+‎ const code = "goes here";
+‎ This is highlighted
+‎ This is also highlighted
+‎ This is not highlighted
+‎ Neither is this
+‎```
+````
+
 #### Terminal command
 
 To display a terminal command, use:
