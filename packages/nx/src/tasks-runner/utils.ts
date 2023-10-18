@@ -352,11 +352,7 @@ export function isCacheableTask(
     cacheableTargets?: string[] | null;
   }
 ): boolean {
-  if (
-    task.cache !== undefined &&
-    process.env.NX_ALLOW_PROJECT_LEVEL_CACHE === 'true' &&
-    !longRunningTask(task)
-  ) {
+  if (task.cache !== undefined && !longRunningTask(task)) {
     return task.cache;
   }
 

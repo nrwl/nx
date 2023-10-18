@@ -46,7 +46,7 @@ describe('react native', () => {
   afterAll(() => cleanupProject());
 
   it('should test and lint', async () => {
-    const componentName = uniq('component');
+    const componentName = uniq('Component');
     runCLI(
       `generate @nx/react-native:component ${componentName} --project=${libName} --export --no-interactive`
     );
@@ -165,7 +165,7 @@ describe('react native', () => {
   });
 
   it('should build publishable library', async () => {
-    const componentName = uniq('component');
+    const componentName = uniq('Component');
 
     runCLI(
       `generate @nx/react-native:component ${componentName} --project=${libName} --export`

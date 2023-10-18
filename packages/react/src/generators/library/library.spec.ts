@@ -21,7 +21,7 @@ describe('lib', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   let defaultSchema: Schema = {
-    name: 'myLib',
+    name: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -449,7 +449,7 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'myApp',
+        name: 'my-app',
         routing: true,
         style: 'css',
         bundler: 'webpack',
@@ -478,7 +478,7 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'myApp',
+        name: 'my-app',
         style: 'css',
         bundler: 'webpack',
         projectNameAndRootFormat: 'as-provided',

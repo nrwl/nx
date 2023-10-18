@@ -26,70 +26,77 @@ describe('component', () => {
     await componentGenerator(appTree, {
       name: 'hello',
       project: libName,
-      unitTestRunner: 'vitest',
     });
 
-    expect(
-      appTree.read(`${libName}/src/components/hello/hello.vue`, 'utf-8')
-    ).toMatchSnapshot();
-    expect(
-      appTree.read(`${libName}/src/components/hello/hello.spec.ts`, 'utf-8')
-    ).toMatchSnapshot();
-  });
+    expect(appTree.read(`${libName}/src/lib/hello/hello.vue`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "<script setup lang="ts">
+      defineProps<{}>();
+      </script>
 
-  it('should generate files with jest', async () => {
-    await componentGenerator(appTree, {
-      name: 'hello',
-      project: libName,
-      unitTestRunner: 'jest',
-    });
+      <template>
+        <p>Welcome to Hello!</p>
+      </template>
 
-    expect(
-      appTree.read(`${libName}/src/components/hello/hello.vue`, 'utf-8')
-    ).toMatchSnapshot();
-    expect(
-      appTree.read(`${libName}/src/components/hello/hello.spec.ts`, 'utf-8')
-    ).toMatchSnapshot();
+      <style scoped></style>
+      "
+    `);
+    expect(appTree.read(`${libName}/src/lib/hello/hello.spec.ts`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { mount } from '@vue/test-utils';
+      import Hello from './hello.vue';
+
+      describe('Hello', () => {
+        it('renders properly', () => {
+          const wrapper = mount(Hello, {});
+          expect(wrapper.text()).toContain('Welcome to Hello');
+        });
+      });
+      "
+    `);
   });
 
   it('should have correct component name based on directory', async () => {
     await componentGenerator(appTree, {
       name: 'hello-world',
       project: libName,
-      unitTestRunner: 'none',
       directory: 'foo/bar',
     });
 
     expect(
-      appTree.read(`${libName}/src/foo/bar/hello-world.vue`, 'utf-8')
-    ).toContain('FooBarHelloWorld');
+      appTree.read(
+        `${libName}/src/foo/bar/hello-world/hello-world.vue`,
+        'utf-8'
+      )
+    ).toContain('HelloWorld');
   });
 
   it('should not append Component if component name is two words - camelCase', async () => {
     await componentGenerator(appTree, {
       name: 'helloWorld',
       project: libName,
-      unitTestRunner: 'none',
       directory: 'foo/bar-baz',
     });
 
     expect(
-      appTree.read(`${libName}/src/foo/bar-baz/hello-world.vue`, 'utf-8')
-    ).toContain('FooBarBazHelloWorld');
+      appTree.read(
+        `${libName}/src/foo/bar-baz/hello-world/hello-world.vue`,
+        'utf-8'
+      )
+    ).toContain('HelloWorld');
   });
 
   it('should generate files for an app', async () => {
     await componentGenerator(appTree, {
       name: 'hello',
       project: appName,
-      unitTestRunner: 'vitest',
     });
 
     expect(
-      appTree.read(`${appName}/src/components/hello/hello.vue`, 'utf-8')
-    ).toContain('AppHello');
+      appTree.read(`${appName}/src/app/hello/hello.vue`, 'utf-8')
+    ).toContain('Hello');
     expect(
-      appTree.exists(`${appName}/src/components/hello/hello.spec.ts`)
+      appTree.exists(`${appName}/src/app/hello/hello.spec.ts`)
     ).toBeTruthy();
   });
 
@@ -100,9 +107,11 @@ describe('component', () => {
         project: libName,
         export: true,
       });
-      expect(
-        appTree.read(`${libName}/src/index.ts`, 'utf-8')
-      ).toMatchSnapshot();
+      expect(appTree.read(`${libName}/src/index.ts`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "export { default as Hello } from './lib/hello/hello.vue';
+        "
+      `);
     });
 
     it('should not export from an app', async () => {
@@ -112,9 +121,7 @@ describe('component', () => {
         export: true,
       });
 
-      expect(
-        appTree.read(`${appName}/src/index.ts`, 'utf-8')
-      ).toMatchSnapshot();
+      expect(appTree.exists(`${appName}/src/index.ts`)).toBe(false);
     });
   });
 
@@ -127,10 +134,10 @@ describe('component', () => {
         directory: 'foo/bar',
       });
       expect(
-        appTree.read(`${libName}/src/foo/bar/Hello.vue`, 'utf-8')
-      ).toContain('FooBarHello');
+        appTree.read(`${libName}/src/foo/bar/hello/Hello.vue`, 'utf-8')
+      ).toContain('Hello');
       expect(
-        appTree.exists(`${libName}/src/foo/bar/Hello.spec.ts`)
+        appTree.exists(`${libName}/src/foo/bar/hello/Hello.spec.ts`)
       ).toBeTruthy();
     });
   });
@@ -144,12 +151,10 @@ describe('component', () => {
         pascalCaseDirectory: true,
       });
       expect(
-        appTree.exists(`${libName}/src/components/HelloWorld/HelloWorld.vue`)
+        appTree.exists(`${libName}/src/lib/HelloWorld/HelloWorld.vue`)
       ).toBeTruthy();
       expect(
-        appTree.exists(
-          `${libName}/src/components/HelloWorld/HelloWorld.spec.ts`
-        )
+        appTree.exists(`${libName}/src/lib/HelloWorld/HelloWorld.spec.ts`)
       ).toBeTruthy();
     });
   });
@@ -162,7 +167,7 @@ describe('component', () => {
         flat: true,
       });
 
-      expect(appTree.exists(`${libName}/src/components/hello.vue`));
+      expect(appTree.exists(`${libName}/src/lib/hello.vue`));
     });
     it('should work with custom directory path', async () => {
       await componentGenerator(appTree, {

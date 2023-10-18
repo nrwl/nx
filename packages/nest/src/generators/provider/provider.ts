@@ -13,23 +13,39 @@ import {
 export type ProviderGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;
 
-export function providerGenerator(
+export async function providerGenerator(
+  tree: Tree,
+  rawOptions: ProviderGeneratorOptions
+) {
+  await providerGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function providerGeneratorInternal(
   tree: Tree,
   rawOptions: ProviderGeneratorOptions
 ): Promise<any> {
-  const options = normalizeProviderOptions(tree, rawOptions);
+  const options = await normalizeProviderOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'provider', options);
 }
 
 export default providerGenerator;
 
-function normalizeProviderOptions(
+async function normalizeProviderOptions(
   tree: Tree,
   options: ProviderGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'provider',
+    '@nx/nest:provider',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
   };

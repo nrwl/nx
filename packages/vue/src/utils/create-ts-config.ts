@@ -8,7 +8,6 @@ export function createTsConfig(
   options: {
     strict?: boolean;
     style?: string;
-    bundler?: string;
     rootProject?: boolean;
     unitTestRunner?: string;
   },
@@ -56,7 +55,7 @@ export function createTsConfig(
   writeJson(host, `${projectRoot}/tsconfig.json`, json);
 
   const tsconfigProjectPath = `${projectRoot}/tsconfig.${type}.json`;
-  if (options.bundler === 'vite' && host.exists(tsconfigProjectPath)) {
+  if (host.exists(tsconfigProjectPath)) {
     updateJson(host, tsconfigProjectPath, (json) => {
       json.compilerOptions ??= {};
 

@@ -1924,6 +1924,22 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "How to create a Module Federation Remote Application",
+                "path": "/recipes/module-federation/create-a-remote",
+                "id": "create-a-remote",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "How to Federate a Module",
+                "path": "/recipes/module-federation/federate-a-module",
+                "id": "federate-a-module",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3290,6 +3306,22 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "How to create a Module Federation Remote Application",
+            "path": "/recipes/module-federation/create-a-remote",
+            "id": "create-a-remote",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "How to Federate a Module",
+            "path": "/recipes/module-federation/federate-a-module",
+            "id": "federate-a-module",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3298,6 +3330,22 @@
         "name": "How to create a Module Federation Host Application",
         "path": "/recipes/module-federation/create-a-host",
         "id": "create-a-host",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to create a Module Federation Remote Application",
+        "path": "/recipes/module-federation/create-a-remote",
+        "id": "create-a-remote",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to Federate a Module",
+        "path": "/recipes/module-federation/federate-a-module",
+        "id": "federate-a-module",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

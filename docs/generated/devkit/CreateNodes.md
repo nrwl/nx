@@ -6,6 +6,6 @@ A pair of file patterns and [CreateNodesFunction](../../devkit/documents/CreateN
 
 #### Type parameters
 
-| Name | Type                                                                    |
-| :--- | :---------------------------------------------------------------------- |
-| `T`  | extends `Record`<`string`, `unknown`\> = `Record`<`string`, `unknown`\> |
+| Name | Type      |
+| :--- | :-------- |
+| `T`  | `unknown` |

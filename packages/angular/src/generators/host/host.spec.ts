@@ -86,7 +86,7 @@ describe('Host App Generator', () => {
     // ACT
 
     await generateTestHostApplication(tree, {
-      name: 'hostApp',
+      name: 'host-app',
       remotes: ['remote1', 'remote2'],
       typescriptConfiguration: false,
     });
@@ -116,7 +116,7 @@ describe('Host App Generator', () => {
     // ACT
 
     await generateTestHostApplication(tree, {
-      name: 'hostApp',
+      name: 'host-app',
       remotes: ['remote1', 'remote2'],
       typescriptConfiguration: true,
     });
@@ -149,7 +149,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'hostApp',
+      name: 'host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: false,
     });
@@ -173,7 +173,7 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'hostApp',
+      name: 'host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: true,
     });
@@ -197,8 +197,8 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'hostApp',
-      directory: 'foo/hostApp',
+      name: 'host-app',
+      directory: 'foo/host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: false,
     });
@@ -222,8 +222,8 @@ describe('Host App Generator', () => {
 
     // ACT
     await generateTestHostApplication(tree, {
-      name: 'hostApp',
-      directory: 'foo/hostApp',
+      name: 'host-app',
+      directory: 'foo/host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: true,
     });

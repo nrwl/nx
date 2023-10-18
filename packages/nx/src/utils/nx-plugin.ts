@@ -54,9 +54,7 @@ export interface CreateNodesContext {
  * A function which parses a configuration file into a set of nodes.
  * Used for creating nodes for the {@link ProjectGraph}
  */
-export type CreateNodesFunction<
-  T extends Record<string, unknown> = Record<string, unknown>
-> = (
+export type CreateNodesFunction<T = unknown> = (
   projectConfigurationFile: string,
   options: T | undefined,
   context: CreateNodesContext
@@ -68,9 +66,7 @@ export type CreateNodesFunction<
 /**
  * A pair of file patterns and {@link CreateNodesFunction}
  */
-export type CreateNodes<
-  T extends Record<string, unknown> = Record<string, unknown>
-> = readonly [
+export type CreateNodes<T = unknown> = readonly [
   projectFilePattern: string,
   createNodesFunction: CreateNodesFunction<T>
 ];
@@ -111,9 +107,7 @@ export interface CreateDependenciesContext {
  * A function which parses files in the workspace to create dependencies in the {@link ProjectGraph}
  * Use {@link validateDependency} to validate dependencies
  */
-export type CreateDependencies<
-  T extends Record<string, unknown> = Record<string, unknown>
-> = (
+export type CreateDependencies<T = unknown> = (
   options: T | undefined,
   context: CreateDependenciesContext
 ) => RawProjectGraphDependency[] | Promise<RawProjectGraphDependency[]>;
@@ -121,9 +115,7 @@ export type CreateDependencies<
 /**
  * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}
  */
-export type NxPluginV2<
-  T extends Record<string, unknown> = Record<string, unknown>
-> = {
+export type NxPluginV2<T = unknown> = {
   name: string;
 
   /**
@@ -148,7 +140,7 @@ export type NxPlugin = NxPluginV1 | NxPluginV2;
 
 export type LoadedNxPlugin = {
   plugin: NxPluginV2 & Pick<NxPluginV1, 'processProjectGraph'>;
-  options?: Record<string, unknown>;
+  options?: unknown;
 };
 
 // Short lived cache (cleared between cmd runs)

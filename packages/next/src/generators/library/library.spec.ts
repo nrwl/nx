@@ -28,7 +28,7 @@ describe('next library', () => {
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'myLib',
+      name: 'my-lib',
     });
     const tsconfigTypes = readJson(appTree, 'my-lib/tsconfig.lib.json')
       .compilerOptions.types;
@@ -52,11 +52,11 @@ describe('next library', () => {
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'myLib',
+      name: 'my-lib',
     });
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'myLib2',
+      name: 'my-lib2',
       style: '@emotion/styled',
     });
 
@@ -72,7 +72,7 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'myLib',
+      name: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
@@ -100,7 +100,7 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'myLib',
+      name: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,

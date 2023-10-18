@@ -184,12 +184,11 @@ function getProjectNameAndRootFormats(
   tree: Tree,
   options: ProjectGenerationOptions
 ): ProjectNameAndRootFormats {
-  const name = names(options.name).fileName;
   const directory = options.directory
     ? normalizePath(options.directory.replace(/^\.?\//, ''))
     : undefined;
 
-  const asProvidedProjectName = name;
+  const asProvidedProjectName = options.name;
 
   let asProvidedProjectDirectory: string;
   const relativeCwd = normalizePath(relative(workspaceRoot, getCwd())).replace(
@@ -199,12 +198,9 @@ function getProjectNameAndRootFormats(
   if (directory) {
     // append the directory to the current working directory if it doesn't start with it
     if (directory === relativeCwd || directory.startsWith(`${relativeCwd}/`)) {
-      asProvidedProjectDirectory = names(directory).fileName;
+      asProvidedProjectDirectory = directory;
     } else {
-      asProvidedProjectDirectory = joinPathFragments(
-        relativeCwd,
-        names(directory).fileName
-      );
+      asProvidedProjectDirectory = joinPathFragments(relativeCwd, directory);
     }
   } else if (options.rootProject) {
     asProvidedProjectDirectory = '.';
@@ -222,7 +218,7 @@ function getProjectNameAndRootFormats(
     }
   }
 
-  if (name.startsWith('@')) {
+  if (asProvidedProjectName.startsWith('@')) {
     const nameWithoutScope = asProvidedProjectName.split('/')[1];
     return {
       'as-provided': {
@@ -251,6 +247,7 @@ function getProjectNameAndRootFormats(
     }
   }
 
+  const name = names(options.name).fileName;
   let { projectDirectory, layoutDirectory } = getDirectories(
     tree,
     directory,

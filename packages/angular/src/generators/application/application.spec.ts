@@ -82,7 +82,7 @@ describe('app', () => {
 
     it('should update tags + implicit dependencies', async () => {
       // ACT
-      await generateApp(appTree, 'myApp', { tags: 'one,two,my-app' });
+      await generateApp(appTree, 'my-app', { tags: 'one,two,my-app' });
 
       // ASSERT
       const projects = devkit.getProjects(appTree);
@@ -193,14 +193,14 @@ describe('app', () => {
 
   describe('nested', () => {
     it('should create project configs', async () => {
-      await generateApp(appTree, 'myApp', { directory: 'myDir/myApp' });
+      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
       expect(readProjectConfiguration(appTree, 'my-app')).toMatchSnapshot();
       expect(readProjectConfiguration(appTree, 'my-app-e2e')).toMatchSnapshot();
     });
 
     it('should update tags + implicit dependencies', async () => {
-      await generateApp(appTree, 'myApp', {
-        directory: 'myDir/myApp',
+      await generateApp(appTree, 'my-app', {
+        directory: 'my-dir/my-app',
         tags: 'one,two,my-app',
       });
       const projects = devkit.getProjects(appTree);
@@ -225,7 +225,7 @@ describe('app', () => {
 
         expect(lookupFn(content)).toEqual(expectedValue);
       };
-      await generateApp(appTree, 'myApp', { directory: 'myDir/myApp' });
+      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
 
       const appModulePath = 'my-dir/my-app/src/app/app.module.ts';
       expect(appTree.read(appModulePath, 'utf-8')).toContain('class AppModule');
@@ -267,7 +267,7 @@ describe('app', () => {
 
     it('should extend from tsconfig.base.json', async () => {
       // ACT
-      await generateApp(appTree, 'app', { directory: 'myDir/app' });
+      await generateApp(appTree, 'app', { directory: 'my-dir/app' });
 
       // ASSERT
       const appTsConfig = readJson(appTree, 'my-dir/app/tsconfig.json');
@@ -279,7 +279,7 @@ describe('app', () => {
       appTree.rename('tsconfig.base.json', 'tsconfig.json');
 
       // ACT
-      await generateApp(appTree, 'app', { directory: 'myDir/app' });
+      await generateApp(appTree, 'app', { directory: 'my-dir/app' });
 
       // ASSERT
       const appTsConfig = readJson(appTree, 'my-dir/app/tsconfig.json');
@@ -298,7 +298,7 @@ describe('app', () => {
 
     it('should accept numbers in the path', async () => {
       // ACT
-      await generateApp(appTree, 'myApp', {
+      await generateApp(appTree, 'my-app', {
         directory: 'src/9-websites/my-app',
       });
 
@@ -315,7 +315,7 @@ describe('app', () => {
 
         expect(lookupFn(content)).toEqual(expectedValue);
       };
-      await generateApp(appTree, 'myApp', { directory: 'myDir/myApp' });
+      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
 
       const appModulePath = 'my-dir/my-app/src/app/app.module.ts';
       expect(appTree.read(appModulePath, 'utf-8')).toContain('class AppModule');
@@ -358,8 +358,8 @@ describe('app', () => {
 
   describe('routing', () => {
     it('should include RouterTestingModule', async () => {
-      await generateApp(appTree, 'myApp', {
-        directory: 'myDir/myApp',
+      await generateApp(appTree, 'my-app', {
+        directory: 'my-dir/my-app',
         routing: true,
       });
       expect(
@@ -371,8 +371,8 @@ describe('app', () => {
     });
 
     it('should not modify tests when --skip-tests is set', async () => {
-      await generateApp(appTree, 'myApp', {
-        directory: 'myDir/myApp',
+      await generateApp(appTree, 'my-app', {
+        directory: 'my-dir/my-app',
         routing: true,
         skipTests: true,
       });
@@ -384,15 +384,15 @@ describe('app', () => {
 
   describe('template generation mode', () => {
     it('should create Nx specific `app.component.html` template', async () => {
-      await generateApp(appTree, 'myApp', { directory: 'myDir/myApp' });
+      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
       expect(
         appTree.read('my-dir/my-app/src/app/app.component.html', 'utf-8')
       ).toContain('<proj-nx-welcome></proj-nx-welcome>');
     });
 
     it("should update `template`'s property of AppComponent with Nx content", async () => {
-      await generateApp(appTree, 'myApp', {
-        directory: 'myDir/myApp',
+      await generateApp(appTree, 'my-app', {
+        directory: 'my-dir/my-app',
         inlineTemplate: true,
       });
       expect(
@@ -401,15 +401,15 @@ describe('app', () => {
     });
 
     it('should create Nx specific `nx-welcome.component.ts` file', async () => {
-      await generateApp(appTree, 'myApp', { directory: 'myDir/myApp' });
+      await generateApp(appTree, 'my-app', { directory: 'my-dir/my-app' });
       expect(
         appTree.read('my-dir/my-app/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('Hello there');
     });
 
     it('should update the AppComponent spec to target Nx content', async () => {
-      await generateApp(appTree, 'myApp', {
-        directory: 'myDir/myApp',
+      await generateApp(appTree, 'my-app', {
+        directory: 'my-dir/my-app',
         inlineTemplate: true,
       });
       const testFileContent = appTree.read(
@@ -424,21 +424,21 @@ describe('app', () => {
 
   describe('--style scss', () => {
     it('should generate scss styles', async () => {
-      await generateApp(appTree, 'myApp', { style: 'scss' });
+      await generateApp(appTree, 'my-app', { style: 'scss' });
       expect(appTree.exists('my-app/src/app/app.component.scss')).toEqual(true);
     });
   });
 
   describe('--style sass', () => {
     it('should generate sass styles', async () => {
-      await generateApp(appTree, 'myApp', { style: 'sass' });
+      await generateApp(appTree, 'my-app', { style: 'sass' });
       expect(appTree.exists('my-app/src/app/app.component.sass')).toEqual(true);
     });
   });
 
   describe('--style less', () => {
     it('should generate less styles', async () => {
-      await generateApp(appTree, 'myApp', { style: 'less' });
+      await generateApp(appTree, 'my-app', { style: 'less' });
       expect(appTree.exists('my-app/src/app/app.component.less')).toEqual(true);
     });
   });
@@ -458,7 +458,7 @@ describe('app', () => {
     xit('should skip format when set to true', async () => {
       const spy = jest.spyOn(devkit, 'formatFiles');
 
-      await generateApp(appTree, 'myApp', { skipFormat: true });
+      await generateApp(appTree, 'my-app', { skipFormat: true });
 
       expect(spy).not.toHaveBeenCalled();
     });
@@ -467,7 +467,7 @@ describe('app', () => {
   describe('--linter', () => {
     describe('eslint', () => {
       it('should add lint target', async () => {
-        await generateApp(appTree, 'myApp', { linter: Linter.EsLint });
+        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
         expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
           .toMatchInlineSnapshot(`
           {
@@ -500,7 +500,7 @@ describe('app', () => {
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
-        await generateApp(appTree, 'myApp', { linter: Linter.EsLint });
+        await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
 
         const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
         expect(eslintConfig).toMatchInlineSnapshot(`
@@ -556,7 +556,7 @@ describe('app', () => {
 
     describe('none', () => {
       it('should add no lint target', async () => {
-        await generateApp(appTree, 'myApp', { linter: Linter.None });
+        await generateApp(appTree, 'my-app', { linter: Linter.None });
         expect(
           readProjectConfiguration(appTree, 'my-app').targets.lint
         ).toBeUndefined();
@@ -594,7 +594,7 @@ describe('app', () => {
 
     describe('none', () => {
       it('should not generate test configuration', async () => {
-        await generateApp(appTree, 'myApp', {
+        await generateApp(appTree, 'my-app', {
           unitTestRunner: UnitTestRunner.None,
         });
         expect(appTree.exists('my-app/src/test-setup.ts')).toBeFalsy();
@@ -620,7 +620,7 @@ describe('app', () => {
   describe('--e2e-test-runner', () => {
     describe('none', () => {
       it('should not generate test configuration', async () => {
-        await generateApp(appTree, 'myApp', {
+        await generateApp(appTree, 'my-app', {
           e2eTestRunner: E2eTestRunner.None,
         });
         expect(appTree.exists('my-app-e2e')).toBeFalsy();
@@ -1083,7 +1083,7 @@ describe('app', () => {
 
 async function generateApp(
   appTree: Tree,
-  name: string = 'myApp',
+  name: string = 'my-app',
   options: Partial<Schema> = {}
 ) {
   await generateTestApplication(appTree, {

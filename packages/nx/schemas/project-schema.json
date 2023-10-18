@@ -108,6 +108,10 @@
           "command": {
             "type": "string",
             "description": "A shorthand for using the nx:run-commands executor"
+          },
+          "cache": {
+            "type": "boolean",
+            "description": "Specifies if the given target should be cacheable"
           }
         }
       }
