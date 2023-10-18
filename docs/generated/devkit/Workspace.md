@@ -320,7 +320,7 @@ Available Task Runners
 
 #### Index signature
 
-▪ [tasksRunnerName: `string`]: { `options?`: `any` ; `runner`: `string` }
+▪ [tasksRunnerName: `string`]: { `options?`: `any` ; `runner?`: `string` }
 
 #### Inherited from
 
