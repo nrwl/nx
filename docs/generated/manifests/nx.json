@@ -1225,26 +1225,6 @@
             "isExternal": false,
             "path": "/concepts/more-concepts/how-project-graph-is-built",
             "tags": ["explore-graph"]
-          },
-          {
-            "id": "nx-and-the-wrapper",
-            "name": "Nx and the Nx Wrapper",
-            "description": "",
-            "file": "shared/guides/nx-and-the-wrapper",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/nx-and-the-wrapper",
-            "tags": []
-          },
-          {
-            "id": "global-nx",
-            "name": "Managing your Global Nx Installation",
-            "description": "",
-            "file": "shared/guides/global-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/global-nx",
-            "tags": []
           }
         ],
         "isExternal": false,
@@ -1572,26 +1552,6 @@
         "isExternal": false,
         "path": "/concepts/more-concepts/how-project-graph-is-built",
         "tags": ["explore-graph"]
-      },
-      {
-        "id": "nx-and-the-wrapper",
-        "name": "Nx and the Nx Wrapper",
-        "description": "",
-        "file": "shared/guides/nx-and-the-wrapper",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/nx-and-the-wrapper",
-        "tags": []
-      },
-      {
-        "id": "global-nx",
-        "name": "Managing your Global Nx Installation",
-        "description": "",
-        "file": "shared/guides/global-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/global-nx",
-        "tags": []
       }
     ],
     "isExternal": false,
@@ -1767,26 +1727,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/how-project-graph-is-built",
     "tags": ["explore-graph"]
-  },
-  "/concepts/more-concepts/nx-and-the-wrapper": {
-    "id": "nx-and-the-wrapper",
-    "name": "Nx and the Nx Wrapper",
-    "description": "",
-    "file": "shared/guides/nx-and-the-wrapper",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/nx-and-the-wrapper",
-    "tags": []
-  },
-  "/concepts/more-concepts/global-nx": {
-    "id": "global-nx",
-    "name": "Managing your Global Nx Installation",
-    "description": "",
-    "file": "shared/guides/global-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/global-nx",
-    "tags": []
   },
   "/recipes": {
     "id": "recipes",

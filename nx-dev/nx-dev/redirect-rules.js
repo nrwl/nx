@@ -887,7 +887,7 @@ const latestRecipesRefactoring = {
   '/reference/commands': '/packages/nx',
 };
 
-const coreFeatureRefactoring = {
+const coreFeatureAndConceptsRefactoring = {
   '/core-features/share-your-cache': '/core-features/remote-cache',
   '/concepts/more-concepts/customizing-inputs':
     '/recipes/running-tasks/customizing-inputs',
@@ -899,6 +899,10 @@ const coreFeatureRefactoring = {
     '/recipes/running-tasks/workspace-watching',
   '/recipes/tips-n-tricks/reduce-repetitive-configuration':
     '/recipes/running-tasks/reduce-repetitive-configuration',
+  '/concepts/more-concepts/global-nx':
+    '/getting-started/installation#installing-nx-globally',
+  '/concepts/more-concepts/nx-and-the-wrapper':
+    '/getting-started/installation#selfmanaged-nx-installation',
 };
 
 /*
@@ -940,7 +944,7 @@ module.exports = {
   makeMoreConceptsSubmenu,
   pluginsToExtendNx,
   latestRecipesRefactoring,
-  coreFeatureRefactoring,
+  coreFeatureRefactoring: coreFeatureAndConceptsRefactoring,
   aiChat,
   eslintRename,
 };

@@ -74,8 +74,6 @@
       - [Grouping Libraries](/concepts/more-concepts/grouping-libraries)
       - [Buildable and Publishable Libraries](/concepts/more-concepts/buildable-and-publishable-libraries)
       - [How the Project Graph is Built](/concepts/more-concepts/how-project-graph-is-built)
-      - [Nx and the Nx Wrapper](/concepts/more-concepts/nx-and-the-wrapper)
-      - [Managing your Global Nx Installation](/concepts/more-concepts/global-nx)
   - [Recipes](/recipes)
     - [Tasks & Caching](/recipes/running-tasks)
       - [Fine-tuning Caching with Inputs](/recipes/running-tasks/customizing-inputs)

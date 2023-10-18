@@ -434,16 +434,6 @@
                   "id": "how-project-graph-is-built",
                   "tags": ["explore-graph"],
                   "file": "shared/concepts/how-project-graph-is-built"
-                },
-                {
-                  "name": "Nx and the Nx Wrapper",
-                  "id": "nx-and-the-wrapper",
-                  "file": "shared/guides/nx-and-the-wrapper"
-                },
-                {
-                  "name": "Managing your Global Nx Installation",
-                  "id": "global-nx",
-                  "file": "shared/guides/global-nx"
                 }
               ]
             }

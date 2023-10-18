@@ -983,22 +983,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Nx and the Nx Wrapper",
-                "path": "/concepts/more-concepts/nx-and-the-wrapper",
-                "id": "nx-and-the-wrapper",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Managing your Global Nx Installation",
-                "path": "/concepts/more-concepts/global-nx",
-                "id": "global-nx",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1260,22 +1244,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Nx and the Nx Wrapper",
-            "path": "/concepts/more-concepts/nx-and-the-wrapper",
-            "id": "nx-and-the-wrapper",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Managing your Global Nx Installation",
-            "path": "/concepts/more-concepts/global-nx",
-            "id": "global-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -1412,22 +1380,6 @@
         "name": "How the Project Graph is Built",
         "path": "/concepts/more-concepts/how-project-graph-is-built",
         "id": "how-project-graph-is-built",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx and the Nx Wrapper",
-        "path": "/concepts/more-concepts/nx-and-the-wrapper",
-        "id": "nx-and-the-wrapper",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Managing your Global Nx Installation",
-        "path": "/concepts/more-concepts/global-nx",
-        "id": "global-nx",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
