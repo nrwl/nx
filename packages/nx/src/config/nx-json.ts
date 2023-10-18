@@ -167,7 +167,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   /**
    * Plugins for extending the project graph
    */
-  plugins?: PluginDefinition[];
+  plugins?: PluginConfiguration[];
 
   /**
    * Configuration for Nx Plugins
@@ -225,9 +225,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useDaemonProcess?: boolean;
 }
 
-export type PluginDefinition =
+export type PluginConfiguration =
   | string
-  | { plugin: string; options?: Record<string, unknown> };
+  | { plugin: string; options?: unknown };
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   const nxJson = join(root, 'nx.json');

@@ -30,7 +30,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [nxCloudEncryptionKey](../../devkit/documents/Workspace#nxcloudencryptionkey): string
 - [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
 - [parallel](../../devkit/documents/Workspace#parallel): number
-- [plugins](../../devkit/documents/Workspace#plugins): PluginDefinition[]
+- [plugins](../../devkit/documents/Workspace#plugins): PluginConfiguration[]
 - [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, Record&lt;string, unknown&gt;&gt;
 - [projects](../../devkit/documents/Workspace#projects): Record&lt;string, ProjectConfiguration&gt;
 - [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
@@ -254,7 +254,7 @@ Specifies how many tasks can be run in parallel.
 
 ### plugins
 
-• `Optional` **plugins**: `PluginDefinition`[]
+• `Optional` **plugins**: [`PluginConfiguration`](../../devkit/documents/PluginConfiguration)[]
 
 Plugins for extending the project graph
 

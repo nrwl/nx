@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { ensureDirSync, renameSync } from 'fs-extra';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
-import { NxJsonConfiguration, PluginDefinition } from '../config/nx-json';
+import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
 import {
   FileData,
   FileMap,
@@ -328,7 +328,7 @@ function processProjectNode(
 type PluginData = {
   name: string;
   version: string;
-  options?: Record<string, unknown>;
+  options?: unknown;
 };
 
 function getNxJsonPluginsData(

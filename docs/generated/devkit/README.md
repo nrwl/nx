@@ -77,6 +77,7 @@ It only uses language primitives and immutable objects
 - [NxPluginV1](../../devkit/documents/NxPluginV1)
 - [NxPluginV2](../../devkit/documents/NxPluginV2)
 - [PackageManager](../../devkit/documents/PackageManager)
+- [PluginConfiguration](../../devkit/documents/PluginConfiguration)
 - [ProjectGraphNode](../../devkit/documents/ProjectGraphNode)
 - [ProjectTargetConfigurator](../../devkit/documents/ProjectTargetConfigurator)
 - [ProjectType](../../devkit/documents/ProjectType)
