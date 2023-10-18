@@ -80,6 +80,41 @@ Let's say you start with the following `turbo.json` file:
 
 Creating the equivalent configuration with Nx yields the following files:
 
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+```json {% fileName="/nx.json" %}
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "sharedGlobals": ["babel.config.json"],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["default"],
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": ["default"],
+      "cache": true
+    },
+    "e2e": {
+      "dependsOn": ["build"],
+      "inputs": ["default"],
+      "cache": true
+    }
+  },
+  "nxCloudAccessToken": "..."
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
 ```json {% fileName="/nx.json" %}
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
@@ -113,6 +148,9 @@ Creating the equivalent configuration with Nx yields the following files:
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ```jsonc {% fileName="/packages/docs/package.json" %}
 {
