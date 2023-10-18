@@ -121,7 +121,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
       /**
        * Path to resolve the runner
        */
-      runner: string;
+      runner?: string;
       /**
        * Default options for the runner
        */
