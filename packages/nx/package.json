@@ -141,6 +141,7 @@
       "@nrwl/tao",
       "@nx/vite",
       "@nrwl/vite",
+      "@nx/vue",
       "@nx/web",
       "@nrwl/web",
       "@nx/webpack",
