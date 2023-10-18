@@ -891,6 +891,14 @@ const coreFeatureRefactoring = {
   '/core-features/share-your-cache': '/core-features/remote-cache',
   '/concepts/more-concepts/customizing-inputs':
     '/recipes/running-tasks/customizing-inputs',
+  '/recipes/tips-n-tricks/root-level-scripts':
+    '/recipes/running-tasks/root-level-scripts',
+  '/recipes/tips-n-tricks/run-commands-executor':
+    '/recipes/running-tasks/run-commands-executor',
+  '/recipes/tips-n-tricks/workspace-watching':
+    '/recipes/running-tasks/workspace-watching',
+  '/recipes/tips-n-tricks/reduce-repetitive-configuration':
+    '/recipes/running-tasks/reduce-repetitive-configuration',
 };
 
 /*

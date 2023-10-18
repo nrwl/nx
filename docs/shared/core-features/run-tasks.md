@@ -246,4 +246,4 @@ If you want Nx to cache the task, but prefer to use npm (or pnpm/yarn) to run th
 }
 ```
 
-Learn more about root-level tasks [in our dedicated recipe page](/recipes/tips-n-tricks/root-level-scripts).
+Learn more about root-level tasks [in our dedicated recipe page](/recipes/running-tasks/root-level-scripts).
