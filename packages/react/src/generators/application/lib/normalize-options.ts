@@ -35,7 +35,6 @@ export async function normalizeOptions<T extends Schema = Schema>(
   });
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
 
@@ -51,7 +50,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
 
   assertValidStyle(options.style);
 
-  if (options.bundler === 'vite') {
+  if (options.bundler === 'vite' && options.unitTestRunner !== 'none') {
     options.unitTestRunner = 'vitest';
   }
 
@@ -73,9 +72,7 @@ export async function normalizeOptions<T extends Schema = Schema>(
   normalized.classComponent = normalized.classComponent ?? false;
   normalized.compiler = normalized.compiler ?? 'babel';
   normalized.bundler = normalized.bundler ?? 'webpack';
-  normalized.unitTestRunner =
-    normalized.unitTestRunner ??
-    (normalized.bundler === 'vite' ? 'vitest' : 'jest');
+  normalized.unitTestRunner = normalized.unitTestRunner ?? 'jest';
   normalized.e2eTestRunner = normalized.e2eTestRunner ?? 'cypress';
   normalized.inSourceTests = normalized.minimal || normalized.inSourceTests;
   normalized.devServerPort ??= findFreePort(host);
