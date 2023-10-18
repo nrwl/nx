@@ -31,7 +31,7 @@ describe('component', () => {
     expect(appTree.read(`${libName}/src/lib/hello/hello.vue`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "<script setup lang="ts">
-      defineProps<{}>();
+      // defineProps<{}>()
       </script>
 
       <template>
