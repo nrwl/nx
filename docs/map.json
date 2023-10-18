@@ -308,6 +308,29 @@
               "file": "shared/using-nx/affected"
             },
             {
+              "name": "Module Federation",
+              "id": "module-federation",
+              "description": "Understand more about Module Federation with NX",
+              "itemList": [
+                {
+                  "name": "Faster Builds with Module Federation",
+                  "id": "faster-builds-with-module-federation",
+                  "tags": [
+                    "use-task-executors",
+                    "module-federation",
+                    "angular",
+                    "react"
+                  ],
+                  "file": "shared/guides/module-federation/faster-builds"
+                },
+                {
+                  "name": "Micro Frontend Architecture",
+                  "id": "micro-frontend-architecture",
+                  "file": "shared/guides/module-federation/micro-frontend-architecture"
+                }
+              ]
+            },
+            {
               "name": "More Concepts",
               "id": "more-concepts",
               "description": "Get deeper into how Nx works and its different aspects.",
@@ -376,22 +399,6 @@
                   "id": "nx-devkit-angular-devkit",
                   "tags": ["create-your-own-plugin"],
                   "file": "shared/guides/nx-devkit-angular-devkit"
-                },
-                {
-                  "name": "Micro Frontend Architecture",
-                  "id": "micro-frontend-architecture",
-                  "file": "shared/guides/module-federation/micro-frontend-architecture"
-                },
-                {
-                  "name": "Faster Builds with Module Federation",
-                  "id": "faster-builds-with-module-federation",
-                  "tags": [
-                    "use-task-executors",
-                    "module-federation",
-                    "angular",
-                    "react"
-                  ],
-                  "file": "shared/guides/module-federation/faster-builds"
                 },
                 {
                   "name": "Applications and Libraries",

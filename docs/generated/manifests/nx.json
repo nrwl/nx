@@ -1005,6 +1005,42 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "module-federation",
+        "name": "Module Federation",
+        "description": "Understand more about Module Federation with NX",
+        "file": "",
+        "itemList": [
+          {
+            "id": "faster-builds-with-module-federation",
+            "name": "Faster Builds with Module Federation",
+            "description": "",
+            "file": "shared/guides/module-federation/faster-builds",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/module-federation/faster-builds-with-module-federation",
+            "tags": [
+              "use-task-executors",
+              "module-federation",
+              "angular",
+              "react"
+            ]
+          },
+          {
+            "id": "micro-frontend-architecture",
+            "name": "Micro Frontend Architecture",
+            "description": "",
+            "file": "shared/guides/module-federation/micro-frontend-architecture",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/module-federation/micro-frontend-architecture",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/concepts/module-federation",
+        "tags": []
+      },
+      {
         "id": "more-concepts",
         "name": "More Concepts",
         "description": "Get deeper into how Nx works and its different aspects.",
@@ -1129,31 +1165,6 @@
             "isExternal": false,
             "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
             "tags": ["create-your-own-plugin"]
-          },
-          {
-            "id": "micro-frontend-architecture",
-            "name": "Micro Frontend Architecture",
-            "description": "",
-            "file": "shared/guides/module-federation/micro-frontend-architecture",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/micro-frontend-architecture",
-            "tags": []
-          },
-          {
-            "id": "faster-builds-with-module-federation",
-            "name": "Faster Builds with Module Federation",
-            "description": "",
-            "file": "shared/guides/module-federation/faster-builds",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-            "tags": [
-              "use-task-executors",
-              "module-federation",
-              "angular",
-              "react"
-            ]
           },
           {
             "id": "applications-and-libraries",
@@ -1315,6 +1326,57 @@
     "path": "/concepts/affected",
     "tags": ["run-tasks"]
   },
+  "/concepts/module-federation": {
+    "id": "module-federation",
+    "name": "Module Federation",
+    "description": "Understand more about Module Federation with NX",
+    "file": "",
+    "itemList": [
+      {
+        "id": "faster-builds-with-module-federation",
+        "name": "Faster Builds with Module Federation",
+        "description": "",
+        "file": "shared/guides/module-federation/faster-builds",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/module-federation/faster-builds-with-module-federation",
+        "tags": ["use-task-executors", "module-federation", "angular", "react"]
+      },
+      {
+        "id": "micro-frontend-architecture",
+        "name": "Micro Frontend Architecture",
+        "description": "",
+        "file": "shared/guides/module-federation/micro-frontend-architecture",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/module-federation/micro-frontend-architecture",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/concepts/module-federation",
+    "tags": []
+  },
+  "/concepts/module-federation/faster-builds-with-module-federation": {
+    "id": "faster-builds-with-module-federation",
+    "name": "Faster Builds with Module Federation",
+    "description": "",
+    "file": "shared/guides/module-federation/faster-builds",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/module-federation/faster-builds-with-module-federation",
+    "tags": ["use-task-executors", "module-federation", "angular", "react"]
+  },
+  "/concepts/module-federation/micro-frontend-architecture": {
+    "id": "micro-frontend-architecture",
+    "name": "Micro Frontend Architecture",
+    "description": "",
+    "file": "shared/guides/module-federation/micro-frontend-architecture",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/module-federation/micro-frontend-architecture",
+    "tags": []
+  },
   "/concepts/more-concepts": {
     "id": "more-concepts",
     "name": "More Concepts",
@@ -1440,26 +1502,6 @@
         "isExternal": false,
         "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
         "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "micro-frontend-architecture",
-        "name": "Micro Frontend Architecture",
-        "description": "",
-        "file": "shared/guides/module-federation/micro-frontend-architecture",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/micro-frontend-architecture",
-        "tags": []
-      },
-      {
-        "id": "faster-builds-with-module-federation",
-        "name": "Faster Builds with Module Federation",
-        "description": "",
-        "file": "shared/guides/module-federation/faster-builds",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-        "tags": ["use-task-executors", "module-federation", "angular", "react"]
       },
       {
         "id": "applications-and-libraries",
@@ -1665,26 +1707,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
     "tags": ["create-your-own-plugin"]
-  },
-  "/concepts/more-concepts/micro-frontend-architecture": {
-    "id": "micro-frontend-architecture",
-    "name": "Micro Frontend Architecture",
-    "description": "",
-    "file": "shared/guides/module-federation/micro-frontend-architecture",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/micro-frontend-architecture",
-    "tags": []
-  },
-  "/concepts/more-concepts/faster-builds-with-module-federation": {
-    "id": "faster-builds-with-module-federation",
-    "name": "Faster Builds with Module Federation",
-    "description": "",
-    "file": "shared/guides/module-federation/faster-builds",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-    "tags": ["use-task-executors", "module-federation", "angular", "react"]
   },
   "/concepts/more-concepts/applications-and-libraries": {
     "id": "applications-and-libraries",
