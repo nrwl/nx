@@ -412,6 +412,13 @@
       "id": "console-shortcuts",
       "name": "Keyboard Shortcuts",
       "path": "/recipes/nx-console/console-shortcuts"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/console-troubleshooting",
+      "id": "console-troubleshooting",
+      "name": "Troubleshooting",
+      "path": "/recipes/nx-console/console-troubleshooting"
     }
   ],
   "use-task-executors": [
