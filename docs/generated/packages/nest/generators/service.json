@@ -46,7 +46,7 @@
       },
       "flat": {
         "description": "Flag to indicate if a directory is created.",
-        "x-deprecated": "provide the `directory` option instead and use the `as-provided` format. it will be removed in nx v18.",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.",
         "type": "boolean",
         "default": false
       },
