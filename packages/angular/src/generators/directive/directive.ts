@@ -41,11 +41,11 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
       tree,
       options.directory,
       modulePath,
-      '',
+      options.name,
       options.symbolName,
       options.fileName,
       'declarations',
-      options.flat,
+      true,
       options.export
     );
   }
