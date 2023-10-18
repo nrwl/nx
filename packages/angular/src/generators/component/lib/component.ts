@@ -15,7 +15,10 @@ export function exportComponentInEntryPoint(
     return;
   }
 
-  const { root, projectType } = readProjectConfiguration(tree, schema.project);
+  const { root, projectType } = readProjectConfiguration(
+    tree,
+    schema.projectName
+  );
 
   if (projectType === 'application') {
     return;

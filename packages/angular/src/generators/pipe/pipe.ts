@@ -43,11 +43,11 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
       tree,
       options.directory,
       modulePath,
-      '',
+      options.name,
       options.symbolName,
       options.fileName,
       'declarations',
-      options.flat,
+      true,
       options.export
     );
   }
