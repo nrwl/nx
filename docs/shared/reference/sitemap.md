@@ -190,6 +190,7 @@
       - [Add Dependency Command](/recipes/nx-console/console-add-dependency-command)
       - [Project Pane](/recipes/nx-console/console-project-pane)
       - [Keyboard Shortcuts](/recipes/nx-console/console-shortcuts)
+      - [Troubleshooting](/recipes/nx-console/console-troubleshooting)
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)

@@ -1131,6 +1131,12 @@
                   "id": "console-shortcuts",
                   "tags": ["integrate-with-editors"],
                   "file": "shared/recipes/console-shortcuts"
+                },
+                {
+                  "name": "Troubleshooting",
+                  "id": "console-troubleshooting",
+                  "tags": ["integrate-with-editors"],
+                  "file": "shared/recipes/console-troubleshooting"
                 }
               ]
             },
