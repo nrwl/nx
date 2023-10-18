@@ -145,7 +145,7 @@ function getNormalizedTsConfig(options: TypeScriptCompilationOptions) {
   const tsConfig = readTsConfig(options.tsConfig);
   tsConfig.options.outDir = options.outputPath;
   tsConfig.options.noEmitOnError = true;
-  tsConfig.options.rootDir = options.rootDir;
+  tsConfig.options.rootDir = '.';
   if (tsConfig.options.incremental && !tsConfig.options.tsBuildInfoFile) {
     tsConfig.options.tsBuildInfoFile = joinPathFragments(
       options.outputPath,
