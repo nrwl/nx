@@ -2363,6 +2363,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Troubleshooting",
+                "path": "/recipes/nx-console/console-troubleshooting",
+                "id": "console-troubleshooting",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -4081,6 +4089,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting",
+            "path": "/recipes/nx-console/console-troubleshooting",
+            "id": "console-troubleshooting",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4129,6 +4145,14 @@
         "name": "Keyboard Shortcuts",
         "path": "/recipes/nx-console/console-shortcuts",
         "id": "console-shortcuts",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting",
+        "path": "/recipes/nx-console/console-troubleshooting",
+        "id": "console-troubleshooting",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

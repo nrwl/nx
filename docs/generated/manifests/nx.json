@@ -2945,6 +2945,16 @@
             "isExternal": false,
             "path": "/recipes/nx-console/console-shortcuts",
             "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-troubleshooting",
+            "name": "Troubleshooting",
+            "description": "",
+            "file": "shared/recipes/console-troubleshooting",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-troubleshooting",
+            "tags": ["integrate-with-editors"]
           }
         ],
         "isExternal": false,
@@ -5089,6 +5099,16 @@
         "isExternal": false,
         "path": "/recipes/nx-console/console-shortcuts",
         "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-troubleshooting",
+        "name": "Troubleshooting",
+        "description": "",
+        "file": "shared/recipes/console-troubleshooting",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-troubleshooting",
+        "tags": ["integrate-with-editors"]
       }
     ],
     "isExternal": false,
@@ -5153,6 +5173,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-shortcuts",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-troubleshooting": {
+    "id": "console-troubleshooting",
+    "name": "Troubleshooting",
+    "description": "",
+    "file": "shared/recipes/console-troubleshooting",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-troubleshooting",
     "tags": ["integrate-with-editors"]
   },
   "/recipes/other": {
