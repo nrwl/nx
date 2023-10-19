@@ -13,10 +13,12 @@ export default async function update(tree: Tree) {
 
   const nxJson = readNxJson(tree);
 
-  delete nxJson.cli?.['defaultCollection'];
+  if (nxJson.cli) {
+    delete nxJson.cli?.['defaultCollection'];
 
-  if (Object.keys(nxJson.cli).length < 1) {
-    delete nxJson.cli;
+    if (Object.keys(nxJson.cli).length < 1) {
+      delete nxJson.cli;
+    }
   }
 
   warnNpmScopeHasChanged(tree, nxJson);

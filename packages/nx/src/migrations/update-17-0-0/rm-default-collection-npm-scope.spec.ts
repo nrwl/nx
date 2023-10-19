@@ -43,6 +43,14 @@ describe('rm-default-collection-npm-scope migration', () => {
       await update(tree);
       expect(readJson(tree, 'nx.json').cli).not.toBeDefined();
     });
+
+    it('should work if cli is not defined', async () => {
+      updateJson(tree, 'nx.json', (j) => {
+        delete j.cli;
+        return j;
+      });
+      await update(tree);
+    });
   });
 
   describe('without nx.json', () => {
