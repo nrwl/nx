@@ -27,7 +27,7 @@ import { normalizePath } from './path';
 import { dirname, join } from 'path';
 import { getNxRequirePaths } from './installation-directory';
 import { readTsConfig } from '../plugins/js/utils/typescript';
-import { NxJsonConfiguration, PluginDefinition } from '../config/nx-json';
+import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
 
 import type * as ts from 'typescript';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
@@ -194,14 +194,14 @@ function getPluginPathAndName(
 }
 
 export async function loadNxPluginAsync(
-  pluginDefinition: PluginDefinition,
+  pluginConfiguration: PluginConfiguration,
   paths: string[],
   root: string
 ): Promise<LoadedNxPlugin> {
   const { plugin: moduleName, options } =
-    typeof pluginDefinition === 'object'
-      ? pluginDefinition
-      : { plugin: pluginDefinition, options: undefined };
+    typeof pluginConfiguration === 'object'
+      ? pluginConfiguration
+      : { plugin: pluginConfiguration, options: undefined };
   let pluginModule = nxPluginCache.get(moduleName);
   if (pluginModule) {
     return { plugin: pluginModule, options };
@@ -217,14 +217,14 @@ export async function loadNxPluginAsync(
 }
 
 function loadNxPluginSync(
-  pluginDefinition: PluginDefinition,
+  pluginConfiguration: PluginConfiguration,
   paths: string[],
   root: string
 ): LoadedNxPlugin {
   const { plugin: moduleName, options } =
-    typeof pluginDefinition === 'object'
-      ? pluginDefinition
-      : { plugin: pluginDefinition, options: undefined };
+    typeof pluginConfiguration === 'object'
+      ? pluginConfiguration
+      : { plugin: pluginConfiguration, options: undefined };
   let pluginModule = nxPluginCache.get(moduleName);
   if (pluginModule) {
     return { plugin: pluginModule, options };
@@ -280,7 +280,7 @@ export function loadNxPluginsSync(
 }
 
 export async function loadNxPlugins(
-  plugins: PluginDefinition[],
+  plugins: PluginConfiguration[],
   paths = getNxRequirePaths(),
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {

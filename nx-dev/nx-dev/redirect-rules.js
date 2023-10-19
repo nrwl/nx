@@ -661,7 +661,7 @@ const packagesDocuments = {
 };
 
 /**
- * Concept documents Updates (updated 2023-03-31)
+ * Concept documents Updates (updated 2023-10-18)
  */
 const conceptUrls = {
   '/concepts/more-concepts/global-nx':
@@ -674,6 +674,10 @@ const conceptUrls = {
     '/getting-started/tutorials/react-standalone-tutorial',
   '/getting-started/angular-standalone-tutorial':
     '/getting-started/tutorials/angular-standalone-tutorial',
+  '/concepts/more-concepts/micro-frontend-architecture':
+    '/concepts/module-federation/micro-frontend-architecture',
+  '/concepts/more-concepts/faster-builds-with-module-federation':
+    '/concepts/module-federation/faster-builds-with-module-federation',
 };
 
 const nested5minuteTutorialUrls = {

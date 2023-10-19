@@ -15,7 +15,7 @@ export async function normalizeOptions(
     directory,
     fileName,
     filePath,
-    project,
+    project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
     artifactType: 'component',
     callingGenerator: '@nx/angular:component',
@@ -33,7 +33,7 @@ export async function normalizeOptions(
 
   const { prefix, root, sourceRoot } = readProjectConfiguration(
     tree,
-    project
+    projectName
   ) as AngularProjectConfiguration;
 
   const selector =
@@ -43,7 +43,7 @@ export async function normalizeOptions(
   return {
     ...options,
     name,
-    project,
+    projectName,
     changeDetection: options.changeDetection ?? 'Default',
     style: options.style ?? 'css',
     directory,

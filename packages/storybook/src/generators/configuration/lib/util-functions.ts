@@ -546,7 +546,7 @@ export function createProjectStorybookDir(
       : 'src/lib';
 
   if (uiFramework === '@storybook/vue3-vite') {
-    projectDirectory = 'src/components';
+    projectDirectory = 'src';
   }
 
   const storybookConfigExists = projectIsRootProjectInStandaloneWorkspace

@@ -1,23 +1,10 @@
-import { joinPathFragments, Tree, writeJson } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
-} from '@nx/storybook/src/utils/utilities';
-import { nxVersion, storybookVersion } from '@nx/storybook/src/utils/versions';
-import * as targetVariations from '@nx/storybook/src/utils/test-configs/different-target-variations.json';
-import libraryGenerator from '../library/library';
-import componentGenerator from '../component/component';
-import storybookConfigurationGenerator from '../storybook-configuration/storybook-configuration';
-import { Linter } from '@nx/eslint';
-
-// nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
-}));
+} from './utilities';
+import * as targetVariations from './test-configs/different-target-variations.json';
 
 describe('testing utilities', () => {
   describe('Test functions that need workspace tree', () => {
@@ -25,32 +12,6 @@ describe('testing utilities', () => {
 
     beforeEach(async () => {
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-      await libraryGenerator(appTree, {
-        name: 'test-ui-lib',
-      });
-
-      await componentGenerator(appTree, {
-        name: 'button',
-        project: 'test-ui-lib',
-      });
-
-      writeJson(appTree, 'package.json', {
-        devDependencies: {
-          '@nx/storybook': nxVersion,
-          '@storybook/addon-knobs': storybookVersion,
-          '@storybook/angular': storybookVersion,
-        },
-      });
-      writeJson(appTree, 'test-ui-lib/tsconfig.json', {});
-
-      await storybookConfigurationGenerator(appTree, {
-        name: 'test-ui-lib',
-        configureCypress: true,
-        configureStaticServe: false,
-        linter: Linter.EsLint,
-        generateStories: false,
-      });
 
       appTree.write(
         `test-ui-lib/src/lib/button/button.component.stories.ts`,
@@ -92,6 +53,16 @@ describe('testing utilities', () => {
         `test-ui-lib/src/lib/button/button.component.other.ts`,
         `
         import { Button } from './button';
+
+        // test test
+      `
+      );
+
+      appTree.write(
+        `test-ui-lib/src/lib/button/button.test.stories.ts`,
+        `
+        import { Button } from './button';
+        import * as Storybook from '@storybook/react';
 
         // test test
       `
@@ -159,6 +130,14 @@ describe('testing utilities', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
           'test-ui-lib/src/lib/button/button.other.stories.ts'
+        );
+        expect(fileIsStory).toBeTruthy();
+      });
+
+      it('should verify it is story when using unnamed import', () => {
+        const fileIsStory = isTheFileAStory(
+          appTree,
+          'test-ui-lib/src/lib/button/button.test.stories.ts'
         );
         expect(fileIsStory).toBeTruthy();
       });

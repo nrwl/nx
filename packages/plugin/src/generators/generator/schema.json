@@ -58,6 +58,11 @@
       "default": false,
       "description": "Do not format files with prettier.",
       "x-priority": "internal"
+    },
+    "nameAndDirectoryFormat": {
+      "description": "Whether to generate the generator in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     }
   },
   "required": ["name"],

@@ -20,11 +20,6 @@
       },
       "additionalProperties": false
     },
-    "npmScope": {
-      "type": "string",
-      "description": "NPM Scope that the workspace uses.",
-      "deprecated": "This is inferred from the package.json in the workspace root instead."
-    },
     "tasksRunnerOptions": {
       "type": "object",
       "additionalProperties": {
@@ -221,10 +216,6 @@
           "type": "string",
           "description": "The default package manager to use.",
           "enum": ["yarn", "pnpm", "npm"]
-        },
-        "defaultCollection": {
-          "type": "string",
-          "description": "The default generator collection to use."
         }
       }
     },

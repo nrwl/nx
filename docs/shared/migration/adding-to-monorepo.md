@@ -49,6 +49,29 @@ This process adds `nx` to your `package.json` at the root of your workspace:
 
 It also creates a `nx.json` based on the answers given during the setup process. This includes cacheable operations as well as some initial definition of the task pipeline. Here is an example:
 
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "cache": true
+    },
+    "lint": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
 ```json {% fileName="nx.json" %}
 {
   "tasksRunnerOptions": {
@@ -66,6 +89,9 @@ It also creates a `nx.json` based on the answers given during the setup process.
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Incrementally Adopting Nx
 

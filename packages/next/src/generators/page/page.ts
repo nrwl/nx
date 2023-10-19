@@ -27,13 +27,11 @@ export async function pageGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   const componentTask = await reactComponentGenerator(host, {
     ...options,
-    project: schema.project,
-    pascalCaseFiles: false,
+    nameAndDirectoryFormat: 'as-provided', // already determined the directory so use as is
     export: false,
     classComponent: false,
     routing: false,
     skipTests: !options.withTests,
-    flat: !!options.flat,
     skipFormat: true,
   });
 
@@ -52,58 +50,46 @@ export async function pageGeneratorInternal(host: Tree, schema: Schema) {
 
 async function normalizeOptions(host: Tree, options: Schema) {
   let isAppRouter: boolean;
+  let derivedDirectory: string;
 
   if (options.project) {
     // Legacy behavior, detect app vs page router from specified project.
+    // TODO(v18): remove this logic
     const project = readProjectConfiguration(host, options.project);
     // app/ is a reserved folder in nextjs so it is safe to check it's existence
     isAppRouter = host.exists(`${project.root}/app`);
+
+    const routerDirectory = isAppRouter ? 'app' : 'pages';
+    derivedDirectory = options.directory
+      ? `${routerDirectory}/${options.directory}`
+      : `${routerDirectory}`;
   } else {
-    // New behavior, detect app vs page router from the positional arg or directory path
-    const parts =
-      options.name.includes('/') || // mac, linux
-      options.name.includes('\\') // windows
-        ? options.name.split(/[\/\\]/)
-        : options.directory.split(/[\/\\]/);
-    if (parts.includes('pages')) {
-      isAppRouter = false;
-    } else if (parts.includes('app')) {
-      isAppRouter = true;
-    } else {
-    }
+    // New behavior, use directory as is without detecting whether we're using app or pages router.
+    derivedDirectory = options.directory;
   }
 
   const {
     artifactName: name,
     project: projectName,
-    filePath,
     fileName,
-    nameAndDirectoryFormat,
+    directory,
   } = await determineArtifactNameAndDirectoryOptions(host, {
-    artifactType: 'component',
-    callingGenerator: '@nx/react:component',
+    artifactType: 'page',
+    callingGenerator: '@nx/next:page',
     name: options.name,
     fileName: isAppRouter ? 'page' : 'index',
     directory: options.directory,
-    derivedDirectory: options.directory,
+    derivedDirectory,
     flat: options.flat,
     nameAndDirectoryFormat: options.nameAndDirectoryFormat,
     project: options.project,
     fileExtension: 'tsx',
   });
-
-  const routerDirectory = isAppRouter ? 'app' : 'pages';
-  const derivedDirectory = options.directory
-    ? `${routerDirectory}/${options.directory}`
-    : `${routerDirectory}`;
-
   return {
     ...options,
+    directory,
     fileName,
     projectName,
-    derivedDirectory,
-    filePath,
-    nameAndDirectoryFormat,
   };
 }
 

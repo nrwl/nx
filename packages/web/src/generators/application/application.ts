@@ -27,6 +27,7 @@ import { join } from 'path';
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -381,17 +382,16 @@ async function normalizeOptions(
     callingGenerator: '@nx/web:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
 
-  const { npmScope } = getWorkspaceLayout(host);
+  const npmScope = getNpmScope(host);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  if (options.bundler === 'vite' && !options.unitTestRunner) {
+  if (options.bundler === 'vite' && options.unitTestRunner !== 'none') {
     options.unitTestRunner = 'vitest';
   }
 

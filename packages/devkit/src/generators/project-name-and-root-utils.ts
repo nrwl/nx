@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import type { ProjectType } from 'nx/src/config/workspace-json-project-json';
 import type { Tree } from 'nx/src/generators/tree';
-import { relative } from 'path';
+import { join, relative } from 'path';
 import { requireNx } from '../../nx';
 import {
   extractLayoutDirectory,
@@ -14,8 +14,6 @@ const {
   normalizePath,
   logger,
   readJson,
-  readNxJson,
-  updateNxJson,
   stripIndents,
   workspaceRoot,
 } = requireNx();
@@ -329,13 +327,6 @@ function getImportPath(npmScope: string | undefined, name: string) {
 }
 
 function getNpmScope(tree: Tree): string | undefined {
-  const nxJson = readNxJson(tree);
-
-  // TODO(v17): Remove reading this from nx.json
-  if (nxJson?.npmScope) {
-    return nxJson.npmScope;
-  }
-
   const { name } = tree.exists('package.json')
     ? readJson<{ name?: string }>(tree, 'package.json')
     : { name: null };
@@ -357,4 +348,11 @@ function getCwd(): string {
   return process.env.INIT_CWD?.startsWith(workspaceRoot)
     ? process.env.INIT_CWD
     : process.cwd();
+}
+
+/**
+ * Function for setting cwd during testing
+ */
+export function setCwd(path: string): void {
+  process.env.INIT_CWD = join(workspaceRoot, path);
 }

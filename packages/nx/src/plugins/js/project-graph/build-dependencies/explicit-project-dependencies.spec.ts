@@ -476,9 +476,7 @@ interface VirtualWorkspaceConfig {
 async function createContext(
   config: VirtualWorkspaceConfig
 ): Promise<CreateDependenciesContext> {
-  const nxJson = {
-    npmScope: 'proj',
-  };
+  const nxJson = {};
   const projectsFs = {
     [`./libs/${config.source}/project.json`]: JSON.stringify({
       name: config.source,

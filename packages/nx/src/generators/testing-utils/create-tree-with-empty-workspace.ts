@@ -25,7 +25,7 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
   tree.write(
     '/package.json',
     JSON.stringify({
-      name: 'test-name',
+      name: '@proj/source',
       dependencies: {},
       devDependencies: {},
     })
@@ -33,7 +33,6 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
   tree.write(
     '/nx.json',
     JSON.stringify({
-      npmScope: 'proj',
       affected: {
         defaultBase: 'main',
       },

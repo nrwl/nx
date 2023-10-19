@@ -13,7 +13,7 @@ export type GenerationOptions = {
   directory: string;
   filePath: string;
   name: string;
-  project: string;
+  projectName: string;
   export?: boolean;
   inlineScam?: boolean;
 };
@@ -25,7 +25,7 @@ export function exportScam(tree: Tree, options: GenerationOptions): void {
 
   const { projectType, root, sourceRoot } = readProjectConfiguration(
     tree,
-    options.project
+    options.projectName
   );
   const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
 

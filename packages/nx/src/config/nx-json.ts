@@ -103,11 +103,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   targetDefaults?: TargetDefaults;
   /**
-   * @deprecated This is inferred from the package.json in the workspace root. Please use {@link getNpmScope} instead.
-   * NPM Scope that the workspace uses
-   */
-  npmScope?: string;
-  /**
    * Default options for `nx affected`
    */
   affected?: NxAffectedConfig;
@@ -126,7 +121,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
       /**
        * Path to resolve the runner
        */
-      runner: string;
+      runner?: string;
       /**
        * Default options for the runner
        */
@@ -158,16 +153,12 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   cli?: {
     packageManager?: PackageManager;
 
-    /**
-     * @deprecated - defaultCollection is deprecated and will be removed
-     */
-    defaultCollection?: string;
     defaultProjectName?: string;
   };
   /**
    * Plugins for extending the project graph
    */
-  plugins?: PluginDefinition[];
+  plugins?: PluginConfiguration[];
 
   /**
    * Configuration for Nx Plugins
@@ -225,9 +216,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   useDaemonProcess?: boolean;
 }
 
-export type PluginDefinition =
+export type PluginConfiguration =
   | string
-  | { plugin: string; options?: Record<string, unknown> };
+  | { plugin: string; options?: unknown };
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   const nxJson = join(root, 'nx.json');

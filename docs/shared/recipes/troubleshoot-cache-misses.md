@@ -2,7 +2,7 @@
 
 Problem: A task is being executed when you expect it to be replayed from the cache.
 
-1. Check if your task is listed in `cacheableOperations` defined in `nx.json#tasksRunnerOptions`
+1. Check if your task is either marked with `"cache": true` in `nx.json#targetDefaults` or listed in `cacheableOperations` defined in `nx.json#tasksRunnerOptions`
 
 1. Check if the output of your task is changing the inputs of your task
 

@@ -22,6 +22,7 @@ interface NormalizedSchema extends Schema {
   hookName: string;
   hookTypeName: string;
   fileName: string;
+  projectName: string;
 }
 
 export async function hookGenerator(host: Tree, schema: Schema) {
@@ -70,7 +71,8 @@ function addExportsToBarrel(host: Tree, options: NormalizedSchema) {
     tsModule = ensureTypescript();
   }
   const workspace = getProjects(host);
-  const isApp = workspace.get(options.project).projectType === 'application';
+  const isApp =
+    workspace.get(options.projectName).projectType === 'application';
 
   if (options.export && !isApp) {
     const indexFilePath = joinPathFragments(
@@ -141,7 +143,7 @@ async function normalizeOptions(
       : 'use-'.concat(fileName);
   const hookName = 'use'.concat(className);
   const hookTypeName = 'Use'.concat(className);
-  const project = getProjects(host).get(options.project);
+  const project = getProjects(host).get(projectName);
 
   const { sourceRoot: projectSourceRoot, projectType } = project;
 
@@ -173,6 +175,7 @@ async function normalizeOptions(
     hookTypeName,
     fileName: hookFilename,
     projectSourceRoot,
+    projectName,
   };
 }
 

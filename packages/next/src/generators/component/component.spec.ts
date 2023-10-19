@@ -75,4 +75,17 @@ describe('component', () => {
     expect(tree.exists('my-lib/src/bar/world/world.spec.tsx')).toBeTruthy();
     expect(tree.exists('my-lib/src/bar/world/world.module.css')).toBeTruthy();
   });
+
+  it('should work with path as-provided', async () => {
+    await componentGenerator(tree, {
+      name: 'hello',
+      directory: 'my-lib/src/foo',
+      nameAndDirectoryFormat: 'as-provided',
+      style: 'css',
+    });
+
+    expect(tree.exists('my-lib/src/foo/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-lib/src/foo/hello.spec.tsx')).toBeTruthy();
+    expect(tree.exists('my-lib/src/foo/hello.module.css')).toBeTruthy();
+  });
 });

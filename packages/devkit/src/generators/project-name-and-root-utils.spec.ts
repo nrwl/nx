@@ -5,6 +5,7 @@ import { updateJson } from 'nx/src/generators/utils/json';
 import { workspaceRoot } from 'nx/src/utils/workspace-root';
 import { join } from 'path';
 import { determineProjectNameAndRootOptions } from './project-name-and-root-utils';
+import { setCwd } from '../../internal-testing-utils';
 
 describe('determineProjectNameAndRootOptions', () => {
   let tree: Tree;
@@ -33,6 +34,9 @@ describe('determineProjectNameAndRootOptions', () => {
   describe('no layout', () => {
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace();
+
+      setCwd('');
+
       jest.clearAllMocks();
     });
 
@@ -297,23 +301,6 @@ describe('determineProjectNameAndRootOptions', () => {
       });
     });
 
-    it('should derive import path for root projects when package.json does not have a name and format is as-provided', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.name = undefined;
-        return json;
-      });
-
-      const result = await determineProjectNameAndRootOptions(tree, {
-        name: 'libName',
-        projectType: 'library',
-        projectNameAndRootFormat: 'as-provided',
-        rootProject: true,
-        callingGenerator: '',
-      });
-
-      expect(result.importPath).toBe('@proj/libName');
-    });
-
     it('should throw when an invalid name is provided', async () => {
       await expect(
         determineProjectNameAndRootOptions(tree, {
@@ -382,23 +369,6 @@ describe('determineProjectNameAndRootOptions', () => {
         projectRoot: '.',
         projectNameAndRootFormat: 'derived',
       });
-    });
-
-    it('should derive import path for root projects when package.json does not have a name and format is "derived"', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.name = undefined;
-        return json;
-      });
-
-      const result = await determineProjectNameAndRootOptions(tree, {
-        name: 'libName',
-        projectType: 'library',
-        projectNameAndRootFormat: 'derived',
-        rootProject: true,
-        callingGenerator: '',
-      });
-
-      expect(result.importPath).toBe('@proj/lib-name');
     });
 
     it(`should handle window's style paths correctly when format is "derived"`, async () => {
@@ -650,23 +620,6 @@ describe('determineProjectNameAndRootOptions', () => {
       });
     });
 
-    it('should derive import path for root projects when package.json does not have a name and format is "as-provided"', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.name = undefined;
-        return json;
-      });
-
-      const result = await determineProjectNameAndRootOptions(tree, {
-        name: 'libName',
-        projectType: 'library',
-        projectNameAndRootFormat: 'as-provided',
-        rootProject: true,
-        callingGenerator: '',
-      });
-
-      expect(result.importPath).toBe('@proj/libName');
-    });
-
     it('should throw when an invalid name is provided', async () => {
       await expect(
         determineProjectNameAndRootOptions(tree, {
@@ -757,23 +710,6 @@ describe('determineProjectNameAndRootOptions', () => {
         projectRoot: '.',
         projectNameAndRootFormat: 'derived',
       });
-    });
-
-    it('should derive import path for root projects when package.json does not have a name and format is "derived"', async () => {
-      updateJson(tree, 'package.json', (json) => {
-        json.name = undefined;
-        return json;
-      });
-
-      const result = await determineProjectNameAndRootOptions(tree, {
-        name: 'libName',
-        projectType: 'library',
-        projectNameAndRootFormat: 'derived',
-        rootProject: true,
-        callingGenerator: '',
-      });
-
-      expect(result.importPath).toBe('@proj/lib-name');
     });
 
     it('should prompt for the project name and root format', async () => {

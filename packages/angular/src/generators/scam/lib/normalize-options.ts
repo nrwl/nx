@@ -13,7 +13,7 @@ export async function normalizeOptions(
     directory,
     fileName,
     filePath,
-    project,
+    project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
     artifactType: options.type,
     callingGenerator: '@nx/angular:scam',
@@ -38,6 +38,6 @@ export async function normalizeOptions(
     filePath,
     name,
     symbolName,
-    project,
+    projectName,
   };
 }

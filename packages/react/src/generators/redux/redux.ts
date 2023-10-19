@@ -194,7 +194,7 @@ async function normalizeOptions(
   // for it without needing to specify --appProject.
   options.appProject =
     options.appProject ||
-    (projectType === 'application' ? options.project : undefined);
+    (projectType === 'application' ? projectName : undefined);
   if (options.appProject) {
     const appConfig = projects.get(options.appProject);
     if (appConfig.projectType !== 'application') {

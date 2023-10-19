@@ -63,7 +63,24 @@ By default `useNx` will be set to `false`, so you have to explicitly opt-in.
 
 **3. Create a nx.json (optional but recommended)**
 
-Nx works even without `nx.json` but to configure some more details such as the `cacheableOperations` of your monorepo in particular, create a `nx.json` at the root of the monorepo. Alternatively you can also just run `npx nx@latest init` to have one generated. Specify the cacheable operations, usually something like `build`, `test`, `lint` etc, depending on your workspace setup:
+Nx works even without `nx.json` but to configure some more details such as the `cacheableOperations` of your monorepo in particular, create a `nx.json` at the root of the monorepo. Alternatively you can also just run `npx nx@latest init` to have one generated. Specify the cacheable targets, usually something like `build`, `test`, `lint` etc, depending on your workspace setup:
+
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+```json {% fileName="nx.json" %}
+{
+  "extends": "nx/presets/npm.json",
+  "targetDefaults": {
+    "build": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
 
 ```json {% fileName="nx.json" %}
 {
@@ -78,6 +95,9 @@ Nx works even without `nx.json` but to configure some more details such as the `
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 Having done these steps, you can now keep using your Lerna repository as you did before. All the commands will work in a backwards compatible way but will be a lot faster. [Read our blog post for some benchmarks](https://blog.nrwl.io/lerna-used-to-walk-now-it-can-fly-eab7a0fe7700?source=friends_link&sk=6c827ec7c9adfc1c760ff2e3f3e05cc7).
 

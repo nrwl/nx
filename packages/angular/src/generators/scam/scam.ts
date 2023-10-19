@@ -2,26 +2,21 @@ import type { Tree } from '@nx/devkit';
 import { formatFiles } from '@nx/devkit';
 import { componentGenerator } from '../component/component';
 import { exportScam } from '../utils/export-scam';
-import {
-  convertComponentToScam,
-  normalizeOptions,
-  validateOptions,
-} from './lib';
+import { convertComponentToScam, normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function scamGenerator(tree: Tree, rawOptions: Schema) {
-  validateOptions(tree, rawOptions);
-
-  const { inlineScam, ...generatorOptions } = rawOptions;
+  const options = await normalizeOptions(tree, rawOptions);
   await componentGenerator(tree, {
-    ...generatorOptions,
+    ...options,
     skipImport: true,
     export: false,
     standalone: false,
     skipFormat: true,
+    // options are already normalize, use them as is
+    nameAndDirectoryFormat: 'as-provided',
   });
 
-  const options = await normalizeOptions(tree, rawOptions);
   convertComponentToScam(tree, options);
   exportScam(tree, options);
 
