@@ -17,6 +17,7 @@ describe('federate-module', () => {
 
   beforeAll(() => {
     tree = createTreeWithEmptyWorkspace();
+    tree.write('my-remote/src/my-federated-module.ts', ''); // Ensure that the file exists
   });
   describe('no remote', () => {
     it('should generate a remote and e2e', async () => {
@@ -45,6 +46,17 @@ describe('federate-module', () => {
       expect(
         tsconfig.compilerOptions.paths['my-remote/my-federated-module']
       ).toEqual(['my-remote/src/my-federated-module.ts']);
+    });
+
+    it('should error when invalid path is provided', async () => {
+      await federateModuleGenerator(tree, {
+        ...schema,
+        path: 'invalid/path',
+      }).catch((e) => {
+        expect(e.message).toContain(
+          'The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.'
+        );
+      });
     });
   });
 
