@@ -163,7 +163,7 @@ Since version 16.8.0, Nx supports the usage of flat config in the [@nx/lint:esli
 To convert workspace ESLint configurations from the default `.eslintrc.json` to the new flat config you need to run:
 
 ```shell
- nx g @nx/eslint:convert-to-flat-config
+ nx g @nx/linter:convert-to-flat-config
 ```
 
 The generator will go through all the projects and convert their configurations to the new format. It will also convert the base `.eslintrc.json` and `.eslintignore`.
