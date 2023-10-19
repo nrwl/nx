@@ -5,6 +5,7 @@ export interface Schema {
   name: string;
   path: string;
   remote: string;
+  remoteDirectory?: string;
   host?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   unitTestRunner?: UnitTestRunner;
