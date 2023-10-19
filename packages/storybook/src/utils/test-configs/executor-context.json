@@ -84,7 +84,7 @@
           },
           "lint": {
             "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
-            "executor": "@nx/linter:eslint",
+            "executor": "@nx/eslint:lint",
             "outputs": ["{options.outputFile}"],
             "options": {
               "lintFilePatterns": ["apps/main-webpack/**/*.{ts,tsx,js,jsx}"]
