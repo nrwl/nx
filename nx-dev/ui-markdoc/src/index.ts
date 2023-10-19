@@ -133,9 +133,20 @@ const tokenizer = new Tokenizer({
   allowComments: true,
 });
 
-export const parseMarkdown: (markdown: string) => Node = (markdown) => {
+const parseMarkdown: (markdown: string) => Node = (markdown) => {
   const tokens = tokenizer.tokenize(markdown);
   return parse(tokens);
+};
+
+
+export const extractFrontmatter = (
+  documentContent: string
+): Record<string, any> => {
+  const ast = parseMarkdown(documentContent);
+  const frontmatter = ast.attributes['frontmatter']
+    ? (yamlLoad(ast.attributes['frontmatter']) as Record<string, any>)
+    : {};
+  return frontmatter;
 };
 
 export const renderMarkdown: (
