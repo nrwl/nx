@@ -39,6 +39,8 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
     expect(() => runCLI(`build ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`lint e2e`)).not.toThrow();
     expect(() => runCLI(`e2e e2e`)).not.toThrow();
   });
 });
