@@ -55,6 +55,7 @@
     - [Module Federation](/concepts/module-federation)
       - [Faster Builds with Module Federation](/concepts/module-federation/faster-builds-with-module-federation)
       - [Micro Frontend Architecture](/concepts/module-federation/micro-frontend-architecture)
+      - [Manage Library Versions with Module Federation](/concepts/module-federation/manage-library-versions-with-module-federation)
     - [More Concepts](/concepts/more-concepts)
       - [Customizing Inputs](/concepts/more-concepts/customizing-inputs)
       - [Incremental Builds](/concepts/more-concepts/incremental-builds)

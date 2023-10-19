@@ -1034,6 +1034,16 @@
             "isExternal": false,
             "path": "/concepts/module-federation/micro-frontend-architecture",
             "tags": []
+          },
+          {
+            "id": "manage-library-versions-with-module-federation",
+            "name": "Manage Library Versions with Module Federation",
+            "description": "",
+            "file": "shared/guides/module-federation/manage-library-versions-with-module-federation",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -1351,6 +1361,16 @@
         "isExternal": false,
         "path": "/concepts/module-federation/micro-frontend-architecture",
         "tags": []
+      },
+      {
+        "id": "manage-library-versions-with-module-federation",
+        "name": "Manage Library Versions with Module Federation",
+        "description": "",
+        "file": "shared/guides/module-federation/manage-library-versions-with-module-federation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -1375,6 +1395,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/micro-frontend-architecture",
+    "tags": []
+  },
+  "/concepts/module-federation/manage-library-versions-with-module-federation": {
+    "id": "manage-library-versions-with-module-federation",
+    "name": "Manage Library Versions with Module Federation",
+    "description": "",
+    "file": "shared/guides/module-federation/manage-library-versions-with-module-federation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
     "tags": []
   },
   "/concepts/more-concepts": {
