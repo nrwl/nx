@@ -74,6 +74,14 @@
           "version": "^5.60.1"
         }
       }
+    },
+    "17.0.0": {
+      "version": "17.0.0-rc.2",
+      "packages": {
+        "eslint-config-prettier": {
+          "version": "^9.0.0"
+        }
+      }
     }
   }
 }
