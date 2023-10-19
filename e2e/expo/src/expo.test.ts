@@ -42,7 +42,7 @@ describe('expo', () => {
   afterAll(() => cleanupProject());
 
   it('should test and lint', async () => {
-    const componentName = uniq('component');
+    const componentName = uniq('Component');
 
     runCLI(
       `generate @nx/expo:component ${componentName} --project=${libName} --export --no-interactive`

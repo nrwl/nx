@@ -45,7 +45,7 @@
               "eslint",
               "http-server", // Used by readModulePackageJson
               // Installed by ensurePackage
-              "@nx/linter",
+              "@nx/eslint",
               "@nx/cypress",
               "@nx/playwright",
               "@nx/vite",

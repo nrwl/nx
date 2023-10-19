@@ -763,6 +763,8 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
     });
 
     it('should not prompt and default to "as-provided" format when providing a directory in the name is disallowed', async () => {
+      // simulate interactive mode
+      ensureInteractiveMode();
       addProjectConfiguration(tree, 'app1', {
         root: 'apps/app1',
         projectType: 'application',
@@ -779,9 +781,14 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
 
       expect(promptSpy).not.toHaveBeenCalled();
       expect(result.nameAndDirectoryFormat).toBe('as-provided');
+
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
     });
 
     it('should not prompt and default to "as-provided" format when the directory is not under the provided project root', async () => {
+      // simulate interactive mode
+      ensureInteractiveMode();
       addProjectConfiguration(tree, 'app1', {
         root: 'apps/app1',
         projectType: 'application',
@@ -802,6 +809,9 @@ describe('determineArtifactNameAndDirectoryOptions', () => {
 
       expect(promptSpy).not.toHaveBeenCalled();
       expect(result.nameAndDirectoryFormat).toBe('as-provided');
+
+      // restore original interactive mode
+      restoreOriginalInteractiveMode();
     });
 
     it('should not prompt when the resulting name and directory are the same for both formats', async () => {

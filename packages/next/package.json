@@ -46,7 +46,7 @@
     "webpack-merge": "^5.8.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter",
+    "@nx/eslint": "file:../eslint",
     "@nx/react": "file:../react",
     "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace"

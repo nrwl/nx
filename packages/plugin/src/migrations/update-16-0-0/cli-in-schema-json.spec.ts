@@ -10,7 +10,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { assertRunsAgainstNxRepo } from '@nx/devkit/internal-testing-utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import executorGenerator from '../../generators/executor/executor';

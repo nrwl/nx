@@ -24,7 +24,7 @@
       "description": "Create a library"
     },
     "component": {
-      "factory": "./src/generators/component/component#expoComponentGenerator",
+      "factory": "./src/generators/component/component#expoComponentGeneratorInternal",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a component",
       "aliases": ["c"]

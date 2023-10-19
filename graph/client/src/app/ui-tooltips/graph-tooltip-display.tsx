@@ -7,6 +7,7 @@ import {
   Tooltip,
 } from '@nx/graph/ui-tooltips';
 import { ProjectNodeActions } from './project-node-actions';
+import { TaskNodeActions } from './task-node-actions';
 
 const tooltipService = getTooltipService();
 
@@ -29,7 +30,11 @@ export function TooltipDisplay() {
         tooltipToRender = <ProjectEdgeNodeTooltip {...currentTooltip.props} />;
         break;
       case 'taskNode':
-        tooltipToRender = <TaskNodeTooltip {...currentTooltip.props} />;
+        tooltipToRender = (
+          <TaskNodeTooltip {...currentTooltip.props}>
+            <TaskNodeActions {...currentTooltip.props} />
+          </TaskNodeTooltip>
+        );
         break;
     }
   }

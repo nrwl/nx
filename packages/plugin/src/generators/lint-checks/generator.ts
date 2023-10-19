@@ -12,7 +12,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import type { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/eslint/schema';
+import type { Schema as EsLintExecutorOptions } from '@nx/eslint/src/executors/lint/schema';
 
 import { PluginLintChecksGeneratorSchema } from './schema';
 import { NX_PREFIX } from 'nx/src/utils/logger';
@@ -22,8 +22,8 @@ import {
   isEslintConfigSupported,
   lintConfigHasOverride,
   updateOverrideInLintConfig,
-} from '@nx/linter/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/linter/src/utils/flat-config';
+} from '@nx/eslint/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export default async function pluginLintCheckGenerator(
   host: Tree,
@@ -135,6 +135,7 @@ function updateProjectTarget(
 
   for (const [target, configuration] of Object.entries(project.targets)) {
     if (
+      configuration.executor === '@nx/eslint:lint' ||
       configuration.executor === '@nx/linter:eslint' ||
       configuration.executor === '@nrwl/linter:eslint'
     ) {
@@ -292,6 +293,8 @@ export function getEsLintOptions(
 ): [target: string, configuration: TargetConfiguration<EsLintExecutorOptions>] {
   return Object.entries(project.targets || {}).find(
     ([, x]) =>
-      x.executor === '@nx/linter:eslint' || x.executor === '@nrwl/linter:eslint'
+      x.executor === '@nx/eslint:lint' ||
+      x.executor === '@nx/linter:eslint' ||
+      x.executor === '@nrwl/linter:eslint'
   );
 }

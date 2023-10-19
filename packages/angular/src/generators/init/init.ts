@@ -10,7 +10,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { jestInitGenerator } from '@nx/jest';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {

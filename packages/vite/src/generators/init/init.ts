@@ -12,16 +12,16 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
+  edgeRuntimeVmVersion,
+  happyDomVersion,
   jsdomVersion,
   nxVersion,
   vitePluginDtsVersion,
-  vitePluginReactVersion,
   vitePluginReactSwcVersion,
+  vitePluginReactVersion,
   vitestUiVersion,
   vitestVersion,
   viteVersion,
-  happyDomVersion,
-  edgeRuntimeVmVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -111,6 +111,7 @@ export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
     await jsInitGenerator(tree, {
       ...schema,
       skipFormat: true,
+      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
     })
   );
 

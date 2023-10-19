@@ -6,11 +6,6 @@
   "description": "Migrates an Angular CLI workspace to Nx or adds the Angular plugin to an Nx workspace. NOTE: Does not work in the `--dry-run` mode.",
   "type": "object",
   "properties": {
-    "npmScope": {
-      "type": "string",
-      "description": "Npm scope for importing libs. NOTE: only used if running the generator in an Angular CLI workspace.",
-      "x-deprecated": "This will be inferred from your root package.json"
-    },
     "defaultBase": {
       "type": "string",
       "description": "Default base branch for affected. NOTE: only used if running the generator in an Angular CLI workspace.",

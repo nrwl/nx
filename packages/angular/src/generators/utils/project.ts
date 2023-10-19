@@ -1,23 +1,7 @@
 import type { Tree } from '@nx/devkit';
-import { names, readNxJson, readProjectConfiguration } from '@nx/devkit';
+import { readProjectConfiguration } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../utils/types';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
-
-export function normalizeDirectory(
-  appName: string,
-  directoryName: string
-): string {
-  return directoryName
-    ? `${names(directoryName).fileName}/${names(appName).fileName}`
-    : names(appName).fileName;
-}
-
-export function normalizeProjectName(
-  appName: string,
-  directoryName: string
-): string {
-  return normalizeDirectory(appName, directoryName).replace(/\//g, '-');
-}
 
 export function normalizeNewProjectPrefix(
   prefix: string | undefined,

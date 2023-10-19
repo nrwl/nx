@@ -6,7 +6,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { configurationGenerator } from '@nx/jest';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { addTsConfigPath } from '@nx/js';
 import { lt } from 'semver';
 import init from '../../generators/init/init';

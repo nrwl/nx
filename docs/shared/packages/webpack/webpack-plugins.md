@@ -165,7 +165,7 @@ module.exports = composePlugins(
 The `withModuleFederation` and `withModuleFederationForSSR` plugins add module federation support to the webpack build. These plugins use
 [`ModuleFederationPlugin`](https://webpack.js.org/concepts/module-federation/) and provide a simpler API through Nx.
 
-For more information, refer to the [Module Federation recipe](/concepts/more-concepts/faster-builds-with-module-federation).
+For more information, refer to the [Module Federation recipe](/concepts/module-federation/faster-builds-with-module-federation).
 
 ### Options
 

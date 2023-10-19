@@ -19,6 +19,5 @@ describe('preset generator', () => {
     expect(config).toBeDefined();
     const packageJson = readJson<PackageJson>(tree, 'package.json');
     expect(packageJson.dependencies).toHaveProperty('@nx/devkit');
-    expect(readJson(tree, 'nx.json').npmScope).not.toBeDefined();
   });
 });

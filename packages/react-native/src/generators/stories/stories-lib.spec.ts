@@ -2,7 +2,7 @@ import { Tree } from '@nx/devkit';
 import storiesGenerator from './stories';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import libraryGenerator from '../library/library';
 import reactNativeComponentGenerator from '../component/component';
 

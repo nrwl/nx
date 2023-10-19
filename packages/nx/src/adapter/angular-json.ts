@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import { readJsonFile } from '../utils/fileutils';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { NxPluginV2 } from '../devkit-exports';
+import { NxPluginV2 } from '../utils/nx-plugin';
 
 export const NX_ANGULAR_JSON_PLUGIN_NAME = 'nx-angular-json-plugin';
 
@@ -10,7 +10,7 @@ export const NxAngularJsonPlugin: NxPluginV2 = {
   name: NX_ANGULAR_JSON_PLUGIN_NAME,
   createNodes: [
     'angular.json',
-    (f, ctx) => ({
+    (f, _, ctx) => ({
       projects: readAngularJson(ctx.workspaceRoot),
     }),
   ],

@@ -21,8 +21,8 @@ import {
 } from '@nx/devkit';
 
 import reactInitGenerator from '../init/init';
-import { Linter, lintProjectGenerator } from '@nx/linter';
-import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 import {
   babelLoaderVersion,
   nxRspackVersion,
@@ -37,7 +37,7 @@ import { addE2e } from './lib/add-e2e';
 import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
-} from '@nx/linter/src/generators/utils/eslint-file';
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -144,11 +144,10 @@ export async function applicationGeneratorInternal(
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [
           options.compiler === 'swc'
             ? `import react from '@vitejs/plugin-react-swc'`
@@ -207,11 +206,10 @@ export async function applicationGeneratorInternal(
         includeVitest: true,
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [
           options.compiler === 'swc'
             ? `import react from '@vitejs/plugin-react-swc'`

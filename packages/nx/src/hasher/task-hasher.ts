@@ -833,7 +833,7 @@ class TaskHasherImpl {
                 )
               );
             } else {
-              const value = `${stdout}${stderr}`.trim();
+              const value = hashArray([`${stdout}${stderr}`.trim()]);
               res({
                 details: { [`runtime:${runtime}`]: value },
                 value,

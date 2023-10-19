@@ -1,4 +1,4 @@
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 
 export interface ConfigurationGeneratorSchema {
   project: string;

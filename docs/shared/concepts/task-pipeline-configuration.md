@@ -13,19 +13,33 @@ npx nx build myapp --parallel=5
 
 Note, you can also change the default in `nx.json`, like this:
 
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+```json {% fileName="nx.json"%}
+{
+  "parallel": 5
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
 ```json {% fileName="nx.json"%}
 {
   "tasksRunnerOptions": {
     "default": {
       "runner": "nx/tasks-runners/default",
       "options": {
-        "cacheableOperations": [],
         "parallel": 5
       }
     }
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Define Task Dependencies (aka Task Pipelines)
 

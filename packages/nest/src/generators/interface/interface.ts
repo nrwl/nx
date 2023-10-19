@@ -4,11 +4,26 @@ import { normalizeOptions, runNestSchematic } from '../utils';
 
 export type InterfaceGeneratorOptions = NestGeneratorOptions;
 
-export function interfaceGenerator(
+export async function interfaceGenerator(
+  tree: Tree,
+  rawOptions: InterfaceGeneratorOptions
+) {
+  await interfaceGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function interfaceGeneratorInternal(
   tree: Tree,
   rawOptions: InterfaceGeneratorOptions
 ): Promise<any> {
-  const options = normalizeOptions(tree, rawOptions);
+  const options = await normalizeOptions(
+    tree,
+    'interface',
+    '@nx/nest:interface',
+    rawOptions
+  );
 
   return runNestSchematic(tree, 'interface', options);
 }

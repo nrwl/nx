@@ -315,21 +315,17 @@ describe('@nx/vite:configuration', () => {
     });
 
     it('should add config for building library', async () => {
-      addProjectConfiguration(tree, 'my-lib', {
-        root: 'my-lib',
-      });
+      mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
         uiFramework: 'react',
         includeLib: true,
-        project: 'my-lib',
-        newProject: true,
+        project: 'react-lib-nonb-jest',
       });
-
-      const viteConfig = tree.read('my-lib/vite.config.ts').toString();
-
-      expect(viteConfig).toMatch('build: {');
-      expect(viteConfig).toMatch("external: ['react'");
-      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      const viteConfig = tree.read(
+        'libs/react-lib-nonb-jest/vite.config.ts',
+        'utf-8'
+      );
+      expect(viteConfig).toMatchSnapshot();
     });
 
     it('should set up non buildable library correctly', async () => {

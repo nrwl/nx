@@ -18,11 +18,12 @@ import {
   getToggleAllButtonForFolder,
   getUncheckedProjectItems,
   getUnfocusProjectButton,
+  openTooltipForNode,
 } from '../support/app.po';
 
 import * as affectedJson from '../fixtures/affected.json';
 import { testProjectsRoutes, testTaskRoutes } from '../support/routing-tests';
-import * as nxExamplesJson from '../fixtures/nx-examples-project-graph.json';
+import * as nxExamplesTaskInputs from '../fixtures/nx-examples-task-inputs.json';
 
 describe('dev mode - task graph', () => {
   before(() => {
@@ -182,5 +183,55 @@ describe('dev mode - task graph', () => {
     // check that params work from old base url of /
     // and also new /projects route
     testTaskRoutes('browser', ['/e2e/tasks']);
+  });
+
+  describe('file inputs', () => {
+    beforeEach(() => {
+      cy.intercept(
+        {
+          method: 'GET',
+          url: '/task-inputs.json*',
+        },
+        async (req) => {
+          // Extract the desired query parameter
+          const taskId = req.url.split('taskId=')[1];
+          // Load the fixture data and find the property based on the query parameter
+
+          const expandedInputs = nxExamplesTaskInputs[taskId];
+
+          // Reply with the selected property
+          req.reply({
+            body: expandedInputs,
+          });
+        }
+      ).as('getTaskInputs');
+    });
+    it('should display input files', () => {
+      getSelectTargetDropdown().select('build', { force: true });
+      cy.get('[data-project="cart"]').click({
+        force: true,
+      });
+      openTooltipForNode('cart:build');
+      cy.get('[data-cy="inputs-accordion"]').click();
+
+      cy.get('[data-cy="input-list-entry"]').should('have.length', 18);
+      const expectedSections = [
+        'cart-cart-page',
+        'shared-assets',
+        'shared-header',
+        'shared-styles',
+        'External Inputs',
+      ];
+      cy.get('[data-cy="input-section-entry"]').each((el, idx) => {
+        expect(el.text()).to.equal(expectedSections[idx]);
+      });
+
+      const sharedHeaderSelector =
+        '[data-cy="input-section-entry"]:contains(shared-header)';
+      cy.get(sharedHeaderSelector).click();
+      cy.get(sharedHeaderSelector)
+        .nextAll('[data-cy="input-list-entry"]')
+        .should('have.length', 9);
+    });
   });
 });

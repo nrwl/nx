@@ -239,7 +239,7 @@ export function PluginsTab(): JSX.Element {
               Installed plugins: <br />
               <br />
               @nx/js (executors,generators) <br />
-              @nx/linter (executors,generators) <br />
+              @nx/eslint (executors,generators) <br />
               @nx/next (executors,generators)
               <br />
               <br />

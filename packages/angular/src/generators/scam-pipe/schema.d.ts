@@ -27,6 +27,6 @@ export interface NormalizedSchema extends Schema {
   fileName: string;
   filePath: string;
   inlineScam: boolean;
-  project: string;
+  projectName: string;
   symbolName: string;
 }

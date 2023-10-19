@@ -8,7 +8,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { pluginGenerator } from '../plugin/plugin';
 import { generatorGenerator } from './generator';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { setCwd } from '@nx/devkit/internal-testing-utils';
 
 describe('NxPlugin Generator Generator', () => {

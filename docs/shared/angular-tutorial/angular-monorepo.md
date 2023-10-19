@@ -404,7 +404,7 @@ export * from './lib/product-list/product-list.component';
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Configure it in the `app.config.ts`.
 
-```ts {% fileName="apps/angular-store/src/app/app.config.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.config.ts" highlightLines=[2,3,4,5,6,9] %}
 import { ApplicationConfig } from '@angular/core';
 import {
   provideRouter,
@@ -425,7 +425,7 @@ And in `app.component.html`:
 
 Then we can add the `ProductListComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
 
-```ts {% fileName="apps/angular-store/src/app/app.routes.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[10,11,12,13,14] %}
 import { Route } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
@@ -454,7 +454,7 @@ Let's apply the same for our `orders` library.
 
 In the end, your `app.routes.ts` should look similar to this:
 
-```ts {% fileName="apps/angular-store/src/app/app.routes.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[15,16,17,18,19] %}
 import { Route } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
@@ -479,7 +479,7 @@ export const appRoutes: Route[] = [
 
 Let's also show products in the `inventory` app.
 
-```ts {% fileName="apps/inventory/src/app/app.component.ts" %}
+```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,6] %}
 import { Component } from '@angular/core';
 import { ProductListComponent } from '@angular-monorepo/products';
 
@@ -921,7 +921,7 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 
 To test it, go to your `libs/products/src/lib/product-list/product-list.component.ts` file and import the `OrderListComponent` from the `orders` project:
 
-```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" %}
+```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" highlightLines=[4,5] %}
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 

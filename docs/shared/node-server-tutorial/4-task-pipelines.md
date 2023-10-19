@@ -146,7 +146,7 @@ Here are the outputs defined for the `auth` project:
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "outputFile": "dist/auth/lint-report.txt"

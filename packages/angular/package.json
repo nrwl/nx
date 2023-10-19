@@ -62,8 +62,9 @@
     "@nx/cypress": "file:../cypress",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter",
+    "@nx/eslint": "file:../eslint",
     "@nx/webpack": "file:../webpack",
+    "@nx/web": "file:../web",
     "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {

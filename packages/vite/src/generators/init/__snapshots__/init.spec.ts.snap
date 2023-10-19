@@ -18,7 +18,7 @@ exports[`@nx/vite:init dependencies for package.json should add vite packages an
     "vite": "~4.3.9",
     "vitest": "~0.32.0",
   },
-  "name": "test-name",
+  "name": "@proj/source",
 }
 `;
 
@@ -37,7 +37,7 @@ exports[`@nx/vite:init dependencies for package.json should support --testEnviro
     "vite": "~4.3.9",
     "vitest": "~0.32.0",
   },
-  "name": "test-name",
+  "name": "@proj/source",
 }
 `;
 
@@ -56,7 +56,7 @@ exports[`@nx/vite:init dependencies for package.json should support --testEnviro
     "vite": "~4.3.9",
     "vitest": "~0.32.0",
   },
-  "name": "test-name",
+  "name": "@proj/source",
 }
 `;
 
@@ -75,6 +75,6 @@ exports[`@nx/vite:init dependencies for package.json should support --testEnviro
     "vite": "~4.3.9",
     "vitest": "~0.32.0",
   },
-  "name": "test-name",
+  "name": "@proj/source",
 }
 `;

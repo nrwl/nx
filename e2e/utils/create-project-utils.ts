@@ -77,7 +77,7 @@ export function newProject({
         `@nx/esbuild`,
         `@nx/jest`,
         `@nx/js`,
-        `@nx/linter`,
+        `@nx/eslint`,
         `@nx/nest`,
         `@nx/next`,
         `@nx/node`,

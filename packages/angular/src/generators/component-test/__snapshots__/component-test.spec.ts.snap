@@ -8,11 +8,11 @@ describe(MyLibComponent.name, () => {
 
   beforeEach(() => {
     TestBed.overrideComponent(MyLibComponent, {
-      add: { 
+      add: {
         imports: [],
         providers: []
       }
-    }) 
+    })
   })
 
   it('renders', () => {
@@ -38,11 +38,11 @@ describe(MyLibComponent.name, () => {
 
   beforeEach(() => {
     TestBed.overrideComponent(MyLibComponent, {
-      add: { 
+      add: {
         imports: [],
         providers: []
       }
-    }) 
+    })
   })
 
   it('renders', () => {
@@ -61,11 +61,11 @@ describe(MyLibComponent.name, () => {
 
   beforeEach(() => {
     TestBed.overrideComponent(MyLibComponent, {
-      add: { 
+      add: {
         imports: [],
         providers: []
       }
-    }) 
+    })
   })
 
   it('renders', () => {

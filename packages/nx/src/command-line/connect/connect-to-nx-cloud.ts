@@ -10,20 +10,16 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { NxArgs } from '../../utils/command-line-utils';
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
-  if (!nxJson.tasksRunnerOptions) {
-    // No tasks runner options:
+  const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
+
+  if (!defaultRunner) {
+    // No tasks runner options OR no default runner defined:
     // - If access token defined, uses cloud runner
     // - If no access token defined, uses default
     return !nxJson.nxCloudAccessToken;
   }
-  const defaultRunner = nxJson.tasksRunnerOptions?.default;
-  if (
-    !defaultRunner.runner ||
-    defaultRunner.runner === 'nx/tasks-runners/default'
-  ) {
-    return true;
-  }
-  return false;
+
+  return defaultRunner === 'nx/tasks-runners/default';
 }
 
 export async function connectToNxCloudIfExplicitlyAsked(

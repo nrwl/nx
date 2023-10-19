@@ -231,18 +231,32 @@ npx nx run test --skip-nx-cache
 
 The cache is stored in `node_modules/.cache/nx` by default. To change the cache location, update the `cacheDirectory` option for the task runner in `nx.json`:
 
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+```json {% fileName="nx.json"%}
+{
+  "cacheDirectory": "/tmp/mycache"
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
 ```json {% fileName="nx.json"%}
 {
   "tasksRunnerOptions": {
     "default": {
       "options": {
-        "cacheableOperations": ["build", "test"],
         "cacheDirectory": "/tmp/mycache"
       }
     }
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Outputs vs Output Path
 

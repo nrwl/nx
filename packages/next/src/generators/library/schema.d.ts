@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-directory-utils';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 import type { SupportedStyles } from '@nx/react';
 
 export interface Schema {

@@ -26,9 +26,9 @@
     "presets": []
   },
   "description": "Create a new Workspace ESLint rule.",
-  "implementation": "/packages/linter/src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator.ts",
+  "implementation": "/packages/eslint/src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator.ts",
   "aliases": [],
   "hidden": false,
-  "path": "/packages/linter/src/generators/workspace-rule/schema.json",
+  "path": "/packages/eslint/src/generators/workspace-rule/schema.json",
   "type": "generator"
 }

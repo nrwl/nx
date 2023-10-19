@@ -1,6 +1,6 @@
 {
   "name": "redux",
-  "factory": "./src/generators/redux/redux#reduxGenerator",
+  "factory": "./src/generators/redux/redux#reduxGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -20,15 +20,19 @@
         "description": "The name of the project to add the slice to. If it is an application, then the store configuration will be updated too.",
         "alias": "p",
         "$default": { "$source": "projectName" },
-        "x-prompt": "What is the name of the project for this slice?",
-        "x-priority": "important"
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
       },
       "directory": {
         "type": "string",
         "alias": "dir",
         "default": "",
-        "description": "The name of the folder used to contain/group the generated Redux files.",
+        "description": "The directory at which to create the Redux files. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
         "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "appProject": {
         "type": "string",
@@ -46,7 +50,7 @@
   },
   "description": "Create a Redux slice for a project.",
   "aliases": ["slice"],
-  "implementation": "/packages/react/src/generators/redux/redux#reduxGenerator.ts",
+  "implementation": "/packages/react/src/generators/redux/redux#reduxGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/react/src/generators/redux/schema.json",
   "type": "generator"

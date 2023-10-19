@@ -15,9 +15,7 @@ describe('tscExecutor', () => {
         version: 2,
         projects: {},
       },
-      nxJsonConfiguration: {
-        npmScope: 'test',
-      },
+      nxJsonConfiguration: {},
       isVerbose: false,
       projectName: 'example',
       targetName: 'build',

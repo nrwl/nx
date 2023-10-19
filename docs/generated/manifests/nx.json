@@ -1005,6 +1005,42 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "module-federation",
+        "name": "Module Federation",
+        "description": "Understand more about Module Federation with NX",
+        "file": "",
+        "itemList": [
+          {
+            "id": "faster-builds-with-module-federation",
+            "name": "Faster Builds with Module Federation",
+            "description": "",
+            "file": "shared/guides/module-federation/faster-builds",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/module-federation/faster-builds-with-module-federation",
+            "tags": [
+              "use-task-executors",
+              "module-federation",
+              "angular",
+              "react"
+            ]
+          },
+          {
+            "id": "micro-frontend-architecture",
+            "name": "Micro Frontend Architecture",
+            "description": "",
+            "file": "shared/guides/module-federation/micro-frontend-architecture",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/module-federation/micro-frontend-architecture",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/concepts/module-federation",
+        "tags": []
+      },
+      {
         "id": "more-concepts",
         "name": "More Concepts",
         "description": "Get deeper into how Nx works and its different aspects.",
@@ -1129,31 +1165,6 @@
             "isExternal": false,
             "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
             "tags": ["create-your-own-plugin"]
-          },
-          {
-            "id": "micro-frontend-architecture",
-            "name": "Micro Frontend Architecture",
-            "description": "",
-            "file": "shared/guides/module-federation/micro-frontend-architecture",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/micro-frontend-architecture",
-            "tags": []
-          },
-          {
-            "id": "faster-builds-with-module-federation",
-            "name": "Faster Builds with Module Federation",
-            "description": "",
-            "file": "shared/guides/module-federation/faster-builds",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-            "tags": [
-              "use-task-executors",
-              "module-federation",
-              "angular",
-              "react"
-            ]
           },
           {
             "id": "applications-and-libraries",
@@ -1315,6 +1326,57 @@
     "path": "/concepts/affected",
     "tags": ["run-tasks"]
   },
+  "/concepts/module-federation": {
+    "id": "module-federation",
+    "name": "Module Federation",
+    "description": "Understand more about Module Federation with NX",
+    "file": "",
+    "itemList": [
+      {
+        "id": "faster-builds-with-module-federation",
+        "name": "Faster Builds with Module Federation",
+        "description": "",
+        "file": "shared/guides/module-federation/faster-builds",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/module-federation/faster-builds-with-module-federation",
+        "tags": ["use-task-executors", "module-federation", "angular", "react"]
+      },
+      {
+        "id": "micro-frontend-architecture",
+        "name": "Micro Frontend Architecture",
+        "description": "",
+        "file": "shared/guides/module-federation/micro-frontend-architecture",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/module-federation/micro-frontend-architecture",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/concepts/module-federation",
+    "tags": []
+  },
+  "/concepts/module-federation/faster-builds-with-module-federation": {
+    "id": "faster-builds-with-module-federation",
+    "name": "Faster Builds with Module Federation",
+    "description": "",
+    "file": "shared/guides/module-federation/faster-builds",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/module-federation/faster-builds-with-module-federation",
+    "tags": ["use-task-executors", "module-federation", "angular", "react"]
+  },
+  "/concepts/module-federation/micro-frontend-architecture": {
+    "id": "micro-frontend-architecture",
+    "name": "Micro Frontend Architecture",
+    "description": "",
+    "file": "shared/guides/module-federation/micro-frontend-architecture",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/module-federation/micro-frontend-architecture",
+    "tags": []
+  },
   "/concepts/more-concepts": {
     "id": "more-concepts",
     "name": "More Concepts",
@@ -1440,26 +1502,6 @@
         "isExternal": false,
         "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
         "tags": ["create-your-own-plugin"]
-      },
-      {
-        "id": "micro-frontend-architecture",
-        "name": "Micro Frontend Architecture",
-        "description": "",
-        "file": "shared/guides/module-federation/micro-frontend-architecture",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/micro-frontend-architecture",
-        "tags": []
-      },
-      {
-        "id": "faster-builds-with-module-federation",
-        "name": "Faster Builds with Module Federation",
-        "description": "",
-        "file": "shared/guides/module-federation/faster-builds",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-        "tags": ["use-task-executors", "module-federation", "angular", "react"]
       },
       {
         "id": "applications-and-libraries",
@@ -1665,26 +1707,6 @@
     "isExternal": false,
     "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
     "tags": ["create-your-own-plugin"]
-  },
-  "/concepts/more-concepts/micro-frontend-architecture": {
-    "id": "micro-frontend-architecture",
-    "name": "Micro Frontend Architecture",
-    "description": "",
-    "file": "shared/guides/module-federation/micro-frontend-architecture",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/micro-frontend-architecture",
-    "tags": []
-  },
-  "/concepts/more-concepts/faster-builds-with-module-federation": {
-    "id": "faster-builds-with-module-federation",
-    "name": "Faster Builds with Module Federation",
-    "description": "",
-    "file": "shared/guides/module-federation/faster-builds",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-    "tags": ["use-task-executors", "module-federation", "angular", "react"]
   },
   "/concepts/more-concepts/applications-and-libraries": {
     "id": "applications-and-libraries",
@@ -2384,6 +2406,47 @@
         "tags": []
       },
       {
+        "id": "module-federation",
+        "name": "Module Federation",
+        "description": "Advanced guides to utilize Module Federation with Nx.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "create-a-host",
+            "name": "How to create a Module Federation Host Application",
+            "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+            "file": "shared/recipes/module-federation/creating-a-host",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/create-a-host",
+            "tags": []
+          },
+          {
+            "id": "create-a-remote",
+            "name": "How to create a Module Federation Remote Application",
+            "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+            "file": "shared/recipes/module-federation/creating-a-remote",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/create-a-remote",
+            "tags": []
+          },
+          {
+            "id": "federate-a-module",
+            "name": "How to Federate a Module",
+            "description": "A guide on how to federate a module in your Nx workspace",
+            "file": "shared/recipes/module-federation/federate-a-module",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/module-federation/federate-a-module",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/module-federation",
+        "tags": []
+      },
+      {
         "id": "enforce-module-boundaries",
         "name": "Enforce Module Boundaries",
         "description": "Configuring the enforce module boundaries rule",
@@ -2881,6 +2944,16 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/nx-console/console-shortcuts",
+            "tags": ["integrate-with-editors"]
+          },
+          {
+            "id": "console-troubleshooting",
+            "name": "Troubleshooting",
+            "description": "",
+            "file": "shared/recipes/console-troubleshooting",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-troubleshooting",
             "tags": ["integrate-with-editors"]
           }
         ],
@@ -4066,6 +4139,77 @@
     "path": "/recipes/webpack/webpack-plugins",
     "tags": []
   },
+  "/recipes/module-federation": {
+    "id": "module-federation",
+    "name": "Module Federation",
+    "description": "Advanced guides to utilize Module Federation with Nx.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "create-a-host",
+        "name": "How to create a Module Federation Host Application",
+        "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+        "file": "shared/recipes/module-federation/creating-a-host",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/create-a-host",
+        "tags": []
+      },
+      {
+        "id": "create-a-remote",
+        "name": "How to create a Module Federation Remote Application",
+        "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+        "file": "shared/recipes/module-federation/creating-a-remote",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/create-a-remote",
+        "tags": []
+      },
+      {
+        "id": "federate-a-module",
+        "name": "How to Federate a Module",
+        "description": "A guide on how to federate a module in your Nx workspace",
+        "file": "shared/recipes/module-federation/federate-a-module",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/module-federation/federate-a-module",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/module-federation",
+    "tags": []
+  },
+  "/recipes/module-federation/create-a-host": {
+    "id": "create-a-host",
+    "name": "How to create a Module Federation Host Application",
+    "description": "A guide on how to create a Module Federation Host Application in your Nx workspace",
+    "file": "shared/recipes/module-federation/creating-a-host",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/create-a-host",
+    "tags": []
+  },
+  "/recipes/module-federation/create-a-remote": {
+    "id": "create-a-remote",
+    "name": "How to create a Module Federation Remote Application",
+    "description": "A guide on how to create a Module Federation Remote Application in your Nx workspace",
+    "file": "shared/recipes/module-federation/creating-a-remote",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/create-a-remote",
+    "tags": []
+  },
+  "/recipes/module-federation/federate-a-module": {
+    "id": "federate-a-module",
+    "name": "How to Federate a Module",
+    "description": "A guide on how to federate a module in your Nx workspace",
+    "file": "shared/recipes/module-federation/federate-a-module",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/module-federation/federate-a-module",
+    "tags": []
+  },
   "/recipes/enforce-module-boundaries": {
     "id": "enforce-module-boundaries",
     "name": "Enforce Module Boundaries",
@@ -4955,6 +5099,16 @@
         "isExternal": false,
         "path": "/recipes/nx-console/console-shortcuts",
         "tags": ["integrate-with-editors"]
+      },
+      {
+        "id": "console-troubleshooting",
+        "name": "Troubleshooting",
+        "description": "",
+        "file": "shared/recipes/console-troubleshooting",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-troubleshooting",
+        "tags": ["integrate-with-editors"]
       }
     ],
     "isExternal": false,
@@ -5019,6 +5173,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-shortcuts",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-troubleshooting": {
+    "id": "console-troubleshooting",
+    "name": "Troubleshooting",
+    "description": "",
+    "file": "shared/recipes/console-troubleshooting",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-troubleshooting",
     "tags": ["integrate-with-editors"]
   },
   "/recipes/other": {

@@ -32,11 +32,18 @@ async function generateGraph(directory: string, name: string) {
     /window.taskGraphResponse = (.*?);/
   );
 
+  const expandedTaskInputsReponse = environmentJs.match(
+    /window.expandedTaskInputsResponse = (.*?);/
+  );
+
   ensureDirSync(
     join(__dirname, '../graph/client/src/assets/generated-project-graphs/')
   );
   ensureDirSync(
     join(__dirname, '../graph/client/src/assets/generated-task-graphs/')
+  );
+  ensureDirSync(
+    join(__dirname, '../graph/client/src/assets/generated-task-inputs/')
   );
 
   writeFileSync(
@@ -55,6 +62,15 @@ async function generateGraph(directory: string, name: string) {
       `${name}.json`
     ),
     taskGraphResponse[1]
+  );
+
+  writeFileSync(
+    join(
+      __dirname,
+      '../graph/client/src/assets/generated-task-inputs/',
+      `${name}.json`
+    ),
+    expandedTaskInputsReponse[1]
   );
 }
 

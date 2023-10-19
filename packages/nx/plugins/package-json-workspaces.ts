@@ -56,12 +56,6 @@ export function buildProjectConfigurationFromPackageJson(
   }
 
   let name = packageJson.name ?? toProjectName(normalizedPath);
-  if (nxJson?.npmScope) {
-    const npmPrefix = `@${nxJson.npmScope}/`;
-    if (name.startsWith(npmPrefix)) {
-      name = name.replace(npmPrefix, '');
-    }
-  }
   const projectType =
     nxJson?.workspaceLayout?.appsDir != nxJson?.workspaceLayout?.libsDir &&
     nxJson?.workspaceLayout?.appsDir &&

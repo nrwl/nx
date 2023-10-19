@@ -18,7 +18,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -28,8 +28,8 @@ import {
 import { StorybookConfigureSchema } from '../schema';
 import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
-import { findEslintFile } from '@nx/linter/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/linter/src/utils/flat-config';
+import { findEslintFile } from '@nx/eslint/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 const DEFAULT_PORT = 4400;
 
@@ -546,7 +546,7 @@ export function createProjectStorybookDir(
       : 'src/lib';
 
   if (uiFramework === '@storybook/vue3-vite') {
-    projectDirectory = 'src/components';
+    projectDirectory = 'src';
   }
 
   const storybookConfigExists = projectIsRootProjectInStandaloneWorkspace

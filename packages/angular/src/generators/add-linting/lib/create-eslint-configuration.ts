@@ -9,7 +9,7 @@ type EslintExtensionSchema = {
 };
 
 /**
- * @deprecated Use tools from `@nx/linter/src/generators/utils/eslint-file` instead
+ * @deprecated Use tools from `@nx/eslint/src/generators/utils/eslint-file` instead
  */
 export const extendAngularEslintJson = (
   json: Linter.Config,

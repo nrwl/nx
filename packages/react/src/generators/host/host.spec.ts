@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import hostGenerator from './host';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('hostGenerator', () => {
   let tree: Tree;
@@ -164,8 +164,8 @@ describe('hostGenerator', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await hostGenerator(tree, {
-      name: 'hostApp',
-      directory: 'foo/hostApp',
+      name: 'host-app',
+      directory: 'foo/host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       projectNameAndRootFormat: 'as-provided',
       e2eTestRunner: 'none',
@@ -187,8 +187,8 @@ describe('hostGenerator', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await hostGenerator(tree, {
-      name: 'hostApp',
-      directory: 'foo/hostApp',
+      name: 'host-app',
+      directory: 'foo/host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       projectNameAndRootFormat: 'as-provided',
       e2eTestRunner: 'none',

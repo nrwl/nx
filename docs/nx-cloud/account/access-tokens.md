@@ -23,21 +23,33 @@ Let's see how access tokens work.
 
 If you open your `nx.json`, you will see something like this:
 
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
 ```json
 {
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx-cloud",
-      "options": {
-        "accessToken": "SOMETOKEN",
-        "cacheableOperations": ["build", "test", "lint", "e2e"]
-      }
-    }
-  }
+  "nxCloudAccessToken": "SOMETOKEN"
 }
 ```
 
-If you remove the `accessToken` property from the configuration, the runner will run all commands as if you were not connected to Nx Cloud. This essentially turns off Nx Cloud.
+{% /tab %}
+{% tab label="Nx < 17" %}
+
+```json
+"tasksRunnerOptions": {
+    "default": {
+      "runner": "nx-cloud",
+      "options": {
+        "accessToken": "SOMETOKEN"
+      }
+    }
+  }
+```
+
+{% /tab %}
+{% /tabs %}
+
+If you remove the `nxCloudAccessToken` or `accessToken` property from the configuration, the runner will run all commands as if you were not connected to Nx Cloud. This essentially turns off Nx Cloud.
 
 ## Setting a Different Access Token in CI
 

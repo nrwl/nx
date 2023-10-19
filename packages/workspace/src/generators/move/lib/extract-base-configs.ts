@@ -31,12 +31,12 @@ export function maybeExtractEslintConfigIfRootProject(
   let migrateConfigToMonorepoStyle: any;
   try {
     migrateConfigToMonorepoStyle = require('@nx/' +
-      'linter/src/generators/init/init-migration').migrateConfigToMonorepoStyle;
+      'eslint/src/generators/init/init-migration').migrateConfigToMonorepoStyle;
   } catch {
-    // linter not install
+    // eslint not installed
   }
   // Only need to handle migrating the root rootProject.
-  // If other libs/apps exist, then this migration is already done by `@nx/linter:lint-rootProject` generator.
+  // If other libs/apps exist, then this migration is already done by `@nx/eslint:lint-rootProject` generator.
   migrateConfigToMonorepoStyle?.(
     [rootProject.name],
     tree,

@@ -1,6 +1,6 @@
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import applicationGenerator from '../application/application';
 import storiesGenerator from './stories';
 
@@ -28,7 +28,7 @@ describe('vue:stories for applications', () => {
 
     // create another component
     appTree.write(
-      'test-ui-app/src/components/another-cmp/another-cmp.vue',
+      'test-ui-app/src/app/another-cmp/another-cmp.vue',
       componentContent
     );
   });
@@ -43,7 +43,7 @@ describe('vue:stories for applications', () => {
     ).toMatchSnapshot();
     expect(
       appTree.read(
-        'test-ui-app/src/components/another-cmp/another-cmp.stories.ts',
+        'test-ui-app/src/app/another-cmp/another-cmp.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -60,7 +60,7 @@ describe('vue:stories for applications', () => {
     ).toMatchSnapshot();
     expect(
       appTree.read(
-        'test-ui-app/src/components/another-cmp/another-cmp.stories.ts',
+        'test-ui-app/src/app/another-cmp/another-cmp.stories.ts',
         'utf-8'
       )
     ).toMatchSnapshot();
@@ -84,12 +84,12 @@ describe('vue:stories for applications', () => {
   describe('ignore paths', () => {
     beforeEach(() => {
       appTree.write(
-        'test-ui-app/src/components/test-path/ignore-it/another-one.vue',
+        'test-ui-app/src/app/test-path/ignore-it/another-one.vue',
         componentContent
       );
 
       appTree.write(
-        'test-ui-app/src/components/another-cmp/another-cmp-test.skip.vue',
+        'test-ui-app/src/app/another-cmp/another-cmp-test.skip.vue',
         componentContent
       );
     });
@@ -102,20 +102,18 @@ describe('vue:stories for applications', () => {
         appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
+        appTree.exists('test-ui-app/src/app/another-cmp/another-cmp.stories.ts')
+      ).toBeTruthy();
+
+      expect(
         appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp.stories.ts'
+          'test-ui-app/src/app/test-path/ignore-it/another-one.stories.ts'
         )
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'test-ui-app/src/components/test-path/ignore-it/another-one.stories.ts'
-        )
-      ).toBeTruthy();
-
-      expect(
-        appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp-test.skip.stories.ts'
+          'test-ui-app/src/app/another-cmp/another-cmp-test.skip.stories.ts'
         )
       ).toBeTruthy();
     });
@@ -124,7 +122,7 @@ describe('vue:stories for applications', () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
         ignorePaths: [
-          `test-ui-app/src/components/another-cmp/**`,
+          `test-ui-app/src/app/another-cmp/**`,
           `**/**/src/**/test-path/ignore-it/**`,
         ],
       });
@@ -133,20 +131,18 @@ describe('vue:stories for applications', () => {
         appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
+        appTree.exists('test-ui-app/src/app/another-cmp/another-cmp.stories.ts')
+      ).toBeFalsy();
+
+      expect(
         appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp.stories.ts'
+          'test-ui-app/src/app/test-path/ignore-it/another-one.stories.ts'
         )
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'test-ui-app/src/components/test-path/ignore-it/another-one.stories.ts'
-        )
-      ).toBeFalsy();
-
-      expect(
-        appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp-test.skip.stories.ts'
+          'test-ui-app/src/app/another-cmp/another-cmp-test.skip.stories.ts'
         )
       ).toBeFalsy();
     });
@@ -155,7 +151,7 @@ describe('vue:stories for applications', () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
         ignorePaths: [
-          'test-ui-app/src/components/another-cmp/**/*.skip.*',
+          'test-ui-app/src/app/another-cmp/**/*.skip.*',
           '**/**/src/**/test-path/**',
         ],
       });
@@ -164,20 +160,18 @@ describe('vue:stories for applications', () => {
         appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
-        appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp.stories.ts'
-        )
+        appTree.exists('test-ui-app/src/app/another-cmp/another-cmp.stories.ts')
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'test-ui-app/src/components/test-path/ignore-it/another-one.stories.ts'
+          'test-ui-app/src/app/test-path/ignore-it/another-one.stories.ts'
         )
       ).toBeFalsy();
 
       expect(
         appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp-test.skip.stories.ts'
+          'test-ui-app/src/app/another-cmp/another-cmp-test.skip.stories.ts'
         )
       ).toBeFalsy();
     });
@@ -185,41 +179,39 @@ describe('vue:stories for applications', () => {
     it('should ignore direct path to component', async () => {
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
-        ignorePaths: ['test-ui-app/src/components/another-cmp/**/*.skip.vue'],
+        ignorePaths: ['test-ui-app/src/app/another-cmp/**/*.skip.vue'],
       });
 
       expect(
         appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
+        appTree.exists('test-ui-app/src/app/another-cmp/another-cmp.stories.ts')
+      ).toBeTruthy();
+
+      expect(
         appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp.stories.ts'
+          'test-ui-app/src/app/test-path/ignore-it/another-one.stories.ts'
         )
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'test-ui-app/src/components/test-path/ignore-it/another-one.stories.ts'
-        )
-      ).toBeTruthy();
-
-      expect(
-        appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp-test.skip.stories.ts'
+          'test-ui-app/src/app/another-cmp/another-cmp-test.skip.stories.ts'
         )
       ).toBeFalsy();
     });
 
     it('should ignore a path that has a nested component, but still generate nested component stories', async () => {
       appTree.write(
-        'test-ui-app/src/components/another-cmp/comp-a/comp-a.vue',
+        'test-ui-app/src/app/another-cmp/comp-a/comp-a.vue',
         componentContent
       );
 
       await storiesGenerator(appTree, {
         project: 'test-ui-app',
         ignorePaths: [
-          'test-ui-app/src/components/another-cmp/another-cmp-test.skip.vue',
+          'test-ui-app/src/app/another-cmp/another-cmp-test.skip.vue',
         ],
       });
 
@@ -227,20 +219,18 @@ describe('vue:stories for applications', () => {
         appTree.exists('test-ui-app/src/app/NxWelcome.stories.ts')
       ).toBeTruthy();
       expect(
+        appTree.exists('test-ui-app/src/app/another-cmp/another-cmp.stories.ts')
+      ).toBeTruthy();
+
+      expect(
         appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp.stories.ts'
+          'test-ui-app/src/app/another-cmp/comp-a/comp-a.stories.ts'
         )
       ).toBeTruthy();
 
       expect(
         appTree.exists(
-          'test-ui-app/src/components/another-cmp/comp-a/comp-a.stories.ts'
-        )
-      ).toBeTruthy();
-
-      expect(
-        appTree.exists(
-          'test-ui-app/src/components/another-cmp/another-cmp-test.skip.stories.ts'
+          'test-ui-app/src/app/another-cmp/another-cmp-test.skip.stories.ts'
         )
       ).toBeFalsy();
     });

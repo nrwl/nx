@@ -10,7 +10,7 @@ export const iconsMap: Record<string, string> = {
   express: '/images/icons/express.svg',
   jest: '/images/icons/jest.svg',
   js: '/images/icons/javascript.svg',
-  linter: '/images/icons/eslint.svg',
+  eslint: '/images/icons/eslint.svg',
   'module-federation': '/images/icons/module-federation.svg',
   nest: '/images/icons/nestjs.svg',
   next: '/images/icons/nextdotjs.svg',

@@ -17,7 +17,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 import { join } from 'path';
 import { safeFileDelete } from '../../utils/utilities';

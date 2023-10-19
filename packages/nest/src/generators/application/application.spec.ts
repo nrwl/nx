@@ -5,7 +5,7 @@ import { applicationGenerator } from './application';
 
 describe('application generator', () => {
   let tree: Tree;
-  const appName = 'myNodeApp';
+  const appName = 'my-node-app';
   const appDirectory = 'my-node-app';
 
   beforeEach(() => {

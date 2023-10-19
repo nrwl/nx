@@ -26,12 +26,12 @@
   "builders": "./executors.json",
   "schematics": "./generators.json",
   "dependencies": {
-    "@nx/linter": "file:../../packages/linter"
+    "@nx/eslint": "file:../../packages/eslint"
   },
   "publishConfig": {
     "access": "public"
   },
   "nx-migrations": {
-    "migrations": "@nx/linter/migrations.json"
+    "migrations": "@nx/eslint/migrations.json"
   }
 }

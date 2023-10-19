@@ -92,14 +92,12 @@ function runCliRunAndroid(
   });
 }
 
-const nxOptions = ['sync', 'packager'];
 const startOptions = ['port', 'resetCache'];
-const deprecatedOptions = ['variant', 'jetifier'];
 
 function createRunAndroidOptions(options: ReactNativeRunAndroidOptions) {
-  return getCliOptions<ReactNativeRunAndroidOptions>(
-    options,
-    [...nxOptions, ...startOptions, ...deprecatedOptions],
-    ['appId', 'appIdSuffix', 'deviceId']
-  );
+  return getCliOptions<ReactNativeRunAndroidOptions>(options, startOptions, [
+    'appId',
+    'appIdSuffix',
+    'deviceId',
+  ]);
 }

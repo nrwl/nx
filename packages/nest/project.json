@@ -56,5 +56,5 @@
     },
     "lint": {}
   },
-  "implicitDependencies": ["node", "linter"]
+  "implicitDependencies": ["node", "eslint"]
 }

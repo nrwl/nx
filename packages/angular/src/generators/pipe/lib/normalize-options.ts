@@ -12,7 +12,7 @@ export async function normalizeOptions(
     directory,
     fileName,
     filePath,
-    project,
+    project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
     artifactType: 'pipe',
     callingGenerator: '@nx/angular:pipe',
@@ -30,7 +30,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    project,
+    projectName,
     name,
     directory,
     fileName,

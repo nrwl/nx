@@ -22,6 +22,7 @@ import {
 } from '../../../plugins/package-json-workspaces';
 import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './project-configuration-utils';
 import {
+  LoadedNxPlugin,
   loadNxPlugins,
   loadNxPluginsSync,
   NxPluginV2,
@@ -137,9 +138,9 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
 
   if (
     shouldMergeAngularProjects(workspaceRoot, true) &&
-    !plugins.some((p) => p.name === NX_ANGULAR_JSON_PLUGIN_NAME)
+    !plugins.some((p) => p.plugin.name === NX_ANGULAR_JSON_PLUGIN_NAME)
   ) {
-    plugins.push(NxAngularJsonPlugin);
+    plugins.push({ plugin: NxAngularJsonPlugin });
   }
 
   const globs = configurationGlobs(workspaceRoot, plugins);
@@ -169,7 +170,7 @@ export function retrieveProjectConfigurationsSync(
 function _retrieveProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
-  plugins: NxPluginV2[],
+  plugins: LoadedNxPlugin[],
   globs: string[]
 ): {
   externalNodes: Record<string, ProjectGraphExternalNode>;
@@ -236,8 +237,8 @@ export function retrieveProjectConfigurationsWithoutPluginInference(
     projectGlobPatterns,
     (configs: string[]) => {
       const { projects } = createProjectConfigurations(root, nxJson, configs, [
-        getNxPackageJsonWorkspacesPlugin(root),
-        CreateProjectJsonProjectsPlugin,
+        { plugin: getNxPackageJsonWorkspacesPlugin(root) },
+        { plugin: CreateProjectJsonProjectsPlugin },
       ]);
       return {
         projectNodes: projects,
@@ -273,7 +274,7 @@ export function createProjectConfigurations(
   workspaceRoot: string,
   nxJson: NxJsonConfiguration,
   configFiles: string[],
-  plugins: NxPluginV2[]
+  plugins: LoadedNxPlugin[]
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
@@ -305,11 +306,11 @@ export function createProjectConfigurations(
 
 export function configurationGlobs(
   workspaceRoot: string,
-  plugins: NxPluginV2[]
+  plugins: LoadedNxPlugin[]
 ): string[] {
   const globPatterns: string[] =
     configurationGlobsWithoutPlugins(workspaceRoot);
-  for (const plugin of plugins) {
+  for (const { plugin } of plugins) {
     if (plugin.createNodes) {
       globPatterns.push(plugin.createNodes[0]);
     }

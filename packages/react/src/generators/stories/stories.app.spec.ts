@@ -1,7 +1,7 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import applicationGenerator from '../application/application';
 import storiesGenerator from './stories';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
@@ -112,14 +112,14 @@ describe('react:stories for applications', () => {
       appTree.write(
         'test-ui-app/src/app/test-path/ignore-it/another-one.tsx',
         `import React from 'react';
-  
+
     import './test.scss';
-  
+
     export interface TestProps {
       name: string;
       displayAge: boolean;
     }
-  
+
     export const Test = (props: TestProps) => {
       return (
         <div>
@@ -127,7 +127,7 @@ describe('react:stories for applications', () => {
         </div>
       );
     };
-  
+
     export default Test;
     `
       );
@@ -135,14 +135,14 @@ describe('react:stories for applications', () => {
       appTree.write(
         'test-ui-app/src/app/anothercmp/another-cmp-test.skip.tsx',
         `import React from 'react';
-  
+
     import './test.scss';
-  
+
     export interface TestProps {
       name: string;
       displayAge: boolean;
     }
-  
+
     export const Test = (props: TestProps) => {
       return (
         <div>
@@ -150,7 +150,7 @@ describe('react:stories for applications', () => {
         </div>
       );
     };
-  
+
     export default Test;
     `
       );
@@ -268,14 +268,14 @@ describe('react:stories for applications', () => {
       appTree.write(
         'test-ui-app/src/app/anothercmp/comp-a/comp-a.tsx',
         `import React from 'react';
-  
+
     import './test.scss';
-  
+
     export interface TestProps {
       name: string;
       displayAge: boolean;
     }
-  
+
     export const Test = (props: TestProps) => {
       return (
         <div>
@@ -283,7 +283,7 @@ describe('react:stories for applications', () => {
         </div>
       );
     };
-  
+
     export default Test;
     `
       );

@@ -89,6 +89,7 @@ export function Fence({
   path,
   fileName,
   lineGroups,
+  highlightLines,
   language,
   enableCopy,
 }: {
@@ -96,6 +97,7 @@ export function Fence({
   command: string;
   path: string;
   fileName: string;
+  highlightLines: number[];
   lineGroups: Record<string, number[]>;
   language: string;
   enableCopy: boolean;
@@ -104,7 +106,10 @@ export function Fence({
   const hash = decodeURIComponent(useUrlHash(''));
 
   function lineNumberStyle(lineNumber: number) {
-    if (lineGroups[hash] && lineGroups[hash].includes(lineNumber)) {
+    if (
+      (highlightLines && highlightLines.includes(lineNumber)) ||
+      (lineGroups[hash] && lineGroups[hash].includes(lineNumber))
+    ) {
       return {
         fontSize: 0,
         display: 'inline-block',

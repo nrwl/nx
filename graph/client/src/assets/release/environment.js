@@ -12,6 +12,7 @@ window.appConfig = {
       label: 'local',
       projectGraphUrl: 'assets/project-graphs/e2e.json',
       taskGraphUrl: 'assets/task-graphs/e2e.json',
+      taskInputsUrl: 'assets/task-inputs/e2e.json',
     },
   ],
   defaultWorkspaceId: 'local',

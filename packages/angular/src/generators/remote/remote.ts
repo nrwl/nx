@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   getProjects,
   runTasksInSerial,
@@ -13,6 +14,7 @@ import { setupMf } from '../setup-mf/setup-mf';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { addSsr, findNextAvailablePort } from './lib';
 import type { Schema } from './schema';
+import { swcHelpersVersion } from '@nx/js/src/utils/versions';
 
 export async function remote(tree: Tree, options: Schema) {
   return await remoteInternal(tree, {
@@ -76,7 +78,15 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     typescriptConfiguration,
   });
 
-  let installTasks = [appInstallTask];
+  const installSwcHelpersTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@swc/helpers': swcHelpersVersion,
+    }
+  );
+
+  let installTasks = [appInstallTask, installSwcHelpersTask];
   if (options.ssr) {
     let ssrInstallTask = await addSsr(tree, {
       appName: remoteProjectName,

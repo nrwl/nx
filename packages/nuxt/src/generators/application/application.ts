@@ -17,7 +17,7 @@ import { createTsConfig } from '../../utils/create-ts-config';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { updateGitIgnore } from '../../utils/update-gitignore';
 import { addBuildTarget, addServeTarget } from './lib/add-targets';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { addJest } from '@nx/vue';
 import { addE2e } from './lib/add-e2e';
 import { nxVersion } from '../../utils/versions';

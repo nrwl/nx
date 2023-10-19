@@ -1,24 +1,23 @@
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { filterAffected } from '../../project-graph/affected/affected-project-graph';
 import {
   FileChange,
   calculateFileChanges,
 } from '../../project-graph/file-utils';
 import { filterNodes } from '../../project-graph/operators';
-import { readNxJson } from '../../config/nx-json';
+import { createProjectGraphAsync } from '../../project-graph/project-graph';
+import { allFileData } from '../../utils/all-file-data';
 import {
   NxArgs,
   parseFiles,
   splitArgsIntoNxArgsAndOverrides,
 } from '../../utils/command-line-utils';
-import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { NxJsonConfiguration } from '../../config/nx-json';
-import {
-  ProjectGraph,
-  ProjectGraphProjectNode,
-} from '../../config/project-graph';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { ShowProjectOptions, ShowProjectsOptions } from './command-object';
-import { allFileData } from '../../utils/all-file-data';
 
 export async function showProjectsHandler(
   args: ShowProjectsOptions
@@ -73,7 +72,7 @@ export async function showProjectsHandler(
   }
 
   if (args.json) {
-    console.log(JSON.stringify(Array.from(selectedProjects), null, 2));
+    console.log(JSON.stringify(Array.from(selectedProjects)));
   } else {
     for (const project of selectedProjects) {
       console.log(project);
@@ -92,7 +91,7 @@ export async function showProjectHandler(
     process.exit(1);
   }
   if (args.json) {
-    console.log(JSON.stringify(node.data, null, 2));
+    console.log(JSON.stringify(node.data));
   } else {
     const chalk = require('chalk') as typeof import('chalk');
     const logIfExists = (label, key: keyof typeof node['data']) => {

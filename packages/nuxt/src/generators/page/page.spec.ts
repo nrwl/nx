@@ -16,12 +16,8 @@ describe('page', () => {
       expect(getDirectory('pages/someDir')).toEqual('pages/someDir');
     });
 
-    it('should append "/pages" to the directory if it does not start with "pages/" 2', () => {
-      expect(getDirectory('someDir/')).toEqual('someDir/pages');
-    });
-
-    it('should append "/pages" to the directory if it does not start with "pages/"', () => {
-      expect(getDirectory('someDir')).toEqual('someDir/pages');
+    it('should prepend "pages/" to the directory if it does not start with "pages/"', () => {
+      expect(getDirectory('someDir')).toEqual('pages/someDir');
     });
 
     it('should work with an empty string', () => {

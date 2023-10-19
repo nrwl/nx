@@ -1,11 +1,15 @@
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { Tag } from '@nx/graph/ui-components';
+import { ReactNode } from 'react';
 
 export interface TaskNodeTooltipProps {
   id: string;
   executor: string;
   runTaskCallback?: () => void;
   description?: string;
+  inputs?: Record<string, string[]>;
+
+  children?: ReactNode | ReactNode[];
 }
 
 export function TaskNodeTooltip({
@@ -13,10 +17,11 @@ export function TaskNodeTooltip({
   executor,
   description,
   runTaskCallback: runTargetCallback,
+  children,
 }: TaskNodeTooltipProps) {
   return (
     <div className="text-sm text-slate-700 dark:text-slate-400">
-      <h4 className="flex justify-between items-center gap-4">
+      <h4 className="flex justify-between items-center gap-4 mb-3">
         <div className="flex items-center">
           <Tag className="mr-3">{executor}</Tag>
           <span className="font-mono">{id}</span>
@@ -31,8 +36,8 @@ export function TaskNodeTooltip({
           </button>
         ) : undefined}
       </h4>
-      <h4></h4>
       {description ? <p className="mt-4">{description}</p> : null}
+      {children}
     </div>
   );
 }

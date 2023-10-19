@@ -36,7 +36,7 @@ let parsedLockFile: ParsedLockFile = {};
 export const createNodes: CreateNodes = [
   // Look for all lockfiles
   combineGlobPatterns(LOCKFILES),
-  (lockFile, context) => {
+  (lockFile, _, context) => {
     const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
     if (!pluginConfig.analyzeLockfile) {
       return {};
@@ -74,6 +74,7 @@ export const createNodes: CreateNodes = [
 ];
 
 export const createDependencies: CreateDependencies = (
+  _,
   ctx: CreateDependenciesContext
 ) => {
   const pluginConfig = jsPluginConfig(ctx.nxJsonConfiguration);

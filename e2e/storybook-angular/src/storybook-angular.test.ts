@@ -27,7 +27,9 @@ describe('Storybook executors for Angular', () => {
   describe('serve and build storybook', () => {
     afterAll(() => killPorts());
 
-    it('should serve an Angular based Storybook setup', async () => {
+    // TODO(katerina) TODO(jack): This is currently failing because @storybook/angular:start-storybook has a bad schema. Once it's fixed we need to re-enable this test.
+    // See: https://github.com/storybookjs/storybook/issues/24512
+    xit('should serve an Angular based Storybook setup', async () => {
       const p = await runCommandUntil(
         `run ${angularStorybookLib}:storybook`,
         (output) => {

@@ -44,7 +44,7 @@ All three libraries have a similar project configuration. Here is what their `pr
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/lib1/**/*.ts"]
@@ -90,7 +90,7 @@ All three libraries have a similar project configuration. Here is what their `pr
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/lib2/**/*.ts"]
@@ -137,7 +137,7 @@ All three libraries have a similar project configuration. Here is what their `pr
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["libs/lib3/**/*.ts"]
@@ -185,7 +185,7 @@ Let's use the `targetDefaults` property in `nx.json` to reduce some of this dupl
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["{projectRoot}/**/*.ts"]

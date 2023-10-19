@@ -1,5 +1,9 @@
 # defaultCollection
 
+{% callout type="caution" title="Experimental" %}
+Configuring `defaultCollection` will no longer have any effect in Nx 17+
+{% /callout %}
+
 In the `nx.json` you can set a `defaultCollection` property like this:
 
 ```jsonc

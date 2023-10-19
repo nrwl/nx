@@ -1,5 +1,13 @@
 # Enterprise Release Notes
 
+### 2308.22.7.patch5
+
+- Fixes a UI issue when navigating to branches containg slashes
+
+### 2308.22.7.patch4
+
+- Updates the frontend image to remove some vulnerability issues
+
 ### 2308.22.7.patch3
 
 - Fixes a compatibility issue with the latest `nx-cloud` release

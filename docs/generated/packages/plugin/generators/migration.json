@@ -1,6 +1,6 @@
 {
   "name": "migration",
-  "factory": "./src/generators/migration/migration",
+  "factory": "./src/generators/migration/migration#migrationGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -54,6 +54,11 @@
         "type": "boolean",
         "default": false,
         "description": "Do not eslint configuration for plugin json files."
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the migration in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       }
     },
     "required": ["packageVersion"],
@@ -61,7 +66,7 @@
     "presets": []
   },
   "description": "Create a migration for an Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/migration/migration.ts",
+  "implementation": "/packages/plugin/src/generators/migration/migration#migrationGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/migration/schema.json",

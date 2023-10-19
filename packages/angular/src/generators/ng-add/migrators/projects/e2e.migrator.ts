@@ -20,7 +20,7 @@ import {
   visitNotIgnoredFiles,
   writeJson,
 } from '@nx/devkit';
-import { Linter, lintProjectGenerator } from '@nx/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { getRootTsConfigPathInTree, insertImport } from '@nx/js';
 import { basename, relative } from 'path';
 import type {

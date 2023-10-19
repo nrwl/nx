@@ -4,9 +4,10 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { pluginGenerator } from './plugin';
 import { Schema } from './schema';
@@ -68,7 +69,7 @@ describe('NxPlugin Plugin Generator', () => {
       },
     });
     expect(project.targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: expect.arrayContaining([
@@ -242,10 +243,10 @@ describe('NxPlugin Plugin Generator', () => {
     });
 
     it('should correctly setup npmScope less workspaces', async () => {
-      // remove the npmScope from nx.json
-      const nxJson = JSON.parse(tree.read('nx.json')!.toString());
-      delete nxJson.npmScope;
-      tree.write('nx.json', JSON.stringify(nxJson));
+      updateJson(tree, 'package.json', (j) => {
+        j.name = 'source';
+        return j;
+      });
 
       await pluginGenerator(tree, getSchema());
 

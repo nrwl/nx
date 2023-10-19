@@ -270,7 +270,7 @@ export function findInstalledCommunityPlugins(): PackageJson[] {
 }
 export function findInstalledPackagesWeCareAbout() {
   const packagesWeMayCareAbout: Record<string, string> = {};
-  // TODO (v17): Remove workaround for hiding @nrwl packages when matching @nx package is found.
+  // TODO (v18): Remove workaround for hiding @nrwl packages when matching @nx package is found.
   const packageChangeMap: Record<string, string> = {
     '@nrwl/nx-plugin': '@nx/plugin',
     '@nx/plugin': '@nrwl/nx-plugin',

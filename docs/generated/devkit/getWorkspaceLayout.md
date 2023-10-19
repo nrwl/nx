@@ -8,7 +8,7 @@ and the default scope.
 Example:
 
 ```typescript
-{ appsDir: 'apps', libsDir: 'libs', npmScope: 'myorg' }
+{ appsDir: 'apps', libsDir: 'libs' }
 ```
 
 #### Parameters
@@ -21,9 +21,8 @@ Example:
 
 `Object`
 
-| Name                  | Type      | Description                                                              |
-| :-------------------- | :-------- | :----------------------------------------------------------------------- |
-| `appsDir`             | `string`  | -                                                                        |
-| `libsDir`             | `string`  | -                                                                        |
-| `npmScope`            | `string`  | **`Deprecated`** This will be removed in Nx 17. Use getNpmScope instead. |
-| `standaloneAsDefault` | `boolean` | -                                                                        |
+| Name                  | Type      |
+| :-------------------- | :-------- |
+| `appsDir`             | `string`  |
+| `libsDir`             | `string`  |
+| `standaloneAsDefault` | `boolean` |

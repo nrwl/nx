@@ -169,7 +169,7 @@ const pages: Array<{ title: string; path: string }> = [
   },
   { title: '@nx/js:tsc', path: '/packages/js/executors/tsc' },
   { title: '@nx/js:swc', path: '/packages/js/executors/swc' },
-  { title: '@nx/linter', path: '/packages/linter' },
+  { title: '@nx/linter', path: '/packages/eslint' },
   {
     title: '@nx/linter:workspace-rules-project',
     path: '/packages/linter/generators/workspace-rules-project',

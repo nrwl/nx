@@ -6,7 +6,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import * as linter from '@nx/linter';
+import * as linter from '@nx/eslint';
 import { addLintingGenerator } from './add-linting';
 
 describe('addLinting generator', () => {
@@ -72,7 +72,7 @@ describe('addLinting generator', () => {
 
     const project = readProjectConfiguration(tree, appProjectName);
     expect(project.targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       options: {
         lintFilePatterns: [
           `${appProjectRoot}/**/*.ts`,
@@ -150,7 +150,7 @@ describe('addLinting generator', () => {
 
       const project = readProjectConfiguration(tree, appProjectName);
       expect(project.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         options: {
           lintFilePatterns: [
             `${appProjectRoot}/**/*.ts`,

@@ -1,4 +1,4 @@
-import { Linter, lintProjectGenerator } from '@nx/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -14,8 +14,8 @@ import {
   addOverrideToLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
-} from '@nx/linter/src/generators/utils/eslint-file';
-import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+} from '@nx/eslint/src/generators/utils/eslint-file';
+import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 
 export async function addLinting(
   host: Tree,

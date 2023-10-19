@@ -810,6 +810,31 @@
             "disableCollapsible": false
           },
           {
+            "name": "Module Federation",
+            "path": "/concepts/module-federation",
+            "id": "module-federation",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Faster Builds with Module Federation",
+                "path": "/concepts/module-federation/faster-builds-with-module-federation",
+                "id": "faster-builds-with-module-federation",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Micro Frontend Architecture",
+                "path": "/concepts/module-federation/micro-frontend-architecture",
+                "id": "micro-frontend-architecture",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "More Concepts",
             "path": "/concepts/more-concepts",
             "id": "more-concepts",
@@ -907,22 +932,6 @@
                 "name": "Nx Devkit and Angular Devkit",
                 "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
                 "id": "nx-devkit-angular-devkit",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Micro Frontend Architecture",
-                "path": "/concepts/more-concepts/micro-frontend-architecture",
-                "id": "micro-frontend-architecture",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Faster Builds with Module Federation",
-                "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-                "id": "faster-builds-with-module-federation",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1054,6 +1063,47 @@
         "disableCollapsible": false
       },
       {
+        "name": "Module Federation",
+        "path": "/concepts/module-federation",
+        "id": "module-federation",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Faster Builds with Module Federation",
+            "path": "/concepts/module-federation/faster-builds-with-module-federation",
+            "id": "faster-builds-with-module-federation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Micro Frontend Architecture",
+            "path": "/concepts/module-federation/micro-frontend-architecture",
+            "id": "micro-frontend-architecture",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Faster Builds with Module Federation",
+        "path": "/concepts/module-federation/faster-builds-with-module-federation",
+        "id": "faster-builds-with-module-federation",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Micro Frontend Architecture",
+        "path": "/concepts/module-federation/micro-frontend-architecture",
+        "id": "micro-frontend-architecture",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "More Concepts",
         "path": "/concepts/more-concepts",
         "id": "more-concepts",
@@ -1151,22 +1201,6 @@
             "name": "Nx Devkit and Angular Devkit",
             "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
             "id": "nx-devkit-angular-devkit",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Micro Frontend Architecture",
-            "path": "/concepts/more-concepts/micro-frontend-architecture",
-            "id": "micro-frontend-architecture",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Faster Builds with Module Federation",
-            "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-            "id": "faster-builds-with-module-federation",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1330,22 +1364,6 @@
         "name": "Nx Devkit and Angular Devkit",
         "path": "/concepts/more-concepts/nx-devkit-angular-devkit",
         "id": "nx-devkit-angular-devkit",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Micro Frontend Architecture",
-        "path": "/concepts/more-concepts/micro-frontend-architecture",
-        "id": "micro-frontend-architecture",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Faster Builds with Module Federation",
-        "path": "/concepts/more-concepts/faster-builds-with-module-federation",
-        "id": "faster-builds-with-module-federation",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1912,6 +1930,39 @@
             "disableCollapsible": false
           },
           {
+            "name": "Module Federation",
+            "path": "/recipes/module-federation",
+            "id": "module-federation",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "How to create a Module Federation Host Application",
+                "path": "/recipes/module-federation/create-a-host",
+                "id": "create-a-host",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "How to create a Module Federation Remote Application",
+                "path": "/recipes/module-federation/create-a-remote",
+                "id": "create-a-remote",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "How to Federate a Module",
+                "path": "/recipes/module-federation/federate-a-module",
+                "id": "federate-a-module",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Enforce Module Boundaries",
             "path": "/recipes/enforce-module-boundaries",
             "id": "enforce-module-boundaries",
@@ -2309,6 +2360,14 @@
                 "name": "Keyboard Shortcuts",
                 "path": "/recipes/nx-console/console-shortcuts",
                 "id": "console-shortcuts",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Troubleshooting",
+                "path": "/recipes/nx-console/console-troubleshooting",
+                "id": "console-troubleshooting",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3261,6 +3320,63 @@
         "disableCollapsible": false
       },
       {
+        "name": "Module Federation",
+        "path": "/recipes/module-federation",
+        "id": "module-federation",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "How to create a Module Federation Host Application",
+            "path": "/recipes/module-federation/create-a-host",
+            "id": "create-a-host",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "How to create a Module Federation Remote Application",
+            "path": "/recipes/module-federation/create-a-remote",
+            "id": "create-a-remote",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "How to Federate a Module",
+            "path": "/recipes/module-federation/federate-a-module",
+            "id": "federate-a-module",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to create a Module Federation Host Application",
+        "path": "/recipes/module-federation/create-a-host",
+        "id": "create-a-host",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to create a Module Federation Remote Application",
+        "path": "/recipes/module-federation/create-a-remote",
+        "id": "create-a-remote",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "How to Federate a Module",
+        "path": "/recipes/module-federation/federate-a-module",
+        "id": "federate-a-module",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Enforce Module Boundaries",
         "path": "/recipes/enforce-module-boundaries",
         "id": "enforce-module-boundaries",
@@ -3973,6 +4089,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Troubleshooting",
+            "path": "/recipes/nx-console/console-troubleshooting",
+            "id": "console-troubleshooting",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4021,6 +4145,14 @@
         "name": "Keyboard Shortcuts",
         "path": "/recipes/nx-console/console-shortcuts",
         "id": "console-shortcuts",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting",
+        "path": "/recipes/nx-console/console-troubleshooting",
+        "id": "console-troubleshooting",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6518,6 +6650,65 @@
         "disableCollapsible": false
       },
       {
+        "id": "linter",
+        "path": "/nx-api/linter",
+        "name": "linter",
+        "children": [
+          {
+            "id": "executors",
+            "path": "/nx-api/linter/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "eslint",
+                "path": "/nx-api/linter/executors/eslint",
+                "name": "eslint",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/linter/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "workspace-rules-project",
+                "path": "/nx-api/linter/generators/workspace-rules-project",
+                "name": "workspace-rules-project",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "workspace-rule",
+                "path": "/nx-api/linter/generators/workspace-rule",
+                "name": "workspace-rule",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-flat-config",
+                "path": "/nx-api/linter/generators/convert-to-flat-config",
+                "name": "convert-to-flat-config",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "eslint-plugin",
         "path": "/nx-api/eslint-plugin",
         "name": "eslint-plugin",
@@ -6962,82 +7153,6 @@
                 "id": "setup-build",
                 "path": "/nx-api/js/generators/setup-build",
                 "name": "setup-build",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          }
-        ],
-        "isExternal": false,
-        "disableCollapsible": false
-      },
-      {
-        "id": "linter",
-        "path": "/nx-api/linter",
-        "name": "linter",
-        "children": [
-          {
-            "id": "documents",
-            "path": "/nx-api/linter/documents",
-            "name": "documents",
-            "children": [
-              {
-                "name": "Overview",
-                "path": "/nx-api/linter/documents/overview",
-                "id": "overview",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "executors",
-            "path": "/nx-api/linter/executors",
-            "name": "executors",
-            "children": [
-              {
-                "id": "eslint",
-                "path": "/nx-api/linter/executors/eslint",
-                "name": "eslint",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              }
-            ],
-            "isExternal": false,
-            "disableCollapsible": false
-          },
-          {
-            "id": "generators",
-            "path": "/nx-api/linter/generators",
-            "name": "generators",
-            "children": [
-              {
-                "id": "workspace-rules-project",
-                "path": "/nx-api/linter/generators/workspace-rules-project",
-                "name": "workspace-rules-project",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "workspace-rule",
-                "path": "/nx-api/linter/generators/workspace-rule",
-                "name": "workspace-rule",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "convert-to-flat-config",
-                "path": "/nx-api/linter/generators/convert-to-flat-config",
-                "name": "convert-to-flat-config",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

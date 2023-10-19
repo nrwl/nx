@@ -1,6 +1,6 @@
 {
   "name": "generator",
-  "factory": "./src/generators/generator/generator",
+  "factory": "./src/generators/generator/generator#generatorGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -31,7 +31,6 @@
       "description": {
         "type": "string",
         "description": "Generator description.",
-        "alias": "d",
         "x-priority": "important"
       },
       "unitTestRunner": {
@@ -57,6 +56,11 @@
         "default": false,
         "description": "Do not format files with prettier.",
         "x-priority": "internal"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the generator in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       }
     },
     "required": ["name"],
@@ -64,7 +68,7 @@
     "presets": []
   },
   "description": "Create a generator for an Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/generator/generator.ts",
+  "implementation": "/packages/plugin/src/generators/generator/generator#generatorGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/generator/schema.json",

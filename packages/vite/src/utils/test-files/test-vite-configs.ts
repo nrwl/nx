@@ -197,7 +197,7 @@ export const buildOption = `
       },
       rollupOptions: {
         // External packages that should not be bundled into your library.
-        external: ["'react', 'react-dom', 'react/jsx-runtime'"]
+        external: ['react', 'react-dom', 'react/jsx-runtime']
       }
     },`;
 export const buildOptionObject = {
@@ -208,7 +208,7 @@ export const buildOptionObject = {
     formats: ['es', 'cjs'],
   },
   rollupOptions: {
-    external: ["'react', 'react-dom', 'react/jsx-runtime'"],
+    external: ['react', 'react-dom', 'react/jsx-runtime'],
   },
 };
 

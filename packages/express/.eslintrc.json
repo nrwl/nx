@@ -45,7 +45,7 @@
             "buildTargets": ["build-base"],
             "ignoredDependencies": [
               "nx",
-              "@nx/linter",
+              "@nx/eslint",
               "typescript",
               "eslint",
               "express"

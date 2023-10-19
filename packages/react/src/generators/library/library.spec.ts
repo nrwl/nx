@@ -7,7 +7,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
@@ -21,7 +21,7 @@ describe('lib', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   let defaultSchema: Schema = {
-    name: 'myLib',
+    name: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -53,7 +53,7 @@ describe('lib', () => {
     expect(project.root).toEqual('my-lib');
     expect(project.targets.build).toBeUndefined();
     expect(project.targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -82,6 +82,7 @@ describe('lib', () => {
       'node',
       'vitest',
     ]);
+    expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should update tags', async () => {
@@ -316,7 +317,7 @@ describe('lib', () => {
 
       expect(config.root).toEqual('my-dir/my-lib');
       expect(config.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
         options: {
           lintFilePatterns: ['my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
@@ -414,7 +415,7 @@ describe('lib', () => {
       expect(config.targets.test).toBeUndefined();
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "options": {
             "lintFilePatterns": [
               "my-lib/**/*.{ts,tsx,js,jsx}",
@@ -428,6 +429,18 @@ describe('lib', () => {
     });
   });
 
+  describe('--bundler none, unit test runner vitest', () => {
+    it('should configure vite', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        unitTestRunner: 'vitest',
+        bundler: 'none',
+      });
+
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    });
+  });
+
   describe('--appProject', () => {
     it('should add new route to existing routing code', async () => {
       await applicationGenerator(tree, {
@@ -436,7 +449,7 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'myApp',
+        name: 'my-app',
         routing: true,
         style: 'css',
         bundler: 'webpack',
@@ -465,7 +478,7 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'myApp',
+        name: 'my-app',
         style: 'css',
         bundler: 'webpack',
         projectNameAndRootFormat: 'as-provided',
@@ -496,7 +509,6 @@ describe('lib', () => {
       });
 
       const projectsConfigurations = getProjects(tree);
-
       expect(projectsConfigurations.get('my-lib').targets.build).toBeDefined();
     });
   });

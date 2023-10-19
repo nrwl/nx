@@ -5,6 +5,7 @@ import {
   logger,
   readJson,
   runTasksInSerial,
+  stripIndents,
 } from '@nx/devkit';
 import { Schema } from './schema';
 
@@ -14,6 +15,12 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
+  // Check if the file exists
+  if (!tree.exists(schema.path)) {
+    throw new Error(stripIndents`The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.
+    
+    Path: ${schema.path}`);
+  }
   const tasks: GeneratorCallback[] = [];
   // Check remote exists
   const remote = checkRemoteExists(tree, schema.remote);

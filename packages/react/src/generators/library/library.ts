@@ -90,11 +90,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [
           options.compiler === 'swc'
             ? `import react from '@vitejs/plugin-react-swc'`
@@ -160,11 +159,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeVitest: true,
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [`import react from '@vitejs/plugin-react'`],
         plugins: ['react()'],
       },
@@ -174,7 +172,8 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 
   if (options.component) {
     const componentTask = await componentGenerator(host, {
-      name: options.fileName,
+      nameAndDirectoryFormat: 'as-provided',
+      name: joinPathFragments(options.projectRoot, 'src/lib', options.fileName),
       project: options.name,
       flat: true,
       style: options.style,

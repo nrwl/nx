@@ -33,7 +33,7 @@
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter",
+    "@nx/eslint": "file:../eslint",
     "@nx/vue": "file:../vue",
     "@nx/cypress": "file:../cypress",
     "@nx/playwright": "file:../playwright",

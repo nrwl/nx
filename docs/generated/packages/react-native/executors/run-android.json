@@ -54,11 +54,6 @@
         "examples": ["debug", "release"],
         "x-priority": "important"
       },
-      "packager": {
-        "type": "boolean",
-        "description": "Launch packager while building",
-        "default": true
-      },
       "port": {
         "type": "number",
         "description": "The port where the packager server is listening on.",
@@ -94,12 +89,6 @@
       "interactive": {
         "type": "boolean",
         "description": "Explicitly select build type and flavour to use before running a build"
-      },
-      "sync": {
-        "type": "boolean",
-        "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
-        "x-deprecated": "Add sync-deps to dependsOn for this target in project.json instead",
-        "default": true
       },
       "resetCache": {
         "type": "boolean",

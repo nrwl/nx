@@ -241,8 +241,8 @@ describe('SCAM Directive Generator', () => {
           inlineScam: true,
           flat: false,
         })
-      ).rejects.toThrow(
-        'The path provided (libs/proj/src/lib/random) does not exist under the project root (apps/app1).'
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"The provided directory "libs/proj/src/lib/random" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`
       );
     });
   });

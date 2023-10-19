@@ -1,7 +1,7 @@
 import { detoxApplicationGenerator } from '@nx/detox';
 import { Tree } from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 export async function addDetox(host: Tree, options: NormalizedSchema) {
   if (options?.e2eTestRunner !== 'detox') {

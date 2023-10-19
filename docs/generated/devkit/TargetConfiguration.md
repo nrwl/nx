@@ -12,6 +12,7 @@ Target's configuration
 
 ### Properties
 
+- [cache](../../devkit/documents/TargetConfiguration#cache): boolean
 - [command](../../devkit/documents/TargetConfiguration#command): string
 - [configurations](../../devkit/documents/TargetConfiguration#configurations): Object
 - [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration): string
@@ -22,6 +23,14 @@ Target's configuration
 - [outputs](../../devkit/documents/TargetConfiguration#outputs): string[]
 
 ## Properties
+
+### cache
+
+• `Optional` **cache**: `boolean`
+
+Determines if Nx is able to cache a given target.
+
+---
 
 ### command
 

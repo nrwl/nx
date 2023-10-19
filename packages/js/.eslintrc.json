@@ -45,7 +45,6 @@
               // require.resolve is used for these packages
               "source-map-support",
               "@babel/core",
-              "@babel/plugin-proposal-class-properties",
               "@babel/plugin-proposal-decorators",
               "@babel/plugin-transform-runtime",
               "@babel/preset-env",

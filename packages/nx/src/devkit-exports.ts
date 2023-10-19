@@ -69,6 +69,7 @@ export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
+  PluginConfiguration,
   TargetDefaults,
   NxAffectedConfig,
 } from './config/nx-json';
@@ -121,17 +122,6 @@ export {
  * @category Generators
  */
 export { glob } from './generators/utils/glob';
-
-/**
- * @category Generators
- */
-export {
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-  isStandaloneProject,
-  WorkspaceConfiguration,
-  getWorkspacePath,
-} from './generators/utils/deprecated';
 
 /**
  * @category Generators

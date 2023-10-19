@@ -92,14 +92,10 @@ function runCliRunIOS(
   });
 }
 
-const nxOptions = ['sync', 'install', 'packager'];
 const startOptions = ['port', 'resetCache'];
-const deprecatedOptions = ['xcodeConfiguration'];
 
 function createRunIOSOptions(options: ReactNativeRunIosOptions) {
-  return getCliOptions<ReactNativeRunIosOptions>(
-    options,
-    [...nxOptions, ...startOptions, ...deprecatedOptions],
-    ['buildFolder']
-  );
+  return getCliOptions<ReactNativeRunIosOptions>(options, startOptions, [
+    'buildFolder',
+  ]);
 }

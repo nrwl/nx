@@ -26,6 +26,8 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
     (graph) => graph.id === selectedWorkspaceId
   );
 
+  projectGraphDataService.setTaskInputsUrl?.(workspaceInfo.taskInputsUrl);
+
   const projectGraph: ProjectGraphClientResponse =
     await projectGraphDataService.getProjectGraph(
       workspaceInfo.projectGraphUrl

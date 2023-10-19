@@ -38,6 +38,14 @@ This will generate a Storybook configuration for the `ui` project and generate s
 
 This is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.
 
+By default, Nx will ignore the following paths:
+
+```text
+*.stories.ts, *.stories.tsx, *.stories.js, *.stories.jsx, *.stories.mdx
+```
+
+but you can change this behaviour easily, as explained above.
+
 ### Generate stories using JavaScript instead of TypeScript
 
 ```bash

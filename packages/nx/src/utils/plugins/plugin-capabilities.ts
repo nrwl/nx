@@ -103,11 +103,13 @@ async function tryGetModule(
       packageJson['nx-migrations'] ??
       packageJson['schematics'] ??
       packageJson['builders']
-      ? await loadNxPluginAsync(
-          packageJson.name,
-          getNxRequirePaths(workspaceRoot),
-          workspaceRoot
-        )
+      ? (
+          await loadNxPluginAsync(
+            packageJson.name,
+            getNxRequirePaths(workspaceRoot),
+            workspaceRoot
+          )
+        ).plugin
       : ({
           name: packageJson.name,
         } as NxPlugin);

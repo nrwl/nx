@@ -8,6 +8,27 @@ same code twice.
 Nx has the most sophisticated and battle-tested computation caching system. It knows when the task you are
 about to run has been executed before, so it can use the cache to restore the results of running that task.
 
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+To enable caching for `build` and `test`, edit the `targetDefaults` property in `nx.json` to include the `build` and `test` tasks:
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true
+    },
+    "test": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
 To enable caching for `build` and `test`, edit the `cacheableOperations` property in `nx.json` to include the `build` and `test` tasks:
 
 ```json {% fileName="nx.json" %}
@@ -22,6 +43,9 @@ To enable caching for `build` and `test`, edit the `cacheableOperations` propert
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 {% callout type="note" title="Cacheable operations need to be side effect free" %}
 This means that given the same input they should always result in

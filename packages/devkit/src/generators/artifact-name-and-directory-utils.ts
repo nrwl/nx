@@ -23,7 +23,7 @@ export type ArtifactGenerationOptions = {
   name: string;
   directory?: string;
   disallowPathInNameForDerived?: boolean;
-  fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx';
+  fileExtension?: 'js' | 'jsx' | 'ts' | 'tsx' | 'vue';
   fileName?: string;
   flat?: boolean;
   nameAndDirectoryFormat?: NameAndDirectoryFormat;
@@ -70,6 +70,13 @@ export async function determineArtifactNameAndDirectoryOptions(
     nameAndDirectoryFormat: NameAndDirectoryFormat;
   }
 > {
+  if (
+    !options.nameAndDirectoryFormat &&
+    (process.env.NX_INTERACTIVE !== 'true' || !isTTY())
+  ) {
+    options.nameAndDirectoryFormat = 'derived';
+  }
+
   const formats = getNameAndDirectoryOptionFormats(tree, options);
   const format =
     options.nameAndDirectoryFormat ?? (await determineFormat(formats, options));
@@ -80,6 +87,10 @@ export async function determineArtifactNameAndDirectoryOptions(
     options,
     formats[format]?.directory
   );
+
+  if (format === 'derived' && options.callingGenerator) {
+    logDeprecationMessage(options, formats);
+  }
 
   return {
     ...formats[format],
@@ -93,12 +104,6 @@ async function determineFormat(
 ): Promise<NameAndDirectoryFormat> {
   if (!formats.derived) {
     return 'as-provided';
-  }
-
-  if (process.env.NX_INTERACTIVE !== 'true' || !isTTY()) {
-    logDeprecationMessage(options, formats);
-
-    return 'derived';
   }
 
   const asProvidedDescription = `As provided: ${formats['as-provided'].filePath}`;
@@ -128,10 +133,6 @@ async function determineFormat(
   }).then(({ format }) =>
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );
-
-  if (result === 'derived' && options.callingGenerator) {
-    logDeprecationMessage(options, formats);
-  }
 
   return result;
 }

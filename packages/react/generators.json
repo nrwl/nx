@@ -25,13 +25,13 @@
       "description": "Create a React library."
     },
     "component": {
-      "factory": "./src/generators/component/component#componentGenerator",
+      "factory": "./src/generators/component/component#componentGeneratorInternal",
       "schema": "./src/generators/component/schema.json",
       "description": "Create a React component.",
       "aliases": ["c"]
     },
     "redux": {
-      "factory": "./src/generators/redux/redux#reduxGenerator",
+      "factory": "./src/generators/redux/redux#reduxGeneratorInternal",
       "schema": "./src/generators/redux/schema.json",
       "description": "Create a Redux slice for a project.",
       "aliases": ["slice"]
@@ -61,7 +61,7 @@
       "hidden": false
     },
     "hook": {
-      "factory": "./src/generators/hook/hook#hookGenerator",
+      "factory": "./src/generators/hook/hook#hookGeneratorInternal",
       "schema": "./src/generators/hook/schema.json",
       "description": "Create a hook.",
       "aliases": ["c"]

@@ -1,10 +1,16 @@
-# Type alias: CreateNodesFunction
+# Type alias: CreateNodesFunction<T\>
 
-Ƭ **CreateNodesFunction**: (`projectConfigurationFile`: `string`, `context`: [`CreateNodesContext`](../../devkit/documents/CreateNodesContext)) => { `externalNodes?`: `Record`<`string`, [`ProjectGraphExternalNode`](../../devkit/documents/ProjectGraphExternalNode)\> ; `projects?`: `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\> }
+Ƭ **CreateNodesFunction**<`T`\>: (`projectConfigurationFile`: `string`, `options`: `T` \| `undefined`, `context`: [`CreateNodesContext`](../../devkit/documents/CreateNodesContext)) => { `externalNodes?`: `Record`<`string`, [`ProjectGraphExternalNode`](../../devkit/documents/ProjectGraphExternalNode)\> ; `projects?`: `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\> }
+
+#### Type parameters
+
+| Name | Type      |
+| :--- | :-------- |
+| `T`  | `unknown` |
 
 #### Type declaration
 
-▸ (`projectConfigurationFile`, `context`): `Object`
+▸ (`projectConfigurationFile`, `options`, `context`): `Object`
 
 A function which parses a configuration file into a set of nodes.
 Used for creating nodes for the [ProjectGraph](../../devkit/documents/ProjectGraph)
@@ -14,6 +20,7 @@ Used for creating nodes for the [ProjectGraph](../../devkit/documents/ProjectGra
 | Name                       | Type                                                              |
 | :------------------------- | :---------------------------------------------------------------- |
 | `projectConfigurationFile` | `string`                                                          |
+| `options`                  | `T` \| `undefined`                                                |
 | `context`                  | [`CreateNodesContext`](../../devkit/documents/CreateNodesContext) |
 
 ##### Returns

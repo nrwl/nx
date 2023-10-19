@@ -15,18 +15,22 @@ env:
   NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
   NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
 steps:
-  - name: Git Clone
+  - name: Checkout
     uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
 
-  - name: Restore cache
-    script: |
-      nxw cache restore {{nxBranch}}-node_modules node_modules
-      nxw cache restore {{nxBranch}}-cypress ~/.cache/Cypress
-      nxw cache restore {{nxBranch}}-pnpm-store ~/.pnpm-store
+  - name: Cache restore
+    uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/cache/main.yaml'
+    env:
+      KEY: 'pnpm-lock.yaml'
+      PATHS: |
+        node_modules
+        ~/.cache/Cypress
+        ~/.pnpm-store
+      BASE_BRANCH: 'master'
 
   - name: Install Pnpm
     script: |
-      npm install -g @pnpm/exe@8.3.1
+      npm install -g @pnpm/exe@8.7.4
 
   - name: Pnpm Install
     script: |
@@ -50,9 +54,3 @@ steps:
     script: |
       source "$HOME/.cargo/env"
       npx nx-cloud start-agent
-
-  - name: Store to cache
-    script: |
-      nxw cache store {{nxBranch}}-node_modules node_modules
-      nxw cache store {{nxBranch}}-cypress ~/.cache/Cypress
-      nxw cache store {{nxBranch}}-pnpm-store ~/.pnpm-store

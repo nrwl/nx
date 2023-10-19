@@ -11,7 +11,6 @@ const allowedProjectExtensions = [
 const allowedWorkspaceExtensions = [
   'implicitDependencies',
   'affected',
-  'npmScope',
   'tasksRunnerOptions',
   'workspaceLayout',
   'plugins',

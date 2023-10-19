@@ -15,7 +15,6 @@ import { applyImplicitDependencies } from './utils/implicit-project-dependencies
 import { normalizeProjectNodes } from './utils/normalize-project-nodes';
 import {
   CreateDependenciesContext,
-  CreateNodesContext,
   isNxPluginV1,
   isNxPluginV2,
   loadNxPlugins,
@@ -234,7 +233,7 @@ async function updateProjectGraphWithPlugins(
 ) {
   const plugins = await loadNxPlugins(context.nxJsonConfiguration?.plugins);
   let graph = initProjectGraph;
-  for (const plugin of plugins) {
+  for (const { plugin } of plugins) {
     try {
       if (
         isNxPluginV1(plugin) &&
@@ -280,12 +279,12 @@ async function updateProjectGraphWithPlugins(
   );
 
   const createDependencyPlugins = plugins.filter(
-    (plugin) => isNxPluginV2(plugin) && plugin.createDependencies
+    ({ plugin }) => isNxPluginV2(plugin) && plugin.createDependencies
   );
   await Promise.all(
-    createDependencyPlugins.map(async (plugin) => {
+    createDependencyPlugins.map(async ({ plugin, options }) => {
       try {
-        const dependencies = await plugin.createDependencies({
+        const dependencies = await plugin.createDependencies(options, {
           ...context,
         });
 

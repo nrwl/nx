@@ -6,6 +6,7 @@ export const fence: Schema = {
     content: { type: 'String', render: false, required: true },
     language: { type: 'String' },
     fileName: { type: 'String', default: '' },
+    highlightLines: { type: 'Array', default: [] },
     lineGroups: { type: 'Object', default: {} },
     command: { type: 'String', default: '' },
     path: { type: 'String', default: '~/workspace' },

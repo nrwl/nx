@@ -31,9 +31,7 @@ describe('explicit package json dependencies', () => {
       },
     };
 
-    const nxJsonConfiguration = {
-      npmScope: 'proj',
-    };
+    const nxJsonConfiguration = {};
 
     await tempFs.createFiles({
       './package.json': `{

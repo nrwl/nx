@@ -120,8 +120,9 @@ export function withConfiguration(yargs: Argv) {
 export function withBatch(yargs: Argv) {
   return yargs.options('batch', {
     type: 'boolean',
+    describe: 'Run task(s) in batches for executors which support batches',
     coerce: (v) => {
-      return v || process.env.BATCH_MODE === 'true';
+      return v || process.env.NX_BATCH_MODE === 'true';
     },
     default: false,
   }) as any;

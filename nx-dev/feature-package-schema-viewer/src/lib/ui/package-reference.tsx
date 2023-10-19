@@ -16,17 +16,15 @@ export function DocumentList({
   documents: DocumentMetadata[];
 }): JSX.Element {
   return (
-    <>
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-        {!!documents.length ? (
-          documents.map((guide) => (
-            <DocumentListItem key={guide.id} document={guide} />
-          ))
-        ) : (
-          <EmptyList type="document" />
-        )}
-      </ul>
-    </>
+    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+      {!!documents.length ? (
+        documents.map((guide) => (
+          <DocumentListItem key={guide.id} document={guide} />
+        ))
+      ) : (
+        <EmptyList type="document" />
+      )}
+    </ul>
   );
 }
 
@@ -63,17 +61,15 @@ export function SchemaList({
   type: 'executor' | 'generator';
 }): JSX.Element {
   return (
-    <>
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-        {!!files.length ? (
-          files.map((schema) => (
-            <SchemaListItem key={schema.name} file={schema} />
-          ))
-        ) : (
-          <EmptyList type={type} />
-        )}
-      </ul>
-    </>
+    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+      {!!files.length ? (
+        files.map((schema) => (
+          <SchemaListItem key={schema.name} file={schema} />
+        ))
+      ) : (
+        <EmptyList type={type} />
+      )}
+    </ul>
   );
 }
 

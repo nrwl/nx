@@ -217,13 +217,15 @@ export function isTheFileAStory(tree: Tree, path: string): boolean {
       });
       const importSpecifiers = findNodes(importNode, [
         ts.SyntaxKind.ImportSpecifier,
+        ts.SyntaxKind.NamespaceImport,
       ]);
       importSpecifiers.forEach((importSpecifier: ts.ImportSpecifier) => {
         if (
           importSpecifier.getText() === 'Story' ||
           importSpecifier.getText() === 'Meta' ||
           importSpecifier.getText() === 'storiesOf' ||
-          importSpecifier.getText() === 'ComponentStory'
+          importSpecifier.getText() === 'ComponentStory' ||
+          importSpecifier.getText().includes('Storybook')
         ) {
           nodeContainsStoryImport = true;
         }

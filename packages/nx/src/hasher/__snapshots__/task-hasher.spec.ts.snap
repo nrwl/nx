@@ -232,15 +232,15 @@ exports[`TaskHasher should be able to include only a part of the base tsconfig 1
       "parent:ProjectConfiguration": "18166168584521190546",
       "parent:TsConfig": "4035819825874039301",
       "parent:{projectRoot}/**/*": "8263681721738113012",
-      "runtime:echo runtime123": "runtime123",
-      "runtime:echo runtime456": "runtime456",
+      "runtime:echo runtime123": "29846575039086708",
+      "runtime:echo runtime456": "9687767313975325934",
       "{workspaceRoot}/.gitignore": "3244421341483603138",
       "{workspaceRoot}/.nxignore": "3244421341483603138",
       "{workspaceRoot}/nx.json": "8942239360311677987",
     },
     "runtime": {},
   },
-  "value": "6617704315962978691",
+  "value": "11657880113460718404",
 }
 `;
 
@@ -256,8 +256,8 @@ exports[`TaskHasher should create task hash 1`] = `
       "parent:ProjectConfiguration": "12175533918137189298",
       "parent:TsConfig": "8767608672024750088",
       "parent:{projectRoot}/**/*": "8263681721738113012",
-      "runtime:echo runtime123": "runtime123",
-      "runtime:echo runtime456": "runtime456",
+      "runtime:echo runtime123": "29846575039086708",
+      "runtime:echo runtime456": "9687767313975325934",
       "tagged:ProjectConfiguration": "4875698716044094030",
       "tagged:TsConfig": "8767608672024750088",
       "tagged:{projectRoot}/**/*": "3244421341483603138",
@@ -270,7 +270,7 @@ exports[`TaskHasher should create task hash 1`] = `
     },
     "runtime": {},
   },
-  "value": "14343902810028001500",
+  "value": "11744133219421970738",
 }
 `;
 

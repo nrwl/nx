@@ -71,6 +71,11 @@
       "version": "17.0.0-beta.3",
       "description": "Use minimal config for tasksRunnerOptions",
       "implementation": "./src/migrations/update-17-0-0/use-minimal-config-for-tasks-runner-options"
+    },
+    "rm-default-collection-npm-scope": {
+      "version": "17.0.0-rc.1",
+      "description": "Migration for v17.0.0-rc.1",
+      "implementation": "./src/migrations/update-17-0-0/rm-default-collection-npm-scope"
     }
   }
 }

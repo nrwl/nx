@@ -2,12 +2,12 @@ import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../../library/library';
 import { createComponentStories } from './component-story';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('vue:component-story', () => {
   let appTree: Tree;
-  let cmpPath = 'test-ui-lib/src/components/test-ui-lib.vue';
-  let storyFilePath = 'test-ui-lib/src/components/test-ui-lib.stories.ts';
+  let cmpPath = 'test-ui-lib/src/lib/test-ui-lib.vue';
+  let storyFilePath = 'test-ui-lib/src/lib/test-ui-lib.stories.ts';
 
   describe('default setup', () => {
     beforeEach(async () => {
@@ -22,7 +22,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'components/test-ui-lib.vue'
+          'lib/test-ui-lib.vue'
         );
       });
 
@@ -42,11 +42,11 @@ describe('vue:component-story', () => {
             age: number;
           }>();
           </script>
-          
+
           <template>
             <p>Welcome to Vlv!</p>
           </template>
-          
+
           <style scoped>
           </style>
           `
@@ -58,7 +58,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'components/test-ui-lib.vue'
+          'lib/test-ui-lib.vue'
         );
       });
 
@@ -81,11 +81,11 @@ describe('vue:component-story', () => {
               }
             }
             </script>
-          
+
           <template>
             <p>Welcome to Vlv!</p>
           </template>
-          
+
           <style scoped>
           </style>
           `
@@ -97,7 +97,7 @@ describe('vue:component-story', () => {
             interactionTests: true,
             project: 'test-ui-lib',
           },
-          'components/test-ui-lib.vue'
+          'lib/test-ui-lib.vue'
         );
       });
 

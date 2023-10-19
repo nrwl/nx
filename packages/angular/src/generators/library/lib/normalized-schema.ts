@@ -1,5 +1,5 @@
 import { UnitTestRunner } from '../../../utils/test-runners';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 
 export interface NormalizedSchema {
   libraryOptions: {

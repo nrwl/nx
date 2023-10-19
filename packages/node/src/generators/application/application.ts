@@ -23,8 +23,8 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nx/js';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
-import { Linter, lintProjectGenerator } from '@nx/linter';
-import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 import { join } from 'path';
 import {
   expressTypingsVersion,

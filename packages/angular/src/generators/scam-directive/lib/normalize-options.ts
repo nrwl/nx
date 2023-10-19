@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { normalizeNameAndPaths } from '../../utils/path';
 import type { NormalizedSchema, Schema } from '../schema';
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { names } from '@nx/devkit';
@@ -13,7 +12,7 @@ export async function normalizeOptions(
     directory,
     fileName,
     filePath,
-    project,
+    project: projectName,
   } = await determineArtifactNameAndDirectoryOptions(tree, {
     artifactType: 'directive',
     callingGenerator: '@nx/angular:scam-directive',
@@ -38,6 +37,6 @@ export async function normalizeOptions(
     filePath,
     name,
     symbolName,
-    project,
+    projectName,
   };
 }

@@ -19,6 +19,8 @@ Create an application named `my-app`:
 nx g @nx/web:app my-app --bundler=vite
 ```
 
+When choosing `vite` as the bundler, your unit tests will be set up with `vitest`, unless you choose `none` for `unitTestRunner`.
+
 {% /tab %}
 
 {% tab label="Specify directory" %}

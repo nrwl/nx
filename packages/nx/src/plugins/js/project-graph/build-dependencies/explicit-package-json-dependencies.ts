@@ -25,9 +25,7 @@ export function buildExplicitPackageJsonDependencies(
     Object.values(ctx.filesToProcess.projectFileMap[source]).forEach((f) => {
       if (isPackageJsonAtProjectRoot(nodes, f.file)) {
         // we only create the package name map once and only if a package.json file changes
-        packageNameMap =
-          packageNameMap ||
-          createPackageNameMap(ctx.nxJsonConfiguration, ctx.projects);
+        packageNameMap = packageNameMap || createPackageNameMap(ctx.projects);
         processPackageJson(source, f.file, ctx, res, packageNameMap);
       }
     });
@@ -35,24 +33,14 @@ export function buildExplicitPackageJsonDependencies(
   return res;
 }
 
-function createPackageNameMap(
-  nxJsonConfiguration: NxJsonConfiguration,
-  projects: ProjectsConfigurations['projects']
-) {
+function createPackageNameMap(projects: ProjectsConfigurations['projects']) {
   const res = {};
   for (let projectName of Object.keys(projects)) {
     try {
       const packageJson = parseJson(
         defaultFileRead(join(projects[projectName].root, 'package.json'))
       );
-      // TODO(v17): Stop reading nx.json for the npmScope
-      const npmScope = nxJsonConfiguration.npmScope;
-      res[
-        packageJson.name ??
-          (npmScope
-            ? `${npmScope === '@' ? '' : '@'}${npmScope}/${projectName}`
-            : projectName)
-      ] = projectName;
+      res[packageJson.name ?? projectName] = projectName;
     } catch (e) {}
   }
   return res;

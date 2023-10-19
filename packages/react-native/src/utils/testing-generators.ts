@@ -1,6 +1,6 @@
 import { addProjectConfiguration, names, Tree } from '@nx/devkit';
 import applicationGenerator from '../generators/application/application';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 export async function createApp(tree: Tree, appName: string): Promise<void> {
   await applicationGenerator(tree, {

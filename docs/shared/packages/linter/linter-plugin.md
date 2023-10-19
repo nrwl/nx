@@ -5,17 +5,17 @@ The Linter plugin contains executors, generator, plugin and utilities used for l
 ### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/linter` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/eslint` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-In any Nx workspace, you can install `@nx/linter` by running the following commands if `@nx/linter` package is not installed:
+In any Nx workspace, you can install `@nx/eslint` by running the following commands if `@nx/eslint` package is not installed:
 
 ```shell
-npm i --save-dev @nx/linter
+npm i --save-dev @nx/eslint
 ```
 
 ```shell
-yarn add --dev @nx/linter
+yarn add --dev @nx/eslint
 ```
 
 ## Lint

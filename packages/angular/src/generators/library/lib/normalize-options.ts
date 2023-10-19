@@ -1,7 +1,7 @@
 import { names, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { normalizeNewProjectPrefix } from '../../utils/project';
 import { Schema } from '../schema';

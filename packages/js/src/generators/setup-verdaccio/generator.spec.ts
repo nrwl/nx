@@ -17,7 +17,7 @@ describe('setup-verdaccio generator', () => {
     await generator(tree, options);
     const config = readJson(tree, 'project.json');
     expect(config).toEqual({
-      name: 'test-name',
+      name: '@proj/source',
       $schema: 'node_modules/nx/schemas/project-schema.json',
       targets: {
         'local-registry': {
@@ -51,7 +51,7 @@ describe('setup-verdaccio generator', () => {
     await generator(tree, options);
     const config = readJson(tree, 'project.json');
     expect(config).toEqual({
-      name: 'test-name',
+      name: '@proj/source',
       $schema: 'node_modules/nx/schemas/project-schema.json',
       targets: {
         'local-registry': {
