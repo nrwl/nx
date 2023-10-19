@@ -6,8 +6,8 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Schema } from '../schema';
-import { updateImports } from './update-imports';
 import { normalizeSchema } from './normalize-schema';
+import { updateImports } from './update-imports';
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');
@@ -216,6 +216,41 @@ describe('updateImports', () => {
     expect(tree.read(importerFilePath, 'utf-8')).toContain(
       `import('@proj/tabs/components').then(m => m.Tab);`
     );
+    expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should update imports and reexports', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-destination',
+      config: 'project',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    await libraryGenerator(tree, {
+      name: 'my-importer',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    const importerFilePath = 'my-importer/src/importer.ts';
+    tree.write(
+      importerFilePath,
+      `
+        import { MyClass } from '@proj/my-source';
+        export { MyOtherClass } from '@proj/my-source';
+        
+        export class MyExtendedClass extends MyClass {};
+      `
+    );
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+
+    updateImports(
+      tree,
+      await normalizeSchema(tree, schema, projectConfig),
+      projectConfig
+    );
+
     expect(tree.read(importerFilePath, 'utf-8')).toMatchSnapshot();
   });
 
