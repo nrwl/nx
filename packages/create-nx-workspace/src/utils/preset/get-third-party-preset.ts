@@ -9,15 +9,17 @@ import { isKnownPreset } from './preset';
  */
 export async function getThirdPartyPreset(
   preset?: string
-): Promise<string | null> {
+): Promise<{ preset: string; version?: string } | null> {
   if (preset && !isKnownPreset(preset)) {
     // extract the package name from the preset
-    const packageName = preset.match(/.+@/)
-      ? preset[0] + preset.substring(1).split('@')[0]
-      : preset;
+    const atIndex = preset.indexOf('@', 1);
+    const [packageName, version] =
+      atIndex > 0
+        ? [preset.slice(0, atIndex), preset.slice(atIndex + 1)]
+        : [preset];
     const validateResult = validateNpmPackage(packageName);
     if (validateResult.validForNewPackages) {
-      return Promise.resolve(packageName);
+      return Promise.resolve({ preset: packageName, version });
     } else {
       //! Error here
       output.error({

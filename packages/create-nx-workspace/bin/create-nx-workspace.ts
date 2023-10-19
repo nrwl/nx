@@ -275,7 +275,7 @@ async function normalizeArgsMiddleware(
   });
 
   try {
-    let thirdPartyPreset: string | null;
+    let thirdPartyPreset: { preset: string; version?: string } | null;
 
     // Node options
     let docker: boolean;
@@ -293,7 +293,8 @@ async function normalizeArgsMiddleware(
 
     if (thirdPartyPreset) {
       Object.assign(argv, {
-        preset: thirdPartyPreset,
+        preset: thirdPartyPreset.preset,
+        presetVersion: thirdPartyPreset.version,
         appName: '',
         style: '',
       });

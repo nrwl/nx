@@ -9,7 +9,7 @@ import { spawnAndWait } from './utils/child-process-utils';
 import { unparse } from './utils/unparse';
 
 export async function createPreset<T extends CreateWorkspaceOptions>(
-  preset: string,
+  { preset }: { preset: string },
   parsedArgs: T,
   packageManager: PackageManager,
   directory: string
