@@ -15,7 +15,7 @@ export default async function update(tree: Tree) {
 
   delete nxJson.cli?.['defaultCollection'];
 
-  if (Object.keys(nxJson.cli).length < 1) {
+  if (nxJson?.cli && Object.keys(nxJson.cli).length < 1) {
     delete nxJson.cli;
   }
 
