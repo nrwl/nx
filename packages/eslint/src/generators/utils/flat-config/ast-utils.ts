@@ -335,18 +335,24 @@ export function addBlockToFlatConfigExport(
   });
   const insert = printer.printNode(ts.EmitHint.Expression, config, source);
   if (options.insertAtTheEnd) {
+    const index =
+      exportsArray.length > 0
+        ? exportsArray.at(exportsArray.length - 1).end
+        : exportsArray.pos;
     return applyChangesToString(content, [
       {
         type: ChangeType.Insert,
-        index: exportsArray[exportsArray.length - 1].end,
+        index,
         text: `,\n${insert}`,
       },
     ]);
   } else {
+    const index =
+      exportsArray.length > 0 ? exportsArray.at(0).pos : exportsArray.pos;
     return applyChangesToString(content, [
       {
         type: ChangeType.Insert,
-        index: exportsArray[0].pos,
+        index,
         text: `\n${insert},`,
       },
     ]);
