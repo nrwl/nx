@@ -337,11 +337,11 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   private async migrateCypressE2eProject(): Promise<void> {
     const oldCypressConfigFilePath = this.getOldCypressConfigFilePath();
 
+    // TODO(v18): This needs to be removed before v18 since the generator is going away.
     await cypressProjectGenerator(this.tree, {
       name: this.project.name,
       project: this.appName,
       linter: this.isProjectUsingEsLint ? Linter.EsLint : Linter.None,
-      standaloneConfig: true,
       skipFormat: true,
     });
 

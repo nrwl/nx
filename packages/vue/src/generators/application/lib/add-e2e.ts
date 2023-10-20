@@ -15,30 +15,39 @@ export async function addE2e(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
-    case 'cypress':
+    case 'cypress': {
       webStaticServeGenerator(tree, {
         buildTarget: `${options.projectName}:build`,
         targetName: 'serve-static',
       });
 
-      const { cypressProjectGenerator } = ensurePackage<
+      const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')
       >('@nx/cypress', nxVersion);
-
-      return await cypressProjectGenerator(tree, {
+      addProjectConfiguration(tree, options.e2eProjectName, {
+        projectType: 'application',
+        root: options.e2eProjectRoot,
+        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+        targets: {},
+        tags: [],
+        implicitDependencies: [options.projectName],
+      });
+      return await configurationGenerator(tree, {
         ...options,
-        name: options.e2eProjectName,
-        directory: options.e2eProjectRoot,
-        projectNameAndRootFormat: 'as-provided',
-        project: options.projectName,
+        project: options.e2eProjectName,
+        directory: 'src',
         bundler: 'vite',
         skipFormat: true,
+        devServerTarget: `${options.projectName}:serve`,
+        jsx: true,
       });
-    case 'playwright':
+    }
+    case 'playwright': {
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/playwright')
       >('@nx/playwright', nxVersion);
       addProjectConfiguration(tree, options.e2eProjectName, {
+        projectType: 'application',
         root: options.e2eProjectRoot,
         sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
         targets: {},
@@ -57,6 +66,7 @@ export async function addE2e(
         }`,
         webServerAddress: 'http://localhost:4200',
       });
+    }
     case 'none':
     default:
       return () => {};
