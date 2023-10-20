@@ -98,7 +98,7 @@
     "component": {
       "type": "boolean",
       "description": "Generate a default component.",
-      "default": true
+      "default": false
     },
     "js": {
       "type": "boolean",
