@@ -194,9 +194,15 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
           const meta = _authors.get(authorName);
           for (const email of meta.email) {
             // For these pseudo-anonymized emails we can just extract the Github username from before the @
+            // It could either be in the format: username@ or github_id+username@
             if (email.endsWith('@users.noreply.github.com')) {
-              meta.github = email.split('@')[0];
-              break;
+              const match = email.match(
+                /^(\d+\+)?([^@]+)@users\.noreply\.github\.com$/
+              );
+              if (match && match[2]) {
+                meta.github = match[2];
+                break;
+              }
             }
             // Look up any other emails against the ungh.cc API
             const { data } = await axios
