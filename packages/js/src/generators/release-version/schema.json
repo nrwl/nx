@@ -21,9 +21,9 @@
       "type": "string",
       "description": "Exact version or semver keyword to apply to the selected release group. Overrides specifierSource."
     },
-    "releaseGroupName": {
-      "type": "string",
-      "description": "The name of the release group being versioned in the current execution."
+    "releaseGroup": {
+      "type": "object",
+      "description": "The resolved release group configuration, including name, relevant to all projects in the current execution."
     },
     "specifierSource": {
       "type": "string",
@@ -51,5 +51,5 @@
       "default": {}
     }
   },
-  "required": ["projects", "projectGraph", "releaseGroupName"]
+  "required": ["projects", "projectGraph", "releaseGroup"]
 }

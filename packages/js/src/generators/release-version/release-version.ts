@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
-import { getLastGitTag } from 'nx/src/command-line/release/utils/git';
+import { getLatestGitTagForPattern } from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
   resolveSemverSpecifierFromPrompt,
@@ -56,7 +56,7 @@ export async function releaseVersionGenerator(
 
   // only used for options.currentVersionResolver === 'git-tag', but
   // must be declared here in order to reuse it for additional projects
-  let lastMatchingGitTag: string;
+  let latestMatchingGitTag: { tag: string; extractedVersion: string };
 
   // if specifier is undefined, then we haven't resolved it yet
   // if specifier is null, then it has been resolved and no changes are necessary
@@ -154,25 +154,26 @@ To fix this you will either need to add a package.json file at that location, or
         break;
       case 'git-tag': {
         if (!currentVersion) {
-          const tagVersionPrefix =
-            (options.currentVersionResolverMetadata
-              ?.tagVersionPrefix as string) ?? 'v';
-          const matchingPattern = `${tagVersionPrefix}*.*.*`;
-          lastMatchingGitTag = await getLastGitTag(matchingPattern);
-
-          if (!lastMatchingGitTag) {
+          const releaseTagPattern = options.releaseGroup.releaseTagPattern;
+          latestMatchingGitTag = await getLatestGitTagForPattern(
+            releaseTagPattern,
+            {
+              projectName: project.name,
+            }
+          );
+          if (!latestMatchingGitTag) {
             throw new Error(
-              `No git tags matching pattern "${matchingPattern}" were found.`
+              `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found.`
             );
           }
 
-          currentVersion = lastMatchingGitTag.replace(tagVersionPrefix, '');
+          currentVersion = latestMatchingGitTag.extractedVersion;
           log(
-            `📄 Resolved the current version as ${currentVersion} from git tag "${lastMatchingGitTag}".`
+            `📄 Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}".`
           );
         } else {
           log(
-            `📄 Using the current version ${currentVersion} already resolved from git tag "${lastMatchingGitTag}".`
+            `📄 Using the current version ${currentVersion} already resolved from git tag "${latestMatchingGitTag.tag}".`
           );
         }
         break;
@@ -190,7 +191,7 @@ To fix this you will either need to add a package.json file at that location, or
         case 'conventional-commits':
           if (options.currentVersionResolver !== 'git-tag') {
             throw new Error(
-              `Invalid currentVersionResolver "${options.currentVersionResolver}" provided for release group "${options.releaseGroupName}". Must be "git-tag" when "specifierSource" is "conventional-commits"`
+              `Invalid currentVersionResolver "${options.currentVersionResolver}" provided for release group "${options.releaseGroup.name}". Must be "git-tag" when "specifierSource" is "conventional-commits"`
             );
           }
 
@@ -205,7 +206,7 @@ To fix this you will either need to add a package.json file at that location, or
           }
 
           specifier = await resolveSemverSpecifierFromConventionalCommits(
-            lastMatchingGitTag,
+            latestMatchingGitTag.tag,
             options.projectGraph,
             projects.map((p) => p.name)
           );
@@ -216,8 +217,8 @@ To fix this you will either need to add a package.json file at that location, or
           break;
         case 'prompt':
           specifier = await resolveSemverSpecifierFromPrompt(
-            `What kind of change is this for the ${projects.length} matched projects(s) within release group "${options.releaseGroupName}"?`,
-            `What is the exact version for the ${projects.length} matched project(s) within release group "${options.releaseGroupName}"?`
+            `What kind of change is this for the ${projects.length} matched projects(s) within release group "${options.releaseGroup.name}"?`,
+            `What is the exact version for the ${projects.length} matched project(s) within release group "${options.releaseGroup.name}"?`
           );
           break;
         default:

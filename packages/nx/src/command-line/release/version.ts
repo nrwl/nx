@@ -24,11 +24,13 @@ import { parseGeneratorString } from '../generate/generate';
 import { getGeneratorInformation } from '../generate/generator-utils';
 import { VersionOptions } from './command-object';
 import {
-  CATCH_ALL_RELEASE_GROUP,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
-import { filterReleaseGroups } from './config/filter-release-groups';
+import {
+  ReleaseGroupWithName,
+  filterReleaseGroups,
+} from './config/filter-release-groups';
 import { printDiff } from './utils/print-changes';
 
 // Reexport for use in plugin release-version generator implementations
@@ -37,7 +39,7 @@ export { deriveNewSemverVersion } from './utils/semver';
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
   projects: ProjectGraphProjectNode[];
-  releaseGroupName: string;
+  releaseGroup: ReleaseGroupWithName;
   projectGraph: ProjectGraph;
   specifier?: string;
   specifierSource?: 'prompt' | 'conventional-commits';
@@ -109,7 +111,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
         tree,
         generatorData,
         releaseGroupProjectNames,
-        releaseGroupName
+        releaseGroup
       );
     }
 
@@ -140,7 +142,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
       tree,
       generatorData,
       releaseGroup.projects,
-      releaseGroupName
+      releaseGroup
     );
   }
 
@@ -156,15 +158,12 @@ async function runVersionOnProjects(
   tree: Tree,
   generatorData: GeneratorData,
   projectNames: string[],
-  releaseGroupName: string
+  releaseGroup: ReleaseGroupWithName
 ) {
   const generatorOptions: ReleaseVersionGeneratorSchema = {
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
-    releaseGroupName:
-      releaseGroupName === CATCH_ALL_RELEASE_GROUP
-        ? 'default'
-        : releaseGroupName,
+    releaseGroup,
     specifier: args.specifier ?? '',
     preid: args.preid,
     ...generatorData.configGeneratorOptions,
