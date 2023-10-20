@@ -370,13 +370,6 @@
       "path": "/reference/nxignore"
     },
     {
-      "description": "",
-      "file": "",
-      "id": "nxjson-workspaceLayout",
-      "name": "nx.json workspaceLayout property",
-      "path": "/reference/nx-json#workspace-layout"
-    },
-    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/format-check",
       "id": "format-check",
