@@ -211,9 +211,15 @@ To fix this you will either need to add a package.json file at that location, or
             projects.map((p) => p.name)
           );
 
-          log(
-            `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`
-          );
+          if (specifier) {
+            log(
+              `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`
+            );
+          } else {
+            log(
+              `🚫 No changes were detected using git history and the conventional commits standard.`
+            );
+          }
           break;
         case 'prompt':
           specifier = await resolveSemverSpecifierFromPrompt(

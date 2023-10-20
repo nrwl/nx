@@ -63,6 +63,10 @@ export async function getLatestGitTagForPattern(
   )}`;
   const latestTag = tags[0];
   const matchingTags = tags.filter((tag) => !!tag.match(tagRegexp));
+
+  if (!matchingTags.length) {
+    return null;
+  }
   const [, version] = matchingTags[0].match(tagRegexp);
 
   return {
