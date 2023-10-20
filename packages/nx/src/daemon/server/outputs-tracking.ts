@@ -1,9 +1,7 @@
-import { lstat } from 'fs-extra';
-import { dirname, join } from 'path';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { dirname } from 'path';
+import { WatchEvent, getFilesForOutputs } from '../../native';
 import { collapseExpandedOutputs } from '../../utils/collapse-expanded-outputs';
-import type { Event } from '@parcel/watcher';
-import { getFilesForOutputs } from '../../native';
+import { workspaceRoot } from '../../utils/workspace-root';
 
 let disabled = false;
 
@@ -66,7 +64,7 @@ async function normalizeOutputs(outputs: string[]) {
 }
 
 export function processFileChangesInOutputs(
-  changeEvents: Event[],
+  changeEvents: WatchEvent[],
   now: number = undefined
 ) {
   if (!now) {
