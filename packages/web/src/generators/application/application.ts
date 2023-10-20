@@ -6,7 +6,6 @@ import {
   generateFiles,
   GeneratorCallback,
   getPackageManagerCommand,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,

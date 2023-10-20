@@ -2,10 +2,8 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-  workspaceLayout,
 } from '@nx/devkit';
 import exportApp from 'next/dist/export';
-import { join, resolve } from 'path';
 import {
   calculateProjectBuildableDependencies,
   DependentBuildableProjectNode,

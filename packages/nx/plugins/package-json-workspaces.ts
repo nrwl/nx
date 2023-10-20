@@ -59,7 +59,7 @@ export function buildProjectConfigurationFromPackageJson(
   const projectType =
     nxJson?.workspaceLayout?.appsDir != nxJson?.workspaceLayout?.libsDir &&
     nxJson?.workspaceLayout?.appsDir &&
-    directory.startsWith(nxJson.workspaceLayout.appsDir)
+    directory.startsWith(nxJson.workspaceLayout?.appsDir)
       ? 'application'
       : 'library';
 

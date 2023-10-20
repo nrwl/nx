@@ -13,6 +13,8 @@ const { readNxJson } = requireNx();
  * { appsDir: 'apps', libsDir: 'libs' }
  * ```
  * @param tree - file system tree
+ *
+ * @deprecated Generators should accept the full path via a --directory argument.
  */
 export function getWorkspaceLayout(tree: Tree): {
   appsDir: string;

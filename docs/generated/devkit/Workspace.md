@@ -341,6 +341,10 @@ Version of the configuration format
 
 Where new apps + libs should be placed
 
+**`Deprecated`**
+
+Workspace Layout will be removed in Nx v18. Pass the full `--directory` option to the generators instead.
+
 #### Type declaration
 
 | Name       | Type     |
