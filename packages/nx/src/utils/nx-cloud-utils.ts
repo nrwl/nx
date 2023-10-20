@@ -24,7 +24,7 @@ export function getNxCloudToken(nxJson: NxJsonConfiguration): string {
   );
 
   if (!cloudRunner && !nxJson.nxCloudAccessToken)
-    throw new Error('nx-cloud runner not find in nx.json');
+    throw new Error('nx-cloud runner not found in nx.json');
 
-  return cloudRunner.options.accessToken ?? nxJson.nxCloudAccessToken;
+  return cloudRunner?.options.accessToken ?? nxJson.nxCloudAccessToken;
 }

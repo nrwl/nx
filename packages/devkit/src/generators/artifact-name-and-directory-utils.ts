@@ -404,7 +404,7 @@ function isTTY(): boolean {
   return !!process.stdout.isTTY && process.env['CI'] !== 'true';
 }
 
-function getRelativeCwd(): string {
+export function getRelativeCwd(): string {
   return normalizePath(relative(workspaceRoot, getCwd()));
 }
 

@@ -107,14 +107,12 @@ If you accidentally generate a project in the wrong folder, use the [move genera
 
 ### inputs & namedInputs
 
-Named inputs defined in `nx.json` are merged with the named inputs defined in each project's project.json.
-In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
+Named inputs defined in `nx.json` are merged with the named inputs defined in each project's project.json. In other words, every project has a set of named inputs, and it's defined as: `{...namedInputsFromNxJson, ...namedInputsFromProjectsProjectJson}`.
 
 Defining `inputs` for a given target would replace the set of inputs for that target name defined in `nx.json`.
 Using pseudocode `inputs = projectJson.targets.build.inputs || nxJson.targetDefaults.build.inputs`.
 
-You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things
-like this (which applies to every project):
+You can also define and redefine named inputs. This enables one key use case, where your `nx.json` can define things like this (which applies to every project):
 
 ```
 "test": {
@@ -125,7 +123,7 @@ like this (which applies to every project):
 }
 ```
 
-And projects can define their `production` fileset, without having to redefine the inputs for the `test` target.
+And projects can define their `production` inputs, without having to redefine the inputs for the `test` target.
 
 ```json {% fileName="project.json" %}
 {
@@ -139,7 +137,7 @@ In this case Nx will use the right `production` input for each project.
 
 {% cards %}
 {% card title="Project Configuration reference" type="documentation" description="inputs and namedInputs are also described in the project configuration reference" url="/reference/project-configuration#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/concepts/more-concepts/customizing-inputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/recipes/running-tasks/customizing-inputs" /%}
 {% /cards %}
 
 ### Target Defaults

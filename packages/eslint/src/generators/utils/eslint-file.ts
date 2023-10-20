@@ -82,15 +82,15 @@ export function updateRelativePathsInConfig(
     const config = tree.read(configPath, 'utf-8');
     tree.write(
       configPath,
-      replaceFlatConfigPaths(config, sourcePath, offset, destinationPath)
+      replaceFlatConfigPaths(config, sourcePath, offset, destinationPath, tree)
     );
   } else {
     updateJson(tree, configPath, (json) => {
       if (typeof json.extends === 'string') {
-        json.extends = offsetFilePath(sourcePath, json.extends, offset);
+        json.extends = offsetFilePath(sourcePath, json.extends, offset, tree);
       } else if (json.extends) {
         json.extends = json.extends.map((extend: string) =>
-          offsetFilePath(sourcePath, extend, offset)
+          offsetFilePath(sourcePath, extend, offset, tree)
         );
       }
 
@@ -114,7 +114,8 @@ function replaceFlatConfigPaths(
   config: string,
   sourceRoot: string,
   offset: string,
-  destinationRoot: string
+  destinationRoot: string,
+  tree: Tree
 ): string {
   let match;
   let newConfig = config;
@@ -122,7 +123,7 @@ function replaceFlatConfigPaths(
   // replace requires
   const requireRegex = RegExp(/require\(['"](.*)['"]\)/g);
   while ((match = requireRegex.exec(newConfig)) !== null) {
-    const newPath = offsetFilePath(sourceRoot, match[1], offset);
+    const newPath = offsetFilePath(sourceRoot, match[1], offset, tree);
     newConfig =
       newConfig.slice(0, match.index) +
       `require('${newPath}')` +
@@ -143,8 +144,20 @@ function replaceFlatConfigPaths(
 function offsetFilePath(
   projectRoot: string,
   pathToFile: string,
-  offset: string
+  offset: string,
+  tree: Tree
 ): string {
+  if (
+    eslintConfigFileWhitelist.some((eslintFile) =>
+      pathToFile.includes(eslintFile)
+    )
+  ) {
+    // if the file is point to base eslint
+    const rootEslint = findEslintFile(tree);
+    if (rootEslint) {
+      return joinPathFragments(offset, rootEslint);
+    }
+  }
   if (!pathToFile.startsWith('..')) {
     // not a relative path
     return pathToFile;

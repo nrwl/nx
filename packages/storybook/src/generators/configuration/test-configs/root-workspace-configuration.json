@@ -146,7 +146,7 @@
           }
         },
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/reapp/**/*.{ts,tsx,js,jsx}"]
@@ -171,7 +171,7 @@
       "tags": [],
       "targets": {
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["libs/nxlib/**/*.{ts,tsx,js,jsx}"]
@@ -215,7 +215,7 @@
           }
         },
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["libs/nxlib-buildable/**/*.{ts,tsx,js,jsx}"]
@@ -259,7 +259,7 @@
           }
         },
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["libs/relib-buildable/**/*.{ts,tsx,js,jsx}"]
@@ -342,7 +342,7 @@
           }
         },
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/reapp-swc/**/*.{ts,tsx,js,jsx}"]

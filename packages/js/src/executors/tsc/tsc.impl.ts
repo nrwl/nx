@@ -64,7 +64,7 @@ export async function* tscExecutor(
 
   const { projectRoot, tmpTsConfig, target, dependencies } = checkDependencies(
     context,
-    _options.tsConfig
+    options.tsConfig
   );
 
   if (tmpTsConfig) {

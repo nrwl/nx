@@ -4,7 +4,7 @@ Linter can be configured in multiple ways. The basic way is to provide only `lin
 
 ```json
 "lint": {
-  "executor": "@nx/linter:eslint",
+  "executor": "@nx/eslint:lint",
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"]
   }
@@ -20,7 +20,7 @@ Linter provides an automated way of fixing known issues. To ensure that those ch
 
 ```json
 "lint": {
-  "executor": "@nx/linter:eslint",
+  "executor": "@nx/eslint:lint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"]
@@ -38,7 +38,7 @@ We can also set this flag via project configuration to always fix files when run
 
 ```json
 "lint": {
-  "executor": "@nx/linter:eslint",
+  "executor": "@nx/eslint:lint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
@@ -54,7 +54,7 @@ ESLint executor uses the `stylish` output format by default. You can change this
 
 ```json
 "lint": {
-  "executor": "@nx/linter:eslint",
+  "executor": "@nx/eslint:lint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
@@ -76,7 +76,7 @@ We can also set this via project configuration as a default option.
 
 ```json
 "lint": {
-  "executor": "@nx/linter:eslint",
+  "executor": "@nx/eslint:lint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
@@ -92,7 +92,7 @@ We can also set this via project configuration as a default option.
 
 ```json
 "lint": {
-  "executor": "@nx/linter:eslint",
+  "executor": "@nx/eslint:lint",
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],

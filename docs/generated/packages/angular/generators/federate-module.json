@@ -9,7 +9,7 @@
     "description": "Create a federated module, which is exposed by a remote and can be subsequently loaded by a host.",
     "examples": [
       {
-        "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=my-remote-app",
+        "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=my-remote-app --remoteDirectory=apps/my-remote-app",
         "description": "Create a federated module from my-remote-app, that exposes my-cmp from ./src/component/my-cmp.ts as MyModule."
       }
     ],
@@ -32,6 +32,10 @@
         "type": "string",
         "description": "The name of the remote.",
         "x-prompt": "What is/should the remote be named?"
+      },
+      "remoteDirectory": {
+        "description": "The directory of the new remote application if one needs to be created.",
+        "type": "string"
       },
       "projectNameAndRootFormat": {
         "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",

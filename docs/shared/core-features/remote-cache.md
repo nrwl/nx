@@ -1,7 +1,6 @@
 # Use Remote Caching
 
-The computation cache provided by Nx can be distributed across multiple machines. You can either build an implementation of the cache or use Nx Cloud. Nx Cloud is an app that provides a fast and zero-config implementation of distributed caching. It's completely free for OSS projects and for most closed-sourced
-projects ([read more here](https://nx.app/pricing)).
+By default Nx [caches task computations locally](/core-features/cache-task-results). However, to benefit from the cache across your team and in particular on CI, the computation cache can also be distributed across multiple machines. Nx Cloud is an app that provides a fast and zero-config implementation of distributed caching. It's completely free for OSS projects and for most closed-sourced projects ([read more here](https://nx.app/pricing)).
 
 ![Diagram showing Teika sharing his cache with CI, Kimiko and James](/shared/images/dte/distributed-caching.svg)
 
@@ -86,9 +85,8 @@ forth.
 
 **You will also see an interactive tutorial helping you explore distributed caching and the Nx Cloud user interface.**
 
-If you lose this link, you can still connect your workspace to Nx Cloud. Go to [nx.app](https://nx.app), create an
-account, and connect your workspace using the access token from `nx.json`.
+**If you lose this link, you can still connect your workspace to Nx Cloud**. Go to [nx.app](https://nx.app), create an account, and connect your workspace using the access token from `nx.json`.
 
-## Skipping Cloud
+## Skipping Cloud Cache
 
 Similar to how `--skip-nx-cache` will instruct Nx not to use the local cache, passing `--no-cloud` will tell Nx not to use the remote cache from Nx Cloud.

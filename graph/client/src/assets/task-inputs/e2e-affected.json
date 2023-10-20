@@ -18,7 +18,7 @@
       "libs/products/product-detail-page/tsconfig.lib.json",
       "libs/products/product-detail-page/tsconfig.spec.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "products-product-detail-page:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -232,7 +232,7 @@
       "libs/shared/product/types/tsconfig.json",
       "libs/shared/product/types/tsconfig.lib.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "shared-product-state:lint": {
     "general": [".eslintrc.json", ".gitignore", "babel.config.json", "nx.json"],
@@ -256,7 +256,7 @@
       "libs/shared/product/state/tsconfig.lib.json",
       "libs/shared/product/state/tsconfig.spec.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "shared-product-state:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -469,7 +469,7 @@
       "libs/shared/product/data/tsconfig.json",
       "libs/shared/product/data/tsconfig.lib.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "products-home-page:lint": {
     "general": [".eslintrc.json", ".gitignore", "babel.config.json", "nx.json"],
@@ -490,7 +490,7 @@
       "libs/products/home-page/tsconfig.lib.json",
       "libs/products/home-page/tsconfig.spec.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "products-home-page:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -717,7 +717,7 @@
       "libs/shared/product/ui/tsconfig.lib.json",
       "libs/shared/product/ui/tsconfig.spec.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "shared-product-ui:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -772,7 +772,7 @@
       "libs/shared/cart/state/tsconfig.lib.json",
       "libs/shared/cart/state/tsconfig.spec.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "shared-cart-state:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -994,7 +994,7 @@
       "libs/shared/translate/tsconfig.json",
       "libs/shared/translate/tsconfig.lib.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "shared-e2e-utils:lint": {
     "general": [".eslintrc.json", ".gitignore", "babel.config.json", "nx.json"],
@@ -1007,7 +1007,7 @@
       "libs/shared/e2e-utils/tsconfig.json",
       "libs/shared/e2e-utils/tsconfig.lib.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "cart-cart-page:lint": {
     "general": [".eslintrc.json", ".gitignore", "babel.config.json", "nx.json"],
@@ -1025,7 +1025,7 @@
       "libs/cart/cart-page/tsconfig.lib.json",
       "libs/cart/cart-page/tsconfig.spec.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "cart-cart-page:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -1218,7 +1218,7 @@
       "libs/shared/header/tsconfig.lib.json",
       "libs/shared/header/tsconfig.spec.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "shared-header:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -1265,7 +1265,7 @@
       "libs/shared/jsxify/tsconfig.json",
       "libs/shared/jsxify/tsconfig.lib.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "products-e2e:e2e": {
     "general": [".gitignore", "babel.config.json", "nx.json"],
@@ -1726,7 +1726,7 @@
       "apps/products-e2e/src/support/e2e.ts",
       "apps/products-e2e/tsconfig.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "products:build": {
     "general": [
@@ -2989,7 +2989,7 @@
       "apps/products/tsconfig.json",
       "apps/products/tsconfig.spec.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "products:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -3939,7 +3939,7 @@
       "apps/cart-e2e/src/support/e2e.ts",
       "apps/cart-e2e/tsconfig.json"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "cart:build:production": {
     "general": [".gitignore", "babel.config.json", "nx.json"],
@@ -4190,7 +4190,7 @@
       "npm:@nrwl/workspace",
       "npm:@nx/devkit",
       "npm:@nx/js",
-      "npm:@nx/linter",
+      "npm:@nx/eslint",
       "npm:@nx/nx-darwin-arm64",
       "npm:@nx/nx-darwin-x64@18.0.5",
       "npm:@nx/nx-freebsd-x64@18.0.5",
@@ -5150,7 +5150,7 @@
       "npm:@nrwl/workspace",
       "npm:@nx/devkit",
       "npm:@nx/js",
-      "npm:@nx/linter",
+      "npm:@nx/eslint",
       "npm:@nx/nx-darwin-arm64",
       "npm:@nx/nx-darwin-x64@18.0.5",
       "npm:@nx/nx-freebsd-x64@18.0.5",
@@ -6125,7 +6125,7 @@
       "npm:@nrwl/workspace",
       "npm:@nx/devkit",
       "npm:@nx/js",
-      "npm:@nx/linter",
+      "npm:@nx/eslint",
       "npm:@nx/nx-darwin-arm64",
       "npm:@nx/nx-darwin-x64@18.0.5",
       "npm:@nx/nx-freebsd-x64@18.0.5",
@@ -7100,7 +7100,7 @@
       "npm:@nrwl/workspace",
       "npm:@nx/devkit",
       "npm:@nx/js",
-      "npm:@nx/linter",
+      "npm:@nx/eslint",
       "npm:@nx/nx-darwin-arm64",
       "npm:@nx/nx-darwin-x64@18.0.5",
       "npm:@nx/nx-freebsd-x64@18.0.5",
@@ -7835,7 +7835,7 @@
       "apps/cart/tsconfig.spec.json",
       "apps/cart/webpack.config.js"
     ],
-    "external": ["npm:@nx/linter"]
+    "external": ["npm:@nx/eslint"]
   },
   "cart:test": {
     "general": [".gitignore", "babel.config.json", "jest.preset.js", "nx.json"],
@@ -8092,7 +8092,7 @@
       "npm:@nx/devkit",
       "npm:@nx/jest",
       "npm:@nx/js",
-      "npm:@nx/linter",
+      "npm:@nx/eslint",
       "npm:@nx/nx-darwin-arm64",
       "npm:@nx/nx-darwin-x64@18.0.5",
       "npm:@nx/nx-freebsd-x64@18.0.5",
@@ -9072,7 +9072,7 @@
       "npm:@nrwl/workspace",
       "npm:@nx/devkit",
       "npm:@nx/js",
-      "npm:@nx/linter",
+      "npm:@nx/eslint",
       "npm:@nx/nx-darwin-arm64",
       "npm:@nx/nx-darwin-x64@18.0.5",
       "npm:@nx/nx-freebsd-x64@18.0.5",

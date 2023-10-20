@@ -57,7 +57,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
           : {
               // Allow importing core-js in entrypoint and use browserslist to select polyfills.
               useBuiltIns: options.useBuiltIns ?? 'entry',
-              corejs: 3,
+              corejs: options.useBuiltIns !== false ? 3 : null,
               // Do not transform modules to CJS
               modules: false,
               targets: isModern ? { esmodules: 'intersect' } : undefined,

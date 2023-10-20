@@ -12,7 +12,12 @@ export function updateEslintConfig(
   project: ProjectConfiguration
 ) {
   // if there is no suitable eslint config, we don't need to do anything
-  if (!tree.exists('.eslintrc.json') && !tree.exists('eslint.config.js')) {
+  if (
+    !tree.exists('.eslintrc.json') &&
+    !tree.exists('eslint.config.js') &&
+    !tree.exists('.eslintrc.base.json') &&
+    !tree.exists('eslint.base.config.js')
+  ) {
     return;
   }
   try {

@@ -4,8 +4,6 @@
 Before reading this guide, [check out the mental model guide](/concepts/mental-model). It will help you understand how computation caching fits into the rest of Nx.
 {% /callout %}
 
-## Overview
-
 When you run `nx test app1`, you are telling Nx to run the app1:test task plus all the tasks it depends on.
 
 When you run `nx run-many -t test -p app1 lib`, you are telling Nx to do the same for two tasks app1:test

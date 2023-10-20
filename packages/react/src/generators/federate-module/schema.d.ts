@@ -2,6 +2,7 @@ export interface Schema {
   name: string;
   path: string;
   remote: string;
+  remoteDirectory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   e2eTestRunner?: 'cypress' | 'none';
   host?: string;

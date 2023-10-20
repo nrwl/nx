@@ -8,6 +8,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 import { addTsConfigPath } from '@nx/js';
 
@@ -24,6 +25,7 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
+import { relative } from 'path';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -171,9 +173,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.component) {
+    const relativeCwd = getRelativeCwd();
+    const name = joinPathFragments(
+      options.projectRoot,
+      'src/lib',
+      options.fileName
+    );
     const componentTask = await componentGenerator(host, {
       nameAndDirectoryFormat: 'as-provided',
-      name: joinPathFragments(options.projectRoot, 'src/lib', options.fileName),
+      name: relativeCwd ? relative(relativeCwd, name) : name,
       project: options.name,
       flat: true,
       style: options.style,

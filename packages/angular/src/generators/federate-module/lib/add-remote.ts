@@ -11,6 +11,8 @@ export async function addRemote(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const remote = getRemoteIfExists(tree, schema.remote);
 
+  let projectRoot, remoteName;
+
   if (!remote) {
     const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
 
@@ -24,6 +26,7 @@ export async function addRemote(tree: Tree, schema: Schema) {
 
     const remoteGeneratorCallback = await remoteGenerator(tree, {
       name: schema.remote,
+      directory: schema.remoteDirectory,
       host: schema.host,
       standalone: schema.standalone,
       projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
@@ -33,18 +36,21 @@ export async function addRemote(tree: Tree, schema: Schema) {
     });
 
     tasks.push(remoteGeneratorCallback);
+    const { projectName, projectRoot: remoteRoot } =
+      await determineProjectNameAndRootOptions(tree, {
+        name: schema.remote,
+        directory: schema.remoteDirectory,
+        projectType: 'application',
+        projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
+        callingGenerator: '@nx/angular:federate-module',
+      });
+
+    projectRoot = remoteRoot;
+    remoteName = projectName;
+  } else {
+    projectRoot = remote.root;
+    remoteName = remote.name;
   }
-
-  const { projectName, projectRoot: remoteRoot } =
-    await determineProjectNameAndRootOptions(tree, {
-      name: schema.remote,
-      projectType: 'application',
-      projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
-      callingGenerator: '@nx/angular:federate-module',
-    });
-
-  const projectRoot = remote ? remote.root : remoteRoot;
-  const remoteName = remote ? remote.name : projectName;
 
   // TODO(Colum): add implicit dependency if the path points to a file in a different project
 

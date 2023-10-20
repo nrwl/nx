@@ -1,6 +1,6 @@
-The Linter plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
+The ESLint plugin contains executors, generator, plugin and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.
 
-## Setting Up Linter
+## Setting Up ESLint
 
 ### Installation
 
@@ -32,7 +32,7 @@ nx lint my-lib
 
 ## Utils
 
-- [convert-to-flat-config](/nx-api/linter/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
+- [convert-to-flat-config](/nx-api/eslint/generators/convert-to-flat-config) - Converts the workspace's [ESLint](https://eslint.org/) configs to the new [Flat Config](https://eslint.org/blog/2022/08/new-config-system-part-2)
 
 ## ESLint plugin
 

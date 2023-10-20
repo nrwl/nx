@@ -38,7 +38,7 @@ Additionally, you need to adjust your `lintFilePatterns` to include the project'
   "targets": {
     // ... more targets
     "lint": {
-      "executor": "@nx/linter:lint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": [

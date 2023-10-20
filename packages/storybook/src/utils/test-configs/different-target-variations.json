@@ -160,7 +160,7 @@
       "defaultConfiguration": "production"
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "libs/nglibuild/**/*.ts",

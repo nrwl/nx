@@ -21,7 +21,7 @@ For example, Jest has a global `/jest.config.ts` file and a project-specific `/a
 In a repository with many different projects and many different tools, there will be a lot of tooling configuration. Nx helps reduce the complexity of managing that configuration in two ways:
 
 1. Abstracting away common tooling configuration settings so that if your project is using the tool in the most common way, you won't need to worry about configuration at all. The default settings for any Nx plugin executor are intended to work without modification for most projects in the community.
-2. Allowing you to [provide `targetDefaults`](/recipes/tips-n-tricks/reduce-repetitive-configuration) so that the most common settings for projects in your repo can all be defined in one place. Then, only projects that are exceptions need to overwrite those settings. With the judicious application of this method, larger repositories can actually have less lines of configuration after adding Nx than before.
+2. Allowing you to [provide `targetDefaults`](/recipes/running-tasks/reduce-repetitive-configuration) so that the most common settings for projects in your repo can all be defined in one place. Then, only projects that are exceptions need to overwrite those settings. With the judicious application of this method, larger repositories can actually have less lines of configuration after adding Nx than before.
 
 ## Determining the Value of a Configuration Property
 

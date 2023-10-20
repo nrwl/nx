@@ -1,4 +1,4 @@
-The `@nx/linter-plugin` package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as the following Nx-specific ESLint rules:
+The `@nx/eslint-plugin` package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as the following Nx-specific ESLint rules:
 
 - [enforce-module-boundaries](#enforce-module-boundaries-rule)
 - [dependency-checks](#dependency-checks-rule)

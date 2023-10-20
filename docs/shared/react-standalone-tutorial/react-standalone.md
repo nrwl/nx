@@ -237,7 +237,7 @@ Nx understands and supports both approaches, allowing you to define targets eith
 
 So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
 
-[visit our "Why Nx" page](/getting-started/why-nx) for more deails.
+[Visit our "Why Nx" page](/getting-started/why-nx) for more details.
 
 ## Creating New Components
 

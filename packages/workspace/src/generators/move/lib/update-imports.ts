@@ -1,26 +1,26 @@
 import {
-  applyChangesToString,
   ChangeType,
-  getProjects,
-  getWorkspaceLayout,
-  joinPathFragments,
   ProjectConfiguration,
   StringChange,
   Tree,
+  applyChangesToString,
+  getProjects,
+  getWorkspaceLayout,
+  joinPathFragments,
+  readJson,
   visitNotIgnoredFiles,
   writeJson,
-  readJson,
 } from '@nx/devkit';
+import { relative } from 'path';
 import type * as ts from 'typescript';
+import { getImportPath } from '../../../utilities/get-import-path';
 import {
-  getRootTsConfigPathInTree,
   findNodes,
+  getRootTsConfigPathInTree,
 } from '../../../utilities/ts-config';
+import { ensureTypescript } from '../../../utilities/typescript';
 import { NormalizedSchema } from '../schema';
 import { normalizePathSlashes } from './utils';
-import { relative } from 'path';
-import { ensureTypescript } from '../../../utilities/typescript';
-import { getImportPath } from '../../../utilities/get-import-path';
 
 let tsModule: typeof import('typescript');
 
@@ -187,10 +187,10 @@ function updateImportDeclarations(
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
-  const importDecls = findNodes(
-    sourceFile,
-    tsModule.SyntaxKind.ImportDeclaration
-  ) as ts.ImportDeclaration[];
+  const importDecls = findNodes(sourceFile, [
+    tsModule.SyntaxKind.ImportDeclaration,
+    tsModule.SyntaxKind.ExportDeclaration,
+  ]) as ts.ImportDeclaration[];
 
   const changes: StringChange[] = [];
 

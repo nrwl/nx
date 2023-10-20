@@ -24,18 +24,14 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   // Check remote exists
   const remote = checkRemoteExists(tree, schema.remote);
-  const { projectName, projectRoot: remoteRoot } =
-    await determineProjectNameAndRootOptions(tree, {
-      name: schema.remote,
-      projectType: 'application',
-      projectNameAndRootFormat: schema.projectNameAndRootFormat,
-      callingGenerator: '@nx/react:federate-module',
-    });
+
+  let projectRoot, remoteName;
 
   if (!remote) {
     // create remote
     const remoteGenerator = await remoteGeneratorInternal(tree, {
       name: schema.remote,
+      directory: schema.remoteDirectory,
       e2eTestRunner: schema.e2eTestRunner,
       skipFormat: schema.skipFormat,
       linter: schema.linter,
@@ -46,10 +42,22 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
     });
 
     tasks.push(remoteGenerator);
-  }
 
-  const projectRoot = remote ? remote.root : remoteRoot;
-  const remoteName = remote ? remote.name : projectName;
+    const { projectName, projectRoot: remoteRoot } =
+      await determineProjectNameAndRootOptions(tree, {
+        name: schema.remote,
+        directory: schema.remoteDirectory,
+        projectType: 'application',
+        projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
+        callingGenerator: '@nx/react:federate-module',
+      });
+
+    projectRoot = remoteRoot;
+    remoteName = projectName;
+  } else {
+    projectRoot = remote.root;
+    remoteName = remote.name;
+  }
 
   // add path to exposes property
   addPathToExposes(tree, projectRoot, schema.name, schema.path);

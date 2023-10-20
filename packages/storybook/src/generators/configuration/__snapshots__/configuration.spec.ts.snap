@@ -473,7 +473,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite/**/*.{ts,tsx,js,jsx}",
@@ -555,7 +555,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite-e2e/**/*.{js,ts}",
@@ -610,7 +610,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite-ts/**/*.{ts,tsx,js,jsx}",
@@ -692,7 +692,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/main-vite-ts-e2e/**/*.{js,ts}",
@@ -775,7 +775,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/main-webpack/**/*.{ts,tsx,js,jsx}",
@@ -857,7 +857,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/main-webpack-e2e/**/*.{js,ts}",
@@ -936,7 +936,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/nextapp/**/*.{ts,tsx,js,jsx}",
@@ -1019,7 +1019,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/nextapp-e2e/**/*.{js,ts}",
@@ -1113,7 +1113,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/ngapp/**/*.ts",
@@ -1187,7 +1187,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/ngapp-e2e/**/*.{js,ts}",
@@ -1224,7 +1224,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/nglib-e2e/**/*.{js,ts}",
@@ -1261,7 +1261,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/react-rollup-e2e/**/*.{js,ts}",
@@ -1343,7 +1343,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/react-swc/**/*.{ts,tsx,js,jsx}",
@@ -1425,7 +1425,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/react-swc-e2e/**/*.{js,ts}",
@@ -1462,7 +1462,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/react-vite-e2e/**/*.{js,ts}",
@@ -1517,7 +1517,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/reapp/**/*.{ts,tsx,js,jsx}",
@@ -1599,7 +1599,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/reapp-e2e/**/*.{js,ts}",
@@ -1681,7 +1681,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/reappw/**/*.{ts,tsx,js,jsx}",
@@ -1763,7 +1763,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/reappw-e2e/**/*.{js,ts}",
@@ -1818,7 +1818,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/wv1/**/*.ts",
@@ -1900,7 +1900,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/wv1-e2e/**/*.{js,ts}",
@@ -1976,7 +1976,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/ww1/**/*.ts",
@@ -2052,7 +2052,7 @@ Map {
         },
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "apps/ww1-e2e/**/*.{js,ts}",
@@ -2107,7 +2107,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/my-plugin/**/*.ts",
@@ -2172,7 +2172,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/nglib/**/*.ts",
@@ -2257,7 +2257,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/react-rollup/**/*.{ts,tsx,js,jsx}",
@@ -2330,7 +2330,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/react-rollup-2/**/*.{ts,tsx,js,jsx}",
@@ -2394,7 +2394,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/react-vite/**/*.{ts,tsx,js,jsx}",
@@ -2461,7 +2461,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/react-vite-2/**/*.{ts,tsx,js,jsx}",
@@ -2504,7 +2504,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/utils/one/**/*.ts",
@@ -2544,7 +2544,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/utils/three-vite/**/*.ts",
@@ -2587,7 +2587,7 @@ Map {
         ],
       },
       "lint": {
-        "executor": "@nx/linter:eslint",
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
             "libs/utils/two/**/*.ts",

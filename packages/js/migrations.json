@@ -96,6 +96,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "17.0.0": {
+      "version": "17.0.0-rc.2",
+      "packages": {
+        "esbuild": {
+          "version": "^0.19.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
