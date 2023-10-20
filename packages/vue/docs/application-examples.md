@@ -6,16 +6,6 @@
 Create an application named `my-app`:
 
 ```shell
-nx g @nx/vue:application my-app
-```
-
-{% /tab %}
-
-{% tab label="Application using Vite as bundler" %}
-
-Create an application named `my-app`:
-
-```shell
 nx g @nx/vue:app my-app
 ```
 
