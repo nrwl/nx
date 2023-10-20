@@ -19,16 +19,16 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
-    "@nx/js": "^16.8.0",
-    "@nx/linter": "^16.8.0",
-    "@nx/devkit": "^16.8.0",
+    "@nx/js": "^17.0.1",
+    "@nx/devkit": "^17.0.1",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "ajv": "^8.12.0",
     "ajv-keywords": "5.1.0",
     "less-loader": "11.1.0",
     "license-webpack-plugin": "^4.0.2",
     "sass-loader": "^12.2.0",
-    "stylus-loader": "^7.1.0"
+    "stylus-loader": "^7.1.0",
+    "@nx/eslint": "^17.0.1"
   },
   "nx-migrations": {
     "migrations": "./migrations.json"
