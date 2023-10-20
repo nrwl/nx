@@ -147,7 +147,7 @@ function computeWorkspaceConfigHash(
  * TODO(Cammisuli): remove after 16.4 - Rust watcher handles nested gitignores
  */
 function filterUpdatedFiles(files: string[]) {
-  if (files.length === 0) {
+  if (files.length === 0 || process.env.NX_NATIVE_WATCHER === 'true') {
     return files;
   }
 
