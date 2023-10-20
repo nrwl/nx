@@ -262,20 +262,20 @@ More info can be found in [the integrate with editors article](/core-features/in
 
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/vue:component hello-world --no-export --unit-test-runner=vitest --dry-run" path="myvueapp" %}
+```{% command="npx nx g @nx/vue:component hello-world --no-export --unit-test-runner=vitest --directory=src/components --dry-run" path="myvueapp" %}
 >  NX  Generating @nx/vue:component
 
-CREATE src/components/hello-world/hello-world.spec.ts
-CREATE src/components/hello-world/hello-world.vue
+CREATE src/components/hello-world.spec.ts
+CREATE src/components/hello-world.vue
 
 NOTE: The "dryRun" flag means no changes were made.
 ```
 
-As you can see it generates a new component in the `app/hello-world/` folder. If you want to actually run the generator, remove the `--dry-run` flag.
+As you can see it generates a new component in the `src/components/` folder. If you want to actually run the generator, remove the `--dry-run` flag.
 
-```ts {% fileName="src/components/hello-world/hello-world.vue" %}
+```ts {% fileName="src/components/hello-world.vue" %}
 <script setup lang="ts">
-defineProps<{}>();
+// defineProps<{}>();
 </script>
 
 <template>
@@ -430,20 +430,20 @@ All libraries that we generate automatically have aliases created in the root-le
   "compilerOptions": {
     ...
     "paths": {
-      "orders": ["modules/orders/src/index.ts"],
-      "products": ["modules/products/src/index.ts"],
-      "shared-ui": ["modules/shared/ui/src/index.ts"]
+      "@myvueapp/orders": ["modules/orders/src/index.ts"],
+      "@myvueapp/products": ["modules/products/src/index.ts"],
+      "@myvueapp/shared-ui": ["modules/shared/ui/src/index.ts"]
     },
     ...
   },
 }
 ```
 
-Hence we can easily import them into other libraries and our Vue application. For example: let's use our existing `Products` component in `modules/products/src/components/products.vue`:
+Hence we can easily import them into other libraries and our Vue application. For example: let's use our existing `Products` component in `modules/products/src/lib/products.vue`:
 
-```vue {% fileName="modules/products/src/components/products.vue" %}
+```vue {% fileName="modules/products/src/lib/products.vue" %}
 <script setup lang="ts">
-defineProps<{}>();
+// defineProps<{}>();
 </script>
 
 <template>
@@ -456,7 +456,7 @@ defineProps<{}>();
 Make sure the `Products` component is exported via the `index.ts` file of our `products` library (which it should already be). The `modules/products/src/index.ts` file is the public API for the `products` library with the rest of the workspace. Only export what's really necessary to be usable outside the library itself.
 
 ```ts {% fileName="modules/products/src/index.ts" %}
-export { default as Products } from './components/products.vue';
+export { default as Products } from './lib/products.vue';
 ```
 
 We're ready to import it into our main application now. First, let's set up the Vue Router.
@@ -479,7 +479,7 @@ const routes = [
   { path: '/', component: NxWelcome },
   {
     path: '/products',
-    component: () => import('products').then((m) => m.Products),
+    component: () => import('@myvueapp/products').then((m) => m.Products),
   },
 ];
 
@@ -535,11 +535,11 @@ const routes = [
   { path: '/', component: NxWelcome },
   {
     path: '/products',
-    component: () => import('products').then((m) => m.Products),
+    component: () => import('@myvueapp/products').then((m) => m.Products),
   },
   {
     path: '/orders',
-    component: () => import('orders').then((m) => m.Orders),
+    component: () => import('@myvueapp/orders').then((m) => m.Orders),
   },
 ];
 
@@ -770,9 +770,9 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 }
 ```
 
-To test it, go to your `modules/products/src/components/products.vue` file and import the `Orders` component from the `orders` project:
+To test it, go to your `modules/products/src/lib/products.vue` file and import the `Orders` component from the `orders` project:
 
-```tsx {% fileName="modules/products/src/components/products.vue" %}
+```tsx {% fileName="modules/products/src/lib/products.vue" %}
 <script setup lang="ts">
 defineProps<{}>();
 
@@ -794,7 +794,7 @@ If you lint your workspace you'll get an error now:
     ✖  nx run products:lint
        Linting "products"...
 
-       /Users/isaac/Documents/code/nx-recipes/vue-standalone/modules/products/src/components/products.vue
+       /Users/isaac/Documents/code/nx-recipes/vue-standalone/modules/products/src/lib/products.vue
          5:1   error    A project tagged with "scope:products" can only depend on libs tagged with "scope:products", "scope:shared"  @nx/enforce-module-boundaries
          5:10  warning  'Orders' is defined but never used                                                                           @typescript-eslint/no-unused-vars
 
