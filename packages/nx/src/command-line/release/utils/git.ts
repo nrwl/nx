@@ -3,7 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 import { spawn } from 'node:child_process';
-import { interpolate } from 'nx/src/tasks-runner/utils';
+import { interpolate } from '../../../tasks-runner/utils';
 
 export interface GitCommitAuthor {
   name: string;

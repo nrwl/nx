@@ -648,14 +648,12 @@ describe('nx release', () => {
           default: {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
+            releaseTagPattern: 'xx{version}',
             version: {
               generator: '@nx/js:release-version',
               generatorOptions: {
                 // Resolve the latest version from the git tag
                 currentVersionResolver: 'git-tag',
-                currentVersionResolverMetadata: {
-                  tagVersionPrefix: 'xx',
-                },
               },
             },
           },
@@ -724,14 +722,12 @@ describe('nx release', () => {
           default: {
             // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
             projects: ['*', '!@proj/source'],
+            releaseTagPattern: 'xx{version}',
             version: {
               generator: '@nx/js:release-version',
               generatorOptions: {
                 specifierSource: 'conventional-commits',
                 currentVersionResolver: 'git-tag',
-                currentVersionResolverMetadata: {
-                  tagVersionPrefix: 'xx',
-                },
               },
             },
           },

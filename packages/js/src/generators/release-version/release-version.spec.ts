@@ -1,5 +1,6 @@
 import { ProjectGraph, Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { ReleaseGroupWithName } from 'nx/src/command-line/release/config/filter-release-groups';
 import { releaseVersionGenerator } from './release-version';
 import { createWorkspaceWithPackageDependencies } from './test-utils/create-workspace-with-package-dependencies';
 
@@ -58,7 +59,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: 'major',
       currentVersionResolver: 'disk',
-      releaseGroupName: 'default',
+      releaseGroup: createReleaseGroup(),
     });
     expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual('1.0.0');
 
@@ -67,7 +68,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: 'minor',
       currentVersionResolver: 'disk',
-      releaseGroupName: 'default',
+      releaseGroup: createReleaseGroup(),
     });
     expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual('1.1.0');
 
@@ -76,7 +77,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: 'patch',
       currentVersionResolver: 'disk',
-      releaseGroupName: 'default',
+      releaseGroup: createReleaseGroup(),
     });
     expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual('1.1.1');
 
@@ -85,7 +86,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: '1.2.3', // exact version
       currentVersionResolver: 'disk',
-      releaseGroupName: 'default',
+      releaseGroup: createReleaseGroup(),
     });
     expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual('1.2.3');
   });
@@ -96,7 +97,7 @@ describe('release-version', () => {
       projectGraph,
       specifier: 'major',
       currentVersionResolver: 'disk',
-      releaseGroupName: 'default',
+      releaseGroup: createReleaseGroup(),
     });
 
     expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
@@ -142,7 +143,7 @@ describe('release-version', () => {
           projectGraph,
           specifier: 'major',
           currentVersionResolver: 'disk',
-          releaseGroupName: 'default',
+          releaseGroup: createReleaseGroup(),
         })
       ).rejects.toThrowErrorMatchingInlineSnapshot(`
         "The project "my-lib" does not have a package.json available at libs/my-lib/package.json.
@@ -152,3 +153,13 @@ describe('release-version', () => {
     });
   });
 });
+
+function createReleaseGroup(
+  partialGroup: Partial<ReleaseGroupWithName> = {}
+): ReleaseGroupWithName {
+  return {
+    name: 'default',
+    releaseTagPattern: '{projectName}@v{version}',
+    ...partialGroup,
+  } as ReleaseGroupWithName;
+}
