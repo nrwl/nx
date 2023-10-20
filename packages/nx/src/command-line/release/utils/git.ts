@@ -36,6 +36,10 @@ function escapeRegExp(string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
+// https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+const SEMVER_REGEX =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/g;
+
 export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
   additionalInterpolationData = {}
@@ -61,12 +65,17 @@ export async function getLatestGitTagForPattern(
     ' ',
     '(.+)'
   )}`;
-  const matchingTags = tags.filter((tag) => !!tag.match(tagRegexp));
+  const matchingSemverTags = tags.filter(
+    (tag) =>
+      // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
+      !!tag.match(tagRegexp) && tag.match(tagRegexp)[1]?.match(SEMVER_REGEX)
+  );
 
-  if (!matchingTags.length) {
+  if (!matchingSemverTags.length) {
     return null;
   }
-  const [latestMatchingTag, version] = matchingTags[0].match(tagRegexp);
+
+  const [latestMatchingTag, version] = matchingSemverTags[0].match(tagRegexp);
 
   return {
     tag: latestMatchingTag,

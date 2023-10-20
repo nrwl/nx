@@ -4,6 +4,7 @@ jest.mock('./exec-command', () => ({
   execCommand: jest.fn(() =>
     Promise.resolve(`
 x5.0.0
+release/4.😐2.2
 release/4.2.1
 release/my-lib-1@v4.2.1
 v4.0.1
