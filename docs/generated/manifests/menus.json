@@ -816,6 +816,14 @@
             "isExternal": false,
             "children": [
               {
+                "name": "Module Federation and Nx",
+                "path": "/concepts/module-federation/module-federation-and-nx",
+                "id": "module-federation-and-nx",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Faster Builds with Module Federation",
                 "path": "/concepts/module-federation/faster-builds-with-module-federation",
                 "id": "faster-builds-with-module-federation",
@@ -1053,6 +1061,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Module Federation and Nx",
+            "path": "/concepts/module-federation/module-federation-and-nx",
+            "id": "module-federation-and-nx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Faster Builds with Module Federation",
             "path": "/concepts/module-federation/faster-builds-with-module-federation",
             "id": "faster-builds-with-module-federation",
@@ -1077,6 +1093,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Module Federation and Nx",
+        "path": "/concepts/module-federation/module-federation-and-nx",
+        "id": "module-federation-and-nx",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {

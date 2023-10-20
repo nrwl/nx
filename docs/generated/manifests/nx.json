@@ -1011,6 +1011,16 @@
         "file": "",
         "itemList": [
           {
+            "id": "module-federation-and-nx",
+            "name": "Module Federation and Nx",
+            "description": "",
+            "file": "shared/guides/module-federation/module-federation-and-nx",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/concepts/module-federation/module-federation-and-nx",
+            "tags": ["module-federation", "angular", "react"]
+          },
+          {
             "id": "faster-builds-with-module-federation",
             "name": "Faster Builds with Module Federation",
             "description": "",
@@ -1313,6 +1323,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "module-federation-and-nx",
+        "name": "Module Federation and Nx",
+        "description": "",
+        "file": "shared/guides/module-federation/module-federation-and-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/module-federation/module-federation-and-nx",
+        "tags": ["module-federation", "angular", "react"]
+      },
+      {
         "id": "faster-builds-with-module-federation",
         "name": "Faster Builds with Module Federation",
         "description": "",
@@ -1346,6 +1366,16 @@
     "isExternal": false,
     "path": "/concepts/module-federation",
     "tags": []
+  },
+  "/concepts/module-federation/module-federation-and-nx": {
+    "id": "module-federation-and-nx",
+    "name": "Module Federation and Nx",
+    "description": "",
+    "file": "shared/guides/module-federation/module-federation-and-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/module-federation/module-federation-and-nx",
+    "tags": ["module-federation", "angular", "react"]
   },
   "/concepts/module-federation/faster-builds-with-module-federation": {
     "id": "faster-builds-with-module-federation",

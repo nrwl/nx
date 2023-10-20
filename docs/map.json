@@ -313,6 +313,12 @@
               "description": "Understand more about Module Federation with NX",
               "itemList": [
                 {
+                  "name": "Module Federation and Nx",
+                  "id": "module-federation-and-nx",
+                  "tags": ["module-federation", "angular", "react"],
+                  "file": "shared/guides/module-federation/module-federation-and-nx"
+                },
+                {
                   "name": "Faster Builds with Module Federation",
                   "id": "faster-builds-with-module-federation",
                   "tags": [
@@ -335,7 +341,6 @@
                 }
               ]
             },
-
             {
               "name": "More Concepts",
               "id": "more-concepts",
