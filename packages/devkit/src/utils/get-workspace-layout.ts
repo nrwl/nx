@@ -10,6 +10,8 @@ import { readNxJson, Tree } from 'nx/src/devkit-exports';
  * { appsDir: 'apps', libsDir: 'libs' }
  * ```
  * @param tree - file system tree
+ *
+ * @deprecated Generators should accept the full path via a --directory argument.
  */
 export function getWorkspaceLayout(tree: Tree): {
   appsDir: string;

@@ -334,6 +334,8 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
 
   /**
    * Where new apps + libs should be placed
+   *
+   * @deprecated Workspace Layout will be removed in Nx v20. Pass the full `--directory` option to the generators instead.
    */
   workspaceLayout?: {
     libsDir?: string;
