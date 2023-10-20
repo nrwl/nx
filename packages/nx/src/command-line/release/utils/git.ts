@@ -2,8 +2,8 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
-import { spawn } from 'node:child_process';
 import { interpolate } from '../../../tasks-runner/utils';
+import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
   name: string;
@@ -61,16 +61,15 @@ export async function getLatestGitTagForPattern(
     ' ',
     '(.+)'
   )}`;
-  const latestTag = tags[0];
   const matchingTags = tags.filter((tag) => !!tag.match(tagRegexp));
 
   if (!matchingTags.length) {
     return null;
   }
-  const [, version] = matchingTags[0].match(tagRegexp);
+  const [latestMatchingTag, version] = matchingTags[0].match(tagRegexp);
 
   return {
-    tag: latestTag,
+    tag: latestMatchingTag,
     extractedVersion: version,
   };
 }
@@ -177,35 +176,4 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     isBreaking,
     affectedFiles,
   };
-}
-
-async function execCommand(
-  cmd: string,
-  args: string[],
-  options?: any
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, {
-      ...options,
-      stdio: ['pipe', 'pipe', 'pipe'], // stdin, stdout, stderr
-      encoding: 'utf-8',
-    });
-
-    let stdout = '';
-    child.stdout.on('data', (chunk) => {
-      stdout += chunk;
-    });
-
-    child.on('error', (error) => {
-      reject(error);
-    });
-
-    child.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Command failed with exit code ${code}`));
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
 }
