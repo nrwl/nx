@@ -2573,6 +2573,93 @@
     "source": "/packages/vite/src"
   },
   {
+    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview of the Nx Vue Plugin",
+        "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
+        "file": "generated/packages/vue/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "vue/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/vue/vue-plugin"
+      }
+    ],
+    "executors": [],
+    "generators": [
+      {
+        "description": "Initialize the `@nx/vue` plugin.",
+        "file": "generated/packages/vue/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/vue/src/generators/init/schema.json",
+        "path": "vue/generators/init",
+        "type": "generator"
+      },
+      {
+        "description": "Create a Vue application.",
+        "file": "generated/packages/vue/generators/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/vue/src/generators/application/schema.json",
+        "path": "vue/generators/application",
+        "type": "generator"
+      },
+      {
+        "description": "Create a Vue library.",
+        "file": "generated/packages/vue/generators/library.json",
+        "hidden": false,
+        "name": "library",
+        "originalFilePath": "/packages/vue/src/generators/library/schema.json",
+        "path": "vue/generators/library",
+        "type": "generator"
+      },
+      {
+        "description": "Create a Vue component.",
+        "file": "generated/packages/vue/generators/component.json",
+        "hidden": false,
+        "name": "component",
+        "originalFilePath": "/packages/vue/src/generators/component/schema.json",
+        "path": "vue/generators/component",
+        "type": "generator"
+      },
+      {
+        "description": "Set up Tailwind configuration for a project.",
+        "file": "generated/packages/vue/generators/setup-tailwind.json",
+        "hidden": false,
+        "name": "setup-tailwind",
+        "originalFilePath": "/packages/vue/src/generators/setup-tailwind/schema.json",
+        "path": "vue/generators/setup-tailwind",
+        "type": "generator"
+      },
+      {
+        "description": "Set up storybook for a Vue app or library.",
+        "file": "generated/packages/vue/generators/storybook-configuration.json",
+        "hidden": false,
+        "name": "storybook-configuration",
+        "originalFilePath": "/packages/vue/src/generators/storybook-configuration/schema.json",
+        "path": "vue/generators/storybook-configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Create stories for all components declared in an app or library.",
+        "file": "generated/packages/vue/generators/stories.json",
+        "hidden": false,
+        "name": "stories",
+        "originalFilePath": "/packages/vue/src/generators/stories/schema.json",
+        "path": "vue/generators/stories",
+        "type": "generator"
+      }
+    ],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "vue",
+    "packageName": "@nx/vue",
+    "root": "/packages/vue",
+    "source": "/packages/vue/src"
+  },
+  {
     "description": "The Nx Plugin for Web Components contains generators for managing Web Component applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Scaffolding for creating buildable libraries that can be published to npm.\n\n- Utilities for automatic workspace refactoring.",
     "documents": [
       {

@@ -1795,6 +1795,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Set up Storybook for Vue Projects",
+                "path": "/recipes/storybook/overview-vue",
+                "id": "overview-vue",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Configuring Storybook on Nx",
                 "path": "/recipes/storybook/configuring-storybook",
                 "id": "configuring-storybook",
@@ -3098,6 +3106,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Set up Storybook for Vue Projects",
+            "path": "/recipes/storybook/overview-vue",
+            "id": "overview-vue",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configuring Storybook on Nx",
             "path": "/recipes/storybook/configuring-storybook",
             "id": "configuring-storybook",
@@ -3184,6 +3200,14 @@
         "name": "Set up Storybook for Angular Projects",
         "path": "/recipes/storybook/overview-angular",
         "id": "overview-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Storybook for Vue Projects",
+        "path": "/recipes/storybook/overview-vue",
+        "id": "overview-vue",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -8693,6 +8717,97 @@
                 "id": "vitest",
                 "path": "/nx-api/vite/generators/vitest",
                 "name": "vitest",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "vue",
+        "path": "/nx-api/vue",
+        "name": "vue",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/vue/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview of the Nx Vue Plugin",
+                "path": "/nx-api/vue/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/vue/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/vue/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/vue/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "library",
+                "path": "/nx-api/vue/generators/library",
+                "name": "library",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "component",
+                "path": "/nx-api/vue/generators/component",
+                "name": "component",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-tailwind",
+                "path": "/nx-api/vue/generators/setup-tailwind",
+                "name": "setup-tailwind",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "storybook-configuration",
+                "path": "/nx-api/vue/generators/storybook-configuration",
+                "name": "storybook-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "stories",
+                "path": "/nx-api/vue/generators/stories",
+                "name": "stories",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

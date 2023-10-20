@@ -2597,6 +2597,94 @@
     },
     "path": "/nx-api/vite"
   },
+  "vue": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "vue",
+    "packageName": "@nx/vue",
+    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "documents": {
+      "/nx-api/vue/documents/overview": {
+        "id": "overview",
+        "name": "Overview of the Nx Vue Plugin",
+        "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
+        "file": "generated/packages/vue/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/vue/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/vue/vue-plugin"
+      }
+    },
+    "root": "/packages/vue",
+    "source": "/packages/vue/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/vue/generators/init": {
+        "description": "Initialize the `@nx/vue` plugin.",
+        "file": "generated/packages/vue/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/vue/src/generators/init/schema.json",
+        "path": "/nx-api/vue/generators/init",
+        "type": "generator"
+      },
+      "/nx-api/vue/generators/application": {
+        "description": "Create a Vue application.",
+        "file": "generated/packages/vue/generators/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/vue/src/generators/application/schema.json",
+        "path": "/nx-api/vue/generators/application",
+        "type": "generator"
+      },
+      "/nx-api/vue/generators/library": {
+        "description": "Create a Vue library.",
+        "file": "generated/packages/vue/generators/library.json",
+        "hidden": false,
+        "name": "library",
+        "originalFilePath": "/packages/vue/src/generators/library/schema.json",
+        "path": "/nx-api/vue/generators/library",
+        "type": "generator"
+      },
+      "/nx-api/vue/generators/component": {
+        "description": "Create a Vue component.",
+        "file": "generated/packages/vue/generators/component.json",
+        "hidden": false,
+        "name": "component",
+        "originalFilePath": "/packages/vue/src/generators/component/schema.json",
+        "path": "/nx-api/vue/generators/component",
+        "type": "generator"
+      },
+      "/nx-api/vue/generators/setup-tailwind": {
+        "description": "Set up Tailwind configuration for a project.",
+        "file": "generated/packages/vue/generators/setup-tailwind.json",
+        "hidden": false,
+        "name": "setup-tailwind",
+        "originalFilePath": "/packages/vue/src/generators/setup-tailwind/schema.json",
+        "path": "/nx-api/vue/generators/setup-tailwind",
+        "type": "generator"
+      },
+      "/nx-api/vue/generators/storybook-configuration": {
+        "description": "Set up storybook for a Vue app or library.",
+        "file": "generated/packages/vue/generators/storybook-configuration.json",
+        "hidden": false,
+        "name": "storybook-configuration",
+        "originalFilePath": "/packages/vue/src/generators/storybook-configuration/schema.json",
+        "path": "/nx-api/vue/generators/storybook-configuration",
+        "type": "generator"
+      },
+      "/nx-api/vue/generators/stories": {
+        "description": "Create stories for all components declared in an app or library.",
+        "file": "generated/packages/vue/generators/stories.json",
+        "hidden": false,
+        "name": "stories",
+        "originalFilePath": "/packages/vue/src/generators/stories/schema.json",
+        "path": "/nx-api/vue/generators/stories",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/vue"
+  },
   "web": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "web",
