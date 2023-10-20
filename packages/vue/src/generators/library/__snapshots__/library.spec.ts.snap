@@ -8,7 +8,7 @@ exports[`lib nested should create a local tsconfig.json 1`] = `
     "esModuleInterop": false,
     "jsx": "preserve",
     "jsxImportSource": "vue",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "strict": true,
     "verbatimModuleSyntax": true,
