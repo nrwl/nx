@@ -473,15 +473,21 @@ Each of these libraries
 {% video-link link="https://youtu.be/ZAO0yXupIIE?t=976" /%}
 
 All libraries that we generate automatically have aliases created in the root-level `tsconfig.base.json`.
-
+ <br />
+Could be genereated in a such way:
+```
+  "@myngapp/orders": ["modules/orders/src/index.ts"],
+  "@myngapp/products": ["modules/products/src/index.ts"],
+  "@myngapp/shared-ui": ["modules/shared/ui/src/index.ts"]
+```
 ```json {% fileName="tsconfig.base.json" %}
 {
   "compilerOptions": {
     ...
     "paths": {
-      "products": ["modules/products/src/index.ts"],
-      "orders": ["modules/orders/src/index.ts"],
-      "shared-ui": ["modules/shared/ui/src/index.ts"]
+      "@myngapp/orders": ["modules/orders/src/index.ts"],
+      "@myngapp/products": ["modules/products/src/index.ts"],
+      "@myngapp/shared-ui": ["modules/shared/ui/src/index.ts"]
     },
     ...
   },
