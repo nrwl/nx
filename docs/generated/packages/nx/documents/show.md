@@ -109,6 +109,12 @@ Type: `string`
 
 Base of the current branch (usually main)
 
+##### data
+
+Type: `string`
+
+Show extra project data in output
+
 ##### exclude
 
 Type: `string`
