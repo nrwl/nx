@@ -76,6 +76,20 @@ export async function showProjectsHandler(
   } else {
     for (const project of selectedProjects) {
       console.log(project);
+
+      if (!args?.data) {
+        continue;
+      }
+
+      const maxAttrLength =
+        args.data.reduce((max, attr) => Math.max(max, attr.length), 0) || 0;
+
+      for (let attr of args.data) {
+        const attrValue = graph.nodes[project]?.data?.[attr] || '';
+        console.log(
+          `\t${attr.padEnd(maxAttrLength)} ${JSON.stringify(attrValue)}`
+        );
+      }
     }
   }
   process.exit(0);

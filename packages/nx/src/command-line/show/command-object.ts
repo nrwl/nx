@@ -17,6 +17,7 @@ export type ShowProjectsOptions = NxShowArgs & {
   type: ProjectGraphProjectNode['type'];
   projects: string[];
   withTarget: string[];
+  data: string[];
 };
 
 export type ShowProjectOptions = NxShowArgs & {
@@ -75,6 +76,11 @@ const showProjectsCommand: CommandModule<NxShowArgs, ShowProjectsOptions> = {
         type: 'string',
         alias: ['t'],
         description: 'Show only projects that have a specific target',
+        coerce: parseCSV,
+      })
+      .option('data', {
+        type: 'string',
+        description: 'Show extra project data in output',
         coerce: parseCSV,
       })
       .option('type', {
