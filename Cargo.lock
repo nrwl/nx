@@ -2610,6 +2610,7 @@ dependencies = [
  "serde",
  "serde_json",
  "static_assertions",
+ "static_vcruntime",
  "swc_common",
  "swc_ecma_ast",
  "swc_ecma_dep_graph",
@@ -3869,6 +3870,12 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "static_vcruntime"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "954e3e877803def9dc46075bf4060147c55cd70db97873077232eae0269dc89b"
 
 [[package]]
 name = "string-width"

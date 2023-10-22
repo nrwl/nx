@@ -109,6 +109,7 @@ crate-type = ['cdylib']
 
 [build-dependencies]
 napi-build = '2.1.3'
+static_vcruntime = '2.0'
 
 [dev-dependencies]
 assert_fs = "1.0.10"
