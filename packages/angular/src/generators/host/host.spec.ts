@@ -460,27 +460,6 @@ describe('Host App Generator', () => {
     });
   });
 
-  it('should error correctly when Angular version does not support standalone', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        '@angular/core': '14.0.0',
-      },
-    }));
-
-    // ACT & ASSERT
-    await expect(
-      generateTestHostApplication(tree, {
-        name: 'test',
-        standalone: true,
-      })
-    ).rejects
-      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
-  });
-
   describe('--project-name-and-root-format=derived', () => {
     it('should generate a host, integrate existing remotes and generate any remotes that dont exist', async () => {
       // ARRANGE
