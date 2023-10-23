@@ -36,15 +36,6 @@ export async function createFiles(
     substitutions
   );
 
-  if (installedAngularInfo.major === 14) {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, '../files/v14'),
-      options.appProjectRoot,
-      substitutions
-    );
-  }
-
   if (options.standalone) {
     generateFiles(
       tree,
