@@ -158,7 +158,7 @@
       "x-priority": "internal"
     },
     "standalone": {
-      "description": "Whether to generate a remote application with standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "Whether to generate a remote application with standalone components.",
       "type": "boolean",
       "default": false
     },
