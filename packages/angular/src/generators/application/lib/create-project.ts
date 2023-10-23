@@ -27,10 +27,7 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
           }`,
           index: `${options.appProjectRoot}/src/index.html`,
           main: `${options.appProjectRoot}/src/main.ts`,
-          polyfills:
-            installedAngularInfo.major === 14
-              ? `${options.appProjectRoot}/src/polyfills.ts`
-              : ['zone.js'],
+          polyfills: ['zone.js'],
           tsConfig: `${options.appProjectRoot}/tsconfig.app.json`,
           assets: [
             `${options.appProjectRoot}/src/favicon.ico`,
@@ -53,15 +50,6 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
                       type: 'anyComponentStyle',
                       maximumWarning: '2kb',
                       maximumError: '4kb',
-                    },
-                  ]
-                : undefined,
-            fileReplacements:
-              installedAngularInfo.major === 14
-                ? [
-                    {
-                      replace: `${options.appProjectRoot}/src/environments/environment.ts`,
-                      with: `${options.appProjectRoot}/src/environments/environment.prod.ts`,
                     },
                   ]
                 : undefined,

@@ -51,7 +51,7 @@
         "description": "Do not import this pipe into the owning NgModule."
       },
       "standalone": {
-        "description": "Whether the generated pipe is standalone. _Note: This is only supported in Angular versions >= 14.1.0_.",
+        "description": "Whether the generated pipe is standalone.",
         "type": "boolean",
         "default": false
       },

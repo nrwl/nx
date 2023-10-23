@@ -3,15 +3,12 @@ import {
   formatFiles,
   getProjects,
   runTasksInSerial,
-  stripIndents,
   Tree,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { lt } from 'semver';
 import { E2eTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import { setupMf } from '../setup-mf/setup-mf';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { addSsr, findNextAvailablePort } from './lib';
 import type { Schema } from './schema';
 import { swcHelpersVersion } from '@nx/js/src/utils/versions';
@@ -24,13 +21,6 @@ export async function remote(tree: Tree, options: Schema) {
 }
 
 export async function remoteInternal(tree: Tree, schema: Schema) {
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
-
-  if (lt(installedAngularVersionInfo.version, '14.1.0') && schema.standalone) {
-    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
-  }
-
   const { typescriptConfiguration = true, ...options }: Schema = schema;
 
   const projects = getProjects(tree);

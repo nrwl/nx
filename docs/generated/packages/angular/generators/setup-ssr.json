@@ -51,7 +51,7 @@
       },
       "standalone": {
         "type": "boolean",
-        "description": "Use Standalone Components to bootstrap SSR. _Note: This is only supported in Angular versions >= 14.1.0_."
+        "description": "Use Standalone Components to bootstrap SSR."
       },
       "hydration": {
         "type": "boolean",
