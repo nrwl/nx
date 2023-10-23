@@ -49,7 +49,7 @@ describe('nx init (Angular CLI)', () => {
     expect(coldBuildOutput).toContain(
       `Successfully ran target build for project ${project}`
     );
-    checkFilesExist(`dist/${project}/main.js`);
+    checkFilesExist(`dist/${project}/browser/main.js`);
 
     // run build again to check is coming from cache
     const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);
@@ -83,7 +83,7 @@ describe('nx init (Angular CLI)', () => {
     expect(coldBuildOutput).toContain(
       `Successfully ran target build for project ${project}`
     );
-    checkFilesExist(`dist/apps/${project}/main.js`);
+    checkFilesExist(`dist/apps/${project}/browser/main.js`);
 
     // run build again to check is coming from cache
     const cachedBuildOutput = runCLI(`build ${project} --outputHashing none`);
