@@ -279,13 +279,13 @@
       "description": "Update the @angular/cli package version to ~16.2.0.",
       "factory": "./src/migrations/update-16-7-0/update-angular-cli"
     },
-    "update-angular-cli-version-17-0-0-next-9": {
+    "update-angular-cli-version-17-0-0-rc-0": {
       "cli": "nx",
       "version": "17.2.0-beta.0",
       "requires": {
-        "@angular/core": ">=17.0.0-next.8"
+        "@angular/core": ">=17.0.0-rc.0"
       },
-      "description": "Update the @angular/cli package version to ~17.0.0-next.9.",
+      "description": "Update the @angular/cli package version to ~17.0.0-rc.0.",
       "factory": "./src/migrations/update-17-2-0/update-angular-cli"
     }
   },
@@ -1368,43 +1368,43 @@
       "version": "17.2.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v17?",
       "requires": {
-        "@angular/core": ">=16.2.0 <17.0.0-next.8"
+        "@angular/core": ">=16.2.0 <17.0.0-rc.0"
       },
       "packages": {
         "@angular-devkit/architect": {
-          "version": "~0.1700.0-next.9",
+          "version": "~0.1700.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-angular": {
-          "version": "~17.0.0-next.9",
+          "version": "~17.0.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-webpack": {
-          "version": "~0.1700.0-next.9",
+          "version": "~0.1700.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/core": {
-          "version": "~17.0.0-next.9",
+          "version": "~17.0.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
-          "version": "~17.0.0-next.9",
+          "version": "~17.0.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
-          "version": "~17.0.0-next.8",
+          "version": "~17.0.0-rc.0",
           "alwaysAddToPackageJson": true
         },
         "@angular/material": {
-          "version": "~17.0.0-next.7",
+          "version": "~17.0.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/cdk": {
-          "version": "~17.0.0-next.7",
+          "version": "~17.0.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@schematics/angular": {
-          "version": "~17.0.0-next.9",
+          "version": "~17.0.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
