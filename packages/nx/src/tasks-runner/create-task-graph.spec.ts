@@ -84,6 +84,35 @@ describe('createTaskGraph', () => {
     });
   });
 
+  it('should throw an error if configuration does not exist', () => {
+    expect(() =>
+      createTaskGraph(
+        {
+          nodes: {
+            app1: {
+              name: 'app1',
+              type: 'app',
+              data: {
+                root: 'app1-root',
+                targets: {
+                  test: {
+                    executor: 'nx:run-commands',
+                  },
+                },
+              },
+            },
+          },
+          dependencies: {},
+        },
+        {},
+        ['app1'],
+        ['test'],
+        'randomConfig',
+        {}
+      )
+    ).toThrowError();
+  });
+
   it('should return a task per project with the given target', () => {
     const oneTask = createTaskGraph(
       projectGraph,

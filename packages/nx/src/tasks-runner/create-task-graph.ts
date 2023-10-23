@@ -34,7 +34,8 @@ export class ProcessTasks {
           const resolvedConfiguration = this.resolveConfiguration(
             project,
             target,
-            configuration
+            configuration,
+            false
           );
           const id = this.getId(projectName, target, resolvedConfiguration);
           const task = this.createTask(
@@ -353,11 +354,23 @@ export class ProcessTasks {
   resolveConfiguration(
     project: ProjectGraphProjectNode,
     target: string,
-    configuration: string | undefined
-  ) {
+    configuration: string | undefined,
+    fallbackToDefault: boolean = true
+  ): string | undefined {
     const defaultConfiguration =
       project.data.targets?.[target]?.defaultConfiguration;
     configuration ??= defaultConfiguration;
+    if (
+      !fallbackToDefault &&
+      configuration &&
+      configuration !== 'development' &&
+      configuration !== 'production' &&
+      !projectHasTargetAndConfiguration(project, target, configuration)
+    ) {
+      throw new Error(
+        `Cannot find configuration ${configuration} for task ${project.name}:${target}:${configuration}`
+      );
+    }
     return projectHasTargetAndConfiguration(project, target, configuration)
       ? configuration
       : defaultConfiguration;
