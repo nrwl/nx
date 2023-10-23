@@ -6,11 +6,10 @@ import {
   names,
 } from '@nx/devkit';
 import { addToNgModule, findModule } from '../utils';
-import { normalizeOptions, validateOptions } from './lib';
+import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
-  validateOptions(tree, rawOptions);
   const options = await normalizeOptions(tree, rawOptions);
 
   const pipeNames = names(options.name);

@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { writeJson } from '@nx/devkit';
 import { tsConfigBaseOptions } from '@nx/js';
-import { getInstalledAngularMajorVersion } from './version-utils';
 
 export { extractTsConfigBase } from '@nx/js';
 
@@ -17,11 +16,9 @@ export function createTsConfig(
   },
   relativePathToRootTsConfig: string
 ) {
-  const majorAngularVersion = getInstalledAngularMajorVersion(host);
-
   const json = {
     compilerOptions: {
-      target: majorAngularVersion === 14 ? 'es2020' : 'es2022',
+      target: 'es2022',
       useDefineForClassFields: false,
     },
     files: [],

@@ -10,7 +10,6 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
-import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
@@ -1676,124 +1675,6 @@ describe('lib', () => {
       expect(
         tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
       ).toMatchSnapshot();
-    });
-  });
-
-  describe('--angular-14', () => {
-    beforeEach(() => {
-      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.1.0',
-        },
-      }));
-    });
-
-    it('should create a local tsconfig.json', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts();
-
-      // ASSERT
-      const tsconfigJson = readJson(tree, 'my-lib/tsconfig.json');
-      expect(tsconfigJson).toEqual({
-        extends: '../tsconfig.base.json',
-        angularCompilerOptions: {
-          enableI18nLegacyMessageIdFormat: false,
-          strictInjectionParameters: true,
-          strictInputAccessModifiers: true,
-          strictTemplates: true,
-        },
-        compilerOptions: {
-          forceConsistentCasingInFileNames: true,
-          noFallthroughCasesInSwitch: true,
-          noPropertyAccessFromIndexSignature: true,
-          noImplicitOverride: true,
-          noImplicitReturns: true,
-          strict: true,
-          target: 'es2020',
-          useDefineForClassFields: false,
-        },
-        files: [],
-        include: [],
-        references: [
-          {
-            path: './tsconfig.lib.json',
-          },
-          {
-            path: './tsconfig.spec.json',
-          },
-        ],
-      });
-    });
-
-    it('should create a local package.json', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({
-        publishable: true,
-        importPath: '@myorg/lib',
-      });
-
-      // ASSERT
-      const tsconfigJson = readJson(tree, 'my-lib/package.json');
-      expect(tsconfigJson).toMatchInlineSnapshot(`
-        {
-          "dependencies": {
-            "tslib": "^2.3.0",
-          },
-          "name": "@myorg/lib",
-          "peerDependencies": {
-            "@angular/common": "^14.1.0",
-            "@angular/core": "^14.1.0",
-          },
-          "sideEffects": false,
-          "version": "0.0.1",
-        }
-      `);
-    });
-
-    it('should generate a library with a standalone component as entry point with angular 14.1.0', async () => {
-      await runLibraryGeneratorWithOpts({ standalone: true });
-
-      expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchSnapshot();
-      expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should throw an error when trying to generate a library with a standalone component as entry point when angular version is < 14.1.0', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.0.0',
-        },
-      }));
-
-      await expect(
-        runLibraryGeneratorWithOpts({ standalone: true })
-      ).rejects.toThrow(
-        `The \"--standalone\" option is not supported in Angular versions < 14.1.0.`
-      );
-    });
-
-    it('should update package.json with correct versions when buildable', async () => {
-      // ACT
-      await runLibraryGeneratorWithOpts({ buildable: true });
-
-      // ASSERT
-      const packageJson = readJson(tree, '/package.json');
-      expect(packageJson.devDependencies['ng-packagr']).toEqual(
-        backwardCompatibleVersions.angularV14.ngPackagrVersion
-      );
-      expect(packageJson.devDependencies['postcss']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-import']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
   });
 
