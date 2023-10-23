@@ -231,6 +231,7 @@
   - [Deprecated](/deprecated)
     - [workspace.json](/deprecated/workspace-json)
     - [workspace-lint](/deprecated/workspace-lint)
+    - [workspace-layout](/deprecated/workspace-layout)
     - [Workspace Generators](/deprecated/workspace-generators)
     - [Workspace Executors](/deprecated/workspace-executors)
     - [defaultCollection](/deprecated/default-collection)

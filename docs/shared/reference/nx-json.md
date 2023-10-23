@@ -4,26 +4,15 @@ The `nx.json` file configures the Nx CLI and project defaults. The full [machine
 
 The following is an expanded example showing all options. Your `nx.json` will likely be much shorter. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
 
-```json {% fileName="nx.json" lineGroups={ Caching:[15,16,17,18,19,20,21,22,23,24,25,26,29], Orchestration:[3,4,5,28,30], Execution:[28,31,32,33,34] } %}
+```json {% fileName="nx.json" lineGroups={ Caching:[11,12,13,14,17,23,27], Orchestration:[3,4,5,18], Execution:[19,20,21,22] } %}
 {
   "extends": "nx/presets/npm.json",
   "affected": {
     "defaultBase": "main"
   },
-  "workspaceLayout": {
-    "projectNameAndRootFormat": "as-provided"
-  },
   "generators": {
     "@nx/js:library": {
       "buildable": true
-    }
-  },
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"]
-      }
     }
   },
   "namedInputs": {
@@ -40,7 +29,9 @@ The following is an expanded example showing all options. Your `nx.json` will li
       },
       "cache": true
     }
-  }
+  },
+  "parallel": 4,
+  "cacheDirectory": "tmp/my-nx-cache"
 }
 ```
 
@@ -61,49 +52,6 @@ In Nx 17, the `npmScope` property is ignored.
 Tells Nx which branch and HEAD to use when calculating affected projects.
 
 - `defaultBase` defines the default base branch, defaulted to `main`.
-
-### Workspace Layout
-
-You can add a `workspaceLayout` property to modify where libraries and apps are located. As of Nx 16.8.0, there is a property called `projectNameAndRootFormat` that determines how this configuration block is interpreted. The default setting is `"projectNameAndRootFormat": "as-provided"`.
-
-```json
-{
-  "workspaceLayout": {
-    "projectNameAndRootFormat": "as-provided"
-  }
-}
-```
-
-This setting makes app or lib generators behave in the following way:
-
-- `nx g app my-app` creates a new application named `my-app` in the `/my-app` folder
-- `nx g lib my-lib` creates a new library named `my-lib` in the `/my-lib` folder
-- `nx g app my-app --directory=apps/nested/my-app` creates a new application named `my-app` in the `/apps/nested/my-app` folder
-- `nx g lib my-lib --directory=libs/shared/ui/my-lib` creates a new library named `my-lib` in the `/libs/shared/ui/my-lib` folder
-
-The other style is `"projectNameAndRootFormat": "derived"`, which behaves the way Nx did before version 16.8.0.
-
-```json
-{
-  "workspaceLayout": {
-    "projectNameAndRootFormat": "derived",
-    "appsDir": "demos",
-    "libsDir": "packages"
-  }
-}
-```
-
-These settings would store apps in `/demos/` and libraries in `/packages/`. The paths specified are relative to the
-workspace root.
-
-This makes app or lib generators behave in the following way:
-
-- `nx g app my-app` creates a new application named `my-app` in the `/demos/my-app` folder
-- `nx g lib my-lib` creates a new library named `my-lib` in the `/packages/my-lib` folder
-- `nx g app my-app --directory=nested` creates a new application named `nested-my-app` in the `/demos/nested/my-app` folder
-- `nx g lib my-lib --directory=shared/ui` creates a new library named `shared-ui-my-lib` in the `/packages/shared/ui/my-lib` folder
-
-If you accidentally generate a project in the wrong folder, use the [move generator](/nx-api/workspace/generators/move) to move it to the correct location.
 
 ### inputs & namedInputs
 
@@ -257,12 +205,29 @@ pass `--buildable=true` when creating new libraries.
 Tasks runners are invoked when you run `nx test`, `nx build`, `nx run-many`, `nx affected`, and so on. The tasks runner
 named "default" is used by default. Specify a different one like this `nx run-many -t build --runner=another`.
 
+To register a tasks runner, add it to `nx.json` like this:
+
+```json {% fileName="nx.json" %}
+{
+  "tasksRunnerOptions": {
+    "another": {
+      "runner": "nx/tasks-runners/default",
+      "options": {}
+    }
+  }
+}
+```
+
 Tasks runners can accept different options. The following are the options supported
 by `"nx/tasks-runners/default"` and `"nx-cloud"`.
 
+{% callout type="note" title="Define these properties at the root" %}
+As of Nx 17, if you only use one tasks runner, you can specify these properties at the root of `nx.json` instead of inside the `tasksRunnerOptions` property.
+{% /callout %}
+
 | Property                | Description                                                                                                                                                                                                                                                                                                                             |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| cacheableOperations     | defines the list of targets/operations that are cached by Nx                                                                                                                                                                                                                                                                            |
+| cacheableOperations     | In Nx < 17, defined the list of targets/operations that were cached by Nx. In Nx 17, use the `cache` property in `targetDefaults` or individual target definitions                                                                                                                                                                      |
 | parallel                | defines the max number of targets ran in parallel (in older versions of Nx you had to pass `--parallel --maxParallel=3` instead of `--parallel=3`)                                                                                                                                                                                      |
 | captureStderr           | defines whether the cache captures stderr or just stdout                                                                                                                                                                                                                                                                                |
 | skipNxCache             | defines whether the Nx Cache should be skipped (defaults to `false`)                                                                                                                                                                                                                                                                    |
