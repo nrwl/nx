@@ -10,7 +10,6 @@ import {
   exportComponentInEntryPoint,
   findModuleFromOptions,
   normalizeOptions,
-  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
@@ -25,7 +24,6 @@ export async function componentGeneratorInternal(
   tree: Tree,
   rawOptions: Schema
 ) {
-  validateOptions(tree, rawOptions);
   const options = await normalizeOptions(tree, rawOptions);
 
   generateFiles(
