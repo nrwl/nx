@@ -1743,6 +1743,44 @@ describe('params', () => {
       ]);
     });
 
+    it('should use a multiselect if type is array and x-prompt uses shorthand', () => {
+      const prompts = getPromptsForSchema(
+        {},
+        {
+          properties: {
+            pets: {
+              type: 'array',
+              'x-prompt': 'What kind of pets do you have?',
+              items: {
+                enum: ['cat', 'dog', 'fish'],
+              },
+            },
+          },
+        },
+        {
+          version: 2,
+          projects: {},
+        }
+      );
+
+      expect(prompts).toMatchInlineSnapshot(`
+        [
+          {
+            "choices": [
+              "cat",
+              "dog",
+              "fish",
+            ],
+            "limit": 10,
+            "message": "What kind of pets do you have?",
+            "name": "pets",
+            "type": "multiselect",
+            "validate": [Function],
+          },
+        ]
+      `);
+    });
+
     describe('Project prompts', () => {
       it('should use an autocomplete prompt for a property named project', () => {
         const prompts = getPromptsForSchema(
