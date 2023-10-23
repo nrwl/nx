@@ -21,6 +21,8 @@ If you are using Angular, React, Next.js, Vue or React Native in your project, i
 
 - [React Native Storybook Configuration Generator](/nx-api/react-native/generators/storybook-configuration)
 
+- [Vue Storybook Configuration Generator](/nx-api/vue/generators/storybook-configuration)
+
 If you are not using one of the framework-specific generators mentioned above, when running this generator you will be prompted to provide the following:
 
 - The `name` of the project you want to generate the configuration for.

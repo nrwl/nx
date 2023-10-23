@@ -95,6 +95,86 @@
     "useDaemonProcess": {
       "type": "boolean",
       "description": "Specifies whether the daemon should be used for the default tasks runner."
+    },
+    "release": {
+      "type": "object",
+      "description": "Configuration for the nx release commands.",
+      "additionalProperties": false,
+      "properties": {
+        "groups": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "version": {
+                "$ref": "#/definitions/NxReleaseVersionConfiguration"
+              },
+              "changelog": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                  },
+                  {
+                    "type": "boolean",
+                    "enum": [false]
+                  }
+                ]
+              },
+              "releaseTagPattern": {
+                "type": "string"
+              }
+            },
+            "required": ["projects"]
+          }
+        },
+        "changelog": {
+          "type": "object",
+          "properties": {
+            "workspaceChangelog": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                },
+                {
+                  "type": "boolean",
+                  "enum": [false]
+                }
+              ]
+            },
+            "projectChangelogs": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                },
+                {
+                  "type": "boolean",
+                  "enum": [false]
+                }
+              ]
+            }
+          }
+        },
+        "version": {
+          "$ref": "#/definitions/NxReleaseVersionConfiguration"
+        },
+        "releaseTagPattern": {
+          "type": "string"
+        }
+      }
     }
   },
   "definitions": {
@@ -389,6 +469,67 @@
           }
         }
       ]
+    },
+    "NxReleaseVersionConfiguration": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "type": "string"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "NxReleaseChangelogConfiguration": {
+      "type": "object",
+      "properties": {
+        "createRelease": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["github"]
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "entryWhenNoChanges": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "file": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "renderer": {
+          "type": "string"
+        },
+        "renderOptions": {
+          "$ref": "#/definitions/ChangelogRenderOptions"
+        }
+      }
+    },
+    "ChangelogRenderOptions": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

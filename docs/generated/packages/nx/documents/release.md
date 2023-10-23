@@ -101,22 +101,6 @@ nx release changelog [version]
 
 #### Options
 
-##### createRelease
-
-Type: `string`
-
-Choices: [github]
-
-Create a release for the given version on a supported source control service provider, such as Github.
-
-##### file
-
-Type: `string`
-
-Default: `CHANGELOG.md`
-
-The name of the file to write the changelog to. It can also be set to `false` to disable file generation. Defaults to CHANGELOG.md.
-
 ##### from
 
 Type: `string`
@@ -139,7 +123,11 @@ Show help
 
 ##### interactive
 
-Type: `boolean`
+Type: `string`
+
+Choices: [all, workspace, projects]
+
+Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level
 
 ##### tagVersionPrefix
 

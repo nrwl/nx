@@ -21,7 +21,7 @@ export function createTsConfig(
       strict: options.strict,
       jsx: 'preserve',
       jsxImportSource: 'vue',
-      moduleResolution: 'bundler',
+      moduleResolution: 'node',
       resolveJsonModule: true,
       verbatimModuleSyntax: options.unitTestRunner !== 'jest',
     },

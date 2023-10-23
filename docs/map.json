@@ -714,6 +714,13 @@
                   "file": "shared/recipes/storybook/plugin-angular"
                 },
                 {
+                  "name": "Set up Storybook for Vue Projects",
+                  "id": "overview-vue",
+                  "tags": ["storybook"],
+                  "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+                  "file": "shared/recipes/storybook/plugin-vue"
+                },
+                {
                   "name": "Configuring Storybook on Nx",
                   "id": "configuring-storybook",
                   "tags": ["storybook"],

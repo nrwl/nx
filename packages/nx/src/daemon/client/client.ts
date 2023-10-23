@@ -366,12 +366,6 @@ export class DaemonClient {
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
 
-    if (this.nxJson.tasksRunnerOptions?.default?.options?.useParcelWatcher) {
-      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = 'false';
-    } else {
-      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = 'true';
-    }
-
     const backgroundProcess = spawn(
       process.execPath,
       [join(__dirname, '../server/start.js')],

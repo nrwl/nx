@@ -30,6 +30,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -122,10 +123,10 @@ describe('nx release', () => {
     const changelogOutput = runCLI(`release changelog 999.9.9`);
     expect(changelogOutput).toMatchInlineSnapshot(`
 
-      >  NX   Generating a CHANGELOG.md entry for v999.9.9
+      >  NX   Generating an entry in CHANGELOG.md for v999.9.9
 
 
-      + ## v999.9.9
+      + ## 999.9.9
       +
       +
       + ### 🚀 Features
@@ -140,7 +141,7 @@ describe('nx release', () => {
     `);
 
     expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
-      ## v999.9.9
+      ## 999.9.9
 
 
       ### 🚀 Features
@@ -543,6 +544,98 @@ describe('nx release', () => {
         .toString()
         .trim()
     ).toEqual('1000.0.0-next.0');
+
+    // Update custom nx release config to demonstrate project level changelogs
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          default: {
+            // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
+            projects: ['*', '!@proj/source'],
+            changelog: {
+              // This should be merged with and take priority over the projectChangelogs config at the root of the config
+              createRelease: 'github',
+            },
+          },
+        },
+        changelog: {
+          projectChangelogs: {
+            renderOptions: {
+              createRelease: false, // will be overridden by the group
+              // Customize the changelog renderer to not print the Thank You section this time (not overridden by the group)
+              includeAuthors: false,
+            },
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    // We need a valid git origin for the command to work when createRelease is set
+    await runCommandAsync(
+      `git remote add origin https://github.com/nrwl/fake-repo.git`
+    );
+
+    // Perform a dry-run this time to show that it works but also prevent making any requests to github within the test
+    const changelogDryRunOutput = runCLI(
+      `release changelog 1000.0.0-next.0 --dry-run`
+    );
+    expect(changelogDryRunOutput).toMatchInlineSnapshot(`
+
+      >  NX   Previewing an entry in CHANGELOG.md for v1000.0.0-next.0
+
+
+
+      + ## 1000.0.0-next.0
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature
+      +
+      + ### ❤️  Thank You
+      +
+      + - Test
+      +
+      ## 999.9.9
+
+
+
+
+      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for {project-name}@v1000.0.0-next.0
+
+
+      + ## 1000.0.0-next.0
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for {project-name}@v1000.0.0-next.0
+
+
+      + ## 1000.0.0-next.0
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for {project-name}@v1000.0.0-next.0
+
+
+      + ## 1000.0.0-next.0
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+    `);
 
     // port and process cleanup
     await killProcessAndPorts(process.pid, verdaccioPort);

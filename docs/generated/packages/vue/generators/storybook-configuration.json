@@ -1,0 +1,85 @@
+{
+  "name": "storybook-configuration",
+  "factory": "./src/generators/storybook-configuration/configuration",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxVueStorybookConfigure",
+    "title": "Vue Storybook Configure",
+    "description": "Set up Storybook for a Vue project.",
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "aliases": ["project", "projectName"],
+        "description": "Project for which to generate Storybook configuration.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "For which project do you want to generate Storybook configuration?",
+        "x-dropdown": "projects",
+        "x-priority": "important"
+      },
+      "interactionTests": {
+        "type": "boolean",
+        "description": "Set up Storybook interaction tests.",
+        "x-prompt": "Do you want to set up Storybook interaction tests?",
+        "x-priority": "important",
+        "alias": ["configureTestRunner"],
+        "default": true
+      },
+      "generateStories": {
+        "type": "boolean",
+        "description": "Automatically generate `*.stories.ts` files for components declared in this project?",
+        "x-prompt": "Automatically generate *.stories.ts files for components declared in this project?",
+        "default": true,
+        "x-priority": "important"
+      },
+      "configureStaticServe": {
+        "type": "boolean",
+        "description": "Specifies whether to configure a static file server target for serving storybook. Helpful for speeding up CI build/test times.",
+        "x-prompt": "Configure a static file server for the storybook instance?",
+        "default": true,
+        "x-priority": "important"
+      },
+      "js": {
+        "type": "boolean",
+        "description": "Generate JavaScript story files rather than TypeScript story files.",
+        "default": false
+      },
+      "tsConfiguration": {
+        "type": "boolean",
+        "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
+        "default": true
+      },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint"],
+        "default": "eslint"
+      },
+      "ignorePaths": {
+        "type": "array",
+        "description": "Paths to ignore when looking for components.",
+        "items": { "type": "string", "description": "Path to ignore." },
+        "default": [
+          "*.stories.ts,*.stories.tsx,*.stories.js,*.stories.jsx,*.stories.mdx"
+        ],
+        "examples": [
+          "apps/my-app/src/not-stories/**",
+          "**/**/src/**/not-stories/**",
+          "libs/my-lib/**/*.something.ts",
+          "**/**/src/**/*.other.*",
+          "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
+        ]
+      }
+    },
+    "required": ["name"],
+    "examplesFile": "This generator will set up Storybook for your **Vue** project. You can also use this generator to generate Storybook configuration for your **Next.js** project. By default, starting Nx 16, Storybook v7 is used.\n\n```bash\nnx g @nx/vue:storybook-configuration project-name\n```\n\nYou can read more about how this generator works, in the [Storybook for Vue overview page](/recipes/storybook/overview-vue#generate-storybook-configuration-for-a-vue-project).\n\nWhen running this generator, you will be prompted to provide the following:\n\n- The `name` of the project you want to generate the configuration for.\n- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/vue/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. Also, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/vue/writing-tests/test-runner). You can read more about this in the [Nx Storybook interaction tests documentation page](/packages/storybook/documents/interaction-tests)..\n- Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.\n\nYou must provide a `name` for the generator to work.\n\nBy default, this generator will also set up [Storybook interaction tests](https://storybook.js.org/docs/vue/writing-tests/interaction-testing). If you don't want to set up Storybook interaction tests, you can pass the `--interactionTests=false` option, but it's not recommended.\n\nThere are a number of other options available. Let's take a look at some examples.\n\n## Examples\n\n### Generate Storybook configuration\n\n```bash\nnx g @nx/vue:storybook-configuration ui\n```\n\nThis will generate Storybook configuration for the `ui` project using TypeScript for the Storybook configuration files (the files inside the `.storybook` directory, eg. `.storybook/main.ts`).\n\n### Ignore certain paths when generating stories\n\n```bash\nnx g @nx/vue:storybook-configuration ui --generateStories=true --ignorePaths=libs/ui/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts\n```\n\nThis will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.\n\nThis is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.\n\nBy default, Nx will ignore the following paths:\n\n```text\n*.stories.ts, *.stories.tsx, *.stories.js, *.stories.jsx, *.stories.mdx\n```\n\nbut you can change this behaviour easily, as explained above.\n\n### Generate stories using JavaScript instead of TypeScript\n\n```bash\nnx g @nx/vue:storybook-configuration ui --generateStories=true --js=true\n```\n\nThis will generate stories for all the components in the `ui` project using JavaScript instead of TypeScript. So, you will have `.stories.js` files next to your components.\n\n### Generate Storybook configuration using JavaScript\n\n```bash\nnx g @nx/vue:storybook-configuration ui --tsConfiguration=false\n```\n\nBy default, our generator generates TypeScript Storybook configuration files. You can choose to use JavaScript for the Storybook configuration files of your project (the files inside the `.storybook` directory, eg. `.storybook/main.js`).\n",
+    "presets": []
+  },
+  "description": "Set up storybook for a Vue app or library.",
+  "hidden": false,
+  "implementation": "/packages/vue/src/generators/storybook-configuration/configuration.ts",
+  "aliases": [],
+  "path": "/packages/vue/src/generators/storybook-configuration/schema.json",
+  "type": "generator"
+}

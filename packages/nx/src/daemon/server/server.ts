@@ -1,65 +1,57 @@
-import { workspaceRoot } from '../../utils/workspace-root';
+import { existsSync, statSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { PerformanceObserver } from 'perf_hooks';
+import { hashArray } from '../../hasher/file-hasher';
+import { hashFile } from '../../native';
+import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
+import { readJsonFile } from '../../utils/fileutils';
+import { PackageJson } from '../../utils/package-json';
+import { nxVersion } from '../../utils/versions';
+import { setupWorkspaceContext } from '../../utils/workspace-context';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { writeDaemonJsonProcessCache } from '../cache';
 import {
   FULL_OS_SOCKET_PATH,
   isWindows,
   killSocketOrPath,
 } from '../socket-utils';
+import {
+  registeredFileWatcherSockets,
+  removeRegisteredFileWatcherSocket,
+} from './file-watching/file-watcher-sockets';
+import { handleHashTasks } from './handle-hash-tasks';
+import {
+  handleOutputsHashesMatch,
+  handleRecordOutputsHash,
+} from './handle-outputs-tracking';
+import { handleProcessInBackground } from './handle-process-in-background';
+import { handleRequestFileData } from './handle-request-file-data';
+import { handleRequestProjectGraph } from './handle-request-project-graph';
+import { handleRequestShutdown } from './handle-request-shutdown';
 import { serverLogger } from './logger';
 import {
-  getOutputsWatcherSubscription,
+  disableOutputsTracking,
+  processFileChangesInOutputs,
+} from './outputs-tracking';
+import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
+import {
   getOutputWatcherInstance,
-  getSourceWatcherSubscription,
   getWatcherInstance,
   handleServerProcessTermination,
   resetInactivityTimeout,
   respondToClient,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
-  storeOutputsWatcherSubscription,
   storeOutputWatcherInstance,
-  storeProcessJsonSubscription,
-  storeSourceWatcherSubscription,
   storeWatcherInstance,
 } from './shutdown-utils';
 import {
   convertChangeEventsToLogMessage,
-  subscribeToOutputsChanges,
-  subscribeToWorkspaceChanges,
   FileWatcherCallback,
-  subscribeToServerProcessJsonChanges,
-  watchWorkspace,
   watchOutputFiles,
+  watchWorkspace,
 } from './watcher';
-import { addUpdatedAndDeletedFiles } from './project-graph-incremental-recomputation';
-import { existsSync, statSync } from 'fs';
-import { handleRequestProjectGraph } from './handle-request-project-graph';
-import { handleProcessInBackground } from './handle-process-in-background';
-import {
-  handleOutputsHashesMatch,
-  handleRecordOutputsHash,
-} from './handle-outputs-tracking';
-import { consumeMessagesFromSocket } from '../../utils/consume-messages-from-socket';
-import {
-  disableOutputsTracking,
-  processFileChangesInOutputs,
-} from './outputs-tracking';
-import { handleRequestShutdown } from './handle-request-shutdown';
-import {
-  registeredFileWatcherSockets,
-  removeRegisteredFileWatcherSocket,
-} from './file-watching/file-watcher-sockets';
-import { nxVersion } from '../../utils/versions';
-import { readJsonFile } from '../../utils/fileutils';
-import { PackageJson } from '../../utils/package-json';
-import { getDaemonProcessIdSync, writeDaemonJsonProcessCache } from '../cache';
-import { handleHashTasks } from './handle-hash-tasks';
-import { hashArray } from '../../hasher/file-hasher';
-import { handleRequestFileData } from './handle-request-file-data';
-import { setupWorkspaceContext } from '../../utils/workspace-context';
-import { hashFile } from '../../native';
 
 let performanceObserver: PerformanceObserver | undefined;
 let workspaceWatcherError: Error | undefined;
@@ -109,7 +101,6 @@ const server = createServer(async (socket) => {
   });
 });
 registerProcessTerminationListeners();
-registerProcessServerJsonTracking();
 
 async function handleMessage(socket, data: string) {
   if (workspaceWatcherError) {
@@ -237,23 +228,6 @@ function registerProcessTerminationListeners() {
         reason: 'received process SIGHUP',
       })
     );
-}
-
-async function registerProcessServerJsonTracking() {
-  if (useNativeWatcher()) {
-    return;
-  }
-
-  storeProcessJsonSubscription(
-    await subscribeToServerProcessJsonChanges(async () => {
-      if (getDaemonProcessIdSync() !== process.pid) {
-        await handleServerProcessTermination({
-          server,
-          reason: 'this process is no longer the current daemon',
-        });
-      }
-    })
-  );
 }
 
 let existingLockHash: string | undefined;
@@ -419,46 +393,20 @@ export async function startServer(): Promise<Server> {
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
 
-          if (useNativeWatcher()) {
-            if (!getWatcherInstance()) {
-              storeWatcherInstance(
-                await watchWorkspace(server, handleWorkspaceChanges)
-              );
+          if (!getWatcherInstance()) {
+            storeWatcherInstance(
+              await watchWorkspace(server, handleWorkspaceChanges)
+            );
 
-              serverLogger.watcherLog(
-                `Subscribed to changes within: ${workspaceRoot} (native)`
-              );
-            }
+            serverLogger.watcherLog(
+              `Subscribed to changes within: ${workspaceRoot} (native)`
+            );
+          }
 
-            if (!getOutputWatcherInstance()) {
-              storeOutputWatcherInstance(
-                await watchOutputFiles(handleOutputsChanges)
-              );
-            }
-          } else {
-            if (!getSourceWatcherSubscription()) {
-              storeSourceWatcherSubscription(
-                await subscribeToWorkspaceChanges(
-                  server,
-                  handleWorkspaceChanges
-                )
-              );
-              serverLogger.watcherLog(
-                `Subscribed to changes within: ${workspaceRoot}`
-              );
-            }
-
-            // temporary disable outputs tracking on linux
-            const outputsTrackingIsEnabled = process.platform != 'linux';
-            if (outputsTrackingIsEnabled) {
-              if (!getOutputsWatcherSubscription()) {
-                storeOutputsWatcherSubscription(
-                  await subscribeToOutputsChanges(handleOutputsChanges)
-                );
-              }
-            } else {
-              disableOutputsTracking();
-            }
+          if (!getOutputWatcherInstance()) {
+            storeOutputWatcherInstance(
+              await watchOutputFiles(handleOutputsChanges)
+            );
           }
 
           return resolve(server);
@@ -470,9 +418,4 @@ export async function startServer(): Promise<Server> {
       reject(err);
     }
   });
-}
-
-// TODO(cammisuli): remove with nx 16.6 (only our watcher will be supported)
-function useNativeWatcher() {
-  return process.env.NX_NATIVE_WATCHER === 'true';
 }

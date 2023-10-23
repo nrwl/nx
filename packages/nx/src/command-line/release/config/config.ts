@@ -40,7 +40,9 @@ export const CATCH_ALL_RELEASE_GROUP = '__default__';
  */
 export type NxReleaseConfig = DeepRequired<
   NxJsonConfiguration['release'] & {
-    groups: EnsureProjectsArray<NxJsonConfiguration['release']['groups']>;
+    groups: DeepRequired<
+      EnsureProjectsArray<NxJsonConfiguration['release']['groups']>
+    >;
   }
 >;
 
@@ -63,65 +65,106 @@ export async function createNxReleaseConfig(
   error: null | CreateNxReleaseConfigError;
   nxReleaseConfig: NxReleaseConfig | null;
 }> {
-  const DEFAULT_VERSION_GENERATOR = '@nx/js:release-version';
-  const DEFAULT_VERSION_GENERATOR_OPTIONS = {};
-
-  const allProjects = findMatchingProjects(['*'], projectGraph.nodes);
-  const userSpecifiedGroups = userConfig.groups || {};
-
-  /**
-   * No user specified release groups, so we treat all projects as being in one release group
-   * together in which all projects are released in lock step.
-   */
-  if (Object.keys(userSpecifiedGroups).length === 0) {
-    // Ensure all projects have the relevant target available, if applicable
-    if (requiredTargetName) {
-      const error = ensureProjectsHaveTarget(
-        allProjects,
-        projectGraph,
-        requiredTargetName
-      );
-      if (error) {
-        return {
-          error,
-          nxReleaseConfig: null,
-        };
-      }
-    }
-
-    return {
-      error: null,
-      nxReleaseConfig: {
-        groups: {
-          [CATCH_ALL_RELEASE_GROUP]: {
-            projects: allProjects,
-            version: {
-              generator: DEFAULT_VERSION_GENERATOR,
-              generatorOptions: DEFAULT_VERSION_GENERATOR_OPTIONS,
-            },
-          },
+  const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
+    version: {
+      generator: '@nx/js:release-version',
+      generatorOptions: {},
+    },
+    changelog: {
+      workspaceChangelog: {
+        createRelease: false,
+        entryWhenNoChanges:
+          'This was a version bump only, there were no code changes.',
+        file: '{workspaceRoot}/CHANGELOG.md',
+        renderer: 'nx/changelog-renderer',
+        renderOptions: {
+          includeAuthors: true,
         },
       },
-    };
-  }
+      // For projectChangelogs if the user has set any changelog config at all, then use one set of defaults, otherwise default to false for the whole feature
+      projectChangelogs: userConfig.changelog?.projectChangelogs
+        ? {
+            createRelease: false,
+            file: '{projectRoot}/CHANGELOG.md',
+            entryWhenNoChanges:
+              'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
+            renderer: 'nx/changelog-renderer',
+            renderOptions: {
+              includeAuthors: true,
+            },
+          }
+        : false,
+    },
+    releaseTagPattern: 'v{version}',
+  };
+  const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
+    version: {
+      generator: '@nx/js:release-version',
+      generatorOptions: {},
+    },
+    changelog: {
+      createRelease: false,
+      entryWhenNoChanges:
+        'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
+      file: '{projectRoot}/CHANGELOG.md',
+      renderer: 'nx/changelog-renderer',
+      renderOptions: {
+        includeAuthors: true,
+      },
+    },
+    releaseTagPattern: '{projectName}@v{version}',
+  };
 
   /**
-   * The user has specified at least one release group.
-   *
+   * We first process root level config and apply defaults, so that we know how to handle the group level
+   * overrides, if applicable.
+   */
+  const rootVersionConfig: NxReleaseConfig['version'] = deepMergeDefaults(
+    [WORKSPACE_DEFAULTS.version],
+    userConfig.version
+  );
+  const rootChangelogConfig: NxReleaseConfig['changelog'] = deepMergeDefaults(
+    [WORKSPACE_DEFAULTS.changelog],
+    userConfig.changelog as Partial<NxReleaseConfig['changelog']>
+  );
+
+  const allProjects = findMatchingProjects(['*'], projectGraph.nodes);
+  const groups: NxReleaseConfig['groups'] =
+    userConfig.groups && Object.keys(userConfig.groups).length
+      ? ensureProjectsConfigIsArray(userConfig.groups)
+      : /**
+         * No user specified release groups, so we treat all projects as being in one release group
+         * together in which all projects are released in lock step.
+         */
+        {
+          [CATCH_ALL_RELEASE_GROUP]: {
+            projects: allProjects,
+            /**
+             * For properties which are overriding config at the root, we use the root level config as the
+             * default values to merge with so that the group that matches a specific project will always
+             * be the valid source of truth for that type of config.
+             */
+            version: deepMergeDefaults(
+              [GROUP_DEFAULTS.version],
+              rootVersionConfig
+            ),
+            releaseTagPattern: GROUP_DEFAULTS.releaseTagPattern,
+            // Directly inherit the root level config for projectChangelogs, if set
+            changelog: rootChangelogConfig.projectChangelogs || false,
+          },
+        };
+
+  /**
    * Resolve all the project names into their release groups, and check
    * that individual projects are not found in multiple groups.
    */
   const releaseGroups: NxReleaseConfig['groups'] = {};
   const alreadyMatchedProjects = new Set<string>();
 
-  for (const [releaseGroupName, userSpecifiedGroup] of Object.entries(
-    userSpecifiedGroups
-  )) {
-    // Ensure that the user config for the release group can resolve at least one project
+  for (const [releaseGroupName, releaseGroup] of Object.entries(groups)) {
+    // Ensure that the config for the release group can resolve at least one project
     const matchingProjects = findMatchingProjects(
-      Array.isArray(userSpecifiedGroup.projects)
-        ? userSpecifiedGroup.projects
-        : [userSpecifiedGroup.projects],
+      releaseGroup.projects,
       projectGraph.nodes
     );
     if (!matchingProjects.length) {
@@ -165,28 +208,48 @@ export async function createNxReleaseConfig(
       }
       alreadyMatchedProjects.add(project);
     }
-    releaseGroups[releaseGroupName] = {
+
+    // First apply any group level defaults, then apply actual root level config (if applicable), then group level config
+    const groupChangelogDefaults: Array<
+      NxReleaseConfig['groups']['string']['changelog']
+    > = [GROUP_DEFAULTS.changelog];
+    if (rootChangelogConfig.projectChangelogs) {
+      groupChangelogDefaults.push(rootChangelogConfig.projectChangelogs);
+    }
+
+    const groupDefaults: NxReleaseConfig['groups']['string'] = {
       projects: matchingProjects,
-      version: userSpecifiedGroup.version
-        ? {
-            generator:
-              userSpecifiedGroup.version.generator || DEFAULT_VERSION_GENERATOR,
-            generatorOptions:
-              userSpecifiedGroup.version.generatorOptions ||
-              DEFAULT_VERSION_GENERATOR_OPTIONS,
-          }
-        : {
-            generator: DEFAULT_VERSION_GENERATOR,
-            generatorOptions: DEFAULT_VERSION_GENERATOR_OPTIONS,
-          },
+      version: deepMergeDefaults(
+        // First apply any group level defaults, then apply actual root level config, then group level config
+        [GROUP_DEFAULTS.version, rootVersionConfig],
+        releaseGroup.version
+      ),
+      // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature
+      changelog:
+        releaseGroup.changelog || rootChangelogConfig.projectChangelogs
+          ? deepMergeDefaults<NxReleaseConfig['groups']['string']['changelog']>(
+              groupChangelogDefaults,
+              releaseGroup.changelog || {}
+            )
+          : false,
+      releaseTagPattern: GROUP_DEFAULTS.releaseTagPattern,
     };
+
+    releaseGroups[releaseGroupName] = deepMergeDefaults([groupDefaults], {
+      ...releaseGroup,
+      // Ensure that the resolved project names take priority over the original user config (which could have contained unresolved globs etc)
+      projects: matchingProjects,
+    });
   }
 
   return {
     error: null,
     nxReleaseConfig: {
-      ...userConfig,
+      version: rootVersionConfig,
+      changelog: rootChangelogConfig,
       groups: releaseGroups,
+      releaseTagPattern:
+        userConfig.releaseTagPattern || WORKSPACE_DEFAULTS.releaseTagPattern,
     },
   };
 }
@@ -234,6 +297,21 @@ export async function handleNxReleaseConfigError(
   process.exit(1);
 }
 
+function ensureProjectsConfigIsArray(
+  groups: NxJsonConfiguration['release']['groups']
+): NxReleaseConfig['groups'] {
+  const result: NxJsonConfiguration['release']['groups'] = {};
+  for (const [groupName, groupConfig] of Object.entries(groups)) {
+    result[groupName] = {
+      ...groupConfig,
+      projects: Array.isArray(groupConfig.projects)
+        ? groupConfig.projects
+        : [groupConfig.projects],
+    };
+  }
+  return result as NxReleaseConfig['groups'];
+}
+
 function ensureProjectsHaveTarget(
   projects: string[],
   projectGraph: ProjectGraph,
@@ -253,4 +331,64 @@ function ensureProjectsHaveTarget(
     };
   }
   return null;
+}
+
+function isObject(value: any): value is Record<string, any> {
+  return value && typeof value === 'object' && !Array.isArray(value);
+}
+
+// Helper function to merge two config objects
+function mergeConfig<T>(
+  objA: DeepRequired<T>,
+  objB: Partial<T>
+): DeepRequired<T> {
+  const merged: any = { ...objA };
+
+  for (const key in objB) {
+    if (objB.hasOwnProperty(key)) {
+      // If objB[key] is explicitly set to false, null or 0, respect that value
+      if (objB[key] === false || objB[key] === null || objB[key] === 0) {
+        merged[key] = objB[key];
+      }
+      // If both objA[key] and objB[key] are objects, recursively merge them
+      else if (isObject(merged[key]) && isObject(objB[key])) {
+        merged[key] = mergeConfig(merged[key], objB[key]);
+      }
+      // If objB[key] is defined, use it (this will overwrite any existing value in merged[key])
+      else if (objB[key] !== undefined) {
+        merged[key] = objB[key];
+      }
+    }
+  }
+
+  return merged as DeepRequired<T>;
+}
+
+/**
+ * This function takes in a strictly typed collection of all possible default values in a particular section of config,
+ * and an optional set of partial user config, and returns a single, deeply merged config object, where the user
+ * config takes priority over the defaults in all cases (only an `undefined` value in the user config will be
+ * overwritten by the defaults, all other falsey values from the user will be respected).
+ */
+function deepMergeDefaults<T>(
+  defaultConfigs: DeepRequired<T>[],
+  userConfig?: Partial<T>
+): DeepRequired<T> {
+  let result: any;
+
+  // First merge defaultConfigs sequentially (meaning later defaults will override earlier ones)
+  for (const defaultConfig of defaultConfigs) {
+    if (!result) {
+      result = defaultConfig;
+      continue;
+    }
+    result = mergeConfig(result, defaultConfig as Partial<T>);
+  }
+
+  // Finally, merge the userConfig
+  if (userConfig) {
+    result = mergeConfig(result, userConfig);
+  }
+
+  return result as DeepRequired<T>;
 }

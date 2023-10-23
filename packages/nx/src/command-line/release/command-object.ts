@@ -24,11 +24,9 @@ export type ChangelogOptions = NxReleaseArgs & {
   version: string;
   to: string;
   from?: string;
-  interactive?: boolean;
+  interactive?: string;
   gitRemote?: string;
   tagVersionPrefix?: string;
-  createRelease?: string;
-  file?: string | false;
 };
 
 export type PublishOptions = NxReleaseArgs &
@@ -146,7 +144,10 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
       })
       .option('interactive', {
         alias: 'i',
-        type: 'boolean',
+        type: 'string',
+        description:
+          'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level',
+        choices: ['all', 'workspace', 'projects'],
       })
       .option('gitRemote', {
         type: 'string',
@@ -159,24 +160,6 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         description:
           'Prefix to apply to the version when creating the Github release tag',
         default: 'v',
-      })
-      .option('createRelease', {
-        describe:
-          'Create a release for the given version on a supported source control service provider, such as Github.',
-        type: 'string',
-        choices: ['github'],
-      })
-      .option('file', {
-        type: 'string',
-        description:
-          'The name of the file to write the changelog to. It can also be set to `false` to disable file generation. Defaults to CHANGELOG.md.',
-        default: 'CHANGELOG.md',
-        coerce: (file) => {
-          if (file === 'false') {
-            return false;
-          }
-          return file;
-        },
       })
       .check((argv) => {
         if (!argv.version) {

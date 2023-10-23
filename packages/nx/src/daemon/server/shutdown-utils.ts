@@ -2,36 +2,10 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import type { Server, Socket } from 'net';
 import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
-import type { AsyncSubscription } from '@parcel/watcher';
 import { deleteDaemonJsonProcessCache } from '../cache';
 import type { Watcher } from '../../native';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
-
-let sourceWatcherSubscription: AsyncSubscription | undefined;
-let outputsWatcherSubscription: AsyncSubscription | undefined;
-
-export function getSourceWatcherSubscription() {
-  return sourceWatcherSubscription;
-}
-
-export function storeSourceWatcherSubscription(s: AsyncSubscription) {
-  sourceWatcherSubscription = s;
-}
-
-export function getOutputsWatcherSubscription() {
-  return outputsWatcherSubscription;
-}
-
-export function storeOutputsWatcherSubscription(s: AsyncSubscription) {
-  outputsWatcherSubscription = s;
-}
-
-let processJsonSubscription: AsyncSubscription | undefined;
-
-export function storeProcessJsonSubscription(s: AsyncSubscription) {
-  processJsonSubscription = s;
-}
 
 let watcherInstance: Watcher | undefined;
 export function storeWatcherInstance(instance: Watcher) {
@@ -61,24 +35,6 @@ export async function handleServerProcessTermination({
   try {
     server.close();
     deleteDaemonJsonProcessCache();
-    if (sourceWatcherSubscription) {
-      await sourceWatcherSubscription.unsubscribe();
-      serverLogger.watcherLog(
-        `Unsubscribed from changes within: ${workspaceRoot} (sources)`
-      );
-    }
-    if (outputsWatcherSubscription) {
-      await outputsWatcherSubscription.unsubscribe();
-      serverLogger.watcherLog(
-        `Unsubscribed from changes within: ${workspaceRoot} (outputs)`
-      );
-    }
-    if (processJsonSubscription) {
-      await processJsonSubscription.unsubscribe();
-      serverLogger.watcherLog(
-        `Unsubscribed from changes within: ${workspaceRoot} (server-process.json)`
-      );
-    }
 
     if (watcherInstance) {
       await watcherInstance.stop();

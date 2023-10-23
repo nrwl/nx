@@ -25,6 +25,7 @@ export const iconsMap: Record<string, string> = {
   rspack: '/images/icons/rspack.svg',
   storybook: '/images/icons/storybook.svg',
   vite: '/images/icons/vite.svg',
+  vue: '/images/icons/vuedotjs.svg',
   web: '/images/icons/html5.svg',
   webpack: '/images/icons/webpack.svg',
   workspace: '/images/icons/nx.svg',

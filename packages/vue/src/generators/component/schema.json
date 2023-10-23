@@ -110,5 +110,5 @@
       "x-prompt": "What unit test runner should be used?"
     }
   },
-  "required": ["name"]
+  "required": ["name", "project"]
 }

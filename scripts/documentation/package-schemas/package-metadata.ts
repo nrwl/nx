@@ -121,9 +121,6 @@ export function findPackageMetadataList(
     .map((folderPath: string): PackageData => {
       const folderName = folderPath.substring(packagesDir.length + 1);
 
-      // TODO(v17): Remove this once @nx/vue is published
-      if (folderName === 'vue') return null;
-
       const relativeFolderPath = folderPath.replace(absoluteRoot, '');
       const packageJson = readJsonSync(
         join(folderPath, 'package.json'),
