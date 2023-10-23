@@ -1,16 +1,12 @@
 import type { Tree } from '@nx/devkit';
 import { stripIndents } from '@nx/devkit';
-import {
-  validateProject,
-  validateStandaloneOption,
-} from '../../utils/validations';
+import { validateProject } from '../../utils/validations';
 import type { Schema } from '../schema';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import { lt } from 'semver';
 
 export function validateOptions(tree: Tree, options: Schema): void {
   validateProject(tree, options.project);
-  validateStandaloneOption(tree, options.standalone);
   validateHydrationOption(tree, options.hydration);
 }
 

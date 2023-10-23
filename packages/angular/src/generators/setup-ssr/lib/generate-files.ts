@@ -39,18 +39,8 @@ export function generateSSRFiles(tree: Tree, schema: Schema) {
       { ...schema, browserBundleOutputPath, tpl: '' }
     );
 
-    const { major: angularMajorVersion, version: angularVersion } =
-      getInstalledAngularVersionInfo(tree);
+    const { version: angularVersion } = getInstalledAngularVersionInfo(tree);
 
-    if (angularMajorVersion < 15) {
-      generateFiles(
-        tree,
-        joinPathFragments(pathToFiles, 'ngmodule', 'v14'),
-        projectRoot,
-
-        { ...schema, browserBundleOutputPath, tpl: '' }
-      );
-    }
     if (lt(angularVersion, '15.2.0')) {
       generateFiles(
         tree,

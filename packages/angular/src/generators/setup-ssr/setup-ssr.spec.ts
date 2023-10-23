@@ -7,6 +7,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { angularVersion, ngUniversalVersion } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupSsr } from './setup-ssr';
@@ -309,7 +310,7 @@ describe('setupSSR', () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '14.2.0',
+          '@angular/core': '15.2.0',
         },
       }));
 
@@ -319,46 +320,14 @@ describe('setupSSR', () => {
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        '~14.2.0'
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
-        '~14.2.0'
+        backwardCompatibleVersions.angularV15.ngUniversalVersion
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual(
-        '~14.2.0'
+        backwardCompatibleVersions.angularV15.ngUniversalVersion
       );
-    });
-
-    it('should create the main.server.ts file correctly for Angular v14', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, {
-        name: 'app1',
-      });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '14.2.0' },
-      }));
-
-      // ACT
-      await setupSsr(tree, { project: 'app1' });
-
-      // ASSERT
-      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "/***************************************************************************************************
-         * Initialize the server environment - for example, adding DOM built-in types to the global scope.
-         *
-         * NOTE:
-         * This import must come before any imports (direct or transitive) that rely on DOM built-ins being
-         * available, such as \`@angular/elements\`.
-         */
-        import '@angular/platform-server/init';
-
-        export { AppServerModule } from './app/app.server.module';
-        export { renderModule } from '@angular/platform-server';
-        "
-      `);
     });
 
     it('should add "withServerTransition" call to app module for angular versions lower than 16', async () => {

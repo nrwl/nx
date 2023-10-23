@@ -75,7 +75,7 @@
         "oneOf": [
           {
             "type": "array",
-            "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'. _Note: supported in Angular versions >= 15.0.0_.",
+            "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
             "items": { "type": "string", "uniqueItems": true },
             "default": []
           },
@@ -137,7 +137,7 @@
                 "input": {
                   "type": "string",
                   "description": "The file to include.",
-                  "pattern": "\\.(?:css|scss|sass|less|styl)$"
+                  "pattern": "\\.(?:css|scss|sass|less)$"
                 },
                 "bundleName": {
                   "type": "string",
@@ -156,7 +156,7 @@
             {
               "type": "string",
               "description": "The file to include.",
-              "pattern": "\\.(?:css|scss|sass|less|styl)$"
+              "pattern": "\\.(?:css|scss|sass|less)$"
             }
           ]
         },
