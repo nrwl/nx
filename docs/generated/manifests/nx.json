@@ -6231,6 +6231,16 @@
         "tags": []
       },
       {
+        "id": "angular-schematics-builders",
+        "name": "Angular Schematics and Builders",
+        "description": "",
+        "file": "shared/deprecated/angular-schematics-builders",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/angular-schematics-builders",
+        "tags": []
+      },
+      {
         "id": "storybook",
         "name": "Storybook deprecated docs",
         "description": "Deprecated @nx/storybook package documentation and guides.",
@@ -6394,6 +6404,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/global-implicit-dependencies",
+    "tags": []
+  },
+  "/deprecated/angular-schematics-builders": {
+    "id": "angular-schematics-builders",
+    "name": "Angular Schematics and Builders",
+    "description": "",
+    "file": "shared/deprecated/angular-schematics-builders",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/angular-schematics-builders",
     "tags": []
   },
   "/deprecated/storybook": {
