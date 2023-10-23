@@ -221,8 +221,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(projectConfig.targets.serve).toEqual({
       executor: '@angular-devkit/build-angular:dev-server',
       configurations: {
-        production: { browserTarget: `${project}:build:production` },
-        development: { browserTarget: `${project}:build:development` },
+        production: { buildTarget: `${project}:build:production` },
+        development: { buildTarget: `${project}:build:development` },
       },
       defaultConfiguration: 'development',
     });
@@ -257,7 +257,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     });
 
     runCLI(`build ${project} --configuration production --outputHashing none`);
-    checkFilesExist(`dist/apps/${project}/main.js`);
+    checkFilesExist(`dist/apps/${project}/browser/main.js`);
   });
 
   it('should handle a workspace with cypress v9', () => {
@@ -450,7 +450,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain(
       `Successfully ran target build for project ${project}`
     );
-    checkFilesExist(`dist/apps/${project}/main.js`);
+    checkFilesExist(`dist/apps/${project}/browser/main.js`);
 
     output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
@@ -468,7 +468,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain(
       `Successfully ran target build for project ${app1}`
     );
-    checkFilesExist(`dist/apps/${app1}/main.js`);
+    checkFilesExist(`dist/apps/${app1}/browser/main.js`);
 
     output = runCLI(`build ${app1} --outputHashing none`);
     expect(output).toContain(
