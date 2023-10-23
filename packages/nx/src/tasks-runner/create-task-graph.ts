@@ -354,13 +354,19 @@ export class ProcessTasks {
     project: ProjectGraphProjectNode,
     target: string,
     configuration: string | undefined
-  ) {
+  ): string | undefined {
     const defaultConfiguration =
       project.data.targets?.[target]?.defaultConfiguration;
     configuration ??= defaultConfiguration;
-    return projectHasTargetAndConfiguration(project, target, configuration)
-      ? configuration
-      : defaultConfiguration;
+    if (
+      configuration &&
+      !projectHasTargetAndConfiguration(project, target, configuration)
+    ) {
+      throw new Error(
+        `Cannot find configuration for task ${project.name}:${target}:${configuration}`
+      );
+    }
+    return configuration;
   }
 
   getId(
