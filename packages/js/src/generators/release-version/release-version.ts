@@ -184,6 +184,10 @@ To fix this you will either need to add a package.json file at that location, or
         );
     }
 
+    if (options.specifier) {
+      log(`📄 Using the provided version specifier "${options.specifier}".`);
+    }
+
     // if specifier is null, then we determined previously via conventional commits that no changes are necessary
     if (specifier === undefined) {
       const specifierSource = options.specifierSource;
@@ -195,6 +199,19 @@ To fix this you will either need to add a package.json file at that location, or
             );
           }
 
+          specifier = await resolveSemverSpecifierFromConventionalCommits(
+            latestMatchingGitTag.tag,
+            options.projectGraph,
+            projects.map((p) => p.name)
+          );
+
+          if (!specifier) {
+            log(
+              `🚫 No changes were detected using git history and the conventional commits standard.`
+            );
+            break;
+          }
+
           // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
           // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
           if (prerelease(currentVersion)) {
@@ -202,22 +219,9 @@ To fix this you will either need to add a package.json file at that location, or
             log(
               `📄 Resolved the specifier as "${specifier}" since the current version is a prerelease.`
             );
-            break;
-          }
-
-          specifier = await resolveSemverSpecifierFromConventionalCommits(
-            latestMatchingGitTag.tag,
-            options.projectGraph,
-            projects.map((p) => p.name)
-          );
-
-          if (specifier) {
-            log(
-              `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`
-            );
           } else {
             log(
-              `🚫 No changes were detected using git history and the conventional commits standard.`
+              `📄 Resolved the specifier as "${specifier}" using git history and the conventional commits standard.`
             );
           }
           break;
