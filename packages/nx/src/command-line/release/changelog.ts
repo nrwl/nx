@@ -78,9 +78,6 @@ export async function changelogHandler(args: ChangelogOptions): Promise<void> {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  /**
-   * TODO: validate releaseTagPattern contains exactly one instance of {version}
-   */
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,

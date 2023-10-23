@@ -945,5 +945,49 @@ describe('createNxReleaseConfig()', () => {
         }
       `);
     });
+
+    it("should return an error if a group's releaseTagPattern has no {version} placeholder", async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        groups: {
+          'group-1': {
+            projects: '*',
+            releaseTagPattern: 'v',
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE",
+            "data": {
+              "releaseGroupName": "group-1",
+            },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it("should return an error if a group's releaseTagPattern has more than one {version} placeholder", async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        groups: {
+          'group-1': {
+            projects: '*',
+            releaseTagPattern: '{version}v{version}',
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE",
+            "data": {
+              "releaseGroupName": "group-1",
+            },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
   });
 });
