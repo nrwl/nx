@@ -58,7 +58,7 @@ A simplified version of Nx's built-in `project.json` plugin is shown below, whic
 ```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = [
   '**/project.json',
-  (projectConfigurationFile: string, context: CreateNodesContext) => {
+  (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
     const projectConfiguration = readJson(projectConfigurationFile);
     const projectRoot = dirname(projectConfigurationFile);
     const projectName = projectConfiguration.name;
@@ -97,7 +97,8 @@ It's more common for plugins to create new dependencies. First-party code contai
 The shape of the [`createDependencies`](/nx-api/devkit/documents/CreateDependencies) function follows:
 
 ```typescript
-export type CreateDependencies = (
+export type CreateDependencies<T> = (
+  opts: T,
   context: CreateDependenciesContext
 ) => CandidateDependency[] | Promise<CandidateDependency[]>;
 ```
@@ -166,7 +167,7 @@ Even though the plugin is written in JavaScript, resolving dependencies of diffe
 A small plugin that recognizes dependencies to projects in the current workspace which a referenced in another project's `package.json` file may look like so:
 
 ```typescript {% fileName="/my-plugin/index.ts" %}
-export const createNodes: CreateNodes = (ctx) => {
+export const createDependencies: CreateDependencies = (opts, ctx) => {
   const packageJsonProjectMap = new Map();
   const nxProjects = Object.values(ctx.projectsConfigurations);
   const results = [];
@@ -210,6 +211,54 @@ Breaking down this example, we can see that it follows this flow:
 6. Validates the dependency
 7. Pushes it into the located dependency array
 8. Returns the located dependencies
+
+## Accepting Plugin Options
+
+When looking at `createNodes`, and `createDependencies` you may notice a parameter called `options`. This is the first parameter for `createDependencies` or the second parameter for `createDependencies`.
+
+By default, its typed as unknown. This is because it belongs to the plugin author. The `CreateNodes`, `CreateDependencies`, and `NxPluginV2` types all accept a generic parameter that allows you to specify the type of the options.
+
+The options are read from `nx.json` when your plugin is specified as an object rather than just its module name.
+
+As an example, the below `nx.json` file specifies a plugin called `my-plugin` and passes it an option called `tagName`.
+
+```json
+{
+  "plugins": [
+    {
+      "name": "my-plugin",
+      "options": {
+        "tagName": "plugin:my-plugin"
+      }
+    }
+  ]
+}
+```
+
+`my-plugin` could then consume these options to add a tag to each project it detected:
+
+```typescript
+type MyPluginOptions = { tagName: string };
+
+export const createNodes: CreateNodes<MyPluginOptions> = [
+  '**/project.json',
+  (fileName, opts, ctx) => {
+    const root = dirname(fileName);
+    const name = basename(fileName);
+
+    return {
+      projects: {
+        [name]: {
+          root,
+          tags: opts.tagName ? [opts.tagName] : [],
+        },
+      },
+    };
+  },
+];
+```
+
+This functionality is available in Nx 17 or higher.
 
 ## Visualizing the Project Graph
 

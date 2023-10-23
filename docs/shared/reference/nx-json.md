@@ -237,6 +237,28 @@ If you are using distributed task execution and disable caching for a given targ
 
 {% /callout %}
 
+### Plugins
+
+Nx plugins can provide generators, executors, as well as modifying the project graph. Any plugin that modifies the project graph must be listed in the `plugins` array in `nx.json`. Plugins which modify the project graph generally either add nodes or dependencies to the graph.
+
+This can be read about in more detail in the [plugins guide](/extending-nx/recipes/project-graph-plugins).
+
+Inside `nx.json`, these plugins are either listed by their module path, or an object that references the plugin's module path and options that should be passed to it.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    "@my-org/graph-plugin",
+    {
+      "plugin": "@my-org/other-plugin",
+      "options": {
+        "someOption": true
+      }
+    }
+  ]
+}
+```
+
 ### Generators
 
 Default generator options are configured in `nx.json` as well. For instance, the following tells Nx to always
