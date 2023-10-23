@@ -51,6 +51,10 @@ export function convertNxExecutor(executor: Executor) {
         projectGraph: null,
         taskGraph: null,
         isVerbose: false,
+        workspace: {
+          version: 2,
+          projects: projectsConfigurations.projects,
+        },
       };
       return executor(options, context);
     };

@@ -2,7 +2,6 @@ import {
   joinPathFragments,
   parseTargetString,
   readCachedProjectGraph,
-  readNxJson,
 } from '@nx/devkit';
 import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
@@ -19,7 +18,6 @@ import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { getRootTsConfigPath } from '@nx/js';
-import { join } from 'path';
 
 type BuildTargetOptions = {
   tsConfig: string;
@@ -36,12 +34,19 @@ export function executeWebpackDevServerBuilder(
 
   const options = normalizeOptions(rawOptions);
 
+  const projectsConfigurations = {
+    version: 2,
+    projects: {},
+  };
   const parsedBrowserTarget = parseTargetString(options.browserTarget, {
     cwd: context.currentDirectory,
     projectGraph: readCachedProjectGraph(),
     projectName: context.target.project,
     root: context.workspaceRoot,
     isVerbose: false,
+    projectsConfigurations,
+    workspace: projectsConfigurations,
+    nxJsonConfiguration: {},
   });
   const browserTargetProjectConfiguration = readCachedProjectConfiguration(
     parsedBrowserTarget.project

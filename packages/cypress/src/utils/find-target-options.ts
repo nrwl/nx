@@ -244,5 +244,9 @@ function createExecutorContext(
     projectName,
     projectsConfigurations,
     nxJsonConfiguration,
+    workspace: {
+      version: 2,
+      projects: projectsConfigurations.projects,
+    },
   };
 }

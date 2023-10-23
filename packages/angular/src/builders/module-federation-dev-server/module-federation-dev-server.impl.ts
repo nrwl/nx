@@ -9,11 +9,7 @@ import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
 import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
-import {
-  getDynamicRemotes,
-  getStaticRemotes,
-  validateDevRemotes,
-} from '../utilities/module-federation';
+import { validateDevRemotes } from '../utilities/module-federation';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import {
@@ -64,6 +60,10 @@ export function executeModuleFederationDevServerBuilder(
           projectsConfigurations:
             readProjectsConfigurationFromProjectGraph(projectGraph),
           nxJsonConfiguration: readNxJson(),
+          workspace: {
+            version: 2,
+            projects: workspaceProjects,
+          },
         }
       )
     )

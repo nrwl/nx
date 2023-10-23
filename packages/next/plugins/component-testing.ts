@@ -58,12 +58,19 @@ export function nxComponentTestingPreset(
   let buildFileReplacements = [];
   let buildOuputPath = `dist/${ctProjectName}/.next`;
   if (buildTarget) {
+    const projectsConfigurations = {
+      version: 2,
+      projects: {},
+    };
     const parsedBuildTarget = parseTargetString(buildTarget, {
       cwd: process.cwd(),
       root: workspaceRoot,
       isVerbose: false,
       projectName: ctProjectName,
       projectGraph: graph,
+      projectsConfigurations,
+      workspace: projectsConfigurations,
+      nxJsonConfiguration: {},
     });
     const buildProjectConfig = graph.nodes[parsedBuildTarget.project]?.data;
     const buildExecutorContext = createExecutorContext(

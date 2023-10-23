@@ -47,22 +47,18 @@ Enable verbose logging
 
 ### nxJsonConfiguration
 
-• `Optional` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+• **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
 
 The contents of nx.json.
-
-@todo(vsavkin): mark this as required for v17
 
 ---
 
 ### projectGraph
 
-• `Optional` **projectGraph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
+• **projectGraph**: [`ProjectGraph`](../../devkit/documents/ProjectGraph)
 
 A snapshot of the project graph as
 it existed when the Nx command was kicked off
-
-@todo(vsavkin) mark this required for v17
 
 ---
 
@@ -76,11 +72,9 @@ The name of the project being executed on
 
 ### projectsConfigurations
 
-• `Optional` **projectsConfigurations**: [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
+• **projectsConfigurations**: [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations)
 
 Projects config
-
-@todo(vsavkin): mark this as required for v17
 
 ---
 
@@ -119,8 +113,7 @@ it existed when the Nx command was kicked off
 
 ### workspace
 
-• `Optional` **workspace**: [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+• **workspace**: [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
 
 Deprecated. Use projectsConfigurations or nxJsonConfiguration
 The full workspace configuration
-@todo(vsavkin): remove after v17

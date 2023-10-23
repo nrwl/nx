@@ -16,6 +16,14 @@ describe('tscExecutor', () => {
         projects: {},
       },
       nxJsonConfiguration: {},
+      projectGraph: {
+        nodes: {},
+        dependencies: {},
+      },
+      workspace: {
+        version: 2,
+        projects: {},
+      },
       isVerbose: false,
       projectName: 'example',
       targetName: 'build',
