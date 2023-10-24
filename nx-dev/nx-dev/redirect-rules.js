@@ -887,8 +887,22 @@ const latestRecipesRefactoring = {
   '/reference/commands': '/packages/nx',
 };
 
-const coreFeatureRefactoring = {
+const coreFeatureAndConceptsRefactoring = {
   '/core-features/share-your-cache': '/core-features/remote-cache',
+  '/concepts/more-concepts/customizing-inputs':
+    '/recipes/running-tasks/customizing-inputs',
+  '/recipes/tips-n-tricks/root-level-scripts':
+    '/recipes/running-tasks/root-level-scripts',
+  '/recipes/tips-n-tricks/run-commands-executor':
+    '/recipes/running-tasks/run-commands-executor',
+  '/recipes/tips-n-tricks/workspace-watching':
+    '/recipes/running-tasks/workspace-watching',
+  '/recipes/tips-n-tricks/reduce-repetitive-configuration':
+    '/recipes/running-tasks/reduce-repetitive-configuration',
+  '/concepts/more-concepts/global-nx':
+    '/getting-started/installation#installing-nx-globally',
+  '/concepts/more-concepts/nx-and-the-wrapper':
+    '/getting-started/installation#selfmanaged-nx-installation',
 };
 
 /*
@@ -899,11 +913,20 @@ const aiChat = {
 };
 
 // rename nx/linter to eslint
-// TODO(v17) invert these redirects
 const eslintRename = {
-  '/nx-api/eslint': '/nx-api/linter',
-  '/packages/eslint': '/packages/linter',
-  '/nx-api/eslint/executors/lint': '/nx-api/linter/executors/eslint',
+  '/nx-api/linter': '/nx-api/eslint',
+  '/nx-api/linter/documents': '/nx-api/eslint/documents',
+  '/nx-api/linter/documents/overview': '/nx-api/eslint/documents/overview',
+  '/nx-api/linter/executors': '/nx-api/eslint/executors',
+  '/nx-api/linter/executors/eslint': '/nx-api/eslint/executors/lint',
+  '/nx-api/linter/generators': '/nx-api/eslint/generators',
+  '/nx-api/linter/generators/convert-to-flat-config':
+    '/nx-api/eslint/generators/convert-to-flat-config',
+  '/nx-api/linter/generators/workspace-rule':
+    '/nx-api/eslint/generators/workspace-rule',
+  '/nx-api/linter/generators/workspace-rules-project':
+    '/nx-api/eslint/generators/workspace-rules-project',
+  '/packages/linter': '/packages/eslint',
 };
 
 /**
@@ -930,7 +953,7 @@ module.exports = {
   makeMoreConceptsSubmenu,
   pluginsToExtendNx,
   latestRecipesRefactoring,
-  coreFeatureRefactoring,
+  coreFeatureRefactoring: coreFeatureAndConceptsRefactoring,
   aiChat,
   eslintRename,
 };

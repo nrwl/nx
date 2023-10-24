@@ -121,7 +121,7 @@ When you run a task, Nx uses the inputs for your task to create a hash that is u
 
 If this index does not exist, Nx runs the command and if the command succeeds, it stores the result in the cache.
 
-{% card title="More On Customizing Inputs" description="See the Customizing Inputs Guide for more details on how to set inputs for your tasks." url="/concepts/more-concepts/customizing-inputs" /%}
+{% card title="More On Customizing Inputs" description="See the Customizing Inputs Guide for more details on how to set inputs for your tasks." url="/recipes/running-tasks/customizing-inputs" /%}
 
 ### Outputs
 

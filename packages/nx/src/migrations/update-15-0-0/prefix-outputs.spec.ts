@@ -116,6 +116,34 @@ describe('15.0.0 migration (prefix-outputs)', () => {
 
     await prefixOutputs(tree);
   });
+
+  it('should handle negated outputs', async () => {
+    const nxJson = readNxJson(tree);
+    updateNxJson(tree, {
+      ...nxJson,
+      targetDefaults: {
+        build: {
+          outputs: ['!dist', '{projectRoot}/build', '{options.outputPath}'],
+        },
+      },
+    });
+
+    await prefixOutputs(tree);
+
+    const updated = readNxJson(tree);
+
+    expect(updated.targetDefaults).toMatchInlineSnapshot(`
+      {
+        "build": {
+          "outputs": [
+            "!{workspaceRoot}/dist",
+            "{projectRoot}/build",
+            "{options.outputPath}",
+          ],
+        },
+      }
+    `);
+  });
 });
 
 describe('15.0.0 migration (prefix-outputs) (v1)', () => {

@@ -30,6 +30,7 @@ function updateNxJsonExecutor(tree: Tree) {
   for (const [targetName, targetConfig] of Object.entries(
     nxJson.targetDefaults ?? {}
   )) {
+    // this will be in a broken state after the package is globally renamed
     if (targetConfig.executor !== '@nx/eslint:eslint') {
       continue;
     }
@@ -51,6 +52,7 @@ function updateProjectExecutor(tree: Tree) {
     for (const [targetName, targetConfig] of Object.entries(
       projectConfiguration.targets ?? {}
     )) {
+      // this will be in a broken state after the package is globally renamed
       if (targetConfig.executor !== '@nx/eslint:eslint') {
         continue;
       }

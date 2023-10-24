@@ -87,6 +87,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Vue Standalone",
+                "path": "/getting-started/tutorials/vue-standalone-tutorial",
+                "id": "vue-standalone-tutorial",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Node Standalone",
                 "path": "/getting-started/tutorials/node-server-tutorial",
                 "id": "node-server-tutorial",
@@ -179,6 +187,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Vue Standalone",
+            "path": "/getting-started/tutorials/vue-standalone-tutorial",
+            "id": "vue-standalone-tutorial",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Node Standalone",
             "path": "/getting-started/tutorials/node-server-tutorial",
             "id": "node-server-tutorial",
@@ -233,6 +249,14 @@
         "name": "Angular Monorepo",
         "path": "/getting-started/tutorials/angular-monorepo-tutorial",
         "id": "angular-monorepo-tutorial",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Vue Standalone",
+        "path": "/getting-started/tutorials/vue-standalone-tutorial",
+        "id": "vue-standalone-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -754,25 +778,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-            "path": "/concepts/integrated-vs-package-based",
-            "id": "integrated-vs-package-based",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Mental Model",
             "path": "/concepts/mental-model",
             "id": "mental-model",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Types of Configuration",
-            "path": "/concepts/types-of-configuration",
-            "id": "types-of-configuration",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -786,6 +794,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Types of Configuration",
+            "path": "/concepts/types-of-configuration",
+            "id": "types-of-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Improve Worst Case CI Times",
             "path": "/concepts/dte",
             "id": "dte",
@@ -794,7 +810,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Task Pipeline Configuration",
+            "name": "What is a Task Pipeline",
             "path": "/concepts/task-pipeline-configuration",
             "id": "task-pipeline-configuration",
             "isExternal": false,
@@ -802,9 +818,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Affected",
+            "name": "How Affected Works",
             "path": "/concepts/affected",
             "id": "affected",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+            "path": "/concepts/integrated-vs-package-based",
+            "id": "integrated-vs-package-based",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -815,6 +839,14 @@
             "id": "module-federation",
             "isExternal": false,
             "children": [
+              {
+                "name": "Module Federation and Nx",
+                "path": "/concepts/module-federation/module-federation-and-nx",
+                "id": "module-federation-and-nx",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
               {
                 "name": "Faster Builds with Module Federation",
                 "path": "/concepts/module-federation/faster-builds-with-module-federation",
@@ -830,6 +862,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Manage Library Versions with Module Federation",
+                "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
+                "id": "manage-library-versions-with-module-federation",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -840,14 +880,6 @@
             "id": "more-concepts",
             "isExternal": false,
             "children": [
-              {
-                "name": "Customizing Inputs",
-                "path": "/concepts/more-concepts/customizing-inputs",
-                "id": "customizing-inputs",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "Incremental Builds",
                 "path": "/concepts/more-concepts/incremental-builds",
@@ -983,22 +1015,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Nx and the Nx Wrapper",
-                "path": "/concepts/more-concepts/nx-and-the-wrapper",
-                "id": "nx-and-the-wrapper",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Managing your Global Nx Installation",
-                "path": "/concepts/more-concepts/global-nx",
-                "id": "global-nx",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1007,25 +1023,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-        "path": "/concepts/integrated-vs-package-based",
-        "id": "integrated-vs-package-based",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Mental Model",
         "path": "/concepts/mental-model",
         "id": "mental-model",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Types of Configuration",
-        "path": "/concepts/types-of-configuration",
-        "id": "types-of-configuration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1039,6 +1039,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "Types of Configuration",
+        "path": "/concepts/types-of-configuration",
+        "id": "types-of-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Improve Worst Case CI Times",
         "path": "/concepts/dte",
         "id": "dte",
@@ -1047,7 +1055,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Task Pipeline Configuration",
+        "name": "What is a Task Pipeline",
         "path": "/concepts/task-pipeline-configuration",
         "id": "task-pipeline-configuration",
         "isExternal": false,
@@ -1055,9 +1063,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Affected",
+        "name": "How Affected Works",
         "path": "/concepts/affected",
         "id": "affected",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+        "path": "/concepts/integrated-vs-package-based",
+        "id": "integrated-vs-package-based",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1068,6 +1084,14 @@
         "id": "module-federation",
         "isExternal": false,
         "children": [
+          {
+            "name": "Module Federation and Nx",
+            "path": "/concepts/module-federation/module-federation-and-nx",
+            "id": "module-federation-and-nx",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
           {
             "name": "Faster Builds with Module Federation",
             "path": "/concepts/module-federation/faster-builds-with-module-federation",
@@ -1083,8 +1107,24 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Manage Library Versions with Module Federation",
+            "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
+            "id": "manage-library-versions-with-module-federation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Module Federation and Nx",
+        "path": "/concepts/module-federation/module-federation-and-nx",
+        "id": "module-federation-and-nx",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -1104,19 +1144,19 @@
         "disableCollapsible": false
       },
       {
+        "name": "Manage Library Versions with Module Federation",
+        "path": "/concepts/module-federation/manage-library-versions-with-module-federation",
+        "id": "manage-library-versions-with-module-federation",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "More Concepts",
         "path": "/concepts/more-concepts",
         "id": "more-concepts",
         "isExternal": false,
         "children": [
-          {
-            "name": "Customizing Inputs",
-            "path": "/concepts/more-concepts/customizing-inputs",
-            "id": "customizing-inputs",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
           {
             "name": "Incremental Builds",
             "path": "/concepts/more-concepts/incremental-builds",
@@ -1252,32 +1292,8 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Nx and the Nx Wrapper",
-            "path": "/concepts/more-concepts/nx-and-the-wrapper",
-            "id": "nx-and-the-wrapper",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Managing your Global Nx Installation",
-            "path": "/concepts/more-concepts/global-nx",
-            "id": "global-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Customizing Inputs",
-        "path": "/concepts/more-concepts/customizing-inputs",
-        "id": "customizing-inputs",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -1417,27 +1433,68 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx and the Nx Wrapper",
-        "path": "/concepts/more-concepts/nx-and-the-wrapper",
-        "id": "nx-and-the-wrapper",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Managing your Global Nx Installation",
-        "path": "/concepts/more-concepts/global-nx",
-        "id": "global-nx",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Recipes",
         "path": "/recipes",
         "id": "recipes",
         "isExternal": false,
         "children": [
+          {
+            "name": "Tasks & Caching",
+            "path": "/recipes/running-tasks",
+            "id": "running-tasks",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Fine-tuning Caching with Inputs",
+                "path": "/recipes/running-tasks/customizing-inputs",
+                "id": "customizing-inputs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Defining a Task Pipeline",
+                "path": "/recipes/running-tasks/defining-task-pipeline",
+                "id": "defining-task-pipeline",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Running Custom Commands",
+                "path": "/recipes/running-tasks/run-commands-executor",
+                "id": "run-commands-executor",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Run Root-Level NPM Scripts with Nx",
+                "path": "/recipes/running-tasks/root-level-scripts",
+                "id": "root-level-scripts",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Workspace Watching",
+                "path": "/recipes/running-tasks/workspace-watching",
+                "id": "workspace-watching",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Reduce Repetitive Configuration",
+                "path": "/recipes/running-tasks/reduce-repetitive-configuration",
+                "id": "reduce-repetitive-configuration",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
           {
             "name": "Adopting Nx",
             "path": "/recipes/adopting-nx",
@@ -1733,6 +1790,14 @@
                 "name": "Set up Storybook for Angular Projects",
                 "path": "/recipes/storybook/overview-angular",
                 "id": "overview-angular",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Set up Storybook for Vue Projects",
+                "path": "/recipes/storybook/overview-vue",
+                "id": "overview-vue",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2187,33 +2252,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Reduce Repetitive Configuration",
-                "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
-                "id": "reduce-repetitive-configuration",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Run Root-Level NPM Scripts with Nx",
-                "path": "/recipes/tips-n-tricks/root-level-scripts",
-                "id": "root-level-scripts",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Disable Graph Links Created from Analyzing Source Files",
                 "path": "/recipes/tips-n-tricks/analyze-source-files",
                 "id": "analyze-source-files",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Workspace Watching",
-                "path": "/recipes/tips-n-tricks/workspace-watching",
-                "id": "workspace-watching",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2230,14 +2271,6 @@
                 "name": "Altering Migration Process",
                 "path": "/recipes/tips-n-tricks/advanced-update",
                 "id": "advanced-update",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Running Custom Commands",
-                "path": "/recipes/tips-n-tricks/run-commands-executor",
-                "id": "run-commands-executor",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2393,6 +2426,111 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Tasks & Caching",
+        "path": "/recipes/running-tasks",
+        "id": "running-tasks",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Fine-tuning Caching with Inputs",
+            "path": "/recipes/running-tasks/customizing-inputs",
+            "id": "customizing-inputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Defining a Task Pipeline",
+            "path": "/recipes/running-tasks/defining-task-pipeline",
+            "id": "defining-task-pipeline",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Running Custom Commands",
+            "path": "/recipes/running-tasks/run-commands-executor",
+            "id": "run-commands-executor",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Run Root-Level NPM Scripts with Nx",
+            "path": "/recipes/running-tasks/root-level-scripts",
+            "id": "root-level-scripts",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Workspace Watching",
+            "path": "/recipes/running-tasks/workspace-watching",
+            "id": "workspace-watching",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Reduce Repetitive Configuration",
+            "path": "/recipes/running-tasks/reduce-repetitive-configuration",
+            "id": "reduce-repetitive-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Fine-tuning Caching with Inputs",
+        "path": "/recipes/running-tasks/customizing-inputs",
+        "id": "customizing-inputs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Defining a Task Pipeline",
+        "path": "/recipes/running-tasks/defining-task-pipeline",
+        "id": "defining-task-pipeline",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Running Custom Commands",
+        "path": "/recipes/running-tasks/run-commands-executor",
+        "id": "run-commands-executor",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Root-Level NPM Scripts with Nx",
+        "path": "/recipes/running-tasks/root-level-scripts",
+        "id": "root-level-scripts",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Workspace Watching",
+        "path": "/recipes/running-tasks/workspace-watching",
+        "id": "workspace-watching",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce Repetitive Configuration",
+        "path": "/recipes/running-tasks/reduce-repetitive-configuration",
+        "id": "reduce-repetitive-configuration",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -2968,6 +3106,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Set up Storybook for Vue Projects",
+            "path": "/recipes/storybook/overview-vue",
+            "id": "overview-vue",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Configuring Storybook on Nx",
             "path": "/recipes/storybook/configuring-storybook",
             "id": "configuring-storybook",
@@ -3054,6 +3200,14 @@
         "name": "Set up Storybook for Angular Projects",
         "path": "/recipes/storybook/overview-angular",
         "id": "overview-angular",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Storybook for Vue Projects",
+        "path": "/recipes/storybook/overview-vue",
+        "id": "overview-vue",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3697,33 +3851,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Reduce Repetitive Configuration",
-            "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
-            "id": "reduce-repetitive-configuration",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Run Root-Level NPM Scripts with Nx",
-            "path": "/recipes/tips-n-tricks/root-level-scripts",
-            "id": "root-level-scripts",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Disable Graph Links Created from Analyzing Source Files",
             "path": "/recipes/tips-n-tricks/analyze-source-files",
             "id": "analyze-source-files",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Workspace Watching",
-            "path": "/recipes/tips-n-tricks/workspace-watching",
-            "id": "workspace-watching",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3740,14 +3870,6 @@
             "name": "Altering Migration Process",
             "path": "/recipes/tips-n-tricks/advanced-update",
             "id": "advanced-update",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Running Custom Commands",
-            "path": "/recipes/tips-n-tricks/run-commands-executor",
-            "id": "run-commands-executor",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3876,33 +3998,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Reduce Repetitive Configuration",
-        "path": "/recipes/tips-n-tricks/reduce-repetitive-configuration",
-        "id": "reduce-repetitive-configuration",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Run Root-Level NPM Scripts with Nx",
-        "path": "/recipes/tips-n-tricks/root-level-scripts",
-        "id": "root-level-scripts",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Disable Graph Links Created from Analyzing Source Files",
         "path": "/recipes/tips-n-tricks/analyze-source-files",
         "id": "analyze-source-files",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Workspace Watching",
-        "path": "/recipes/tips-n-tricks/workspace-watching",
-        "id": "workspace-watching",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3919,14 +4017,6 @@
         "name": "Altering Migration Process",
         "path": "/recipes/tips-n-tricks/advanced-update",
         "id": "advanced-update",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Running Custom Commands",
-        "path": "/recipes/tips-n-tricks/run-commands-executor",
-        "id": "run-commands-executor",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4859,6 +4949,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "workspace-layout",
+            "path": "/deprecated/workspace-layout",
+            "id": "workspace-layout",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Workspace Generators",
             "path": "/deprecated/workspace-generators",
             "id": "workspace-generators",
@@ -4894,6 +4992,14 @@
             "name": "globalImplicitDependencies",
             "path": "/deprecated/global-implicit-dependencies",
             "id": "global-implicit-dependencies",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Angular Schematics and Builders",
+            "path": "/deprecated/angular-schematics-builders",
+            "id": "angular-schematics-builders",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4983,6 +5089,14 @@
         "disableCollapsible": false
       },
       {
+        "name": "workspace-layout",
+        "path": "/deprecated/workspace-layout",
+        "id": "workspace-layout",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Workspace Generators",
         "path": "/deprecated/workspace-generators",
         "id": "workspace-generators",
@@ -5018,6 +5132,14 @@
         "name": "globalImplicitDependencies",
         "path": "/deprecated/global-implicit-dependencies",
         "id": "global-implicit-dependencies",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Angular Schematics and Builders",
+        "path": "/deprecated/angular-schematics-builders",
+        "id": "angular-schematics-builders",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5190,14 +5312,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "nx.json workspaceLayout property",
-            "path": "/reference/nx-json#workspace-layout",
-            "id": "nxjson-workspaceLayout",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "nx.json generator defaults",
             "path": "/reference/nx-json#generators",
             "id": "nxjson-generator-defaults",
@@ -5252,14 +5366,6 @@
         "name": "Project Configuration reference: inputs and namedInputs",
         "path": "/reference/project-configuration#inputs-&-namedinputs",
         "id": "project-config-inputs",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "nx.json workspaceLayout property",
-        "path": "/reference/nx-json#workspace-layout",
-        "id": "nxjson-workspaceLayout",
         "isExternal": true,
         "children": [],
         "disableCollapsible": false
@@ -6650,19 +6756,36 @@
         "disableCollapsible": false
       },
       {
-        "id": "linter",
-        "path": "/nx-api/linter",
-        "name": "linter",
+        "id": "eslint",
+        "path": "/nx-api/eslint",
+        "name": "eslint",
         "children": [
           {
+            "id": "documents",
+            "path": "/nx-api/eslint/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/eslint/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
             "id": "executors",
-            "path": "/nx-api/linter/executors",
+            "path": "/nx-api/eslint/executors",
             "name": "executors",
             "children": [
               {
-                "id": "eslint",
-                "path": "/nx-api/linter/executors/eslint",
-                "name": "eslint",
+                "id": "lint",
+                "path": "/nx-api/eslint/executors/lint",
+                "name": "lint",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -6673,12 +6796,12 @@
           },
           {
             "id": "generators",
-            "path": "/nx-api/linter/generators",
+            "path": "/nx-api/eslint/generators",
             "name": "generators",
             "children": [
               {
                 "id": "workspace-rules-project",
-                "path": "/nx-api/linter/generators/workspace-rules-project",
+                "path": "/nx-api/eslint/generators/workspace-rules-project",
                 "name": "workspace-rules-project",
                 "children": [],
                 "isExternal": false,
@@ -6686,7 +6809,7 @@
               },
               {
                 "id": "workspace-rule",
-                "path": "/nx-api/linter/generators/workspace-rule",
+                "path": "/nx-api/eslint/generators/workspace-rule",
                 "name": "workspace-rule",
                 "children": [],
                 "isExternal": false,
@@ -6694,7 +6817,7 @@
               },
               {
                 "id": "convert-to-flat-config",
-                "path": "/nx-api/linter/generators/convert-to-flat-config",
+                "path": "/nx-api/eslint/generators/convert-to-flat-config",
                 "name": "convert-to-flat-config",
                 "children": [],
                 "isExternal": false,
@@ -8610,6 +8733,97 @@
                 "id": "vitest",
                 "path": "/nx-api/vite/generators/vitest",
                 "name": "vitest",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "vue",
+        "path": "/nx-api/vue",
+        "name": "vue",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/vue/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview of the Nx Vue Plugin",
+                "path": "/nx-api/vue/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/vue/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/vue/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/vue/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "library",
+                "path": "/nx-api/vue/generators/library",
+                "name": "library",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "component",
+                "path": "/nx-api/vue/generators/component",
+                "name": "component",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-tailwind",
+                "path": "/nx-api/vue/generators/setup-tailwind",
+                "name": "setup-tailwind",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "storybook-configuration",
+                "path": "/nx-api/vue/generators/storybook-configuration",
+                "name": "storybook-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "stories",
+                "path": "/nx-api/vue/generators/stories",
+                "name": "stories",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

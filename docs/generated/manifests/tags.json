@@ -11,22 +11,50 @@
       "description": "",
       "file": "shared/concepts/task-pipeline-configuration",
       "id": "task-pipeline-configuration",
-      "name": "Task Pipeline Configuration",
+      "name": "What is a Task Pipeline",
       "path": "/concepts/task-pipeline-configuration"
     },
     {
       "description": "",
       "file": "shared/using-nx/affected",
       "id": "affected",
-      "name": "Affected",
+      "name": "How Affected Works",
       "path": "/concepts/affected"
     },
     {
       "description": "",
-      "file": "shared/recipes/root-level-scripts",
+      "file": "shared/recipes/running-tasks/customizing-inputs",
+      "id": "customizing-inputs",
+      "name": "Fine-tuning Caching with Inputs",
+      "path": "/recipes/running-tasks/customizing-inputs"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/defining-task-pipeline",
+      "id": "defining-task-pipeline",
+      "name": "Defining a Task Pipeline",
+      "path": "/recipes/running-tasks/defining-task-pipeline"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/running-custom-commands",
+      "id": "run-commands-executor",
+      "name": "Running Custom Commands",
+      "path": "/recipes/running-tasks/run-commands-executor"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/root-level-scripts",
       "id": "root-level-scripts",
       "name": "Run Root-Level NPM Scripts with Nx",
-      "path": "/recipes/tips-n-tricks/root-level-scripts"
+      "path": "/recipes/running-tasks/root-level-scripts"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/workspace-watching",
+      "id": "workspace-watching",
+      "name": "Workspace Watching",
+      "path": "/recipes/running-tasks/workspace-watching"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -52,6 +80,13 @@
   ],
   "cache-task-results": [
     {
+      "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
+      "file": "shared/core-features/run-tasks",
+      "id": "run-tasks",
+      "name": "Run Tasks",
+      "path": "/core-features/run-tasks"
+    },
+    {
       "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
       "file": "shared/core-features/cache-task-results",
       "id": "cache-task-results",
@@ -67,17 +102,10 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/task-pipeline-configuration",
-      "id": "task-pipeline-configuration",
-      "name": "Task Pipeline Configuration",
-      "path": "/concepts/task-pipeline-configuration"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/customizing-inputs",
+      "file": "shared/recipes/running-tasks/customizing-inputs",
       "id": "customizing-inputs",
-      "name": "Customizing Inputs",
-      "path": "/concepts/more-concepts/customizing-inputs"
+      "name": "Fine-tuning Caching with Inputs",
+      "path": "/recipes/running-tasks/customizing-inputs"
     },
     {
       "description": "",
@@ -342,13 +370,6 @@
       "path": "/reference/nxignore"
     },
     {
-      "description": "",
-      "file": "",
-      "id": "nxjson-workspaceLayout",
-      "name": "nx.json workspaceLayout property",
-      "path": "/reference/nx-json#workspace-layout"
-    },
-    {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
       "file": "generated/packages/generated/packages/nx/documents/format-check",
       "id": "format-check",
@@ -433,7 +454,7 @@
       "description": "",
       "file": "shared/concepts/task-pipeline-configuration",
       "id": "task-pipeline-configuration",
-      "name": "Task Pipeline Configuration",
+      "name": "What is a Task Pipeline",
       "path": "/concepts/task-pipeline-configuration"
     },
     {
@@ -449,6 +470,13 @@
       "id": "incremental-builds",
       "name": "Incremental Builds",
       "path": "/concepts/more-concepts/incremental-builds"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/running-custom-commands",
+      "id": "run-commands-executor",
+      "name": "Running Custom Commands",
+      "path": "/recipes/running-tasks/run-commands-executor"
     },
     {
       "description": "",
@@ -470,13 +498,6 @@
       "id": "dynamic-module-federation-with-angular",
       "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
       "path": "/recipes/angular/dynamic-module-federation-with-angular"
-    },
-    {
-      "description": "",
-      "file": "shared/running-custom-commands",
-      "id": "run-commands-executor",
-      "name": "Running Custom Commands",
-      "path": "/recipes/tips-n-tricks/run-commands-executor"
     },
     {
       "description": "",
@@ -596,17 +617,17 @@
   "intro": [
     {
       "description": "",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "path": "/concepts/integrated-vs-package-based"
-    },
-    {
-      "description": "",
       "file": "shared/mental-model",
       "id": "mental-model",
       "name": "Mental Model",
       "path": "/concepts/mental-model"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/integrated-vs-package-based",
+      "id": "integrated-vs-package-based",
+      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+      "path": "/concepts/integrated-vs-package-based"
     }
   ],
   "repository-types": [
@@ -642,6 +663,13 @@
   "module-federation": [
     {
       "description": "",
+      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "id": "module-federation-and-nx",
+      "name": "Module Federation and Nx",
+      "path": "/concepts/module-federation/module-federation-and-nx"
+    },
+    {
+      "description": "",
       "file": "shared/guides/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
@@ -672,6 +700,13 @@
   "angular": [
     {
       "description": "",
+      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "id": "module-federation-and-nx",
+      "name": "Module Federation and Nx",
+      "path": "/concepts/module-federation/module-federation-and-nx"
+    },
+    {
+      "description": "",
       "file": "shared/guides/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
@@ -693,6 +728,13 @@
     }
   ],
   "react": [
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/module-federation-and-nx",
+      "id": "module-federation-and-nx",
+      "name": "Module Federation and Nx",
+      "path": "/concepts/module-federation/module-federation-and-nx"
+    },
     {
       "description": "",
       "file": "shared/guides/module-federation/faster-builds",
@@ -743,6 +785,22 @@
       "id": "project-graph-plugins",
       "name": "Modify the Project Graph",
       "path": "/extending-nx/recipes/project-graph-plugins"
+    }
+  ],
+  "workspace-watching": [
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/workspace-watching",
+      "id": "workspace-watching",
+      "name": "Workspace Watching",
+      "path": "/recipes/running-tasks/workspace-watching"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/watch",
+      "id": "watch",
+      "name": "watch",
+      "path": "/nx-api/nx/documents/watch"
     }
   ],
   "environment-variables": [
@@ -900,6 +958,13 @@
       "path": "/recipes/storybook/overview-angular"
     },
     {
+      "description": "This guide explains how to set up Storybook for Vue projects in your Nx workspace.",
+      "file": "shared/recipes/storybook/plugin-vue",
+      "id": "overview-vue",
+      "name": "Set up Storybook for Vue Projects",
+      "path": "/recipes/storybook/overview-vue"
+    },
+    {
       "description": "This guide explains how Storybook is configured on your Nx workspace.",
       "file": "shared/recipes/storybook/configuring-storybook",
       "id": "configuring-storybook",
@@ -1002,22 +1067,6 @@
       "id": "ci-deployment",
       "name": "Prepare applications for deployment via CI",
       "path": "/recipes/ci/ci-deployment"
-    }
-  ],
-  "workspace-watching": [
-    {
-      "description": "",
-      "file": "shared/recipes/workspace-watching",
-      "id": "workspace-watching",
-      "name": "Workspace Watching",
-      "path": "/recipes/tips-n-tricks/workspace-watching"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/watch",
-      "id": "watch",
-      "name": "watch",
-      "path": "/nx-api/nx/documents/watch"
     }
   ],
   "yarn": [

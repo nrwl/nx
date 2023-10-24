@@ -29,6 +29,15 @@ exports[`updateImports should update dynamic imports 1`] = `
       "
 `;
 
+exports[`updateImports should update imports and reexports 1`] = `
+"
+        import { MyClass } from '@proj/my-destination';
+        export { MyOtherClass } from '@proj/my-destination';
+        
+        export class MyExtendedClass extends MyClass {};
+      "
+`;
+
 exports[`updateImports should update project refs 1`] = `
 "
         import { MyClass } from '@proj/my-destination';

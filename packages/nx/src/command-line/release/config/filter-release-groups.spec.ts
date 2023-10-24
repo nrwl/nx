@@ -9,6 +9,15 @@ describe('filterReleaseGroups()', () => {
   beforeEach(() => {
     nxReleaseConfig = {
       groups: {},
+      changelog: {
+        workspaceChangelog: false,
+        projectChangelogs: false,
+      },
+      version: {
+        generator: '',
+        generatorOptions: {},
+      },
+      releaseTagPattern: '',
     };
     projectGraph = {
       nodes: {
@@ -53,6 +62,12 @@ describe('filterReleaseGroups()', () => {
       nxReleaseConfig.groups = {
         foo: {
           projects: ['lib-a'],
+          changelog: false,
+          version: {
+            generator: '',
+            generatorOptions: {},
+          },
+          releaseTagPattern: '',
         },
       };
       const { error } = filterReleaseGroups(projectGraph, nxReleaseConfig, [
@@ -72,9 +87,21 @@ describe('filterReleaseGroups()', () => {
       nxReleaseConfig.groups = {
         foo: {
           projects: ['lib-a'],
+          changelog: false,
+          version: {
+            generator: '',
+            generatorOptions: {},
+          },
+          releaseTagPattern: '',
         },
         bar: {
           projects: ['lib-b'],
+          changelog: false,
+          version: {
+            generator: '',
+            generatorOptions: {},
+          },
+          releaseTagPattern: '',
         },
       };
       const { error, releaseGroups, releaseGroupToFilteredProjects } =
@@ -83,34 +110,58 @@ describe('filterReleaseGroups()', () => {
       expect(releaseGroups).toMatchInlineSnapshot(`
         [
           {
+            "changelog": false,
             "name": "foo",
             "projects": [
               "lib-a",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           },
           {
+            "changelog": false,
             "name": "bar",
             "projects": [
               "lib-b",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           },
         ]
       `);
       expect(releaseGroupToFilteredProjects).toMatchInlineSnapshot(`
         Map {
           {
+            "changelog": false,
             "name": "foo",
             "projects": [
               "lib-a",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           } => Set {
             "lib-a",
           },
           {
+            "changelog": false,
             "name": "bar",
             "projects": [
               "lib-b",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           } => Set {
             "lib-b",
           },
@@ -122,9 +173,21 @@ describe('filterReleaseGroups()', () => {
       nxReleaseConfig.groups = {
         foo: {
           projects: ['lib-a'],
+          changelog: false,
+          version: {
+            generator: '',
+            generatorOptions: {},
+          },
+          releaseTagPattern: '',
         },
         bar: {
           projects: ['lib-b'],
+          changelog: false,
+          version: {
+            generator: '',
+            generatorOptions: {},
+          },
+          releaseTagPattern: '',
         },
       };
       const { error, releaseGroups, releaseGroupToFilteredProjects } =
@@ -133,20 +196,32 @@ describe('filterReleaseGroups()', () => {
       expect(releaseGroups).toMatchInlineSnapshot(`
         [
           {
+            "changelog": false,
             "name": "foo",
             "projects": [
               "lib-a",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           },
         ]
       `);
       expect(releaseGroupToFilteredProjects).toMatchInlineSnapshot(`
         Map {
           {
+            "changelog": false,
             "name": "foo",
             "projects": [
               "lib-a",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           } => Set {
             "lib-a",
           },
@@ -158,6 +233,12 @@ describe('filterReleaseGroups()', () => {
       nxReleaseConfig.groups = {
         [CATCH_ALL_RELEASE_GROUP]: {
           projects: ['lib-a', 'lib-a'],
+          changelog: false,
+          version: {
+            generator: '',
+            generatorOptions: {},
+          },
+          releaseTagPattern: '',
         },
       };
       const { error, releaseGroups, releaseGroupToFilteredProjects } =
@@ -166,22 +247,34 @@ describe('filterReleaseGroups()', () => {
       expect(releaseGroups).toMatchInlineSnapshot(`
         [
           {
+            "changelog": false,
             "name": "__default__",
             "projects": [
               "lib-a",
               "lib-a",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           },
         ]
       `);
       expect(releaseGroupToFilteredProjects).toMatchInlineSnapshot(`
         Map {
           {
+            "changelog": false,
             "name": "__default__",
             "projects": [
               "lib-a",
               "lib-a",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           } => Set {
             "lib-a",
           },
@@ -209,9 +302,21 @@ describe('filterReleaseGroups()', () => {
       nxReleaseConfig.groups = {
         foo: {
           projects: ['lib-a'],
+          changelog: false,
+          version: {
+            generator: '',
+            generatorOptions: {},
+          },
+          releaseTagPattern: '',
         },
         bar: {
           projects: ['lib-b'],
+          changelog: false,
+          version: {
+            generator: '',
+            generatorOptions: {},
+          },
+          releaseTagPattern: '',
         },
       };
       const { error, releaseGroups, releaseGroupToFilteredProjects } =
@@ -220,20 +325,32 @@ describe('filterReleaseGroups()', () => {
       expect(releaseGroups).toMatchInlineSnapshot(`
         [
           {
+            "changelog": false,
             "name": "foo",
             "projects": [
               "lib-a",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           },
         ]
       `);
       expect(releaseGroupToFilteredProjects).toMatchInlineSnapshot(`
         Map {
           {
+            "changelog": false,
             "name": "foo",
             "projects": [
               "lib-a",
             ],
+            "releaseTagPattern": "",
+            "version": {
+              "generator": "",
+              "generatorOptions": {},
+            },
           } => Set {
             "lib-a",
           },

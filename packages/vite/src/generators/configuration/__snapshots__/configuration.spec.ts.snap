@@ -114,7 +114,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
       "projectType": "library",
       "targets": {
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": [
@@ -195,7 +195,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
       "projectType": "library",
       "targets": {
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": [
@@ -255,7 +255,7 @@ exports[`@nx/vite:configuration transform React app to use Vite by providing cus
           }
         },
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": [
@@ -398,7 +398,7 @@ exports[`@nx/vite:configuration transform React app to use Vite should transform
           }
         },
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/my-test-react-app/**/*.{ts,tsx,js,jsx}"]
@@ -527,7 +527,7 @@ exports[`@nx/vite:configuration transform Web app to use Vite should transform w
           }
         },
         "lint": {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/my-test-web-app/**/*.ts"]
