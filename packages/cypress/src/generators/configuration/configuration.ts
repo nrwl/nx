@@ -118,6 +118,7 @@ async function addFiles(tree: Tree, options: NormalizedSchema) {
     ext: options.js ? 'js' : 'ts',
     offsetFromRoot: offsetFromRoot(projectConfig.root),
     offsetFromProjectRoot,
+    projectRoot: projectConfig.root,
     tsConfigPath: hasTsConfig
       ? `${offsetFromProjectRoot}/tsconfig.json`
       : getRelativePathToRootTsConfig(tree, projectConfig.root),
