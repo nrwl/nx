@@ -6,6 +6,7 @@ import {
   joinPathFragments,
   offsetFromRoot,
   parseTargetString,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -22,6 +23,7 @@ import { installedCypressVersion } from '../../utils/cypress-version';
 import { viteVersion } from '../../utils/versions';
 import cypressInitGenerator from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
+import { NxCypressMetadata } from '../../plugins/plugin';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -52,11 +54,19 @@ export async function configurationGenerator(
   if (!installedCypressVersion()) {
     tasks.push(await cypressInitGenerator(tree, opts));
   }
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/cypress/plugin'
+      : p.plugin === '@nx/cypress/plugin'
+  );
   if (opts.bundler === 'vite') {
     tasks.push(addDependenciesToPackageJson(tree, {}, { vite: viteVersion }));
   }
-  await addFiles(tree, opts);
-  addTarget(tree, opts);
+  await addFiles(tree, opts, hasPlugin);
+  if (!hasPlugin) {
+    addTarget(tree, opts);
+  }
 
   const linterTask = await addLinterToCyProject(tree, {
     ...opts,
@@ -89,18 +99,28 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 
   options.directory ??= 'src';
 
+  const devServerTarget =
+    options.devServerTarget ??
+    (projectConfig.targets.serve ? `${options.project}:serve` : undefined);
+
+  if (!options.baseUrl && !devServerTarget) {
+    throw new Error('Either baseUrl or devServerTarget must be provided');
+  }
+
   return {
     ...options,
     bundler: options.bundler ?? 'webpack',
     rootProject: options.rootProject ?? projectConfig.root === '.',
     linter: options.linter ?? Linter.EsLint,
-    devServerTarget:
-      options.devServerTarget ??
-      (projectConfig.targets.serve ? `${options.project}:serve` : undefined),
+    devServerTarget,
   };
 }
 
-async function addFiles(tree: Tree, options: NormalizedSchema) {
+async function addFiles(
+  tree: Tree,
+  options: NormalizedSchema,
+  hasPlugin: boolean
+) {
   const projectConfig = readProjectConfiguration(tree, options.project);
   const cyVersion = installedCypressVersion();
   const filesToUse = cyVersion && cyVersion < 10 ? 'v9' : 'v10';
@@ -141,13 +161,41 @@ async function addFiles(tree: Tree, options: NormalizedSchema) {
     });
 
     const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+    let nxMetadata: NxCypressMetadata = null;
 
+    if (hasPlugin && !options.baseUrl && options.devServerTarget) {
+      nxMetadata = {};
+
+      nxMetadata.devServerTarget = options.devServerTarget;
+      nxMetadata.port = options.port;
+      const parsedTarget = parseTargetString(options.devServerTarget);
+
+      const devServerProjectConfig = readProjectConfiguration(
+        tree,
+        parsedTarget.project
+      );
+      // Add production e2e target if serve target is found
+      if (
+        parsedTarget.configuration !== 'production' &&
+        devServerProjectConfig.targets[parsedTarget.target]?.configurations?.[
+          'production'
+        ]
+      ) {
+        nxMetadata.productionDevServerTarget = `${parsedTarget.project}:${parsedTarget.target}:production`;
+      }
+      // Add ci/static e2e target if serve target is found
+      if (devServerProjectConfig.targets?.['serve-static']) {
+        nxMetadata.ciDevServerTarget = `${parsedTarget.project}:serve-static`;
+      }
+    }
     const updatedCyConfig = await addDefaultE2EConfig(
       tree.read(cyFile, 'utf-8'),
       {
-        directory: options.directory,
+        cypressDir: options.directory,
         bundler: options.bundler,
-      }
+      },
+      nxMetadata,
+      options.baseUrl
     );
 
     tree.write(cyFile, updatedCyConfig);
@@ -226,8 +274,6 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
         devServerTarget: `${parsedTarget.project}:serve-static`,
       };
     }
-  } else {
-    throw new Error('Either baseUrl or devServerTarget must be provided');
   }
 
   updateProjectConfiguration(tree, opts.project, projectConfig);

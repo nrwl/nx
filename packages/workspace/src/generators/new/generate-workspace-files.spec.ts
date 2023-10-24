@@ -113,9 +113,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               "^production",
             ],
           },
-          "e2e": {
-            "cache": true,
-          },
           "lint": {
             "cache": true,
           },
@@ -158,9 +155,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               "production",
               "^production",
             ],
-          },
-          "e2e": {
-            "cache": true,
           },
           "lint": {
             "cache": true,
@@ -223,9 +217,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "dependsOn": [
               "^build",
             ],
-          },
-          "e2e": {
-            "cache": true,
           },
           "lint": {
             "cache": true,

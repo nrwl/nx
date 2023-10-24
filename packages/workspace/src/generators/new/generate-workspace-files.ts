@@ -75,9 +75,6 @@ function createNxJson(
       lint: {
         cache: true,
       },
-      e2e: {
-        cache: true,
-      },
     },
   };
 

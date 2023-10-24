@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`add-nx-metadata migration should add nx metadata for dev server target 1`] = `
+"import type { NxCypressMetadata } from '@nx/cypress/plugin';
+
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename),
+  },
+});
+
+/**
+ * This is metadata for the @nx/cypress/plugin
+ */
+export const nx: NxCypressMetadata = {
+  devServerTarget: 'my-app:serve',
+};
+"
+`;
+
+exports[`add-nx-metadata migration should add nx metadata for production, ci and dev server targets 1`] = `
+"import type { NxCypressMetadata } from '@nx/cypress/plugin';
+
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename),
+  },
+});
+
+/**
+ * This is metadata for the @nx/cypress/plugin
+ */
+export const nx: NxCypressMetadata = {
+  devServerTarget: 'my-app:serve',
+  productionDevServerTarget: 'my-app:serve:production',
+  ciDevServerTarget: 'my-app:serve-static',
+};
+"
+`;
+
+exports[`add-nx-metadata migration should nto add nx metadata for if there are none to add 1`] = `
+"import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename),
+  },
+});
+"
+`;
