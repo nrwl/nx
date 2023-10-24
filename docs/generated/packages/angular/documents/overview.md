@@ -33,6 +33,10 @@ yarn add -D @nx/angular
 npm install -D @nx/angular
 ```
 
+{% callout type="note" title="Angular Tutorials" %}
+For a full tutorial experience, follow the [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial) or the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+{% /callout %}
+
 ## Using the Angular Plugin
 
 ### Generating an application
