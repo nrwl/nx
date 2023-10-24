@@ -38,6 +38,15 @@ describe('parseTargetString', () => {
       externalNodes: {},
       version: '',
     },
+    workspace: {
+      version: 2,
+      projects: {},
+    },
+    projectsConfigurations: {
+      version: 2,
+      projects: {},
+    },
+    nxJsonConfiguration: {},
   };
 
   it.each(cases)('$input -> $expected', ({ input, expected }) => {

@@ -104,6 +104,14 @@ describe('Linter Builder', () => {
         },
       },
       nxJsonConfiguration: {},
+      workspace: {
+        version: 2,
+        projects: {},
+      },
+      projectGraph: {
+        nodes: {},
+        dependencies: {},
+      },
       isVerbose: false,
     };
     mockLintFiles.mockImplementation(() => mockReports);

@@ -56,6 +56,14 @@ describe('Jest Executor', () => {
       },
       cwd: '/root',
       isVerbose: true,
+      workspace: {
+        version: 2,
+        projects: {},
+      },
+      projectGraph: {
+        nodes: {},
+        dependencies: {},
+      },
     };
   });
 

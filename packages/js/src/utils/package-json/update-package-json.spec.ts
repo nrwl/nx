@@ -419,6 +419,15 @@ describe('updatePackageJson', () => {
     cwd: '',
     targetName: 'build',
     projectGraph,
+    nxJsonConfiguration: {},
+    projectsConfigurations: {
+      version: 2,
+      projects: {},
+    },
+    workspace: {
+      version: 2,
+      projects: {},
+    },
   };
 
   it('should generate new package if missing', () => {

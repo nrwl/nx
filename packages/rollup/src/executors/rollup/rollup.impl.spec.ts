@@ -22,6 +22,14 @@ describe('rollupExecutor', () => {
       isVerbose: false,
       projectName: 'example',
       targetName: 'build',
+      projectGraph: {
+        nodes: {},
+        dependencies: {},
+      },
+      workspace: {
+        version: 2,
+        projects: {},
+      },
     };
     testOptions = {
       compiler: 'babel',

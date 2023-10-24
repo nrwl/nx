@@ -19,6 +19,15 @@ describe('normalizeOptions', () => {
       },
       dependencies: {},
     },
+    workspace: {
+      version: 2,
+      projects: {},
+    },
+    projectsConfigurations: {
+      version: 2,
+      projects: {},
+    },
+    nxJsonConfiguration: {},
   };
 
   it('should handle single entry point options', () => {

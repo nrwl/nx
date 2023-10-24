@@ -3,16 +3,17 @@ import { ExecutorContext } from 'nx/src/config/misc-interfaces';
 import path = require('path');
 
 describe('buildEsbuildOptions', () => {
-  const context: ExecutorContext = {
-    projectName: 'myapp',
-    projectsConfigurations: {
-      version: 2,
-      projects: {
-        myapp: {
-          root: 'apps/myapp',
-        },
+  const projectsConfigurations = {
+    version: 2,
+    projects: {
+      myapp: {
+        root: 'apps/myapp',
       },
     },
+  };
+  const context: ExecutorContext = {
+    projectName: 'myapp',
+    projectsConfigurations,
     projectGraph: {
       nodes: {
         myapp: {
@@ -33,6 +34,7 @@ describe('buildEsbuildOptions', () => {
         outputPath: 'dist/apps/myapp',
       },
     },
+    workspace: projectsConfigurations,
   };
 
   it('should include environment variables for platform === browser', () => {
