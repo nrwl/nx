@@ -1831,6 +1831,16 @@
             "tags": ["run-tasks", "use-task-executors"]
           },
           {
+            "id": "run-tasks-in-parallel",
+            "name": "Run Tasks in Parallel",
+            "description": "",
+            "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/run-tasks-in-parallel",
+            "tags": ["run-tasks"]
+          },
+          {
             "id": "root-level-scripts",
             "name": "Run Root-Level NPM Scripts with Nx",
             "description": "",
@@ -2974,6 +2984,16 @@
         "tags": ["run-tasks", "use-task-executors"]
       },
       {
+        "id": "run-tasks-in-parallel",
+        "name": "Run Tasks in Parallel",
+        "description": "",
+        "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/run-tasks-in-parallel",
+        "tags": ["run-tasks"]
+      },
+      {
         "id": "root-level-scripts",
         "name": "Run Root-Level NPM Scripts with Nx",
         "description": "",
@@ -3037,6 +3057,16 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/run-commands-executor",
     "tags": ["run-tasks", "use-task-executors"]
+  },
+  "/recipes/running-tasks/run-tasks-in-parallel": {
+    "id": "run-tasks-in-parallel",
+    "name": "Run Tasks in Parallel",
+    "description": "",
+    "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/run-tasks-in-parallel",
+    "tags": ["run-tasks"]
   },
   "/recipes/running-tasks/root-level-scripts": {
     "id": "root-level-scripts",

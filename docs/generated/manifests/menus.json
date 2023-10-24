@@ -1469,6 +1469,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Run Tasks in Parallel",
+                "path": "/recipes/running-tasks/run-tasks-in-parallel",
+                "id": "run-tasks-in-parallel",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Run Root-Level NPM Scripts with Nx",
                 "path": "/recipes/running-tasks/root-level-scripts",
                 "id": "root-level-scripts",
@@ -2386,6 +2394,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Run Tasks in Parallel",
+            "path": "/recipes/running-tasks/run-tasks-in-parallel",
+            "id": "run-tasks-in-parallel",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Run Root-Level NPM Scripts with Nx",
             "path": "/recipes/running-tasks/root-level-scripts",
             "id": "root-level-scripts",
@@ -2432,6 +2448,14 @@
         "name": "Running Custom Commands",
         "path": "/recipes/running-tasks/run-commands-executor",
         "id": "run-commands-executor",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Tasks in Parallel",
+        "path": "/recipes/running-tasks/run-tasks-in-parallel",
+        "id": "run-tasks-in-parallel",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
