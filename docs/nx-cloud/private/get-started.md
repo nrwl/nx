@@ -57,7 +57,7 @@ We do offer, however, a multi-node Kubernetes setup, that is deployed via Helm. 
 
 ## Resources
 
-- [GitHub PR Integration](/nx-cloud/set-up/github)
+- [GitHub PR Integration](/nx-cloud/recipes/source-control-integration/github)
 - [Auth (Basic)](/nx-cloud/private-cloud/auth-single-admin)
 - [GitHub Auth](/nx-cloud/private-cloud/auth-github)
 - [GitLab Auth](/nx-cloud/private-cloud/auth-gitlab)

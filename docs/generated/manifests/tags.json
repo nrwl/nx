@@ -119,7 +119,7 @@
       "file": "",
       "id": "nx-cloud-documentation",
       "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/what-is-nx-cloud"
+      "path": "/nx-cloud/intro/ci-with-nx"
     },
     {
       "description": "",
@@ -197,17 +197,17 @@
     },
     {
       "description": "",
-      "file": "shared/ci-overview",
-      "id": "ci-setup",
-      "name": "CI Setup",
-      "path": "/recipes/ci/ci-setup"
-    },
-    {
-      "description": "",
       "file": "",
       "id": "nx-cloud-documentation",
       "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/what-is-nx-cloud"
+      "path": "/nx-cloud/intro/ci-with-nx"
+    },
+    {
+      "description": "",
+      "file": "shared/ci-overview",
+      "id": "ci-setup",
+      "name": "CI Setup",
+      "path": "/nx-cloud/recipes/set-up/ci-setup"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -1051,24 +1051,6 @@
       "path": "/recipes/deno/deno-netlify-functions"
     }
   ],
-  "docker": [
-    {
-      "description": "",
-      "file": "shared/recipes/ci-deployment",
-      "id": "ci-deployment",
-      "name": "Prepare applications for deployment via CI",
-      "path": "/recipes/ci/ci-deployment"
-    }
-  ],
-  "deploy": [
-    {
-      "description": "",
-      "file": "shared/recipes/ci-deployment",
-      "id": "ci-deployment",
-      "name": "Prepare applications for deployment via CI",
-      "path": "/recipes/ci/ci-deployment"
-    }
-  ],
   "yarn": [
     {
       "description": "",
@@ -1149,6 +1131,24 @@
       "id": "serverless-fastify-planetscale",
       "name": "Using PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
+    }
+  ],
+  "docker": [
+    {
+      "description": "",
+      "file": "shared/recipes/ci-deployment",
+      "id": "ci-deployment",
+      "name": "Prepare applications for deployment via CI",
+      "path": "/nx-cloud/recipes/other/ci-deployment"
+    }
+  ],
+  "deploy": [
+    {
+      "description": "",
+      "file": "shared/recipes/ci-deployment",
+      "id": "ci-deployment",
+      "name": "Prepare applications for deployment via CI",
+      "path": "/nx-cloud/recipes/other/ci-deployment"
     }
   ]
 }

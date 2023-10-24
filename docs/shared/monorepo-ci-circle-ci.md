@@ -38,9 +38,7 @@ To use the [Nx Orb](https://github.com/nrwl/nx-orb) with a private repository on
 It should be a user token, not the project token.
 {% /callout %}
 
-{% nx-cloud-section %}
-
-## Distributed CI with Nx Cloud
+## Distributed Task Execution with Nx Cloud
 
 Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
 
@@ -83,5 +81,3 @@ workflows:
 ```
 
 You can also use our [ci-workflow generator](/nx-api/workspace/generators/ci-workflow) to generate the configuration file.
-
-{% /nx-cloud-section %}

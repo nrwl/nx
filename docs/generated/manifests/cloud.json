@@ -6,13 +6,13 @@
     "file": "",
     "itemList": [
       {
-        "id": "what-is-nx-cloud",
-        "name": "What is Nx Cloud?",
+        "id": "ci-with-nx",
+        "name": "CI with Nx",
         "description": "",
-        "file": "nx-cloud/intro/nx-cloud",
+        "file": "nx-cloud/intro/ci-with-nx",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-cloud/intro/what-is-nx-cloud",
+        "path": "/nx-cloud/intro/ci-with-nx",
         "tags": []
       },
       {
@@ -30,14 +30,14 @@
     "path": "/nx-cloud/intro",
     "tags": []
   },
-  "/nx-cloud/intro/what-is-nx-cloud": {
-    "id": "what-is-nx-cloud",
-    "name": "What is Nx Cloud?",
+  "/nx-cloud/intro/ci-with-nx": {
+    "id": "ci-with-nx",
+    "name": "CI with Nx",
     "description": "",
-    "file": "nx-cloud/intro/nx-cloud",
+    "file": "nx-cloud/intro/ci-with-nx",
     "itemList": [],
     "isExternal": false,
-    "path": "/nx-cloud/intro/what-is-nx-cloud",
+    "path": "/nx-cloud/intro/ci-with-nx",
     "tags": []
   },
   "/nx-cloud/intro/nx-cloud-workflows": {
@@ -50,9 +50,395 @@
     "path": "/nx-cloud/intro/nx-cloud-workflows",
     "tags": []
   },
-  "/nx-cloud/set-up": {
+  "/nx-cloud/recipes": {
+    "id": "recipes",
+    "name": "Recipes",
+    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "set-up",
+        "name": "Set Up CI",
+        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "ci-setup",
+            "name": "CI Setup",
+            "description": "",
+            "file": "shared/ci-overview",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/set-up/ci-setup",
+            "tags": ["distribute-task-execution"]
+          },
+          {
+            "id": "monorepo-ci-azure",
+            "name": "Setting up Azure Pipelines",
+            "description": "",
+            "file": "shared/monorepo-ci-azure",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-circle-ci",
+            "name": "Setting up CircleCI",
+            "description": "",
+            "file": "shared/monorepo-ci-circle-ci",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/set-up/monorepo-ci-circle-ci",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-github-actions",
+            "name": "Setting up GitHub Actions",
+            "description": "",
+            "file": "shared/monorepo-ci-github-actions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/set-up/monorepo-ci-github-actions",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-jenkins",
+            "name": "Setting up Jenkins",
+            "description": "",
+            "file": "shared/monorepo-ci-jenkins",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/set-up/monorepo-ci-jenkins",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-gitlab",
+            "name": "Setting up GitLab",
+            "description": "",
+            "file": "shared/monorepo-ci-gitlab",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/set-up/monorepo-ci-gitlab",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-bitbucket-pipelines",
+            "name": "Setting up Bitbucket",
+            "description": "",
+            "file": "shared/monorepo-ci-bitbucket-pipelines",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/set-up",
+        "tags": []
+      },
+      {
+        "id": "source-control-integration",
+        "name": "Source Control Integration",
+        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "github",
+            "name": "Enable GitHub PR Integration",
+            "description": "",
+            "file": "nx-cloud/set-up/github",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/source-control-integration/github",
+            "tags": []
+          },
+          {
+            "id": "bitbucket-cloud",
+            "name": "Enable Bitbucket Cloud PR Integration",
+            "description": "",
+            "file": "nx-cloud/set-up/bitbucket-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/source-control-integration/bitbucket-cloud",
+            "tags": []
+          },
+          {
+            "id": "gitlab",
+            "name": "Enable GitLab MR Integration",
+            "description": "",
+            "file": "nx-cloud/set-up/gitlab",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/source-control-integration/gitlab",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/source-control-integration",
+        "tags": []
+      },
+      {
+        "id": "other",
+        "name": "Other",
+        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "file": "",
+        "itemList": [
+          {
+            "id": "record-commands",
+            "name": "Record Non-Nx Commands",
+            "description": "",
+            "file": "nx-cloud/set-up/record-commands",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/other/record-commands",
+            "tags": []
+          },
+          {
+            "id": "ci-deployment",
+            "name": "Prepare applications for deployment via CI",
+            "description": "",
+            "file": "shared/recipes/ci-deployment",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/other/ci-deployment",
+            "tags": ["docker", "deploy"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/other",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes",
+    "tags": []
+  },
+  "/nx-cloud/recipes/set-up": {
     "id": "set-up",
-    "name": "Set Up",
+    "name": "Set Up CI",
+    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ci-setup",
+        "name": "CI Setup",
+        "description": "",
+        "file": "shared/ci-overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/set-up/ci-setup",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "monorepo-ci-azure",
+        "name": "Setting up Azure Pipelines",
+        "description": "",
+        "file": "shared/monorepo-ci-azure",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-circle-ci",
+        "name": "Setting up CircleCI",
+        "description": "",
+        "file": "shared/monorepo-ci-circle-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/set-up/monorepo-ci-circle-ci",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-github-actions",
+        "name": "Setting up GitHub Actions",
+        "description": "",
+        "file": "shared/monorepo-ci-github-actions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/set-up/monorepo-ci-github-actions",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-jenkins",
+        "name": "Setting up Jenkins",
+        "description": "",
+        "file": "shared/monorepo-ci-jenkins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/set-up/monorepo-ci-jenkins",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-gitlab",
+        "name": "Setting up GitLab",
+        "description": "",
+        "file": "shared/monorepo-ci-gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/set-up/monorepo-ci-gitlab",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-bitbucket-pipelines",
+        "name": "Setting up Bitbucket",
+        "description": "",
+        "file": "shared/monorepo-ci-bitbucket-pipelines",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/set-up",
+    "tags": []
+  },
+  "/nx-cloud/recipes/set-up/ci-setup": {
+    "id": "ci-setup",
+    "name": "CI Setup",
+    "description": "",
+    "file": "shared/ci-overview",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/set-up/ci-setup",
+    "tags": ["distribute-task-execution"]
+  },
+  "/nx-cloud/recipes/set-up/monorepo-ci-azure": {
+    "id": "monorepo-ci-azure",
+    "name": "Setting up Azure Pipelines",
+    "description": "",
+    "file": "shared/monorepo-ci-azure",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
+    "tags": []
+  },
+  "/nx-cloud/recipes/set-up/monorepo-ci-circle-ci": {
+    "id": "monorepo-ci-circle-ci",
+    "name": "Setting up CircleCI",
+    "description": "",
+    "file": "shared/monorepo-ci-circle-ci",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/set-up/monorepo-ci-circle-ci",
+    "tags": []
+  },
+  "/nx-cloud/recipes/set-up/monorepo-ci-github-actions": {
+    "id": "monorepo-ci-github-actions",
+    "name": "Setting up GitHub Actions",
+    "description": "",
+    "file": "shared/monorepo-ci-github-actions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/set-up/monorepo-ci-github-actions",
+    "tags": []
+  },
+  "/nx-cloud/recipes/set-up/monorepo-ci-jenkins": {
+    "id": "monorepo-ci-jenkins",
+    "name": "Setting up Jenkins",
+    "description": "",
+    "file": "shared/monorepo-ci-jenkins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/set-up/monorepo-ci-jenkins",
+    "tags": []
+  },
+  "/nx-cloud/recipes/set-up/monorepo-ci-gitlab": {
+    "id": "monorepo-ci-gitlab",
+    "name": "Setting up GitLab",
+    "description": "",
+    "file": "shared/monorepo-ci-gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/set-up/monorepo-ci-gitlab",
+    "tags": []
+  },
+  "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines": {
+    "id": "monorepo-ci-bitbucket-pipelines",
+    "name": "Setting up Bitbucket",
+    "description": "",
+    "file": "shared/monorepo-ci-bitbucket-pipelines",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+    "tags": []
+  },
+  "/nx-cloud/recipes/source-control-integration": {
+    "id": "source-control-integration",
+    "name": "Source Control Integration",
+    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "github",
+        "name": "Enable GitHub PR Integration",
+        "description": "",
+        "file": "nx-cloud/set-up/github",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/source-control-integration/github",
+        "tags": []
+      },
+      {
+        "id": "bitbucket-cloud",
+        "name": "Enable Bitbucket Cloud PR Integration",
+        "description": "",
+        "file": "nx-cloud/set-up/bitbucket-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/source-control-integration/bitbucket-cloud",
+        "tags": []
+      },
+      {
+        "id": "gitlab",
+        "name": "Enable GitLab MR Integration",
+        "description": "",
+        "file": "nx-cloud/set-up/gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/source-control-integration/gitlab",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/source-control-integration",
+    "tags": []
+  },
+  "/nx-cloud/recipes/source-control-integration/github": {
+    "id": "github",
+    "name": "Enable GitHub PR Integration",
+    "description": "",
+    "file": "nx-cloud/set-up/github",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/source-control-integration/github",
+    "tags": []
+  },
+  "/nx-cloud/recipes/source-control-integration/bitbucket-cloud": {
+    "id": "bitbucket-cloud",
+    "name": "Enable Bitbucket Cloud PR Integration",
+    "description": "",
+    "file": "nx-cloud/set-up/bitbucket-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/source-control-integration/bitbucket-cloud",
+    "tags": []
+  },
+  "/nx-cloud/recipes/source-control-integration/gitlab": {
+    "id": "gitlab",
+    "name": "Enable GitLab MR Integration",
+    "description": "",
+    "file": "nx-cloud/set-up/gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/source-control-integration/gitlab",
+    "tags": []
+  },
+  "/nx-cloud/recipes/other": {
+    "id": "other",
+    "name": "Other",
     "description": "Learn how to set up Nx Cloud for your workspace.",
     "file": "",
     "itemList": [
@@ -63,83 +449,43 @@
         "file": "nx-cloud/set-up/record-commands",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-cloud/set-up/record-commands",
+        "path": "/nx-cloud/recipes/other/record-commands",
         "tags": []
       },
       {
-        "id": "github",
-        "name": "Enable GitHub PR Integration",
+        "id": "ci-deployment",
+        "name": "Prepare applications for deployment via CI",
         "description": "",
-        "file": "nx-cloud/set-up/github",
+        "file": "shared/recipes/ci-deployment",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-cloud/set-up/github",
-        "tags": []
-      },
-      {
-        "id": "bitbucket-cloud",
-        "name": "Enable Bitbucket Cloud PR Integration",
-        "description": "",
-        "file": "nx-cloud/set-up/bitbucket-cloud",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/set-up/bitbucket-cloud",
-        "tags": []
-      },
-      {
-        "id": "gitlab",
-        "name": "Enable GitLab MR Integration",
-        "description": "",
-        "file": "nx-cloud/set-up/gitlab",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/set-up/gitlab",
-        "tags": []
+        "path": "/nx-cloud/recipes/other/ci-deployment",
+        "tags": ["docker", "deploy"]
       }
     ],
     "isExternal": false,
-    "path": "/nx-cloud/set-up",
+    "path": "/nx-cloud/recipes/other",
     "tags": []
   },
-  "/nx-cloud/set-up/record-commands": {
+  "/nx-cloud/recipes/other/record-commands": {
     "id": "record-commands",
     "name": "Record Non-Nx Commands",
     "description": "",
     "file": "nx-cloud/set-up/record-commands",
     "itemList": [],
     "isExternal": false,
-    "path": "/nx-cloud/set-up/record-commands",
+    "path": "/nx-cloud/recipes/other/record-commands",
     "tags": []
   },
-  "/nx-cloud/set-up/github": {
-    "id": "github",
-    "name": "Enable GitHub PR Integration",
+  "/nx-cloud/recipes/other/ci-deployment": {
+    "id": "ci-deployment",
+    "name": "Prepare applications for deployment via CI",
     "description": "",
-    "file": "nx-cloud/set-up/github",
+    "file": "shared/recipes/ci-deployment",
     "itemList": [],
     "isExternal": false,
-    "path": "/nx-cloud/set-up/github",
-    "tags": []
-  },
-  "/nx-cloud/set-up/bitbucket-cloud": {
-    "id": "bitbucket-cloud",
-    "name": "Enable Bitbucket Cloud PR Integration",
-    "description": "",
-    "file": "nx-cloud/set-up/bitbucket-cloud",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/set-up/bitbucket-cloud",
-    "tags": []
-  },
-  "/nx-cloud/set-up/gitlab": {
-    "id": "gitlab",
-    "name": "Enable GitLab MR Integration",
-    "description": "",
-    "file": "nx-cloud/set-up/gitlab",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/set-up/gitlab",
-    "tags": []
+    "path": "/nx-cloud/recipes/other/ci-deployment",
+    "tags": ["docker", "deploy"]
   },
   "/nx-cloud/account": {
     "id": "account",
@@ -254,8 +600,8 @@
   },
   "/nx-cloud/private-cloud": {
     "id": "private-cloud",
-    "name": "Enterprise + On Prem",
-    "description": "Learn about Nx Cloud Enterprise + On-Prem.",
+    "name": "Run Nx Cloud On-Premise",
+    "description": "Learn about Running Nx Cloud On-Premise",
     "file": "",
     "itemList": [
       {
