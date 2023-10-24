@@ -2188,6 +2188,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Change Cache Location",
+                "path": "/recipes/tips-n-tricks/change-cache-location",
+                "id": "change-cache-location",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Define Secondary Entrypoints for Typescript Packages",
                 "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
                 "id": "define-secondary-entrypoints",
@@ -3787,6 +3795,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Change Cache Location",
+            "path": "/recipes/tips-n-tricks/change-cache-location",
+            "id": "change-cache-location",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Define Secondary Entrypoints for Typescript Packages",
             "path": "/recipes/tips-n-tricks/define-secondary-entrypoints",
             "id": "define-secondary-entrypoints",
@@ -3929,6 +3945,14 @@
         "name": "Enable Typescript Batch Mode",
         "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
         "id": "enable-tsc-batch-mode",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Change Cache Location",
+        "path": "/recipes/tips-n-tricks/change-cache-location",
+        "id": "change-cache-location",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

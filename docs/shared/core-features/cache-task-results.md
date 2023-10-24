@@ -115,34 +115,7 @@ Learn more [about configuring inputs including `namedInputs`](/recipes/running-t
 
 ## Where is the Cache Stored?
 
-By default the cache is stored locally in your `node_modules/.cache`. Cache results are stored for a week before they get deleted. You can customize the cache location in the `nx.json`:
-
-{% tabs %}
-{% tab label="Nx >= 17" %}
-
-```json {% fileName="nx.json"%}
-{
-  "cacheDirectory": "/tmp/mycache"
-}
-```
-
-{% /tab %}
-{% tab label="Nx < 17" %}
-
-```json {% fileName="nx.json"%}
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "options": {
-        "cacheDirectory": "/tmp/mycache"
-      }
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
+The cache is stored in `.nx/cache` by default. You can also [change where the cache](/recipes/tips-n-tricks/change-cache-location) is stored if you want.
 
 ## Enable Remote Caching
 

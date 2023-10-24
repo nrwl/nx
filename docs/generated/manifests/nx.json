@@ -2726,6 +2726,16 @@
             "tags": []
           },
           {
+            "id": "change-cache-location",
+            "name": "Change Cache Location",
+            "description": "",
+            "file": "shared/recipes/tips-n-tricks/change-cache-location",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/tips-n-tricks/change-cache-location",
+            "tags": []
+          },
+          {
             "id": "define-secondary-entrypoints",
             "name": "Define Secondary Entrypoints for Typescript Packages",
             "description": "",
@@ -4721,6 +4731,16 @@
         "tags": []
       },
       {
+        "id": "change-cache-location",
+        "name": "Change Cache Location",
+        "description": "",
+        "file": "shared/recipes/tips-n-tricks/change-cache-location",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/tips-n-tricks/change-cache-location",
+        "tags": []
+      },
+      {
         "id": "define-secondary-entrypoints",
         "name": "Define Secondary Entrypoints for Typescript Packages",
         "description": "",
@@ -4903,6 +4923,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
+    "tags": []
+  },
+  "/recipes/tips-n-tricks/change-cache-location": {
+    "id": "change-cache-location",
+    "name": "Change Cache Location",
+    "description": "",
+    "file": "shared/recipes/tips-n-tricks/change-cache-location",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/tips-n-tricks/change-cache-location",
     "tags": []
   },
   "/recipes/tips-n-tricks/define-secondary-entrypoints": {

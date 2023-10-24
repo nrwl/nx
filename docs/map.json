@@ -1013,6 +1013,11 @@
                   "file": "shared/recipes/enable-tsc-batch-mode"
                 },
                 {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/tips-n-tricks/change-cache-location"
+                },
+                {
                   "name": "Define Secondary Entrypoints for Typescript Packages",
                   "id": "define-secondary-entrypoints",
                   "file": "shared/recipes/tips-n-tricks/define-secondary-entrypoints"
