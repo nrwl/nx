@@ -15,6 +15,10 @@ You can create a new workspace that uses Vue with one of the following commands:
 npx create-nx-workspace@latest --preset=vue
 ```
 
+{% callout type="note" title="Vue Standalone Tutorial" %}
+For a full tutorial experience, follow the [Vue Standalone Tutorial](/getting-started/tutorials/vue-standalone-tutorial)
+{% /callout %}
+
 ## Add Vue to an existing workspace
 
 There are a number of ways to use Vue in your existing workspace.
