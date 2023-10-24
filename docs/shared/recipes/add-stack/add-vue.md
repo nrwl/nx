@@ -4,9 +4,13 @@ The code for this example is available on GitHub:
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/vue" /%}
 
+{% callout title="Official Vue Plugin" %}
+This recipe does not use the official Vue plugin, so it doesn't use generators or automate updating framework dependencies. Use [`@nx/vue`](/nx-api/vue) to use those features.
+{% /callout %}
+
 **Supported Features**
 
-We'll be using an Nx plugin for Vue called [@nx/vite](/nx-api/vite). Although we are using `@nx/vite`, not all dependencies will be able to be automatically updated. So we'll have to update any framework dependencies as needed.
+We'll be using an Nx plugin called [@nx/vite](/nx-api/vite). Although we are using `@nx/vite`, not all dependencies will be able to be automatically updated. So we'll have to update any framework dependencies as needed.
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}

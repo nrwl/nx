@@ -15,14 +15,20 @@ pub(super) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
 
     let node_folder = PathBuf::from(root).join("node_modules");
     walker.filter_entry(move |entry| !entry.path().starts_with(&node_folder));
-    walker
+    let mut ignores = walker
         .build()
         .flatten()
         .filter(|result| {
             result.path().ends_with(".nxignore") || result.path().ends_with(".gitignore")
         })
-        .map(|result| {
-            let path: PathBuf = result.path().into();
+        .map(|result| result.path().into())
+        .collect::<Vec<PathBuf>>();
+
+    ignores.sort();
+
+    ignores
+        .into_iter()
+        .map(|path| {
             let parent: PathBuf = path.parent().unwrap_or(&path).into();
             IgnoreFile {
                 path,

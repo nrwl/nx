@@ -7,8 +7,9 @@ describe('watcher', () => {
   beforeEach(() => {
     temp = new TempFs('watch-dir');
     temp.createFilesSync({
-      '.gitignore': 'node_modules/',
-      '.nxignore': 'app2/',
+      '.gitignore': 'node_modules/\n.env.local',
+      '.nxignore': 'app2/\n!.env.local',
+      '.env.local': '',
       'app1/main.js': '',
       'app1/main.css': '',
       'app2/main.js': '',
@@ -20,8 +21,9 @@ describe('watcher', () => {
     console.log(`watching ${temp.tempDir}`);
   });
 
-  afterEach(() => {
-    watcher.stop();
+  afterEach(async () => {
+    await watcher.stop();
+    watcher = undefined;
     temp.cleanup();
   });
 
@@ -132,6 +134,18 @@ describe('watcher', () => {
       // should not be triggered
       temp.createFileSync('nested-ignore/hello1.txt', '');
       temp.createFileSync('boo.txt', '');
+    });
+  });
+
+  it('should include files that are negated in nxignore but are ignored in gitignore', (done) => {
+    watcher = new Watcher(temp.tempDir);
+    watcher.watch((err, paths) => {
+      expect(paths.some(({ path }) => path === '.env.local')).toBeTruthy();
+      done();
+    });
+
+    wait().then(() => {
+      temp.appendFile('.env.local', 'hello');
     });
   });
 });
