@@ -237,6 +237,7 @@
     - [defaultCollection](/deprecated/default-collection)
     - [runtimeCacheInputs](/deprecated/runtime-cache-inputs)
     - [globalImplicitDependencies](/deprecated/global-implicit-dependencies)
+    - [Angular Schematics and Builders](/deprecated/angular-schematics-builders)
     - [Storybook deprecated docs](/deprecated/storybook)
       - [Angular: Information about the Storybook targets](/deprecated/storybook/angular-storybook-targets)
       - [Angular: The browserTarget](/deprecated/storybook/angular-browser-target)

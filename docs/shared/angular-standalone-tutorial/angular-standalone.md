@@ -36,10 +36,10 @@ title="Tutorial: Standalone Angular Application"
 Create a new Angular application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myngapp --preset=angular-standalone" path="~" %}
+✔ Default stylesheet format · css
+✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Would you like to use Standalone Components in your application? · Yes
-
 ✔ Would you like to add routing? · Yes
-✔ Default stylesheet format             · css
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
@@ -233,7 +233,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can configure the `cache` properties in the targets under `targetDefaults` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
 
 ## Creating New Components
 
@@ -295,7 +295,7 @@ More info can be found in [the integrate with editors article](/core-features/in
 
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/angular:component hello-world --standalone --dry-run" path="myngapp" %}
+```{% command="npx nx g @nx/angular:component hello-world --directory=src/app/hello-world --standalone --dry-run" path="myngapp" %}
 >  NX  Generating @nx/angular:component
 
 CREATE src/app/hello-world/hello-world.component.css
@@ -449,9 +449,9 @@ Running the above commands should lead to the following directory structure:
    │        ├─ src
    │        │  ├─ index.ts
    │        │  ├─ lib
-   │        │  │  └─ ui
+   │        │  │  └─ shared-ui
    │        │  │     ├─ ...
-   │        │  │     └─ ui.component.ts
+   │        │  │     └─ shared-ui.component.ts
    │        └─ ...
    ├─ ...
    ├─ src
@@ -479,9 +479,9 @@ All libraries that we generate automatically have aliases created in the root-le
   "compilerOptions": {
     ...
     "paths": {
-      "products": ["modules/products/src/index.ts"],
-      "orders": ["modules/orders/src/index.ts"],
-      "shared-ui": ["modules/shared/ui/src/index.ts"]
+      "@myngapp/orders": ["modules/orders/src/index.ts"],
+      "@myngapp/products": ["modules/products/src/index.ts"],
+      "@myngapp/shared-ui": ["modules/shared/ui/src/index.ts"]
     },
     ...
   },
@@ -526,7 +526,8 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'products',
-    loadComponent: () => import('products').then((m) => m.ProductsComponent),
+    loadComponent: () =>
+      import('@myngapp/products').then((m) => m.ProductsComponent),
   },
 ];
 ```
@@ -555,11 +556,13 @@ export const appRoutes: Route[] = [
   },
   {
     path: 'products',
-    loadComponent: () => import('products').then((m) => m.ProductsComponent),
+    loadComponent: () =>
+      import('@myngapp/products').then((m) => m.ProductsComponent),
   },
   {
     path: 'orders',
-    loadComponent: () => import('orders').then((m) => m.OrdersComponent),
+    loadComponent: () =>
+      import('@myngapp/orders').then((m) => m.OrdersComponent),
   },
 ];
 ```
@@ -764,7 +767,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // 👇 this import is not allowed
-import { OrdersComponent } from 'orders';
+import { OrdersComponent } from '@myngapp/orders';
 
 @Component({
   selector: 'myngapp-products',

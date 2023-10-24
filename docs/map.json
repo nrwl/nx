@@ -1419,6 +1419,11 @@
               "file": "shared/deprecated/global-implicit-dependencies"
             },
             {
+              "name": "Angular Schematics and Builders",
+              "id": "angular-schematics-builders",
+              "file": "shared/deprecated/angular-schematics-builders"
+            },
+            {
               "name": "Storybook deprecated docs",
               "id": "storybook",
               "description": "Deprecated @nx/storybook package documentation and guides.",

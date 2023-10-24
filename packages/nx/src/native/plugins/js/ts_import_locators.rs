@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::path::Path;
@@ -443,11 +444,13 @@ fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> 
     None
 }
 
-fn process_file((source_project, file_path): (&String, &String)) -> Option<ImportResult> {
+fn process_file(
+    (source_project, file_path): (&String, &String),
+) -> anyhow::Result<Option<ImportResult>> {
     let now = Instant::now();
     let cm = Arc::<SourceMap>::default()
         .load_file(Path::new(file_path))
-        .unwrap();
+        .map_err(|e| anyhow!("Unable to load {}: {}", file_path, e))?;
 
     let comments = SingleThreadedComments::default();
 
@@ -573,16 +576,18 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
         .filter_map(code_is_not_ignored)
         .collect();
 
-    Some(ImportResult {
+    Ok(Some(ImportResult {
         file: file_path.clone(),
         source_project: source_project.clone(),
         static_import_expressions,
         dynamic_import_expressions,
-    })
+    }))
 }
 
 #[napi]
-fn find_imports(project_file_map: HashMap<String, Vec<String>>) -> Vec<ImportResult> {
+fn find_imports(
+    project_file_map: HashMap<String, Vec<String>>,
+) -> anyhow::Result<Vec<ImportResult>> {
     enable_logger();
 
     let files_to_process: Vec<(&String, &String)> = project_file_map
@@ -590,9 +595,24 @@ fn find_imports(project_file_map: HashMap<String, Vec<String>>) -> Vec<ImportRes
         .flat_map(|(project_name, files)| files.iter().map(move |file| (project_name, file)))
         .collect();
 
-    files_to_process
+    let (successes, errors): (Vec<_>, Vec<_>) = files_to_process
         .into_par_iter()
-        .filter_map(process_file)
+        .map(process_file)
+        .partition(|r| r.is_ok());
+
+    if !errors.is_empty() {
+        let errors = errors
+            .into_iter()
+            .map(|e| e.unwrap_err())
+            .map(|e| e.to_string())
+            .collect::<Vec<_>>()
+            .join("\n");
+        anyhow::bail!("{:?}", errors);
+    }
+
+    successes
+        .into_iter()
+        .filter_map(|r| r.transpose())
         .collect()
 }
 #[cfg(test)]
@@ -643,7 +663,8 @@ import 'a4'; import 'a5';
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
 
@@ -795,7 +816,8 @@ import 'a4'; import 'a5';
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone(), broken_file_path],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
         let ast_results: ImportResult = find_imports_with_ast(test_file_path);
@@ -917,7 +939,8 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
 
@@ -963,7 +986,8 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
         let ast_results: ImportResult = find_imports_with_ast(test_file_path);
@@ -1020,7 +1044,8 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
         let ast_results: ImportResult = find_imports_with_ast(test_file_path);
@@ -1058,7 +1083,8 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
         let ast_results: ImportResult = find_imports_with_ast(test_file_path);
@@ -1105,7 +1131,8 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
         let ast_results: ImportResult = find_imports_with_ast(test_file_path);
@@ -1149,7 +1176,8 @@ import('./dynamic-import.vue')
 
         let test_file_path = temp_dir.display().to_string() + "/test.ts";
 
-        let results = find_imports(HashMap::from([(String::from("a"), vec![test_file_path])]));
+        let results =
+            find_imports(HashMap::from([(String::from("a"), vec![test_file_path])])).unwrap();
 
         let result = results.get(0).unwrap();
 
@@ -1188,7 +1216,8 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
         let ast_results: ImportResult = find_imports_with_ast(test_file_path);
@@ -1239,7 +1268,8 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
         let ast_results: ImportResult = find_imports_with_ast(test_file_path);
