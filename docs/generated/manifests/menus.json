@@ -4853,9 +4853,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "workspace-layout",
+            "name": "workspaceLayout",
             "path": "/deprecated/workspace-layout",
             "id": "workspace-layout",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "nameAndDirectoryFormat",
+            "path": "/deprecated/name-and-directory-format",
+            "id": "name-and-directory-format",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4993,9 +5001,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "workspace-layout",
+        "name": "workspaceLayout",
         "path": "/deprecated/workspace-layout",
         "id": "workspace-layout",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "nameAndDirectoryFormat",
+        "path": "/deprecated/name-and-directory-format",
+        "id": "name-and-directory-format",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -6052,12 +6052,22 @@
       },
       {
         "id": "workspace-layout",
-        "name": "workspace-layout",
+        "name": "workspaceLayout",
         "description": "",
         "file": "shared/deprecated/workspace-layout",
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/workspace-layout",
+        "tags": []
+      },
+      {
+        "id": "name-and-directory-format",
+        "name": "nameAndDirectoryFormat",
+        "description": "",
+        "file": "shared/deprecated/name-and-directory-format",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/name-and-directory-format",
         "tags": []
       },
       {
@@ -6228,12 +6238,22 @@
   },
   "/deprecated/workspace-layout": {
     "id": "workspace-layout",
-    "name": "workspace-layout",
+    "name": "workspaceLayout",
     "description": "",
     "file": "shared/deprecated/workspace-layout",
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/workspace-layout",
+    "tags": []
+  },
+  "/deprecated/name-and-directory-format": {
+    "id": "name-and-directory-format",
+    "name": "nameAndDirectoryFormat",
+    "description": "",
+    "file": "shared/deprecated/name-and-directory-format",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/name-and-directory-format",
     "tags": []
   },
   "/deprecated/workspace-generators": {

@@ -1370,9 +1370,14 @@
               "file": "shared/deprecated/workspace-lint"
             },
             {
-              "name": "workspace-layout",
+              "name": "workspaceLayout",
               "id": "workspace-layout",
               "file": "shared/deprecated/workspace-layout"
+            },
+            {
+              "name": "nameAndDirectoryFormat",
+              "id": "name-and-directory-format",
+              "file": "shared/deprecated/name-and-directory-format"
             },
             {
               "name": "Workspace Generators",
