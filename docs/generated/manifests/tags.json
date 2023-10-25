@@ -44,6 +44,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
+      "id": "run-tasks-in-parallel",
+      "name": "Run Tasks in Parallel",
+      "path": "/recipes/running-tasks/run-tasks-in-parallel"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/running-tasks/root-level-scripts",
       "id": "root-level-scripts",
       "name": "Run Root-Level NPM Scripts with Nx",
@@ -119,7 +126,7 @@
       "file": "",
       "id": "nx-cloud-documentation",
       "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/what-is-nx-cloud"
+      "path": "/nx-cloud/intro/ci-with-nx"
     },
     {
       "description": "",
@@ -197,17 +204,17 @@
     },
     {
       "description": "",
-      "file": "shared/ci-overview",
-      "id": "ci-setup",
-      "name": "CI Setup",
-      "path": "/recipes/ci/ci-setup"
-    },
-    {
-      "description": "",
       "file": "",
       "id": "nx-cloud-documentation",
       "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/what-is-nx-cloud"
+      "path": "/nx-cloud/intro/ci-with-nx"
+    },
+    {
+      "description": "",
+      "file": "shared/ci-overview",
+      "id": "ci-setup",
+      "name": "CI Setup",
+      "path": "/nx-cloud/recipes/set-up/ci-setup"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -1051,22 +1058,20 @@
       "path": "/recipes/deno/deno-netlify-functions"
     }
   ],
-  "docker": [
+  "installation": [
     {
       "description": "",
-      "file": "shared/recipes/ci-deployment",
-      "id": "ci-deployment",
-      "name": "Prepare applications for deployment via CI",
-      "path": "/recipes/ci/ci-deployment"
-    }
-  ],
-  "deploy": [
+      "file": "shared/recipes/installation/install-non-javascript",
+      "id": "install-non-javascript",
+      "name": "Install Nx in a Non-Javascript Repo",
+      "path": "/recipes/installation/install-non-javascript"
+    },
     {
       "description": "",
-      "file": "shared/recipes/ci-deployment",
-      "id": "ci-deployment",
-      "name": "Prepare applications for deployment via CI",
-      "path": "/recipes/ci/ci-deployment"
+      "file": "shared/recipes/installation/update-global-installation",
+      "id": "update-global-installation",
+      "name": "Update Your Global Nx Installation",
+      "path": "/recipes/installation/update-global-installation"
     }
   ],
   "yarn": [
@@ -1149,6 +1154,24 @@
       "id": "serverless-fastify-planetscale",
       "name": "Using PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
+    }
+  ],
+  "docker": [
+    {
+      "description": "",
+      "file": "shared/recipes/ci-deployment",
+      "id": "ci-deployment",
+      "name": "Prepare applications for deployment via CI",
+      "path": "/nx-cloud/recipes/other/ci-deployment"
+    }
+  ],
+  "deploy": [
+    {
+      "description": "",
+      "file": "shared/recipes/ci-deployment",
+      "id": "ci-deployment",
+      "name": "Prepare applications for deployment via CI",
+      "path": "/nx-cloud/recipes/other/ci-deployment"
     }
   ]
 }

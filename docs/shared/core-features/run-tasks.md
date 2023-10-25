@@ -84,48 +84,9 @@ Run the `build`, `lint` and `test` target just on the `header` and `footer` proj
 npx nx run-many -t build lint test -p header footer
 ```
 
-Note that Nx parallelizes all these tasks making also sure they are run in the right order based on their dependencies and the [task pipeline configuration](/concepts/task-pipeline-configuration).
+Note that Nx parallelizes all these tasks making sure they are also run in the right order based on their dependencies and the [task pipeline configuration](/concepts/task-pipeline-configuration). You can also [control how many tasks can run in parallel at once](/recipes/running-tasks/run-tasks-in-parallel).
 
 Learn more about the [run-many](/nx-api/nx/documents/run-many) command.
-
-### Run Tasks in Parallel
-
-If you want to increase the number of processes running tasks to, say, 5 (by default, it is 3), pass the
-following:
-
-```shell
-npx nx build myapp --parallel=5
-```
-
-Note, you can also change the default in `nx.json`, like this:
-
-{% tabs %}
-{% tab label="Nx >= 17" %}
-
-```json {% fileName="nx.json"%}
-{
-  "parallel": 5
-}
-```
-
-{% /tab %}
-{% tab label="Nx < 17" %}
-
-```json {% fileName="nx.json"%}
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "parallel": 5
-      }
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
 
 ### Run Tasks on Projects Affected by a PR
 
