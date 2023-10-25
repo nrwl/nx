@@ -76,13 +76,13 @@ Check out [this video for a live walkthrough](https://youtu.be/Tx257WpNsxc) or f
 - Run `pnpm local-registry` in Terminal 1 (keep it running)
 - Run `npm adduser --registry http://localhost:4873` in Terminal 2 (real credentials are not required, you just need to
   be logged in. You can use test/test/test@test.io.)
-- Run `pnpm nx-release 17.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
+- Run `pnpm nx-release 18.0.0 --local` in Terminal 2 - you can choose any nonexistent version number here, but it's recommended to use the next major
 - Run `cd ./tmp` in Terminal 2
-- Run `npx create-nx-workspace@17.0.0` in Terminal 2
+- Run `npx create-nx-workspace@18.0.0` in Terminal 2
 
 If you have problems publishing, make sure you use Node 18 and NPM 8.
 
-**NOTE:** To use this newly published local version, you need to make a new workspace or change all of your target packages to this new version, eg: `"nx": "^17.0.0",` and re-run `pnpm i` in your testing project.
+**NOTE:** To use this newly published local version, you need to make a new workspace, run `nx migrate` or change all of your target packages to this new version, eg: `"nx": "^18.0.0",` and re-run `pnpm i` in your testing project.
 
 ### Publishing for Yarn 2+ (Berry)
 
