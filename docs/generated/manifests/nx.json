@@ -1821,6 +1821,16 @@
             "tags": ["run-tasks"]
           },
           {
+            "id": "change-cache-location",
+            "name": "Change Cache Location",
+            "description": "",
+            "file": "shared/recipes/running-tasks/change-cache-location",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/change-cache-location",
+            "tags": []
+          },
+          {
             "id": "run-commands-executor",
             "name": "Running Custom Commands",
             "description": "",
@@ -3005,6 +3015,16 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "change-cache-location",
+        "name": "Change Cache Location",
+        "description": "",
+        "file": "shared/recipes/running-tasks/change-cache-location",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/change-cache-location",
+        "tags": []
+      },
+      {
         "id": "run-commands-executor",
         "name": "Running Custom Commands",
         "description": "",
@@ -3078,6 +3098,16 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/change-cache-location": {
+    "id": "change-cache-location",
+    "name": "Change Cache Location",
+    "description": "",
+    "file": "shared/recipes/running-tasks/change-cache-location",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/change-cache-location",
+    "tags": []
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",

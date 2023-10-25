@@ -472,6 +472,11 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/running-tasks/change-cache-location"
+                },
+                {
                   "name": "Running Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks", "use-task-executors"],
