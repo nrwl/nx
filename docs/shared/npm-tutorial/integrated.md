@@ -19,11 +19,11 @@ The file structure should look like this:
 
 ```treeview
 myorg/
-├── packages/
-├── tools/
-├── nx.json
-├── package.json
 ├── README.md
+├── node_modules
+├── nx.json
+├── package-lock.json
+├── package.json
 └── tsconfig.base.json
 ```
 
@@ -33,7 +33,7 @@ Nx comes with generators that can help with scaffolding applications. Run this g
 
 ```shell
 npx nx generate @nx/js:library is-even \
---directory=libs/is-even \
+--directory=packages/is-even \
 --publishable \
 --importPath=@myorg/is-even
 ```
@@ -107,7 +107,7 @@ To illustrate that, let's create another package `is-odd`. We can again run the 
 
 ```shell
 npx nx generate @nx/js:library is-odd \
---directory=libs/is-odd \
+--directory=packages/is-odd \
 --publishable \
 --importPath=@myorg/is-odd
 ```
