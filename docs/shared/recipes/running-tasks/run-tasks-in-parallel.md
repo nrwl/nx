@@ -1,7 +1,6 @@
-### Run Tasks in Parallel
+# Run Tasks in Parallel
 
-If you want to increase the number of processes running tasks to, say, 5 (by default, it is 3), pass the
-following:
+If you want to increase the number of processes running tasks to, say, 5 (by default, it is 3), pass the following:
 
 ```shell
 npx nx build myapp --parallel=5
