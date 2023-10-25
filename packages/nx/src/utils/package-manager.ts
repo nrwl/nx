@@ -29,7 +29,9 @@ export interface PackageManagerCommands {
 /**
  * Detects which package manager is used in the workspace based on the lock file.
  */
-export function detectPackageManager(dir: string = ''): PackageManager {
+export function detectPackageManager(
+  dir: string = workspaceRoot
+): PackageManager {
   const nxJson = readNxJson();
   return (
     nxJson.cli?.packageManager ??

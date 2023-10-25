@@ -17,7 +17,7 @@ const { detectPackageManager, getPackageManagerCommand, joinPathFragments } =
 export function installPackagesTask(
   tree: Tree,
   alwaysRun: boolean = false,
-  cwd: string = '',
+  cwd: string = tree.root,
   packageManager: PackageManager = detectPackageManager(cwd)
 ): void {
   if (
