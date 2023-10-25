@@ -1058,6 +1058,22 @@
       "path": "/recipes/deno/deno-netlify-functions"
     }
   ],
+  "installation": [
+    {
+      "description": "",
+      "file": "shared/recipes/installation/install-non-javascript",
+      "id": "install-non-javascript",
+      "name": "Install Nx in a Non-Javascript Repo",
+      "path": "/recipes/installation/install-non-javascript"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/installation/update-global-installation",
+      "id": "update-global-installation",
+      "name": "Update Your Global Nx Installation",
+      "path": "/recipes/installation/update-global-installation"
+    }
+  ],
   "yarn": [
     {
       "description": "",

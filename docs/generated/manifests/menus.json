@@ -2077,6 +2077,31 @@
             "disableCollapsible": false
           },
           {
+            "name": "Installation",
+            "path": "/recipes/installation",
+            "id": "installation",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Install Nx in a Non-Javascript Repo",
+                "path": "/recipes/installation/install-non-javascript",
+                "id": "install-non-javascript",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Update Your Global Nx Installation",
+                "path": "/recipes/installation/update-global-installation",
+                "id": "update-global-installation",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Tips and tricks",
             "path": "/recipes/tips-n-tricks",
             "id": "tips-n-tricks",
@@ -3550,6 +3575,47 @@
         "name": "Tags Allow List",
         "path": "/recipes/enforce-module-boundaries/tags-allow-list",
         "id": "tags-allow-list",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Installation",
+        "path": "/recipes/installation",
+        "id": "installation",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Install Nx in a Non-Javascript Repo",
+            "path": "/recipes/installation/install-non-javascript",
+            "id": "install-non-javascript",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Update Your Global Nx Installation",
+            "path": "/recipes/installation/update-global-installation",
+            "id": "update-global-installation",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Install Nx in a Non-Javascript Repo",
+        "path": "/recipes/installation/install-non-javascript",
+        "id": "install-non-javascript",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Update Your Global Nx Installation",
+        "path": "/recipes/installation/update-global-installation",
+        "id": "update-global-installation",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

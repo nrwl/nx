@@ -2589,6 +2589,37 @@
         "tags": []
       },
       {
+        "id": "installation",
+        "name": "Installation",
+        "description": "Installing Nx",
+        "file": "",
+        "itemList": [
+          {
+            "id": "install-non-javascript",
+            "name": "Install Nx in a Non-Javascript Repo",
+            "description": "",
+            "file": "shared/recipes/installation/install-non-javascript",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/install-non-javascript",
+            "tags": ["installation"]
+          },
+          {
+            "id": "update-global-installation",
+            "name": "Update Your Global Nx Installation",
+            "description": "",
+            "file": "shared/recipes/installation/update-global-installation",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/installation/update-global-installation",
+            "tags": ["installation"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/installation",
+        "tags": []
+      },
+      {
         "id": "tips-n-tricks",
         "name": "Tips and tricks",
         "description": "Various tips and tricks for using Nx.",
@@ -4431,6 +4462,57 @@
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/tags-allow-list",
     "tags": ["enforce-module-boundaries"]
+  },
+  "/recipes/installation": {
+    "id": "installation",
+    "name": "Installation",
+    "description": "Installing Nx",
+    "file": "",
+    "itemList": [
+      {
+        "id": "install-non-javascript",
+        "name": "Install Nx in a Non-Javascript Repo",
+        "description": "",
+        "file": "shared/recipes/installation/install-non-javascript",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/install-non-javascript",
+        "tags": ["installation"]
+      },
+      {
+        "id": "update-global-installation",
+        "name": "Update Your Global Nx Installation",
+        "description": "",
+        "file": "shared/recipes/installation/update-global-installation",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/installation/update-global-installation",
+        "tags": ["installation"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/installation",
+    "tags": []
+  },
+  "/recipes/installation/install-non-javascript": {
+    "id": "install-non-javascript",
+    "name": "Install Nx in a Non-Javascript Repo",
+    "description": "",
+    "file": "shared/recipes/installation/install-non-javascript",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/install-non-javascript",
+    "tags": ["installation"]
+  },
+  "/recipes/installation/update-global-installation": {
+    "id": "update-global-installation",
+    "name": "Update Your Global Nx Installation",
+    "description": "",
+    "file": "shared/recipes/installation/update-global-installation",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/installation/update-global-installation",
+    "tags": ["installation"]
   },
   "/recipes/tips-n-tricks": {
     "id": "tips-n-tricks",

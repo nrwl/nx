@@ -937,6 +937,25 @@
               ]
             },
             {
+              "name": "Installation",
+              "id": "installation",
+              "description": "Installing Nx",
+              "itemList": [
+                {
+                  "name": "Install Nx in a Non-Javascript Repo",
+                  "id": "install-non-javascript",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/install-non-javascript"
+                },
+                {
+                  "name": "Update Your Global Nx Installation",
+                  "id": "update-global-installation",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/update-global-installation"
+                }
+              ]
+            },
+            {
               "name": "Tips and tricks",
               "id": "tips-n-tricks",
               "description": "Various tips and tricks for using Nx.",
