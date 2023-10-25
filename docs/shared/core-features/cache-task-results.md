@@ -115,7 +115,7 @@ Learn more [about configuring inputs including `namedInputs`](/recipes/running-t
 
 ## Where is the Cache Stored?
 
-The cache is stored in `.nx/cache` by default. You can also [change where the cache](/recipes/tips-n-tricks/change-cache-location) is stored if you want.
+The cache is stored in `.nx/cache` by default. You can also [change where the cache](/recipes/running-tasks/change-cache-location) is stored if you want.
 
 ## Enable Remote Caching
 

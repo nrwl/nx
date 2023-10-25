@@ -472,6 +472,11 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/running-tasks/change-cache-location"
+                },
+                {
                   "name": "Running Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks", "use-task-executors"],
@@ -1011,11 +1016,6 @@
                   "name": "Enable Typescript Batch Mode",
                   "id": "enable-tsc-batch-mode",
                   "file": "shared/recipes/enable-tsc-batch-mode"
-                },
-                {
-                  "name": "Change Cache Location",
-                  "id": "change-cache-location",
-                  "file": "shared/recipes/tips-n-tricks/change-cache-location"
                 },
                 {
                   "name": "Define Secondary Entrypoints for Typescript Packages",

@@ -1821,6 +1821,16 @@
             "tags": ["run-tasks"]
           },
           {
+            "id": "change-cache-location",
+            "name": "Change Cache Location",
+            "description": "",
+            "file": "shared/recipes/running-tasks/change-cache-location",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/change-cache-location",
+            "tags": []
+          },
+          {
             "id": "run-commands-executor",
             "name": "Running Custom Commands",
             "description": "",
@@ -2726,16 +2736,6 @@
             "tags": []
           },
           {
-            "id": "change-cache-location",
-            "name": "Change Cache Location",
-            "description": "",
-            "file": "shared/recipes/tips-n-tricks/change-cache-location",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/tips-n-tricks/change-cache-location",
-            "tags": []
-          },
-          {
             "id": "define-secondary-entrypoints",
             "name": "Define Secondary Entrypoints for Typescript Packages",
             "description": "",
@@ -3065,6 +3065,16 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "change-cache-location",
+        "name": "Change Cache Location",
+        "description": "",
+        "file": "shared/recipes/running-tasks/change-cache-location",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/change-cache-location",
+        "tags": []
+      },
+      {
         "id": "run-commands-executor",
         "name": "Running Custom Commands",
         "description": "",
@@ -3128,6 +3138,16 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
+  },
+  "/recipes/running-tasks/change-cache-location": {
+    "id": "change-cache-location",
+    "name": "Change Cache Location",
+    "description": "",
+    "file": "shared/recipes/running-tasks/change-cache-location",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/change-cache-location",
+    "tags": []
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
@@ -4731,16 +4751,6 @@
         "tags": []
       },
       {
-        "id": "change-cache-location",
-        "name": "Change Cache Location",
-        "description": "",
-        "file": "shared/recipes/tips-n-tricks/change-cache-location",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/tips-n-tricks/change-cache-location",
-        "tags": []
-      },
-      {
         "id": "define-secondary-entrypoints",
         "name": "Define Secondary Entrypoints for Typescript Packages",
         "description": "",
@@ -4923,16 +4933,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/tips-n-tricks/enable-tsc-batch-mode",
-    "tags": []
-  },
-  "/recipes/tips-n-tricks/change-cache-location": {
-    "id": "change-cache-location",
-    "name": "Change Cache Location",
-    "description": "",
-    "file": "shared/recipes/tips-n-tricks/change-cache-location",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/tips-n-tricks/change-cache-location",
     "tags": []
   },
   "/recipes/tips-n-tricks/define-secondary-entrypoints": {
