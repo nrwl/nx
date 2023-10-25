@@ -340,7 +340,10 @@ export function parseCSV(args: string[] | string): string[] {
     return [];
   }
   if (Array.isArray(args)) {
-    return args;
+    // If parseCSV is used on `type: 'array'`, the first option may be something like ['a,b,c'].
+    return args.length === 1 && args[0].includes(',')
+      ? parseCSV(args[0])
+      : args;
   }
   const items = args.split(',');
   return items.map((i) =>
