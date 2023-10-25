@@ -11,7 +11,9 @@ export async function mergeCustomWebpackConfig(
 ) {
   const customWebpackConfiguration = resolveCustomWebpackConfig(
     pathToWebpackConfig,
-    join(workspaceRoot, options.tsConfig)
+    options.tsConfig.startsWith(workspaceRoot)
+      ? options.tsConfig
+      : join(workspaceRoot, options.tsConfig)
   );
   // The extra Webpack configuration file can also export a Promise, for instance:
   // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
