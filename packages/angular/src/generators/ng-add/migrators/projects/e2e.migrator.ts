@@ -1,4 +1,4 @@
-import { cypressProjectGenerator } from '@nx/cypress';
+import { configurationGenerator } from '@nx/cypress';
 import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type {
@@ -9,11 +9,9 @@ import type {
 import {
   addProjectConfiguration,
   joinPathFragments,
-  names,
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
-  removeProjectConfiguration,
   stripIndents,
   updateJson,
   updateProjectConfiguration,
@@ -337,12 +335,20 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   private async migrateCypressE2eProject(): Promise<void> {
     const oldCypressConfigFilePath = this.getOldCypressConfigFilePath();
 
-    await cypressProjectGenerator(this.tree, {
-      name: this.project.name,
-      project: this.appName,
+    addProjectConfiguration(this.tree, this.project.name, {
+      projectType: 'application',
+      root: this.project.newRoot,
+      sourceRoot: this.project.newSourceRoot,
+      targets: {},
+      tags: [],
+      implicitDependencies: [this.appName],
+    });
+    await configurationGenerator(this.tree, {
+      project: this.project.name,
       linter: this.isProjectUsingEsLint ? Linter.EsLint : Linter.None,
-      standaloneConfig: true,
       skipFormat: true,
+      // any target would do, we replace it later with the target existing in the project being migrated
+      devServerTarget: `${this.appName}:serve`,
     });
 
     const cypressConfigFilePath = this.updateOrCreateCypressConfigFile(
@@ -388,48 +394,15 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateCypressProjectConfiguration(cypressConfigPath: string): void {
-    /**
-     * The `cypressProjectGenerator` function normalizes the project name. The
-     * migration keeps the names for existing projects as-is to avoid any
-     * confusion. The e2e project is technically new, but it's associated
-     * to an existing application, so we keep it familiar.
-     */
-    const generatedProjectName = names(this.project.name).fileName;
-    if (this.project.name !== generatedProjectName) {
-      // If the names are different, we "rename" the newly added project.
-      this.projectConfig = readProjectConfiguration(
-        this.tree,
-        generatedProjectName
-      );
-
-      this.projectConfig.root = this.project.newRoot;
-      this.projectConfig.sourceRoot = this.project.newSourceRoot;
-      removeProjectConfiguration(this.tree, generatedProjectName);
-      addProjectConfiguration(
-        this.tree,
-        this.project.name,
-        { ...this.projectConfig },
-        true
-      );
-    } else {
-      this.projectConfig = readProjectConfiguration(
-        this.tree,
-        this.project.name
-      );
-    }
+    this.projectConfig = readProjectConfiguration(this.tree, this.project.name);
 
     if (this.isProjectUsingEsLint) {
       // the generated cypress project always generates a "lint" target,
       // in case the app was using a different name for it, we use it
-      const lintTarget = this.projectConfig.targets.lint;
       if (this.lintTargetName && this.lintTargetName !== 'lint') {
         this.projectConfig.targets[this.lintTargetName] =
           this.projectConfig.targets.lint;
       }
-      lintTarget.options.lintFilePatterns =
-        lintTarget.options.lintFilePatterns.map((pattern) =>
-          pattern.replace(`apps/${generatedProjectName}`, this.project.newRoot)
-        );
     }
 
     [this.targetNames.e2e, 'cypress-run', 'cypress-open'].forEach((target) => {

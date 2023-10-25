@@ -33,6 +33,11 @@
         "type": "string",
         "description": "A directory where the project is placed relative from the project root",
         "default": "cypress"
+      },
+      "jsx": {
+        "description": "Whether or not this project uses JSX.",
+        "type": "boolean",
+        "default": true
       }
     },
     "required": ["project"],
