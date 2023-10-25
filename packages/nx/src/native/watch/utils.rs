@@ -1,7 +1,5 @@
 use ignore::WalkBuilder;
 use ignore_files::IgnoreFile;
-use once_cell::sync::Lazy;
-use os_type::{OSInformation, OSType};
 use std::{fs, path::PathBuf};
 use tracing::trace;
 use watchexec_events::{Event, Tag};
@@ -56,10 +54,8 @@ pub(super) fn get_ignore_files<T: AsRef<str>>(root: T) -> Vec<IgnoreFile> {
 //         .collect()
 // }
 
-static OS_PLATFORM: Lazy<OSInformation> = Lazy::new(os_type::current_platform);
-
 pub(super) fn transform_event(watch_event: &Event) -> Option<Event> {
-    if OS_PLATFORM.os_type == OSType::Debian || OS_PLATFORM.os_type == OSType::Arch {
+    if cfg!(linux) {
         let tags = watch_event
             .tags
             .clone()
