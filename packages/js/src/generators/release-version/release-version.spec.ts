@@ -1,4 +1,4 @@
-import { ProjectGraph, Tree, readJson } from '@nx/devkit';
+import { ProjectGraph, Tree, output, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ReleaseGroupWithName } from 'nx/src/command-line/release/config/filter-release-groups';
 import { releaseVersionGenerator } from './release-version';
@@ -136,20 +136,32 @@ describe('release-version', () => {
       tree.delete('libs/my-lib/package.json');
     });
 
-    it(`should error with guidance when not all of the given projects are appropriate for JS versioning`, async () => {
-      await expect(
-        releaseVersionGenerator(tree, {
-          projects: Object.values(projectGraph.nodes), // version all projects
-          projectGraph,
-          specifier: 'major',
-          currentVersionResolver: 'disk',
-          releaseGroup: createReleaseGroup(),
-        })
-      ).rejects.toThrowErrorMatchingInlineSnapshot(`
-        "The project "my-lib" does not have a package.json available at libs/my-lib/package.json.
-                
-        To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "my-lib" from the current release group, or amend the packageRoot configuration to point to where the package.json should be."
-      `);
+    it(`should exit with code one and print guidance when not all of the given projects are appropriate for JS versioning`, async () => {
+      const processSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
+        return undefined as never;
+      });
+      const outputSpy = jest.spyOn(output, 'error').mockImplementation(() => {
+        return undefined as never;
+      });
+
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: 'major',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup(),
+      });
+
+      expect(outputSpy).toHaveBeenCalledWith({
+        title: `The project "my-lib" does not have a package.json available at libs/my-lib/package.json.
+
+To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "my-lib" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`,
+      });
+
+      expect(processSpy).toHaveBeenCalledWith(1);
+
+      processSpy.mockRestore();
+      outputSpy.mockRestore();
     });
   });
 });

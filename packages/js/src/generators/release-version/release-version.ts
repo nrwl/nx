@@ -80,7 +80,7 @@ export async function releaseVersionGenerator(
       if (!tree.exists(packageJsonPath)) {
         throw new Error(
           `The project "${projectName}" does not have a package.json available at ${workspaceRelativePackageJsonPath}.
-        
+
 To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "${projectName}" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`
         );
       }
