@@ -237,6 +237,7 @@ jobs:
       - name: Trigger Docs Release
         if: "!github.event.release.prerelease"
         run: |
+          # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
           git branch -f latest
           git push -f origin latest
     env:
