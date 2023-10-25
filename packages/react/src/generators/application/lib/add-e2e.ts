@@ -43,6 +43,7 @@ export async function addE2e(
         skipFormat: true,
         devServerTarget: `${options.projectName}:serve`,
         jsx: true,
+        rootProject: options.rootProject,
       });
     }
     case 'playwright': {
@@ -68,6 +69,7 @@ export async function addE2e(
           options.name
         }`,
         webServerAddress: 'http://localhost:4200',
+        rootProject: options.rootProject,
       });
     }
     case 'none':
