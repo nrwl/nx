@@ -58,7 +58,7 @@ export function DocumentationHeader({
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
       name: 'Nx Cloud',
-      href: '/nx-cloud/intro/what-is-nx-cloud',
+      href: '/nx-cloud/intro/ci-with-nx',
       current: isNxCloud,
     },
     {

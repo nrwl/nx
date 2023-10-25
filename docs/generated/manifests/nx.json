@@ -2579,97 +2579,6 @@
         "tags": []
       },
       {
-        "id": "ci",
-        "name": "CI",
-        "description": "All recipes about how to use Nx to make your CI faster.",
-        "file": "",
-        "itemList": [
-          {
-            "id": "ci-setup",
-            "name": "CI Setup",
-            "description": "",
-            "file": "shared/ci-overview",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/ci-setup",
-            "tags": ["distribute-task-execution"]
-          },
-          {
-            "id": "ci-deployment",
-            "name": "Prepare applications for deployment via CI",
-            "description": "",
-            "file": "shared/recipes/ci-deployment",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/ci-deployment",
-            "tags": ["docker", "deploy"]
-          },
-          {
-            "id": "monorepo-ci-azure",
-            "name": "Setting up Azure Pipelines",
-            "description": "",
-            "file": "shared/monorepo-ci-azure",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-azure",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-circle-ci",
-            "name": "Setting up CircleCI",
-            "description": "",
-            "file": "shared/monorepo-ci-circle-ci",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-circle-ci",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-github-actions",
-            "name": "Setting up GitHub Actions",
-            "description": "",
-            "file": "shared/monorepo-ci-github-actions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-github-actions",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-jenkins",
-            "name": "Setting up Jenkins",
-            "description": "",
-            "file": "shared/monorepo-ci-jenkins",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-jenkins",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-gitlab",
-            "name": "Setting up GitLab",
-            "description": "",
-            "file": "shared/monorepo-ci-gitlab",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-gitlab",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-bitbucket-pipelines",
-            "name": "Setting up Bitbucket",
-            "description": "",
-            "file": "shared/monorepo-ci-bitbucket-pipelines",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
-            "tags": []
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/ci",
-        "tags": []
-      },
-      {
         "id": "tips-n-tricks",
         "name": "Tips and tricks",
         "description": "Various tips and tricks for using Nx.",
@@ -4492,177 +4401,6 @@
     "isExternal": false,
     "path": "/recipes/enforce-module-boundaries/tags-allow-list",
     "tags": ["enforce-module-boundaries"]
-  },
-  "/recipes/ci": {
-    "id": "ci",
-    "name": "CI",
-    "description": "All recipes about how to use Nx to make your CI faster.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "ci-setup",
-        "name": "CI Setup",
-        "description": "",
-        "file": "shared/ci-overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/ci-setup",
-        "tags": ["distribute-task-execution"]
-      },
-      {
-        "id": "ci-deployment",
-        "name": "Prepare applications for deployment via CI",
-        "description": "",
-        "file": "shared/recipes/ci-deployment",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/ci-deployment",
-        "tags": ["docker", "deploy"]
-      },
-      {
-        "id": "monorepo-ci-azure",
-        "name": "Setting up Azure Pipelines",
-        "description": "",
-        "file": "shared/monorepo-ci-azure",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-azure",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-circle-ci",
-        "name": "Setting up CircleCI",
-        "description": "",
-        "file": "shared/monorepo-ci-circle-ci",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-circle-ci",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-github-actions",
-        "name": "Setting up GitHub Actions",
-        "description": "",
-        "file": "shared/monorepo-ci-github-actions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-github-actions",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-jenkins",
-        "name": "Setting up Jenkins",
-        "description": "",
-        "file": "shared/monorepo-ci-jenkins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-jenkins",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-gitlab",
-        "name": "Setting up GitLab",
-        "description": "",
-        "file": "shared/monorepo-ci-gitlab",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-gitlab",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-bitbucket-pipelines",
-        "name": "Setting up Bitbucket",
-        "description": "",
-        "file": "shared/monorepo-ci-bitbucket-pipelines",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/ci",
-    "tags": []
-  },
-  "/recipes/ci/ci-setup": {
-    "id": "ci-setup",
-    "name": "CI Setup",
-    "description": "",
-    "file": "shared/ci-overview",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/ci-setup",
-    "tags": ["distribute-task-execution"]
-  },
-  "/recipes/ci/ci-deployment": {
-    "id": "ci-deployment",
-    "name": "Prepare applications for deployment via CI",
-    "description": "",
-    "file": "shared/recipes/ci-deployment",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/ci-deployment",
-    "tags": ["docker", "deploy"]
-  },
-  "/recipes/ci/monorepo-ci-azure": {
-    "id": "monorepo-ci-azure",
-    "name": "Setting up Azure Pipelines",
-    "description": "",
-    "file": "shared/monorepo-ci-azure",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-azure",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-circle-ci": {
-    "id": "monorepo-ci-circle-ci",
-    "name": "Setting up CircleCI",
-    "description": "",
-    "file": "shared/monorepo-ci-circle-ci",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-circle-ci",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-github-actions": {
-    "id": "monorepo-ci-github-actions",
-    "name": "Setting up GitHub Actions",
-    "description": "",
-    "file": "shared/monorepo-ci-github-actions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-github-actions",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-jenkins": {
-    "id": "monorepo-ci-jenkins",
-    "name": "Setting up Jenkins",
-    "description": "",
-    "file": "shared/monorepo-ci-jenkins",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-jenkins",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-gitlab": {
-    "id": "monorepo-ci-gitlab",
-    "name": "Setting up GitLab",
-    "description": "",
-    "file": "shared/monorepo-ci-gitlab",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-gitlab",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-bitbucket-pipelines": {
-    "id": "monorepo-ci-bitbucket-pipelines",
-    "name": "Setting up Bitbucket",
-    "description": "",
-    "file": "shared/monorepo-ci-bitbucket-pipelines",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
-    "tags": []
   },
   "/recipes/tips-n-tricks": {
     "id": "tips-n-tricks",
@@ -6570,7 +6308,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/nx-cloud/intro/what-is-nx-cloud",
+        "path": "/nx-cloud/intro/ci-with-nx",
         "tags": ["cache-task-results", "distribute-task-execution"]
       },
       {
@@ -6648,14 +6386,14 @@
     "path": "/see-also",
     "tags": []
   },
-  "/nx-cloud/intro/what-is-nx-cloud": {
+  "/nx-cloud/intro/ci-with-nx": {
     "id": "nx-cloud-documentation",
     "name": "Nx Cloud Documentation",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/nx-cloud/intro/what-is-nx-cloud",
+    "path": "/nx-cloud/intro/ci-with-nx",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
   "/nx-api/nx/documents/affected#skip-nx-cache": {
