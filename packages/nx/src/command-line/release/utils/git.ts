@@ -44,43 +44,47 @@ export async function getLatestGitTagForPattern(
   releaseTagPattern: string,
   additionalInterpolationData = {}
 ): Promise<{ tag: string; extractedVersion: string } | null> {
-  const tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
-    (r) =>
-      r
-        .trim()
-        .split('\n')
-        .map((t) => t.trim())
-        .filter(Boolean)
-  );
-  if (!tags.length) {
+  try {
+    const tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
+      (r) =>
+        r
+          .trim()
+          .split('\n')
+          .map((t) => t.trim())
+          .filter(Boolean)
+    );
+    if (!tags.length) {
+      return null;
+    }
+
+    const interpolatedTagPattern = interpolate(releaseTagPattern, {
+      version: ' ',
+      ...additionalInterpolationData,
+    });
+
+    const tagRegexp = `^${escapeRegExp(interpolatedTagPattern).replace(
+      ' ',
+      '(.+)'
+    )}`;
+    const matchingSemverTags = tags.filter(
+      (tag) =>
+        // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
+        !!tag.match(tagRegexp) && tag.match(tagRegexp)[1]?.match(SEMVER_REGEX)
+    );
+
+    if (!matchingSemverTags.length) {
+      return null;
+    }
+
+    const [latestMatchingTag, version] = matchingSemverTags[0].match(tagRegexp);
+
+    return {
+      tag: latestMatchingTag,
+      extractedVersion: version,
+    };
+  } catch {
     return null;
   }
-
-  const interpolatedTagPattern = interpolate(releaseTagPattern, {
-    version: ' ',
-    ...additionalInterpolationData,
-  });
-
-  const tagRegexp = `^${escapeRegExp(interpolatedTagPattern).replace(
-    ' ',
-    '(.+)'
-  )}`;
-  const matchingSemverTags = tags.filter(
-    (tag) =>
-      // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
-      !!tag.match(tagRegexp) && tag.match(tagRegexp)[1]?.match(SEMVER_REGEX)
-  );
-
-  if (!matchingSemverTags.length) {
-    return null;
-  }
-
-  const [latestMatchingTag, version] = matchingSemverTags[0].match(tagRegexp);
-
-  return {
-    tag: latestMatchingTag,
-    extractedVersion: version,
-  };
 }
 
 export async function getGitDiff(

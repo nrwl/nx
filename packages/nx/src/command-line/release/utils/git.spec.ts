@@ -84,8 +84,12 @@ const releaseTagPatternTestCases = [
 ];
 
 describe('getLatestGitTagForPattern', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
   it.each(releaseTagPatternTestCases)(
-    'Returns tag $expectedTag for pattern $pattern',
+    'should return tag $expectedTag for pattern $pattern',
     async ({ pattern, projectName, expectedTag, expectedVersion }) => {
       const result = await getLatestGitTagForPattern(pattern, {
         projectName,
@@ -96,7 +100,20 @@ describe('getLatestGitTagForPattern', () => {
     }
   );
 
-  it('Returns null if no tags match the pattern', async () => {
+  it('should return null if execCommand throws an error', async () => {
+    // should return null if execCommand throws an error
+    (require('./exec-command').execCommand as jest.Mock).mockImplementationOnce(
+      () => {
+        throw new Error('error');
+      }
+    );
+    const result = await getLatestGitTagForPattern('#{version}', {
+      projectName: 'my-lib-1',
+    });
+    expect(result).toEqual(null);
+  });
+
+  it('should return null if no tags match the pattern', async () => {
     const result = await getLatestGitTagForPattern('#{version}', {
       projectName: 'my-lib-1',
     });

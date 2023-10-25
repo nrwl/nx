@@ -9,7 +9,6 @@ import {
   runCLI,
   runCommandAsync,
   runCommandUntil,
-  tmpProjPath,
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
@@ -663,9 +662,7 @@ describe('nx release', () => {
     });
 
     // Add a git tag to the repo
-    execSync(`git tag -a xx1100.0.0 -m xx1100.0.0`, {
-      cwd: tmpProjPath(),
-    });
+    await runCommandAsync(`git tag xx1100.0.0`);
 
     const versionOutput3 = runCLI(`release version minor`);
     expect(
@@ -769,11 +766,8 @@ describe('nx release', () => {
 
     expect(versionOutput4.match(/Skipping versioning/g).length).toEqual(3);
 
-    execSync(
-      `git add ${pkg1}/my-file.txt && git commit -m "feat!: add new file"`,
-      {
-        cwd: tmpProjPath(),
-      }
+    await runCommandAsync(
+      `git add ${pkg1}/my-file.txt && git commit -m "feat!: add new file"`
     );
 
     const versionOutput5 = runCLI(`release version`);

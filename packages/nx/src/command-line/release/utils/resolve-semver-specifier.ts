@@ -21,7 +21,7 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   from: string,
   projectGraph: ProjectGraph,
   projectNames: string[]
-): Promise<string> {
+): Promise<string | null> {
   const commits = await getGitDiff(from);
   const parsedCommits = parseCommits(commits);
   const projectFileMap = await createProjectFileMapUsingProjectGraph(

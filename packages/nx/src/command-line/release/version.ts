@@ -164,6 +164,7 @@ async function runVersionOnProjects(
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
     releaseGroup,
+    // Always ensure a string to avoid generator schema validation errors
     specifier: args.specifier ?? '',
     preid: args.preid,
     ...generatorData.configGeneratorOptions,
