@@ -7,7 +7,7 @@ export function fixBootstrap(tree: Tree, appRoot: string, options: Schema) {
   const mainFilePath = joinPathFragments(appRoot, 'src/main.ts');
   const bootstrapCode = tree.read(mainFilePath, 'utf-8');
   const installedAngularMajor = getInstalledAngularMajorVersion(tree);
-  if (options.standalone) {
+  if (options.standalone && options.mfType === 'remote') {
     tree.write(
       `${appRoot}/src/bootstrap.ts`,
       standaloneBootstrapCode(installedAngularMajor === 14)
