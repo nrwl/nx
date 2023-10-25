@@ -36,6 +36,7 @@ export interface CypressE2EConfigSchema {
   linter?: Linter;
   port?: number | 'cypress-auto';
   jsx?: boolean;
+  rootProject?: boolean;
 }
 
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
@@ -91,7 +92,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
   return {
     ...options,
     bundler: options.bundler ?? 'webpack',
-    rootProject: projectConfig.root === '.',
+    rootProject: options.rootProject ?? projectConfig.root === '.',
     linter: options.linter ?? Linter.EsLint,
     devServerTarget:
       options.devServerTarget ??

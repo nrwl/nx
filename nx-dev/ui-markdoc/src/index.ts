@@ -29,8 +29,6 @@ import { Iframe } from './lib/tags/iframe.component';
 import { iframe } from './lib/tags/iframe.schema';
 import { InstallNxConsole } from './lib/tags/install-nx-console.component';
 import { installNxConsole } from './lib/tags/install-nx-console.schema';
-import { NxCloudSection } from './lib/tags/nx-cloud-section.component';
-import { nxCloudSection } from './lib/tags/nx-cloud-section.schema';
 import { Persona, Personas } from './lib/tags/personas.component';
 import { persona, personas } from './lib/tags/personas.schema';
 import { SideBySide } from './lib/tags/side-by-side.component';
@@ -70,7 +68,6 @@ export const getMarkdocCustomConfig = (
       graph,
       iframe,
       'install-nx-console': installNxConsole,
-      'nx-cloud-section': nxCloudSection,
       persona,
       personas,
       pill,
@@ -96,7 +93,6 @@ export const getMarkdocCustomConfig = (
     Heading,
     Iframe,
     InstallNxConsole,
-    NxCloudSection,
     Persona,
     Personas,
     Pill,
