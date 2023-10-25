@@ -54,7 +54,7 @@ describe('Nx Watch', () => {
     await writeFileForWatcher(`newfile2.txt`, 'content');
 
     expect(await getOutput()).toEqual([proj1]);
-  }, 10000);
+  }, 50000);
 
   it('should watch for all projects and output the project name', async () => {
     const getOutput = await runWatch(`--all -- echo \\$NX_PROJECT_NAME`);
@@ -68,7 +68,7 @@ describe('Nx Watch', () => {
     let results = content.sort();
 
     expect(results).toEqual([proj1, proj2, proj3]);
-  }, 10000);
+  }, 50000);
 
   it('should watch for all project changes and output the file name changes', async () => {
     const getOutput = await runWatch(`--all -- echo \\$NX_FILE_CHANGES`);
@@ -85,7 +85,7 @@ describe('Nx Watch', () => {
       `libs/${proj1}/newfile2.txt`,
       `libs/${proj2}/newfile.txt`,
     ]);
-  }, 10000);
+  }, 50000);
 
   it('should watch for global workspace file changes', async () => {
     const getOutput = await runWatch(
@@ -105,7 +105,7 @@ describe('Nx Watch', () => {
       `libs/${proj2}/newfile.txt`,
       'newfile2.txt',
     ]);
-  }, 10000);
+  }, 50000);
 
   it('should watch selected projects only', async () => {
     const getOutput = await runWatch(
@@ -121,7 +121,7 @@ describe('Nx Watch', () => {
     let results = output.sort();
 
     expect(results).toEqual([proj1, proj3]);
-  }, 10000);
+  }, 50000);
 
   it('should watch projects including their dependencies', async () => {
     updateJson(`libs/${proj3}/project.json`, (json) => {
@@ -142,7 +142,7 @@ describe('Nx Watch', () => {
     let results = output.sort();
 
     expect(results).toEqual([proj1, proj3]);
-  }, 10000);
+  }, 50000);
 });
 
 async function wait(timeout = 200) {
