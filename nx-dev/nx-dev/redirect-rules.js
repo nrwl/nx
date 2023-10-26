@@ -409,7 +409,6 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines',
   '/recipes/ci/ci-deployment': '/nx-cloud/recipes/other/ci-deployment',
   '/nx-cloud/intro/what-is-nx-cloud': '/nx-cloud/intro/ci-with-nx',
-  '/nx-cloud/intro/nx-cloud-workflows': '/nx-cloud/intro/nx-cloud-workflows',
   '/nx-cloud/set-up': '/nx-cloud/recipes/set-up',
   '/nx-cloud/set-up/record-commands': '/nx-cloud/recipes/other/record-commands',
   '/nx-cloud/set-up/github':
