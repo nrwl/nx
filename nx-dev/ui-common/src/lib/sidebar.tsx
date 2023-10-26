@@ -180,7 +180,10 @@ export function SidebarMobile({
   const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
   const isAPI: boolean = router.asPath.startsWith('/nx-api');
   const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
-  const isNx: boolean = !isNxCloud && !isAPI && !isPlugins;
+  const isChangelog: boolean = router.asPath.startsWith('/changelog');
+  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const isNx: boolean =
+    !isNxCloud && !isAPI && !isPlugins && !isChangelog && !isAiChat;
 
   const sections = [
     { name: 'Home', href: '/', current: false },
@@ -191,14 +194,24 @@ export function SidebarMobile({
       current: isNxCloud,
     },
     {
+      name: 'Extending Nx',
+      href: '/extending-nx/intro/getting-started',
+      current: isPlugins,
+    },
+    {
       name: 'API',
       href: '/nx-api',
       current: isAPI,
     },
     {
-      name: 'Extending Nx',
-      href: '/extending-nx/intro/getting-started',
-      current: isPlugins,
+      name: 'Changelog',
+      href: '/changelog',
+      current: isChangelog,
+    },
+    {
+      name: 'AI Chat (beta)',
+      href: '/ai-chat',
+      current: isAiChat,
     },
   ];
   return (
