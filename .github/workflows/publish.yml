@@ -159,17 +159,19 @@ jobs:
        - uses: actions/checkout@v3
        - name: Build
          id: build
-         uses: vmactions/freebsd-vm@v0
+         uses: cross-platform-actions/action@v0.15.0
          env:
            DEBUG: napi:*
            RUSTUP_HOME: /usr/local/rustup
            CARGO_HOME: /usr/local/cargo
            RUSTUP_IO_THREADS: 1
          with:
-           envs: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
-           usesh: true
-           mem: 4096
-           prepare: |
+           operating_system: freebsd
+           version: '13.2'
+           architecture: x86-64
+           environment_variables: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
+           shell: sh
+           run: |
              pkg install -y -f curl node libnghttp2 npm
              npm install --location=global --ignore-scripts pnpm
              curl https://sh.rustup.rs -sSf --output rustup.sh
@@ -181,7 +183,6 @@ jobs:
              node -v
              echo "~~~~ pnpm --version ~~~~"
              pnpm --version
-           run: |
              export PATH="/usr/local/cargo/bin:$PATH"
              pwd
              ls -lah
