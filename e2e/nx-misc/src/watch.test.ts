@@ -25,7 +25,7 @@ describe('Nx Watch', () => {
   let proj1 = uniq('proj1');
   let proj2 = uniq('proj2');
   let proj3 = uniq('proj3');
-  beforeAll(() => {
+  beforeAll(async () => {
     newProject();
     runCLI(`generate @nx/js:lib ${proj1}`);
     runCLI(`generate @nx/js:lib ${proj2}`);
@@ -36,7 +36,8 @@ describe('Nx Watch', () => {
         NX_NATIVE_LOGGING: 'trace',
       },
     });
-  });
+    await wait(2000);
+  }, 50000);
 
   afterEach(() => {
     let daemonLog = readFile('.nx/cache/d/daemon.log');
