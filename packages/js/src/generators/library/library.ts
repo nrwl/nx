@@ -74,7 +74,9 @@ export async function libraryGeneratorInternal(
 
   addProject(tree, options);
 
-  tasks.push(addProjectDependencies(tree, options));
+  if (!options.skipPackageJson) {
+    tasks.push(addProjectDependencies(tree, options));
+  }
 
   if (options.publishable) {
     tasks.push(await setupVerdaccio(tree, { ...options, skipFormat: true }));
@@ -708,7 +710,6 @@ function addProjectDependencies(
   }
 
   // Vite is being installed in the next step if bundler is vite
-
   // noop
   return () => {};
 }
