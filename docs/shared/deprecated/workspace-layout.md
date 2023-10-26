@@ -8,6 +8,7 @@ This setting makes app or lib generators behave in the following way:
 
 - `nx g app my-app` creates a new application named `my-app` in the `/my-app` folder
 - `nx g lib my-lib` creates a new library named `my-lib` in the `/my-lib` folder
+- `cd apps/nested/my-app && nx g app my-app` creates a new application named `my-app` in the `/apps/nested/my-app` folder
 - `nx g app my-app --directory=apps/nested/my-app` creates a new application named `my-app` in the `/apps/nested/my-app` folder
 - `nx g lib my-lib --directory=libs/shared/ui/my-lib` creates a new library named `my-lib` in the `/libs/shared/ui/my-lib` folder
 
@@ -41,28 +42,9 @@ If you accidentally generate a project in the wrong folder, use the [move genera
 You can skip the prompt in two ways:
 
 1. Specify a flag directly in the terminal `nx g app my-app --directory=apps/my-app --projectNameAndRootFormat=as-provided`
-2. Set a default value for that property for every generator that you use.
+2. Use [Nx Console](/core-features/integrate-with-editors) to run your generators
 
-```jsonc {% fileName="nx.json" %}
-{
-  "generators": {
-    "@nx/node": {
-      "application": {
-        "projectNameAndRootFormat": "as-provided"
-      },
-      "library": {
-        "projectNameAndRootFormat": "as-provided"
-      }
-    },
-    "@nx/react": {
-      "application": {
-        "projectNameAndRootFormat": "as-provided"
-      },
-      "library": {
-        "projectNameAndRootFormat": "as-provided"
-      }
-    }
-    // etc
-  }
-}
-```
+## More Documentation
+
+- [nameAndDirectoryFormat](/deprecated/name-and-directory-format)
+- [Generator Defaults](/reference/nx-json#generators)

@@ -7,6 +7,7 @@ As of Nx 17, many generators will prompt you to choose how Nx will calculate whe
 This setting makes generators behave in the following way:
 
 - `nx g component my-component` creates a component in the root.
+- `cd apps/nested/my-app && nx g component my-component` creates a new component named `my-component` in the `/apps/nested/my-app` folder
 - `nx g component my-component --directory=apps/nested/my-app` creates a new component named `my-component` in the `/apps/nested/my-app` folder
 - `nx g component apps/nested/my-app/my-component` creates a new component named `my-component` in the `/apps/nested/my-app` folder
 
@@ -16,7 +17,7 @@ If the directory specified is not inside a project, an error will be thrown.
 
 ## `derived`
 
-Choosing `derived` makes Nx behave the way it did before version 17. Nx will use the deprecated flags (`--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`) to calculate where to generate the code.
+Choosing `derived` makes Nx behave the way it did before version 17. Nx will use the deprecated flags (`--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`) to calculate where to generate the code. This behavior will not be available in Nx 18.
 
 This makes generators behave in the following way:
 
@@ -29,28 +30,9 @@ This makes generators behave in the following way:
 You can skip the prompt in two ways:
 
 1. Specify a flag directly in the terminal `nx g component my-component --directory=apps/my-app --nameAndDirectoryFormat=as-provided`
-2. Set a default value for that property for every generator that you use.
+2. Use [Nx Console](/core-features/integrate-with-editors) to run your generators
 
-```jsonc {% fileName="nx.json" %}
-{
-  "generators": {
-    "@nx/node": {
-      "application": {
-        "nameAndDirectoryFormat": "as-provided"
-      },
-      "library": {
-        "nameAndDirectoryFormat": "as-provided"
-      }
-    },
-    "@nx/react": {
-      "application": {
-        "nameAndDirectoryFormat": "as-provided"
-      },
-      "library": {
-        "nameAndDirectoryFormat": "as-provided"
-      }
-    }
-    // etc
-  }
-}
-```
+## More Documentation
+
+- [workspaceLayout and projectNameAndRootFormat](/deprecated/workspace-layout)
+- [Generator Defaults](/reference/nx-json#generators)
