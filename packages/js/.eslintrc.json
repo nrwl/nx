@@ -53,8 +53,7 @@
               "@swc/cli",
               "babel-plugin-const-enum",
               "babel-plugin-macros",
-              "babel-plugin-transform-typescript-metadata",
-              "@babel/plugin-transform-class-properties"
+              "babel-plugin-transform-typescript-metadata"
             ]
           }
         ]

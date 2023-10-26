@@ -21040,7 +21040,6 @@
               "npm:@babel/plugin-proposal-class-properties",
               "npm:@babel/plugin-proposal-decorators",
               "npm:@babel/plugin-transform-runtime",
-              "npm:@babel/plugin-transform-class-properties",
               "npm:@babel/preset-env",
               "npm:@babel/preset-typescript",
               "npm:@babel/runtime",
