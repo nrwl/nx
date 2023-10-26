@@ -99,6 +99,7 @@ export async function libraryGeneratorInternal(
         project: options.name,
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
+        testEnvironment: options.testEnvironment,
       },
       false
     );
@@ -136,6 +137,7 @@ export async function libraryGeneratorInternal(
         project: options.name,
         includeLib: false,
         includeVitest: true,
+        testEnvironment: options.testEnvironment,
       },
       true
     );
