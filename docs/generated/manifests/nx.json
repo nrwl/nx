@@ -6051,23 +6051,13 @@
         "tags": []
       },
       {
-        "id": "workspace-layout",
-        "name": "workspaceLayout",
+        "id": "as-provided-vs-derived",
+        "name": "As Provided vs. Derived",
         "description": "",
-        "file": "shared/deprecated/workspace-layout",
+        "file": "shared/deprecated/as-provided-vs-derived",
         "itemList": [],
         "isExternal": false,
-        "path": "/deprecated/workspace-layout",
-        "tags": []
-      },
-      {
-        "id": "name-and-directory-format",
-        "name": "nameAndDirectoryFormat",
-        "description": "",
-        "file": "shared/deprecated/name-and-directory-format",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/deprecated/name-and-directory-format",
+        "path": "/deprecated/as-provided-vs-derived",
         "tags": []
       },
       {
@@ -6236,24 +6226,14 @@
     "path": "/deprecated/workspace-lint",
     "tags": []
   },
-  "/deprecated/workspace-layout": {
-    "id": "workspace-layout",
-    "name": "workspaceLayout",
+  "/deprecated/as-provided-vs-derived": {
+    "id": "as-provided-vs-derived",
+    "name": "As Provided vs. Derived",
     "description": "",
-    "file": "shared/deprecated/workspace-layout",
+    "file": "shared/deprecated/as-provided-vs-derived",
     "itemList": [],
     "isExternal": false,
-    "path": "/deprecated/workspace-layout",
-    "tags": []
-  },
-  "/deprecated/name-and-directory-format": {
-    "id": "name-and-directory-format",
-    "name": "nameAndDirectoryFormat",
-    "description": "",
-    "file": "shared/deprecated/name-and-directory-format",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/deprecated/name-and-directory-format",
+    "path": "/deprecated/as-provided-vs-derived",
     "tags": []
   },
   "/deprecated/workspace-generators": {

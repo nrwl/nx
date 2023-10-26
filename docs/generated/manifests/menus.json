@@ -4853,17 +4853,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "workspaceLayout",
-            "path": "/deprecated/workspace-layout",
-            "id": "workspace-layout",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "nameAndDirectoryFormat",
-            "path": "/deprecated/name-and-directory-format",
-            "id": "name-and-directory-format",
+            "name": "As Provided vs. Derived",
+            "path": "/deprecated/as-provided-vs-derived",
+            "id": "as-provided-vs-derived",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5001,17 +4993,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "workspaceLayout",
-        "path": "/deprecated/workspace-layout",
-        "id": "workspace-layout",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "nameAndDirectoryFormat",
-        "path": "/deprecated/name-and-directory-format",
-        "id": "name-and-directory-format",
+        "name": "As Provided vs. Derived",
+        "path": "/deprecated/as-provided-vs-derived",
+        "id": "as-provided-vs-derived",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
