@@ -729,6 +729,101 @@ describe('createNxReleaseConfig()', () => {
         }
       `);
     });
+
+    it('should return an error if no projects can be resolved for a group', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        groups: {
+          'group-1': {
+            projects: ['lib-does-not-exist'],
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "RELEASE_GROUP_MATCHES_NO_PROJECTS",
+            "data": {
+              "releaseGroupName": "group-1",
+            },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it('should return an error if any matched projects do not have the required target specified', async () => {
+      const res = await createNxReleaseConfig(
+        {
+          ...projectGraph,
+          nodes: {
+            ...projectGraph.nodes,
+            'project-without-target': {
+              name: 'project-without-target',
+              type: 'lib',
+              data: {
+                root: 'libs/project-without-target',
+                targets: {},
+              } as any,
+            },
+          },
+        },
+        {
+          groups: {
+            'group-1': {
+              projects: '*', // using string form to ensure that is supported in addition to array form
+            },
+          },
+        },
+        'nx-release-publish'
+      );
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "PROJECTS_MISSING_TARGET",
+            "data": {
+              "projects": [
+                "project-without-target",
+              ],
+              "targetName": "nx-release-publish",
+            },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(
+        {
+          ...projectGraph,
+          nodes: {
+            ...projectGraph.nodes,
+            'another-project-without-target': {
+              name: 'another-project-without-target',
+              type: 'lib',
+              data: {
+                root: 'libs/another-project-without-target',
+                targets: {},
+              } as any,
+            },
+          },
+        },
+        {},
+        'nx-release-publish'
+      );
+      expect(res2).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "PROJECTS_MISSING_TARGET",
+            "data": {
+              "projects": [
+                "another-project-without-target",
+              ],
+              "targetName": "nx-release-publish",
+            },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
   });
 
   describe('release group config errors', () => {
@@ -844,6 +939,50 @@ describe('createNxReleaseConfig()', () => {
                 "another-project-without-target",
               ],
               "targetName": "nx-release-publish",
+            },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it("should return an error if a group's releaseTagPattern has no {version} placeholder", async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        groups: {
+          'group-1': {
+            projects: '*',
+            releaseTagPattern: 'v',
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE",
+            "data": {
+              "releaseGroupName": "group-1",
+            },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it("should return an error if a group's releaseTagPattern has more than one {version} placeholder", async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        groups: {
+          'group-1': {
+            projects: '*',
+            releaseTagPattern: '{version}v{version}',
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE",
+            "data": {
+              "releaseGroupName": "group-1",
             },
           },
           "nxReleaseConfig": null,
