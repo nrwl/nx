@@ -99,6 +99,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
         require.resolve('@babel/plugin-proposal-decorators'),
         options.decorators ?? { legacy: true },
       ],
+      [require.resolve('@babel/plugin-transform-class-properties'), { loose }],
     ].filter(Boolean),
     overrides: [
       // Convert `const enum` to `enum`. The former cannot be supported by babel
