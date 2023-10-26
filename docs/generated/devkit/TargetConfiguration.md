@@ -15,6 +15,7 @@ Target's configuration
 - [cache](../../devkit/documents/TargetConfiguration#cache): boolean
 - [command](../../devkit/documents/TargetConfiguration#command): string
 - [configurations](../../devkit/documents/TargetConfiguration#configurations): Object
+- [createdBy](../../devkit/documents/TargetConfiguration#createdby): string
 - [defaultConfiguration](../../devkit/documents/TargetConfiguration#defaultconfiguration): string
 - [dependsOn](../../devkit/documents/TargetConfiguration#dependson): (string | TargetDependencyConfig)[]
 - [executor](../../devkit/documents/TargetConfiguration#executor): string
@@ -49,6 +50,14 @@ Sets of options
 #### Index signature
 
 ▪ [config: `string`]: `any`
+
+---
+
+### createdBy
+
+• `Optional` **createdBy**: `string`
+
+The configuration file that lead to a given target being created. E.g. project.json or cypress.config.ts.
 
 ---
 

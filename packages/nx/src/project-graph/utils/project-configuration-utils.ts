@@ -90,6 +90,12 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
           });
         for (const node in projectNodes) {
           projectNodes[node].name ??= node;
+          for (const target in projectNodes[node].targets) {
+            projectNodes[node].targets[target] = {
+              ...projectNodes[node].targets[target],
+              createdBy: file,
+            };
+          }
           mergeProjectConfigurationIntoRootMap(
             projectRootMap,
             projectNodes[node]

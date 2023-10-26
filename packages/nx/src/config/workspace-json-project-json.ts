@@ -186,4 +186,9 @@ export interface TargetConfiguration<T = any> {
    * Determines if Nx is able to cache a given target.
    */
   cache?: boolean;
+
+  /**
+   * The configuration file that lead to a given target being created. E.g. project.json or cypress.config.ts.
+   */
+  createdBy?: string;
 }
