@@ -68,7 +68,7 @@
     "standalone": {
       "description": "Whether the generated directive is standalone.",
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "flat": {
       "type": "boolean",

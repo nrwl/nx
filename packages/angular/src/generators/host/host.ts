@@ -22,6 +22,7 @@ export async function host(tree: Tree, options: Schema) {
 
 export async function hostInternal(tree: Tree, schema: Schema) {
   const { typescriptConfiguration = true, ...options }: Schema = schema;
+  options.standalone = options.standalone ?? true;
 
   const projects = getProjects(tree);
 
@@ -50,7 +51,7 @@ export async function hostInternal(tree: Tree, schema: Schema) {
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
-    standalone: options.standalone ?? false,
+    standalone: options.standalone,
     routing: true,
     port: 4200,
     skipFormat: true,
@@ -71,6 +72,7 @@ export async function hostInternal(tree: Tree, schema: Schema) {
     e2eProjectName: skipE2E ? undefined : `${hostProjectName}-e2e`,
     prefix: options.prefix,
     typescriptConfiguration,
+    standalone: options.standalone,
   });
 
   let installTasks = [appInstallTask];

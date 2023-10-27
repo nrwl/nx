@@ -19,6 +19,7 @@ describe('convertPipeToScam', () => {
       skipImport: true,
       export: false,
       flat: false,
+      standalone: false,
     });
 
     // ACT
@@ -127,6 +128,7 @@ describe('convertPipeToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
     });
 
     // ACT
@@ -182,6 +184,7 @@ describe('convertPipeToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
     });
 
     // ACT
@@ -233,6 +236,7 @@ describe('convertPipeToScam', () => {
       export: false,
       flat: false,
       path: 'apps/app1/src/app/random',
+      standalone: false,
     });
 
     // ACT
@@ -292,6 +296,7 @@ describe('convertPipeToScam', () => {
       export: false,
       flat: true,
       path: 'apps/app1/src/app/random',
+      standalone: false,
     });
 
     // ACT

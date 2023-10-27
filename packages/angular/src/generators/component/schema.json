@@ -62,7 +62,7 @@
     "standalone": {
       "description": "Whether the generated component is standalone.",
       "type": "boolean",
-      "default": false,
+      "default": true,
       "x-priority": "important"
     },
     "viewEncapsulation": {

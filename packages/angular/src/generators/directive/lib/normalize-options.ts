@@ -48,5 +48,6 @@ export async function normalizeOptions(
     filePath,
     symbolName,
     selector,
+    standalone: options.standalone ?? true,
   };
 }
