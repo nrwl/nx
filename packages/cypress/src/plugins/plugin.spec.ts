@@ -1,7 +1,7 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { defineConfig } from 'cypress';
 
-import { createNodes, NxCypressMetadata } from './plugin';
+import { createNodes } from './plugin';
 
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodes[1];
@@ -128,13 +128,16 @@ describe('@nx/cypress/plugin', () => {
   it('should use nxMetadata to create additional configurations', () => {
     mockCypressConfig(
       defineConfig({
-        e2e: {},
-      }),
-      {
-        devServerTarget: 'my-app:serve',
-        productionDevServerTarget: 'my-app:serve:production',
-        ciDevServerTarget: 'my-app:serve-static',
-      }
+        e2e: {
+          env: {
+            devServerTargets: {
+              default: 'my-app:serve',
+              production: 'my-app:serve:production',
+            },
+            ciDevServerTarget: 'my-app:serve-static',
+          },
+        },
+      })
     );
     const nodes = createNodesFunction(
       'cypress.config.js',
@@ -184,15 +187,11 @@ describe('@nx/cypress/plugin', () => {
   });
 });
 
-function mockCypressConfig(
-  cypressConfig: Cypress.ConfigOptions,
-  nxMetadata?: NxCypressMetadata
-) {
+function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
   jest.mock(
     'cypress.config.js',
     () => ({
       default: cypressConfig,
-      nx: nxMetadata,
     }),
     {
       virtual: true,

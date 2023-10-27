@@ -6,7 +6,6 @@ import {
 } from '@nx/devkit';
 
 import update from './add-nx-cypress-plugin';
-import { NxCypressMetadata } from '../../plugins/plugin';
 import { defineConfig } from 'cypress';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
@@ -15,15 +14,11 @@ describe('add-nx-cypress-plugin migration', () => {
   let tree: Tree;
   let tempFs: TempFs;
 
-  function mockCypressConfig(
-    cypressConfig: Cypress.ConfigOptions,
-    nxMetadata?: NxCypressMetadata
-  ) {
+  function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
     jest.mock(
       join(tempFs.tempDir, 'e2e/cypress.config.ts'),
       () => ({
         default: cypressConfig,
-        nx: nxMetadata,
       }),
       {
         virtual: true,
@@ -50,13 +45,15 @@ describe('add-nx-cypress-plugin migration', () => {
   it('should remove the e2e target when there are no other options', async () => {
     mockCypressConfig(
       defineConfig({
+        env: {
+          devServerTargets: {
+            default: 'my-app:serve',
+            production: 'my-app:serve:production',
+          },
+          ciDevServerTarget: 'my-app:serve-static',
+        },
         e2e: {},
-      }),
-      {
-        devServerTarget: 'my-app:serve',
-        productionDevServerTarget: 'my-app:serve:production',
-        ciDevServerTarget: 'my-app:serve-static',
-      }
+      })
     );
     updateProjectConfiguration(tree, 'e2e', {
       root: 'e2e',
@@ -115,13 +112,15 @@ describe('add-nx-cypress-plugin migration', () => {
   it('should leave the e2e target with other options', async () => {
     mockCypressConfig(
       defineConfig({
+        env: {
+          devServerTargets: {
+            default: 'my-app:serve',
+            production: 'my-app:serve:production',
+          },
+          ciDevServerTarget: 'my-app:serve-static',
+        },
         e2e: {},
-      }),
-      {
-        devServerTarget: 'my-app:serve',
-        productionDevServerTarget: 'my-app:serve:production',
-        ciDevServerTarget: 'my-app:serve-static',
-      }
+      })
     );
     updateProjectConfiguration(tree, 'e2e', {
       root: 'e2e',

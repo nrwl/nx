@@ -1,15 +1,9 @@
-import { Tree } from '@nx/devkit';
-import { createTree } from '@nx/devkit/testing';
 import {
   addDefaultCTConfig,
   addDefaultE2EConfig,
   addMountDefinition,
 } from './config';
 describe('Cypress Config parser', () => {
-  let tree: Tree;
-  beforeEach(() => {
-    tree = createTree();
-  });
   it('should add CT config to existing e2e config', async () => {
     const actual = await addDefaultCTConfig(
       `import { defineConfig } from 'cypress';
@@ -44,23 +38,19 @@ export default defineConfig({
       {
         cypressDir: 'cypress',
       },
-      null,
       undefined
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-          
           
           import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
       export default defineConfig({
         component: nxComponentTestingPreset(__filename),
-        e2e: { ...nxE2EPreset(__filename, { cypressDir: 'cypress' }) } 
+        e2e: { ...nxE2EPreset(__filename, {"cypressDir":"cypress"}) } 
       });
-
-          
-          "
+      "
     `);
   });
 
@@ -77,7 +67,6 @@ export default defineConfig({
       {
         cypressDir: 'cypress',
       },
-      null,
       undefined
     );
 
@@ -111,7 +100,6 @@ export default defineConfig({
       {
         cypressDir: 'cypress',
       },
-      null,
       undefined
     );
     expect(actual).toMatchInlineSnapshot(`
@@ -142,23 +130,19 @@ export default defineConfig({
       {
         cypressDir: 'cypress',
       },
-      null,
       'https://example.com'
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
           
-          
           import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
       export default defineConfig({
-        e2e: { ...nxE2EPreset(__filename, { cypressDir: 'cypress' }),
+        e2e: { ...nxE2EPreset(__filename, {"cypressDir":"cypress"}),
       baseUrl: 'https://example.com' }
       });
-
-          
-          "
+      "
     `);
   });
 
@@ -172,34 +156,24 @@ export default defineConfig({
 `,
       {
         cypressDir: 'cypress',
-      },
-      {
-        devServerTarget: 'my-app:serve',
-        productionDevServerTarget: 'my-app:serve:production',
+        devServerTargets: {
+          default: 'my-app:serve',
+          production: 'my-app:serve:production',
+        },
         ciDevServerTarget: 'my-app:serve-static',
       },
       undefined
     );
     expect(actual).toMatchInlineSnapshot(`
       "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-          import type { NxCypressMetadata } from '@nx/cypress/plugin';
           
           import { defineConfig } from 'cypress';
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
       export default defineConfig({
-        e2e: { ...nxE2EPreset(__filename, { cypressDir: 'cypress' }) }
+        e2e: { ...nxE2EPreset(__filename, {"cypressDir":"cypress","devServerTargets":{"default":"my-app:serve","production":"my-app:serve:production"},"ciDevServerTarget":"my-app:serve-static"}) }
       });
-
-          
-          /**
-            * This is metadata for the @nx/cypress/plugin
-            */
-            export const nx: NxCypressMetadata = {
-        "devServerTarget": "my-app:serve",
-        "productionDevServerTarget": "my-app:serve:production",
-        "ciDevServerTarget": "my-app:serve-static"
-      };"
+      "
     `);
   });
 

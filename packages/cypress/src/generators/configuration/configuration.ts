@@ -1,11 +1,13 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
   parseTargetString,
+  ProjectGraph,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -23,7 +25,6 @@ import { installedCypressVersion } from '../../utils/cypress-version';
 import { viteVersion } from '../../utils/versions';
 import cypressInitGenerator from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
-import { NxCypressMetadata } from '../../plugins/plugin';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -54,6 +55,7 @@ export async function configurationGenerator(
   if (!installedCypressVersion()) {
     tasks.push(await cypressInitGenerator(tree, opts));
   }
+  const projectGraph = await createProjectGraphAsync();
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string'
@@ -63,7 +65,7 @@ export async function configurationGenerator(
   if (opts.bundler === 'vite') {
     tasks.push(addDependenciesToPackageJson(tree, {}, { vite: viteVersion }));
   }
-  await addFiles(tree, opts, hasPlugin);
+  await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
     addTarget(tree, opts);
   }
@@ -119,6 +121,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 async function addFiles(
   tree: Tree,
   options: NormalizedSchema,
+  projectGraph: ProjectGraph,
   hasPlugin: boolean
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
@@ -161,14 +164,18 @@ async function addFiles(
     });
 
     const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
-    let nxMetadata: NxCypressMetadata = null;
+    let devServerTargets: Record<string, string>;
+
+    let ciDevServerTarget: string;
 
     if (hasPlugin && !options.baseUrl && options.devServerTarget) {
-      nxMetadata = {};
+      devServerTargets = {};
 
-      nxMetadata.devServerTarget = options.devServerTarget;
-      nxMetadata.port = options.port;
-      const parsedTarget = parseTargetString(options.devServerTarget);
+      devServerTargets.default = options.devServerTarget;
+      const parsedTarget = parseTargetString(
+        options.devServerTarget,
+        projectGraph
+      );
 
       const devServerProjectConfig = readProjectConfiguration(
         tree,
@@ -181,20 +188,21 @@ async function addFiles(
           'production'
         ]
       ) {
-        nxMetadata.productionDevServerTarget = `${parsedTarget.project}:${parsedTarget.target}:production`;
+        devServerTargets.production = `${parsedTarget.project}:${parsedTarget.target}:production`;
       }
       // Add ci/static e2e target if serve target is found
       if (devServerProjectConfig.targets?.['serve-static']) {
-        nxMetadata.ciDevServerTarget = `${parsedTarget.project}:serve-static`;
+        ciDevServerTarget = `${parsedTarget.project}:serve-static`;
       }
     }
     const updatedCyConfig = await addDefaultE2EConfig(
       tree.read(cyFile, 'utf-8'),
       {
         cypressDir: options.directory,
-        bundler: options.bundler,
+        bundler: options.bundler === 'vite' ? 'vite' : undefined,
+        devServerTargets,
+        ciDevServerTarget: ciDevServerTarget,
       },
-      nxMetadata,
       options.baseUrl
     );
 

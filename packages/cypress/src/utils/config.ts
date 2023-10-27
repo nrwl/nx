@@ -6,7 +6,6 @@ import type {
   PropertySignature,
 } from 'typescript';
 import { NxCypressE2EPresetOptions } from '../../plugins/cypress-preset';
-import { NxCypressMetadata } from '../plugins/plugin';
 
 const TS_QUERY_EXPORT_CONFIG_PREFIX =
   ':matches(ExportAssignment, BinaryExpression:has(Identifier[name="module"]):has(Identifier[name="exports"]))';
@@ -14,7 +13,6 @@ const TS_QUERY_EXPORT_CONFIG_PREFIX =
 export async function addDefaultE2EConfig(
   cyConfigContents: string,
   options: NxCypressE2EPresetOptions,
-  nxMetadata: NxCypressMetadata,
   baseUrl: string
 ) {
   if (!cyConfigContents) {
@@ -30,10 +28,7 @@ export async function addDefaultE2EConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    const configValue =
-      options.bundler === 'vite'
-        ? `nxE2EPreset(__filename, { cypressDir: '${options.cypressDir}', bundler: 'vite' })`
-        : `nxE2EPreset(__filename, { cypressDir: '${options.cypressDir}' })`;
+    const configValue = `nxE2EPreset(__filename, ${JSON.stringify(options)})`;
 
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
@@ -52,27 +47,9 @@ export async function addDefaultE2EConfig(
       }
     );
 
-    const nxMetadataContents = nxMetadata
-      ? `/**
-      * This is metadata for the @nx/cypress/plugin
-      */
-      export const nx: NxCypressMetadata = ${JSON.stringify(
-        nxMetadata,
-        null,
-        2
-      )};`
-      : '';
-
     return `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-    ${
-      nxMetadata
-        ? "import type { NxCypressMetadata } from '@nx/cypress/plugin';"
-        : ''
-    }
     
-    ${updatedConfigContents}
-    
-    ${nxMetadataContents}`;
+    ${updatedConfigContents}`;
   }
   return updatedConfigContents;
 }

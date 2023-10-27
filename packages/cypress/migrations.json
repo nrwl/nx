@@ -50,8 +50,8 @@
     },
     "add-nx-metadata": {
       "version": "17.2.0-beta.0",
-      "description": "Add metadata into cypress.config.ts files for @nx/cypress/plugin",
-      "implementation": "./src/migrations/update-17-2-0/add-nx-metadata"
+      "description": "Add devServerTargets into cypress.config.ts files for @nx/cypress/plugin",
+      "implementation": "./src/migrations/update-17-2-0/add-dev-server-targets-to-cypress-configs"
     },
     "add-nx-cypress-plugin": {
       "version": "17.2.0-beta.0",

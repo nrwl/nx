@@ -1,1 +1,1 @@
-export { createNodes, NxCypressMetadata } from './src/plugins/plugin';
+export { createNodes } from './src/plugins/plugin';

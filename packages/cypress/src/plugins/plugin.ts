@@ -18,12 +18,12 @@ export interface CypressPluginOptions {
   componentTestingTargetName?: string;
 }
 
-export interface NxCypressMetadata {
-  devServerTarget?: string;
-  port?: number | 'cypress-auto';
-  productionDevServerTarget?: string;
-  ciDevServerTarget?: string;
-}
+// export interface NxCypressMetadata {
+//   devServerTarget?: string;
+//   port?: number | 'cypress-auto';
+//   productionDevServerTarget?: string;
+//   ciDevServerTarget?: string;
+// }
 
 export const createNodes: CreateNodes<CypressPluginOptions> = [
   '**/cypress.config.{js,ts,mjs,mts,cjs,cts}',
@@ -113,10 +113,7 @@ function buildCypressTargets(
   options: CypressPluginOptions,
   context: CreateNodesContext
 ) {
-  const { cypressConfig, nxMetadata } = getCypressConfig(
-    configFilePath,
-    context
-  );
+  const cypressConfig = getCypressConfig(configFilePath, context);
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -166,22 +163,38 @@ function buildCypressTargets(
       );
     }
 
-    if (nxMetadata) {
-      const { devServerTarget, productionDevServerTarget, ciDevServerTarget } =
-        nxMetadata;
+    const cypressEnv = {
+      ...cypressConfig.env,
+      ...cypressConfig.e2e?.env,
+    };
 
-      targets[options.targetName].options.devServerTarget = devServerTarget;
+    const devServerTargets: Record<string, string> =
+      cypressEnv?.devServerTargets;
 
-      if (productionDevServerTarget) {
-        targets[options.targetName].configurations = {
-          production: {
-            devServerTarget: productionDevServerTarget,
-          },
-          ci: {
-            devServerTarget: ciDevServerTarget,
-          },
+    if (devServerTargets?.default) {
+      targets[options.targetName].options.devServerTarget =
+        devServerTargets.default;
+      delete devServerTargets.default;
+    }
+
+    if (Object.keys(devServerTargets ?? {}).length > 0) {
+      targets[options.targetName].configurations ??= {};
+      for (const [configuration, devServerTarget] of Object.entries(
+        devServerTargets ?? {}
+      )) {
+        targets[options.targetName].configurations[configuration] = {
+          devServerTarget,
         };
       }
+    }
+
+    const ciDevServerTarget: string = cypressEnv?.ciDevServerTarget;
+    if (ciDevServerTarget) {
+      targets[options.targetName].configurations ??= {};
+
+      targets[options.targetName].configurations['ci'] = {
+        devServerTarget: ciDevServerTarget,
+      };
     }
   }
 
@@ -227,7 +240,7 @@ function buildCypressTargets(
 function getCypressConfig(
   configFilePath: string,
   context: CreateNodesContext
-): { cypressConfig: any; nxMetadata: NxCypressMetadata } {
+): any {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   let module: any;
@@ -247,11 +260,7 @@ function getCypressConfig(
   } else {
     module = require(resolvedPath);
   }
-  const cypressConfig = module.default ?? module;
-
-  const nxMetadata: NxCypressMetadata = module.nx;
-
-  return { cypressConfig, nxMetadata };
+  return module.default ?? module;
 }
 
 function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {

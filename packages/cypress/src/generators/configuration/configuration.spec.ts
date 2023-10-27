@@ -34,7 +34,7 @@ describe('Cypress e2e configuration', () => {
       mockedInstalledCypressVersion.mockReturnValue(10);
     });
 
-    it('should add nx metadata to the cypress config when the @nx/cypress/plugin is present', async () => {
+    it('should add dev server targets to the cypress config when the @nx/cypress/plugin is present', async () => {
       process.env.NX_PCV3 = 'true';
       await cypressInitGenerator(tree, {});
 
@@ -46,22 +46,21 @@ describe('Cypress e2e configuration', () => {
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-        import type { NxCypressMetadata } from '@nx/cypress/plugin';
 
         import { defineConfig } from 'cypress';
 
         export default defineConfig({
-          e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) },
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              devServerTargets: {
+                default: 'my-app:serve',
+                production: 'my-app:serve:production',
+              },
+              ciDevServerTarget: 'my-app:serve-static',
+            }),
+          },
         });
-
-        /**
-         * This is metadata for the @nx/cypress/plugin
-         */
-        export const nx: NxCypressMetadata = {
-          devServerTarget: 'my-app:serve',
-          productionDevServerTarget: 'my-app:serve:production',
-          ciDevServerTarget: 'my-app:serve-static',
-        };
         "
       `);
       expect(
