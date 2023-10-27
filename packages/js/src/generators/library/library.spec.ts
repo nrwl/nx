@@ -1359,4 +1359,32 @@ describe('lib', () => {
       expect(tree.exists('web/my-lib/src/lib/my-lib.ts')).toBeTruthy();
     });
   });
+
+  describe('--testEnvironment', () => {
+    it('should generate a vite config with testEnvironment set to node', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-node-lib',
+        unitTestRunner: 'vitest',
+        testEnvironment: 'node',
+      });
+
+      const content = tree.read('my-node-lib/vite.config.ts', 'utf-8');
+
+      expect(content).toContain(`environment: 'node'`);
+    });
+
+    it('should generate a vite config with testEnvironment set to jsdom by default', async () => {
+      await libraryGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-jsdom-lib',
+        unitTestRunner: 'vitest',
+        testEnvironment: undefined,
+      });
+
+      const content = tree.read('my-jsdom-lib/vite.config.ts', 'utf-8');
+
+      expect(content).toContain(`environment: 'jsdom'`);
+    });
+  });
 });

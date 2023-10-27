@@ -112,10 +112,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
-              // TODO(v17): Remove this option when @nx/vue is released.
-              .filter(
-                (p) => p !== Preset.VueStandalone && p !== Preset.VueMonorepo
-              )
               .map((p) => `"${p}"`)
               .join(
                 ', '

@@ -155,12 +155,6 @@
         "type": "boolean",
         "description": "Includes third-party packages in the bundle (i.e. npm packages)."
       },
-      "dependenciesFieldType": {
-        "type": "string",
-        "description": "When `bundleInternalProjectsOnly` is true, this option determines whether external packages should be in 'dependencies' or 'peerDependencies' field in the generated package.json file.",
-        "enum": ["dependencies", "peerDependencies"],
-        "default": "dependencies"
-      },
       "esbuildOptions": {
         "type": "object",
         "description": "Additional options to pass to esbuild. See https://esbuild.github.io/api/. Cannot be used with 'esbuildConfig' option.",

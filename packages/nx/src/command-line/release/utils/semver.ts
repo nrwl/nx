@@ -1,7 +1,47 @@
+/**
+ * Special thanks to changelogen for the original inspiration for many of these utilities:
+ * https://github.com/unjs/changelogen
+ */
+
 import { RELEASE_TYPES, ReleaseType, inc, valid } from 'semver';
+import { GitCommit } from './git';
 
 export function isRelativeVersionKeyword(val: string): val is ReleaseType {
   return RELEASE_TYPES.includes(val as ReleaseType);
+}
+
+export function isValidSemverSpecifier(specifier: string): boolean {
+  return (
+    specifier && !!(valid(specifier) || isRelativeVersionKeyword(specifier))
+  );
+}
+
+export interface ConventionalCommitsConfig {
+  types: {
+    [type: string]: {
+      semver: 'patch' | 'minor' | 'major';
+    };
+  };
+}
+
+// https://github.com/unjs/changelogen/blob/main/src/semver.ts
+export function determineSemverChange(
+  commits: GitCommit[],
+  config: ConventionalCommitsConfig
+): 'patch' | 'minor' | 'major' | null {
+  let [hasMajor, hasMinor, hasPatch] = [false, false, false];
+  for (const commit of commits) {
+    const semverType = config.types[commit.type]?.semver;
+    if (semverType === 'major' || commit.isBreaking) {
+      hasMajor = true;
+    } else if (semverType === 'minor') {
+      hasMinor = true;
+    } else if (semverType === 'patch') {
+      hasPatch = true;
+    }
+  }
+
+  return hasMajor ? 'major' : hasMinor ? 'minor' : hasPatch ? 'patch' : null;
 }
 
 export function deriveNewSemverVersion(
