@@ -18,6 +18,7 @@ describe('convertComponentToScam', () => {
       project: 'app1',
       skipImport: true,
       export: false,
+      standalone: false,
     });
 
     // ACT
@@ -72,6 +73,7 @@ describe('convertComponentToScam', () => {
       project: 'app1',
       skipImport: true,
       export: false,
+      standalone: false,
     });
 
     // ACT
@@ -121,6 +123,7 @@ describe('convertComponentToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
     });
 
     // ACT
@@ -177,6 +180,7 @@ describe('convertComponentToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
     });
 
     // ACT
@@ -228,6 +232,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       type: 'random',
+      standalone: false,
     });
 
     // ACT
@@ -286,6 +291,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       type: 'random',
+      standalone: false,
     });
 
     // ACT
@@ -338,6 +344,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: false,
       path: 'apps/app1/src/app/random',
+      standalone: false,
     });
 
     // ACT
@@ -395,6 +402,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       path: 'apps/app1/src/app/random',
+      standalone: false,
     });
 
     // ACT
