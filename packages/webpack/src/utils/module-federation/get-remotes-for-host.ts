@@ -35,7 +35,7 @@ function extractRemoteProjectsFromConfig(
             typeof key === 'string' && typeof parsedManifest[key] === 'string'
         )
       ) {
-        remotes.push(Object.keys(parsedManifest));
+        remotes.push(...Object.keys(parsedManifest));
       }
     }
   }
