@@ -89,15 +89,18 @@ export async function getModuleFederationConfig(
     projectGraph = await createProjectGraphAsync();
   }
 
-  if (!projectGraph.nodes[mfConfig.name]?.data) {
+  const NPM_SCOPE_REGEX = /^@(\w|\w-\w)+\/(?!\/)/;
+  const mfConfigName = mfConfig.name.replace(NPM_SCOPE_REGEX, '');
+
+  if (!projectGraph.nodes[mfConfigName]?.data) {
     throw Error(
-      `Cannot find project "${mfConfig.name}". Check that the name is correct in module-federation.config.js`
+      `Cannot find project "${mfConfigName}". Check that the name is correct in module-federation.config.js`
     );
   }
 
   const dependencies = getDependentPackagesForProject(
     projectGraph,
-    mfConfig.name
+    mfConfigName
   );
 
   if (mfConfig.shared) {
@@ -131,9 +134,7 @@ export async function getModuleFederationConfig(
   });
 
   const sharedDependencies = {
-    ...sharedLibraries.getLibraries(
-      projectGraph.nodes[mfConfig.name].data.root
-    ),
+    ...sharedLibraries.getLibraries(projectGraph.nodes[mfConfigName].data.root),
     ...npmPackages,
   };
 

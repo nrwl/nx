@@ -16,7 +16,7 @@ function extractRemoteProjectsFromConfig(
   config: ModuleFederationConfig,
   pathToManifestFile?: string
 ) {
-  const remotes = [];
+  let remotes = [];
   if (pathToManifestFile && existsSync(pathToManifestFile)) {
     const moduleFederationManifestJson = readFileSync(
       pathToManifestFile,
@@ -42,6 +42,8 @@ function extractRemoteProjectsFromConfig(
   const staticRemotes =
     config.remotes?.map((r) => (Array.isArray(r) ? r[0] : r)) ?? [];
   remotes.push(...staticRemotes);
+  const NPM_SCOPE_REGEX = /^@(\w|\w-\w)+\/(?!\/)/;
+  remotes = remotes.map((r) => r.replace(NPM_SCOPE_REGEX, ''));
   return remotes;
 }
 
