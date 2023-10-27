@@ -177,7 +177,7 @@ jobs:
              whoami
              curl https://sh.rustup.rs -sSf --output rustup.sh
              ls -lah
-             sudo rustup.sh -y --profile minimal --default-toolchain stable
+             sudo ./rustup.sh -y --profile minimal --default-toolchain stable
              ls -lah $CARGO_HOME
              export PATH="/user/root/cargo/bin:$PATH"
              echo "~~~~ rustc --version ~~~~"
