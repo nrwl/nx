@@ -268,7 +268,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "my-dir-my-app:build",
+        "buildTarget": "my-dir-my-app:build",
       },
     },
     "lint": {
@@ -286,10 +286,10 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "serve": {
       "configurations": {
         "development": {
-          "browserTarget": "my-dir-my-app:build:development",
+          "buildTarget": "my-dir-my-app:build:development",
         },
         "production": {
-          "browserTarget": "my-dir-my-app:build:production",
+          "buildTarget": "my-dir-my-app:build:production",
         },
       },
       "defaultConfiguration": "development",
@@ -512,7 +512,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "my-app:build",
+        "buildTarget": "my-app:build",
       },
     },
     "lint": {
@@ -530,10 +530,10 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "serve": {
       "configurations": {
         "development": {
-          "browserTarget": "my-app:build:development",
+          "buildTarget": "my-app:build:development",
         },
         "production": {
-          "browserTarget": "my-app:build:production",
+          "buildTarget": "my-app:build:production",
         },
       },
       "defaultConfiguration": "development",
@@ -985,7 +985,7 @@ exports[`app nested should create project configs 1`] = `
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "my-app:build",
+        "buildTarget": "my-app:build",
       },
     },
     "lint": {
@@ -1003,10 +1003,10 @@ exports[`app nested should create project configs 1`] = `
     "serve": {
       "configurations": {
         "development": {
-          "browserTarget": "my-app:build:development",
+          "buildTarget": "my-app:build:development",
         },
         "production": {
-          "browserTarget": "my-app:build:production",
+          "buildTarget": "my-app:build:production",
         },
       },
       "defaultConfiguration": "development",
@@ -1143,7 +1143,7 @@ exports[`app not nested should create project configs 1`] = `
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "my-app:build",
+        "buildTarget": "my-app:build",
       },
     },
     "lint": {
@@ -1161,10 +1161,10 @@ exports[`app not nested should create project configs 1`] = `
     "serve": {
       "configurations": {
         "development": {
-          "browserTarget": "my-app:build:development",
+          "buildTarget": "my-app:build:development",
         },
         "production": {
-          "browserTarget": "my-app:build:production",
+          "buildTarget": "my-app:build:production",
         },
       },
       "defaultConfiguration": "development",
