@@ -33,11 +33,10 @@ describe('Nx Watch', () => {
     runCLI('daemon --start', {
       env: {
         NX_DAEMON: 'true',
-        NX_NATIVE_LOGGING: 'trace',
+        NX_NATIVE_LOGGING: 'nx',
       },
     });
-    await wait(2000);
-  }, 50000);
+  });
 
   afterEach(() => {
     let daemonLog = readFile('.nx/cache/d/daemon.log');
