@@ -1,5 +1,9 @@
 # Enterprise Release Notes
 
+### 2308.22.7.patch7
+
+- Allows the frontend container to be ran with `runAsNonRoot: true`
+
 ### 2308.22.7.patch6
 
 - Fixes a UI issue on the branch when running a task in a DTE context
