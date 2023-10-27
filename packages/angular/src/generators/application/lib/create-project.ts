@@ -1,11 +1,9 @@
 import type { Tree } from '@nx/devkit';
 import { addProjectConfiguration } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
-  const installedAngularInfo = getInstalledAngularVersionInfo(tree);
   const buildExecutor =
     options.bundler === 'webpack'
       ? '@angular-devkit/build-angular:browser'

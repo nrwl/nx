@@ -55,7 +55,7 @@
     "standalone": {
       "description": "Whether the generated pipe is standalone.",
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "module": {
       "type": "string",

@@ -637,7 +637,7 @@ describe('ngrx', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'myapp' });
+      await generateTestApplication(tree, { name: 'myapp', standalone: false });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
@@ -679,7 +679,7 @@ describe('ngrx', () => {
   describe('rxjs v6 support', () => {
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'myapp' });
+      await generateTestApplication(tree, { name: 'myapp', standalone: false });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
