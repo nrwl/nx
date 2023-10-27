@@ -11,7 +11,11 @@ import {
 } from '@nx/e2e/utils';
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
+
+let cacheDirectory = mkdtempSync(join(tmpdir(), 'daemon'));
+console.log('cache directory', cacheDirectory);
 
 async function writeFileForWatcher(path: string, content: string) {
   const e2ePath = join(tmpProjPath(), path);
@@ -34,12 +38,13 @@ describe('Nx Watch', () => {
       env: {
         NX_DAEMON: 'true',
         NX_NATIVE_LOGGING: 'nx',
+        NX_PROJECT_GRAPH_CACHE_DIRECTORY: cacheDirectory,
       },
     });
   });
 
   afterEach(() => {
-    let daemonLog = readFile('.nx/cache/d/daemon.log');
+    let daemonLog = readFile(join(cacheDirectory, '.nx/cache/d/daemon.log'));
     console.log(daemonLog);
     runCLI('reset');
   });
