@@ -27,6 +27,7 @@ const scopes = [
   { value: 'vue',           name: 'vue:             anything Vue specific' },
   { value: 'web',           name: 'web:             anything Web specific' },
   { value: 'webpack',       name: 'webpack:         anything Webpack specific' },
+  {value: 'module-federation', name: 'module-federation:         anything Module Federation specific'},
 ];
 
 // precomputed scope
