@@ -142,7 +142,7 @@
     "standalone": {
       "type": "boolean",
       "description": "Generate a library that uses a standalone component instead of a module as the entry point.",
-      "default": false
+      "default": true
     },
     "displayBlock": {
       "description": "Specifies if the component generated style will contain `:host { display: block; }`. Disclaimer: This option is only valid when `--standalone` is set to `true`.",

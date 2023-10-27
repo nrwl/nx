@@ -21,7 +21,7 @@ describe('Angular Package', () => {
     it('should work', async () => {
       const myapp = uniq('myapp');
       runCLI(
-        `generate @nx/angular:app ${myapp} --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:app ${myapp} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
       );
 
       // Generate root ngrx state management
@@ -37,7 +37,7 @@ describe('Angular Package', () => {
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
       runCLI(
-        `g @nx/angular:lib ${mylib} --prefix=fl --project-name-and-root-format=as-provided`
+        `g @nx/angular:lib ${mylib} --prefix=fl --no-standalone --project-name-and-root-format=as-provided`
       );
       runCLI(
         `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts --facade`
@@ -54,7 +54,7 @@ describe('Angular Package', () => {
     it('should work with creators', async () => {
       const myapp = uniq('myapp');
       runCLI(
-        `generate @nx/angular:app ${myapp} --routing --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:app ${myapp} --routing --no-standalone --project-name-and-root-format=as-provided --no-interactive`
       );
 
       // Generate root ngrx state management
@@ -72,7 +72,7 @@ describe('Angular Package', () => {
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
       runCLI(
-        `g @nx/angular:lib ${mylib} --prefix=fl --project-name-and-root-format=as-provided`
+        `g @nx/angular:lib ${mylib} --prefix=fl --no-standalone --project-name-and-root-format=as-provided`
       );
 
       const flags = `--facade --barrels`;
@@ -91,7 +91,7 @@ describe('Angular Package', () => {
     it('should work with creators using --module', async () => {
       const myapp = uniq('myapp');
       runCLI(
-        `generate @nx/angular:app ${myapp} --routing --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/angular:app ${myapp} --routing --no-standalone --project-name-and-root-format=as-provided --no-interactive`
       );
 
       // Generate root ngrx state management
@@ -109,7 +109,7 @@ describe('Angular Package', () => {
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
       runCLI(
-        `g @nx/angular:lib ${mylib} --prefix=fl --project-name-and-root-format=as-provided`
+        `g @nx/angular:lib ${mylib} --prefix=fl --no-standalone --project-name-and-root-format=as-provided`
       );
 
       const flags = `--facade --barrels`;

@@ -22,6 +22,7 @@ export async function remote(tree: Tree, options: Schema) {
 
 export async function remoteInternal(tree: Tree, schema: Schema) {
   const { typescriptConfiguration = true, ...options }: Schema = schema;
+  options.standalone = options.standalone ?? true;
 
   const projects = getProjects(tree);
   if (options.host && !projects.has(options.host)) {
@@ -44,7 +45,7 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
-    standalone: options.standalone ?? false,
+    standalone: options.standalone,
     routing: true,
     port,
     skipFormat: true,

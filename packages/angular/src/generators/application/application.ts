@@ -22,7 +22,6 @@ import {
   updateEditorTsConfig,
 } from './lib';
 import type { Schema } from './schema';
-import { prompt } from 'enquirer';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -38,17 +37,6 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
-  if (
-    schema.standalone === undefined &&
-    process.env.NX_INTERACTIVE === 'true'
-  ) {
-    schema.standalone = await prompt({
-      name: 'standalone-components',
-      message: 'Would you like to use Standalone Components?',
-      type: 'confirm',
-    }).then((a) => a['standalone-components']);
-  }
-
   const options = await normalizeOptions(tree, schema);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 

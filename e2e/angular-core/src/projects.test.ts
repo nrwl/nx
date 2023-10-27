@@ -28,10 +28,10 @@ describe('Angular Projects', () => {
   beforeAll(() => {
     proj = newProject();
     runCLI(
-      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app1} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:lib ${lib1} --add-module-spec --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib1} --no-standalone --add-module-spec --project-name-and-root-format=as-provided --no-interactive`
     );
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
@@ -52,7 +52,7 @@ describe('Angular Projects', () => {
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
-      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --standalone=true --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --project-name-and-root-format=as-provided --no-interactive`
     );
 
     const esbuildApp = uniq('esbuild-app');
@@ -201,17 +201,17 @@ describe('Angular Projects', () => {
     // ARRANGE
     const esbuildApp = uniq('esbuild-app');
     runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
 
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
 
     runCLI(
-      `generate @nx/angular:library ${buildableLib} --buildable=true --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:library ${buildableChildLib} --buildable=true --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
 
     // update the app module to include a ref to the buildable lib
@@ -332,14 +332,14 @@ describe('Angular Projects', () => {
     const entryPoint = uniq('entrypoint');
 
     runCLI(
-      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
     );
 
     runCLI(
-      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
@@ -375,7 +375,7 @@ describe('Angular Projects', () => {
     const libName = uniq('lib1');
 
     runCLI(
-      `generate @nx/angular:app ${appName} --project-name-and-root-format=derived --no-interactive`
+      `generate @nx/angular:app ${appName} --no-standalone --project-name-and-root-format=derived --no-interactive`
     );
 
     // check files are generated with the layout directory ("apps/")
@@ -391,7 +391,7 @@ describe('Angular Projects', () => {
     );
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=derived`
+      `generate @nx/angular:lib ${libName} --no-standalone --buildable --project-name-and-root-format=derived`
     );
 
     // check files are generated with the layout directory ("libs/")
@@ -416,12 +416,12 @@ describe('Angular Projects', () => {
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=derived`
+        `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=derived`
       )
     ).toThrow();
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=as-provided`
+      `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and

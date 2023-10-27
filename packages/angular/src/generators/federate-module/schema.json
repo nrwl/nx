@@ -69,7 +69,7 @@
     "standalone": {
       "description": "Whether to generate the remote application with standalone components if it needs to be created.",
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "host": {
       "type": "string",
