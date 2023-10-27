@@ -3,6 +3,7 @@
  * https://github.com/unjs/changelogen
  */
 import { interpolate } from '../../../tasks-runner/utils';
+import { output } from '../../../utils/output';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
@@ -114,6 +115,147 @@ export async function getGitDiff(
       };
       return r;
     });
+}
+
+export async function gitAdd({
+  changedFiles,
+  dryRun,
+  verbose,
+  logFn,
+}: {
+  changedFiles: string[];
+  dryRun?: boolean;
+  verbose?: boolean;
+  logFn?: (...messages: string[]) => void;
+}): Promise<string> {
+  logFn = logFn || console.log;
+  const commandArgs = ['add', ...changedFiles];
+  const message = dryRun
+    ? `Would stage files in git with the following command, but --dry-run was set:`
+    : `Staging files in git with the following command:`;
+  if (verbose) {
+    logFn(message);
+    logFn(`git ${commandArgs.join(' ')}`);
+  }
+  if (dryRun) {
+    return;
+  }
+  return execCommand('git', commandArgs);
+}
+
+export async function gitCommit({
+  messages,
+  additionalArgs,
+  dryRun,
+  verbose,
+  logFn,
+}: {
+  messages: string[];
+  additionalArgs?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+  logFn?: (message: string) => void;
+}): Promise<string> {
+  logFn = logFn || console.log;
+
+  const commandArgs = ['commit'];
+  for (const message of messages) {
+    commandArgs.push('--message', message);
+  }
+  if (additionalArgs) {
+    commandArgs.push(...additionalArgs.split(' '));
+  }
+
+  if (verbose) {
+    logFn(
+      dryRun
+        ? `Would commit files in git with the following command, but --dry-run was set:`
+        : `Committing files in git with the following command:`
+    );
+    logFn(`git ${commandArgs.join(' ')}`);
+  }
+
+  if (dryRun) {
+    return;
+  }
+
+  let hasStagedFiles = false;
+  try {
+    // This command will error if there are staged changes
+    await execCommand('git', ['diff-index', '--quiet', 'HEAD']);
+  } catch {
+    hasStagedFiles = true;
+  }
+
+  if (!hasStagedFiles) {
+    logFn('\nNo staged files found. Skipping commit.');
+    return;
+  }
+
+  return execCommand('git', commandArgs);
+}
+
+export async function gitTag({
+  tag,
+  message,
+  additionalArgs,
+  dryRun,
+  verbose,
+  logFn,
+}: {
+  tag: string;
+  message?: string;
+  additionalArgs?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+  logFn?: (message: string) => void;
+}): Promise<string> {
+  logFn = logFn || console.log;
+
+  const commandArgs = [
+    'tag',
+    // Create an annotated tag (recommended for releases here: https://git-scm.com/docs/git-tag)
+    '--annotate',
+    tag,
+    '--message',
+    message || tag,
+  ];
+  if (additionalArgs) {
+    commandArgs.push(...additionalArgs.split(' '));
+  }
+
+  if (verbose) {
+    logFn(
+      dryRun
+        ? `Would tag the current commit in git with the following command, but --dry-run was set:`
+        : `Tagging the current commit in git with the following command:`
+    );
+    logFn(`git ${commandArgs.join(' ')}`);
+  }
+
+  if (dryRun) {
+    return;
+  }
+
+  try {
+    return await execCommand('git', commandArgs);
+  } catch (err) {
+    throw new Error(`Unexpected error when creating tag ${tag}:\n\n${err}`);
+  }
+}
+
+export async function gitPush() {
+  try {
+    await execCommand('git', [
+      'push',
+      // NOTE: It's important we use --follow-tags, and not --tags, so that we are precise about what we are pushing
+      '--follow-tags',
+      '--no-verify',
+      '--atomic',
+    ]);
+  } catch (err) {
+    throw new Error(`Unexpected git push error: ${err}`);
+  }
 }
 
 export function parseCommits(commits: RawGitCommit[]): GitCommit[] {

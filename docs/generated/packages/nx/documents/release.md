@@ -67,6 +67,42 @@ nx release version [specifier]
 
 #### Options
 
+##### git-commit
+
+Type: `boolean`
+
+Whether or not to automatically commit the changes made by this command
+
+##### git-commit-args
+
+Type: `string`
+
+Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
+
+##### git-commit-message
+
+Type: `string`
+
+Custom git commit message to use when committing the changes made by this command. {version} will be dynamically interpolated when performing fixed releases, interpolated tags will be appended to the commit body when performing independent releases.
+
+##### git-tag
+
+Type: `boolean`
+
+Whether or not to automatically tag the changes made by this command
+
+##### git-tag-args
+
+Type: `string`
+
+Additional arguments to pass to the `git tag` command invoked behind the scenes
+
+##### git-tag-message
+
+Type: `string`
+
+Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself.
+
 ##### help
 
 Type: `boolean`
@@ -106,6 +142,42 @@ nx release changelog [version]
 Type: `string`
 
 The git reference to use as the start of the changelog. If not set it will attempt to resolve the latest tag and use that
+
+##### git-commit
+
+Type: `boolean`
+
+Whether or not to automatically commit the changes made by this command
+
+##### git-commit-args
+
+Type: `string`
+
+Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
+
+##### git-commit-message
+
+Type: `string`
+
+Custom git commit message to use when committing the changes made by this command. {version} will be dynamically interpolated when performing fixed releases, interpolated tags will be appended to the commit body when performing independent releases.
+
+##### git-tag
+
+Type: `boolean`
+
+Whether or not to automatically tag the changes made by this command
+
+##### git-tag-args
+
+Type: `string`
+
+Additional arguments to pass to the `git tag` command invoked behind the scenes
+
+##### git-tag-message
+
+Type: `string`
+
+Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself.
 
 ##### gitRemote
 

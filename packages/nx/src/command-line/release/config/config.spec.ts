@@ -51,6 +51,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": false,
               "workspaceChangelog": {
                 "createRelease": false,
@@ -62,6 +70,14 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "__default__": {
                 "changelog": false,
@@ -70,17 +86,27 @@ describe('createNxReleaseConfig()', () => {
                   "lib-b",
                   "nx",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -93,6 +119,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": false,
               "workspaceChangelog": {
                 "createRelease": false,
@@ -104,6 +138,14 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "__default__": {
                 "changelog": false,
@@ -112,17 +154,27 @@ describe('createNxReleaseConfig()', () => {
                   "lib-b",
                   "nx",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -138,6 +190,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": false,
               "workspaceChangelog": {
                 "createRelease": false,
@@ -149,6 +209,14 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "__default__": {
                 "changelog": false,
@@ -157,17 +225,27 @@ describe('createNxReleaseConfig()', () => {
                   "lib-b",
                   "nx",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -189,6 +267,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": false,
               "workspaceChangelog": {
                 "createRelease": false,
@@ -200,23 +286,41 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "group-1": {
                 "changelog": false,
                 "projects": [
                   "lib-a",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -236,6 +340,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": false,
               "workspaceChangelog": {
                 "createRelease": false,
@@ -247,6 +359,14 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "group-1": {
                 "changelog": false,
@@ -254,17 +374,27 @@ describe('createNxReleaseConfig()', () => {
                   "lib-a",
                   "lib-b",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -296,6 +426,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": false,
               "workspaceChangelog": {
                 "createRelease": false,
@@ -307,13 +445,22 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "group-1": {
                 "changelog": false,
                 "projects": [
                   "lib-a",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@custom/generator",
                   "generatorOptions": {
@@ -326,17 +473,27 @@ describe('createNxReleaseConfig()', () => {
                 "projects": [
                   "lib-b",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@custom/generator-alternative",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -359,6 +516,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": false,
               "workspaceChangelog": {
                 "createRelease": false,
@@ -370,6 +535,14 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "__default__": {
                 "changelog": false,
@@ -378,7 +551,8 @@ describe('createNxReleaseConfig()', () => {
                   "lib-b",
                   "nx",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {
@@ -387,11 +561,247 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {
                 "foo": "bar",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should respect enabling git operations on the version command via the top level', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        git: {
+          commit: true,
+          commitArgs: '--no-verify',
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": true,
+                "commitArgs": "--no-verify",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "includeAuthors": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": true,
+              "commitArgs": "--no-verify",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": true,
+                "commitArgs": "--no-verify",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should respect enabling git operations for the version command directly', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        git: {
+          tag: false,
+        },
+        version: {
+          git: {
+            commit: true,
+            commitArgs: '--no-verify',
+            tag: true, // should take priority over top level
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "includeAuthors": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": true,
+                "commitArgs": "--no-verify",
+                "commitMessage": "",
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+  });
+
+  describe('user config -> top level releaseTagPattern', () => {
+    it('should respect modifying releaseTagPattern at the top level and it should be inherited by the catch all group', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        releaseTagPattern: '{projectName}__{version}',
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "includeAuthors": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "{projectName}__{version}",
+                "version": {
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "{projectName}__{version}",
+            "version": {
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
               },
             },
           },
@@ -413,8 +823,24 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": false,
               "workspaceChangelog": false,
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
             },
             "groups": {
               "__default__": {
@@ -424,17 +850,27 @@ describe('createNxReleaseConfig()', () => {
                   "lib-b",
                   "nx",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -462,6 +898,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": {
                 "createRelease": false,
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
@@ -481,6 +925,14 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "__default__": {
                 "changelog": {
@@ -497,17 +949,27 @@ describe('createNxReleaseConfig()', () => {
                   "lib-b",
                   "nx",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -554,6 +1016,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": {
                 "createRelease": false,
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
@@ -573,6 +1043,14 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "group-1": {
                 "changelog": {
@@ -587,7 +1065,8 @@ describe('createNxReleaseConfig()', () => {
                 "projects": [
                   "lib-a",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
@@ -598,7 +1077,8 @@ describe('createNxReleaseConfig()', () => {
                 "projects": [
                   "lib-b",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
@@ -617,17 +1097,27 @@ describe('createNxReleaseConfig()', () => {
                 "projects": [
                   "nx",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -661,6 +1151,14 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
               "projectChangelogs": {
                 "createRelease": "github",
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
@@ -680,6 +1178,14 @@ describe('createNxReleaseConfig()', () => {
                 "renderer": "nx/changelog-renderer",
               },
             },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
             "groups": {
               "bar": {
                 "changelog": {
@@ -694,7 +1200,8 @@ describe('createNxReleaseConfig()', () => {
                 "projects": [
                   "lib-b",
                 ],
-                "releaseTagPattern": "{projectName}@v{version}",
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
@@ -713,6 +1220,7 @@ describe('createNxReleaseConfig()', () => {
                 "projects": [
                   "lib-a",
                 ],
+                "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}-{version}",
                 "version": {
                   "generator": "@nx/js:release-version",
@@ -720,10 +1228,19 @@ describe('createNxReleaseConfig()', () => {
                 },
               },
             },
+            "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
             },
           },
         }
@@ -986,6 +1503,100 @@ describe('createNxReleaseConfig()', () => {
             },
           },
           "nxReleaseConfig": null,
+        }
+      `);
+    });
+  });
+
+  describe('projectsRelationship at the root', () => {
+    it('should respect the user specified projectsRelationship value and apply it to any groups that do not specify their own value', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        projectsRelationship: 'independent',
+        groups: {
+          'group-1': {
+            projects: 'lib-a',
+            // no explicit value, should inherit from top level
+          },
+          'group-2': {
+            projects: ['lib-b', 'nx'],
+            projectsRelationship: 'fixed', // should not be overridden by top level
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "includeAuthors": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                ],
+                "projectsRelationship": "independent",
+                "releaseTagPattern": "{projectName}@{version}",
+                "version": {
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+              "group-2": {
+                "changelog": false,
+                "projects": [
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "independent",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
         }
       `);
     });

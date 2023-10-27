@@ -1,5 +1,6 @@
 import {
   Tree,
+  formatFiles,
   joinPathFragments,
   output,
   readJson,
@@ -9,13 +10,17 @@ import {
 } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
+import { CATCH_ALL_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import { getLatestGitTagForPattern } from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
   resolveSemverSpecifierFromPrompt,
 } from 'nx/src/command-line/release/utils/resolve-semver-specifier';
 import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
-import { deriveNewSemverVersion } from 'nx/src/command-line/release/version';
+import {
+  VersionData,
+  deriveNewSemverVersion,
+} from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { relative } from 'path';
@@ -28,6 +33,8 @@ export async function releaseVersionGenerator(
   options: ReleaseVersionGeneratorSchema
 ) {
   try {
+    const versionData: VersionData = {};
+
     // If the user provided a specifier, validate that it is valid semver or a relative semver keyword
     if (options.specifier && !isValidSemverSpecifier(options.specifier)) {
       throw new Error(
@@ -108,8 +115,14 @@ To fix this you will either need to add a package.json file at that location, or
             'https://registry.npmjs.org';
           const tag = metadata?.tag ?? 'latest';
 
-          // If the currentVersionResolver is set to registry, we only want to make the request once for the whole batch of projects
-          if (!currentVersion) {
+          /**
+           * If the currentVersionResolver is set to registry, and the projects are not independent, we only want to make the request once for the whole batch of projects.
+           * For independent projects, we need to make a request for each project individually as they will most likely have different versions.
+           */
+          if (
+            !currentVersion ||
+            options.releaseGroup.projectsRelationship === 'independent'
+          ) {
             const spinner = ora(
               `${Array.from(new Array(projectName.length + 3)).join(
                 ' '
@@ -154,7 +167,11 @@ To fix this you will either need to add a package.json file at that location, or
           );
           break;
         case 'git-tag': {
-          if (!currentVersion) {
+          if (
+            !currentVersion ||
+            // We always need to independently resolve the current version from git tag per project if the projects are independent
+            options.releaseGroup.projectsRelationship === 'independent'
+          ) {
             const releaseTagPattern = options.releaseGroup.releaseTagPattern;
             latestMatchingGitTag = await getLatestGitTagForPattern(
               releaseTagPattern,
@@ -164,7 +181,7 @@ To fix this you will either need to add a package.json file at that location, or
             );
             if (!latestMatchingGitTag) {
               throw new Error(
-                `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found.`
+                `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version.`
               );
             }
 
@@ -189,8 +206,21 @@ To fix this you will either need to add a package.json file at that location, or
         log(`📄 Using the provided version specifier "${options.specifier}".`);
       }
 
-      // if specifier is null, then we determined previously via conventional commits that no changes are necessary
-      if (specifier === undefined) {
+      /**
+       * If we are versioning independently then we always need to determine the specifier for each project individually, except
+       * for the case where the user has provided an explicit specifier on the command.
+       *
+       * Otherwise, if versioning the projects together we only need to perform this logic if the specifier is still unset from
+       * previous iterations of the loop.
+       *
+       * NOTE: In the case that we have previously determined via conventional commits that no changes are necessary, the specifier
+       * will be explicitly set to `null`, so that is why we only check for `undefined` explicitly here.
+       */
+      if (
+        specifier === undefined ||
+        (options.releaseGroup.projectsRelationship === 'independent' &&
+          !options.specifier)
+      ) {
         const specifierSource = options.specifierSource;
         switch (specifierSource) {
           case 'conventional-commits':
@@ -213,6 +243,8 @@ To fix this you will either need to add a package.json file at that location, or
               break;
             }
 
+            // TODO: reevaluate this logic/workflow for independent projects
+            //
             // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
             if (prerelease(currentVersion)) {
@@ -226,12 +258,35 @@ To fix this you will either need to add a package.json file at that location, or
               );
             }
             break;
-          case 'prompt':
-            specifier = await resolveSemverSpecifierFromPrompt(
-              `What kind of change is this for the ${projects.length} matched projects(s) within release group "${options.releaseGroup.name}"?`,
-              `What is the exact version for the ${projects.length} matched project(s) within release group "${options.releaseGroup.name}"?`
-            );
+          case 'prompt': {
+            // Only add the release group name to the log if it is one set by the user, otherwise it is useless noise
+            const maybeLogReleaseGroup = (log: string): string => {
+              if (options.releaseGroup.name === CATCH_ALL_RELEASE_GROUP) {
+                return log;
+              }
+              return `${log} within release group "${options.releaseGroup.name}"`;
+            };
+            if (options.releaseGroup.projectsRelationship === 'independent') {
+              specifier = await resolveSemverSpecifierFromPrompt(
+                `${maybeLogReleaseGroup(
+                  `What kind of change is this for project "${projectName}"`
+                )}?`,
+                `${maybeLogReleaseGroup(
+                  `What is the exact version for project "${projectName}"`
+                )}?`
+              );
+            } else {
+              specifier = await resolveSemverSpecifierFromPrompt(
+                `${maybeLogReleaseGroup(
+                  `What kind of change is this for the ${projects.length} matched projects(s)`
+                )}?`,
+                `${maybeLogReleaseGroup(
+                  `What is the exact version for the ${projects.length} matched project(s)`
+                )}?`
+              );
+            }
             break;
+          }
           default:
             throw new Error(
               `Invalid specifierSource "${specifierSource}" provided. Must be one of "prompt" or "conventional-commits"`
@@ -301,7 +356,22 @@ To fix this you will either need to add a package.json file at that location, or
           }
         );
       }
+
+      versionData[projectName] = {
+        currentVersion,
+        newVersion,
+        dependentProjects,
+      };
     }
+
+    // Invoke callback to track updates for later use within the version command (e.g. git tagging)
+    options.onVersionData(versionData);
+
+    /**
+     * Ensure that formatting is applied so that version bump diffs are as mimimal as possible
+     * within the context of the user's workspace.
+     */
+    await formatFiles(tree);
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({
