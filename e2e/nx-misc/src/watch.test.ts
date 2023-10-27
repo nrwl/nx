@@ -25,6 +25,7 @@ async function writeFileForWatcher(path: string, content: string) {
   await wait(10);
 }
 // rerun 1
+// rerun 2
 describe('Nx Watch', () => {
   let proj1 = uniq('proj1');
   let proj2 = uniq('proj2');
