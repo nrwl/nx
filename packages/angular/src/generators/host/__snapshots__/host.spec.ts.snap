@@ -868,8 +868,9 @@ describe('AppComponent', () => {
         RouterTestingModule.withRoutes([
           { path: '', component: NxWelcomeComponent },
         ]),
+        AppComponent,
+        NxWelcomeComponent,
       ],
-      declarations: [AppComponent, NxWelcomeComponent],
     }).compileComponents();
   });
 
@@ -912,8 +913,9 @@ describe('AppComponent', () => {
         RouterTestingModule.withRoutes([
           { path: '', component: NxWelcomeComponent },
         ]),
+        AppComponent,
+        NxWelcomeComponent,
       ],
-      declarations: [AppComponent, NxWelcomeComponent],
     }).compileComponents();
   });
 

@@ -52,6 +52,7 @@ export async function normalizeOptions(
     linter: Linter.EsLint,
     strict: true,
     bundler: options.bundler ?? 'webpack',
+    standalone: true,
     ...options,
     prefix,
     name: appProjectName,

@@ -41,6 +41,7 @@ describe('lib', () => {
       unitTestRunner: UnitTestRunner.Jest,
       simpleName: false,
       strict: true,
+      standalone: false,
       ...opts,
     });
   }

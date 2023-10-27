@@ -149,10 +149,12 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('standaloneApi', {
             describe: chalk.dim`Use Standalone Components if generating an Angular app`,
             type: 'boolean',
+            default: true,
           })
           .option('routing', {
             describe: chalk.dim`Add a routing setup for an Angular app`,
             type: 'boolean',
+            default: true,
           })
           .option('bundler', {
             describe: chalk.dim`Bundler to be used to build the app`,
@@ -754,9 +756,9 @@ async function determineAngularOptions(
   let preset: Preset;
   let style: string;
   let appName: string;
-  let standaloneApi: boolean;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
 
+  const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Angular) {
@@ -808,29 +810,6 @@ async function determineAngularOptions(
   }
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-
-  if (parsedArgs.standaloneApi !== undefined) {
-    standaloneApi = parsedArgs.standaloneApi;
-  } else {
-    const reply = await enquirer.prompt<{ standaloneApi: 'Yes' | 'No' }>([
-      {
-        name: 'standaloneApi',
-        message:
-          'Would you like to use Standalone Components in your application?',
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'No',
-          },
-          {
-            name: 'Yes',
-          },
-        ],
-        initial: 'No' as any,
-      },
-    ]);
-    standaloneApi = reply.standaloneApi === 'Yes';
-  }
 
   return { preset, style, appName, standaloneApi, routing, e2eTestRunner };
 }
