@@ -72,7 +72,7 @@
     "standalone": {
       "type": "boolean",
       "description": "Whether the application is a standalone application.",
-      "default": false
+      "default": true
     },
     "typescriptConfiguration": {
       "type": "boolean",

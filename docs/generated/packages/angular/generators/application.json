@@ -153,6 +153,7 @@
       "standalone": {
         "description": "Generate an application that is setup to use standalone components.",
         "type": "boolean",
+        "default": true,
         "x-priority": "important"
       },
       "rootProject": {

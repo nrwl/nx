@@ -7,7 +7,6 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
-  stripIndents,
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -791,46 +790,6 @@ describe('app', () => {
         appTree.read('standalone/src/app/nx-welcome.component.ts', 'utf-8')
       ).toContain('standalone: true');
     });
-
-    it('should prompt for standalone components and not use them when the user selects false', async () => {
-      // ARRANGE
-      process.env.NX_INTERACTIVE = 'true';
-      // @ts-ignore
-      enquirer.prompt = jest
-        .fn()
-        .mockReturnValue(Promise.resolve({ 'standalone-components': false }));
-
-      // ACT
-      await generateApp(appTree, 'nostandalone');
-
-      // ASSERT
-      expect(appTree.exists('nostandalone/src/app/app.module.ts')).toBeTruthy();
-      expect(enquirer.prompt).toHaveBeenCalled();
-
-      // CLEANUP
-      process.env.NX_INTERACTIVE = undefined;
-    });
-
-    it('should prompt for standalone components and use them when the user selects true', async () => {
-      // ARRANGE
-      process.env.NX_INTERACTIVE = 'true';
-      // @ts-ignore
-      enquirer.prompt = jest
-        .fn()
-        .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
-
-      // ACT
-      await generateApp(appTree, 'nostandalone');
-
-      // ASSERT
-      expect(
-        appTree.exists('nostandalone/src/app/app.module.ts')
-      ).not.toBeTruthy();
-      expect(enquirer.prompt).toHaveBeenCalled();
-
-      // CLEANUP
-      process.env.NX_INTERACTIVE = undefined;
-    });
   });
 
   it('should generate correct main.ts', async () => {
@@ -1058,6 +1017,27 @@ describe('app', () => {
       expect(tsconfigE2E).toMatchSnapshot('e2e tsconfig.json');
     });
   });
+
+  describe('angular v15 support', () => {
+    beforeEach(() => {
+      appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': '~15.2.0',
+        },
+      }));
+    });
+
+    it('should import "ApplicationConfig" from "@angular/platform-browser"', async () => {
+      await generateApp(appTree, 'my-app', { standalone: true });
+
+      expect(
+        appTree.read('my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+  });
 });
 
 async function generateApp(
@@ -1071,6 +1051,7 @@ async function generateApp(
     e2eTestRunner: E2eTestRunner.Cypress,
     unitTestRunner: UnitTestRunner.Jest,
     linter: Linter.EsLint,
+    standalone: false,
     ...options,
   });
 }

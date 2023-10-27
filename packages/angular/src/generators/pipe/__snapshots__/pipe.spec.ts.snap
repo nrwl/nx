@@ -1,32 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`pipe generator should export the pipe correctly when flat=false and path is nested deeper 1`] = `
-"import { Pipe, PipeTransform } from '@angular/core';
-
-@Pipe({
-  name: 'test',
-})
-export class TestPipe implements PipeTransform {
-  transform(value: unknown, ...args: unknown[]): unknown {
-    return null;
-  }
-}
-"
-`;
-
-exports[`pipe generator should export the pipe correctly when flat=false and path is nested deeper 2`] = `
-"import { TestPipe } from './test.pipe';
-
-describe('TestPipe', () => {
-  it('create an instance', () => {
-    const pipe = new TestPipe();
-    expect(pipe).toBeTruthy();
-  });
-});
-"
-`;
-
-exports[`pipe generator should export the pipe correctly when flat=false and path is nested deeper 3`] = `
+exports[`pipe generator --no-standalone should export the pipe correctly when flat=false and path is nested deeper 1`] = `
 "import { NgModule } from '@angular/core';
 import { TestPipe } from './my-pipes/test/test.pipe';
 @NgModule({
@@ -38,7 +12,7 @@ export class TestModule {}
 "
 `;
 
-exports[`pipe generator should generate a pipe with test files and attach to the NgModule automatically 1`] = `
+exports[`pipe generator --no-standalone should generate a pipe with test files and attach to the NgModule automatically 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
@@ -52,7 +26,7 @@ export class TestPipe implements PipeTransform {
 "
 `;
 
-exports[`pipe generator should generate a pipe with test files and attach to the NgModule automatically 2`] = `
+exports[`pipe generator --no-standalone should generate a pipe with test files and attach to the NgModule automatically 2`] = `
 "import { TestPipe } from './test.pipe';
 
 describe('TestPipe', () => {
@@ -64,7 +38,7 @@ describe('TestPipe', () => {
 "
 `;
 
-exports[`pipe generator should generate a pipe with test files and attach to the NgModule automatically 3`] = `
+exports[`pipe generator --no-standalone should generate a pipe with test files and attach to the NgModule automatically 3`] = `
 "import { NgModule } from '@angular/core';
 import { TestPipe } from './test.pipe';
 @NgModule({
@@ -76,7 +50,7 @@ export class TestModule {}
 "
 `;
 
-exports[`pipe generator should import the pipe correctly when flat=false 1`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when flat=false 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
@@ -90,7 +64,7 @@ export class TestPipe implements PipeTransform {
 "
 `;
 
-exports[`pipe generator should import the pipe correctly when flat=false 2`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when flat=false 2`] = `
 "import { TestPipe } from './test.pipe';
 
 describe('TestPipe', () => {
@@ -102,7 +76,7 @@ describe('TestPipe', () => {
 "
 `;
 
-exports[`pipe generator should import the pipe correctly when flat=false 3`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when flat=false 3`] = `
 "import { NgModule } from '@angular/core';
 import { TestPipe } from './test/test.pipe';
 @NgModule({
@@ -114,7 +88,7 @@ export class TestModule {}
 "
 `;
 
-exports[`pipe generator should import the pipe correctly when flat=false and path is nested deeper 1`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when flat=false and path is nested deeper 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
@@ -128,7 +102,7 @@ export class TestPipe implements PipeTransform {
 "
 `;
 
-exports[`pipe generator should import the pipe correctly when flat=false and path is nested deeper 2`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when flat=false and path is nested deeper 2`] = `
 "import { TestPipe } from './test.pipe';
 
 describe('TestPipe', () => {
@@ -140,7 +114,7 @@ describe('TestPipe', () => {
 "
 `;
 
-exports[`pipe generator should import the pipe correctly when flat=false and path is nested deeper 3`] = `
+exports[`pipe generator --no-standalone should import the pipe correctly when flat=false and path is nested deeper 3`] = `
 "import { NgModule } from '@angular/core';
 import { TestPipe } from './my-pipes/test/test.pipe';
 @NgModule({
@@ -152,70 +126,7 @@ export class TestModule {}
 "
 `;
 
-exports[`pipe generator should not generate test file when skipTests=true 1`] = `
-"import { Pipe, PipeTransform } from '@angular/core';
-
-@Pipe({
-  name: 'test',
-})
-export class TestPipe implements PipeTransform {
-  transform(value: unknown, ...args: unknown[]): unknown {
-    return null;
-  }
-}
-"
-`;
-
-exports[`pipe generator should not generate test file when skipTests=true 2`] = `
-"import { NgModule } from '@angular/core';
-import { TestPipe } from './my-pipes/test/test.pipe';
-@NgModule({
-  imports: [],
-  declarations: [TestPipe],
-  exports: [],
-})
-export class TestModule {}
-"
-`;
-
-exports[`pipe generator should not import the pipe when skipImport=true 1`] = `
-"import { Pipe, PipeTransform } from '@angular/core';
-
-@Pipe({
-  name: 'test',
-})
-export class TestPipe implements PipeTransform {
-  transform(value: unknown, ...args: unknown[]): unknown {
-    return null;
-  }
-}
-"
-`;
-
-exports[`pipe generator should not import the pipe when skipImport=true 2`] = `
-"import { TestPipe } from './test.pipe';
-
-describe('TestPipe', () => {
-  it('create an instance', () => {
-    const pipe = new TestPipe();
-    expect(pipe).toBeTruthy();
-  });
-});
-"
-`;
-
-exports[`pipe generator should not import the pipe when skipImport=true 3`] = `
-"import { NgModule } from '@angular/core';
-@NgModule({
-  imports: [],
-  declarations: [],
-  exports: [],
-})
-export class TestModule {}
-"
-`;
-
-exports[`pipe generator should not import the pipe when standalone=true 1`] = `
+exports[`pipe generator should generate correctly 1`] = `
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
@@ -230,7 +141,7 @@ export class TestPipe implements PipeTransform {
 "
 `;
 
-exports[`pipe generator should not import the pipe when standalone=true 2`] = `
+exports[`pipe generator should generate correctly 2`] = `
 "import { TestPipe } from './test.pipe';
 
 describe('TestPipe', () => {
@@ -239,16 +150,5 @@ describe('TestPipe', () => {
     expect(pipe).toBeTruthy();
   });
 });
-"
-`;
-
-exports[`pipe generator should not import the pipe when standalone=true 3`] = `
-"import { NgModule } from '@angular/core';
-@NgModule({
-  imports: [],
-  declarations: [],
-  exports: [],
-})
-export class TestModule {}
 "
 `;

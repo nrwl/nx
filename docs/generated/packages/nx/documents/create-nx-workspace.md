@@ -145,6 +145,8 @@ Customizes the initial content of your workspace. Default presets include: ["app
 
 Type: `boolean`
 
+Default: `true`
+
 Add a routing setup for an Angular app
 
 ### skipGit
@@ -158,6 +160,8 @@ Skip initializing a git repository
 ### standaloneApi
 
 Type: `boolean`
+
+Default: `true`
 
 Use Standalone Components if generating an Angular app
 

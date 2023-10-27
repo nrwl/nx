@@ -19,6 +19,7 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
+      standalone: false,
     });
 
     // ACT
@@ -145,7 +146,6 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
-      standalone: true,
     });
 
     // ACT
@@ -219,6 +219,7 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
+      standalone: false,
     });
 
     // ACT
@@ -257,7 +258,6 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
-      standalone: true,
     });
 
     // ACT
@@ -305,6 +305,7 @@ describe('setupSSR', () => {
 
       await generateTestApplication(tree, {
         name: 'app1',
+        standalone: false,
       });
 
       updateJson(tree, 'package.json', (json) => ({
@@ -340,6 +341,7 @@ describe('setupSSR', () => {
 
       await generateTestApplication(tree, {
         name: 'app1',
+        standalone: false,
       });
 
       // ACT
@@ -374,6 +376,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
         name: 'app1',
+        standalone: false,
       });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
