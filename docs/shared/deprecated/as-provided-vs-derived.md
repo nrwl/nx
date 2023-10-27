@@ -1,8 +1,16 @@
 # as-provided vs. derived
 
-Nx is moving toward a more transparent and predictable way of determining where code will be generated when you run a generator. The new behavior is called `as-provided` and will be the only option in Nx 18. With `as-provided`, Nx places the generated code in the exact folder that you specify. The folder can be specified with a `--directory` flag, a fully specified path (i.e. `libs/shared/my-lib`) or using the current working directory that you run the command from.
+Nx is moving toward a more transparent and predictable way of determining where code will be generated when you run a generator. The new behavior is called `as-provided` and will be the only option in Nx 18. With `as-provided`, Nx places the generated code in the exact folder that you specify. The folder can be specified with a `--directory` flag or use a fully specified path (i.e. `libs/shared/my-lib/src/my-component`). The `--directory` is always calculated from your current working directory that you run the command from.
 
-The old behavior we're calling `derived`, because we tried to figure out the best place to put code for you. The `derived` approach worked for some people, but there were always people that wanted to generate their code in a slightly different location. Accounting for these variations lead to either (1) people repos with a different structure not being able to use these generators or (2) Nx introducing lots of flags to allow people to tweak where code was generated (flags like `--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`).
+The old behavior we're calling `derived`, because we tried to figure out the best place to put code for you. The `derived` approach worked for some people, but there were always people that wanted to generate their code in a slightly different location. Accounting for these variations lead to either (1) people in repos with a different structure not being able to use these generators or (2) Nx introducing lots of flags to allow people to tweak where code was generated (flags like `--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`).
+
+Here are some of the issues with the `derived` behavior that are addressed with `as-provided`:
+
+- We had multiple flags for the same thing: `directory`, `path`, etc. With `as-provided`, we only use `--directory` across all generators.
+- We had some generators expecting the directory option to be relative to the workspace root while others expected it relative to the project source root. With `as-provided`, we made it consistent across all generators to be relative to the current working directory.
+- We converted the provided names to kebab-case. With `as-provided`, we don't transform what's provided.
+
+## Prompting
 
 Until Nx 18, you will be prompted when running a generator to choose which behavior you want to use:
 
