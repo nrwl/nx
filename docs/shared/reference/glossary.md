@@ -120,7 +120,7 @@ A [project](#project) that is located in a sub-folder of another project. This w
 
 A service that provides [distributed caching](#distributed-cache) and [distributed task execution](#distributed-task-execution).
 
-> See: [What is Nx Cloud?](/nx-cloud/intro/what-is-nx-cloud)
+> See: [CI with Nx](/nx-cloud/intro/ci-with-nx)
 
 ### Package
 

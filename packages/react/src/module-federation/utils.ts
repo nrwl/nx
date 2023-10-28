@@ -21,7 +21,14 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
   const remoteEntry = isServer ? 'server/remoteEntry.js' : 'remoteEntry.js';
 
   return function (remote: string) {
-    const remoteConfiguration = readCachedProjectConfiguration(remote);
+    let remoteConfiguration = null;
+    try {
+      remoteConfiguration = readCachedProjectConfiguration(remote);
+    } catch (e) {
+      throw new Error(
+        `Cannot find remote: "${remote}". Check that the remote name is correct in your module federation config file.\n`
+      );
+    }
     const serveTarget = remoteConfiguration?.targets?.[target];
 
     if (!serveTarget) {

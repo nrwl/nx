@@ -11,7 +11,6 @@ export interface Schema {
   js?: boolean;
   skipFormat?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
 }

@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::path::Path;
@@ -13,7 +14,9 @@ use swc_common::{BytePos, SourceMap, Spanned};
 use swc_ecma_ast::EsVersion::EsNext;
 use swc_ecma_parser::error::Error;
 use swc_ecma_parser::lexer::Lexer;
-use swc_ecma_parser::token::Keyword::{Class, Default_, Export, Function, Import};
+use swc_ecma_parser::token::Keyword::{
+    Catch, Class, Default_, Export, Finally, Function, Import, Try,
+};
 use swc_ecma_parser::token::Word::{Ident, Keyword};
 use swc_ecma_parser::token::{BinOpToken, Token, TokenAndSpan};
 use swc_ecma_parser::{Syntax, Tokens, TsConfig};
@@ -42,6 +45,7 @@ enum BlockType {
     Object,
     ObjectType,
     ArrowFunction,
+    TryCatchFinally,
 }
 
 fn is_identifier(token: &Token) -> bool {
@@ -54,6 +58,7 @@ struct State<'a> {
     pub previous_token: Option<TokenAndSpan>,
     pub import_type: ImportType,
     open_brace_count: i128,
+    open_bracket_count: i128,
     blocks_stack: Vec<BlockType>,
     next_block_type: BlockType,
 }
@@ -65,6 +70,7 @@ impl<'a> State<'a> {
             current_token: None,
             previous_token: None,
             open_brace_count: 0,
+            open_bracket_count: 0,
             blocks_stack: vec![],
             next_block_type: BlockType::Block,
             import_type: ImportType::Dynamic,
@@ -105,11 +111,19 @@ impl<'a> State<'a> {
                     // The block has closed so remove it from the block stack
                     self.blocks_stack.pop();
                 }
+                Token::LBracket => {
+                    self.open_bracket_count += 1;
+                }
+                Token::RBracket => {
+                    self.open_bracket_count -= 1;
+                }
                 _ => {}
             }
 
             // Keep track of when we are in an object declaration because colons mean different things
             let in_object_declaration = self.blocks_stack.contains(&BlockType::Object);
+            // Keep track of when we are in an array declaration because commas mean different things
+            let in_array_declaration = self.open_bracket_count > 0;
 
             let new_line = self.lexer.had_line_break_before_last();
 
@@ -140,6 +154,13 @@ impl<'a> State<'a> {
                     Keyword(keyword) if *keyword == Class => {
                         self.next_block_type = BlockType::Class;
                     }
+
+                    // If a try/catch/finally keyword appears, the next open brace will start a function block
+                    Keyword(keyword)
+                        if *keyword == Try || *keyword == Catch || *keyword == Finally =>
+                    {
+                        self.next_block_type = BlockType::TryCatchFinally;
+                    }
                     _ => {}
                 },
                 Token::AssignOp(_) => {
@@ -164,6 +185,25 @@ impl<'a> State<'a> {
                                 self.next_block_type = BlockType::ArrowFunction;
                             }
                         }
+                    }
+                }
+                // When an array opens, the next brace will be an object
+                // Matches [{ }]
+                Token::LBracket => {
+                    if let Some(t) = &self.previous_token {
+                        match t.token {
+                            Token::Colon => {
+                                self.next_block_type = BlockType::ObjectType;
+                            }
+                            _ => {
+                                self.next_block_type = BlockType::Object;
+                            }
+                        }
+                    }
+                }
+                Token::Comma => {
+                    if in_array_declaration {
+                        self.next_block_type = BlockType::Object;
                     }
                 }
                 Token::BinOp(op) => match op {
@@ -406,9 +446,15 @@ fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> 
             Token::LParen |
             // Matches things like require.resolve
             Token::Dot |
+            Token::Comma |
+            Token::LBrace |
+            Token::RBrace |
+            Token::LBracket |
+            Token::RBracket |
+            Token::Colon |
             Token::Word(Ident(_)) => {}
             // This could be a string literal
-            Token::Str { value, .. } => {
+            Token::Str { value, .. } if import.is_none() => {
                 import = Some(value.to_string());
             }
 
@@ -433,6 +479,8 @@ fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> 
                     return None;
                 }
             }
+            // If we found an import, definitely wait for the RParen so it gets added
+            _ if import.is_some() => {}
             // Anything else means this is not a require of a string literal
             _ => {
                 return None;
@@ -443,11 +491,13 @@ fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> 
     None
 }
 
-fn process_file((source_project, file_path): (&String, &String)) -> Option<ImportResult> {
+fn process_file(
+    (source_project, file_path): (&String, &String),
+) -> anyhow::Result<Option<ImportResult>> {
     let now = Instant::now();
     let cm = Arc::<SourceMap>::default()
         .load_file(Path::new(file_path))
-        .unwrap();
+        .map_err(|e| anyhow!("Unable to load {}: {}", file_path, e))?;
 
     let comments = SingleThreadedComments::default();
 
@@ -557,7 +607,7 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
 
     let code_is_not_ignored = |(specifier, pos): (String, BytePos)| {
         let line_with_code = cm.lookup_line(pos).expect("All code is on a line");
-        if lines_with_nx_ignore_comments.contains(&(line_with_code - 1)) {
+        if line_with_code > 0 && lines_with_nx_ignore_comments.contains(&(line_with_code - 1)) {
             None
         } else {
             Some(specifier)
@@ -573,16 +623,18 @@ fn process_file((source_project, file_path): (&String, &String)) -> Option<Impor
         .filter_map(code_is_not_ignored)
         .collect();
 
-    Some(ImportResult {
+    Ok(Some(ImportResult {
         file: file_path.clone(),
         source_project: source_project.clone(),
         static_import_expressions,
         dynamic_import_expressions,
-    })
+    }))
 }
 
 #[napi]
-fn find_imports(project_file_map: HashMap<String, Vec<String>>) -> Vec<ImportResult> {
+fn find_imports(
+    project_file_map: HashMap<String, Vec<String>>,
+) -> anyhow::Result<Vec<ImportResult>> {
     enable_logger();
 
     let files_to_process: Vec<(&String, &String)> = project_file_map
@@ -590,16 +642,36 @@ fn find_imports(project_file_map: HashMap<String, Vec<String>>) -> Vec<ImportRes
         .flat_map(|(project_name, files)| files.iter().map(move |file| (project_name, file)))
         .collect();
 
-    files_to_process
+    let (successes, errors): (Vec<_>, Vec<_>) = files_to_process
         .into_par_iter()
-        .filter_map(process_file)
+        .map(process_file)
+        .partition(|r| r.is_ok());
+
+    if !errors.is_empty() {
+        let errors = errors
+            .into_iter()
+            .map(|e| e.unwrap_err())
+            .map(|e| e.to_string())
+            .collect::<Vec<_>>()
+            .join("\n");
+        anyhow::bail!("{:?}", errors);
+    }
+
+    successes
+        .into_iter()
+        .filter_map(|r| r.transpose())
         .collect()
 }
 #[cfg(test)]
 mod find_imports {
     use super::*;
+    use crate::native::utils::glob::build_glob_set;
+    use crate::native::utils::path::Normalize;
+    use crate::native::walker::nx_walker;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use std::env;
+    use std::path::PathBuf;
     use swc_common::comments::NoopComments;
 
     #[test]
@@ -643,7 +715,8 @@ import 'a4'; import 'a5';
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
 
@@ -795,10 +868,11 @@ import 'a4'; import 'a5';
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone(), broken_file_path],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path);
+        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
 
         assert_eq!(
             result.static_import_expressions,
@@ -917,7 +991,8 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
 
@@ -954,6 +1029,20 @@ import('./dynamic-import.vue')
       }
       const a = 1;
       export class App {}
+
+
+      const a: [{ a: typeof import('static-import-in-array-type-in-object')}] = [];
+
+      const a = [{ a: import('dynamic-import-in-object-in-array')}];
+
+      const a = { a: [import('dynamic-import-in-array-in-object')]};
+
+      const routes = [
+        {},
+        {
+            lazy: () => import('dynamic-import-lazy-route')
+        }
+      ]
                 "#,
             )
             .unwrap();
@@ -963,10 +1052,11 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path);
+        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
 
         assert_eq!(
             result.static_import_expressions,
@@ -1020,10 +1110,11 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path);
+        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
 
         assert_eq!(
             result.static_import_expressions,
@@ -1058,10 +1149,11 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path);
+        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
 
         assert_eq!(
             result.static_import_expressions,
@@ -1105,10 +1197,11 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path);
+        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
 
         assert_eq!(
             result.static_import_expressions,
@@ -1149,7 +1242,8 @@ import('./dynamic-import.vue')
 
         let test_file_path = temp_dir.display().to_string() + "/test.ts";
 
-        let results = find_imports(HashMap::from([(String::from("a"), vec![test_file_path])]));
+        let results =
+            find_imports(HashMap::from([(String::from("a"), vec![test_file_path])])).unwrap();
 
         let result = results.get(0).unwrap();
 
@@ -1188,10 +1282,11 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path);
+        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
 
         assert_eq!(
             result.static_import_expressions,
@@ -1239,10 +1334,11 @@ import('./dynamic-import.vue')
         let results = find_imports(HashMap::from([(
             String::from("a"),
             vec![test_file_path.clone()],
-        )]));
+        )]))
+        .unwrap();
 
         let result = results.get(0).unwrap();
-        let ast_results: ImportResult = find_imports_with_ast(test_file_path);
+        let ast_results: ImportResult = find_imports_with_ast(test_file_path).unwrap();
 
         assert_eq!(
             result.static_import_expressions,
@@ -1254,8 +1350,60 @@ import('./dynamic-import.vue')
         );
     }
 
+    #[test]
+    #[ignore]
+    fn should_find_imports_properly_for_all_files_in_nx_repo() {
+        let current_dir = env::current_dir().unwrap();
+
+        let mut ancestors = current_dir.ancestors();
+
+        ancestors.next();
+        ancestors.next();
+        let root = PathBuf::from(ancestors.next().unwrap());
+
+        let files = nx_walker(root.clone(), move |receiver| {
+            let mut files = vec![];
+            let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
+            for (path, _) in receiver {
+                if glob.is_match(&path) {
+                    files.push(root.join(path).to_normalized_string());
+                }
+            }
+            files
+        });
+
+        let results: HashMap<_, _> =
+            find_imports(HashMap::from([(String::from("nx"), files.clone())]))
+                .unwrap()
+                .into_iter()
+                .map(|import_result| (import_result.file.clone(), import_result))
+                .collect();
+
+        let ast_results: HashMap<_, _> = files
+            .into_iter()
+            .filter_map(|p| find_imports_with_ast(p).ok())
+            .map(|import_result| (import_result.file.clone(), import_result))
+            .collect();
+
+        for (path, import_result) in results {
+            let ast_result = ast_results.get(&path);
+
+            if let Some(ast_result) = ast_result {
+                dbg!(&path, &import_result, &ast_result);
+                assert_eq!(
+                    import_result.static_import_expressions,
+                    ast_result.static_import_expressions
+                );
+                assert_eq!(
+                    import_result.dynamic_import_expressions,
+                    ast_result.dynamic_import_expressions
+                );
+            }
+        }
+    }
+
     // This function finds imports with the ast which verifies that the imports we find are the same as the ones typescript finds
-    fn find_imports_with_ast(file_path: String) -> ImportResult {
+    fn find_imports_with_ast(file_path: String) -> anyhow::Result<ImportResult> {
         let cm = Arc::<SourceMap>::default()
             .load_file(Path::new(file_path.as_str()))
             .unwrap();
@@ -1276,7 +1424,7 @@ import('./dynamic-import.vue')
             None,
             &mut errs,
         )
-        .unwrap();
+        .map_err(|_| anyhow::anyhow!("Failed to create ast"))?;
 
         let comments = NoopComments;
         let deps = swc_ecma_dep_graph::analyze_dependencies(&module, &comments);
@@ -1303,11 +1451,11 @@ import('./dynamic-import.vue')
                 static_import_expressions.push(dep.specifier.to_string());
             }
         }
-        ImportResult {
+        Ok(ImportResult {
             source_project: String::from("source"),
             file: file_path,
             static_import_expressions,
             dynamic_import_expressions,
-        }
+        })
     }
 }

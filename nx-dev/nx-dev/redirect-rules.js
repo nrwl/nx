@@ -394,6 +394,29 @@ const nxCloudUrls = {
   '/nx-cloud/private-cloud/standalone': '/nx-cloud/private-cloud/ami-setup',
   '/nx-cloud/private-cloud/kubernetes-setup':
     '/nx-cloud/private-cloud/get-started',
+  '/recipes/ci': '/nx-cloud/recipes',
+  '/recipes/ci/ci-setup': '/nx-cloud/recipes/set-up/ci-setup',
+  '/recipes/ci/monorepo-ci-azure': '/nx-cloud/recipes/set-up/monorepo-ci-azure',
+  '/recipes/ci/monorepo-ci-circle-ci':
+    '/nx-cloud/recipes/set-up/monorepo-ci-circle-ci',
+  '/recipes/ci/monorepo-ci-github-action':
+    '/nx-cloud/recipes/set-up/monorepo-ci-github-action',
+  '/recipes/ci/monorepo-ci-jenkins':
+    '/nx-cloud/recipes/set-up/monorepo-ci-jenkins',
+  '/recipes/ci/monorepo-ci-gitlab':
+    '/nx-cloud/recipes/set-up/monorepo-ci-gitlab',
+  '/recipes/ci/monorepo-ci-bitbucket-pipelines':
+    '/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines',
+  '/recipes/ci/ci-deployment': '/nx-cloud/recipes/other/ci-deployment',
+  '/nx-cloud/intro/what-is-nx-cloud': '/nx-cloud/intro/ci-with-nx',
+  '/nx-cloud/set-up': '/nx-cloud/recipes/set-up',
+  '/nx-cloud/set-up/record-commands': '/nx-cloud/recipes/other/record-commands',
+  '/nx-cloud/set-up/github':
+    '/nx-cloud/recipes/source-control-integration/github',
+  '/nx-cloud/set-up/bitbucket-cloud':
+    '/nx-cloud/recipes/source-control-integration/bitbucket-cloud',
+  '/nx-cloud/set-up/gitlab':
+    '/nx-cloud/recipes/source-control-integration/gitlab',
 };
 
 /**

@@ -472,10 +472,21 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/running-tasks/change-cache-location"
+                },
+                {
                   "name": "Running Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks", "use-task-executors"],
                   "file": "shared/recipes/running-tasks/running-custom-commands"
+                },
+                {
+                  "name": "Run Tasks in Parallel",
+                  "id": "run-tasks-in-parallel",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/run-tasks-in-parallel"
                 },
                 {
                   "name": "Run Root-Level NPM Scripts with Nx",
@@ -931,51 +942,21 @@
               ]
             },
             {
-              "name": "CI",
-              "id": "ci",
-              "description": "All recipes about how to use Nx to make your CI faster.",
+              "name": "Installation",
+              "id": "installation",
+              "description": "Installing Nx",
               "itemList": [
                 {
-                  "name": "CI Setup",
-                  "id": "ci-setup",
-                  "tags": ["distribute-task-execution"],
-                  "file": "shared/ci-overview"
+                  "name": "Install Nx in a Non-Javascript Repo",
+                  "id": "install-non-javascript",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/install-non-javascript"
                 },
                 {
-                  "name": "Prepare applications for deployment via CI",
-                  "id": "ci-deployment",
-                  "tags": ["docker", "deploy"],
-                  "file": "shared/recipes/ci-deployment"
-                },
-                {
-                  "name": "Setting up Azure Pipelines",
-                  "id": "monorepo-ci-azure",
-                  "file": "shared/monorepo-ci-azure"
-                },
-                {
-                  "name": "Setting up CircleCI",
-                  "id": "monorepo-ci-circle-ci",
-                  "file": "shared/monorepo-ci-circle-ci"
-                },
-                {
-                  "name": "Setting up GitHub Actions",
-                  "id": "monorepo-ci-github-actions",
-                  "file": "shared/monorepo-ci-github-actions"
-                },
-                {
-                  "name": "Setting up Jenkins",
-                  "id": "monorepo-ci-jenkins",
-                  "file": "shared/monorepo-ci-jenkins"
-                },
-                {
-                  "name": "Setting up GitLab",
-                  "id": "monorepo-ci-gitlab",
-                  "file": "shared/monorepo-ci-gitlab"
-                },
-                {
-                  "name": "Setting up Bitbucket",
-                  "id": "monorepo-ci-bitbucket-pipelines",
-                  "file": "shared/monorepo-ci-bitbucket-pipelines"
+                  "name": "Update Your Global Nx Installation",
+                  "id": "update-global-installation",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/update-global-installation"
                 }
               ]
             },
@@ -1389,6 +1370,11 @@
               "file": "shared/deprecated/workspace-lint"
             },
             {
+              "name": "workspace-layout",
+              "id": "workspace-layout",
+              "file": "shared/deprecated/workspace-layout"
+            },
+            {
               "name": "Workspace Generators",
               "id": "workspace-generators",
               "file": "shared/deprecated/workspace-generators"
@@ -1412,6 +1398,11 @@
               "name": "globalImplicitDependencies",
               "id": "global-implicit-dependencies",
               "file": "shared/deprecated/global-implicit-dependencies"
+            },
+            {
+              "name": "Angular Schematics and Builders",
+              "id": "angular-schematics-builders",
+              "file": "shared/deprecated/angular-schematics-builders"
             },
             {
               "name": "Storybook deprecated docs",
@@ -1473,7 +1464,7 @@
               "id": "nx-cloud-documentation",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/nx-cloud/intro/what-is-nx-cloud",
+              "path": "/nx-cloud/intro/ci-with-nx",
               "isExternal": true
             },
             {
@@ -1514,14 +1505,6 @@
               "file": "",
               "tags": ["cache-task-results"],
               "path": "/reference/project-configuration#inputs-&-namedinputs",
-              "isExternal": true
-            },
-            {
-              "name": "nx.json workspaceLayout property",
-              "id": "nxjson-workspaceLayout",
-              "file": "",
-              "tags": ["enforce-module-boundaries"],
-              "path": "/reference/nx-json#workspace-layout",
               "isExternal": true
             },
             {
@@ -1663,9 +1646,9 @@
           "description": "Learn about basic Nx Cloud knowledge.",
           "itemList": [
             {
-              "name": "What is Nx Cloud?",
-              "id": "what-is-nx-cloud",
-              "file": "nx-cloud/intro/nx-cloud"
+              "name": "CI with Nx",
+              "id": "ci-with-nx",
+              "file": "nx-cloud/intro/ci-with-nx"
             },
             {
               "name": "Nx Cloud Workflows",
@@ -1675,29 +1658,92 @@
           ]
         },
         {
-          "name": "Set Up",
-          "id": "set-up",
+          "name": "Recipes",
+          "id": "recipes",
           "description": "Learn how to set up Nx Cloud for your workspace.",
           "itemList": [
             {
-              "name": "Record Non-Nx Commands",
-              "id": "record-commands",
-              "file": "nx-cloud/set-up/record-commands"
+              "name": "Set Up CI",
+              "id": "set-up",
+              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "itemList": [
+                {
+                  "name": "CI Setup",
+                  "id": "ci-setup",
+                  "tags": ["distribute-task-execution"],
+                  "file": "shared/ci-overview"
+                },
+                {
+                  "name": "Setting up Azure Pipelines",
+                  "id": "monorepo-ci-azure",
+                  "file": "shared/monorepo-ci-azure"
+                },
+                {
+                  "name": "Setting up CircleCI",
+                  "id": "monorepo-ci-circle-ci",
+                  "file": "shared/monorepo-ci-circle-ci"
+                },
+                {
+                  "name": "Setting up GitHub Actions",
+                  "id": "monorepo-ci-github-actions",
+                  "file": "shared/monorepo-ci-github-actions"
+                },
+                {
+                  "name": "Setting up Jenkins",
+                  "id": "monorepo-ci-jenkins",
+                  "file": "shared/monorepo-ci-jenkins"
+                },
+                {
+                  "name": "Setting up GitLab",
+                  "id": "monorepo-ci-gitlab",
+                  "file": "shared/monorepo-ci-gitlab"
+                },
+                {
+                  "name": "Setting up Bitbucket",
+                  "id": "monorepo-ci-bitbucket-pipelines",
+                  "file": "shared/monorepo-ci-bitbucket-pipelines"
+                }
+              ]
             },
             {
-              "name": "Enable GitHub PR Integration",
-              "id": "github",
-              "file": "nx-cloud/set-up/github"
+              "name": "Source Control Integration",
+              "id": "source-control-integration",
+              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "itemList": [
+                {
+                  "name": "Enable GitHub PR Integration",
+                  "id": "github",
+                  "file": "nx-cloud/set-up/github"
+                },
+                {
+                  "name": "Enable Bitbucket Cloud PR Integration",
+                  "id": "bitbucket-cloud",
+                  "file": "nx-cloud/set-up/bitbucket-cloud"
+                },
+                {
+                  "name": "Enable GitLab MR Integration",
+                  "id": "gitlab",
+                  "file": "nx-cloud/set-up/gitlab"
+                }
+              ]
             },
             {
-              "name": "Enable Bitbucket Cloud PR Integration",
-              "id": "bitbucket-cloud",
-              "file": "nx-cloud/set-up/bitbucket-cloud"
-            },
-            {
-              "name": "Enable GitLab MR Integration",
-              "id": "gitlab",
-              "file": "nx-cloud/set-up/gitlab"
+              "name": "Other",
+              "id": "other",
+              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "itemList": [
+                {
+                  "name": "Record Non-Nx Commands",
+                  "id": "record-commands",
+                  "file": "nx-cloud/set-up/record-commands"
+                },
+                {
+                  "name": "Prepare applications for deployment via CI",
+                  "id": "ci-deployment",
+                  "tags": ["docker", "deploy"],
+                  "file": "shared/recipes/ci-deployment"
+                }
+              ]
             }
           ]
         },
@@ -1734,9 +1780,9 @@
           ]
         },
         {
-          "name": "Enterprise + On Prem",
+          "name": "Run Nx Cloud On-Premise",
           "id": "private-cloud",
-          "description": "Learn about Nx Cloud Enterprise + On-Prem.",
+          "description": "Learn about Running Nx Cloud On-Premise",
           "itemList": [
             {
               "name": "Get Started",

@@ -107,7 +107,7 @@ export function validateOutputs(outputs: string[]) {
   const invalidOutputs = new Set<string>();
 
   for (const output of outputs) {
-    if (!/^{[\s\S]+}/.test(output)) {
+    if (!/^!?{[\s\S]+}/.test(output)) {
       invalidOutputs.add(output);
     }
   }
@@ -125,14 +125,21 @@ export function transformLegacyOutputs(
       return output;
     }
 
-    const relativePath = isRelativePath(output)
+    let [isNegated, outputPath] = output.startsWith('!')
+      ? [true, output.substring(1)]
+      : [false, output];
+
+    const relativePath = isRelativePath(outputPath)
       ? output
-      : relative(projectRoot, output);
+      : relative(projectRoot, outputPath);
 
     const isWithinProject = !relativePath.startsWith('..');
-    return joinPathFragments(
-      isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
-      isWithinProject ? relativePath : output
+    return (
+      (isNegated ? '!' : '') +
+      joinPathFragments(
+        isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
+        isWithinProject ? relativePath : outputPath
+      )
     );
   });
 }

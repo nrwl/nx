@@ -40,7 +40,8 @@ export default async function* moduleFederationDevServer(
   options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
-  const nxBin = require.resolve('nx');
+  // Force Node to resolve to look for the nx binary that is inside node_modules
+  const nxBin = require.resolve('nx/bin/nx');
   const currIter = options.static
     ? fileServerExecutor(
         {
