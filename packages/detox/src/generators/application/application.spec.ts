@@ -5,7 +5,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from 'packages/linter/src/generators/utils/linter';
+import { Linter } from '@nx/eslint/src/generators/utils/linter';
 
 import detoxApplicationGenerator from './application';
 

@@ -19,9 +19,4 @@ export interface ExpoStartOptions {
   localhost?: boolean;
   tunnel?: boolean;
   offline?: boolean;
-
-  /**
-   * @deprecated TODO(v17) Add sync-deps to dependsOn in project.json for this target instead
-   */
-  sync?: boolean; // default is true
 }

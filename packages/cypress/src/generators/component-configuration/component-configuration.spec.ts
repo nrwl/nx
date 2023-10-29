@@ -100,6 +100,7 @@ describe('Cypress Component Configuration', () => {
     await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
+      jsx: true,
     });
     const projectConfig = readProjectConfiguration(tree, 'cool-lib');
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);
@@ -164,12 +165,11 @@ describe('Cypress Component Configuration', () => {
 
     const nxJson = readJson(tree, 'nx.json');
 
-    expect(
-      nxJson.tasksRunnerOptions.default.options.cacheableOperations
-    ).toEqual(expect.arrayContaining(['component-test']));
     expect(nxJson.targetDefaults['component-test']).toEqual({
       inputs: ['default', '^production'],
+      cache: true,
     });
+
     expect(nxJson.namedInputs.production).toEqual([
       '!{projectRoot}/cypress/**/*',
       '!{projectRoot}/**/*.cy.[jt]s?(x)',

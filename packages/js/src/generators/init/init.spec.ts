@@ -26,6 +26,7 @@ describe('js init generator', () => {
     const prettierignore = tree.read('.prettierignore', 'utf-8');
     expect(prettierignore).toMatch(/\n\/coverage/);
     expect(prettierignore).toMatch(/\n\/dist/);
+    expect(prettierignore).toMatch(/\n\/\.nx\/cache/);
   });
 
   it('should not overwrite existing .prettierrc and .prettierignore files', async () => {

@@ -11,7 +11,6 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateNxJson,
-  convertNxGenerator,
 } from '@nx/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -86,6 +85,7 @@ function addProjectFiles(
   addBaseCypressSetup(tree, {
     project: opts.project,
     directory: opts.directory,
+    jsx: opts.jsx,
   });
 
   generateFiles(
@@ -119,25 +119,17 @@ function addTargetToProject(
 
 function updateNxJsonConfiguration(tree: Tree) {
   const nxJson = readNxJson(tree);
-  nxJson.tasksRunnerOptions = {
-    ...nxJson?.tasksRunnerOptions,
-    default: {
-      ...nxJson?.tasksRunnerOptions?.default,
-      options: {
-        ...nxJson?.tasksRunnerOptions?.default?.options,
-        cacheableOperations: Array.from(
-          new Set([
-            ...(nxJson?.tasksRunnerOptions?.default?.options
-              ?.cacheableOperations ?? []),
-            'component-test',
-          ])
-        ),
-      },
-    },
-  };
+
+  const cacheableOperations: string[] | null =
+    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
+  if (cacheableOperations && !cacheableOperations.includes('component-test')) {
+    cacheableOperations.push('component-test');
+  }
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['component-test'] ??= {};
+  nxJson.targetDefaults['component-test'].cache ??= true;
 
   if (nxJson.namedInputs) {
-    nxJson.targetDefaults ??= {};
     const productionFileSet = nxJson.namedInputs?.production;
     if (productionFileSet) {
       nxJson.namedInputs.production = Array.from(
@@ -218,4 +210,3 @@ export function updateTsConfigForComponentTesting(
 }
 
 export default componentConfigurationGenerator;
-export const compat = convertNxGenerator(componentConfigurationGenerator);

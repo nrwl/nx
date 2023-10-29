@@ -1,5 +1,53 @@
 # Documentation
 
+## Structure of the Documentation
+
+When writing documentation, it is important to know the audience you are writing for and what kind of document you are writing. We try to follow the framework listed below, but there are always some exceptions since the documentation is always changing. This framework is valuable to keep in mind, but we also follow the principle that if a PR is better than the existing content on the site, we'll merge it in and follow up to make it better later if it doesn't perfectly match the standards.
+
+### Types of Documents
+
+We are generally following the [Diataxis](https://diataxis.fr) model where documents are divided into tutorials, concept guides, recipes and reference.
+
+- Tutorial - Focused on explaining a concept through step by step instructions.
+- Concept guide - Explains why something works the way it does or how to think about something.
+- Recipe - Focused directions to accomplish a specific task. Describes how to do something.
+- Reference - Lists what you can do with the tool (i.e. API docs).
+
+### Audiences
+
+We also have different audiences in mind when writing docs:
+
+👶 New user
+
+- They know their framework of choice
+- They have probably heard the term monorepo but don't really know what it is
+- They're smart and eager to learn
+
+👦 Intermediate User
+
+- They know how to create an Nx repo or add Nx to an existing repo
+- They have heard the terms integrated and package-based
+- They know what a project is and how to make one
+- They understand how to run a task and the basics of caching
+- They can launch the graph
+- They know that it is possible to enforce project boundaries
+
+👨‍🦳 Advanced User
+
+- They know everything about Nx except the specific piece of knowledge that is being taught by this document.
+
+### Outline
+
+- Getting Started - These documents assume a new user and are generally concept guides with a lot of links to other parts of the site. There are some elements of recipes mixed in, but those should be kept to a minimum.
+- Tutorials - These are tutorials written for a new user. After completing one of these tutorials, the user should have enough knowledge to be an intermediate user.
+- Core Features - These are primarily recipes with a little concept mixed in. These documents should be short and provide the basic information that people will want 80% of the time and link to anything more complex. A new user should be able to click through these documents and skim them to get a good understanding of what Nx does without getting overwhelmed with details.
+- Concepts - These are concept guides written for a new user. Any recipe content should be split into a recipe document and linked.
+- More Concepts (or other categories under Concepts) - These are concept guides written for an intermediate user.
+- Recipes - These are recipes written for an advanced user.
+- Nx with Your Favorite Tech - These are tutorials written for an intermediate user.
+- Benchmarks - Reference documents linking to external resources.
+- Reference - Reference documents.
+
 ## Markdown syntax available
 
 The default markdown syntax is supported when writing documentation.
@@ -89,6 +137,18 @@ For example:
 [This will highlight the first group.](#first)
 ```
 
+You can also statically highlight a set of lines (the user won't be able to change what is highlighted):
+
+````
+‎```javascript {% highlightLines=[2,3] %}
+‎ const code = "goes here";
+‎ This is highlighted
+‎ This is also highlighted
+‎ This is not highlighted
+‎ Neither is this
+‎```
+````
+
 #### Terminal command
 
 To display a terminal command, use:
@@ -160,16 +220,6 @@ We can display a special button inviting the reader to go to a VSCode marketplac
 
 ```markdown
 {% install-nx-console /%}
-```
-
-#### Nx Cloud section
-
-We can display Nx Cloud related content in the documentation with a visual cue.
-
-```markdown
-{% nx-cloud-section %}
-Your content goes here.
-{% /nx-cloud-section %}
 ```
 
 #### Side by side

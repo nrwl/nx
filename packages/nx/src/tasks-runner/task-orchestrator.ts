@@ -8,7 +8,6 @@ import { TaskStatus } from './tasks-runner';
 import {
   calculateReverseDeps,
   getExecutorForTask,
-  getOutputs,
   isCacheableTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
@@ -36,7 +35,15 @@ export class TaskOrchestrator {
   );
 
   // region internal state
+  private batchEnv = getEnvVariablesForBatchProcess(
+    this.options.skipNxCache,
+    this.options.captureStderr
+  );
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
+
+  private processedTasks = new Map<string, Promise<NodeJS.ProcessEnv>>();
+  private processedBatches = new Map<Batch, Promise<void>>();
+
   private completedTasks: {
     [id: string]: TaskStatus;
   } = {};
@@ -60,7 +67,8 @@ export class TaskOrchestrator {
 
   async run() {
     // initial scheduling
-    await this.tasksSchedule.scheduleNextTasks();
+    await this.scheduleNextTasks();
+
     performance.mark('task-execution:start');
 
     const threads = [];
@@ -123,6 +131,62 @@ export class TaskOrchestrator {
     );
   }
 
+  // region Processing Scheduled Tasks
+  private async processScheduledTask(
+    taskId: string
+  ): Promise<NodeJS.ProcessEnv> {
+    const task = this.taskGraph.tasks[taskId];
+    const taskSpecificEnv = getTaskSpecificEnv(task);
+
+    if (!task.hash) {
+      await hashTask(
+        this.hasher,
+        this.projectGraph,
+        this.taskGraph,
+        task,
+        taskSpecificEnv
+      );
+    }
+
+    this.options.lifeCycle.scheduleTask(task);
+
+    return taskSpecificEnv;
+  }
+
+  private async processScheduledBatch(batch: Batch) {
+    await Promise.all(
+      Object.values(batch.taskGraph.tasks).map(async (task) => {
+        if (!task.hash) {
+          await hashTask(
+            this.hasher,
+            this.projectGraph,
+            this.taskGraph,
+            task,
+            this.batchEnv
+          );
+        }
+        this.options.lifeCycle.scheduleTask(task);
+      })
+    );
+  }
+
+  private processAllScheduledTasks() {
+    const { scheduledTasks, scheduledBatches } =
+      this.tasksSchedule.getAllScheduledTasks();
+
+    for (const batch of scheduledBatches) {
+      this.processedBatches.set(batch, this.processScheduledBatch(batch));
+    }
+    for (const taskId of scheduledTasks) {
+      // Task is already handled or being handled
+      if (!this.processedTasks.has(taskId)) {
+        this.processedTasks.set(taskId, this.processScheduledTask(taskId));
+      }
+    }
+  }
+
+  // endregion Processing Scheduled Tasks
+
   // region Applying Cache
   private async applyCachedResults(tasks: Task[]): Promise<
     {
@@ -147,7 +211,7 @@ export class TaskOrchestrator {
     const cachedResult = await this.cache.get(task);
     if (!cachedResult || cachedResult.code !== 0) return null;
 
-    const outputs = getOutputs(this.projectGraph.nodes, task);
+    const outputs = task.outputs;
     const shouldCopyOutputsFromCache =
       !!outputs.length &&
       (await this.shouldCopyOutputsFromCache(outputs, task.hash));
@@ -182,11 +246,10 @@ export class TaskOrchestrator {
     const taskEntries = Object.entries(batch.taskGraph.tasks);
     const tasks = taskEntries.map(([, task]) => task);
 
-    const env = getEnvVariablesForBatchProcess(
-      this.options.skipNxCache,
-      this.options.captureStderr
-    );
-    await this.preRunSteps(tasks, { groupId }, env);
+    // Wait for batch to be processed
+    await this.processedBatches.get(batch);
+
+    await this.preRunSteps(tasks, { groupId });
 
     let results: {
       task: Task;
@@ -206,7 +269,7 @@ export class TaskOrchestrator {
           executorName: batch.executorName,
           taskGraph: unrunTaskGraph,
         },
-        env
+        this.batchEnv
       );
 
       results.push(...batchResults);
@@ -268,8 +331,10 @@ export class TaskOrchestrator {
     task: Task,
     groupId: number
   ) {
-    const taskSpecificEnv = getTaskSpecificEnv(task);
-    await this.preRunSteps([task], { groupId }, taskSpecificEnv);
+    // Wait for task to be processed
+    const taskSpecificEnv = await this.processedTasks.get(task.id);
+
+    await this.preRunSteps([task], { groupId });
 
     const pipeOutput = await this.pipeOutputCapture(task);
     // obtain metadata
@@ -367,23 +432,7 @@ export class TaskOrchestrator {
   // endregion Single Task
 
   // region Lifecycle
-  private async preRunSteps(
-    tasks: Task[],
-    metadata: TaskMetadata,
-    env: NodeJS.ProcessEnv
-  ) {
-    for (const task of tasks) {
-      if (!task.hash) {
-        await hashTask(
-          this.hasher,
-          this.projectGraph,
-          this.taskGraph,
-          task,
-          env
-        );
-      }
-    }
-
+  private async preRunSteps(tasks: Task[], metadata: TaskMetadata) {
     this.options.lifeCycle.startTasks(tasks, metadata);
   }
 
@@ -422,7 +471,7 @@ export class TaskOrchestrator {
               result.status === 'success'
                 ? 0
                 : 1,
-            outputs: getOutputs(this.projectGraph.nodes, result.task),
+            outputs: result.task.outputs,
           }))
           .filter(({ task, code }) => this.shouldCacheTaskResult(task, code))
           .filter(({ terminalOutput, outputs }) => terminalOutput || outputs)
@@ -465,11 +514,17 @@ export class TaskOrchestrator {
       })
     );
 
-    await this.tasksSchedule.scheduleNextTasks();
+    await this.scheduleNextTasks();
 
     // release blocked threads
     this.waitingForTasks.forEach((f) => f(null));
     this.waitingForTasks.length = 0;
+  }
+
+  private async scheduleNextTasks() {
+    await this.tasksSchedule.scheduleNextTasks();
+
+    this.processAllScheduledTasks();
   }
 
   private complete(
@@ -551,10 +606,7 @@ export class TaskOrchestrator {
 
   private async recordOutputsHash(task: Task) {
     if (this.daemon?.enabled()) {
-      return this.daemon.recordOutputsHash(
-        getOutputs(this.projectGraph.nodes, task),
-        task.hash
-      );
+      return this.daemon.recordOutputsHash(task.outputs, task.hash);
     }
   }
 

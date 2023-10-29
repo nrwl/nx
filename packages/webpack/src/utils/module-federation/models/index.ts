@@ -17,7 +17,7 @@ export type SharedWorkspaceLibraryConfig = {
   getReplacementPlugin: () => NormalModuleReplacementPlugin;
 };
 
-export type Remotes = string[] | [remoteName: string, remoteUrl: string][];
+export type Remotes = Array<string | [remoteName: string, remoteUrl: string]>;
 
 export interface SharedLibraryConfig {
   singleton?: boolean;

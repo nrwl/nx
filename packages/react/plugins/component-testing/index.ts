@@ -253,7 +253,9 @@ function buildTargetWebpack(
   if (options.webpackConfig) {
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
-      options.tsConfig
+      options.tsConfig.startsWith(context.root)
+        ? options.tsConfig
+        : join(context.root, options.tsConfig)
     );
   }
 

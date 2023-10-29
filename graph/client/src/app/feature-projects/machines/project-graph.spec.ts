@@ -114,6 +114,7 @@ const mockAppConfig: AppConfig = {
 describe('dep-graph machine', () => {
   beforeEach(() => {
     window.appConfig = mockAppConfig;
+    window.environment = 'release';
   });
   describe('initGraph', () => {
     it('should set projects, dependencies, and workspaceLayout', () => {

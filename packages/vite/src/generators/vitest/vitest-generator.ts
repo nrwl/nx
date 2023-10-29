@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -61,11 +60,10 @@ export async function vitestGenerator(
           includeVitest: true,
           inSourceTests: schema.inSourceTests,
           rollupOptionsExternal: [
-            `'react'`,
-            `'react-dom'`,
-            `'react/jsx-runtime'`,
+            "'react'",
+            "'react-dom'",
+            "'react/jsx-runtime'",
           ],
-          rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
           imports: [`import react from '@vitejs/plugin-react'`],
           plugins: ['react()'],
         },
@@ -220,4 +218,3 @@ function getCoverageProviderDependency(
 }
 
 export default vitestGenerator;
-export const vitestSchematic = convertNxGenerator(vitestGenerator);

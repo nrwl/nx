@@ -111,11 +111,7 @@ function setNxCloud(tree: Tree) {
   updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
     return {
       ...json,
-      tasksRunnerOptions: {
-        default: {
-          runner: 'nx-cloud',
-        },
-      },
+      nxCloudAccessToken: 'xxxx-xxx-xxxx',
     };
   });
 }

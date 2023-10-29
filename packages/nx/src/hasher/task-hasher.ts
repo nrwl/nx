@@ -459,7 +459,8 @@ class TaskHasherImpl {
     for (const d of taskGraph.dependencies[task.id]) {
       const childTask = taskGraph.tasks[d];
       const outputs = getOutputsForTargetAndConfiguration(
-        childTask,
+        childTask.target,
+        childTask.overrides,
         this.projectGraph.nodes[childTask.target.project]
       );
       const { getFilesForOutputs } =
@@ -476,12 +477,14 @@ class TaskHasherImpl {
         filteredFiles.map((p) => join(workspaceRoot, p))
       )) {
         hashes.push(hash);
-        hashDetails[normalizePath(relative(workspaceRoot, file))] = hash;
       }
 
+      let hash = hashArray(hashes);
       partialHashes.push({
-        value: hashArray(hashes),
-        details: hashDetails,
+        value: hash,
+        details: {
+          [`${dependentTasksOutputFiles}:${outputs.join(',')}`]: hash,
+        },
       });
       if (transitive) {
         partialHashes.push(
@@ -761,7 +764,7 @@ class TaskHasherImpl {
     return {
       value: projectConfig,
       details: {
-        ProjectConfiguration: projectConfig,
+        [`${projectName}:ProjectConfiguration`]: projectConfig,
       },
     };
   }
@@ -774,7 +777,7 @@ class TaskHasherImpl {
     return {
       value: tsConfig,
       details: {
-        TsConfig: tsConfig,
+        [`${projectName}:TsConfig`]: tsConfig,
       },
     };
   }
@@ -830,7 +833,7 @@ class TaskHasherImpl {
                 )
               );
             } else {
-              const value = `${stdout}${stderr}`.trim();
+              const value = hashArray([`${stdout}${stderr}`.trim()]);
               res({
                 details: { [`runtime:${runtime}`]: value },
                 value,

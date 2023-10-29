@@ -56,23 +56,20 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     tasks.push(await addJest(tree, options));
 
   if (options.component) {
-    tasks.push(
-      await componentGenerator(tree, {
-        name: options.fileName,
-        project: options.name,
-        flat: true,
-        skipTests:
-          options.unitTestRunner === 'none' ||
-          (options.unitTestRunner === 'vitest' &&
-            options.inSourceTests == true),
-        export: true,
-        routing: options.routing,
-        js: options.js,
-        pascalCaseFiles: options.pascalCaseFiles,
-        inSourceTests: options.inSourceTests,
-        skipFormat: true,
-      })
-    );
+    await componentGenerator(tree, {
+      name: options.name,
+      project: options.name,
+      flat: true,
+      skipTests:
+        options.unitTestRunner === 'none' ||
+        (options.unitTestRunner === 'vitest' && options.inSourceTests == true),
+      export: true,
+      routing: options.routing,
+      js: options.js,
+      pascalCaseFiles: options.pascalCaseFiles,
+      inSourceTests: options.inSourceTests,
+      skipFormat: true,
+    });
   }
 
   if (options.publishable || options.bundler !== 'none') {

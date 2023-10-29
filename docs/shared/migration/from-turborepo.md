@@ -80,6 +80,41 @@ Let's say you start with the following `turbo.json` file:
 
 Creating the equivalent configuration with Nx yields the following files:
 
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+```json {% fileName="/nx.json" %}
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "sharedGlobals": ["babel.config.json"],
+    "default": ["{projectRoot}/**/*", "sharedGlobals"]
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["default"],
+      "outputs": ["{projectRoot}/dist"],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": ["default"],
+      "cache": true
+    },
+    "e2e": {
+      "dependsOn": ["build"],
+      "inputs": ["default"],
+      "cache": true
+    }
+  },
+  "nxCloudAccessToken": "..."
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
 ```json {% fileName="/nx.json" %}
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
@@ -114,6 +149,9 @@ Creating the equivalent configuration with Nx yields the following files:
 }
 ```
 
+{% /tab %}
+{% /tabs %}
+
 ```jsonc {% fileName="/packages/docs/package.json" %}
 {
   "name": "docs",
@@ -132,12 +170,12 @@ Creating the equivalent configuration with Nx yields the following files:
 
 For each `turbo.json` configuration property, the equivalent Nx property is listed.
 
-| **Global Configuration:** |                                                                                                                                                           |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs)                                                                     |
-| `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs) as an [`env` input](/reference/project-configuration#env-variables) |
-| `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                            |
-| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/concepts/more-concepts/customizing-inputs)                                                                     |
+| **Global Configuration:** |                                                                                                                                                          |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/customizing-inputs)                                                                     |
+| `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/customizing-inputs) as an [`env` input](/reference/project-configuration#env-variables) |
+| `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                           |
+| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/customizing-inputs)                                                                     |
 
 | **Task Configuration:**         |                                                                                                   |
 | ------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -157,7 +195,7 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 |                             |                                                                                                                                                                                       |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `turbo run test lint build` | [`nx run-many -t test lint build`](/nx-api/nx/documents/run-many)                                                                                                                     |
-| `--cache-dir`               | Set in [`nx.json` under `tasksRunnerOptions.default.options.cacheDirectory`](/reference/nx-json#tasks-runner-options)                                                                 |
+| `--cache-dir`               | Set in [`nx.json` under `cacheDirectory`](/reference/nx-json#cache-directory)                                                                                                         |
 | `--concurrency`             | [`--parallel`](/nx-api/nx/documents/run-many#parallel)                                                                                                                                |
 | `--continue`                | [Use `--nx-bail`](/nx-api/nx/documents/run-many#nx-bail) with the inverse value                                                                                                       |
 | `--cwd`                     | Available when using the [`run-commands` executor](/nx-api/nx/executors/run-commands#cwd)                                                                                             |
@@ -166,7 +204,7 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `--filter`                  | Use [`-p admin-*` or `-p tag:api-*`](/nx-api/nx/documents/run-many#projects). Also see [`nx affected`](/nx-api/nx/documents/affected).                                                |
 | `--graph`                   | [Same syntax](/nx-api/nx/documents/run-many#graph) or [`nx graph`](/nx-api/nx/documents/dep-graph) for the entire graph                                                               |
 | `--force`                   | [`nx reset`](/nx-api/nx/documents/reset) and then run the command again                                                                                                               |
-| `--global-deps`             | Use [`inputs` in the `nx.json`](/concepts/more-concepts/customizing-inputs) or project configuration                                                                                  |
+| `--global-deps`             | Use [`inputs` in the `nx.json`](/recipes/running-tasks/customizing-inputs) or project configuration                                                                                   |
 | `--framework-inference`     | Nx knows if you're using a particular framework if you use an executor for that framework.                                                                                            |
 | `--ignore`                  | Use an [`.nxignore` file](/reference/nxignore) (or `.gitignore`)                                                                                                                      |
 | `--log-order`               | Use [`--output-style`](/nx-api/nx/documents/run-many#output-style)                                                                                                                    |

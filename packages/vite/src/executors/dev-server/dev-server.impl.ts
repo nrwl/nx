@@ -1,11 +1,11 @@
 import { ExecutorContext } from '@nx/devkit';
-import { createServer, InlineConfig, mergeConfig, ViteDevServer } from 'vite';
+import type { InlineConfig, ViteDevServer } from 'vite';
 
 import {
-  getViteSharedConfig,
   getNxTargetOptions,
-  getViteServerOptions,
   getViteBuildOptions,
+  getViteServerOptions,
+  getViteSharedConfig,
 } from '../../utils/options-utils';
 
 import { ViteDevServerExecutorOptions } from './schema';
@@ -16,6 +16,11 @@ export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
+  // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
+  const { mergeConfig, createServer } = await (Function(
+    'return import("vite")'
+  )() as Promise<typeof import('vite')>);
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
@@ -39,7 +44,7 @@ export async function* viteDevServerExecutor(
     getViteSharedConfig(mergedOptions, options.clearScreen, context),
     {
       build: getViteBuildOptions(mergedOptions, context),
-      server: getViteServerOptions(mergedOptions, context),
+      server: await getViteServerOptions(mergedOptions, context),
     }
   );
 

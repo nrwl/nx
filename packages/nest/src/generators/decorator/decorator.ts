@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NormalizedOptions,
@@ -8,25 +7,39 @@ import { normalizeOptions, runNestSchematic } from '../utils';
 
 export type DecoratorGeneratorOptions = NestGeneratorWithLanguageOption;
 
-export function decoratorGenerator(
+export async function decoratorGenerator(
+  tree: Tree,
+  rawOptions: DecoratorGeneratorOptions
+) {
+  await decoratorGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function decoratorGeneratorInternal(
   tree: Tree,
   rawOptions: DecoratorGeneratorOptions
 ): Promise<any> {
-  const options = normalizeDecoratorOptions(tree, rawOptions);
+  const options = await normalizeDecoratorOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'decorator', options);
 }
 
 export default decoratorGenerator;
 
-export const decoratorSchematic = convertNxGenerator(decoratorGenerator);
-
-function normalizeDecoratorOptions(
+async function normalizeDecoratorOptions(
   tree: Tree,
   options: DecoratorGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'decorator',
+    '@nx/nest:decorator',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
   };
 }

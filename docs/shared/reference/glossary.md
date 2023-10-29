@@ -32,7 +32,7 @@ When the [cache inputs](#cache-inputs) for a [task](#task) match an existing ent
 
 Everything that might change the output of a [task](#task). This may include source code, task options, environment variables and other settings determined at run time. These values are combined as a hash to serve as a key for an entry in the [cache](#cache).
 
-> See: [Customizing Inputs and Named Inputs](/concepts/more-concepts/customizing-inputs)
+> See: [Customizing Inputs and Named Inputs](/recipes/running-tasks/customizing-inputs)
 
 ### Cache Miss
 
@@ -120,7 +120,7 @@ A [project](#project) that is located in a sub-folder of another project. This w
 
 A service that provides [distributed caching](#distributed-cache) and [distributed task execution](#distributed-task-execution).
 
-> See: [What is Nx Cloud?](/nx-cloud/intro/what-is-nx-cloud)
+> See: [CI with Nx](/nx-cloud/intro/ci-with-nx)
 
 ### Package
 

@@ -58,7 +58,13 @@ function handleArrayRemote(
     ? `${remoteName.replace(/-/g, '_')}@`
     : '';
 
-  return `${globalPrefix}${baseRemote}/remoteEntry.${remoteEntryExt}`;
+  // if the remote is defined with anything other than http then we assume it's a promise based remote
+  // In that case we should use what the user provides as the remote location
+  if (remoteLocation.startsWith('http')) {
+    return `${globalPrefix}${baseRemote}/remoteEntry.${remoteEntryExt}`;
+  } else {
+    return remoteLocation;
+  }
 }
 
 // Helper function to deal with remotes that are strings

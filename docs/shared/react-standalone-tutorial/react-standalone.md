@@ -41,10 +41,10 @@ title="Tutorial: Standalone React Application"
 Create a new standalone React application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myreactapp --preset=react-standalone" path="~" %}
-? Bundler to be used to build the application …
-Vite    [ https://vitejs.dev/ ]
-Webpack [ https://webpack.js.org/ ]
-Rspack  [ https://www.rspack.dev/ ]
+✔ Which bundler would you like to use? · vite
+✔ Test runner to use for end to end (E2E) tests · cypress
+✔ Default stylesheet format · css
+✔ Enable distributed caching to make your CI faster · Yes
 ```
 
 You can choose any bundler you like. In this tutorial we're going to use Vite. The above command generates the following structure:
@@ -225,7 +225,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can configure the `cache` properties in the targets under `targetDefaults` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
 
 ## Nx Plugins? Why?
 
@@ -237,7 +237,7 @@ Nx understands and supports both approaches, allowing you to define targets eith
 
 So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
 
-[visit our "Why Nx" page](/getting-started/why-nx) for more deails.
+[Visit our "Why Nx" page](/getting-started/why-nx) for more details.
 
 ## Creating New Components
 
@@ -284,10 +284,11 @@ More info can be found in [the integrate with editors article](/core-features/in
 
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
-```{% command="npx nx g @nx/react:component hello-world --dry-run" path="myreactapp" %}
+```{% command="npx nx g @nx/react:component --directory=src/app/hello-world hello-world --dry-run" path="myreactapp" %}
 >  NX  Generating @nx/react:component
 
 ✔ Should this component be exported in the project? (y/N) · false
+✔ Where should the component be generated? · src/app/hello-world/hello-world.tsx
 CREATE src/app/hello-world/hello-world.module.css
 CREATE src/app/hello-world/hello-world.spec.tsx
 CREATE src/app/hello-world/hello-world.tsx
@@ -453,9 +454,9 @@ All libraries that we generate automatically have aliases created in the root-le
   "compilerOptions": {
     ...
     "paths": {
-      "products": ["modules/products/src/index.ts"],
-      "orders": ["modules/orders/src/index.ts"],
-      "shared-ui": ["modules/shared/ui/src/index.ts"]
+      "@myreactapp/orders": ["modules/orders/src/index.ts"],
+      "@myreactapp/products": ["modules/products/src/index.ts"],
+      "@myreactapp/ui": ["modules/shared/ui/src/index.ts"]
     },
     ...
   },
@@ -465,7 +466,7 @@ All libraries that we generate automatically have aliases created in the root-le
 Hence we can easily import them into other libraries and our React application. As an example, let's create and expose a `ProductList` component from our `modules/products` library. Either create it by hand or run
 
 ```shell
-nx g @nx/react:component product-list --project=products
+nx g @nx/react:component product-list --directory=modules/products/src/lib/product-list
 ```
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main React application.
@@ -527,7 +528,7 @@ Then we can import the `ProductList` component into our `app.tsx` and render it 
 import { Route, Routes } from 'react-router-dom';
 
 // importing the component from the library
-import { ProductList } from 'products';
+import { ProductList } from '@myreactapp/products';
 
 function Home() {
   return <h1>Home</h1>;
@@ -558,8 +559,8 @@ In the end, your `app.tsx` should look similar to this:
 
 ```tsx {% fileName="src/app/app.tsx" %}
 import { Route, Routes } from 'react-router-dom';
-import { ProductList } from 'products';
-import { OrderList } from 'orders';
+import { ProductList } from '@myreactapp/products';
+import { OrderList } from '@myreactapp/orders';
 
 function Home() {
   return <h1>Home</h1>;
@@ -612,7 +613,7 @@ You should be able to see something similar to the following in your browser.
       }
     },
     {
-      "name": "shared-ui",
+      "name": "ui",
       "type": "lib",
       "data": {
         "tags": []
@@ -640,7 +641,7 @@ You should be able to see something similar to the following in your browser.
       { "source": "myreactapp", "target": "products", "type": "static" }
     ],
     "e2e": [{ "source": "e2e", "target": "myreactapp", "type": "implicit" }],
-    "shared-ui": [],
+    "ui": [],
     "orders": [],
     "products": []
   },
@@ -653,9 +654,9 @@ You should be able to see something similar to the following in your browser.
 
 {% /graph %}
 
-Notice how `shared-ui` is not yet connected to anything because we didn't import it in any of our projects.
+Notice how `ui` is not yet connected to anything because we didn't import it in any of our projects.
 
-Exercise for you: change the codebase such that `shared-ui` is used by `orders` and `products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
+Exercise for you: change the codebase such that `ui` is used by `orders` and `products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
 
 ## Imposing Constraints with Module Boundary Rules
 
@@ -663,9 +664,9 @@ Exercise for you: change the codebase such that `shared-ui` is used by `orders` 
 
 Once you modularize your codebase you want to make sure that the modules are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
-- we might want to allow `orders` to import from `shared-ui` but not the other way around
+- we might want to allow `orders` to import from `ui` but not the other way around
 - we might want to allow `orders` to import from `products` but not the other way around
-- we might want to allow all libraries to import the `shared-ui` components, but not the other way around
+- we might want to allow all libraries to import the `ui` components, but not the other way around
 
 When building these kinds of constraints you usually have two dimensions:
 
@@ -690,7 +691,7 @@ Then go to the `project.json` of your `products` library and assign the tags `ty
 }
 ```
 
-Finally, go to the `project.json` of the `shared-ui` library and assign the tags `type:ui` and `scope:shared` to it.
+Finally, go to the `project.json` of the `ui` library and assign the tags `type:ui` and `scope:shared` to it.
 
 ```json {% fileName="modules/shared/ui/project.json" %}
 {
@@ -767,7 +768,7 @@ To test it, go to your `modules/products/src/lib/product-list/product-list.tsx` 
 import styles from './product-list.module.css';
 
 // This import is not allowed 👇
-import { OrderList } from 'orders';
+import { OrderList } from '@myreactapp/orders';
 
 /* eslint-disable-next-line */
 export interface ProductListProps {}
@@ -789,7 +790,7 @@ If you lint your workspace you'll get an error now:
 ```{% command="nx run-many -t lint" %}
     ✔  nx run myreactapp:lint  [existing outputs match the cache, left as is]
     ✔  nx run e2e:lint  [existing outputs match the cache, left as is]
-    ✔  nx run shared-ui:lint (1s)
+    ✔  nx run ui:lint (1s)
 
     ✖  nx run products:lint
        Linting "products"...

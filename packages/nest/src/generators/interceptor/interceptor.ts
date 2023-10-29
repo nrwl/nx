@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -14,25 +13,39 @@ import {
 export type InterceptorGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;
 
-export function interceptorGenerator(
+export async function interceptorGenerator(
+  tree: Tree,
+  rawOptions: InterceptorGeneratorOptions
+) {
+  await interceptorGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function interceptorGeneratorInternal(
   tree: Tree,
   rawOptions: InterceptorGeneratorOptions
 ): Promise<any> {
-  const options = normalizeInterceptorOptions(tree, rawOptions);
+  const options = await normalizeInterceptorOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'interceptor', options);
 }
 
 export default interceptorGenerator;
 
-export const interceptorSchematic = convertNxGenerator(interceptorGenerator);
-
-function normalizeInterceptorOptions(
+async function normalizeInterceptorOptions(
   tree: Tree,
   options: InterceptorGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'interceptor',
+    '@nx/nest:interceptor',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
   };

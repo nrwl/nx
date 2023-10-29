@@ -27,11 +27,12 @@ describe('convertPipeToScam', () => {
       fileName: 'example.pipe',
       filePath: 'apps/app1/src/app/example/example.pipe.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -84,11 +85,12 @@ describe('convertPipeToScam', () => {
       fileName: 'example.pipe',
       filePath: 'apps/app1/src/app/example/example.pipe.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: false,
       inlineScam: false,
       path: 'apps/app1/src/app',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -133,11 +135,12 @@ describe('convertPipeToScam', () => {
       fileName: 'example.pipe',
       filePath: 'apps/app1/src/app/example.pipe.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: true,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -187,11 +190,12 @@ describe('convertPipeToScam', () => {
       fileName: 'example.pipe',
       filePath: 'apps/app1/src/app/example.pipe.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: false,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -237,11 +241,12 @@ describe('convertPipeToScam', () => {
       fileName: 'example.pipe',
       filePath: 'apps/app1/src/app/random/example/example.pipe.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT
@@ -295,11 +300,12 @@ describe('convertPipeToScam', () => {
       fileName: 'example.pipe',
       filePath: 'apps/app1/src/app/random/example.pipe.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: true,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExamplePipe',
     });
 
     // ASSERT

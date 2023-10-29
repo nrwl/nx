@@ -1,4 +1,5 @@
 import { dirname } from 'path';
+import { logger } from '@nx/devkit';
 
 /*
  * Babel preset to provide TypeScript support and module/nomodule for Nx.
@@ -10,6 +11,9 @@ export interface NxWebBabelPresetOptions {
     decoratorsBeforeExport?: boolean;
     legacy?: boolean;
   };
+  loose?: boolean;
+  /** @deprecated Use `loose` option instead of `classProperties.loose`
+   */
   classProperties?: {
     loose?: boolean;
   };
@@ -30,9 +34,15 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
     (caller) => caller?.emitDecoratorMetadata ?? true
   );
 
-  // Determine settings  for `@babel/plugin-proposal-class-properties`,
+  // Determine settings  for `@babel//babel-plugin-transform-class-properties`,
   // so that we can sync the `loose` option with `@babel/preset-env`.
-  const classProperties = options.classProperties ?? { loose: true };
+  // TODO(v18): Remove classProperties since it's no longer needed, now that the class props transform is in preset-env.
+  const loose = options.classProperties?.loose ?? options.loose ?? true;
+  if (options.classProperties) {
+    logger.warn(
+      `Use =\`loose\` option instead of \`classProperties.loose\`. The \`classProperties\` option will be removed in Nx 18`
+    );
+  }
 
   return {
     presets: [
@@ -47,7 +57,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
           : {
               // Allow importing core-js in entrypoint and use browserslist to select polyfills.
               useBuiltIns: options.useBuiltIns ?? 'entry',
-              corejs: 3,
+              corejs: options.useBuiltIns !== false ? 3 : null,
               // Do not transform modules to CJS
               modules: false,
               targets: isModern ? { esmodules: 'intersect' } : undefined,
@@ -55,7 +65,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
               // Exclude transforms that make all code slower
               exclude: ['transform-typeof-symbol'],
               // This must match the setting for `@babel/plugin-proposal-class-properties`
-              loose: classProperties.loose,
+              loose,
             },
       ],
       [
@@ -89,10 +99,7 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
         require.resolve('@babel/plugin-proposal-decorators'),
         options.decorators ?? { legacy: true },
       ],
-      [
-        require.resolve('@babel/plugin-proposal-class-properties'),
-        classProperties,
-      ],
+      [require.resolve('@babel/plugin-transform-class-properties'), { loose }],
     ].filter(Boolean),
     overrides: [
       // Convert `const enum` to `enum`. The former cannot be supported by babel

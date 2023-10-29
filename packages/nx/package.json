@@ -23,7 +23,8 @@
     "CLI"
   ],
   "bin": {
-    "nx": "./bin/nx.js"
+    "nx": "./bin/nx.js",
+    "nx-cloud": "./bin/nx-cloud.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -32,11 +33,10 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@parcel/watcher": "2.0.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
     "@zkochan/js-yaml": "0.0.6",
-    "axios": "^1.0.0",
+    "axios": "^1.5.1",
     "chalk": "^4.1.0",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
@@ -100,6 +100,7 @@
       "@nx/jest",
       "@nrwl/jest",
       "@nx/linter",
+      "@nx/eslint",
       "@nrwl/linter",
       "@nx/workspace",
       "@nrwl/workspace",
@@ -139,6 +140,7 @@
       "@nrwl/tao",
       "@nx/vite",
       "@nrwl/vite",
+      "@nx/vue",
       "@nx/web",
       "@nrwl/web",
       "@nx/webpack",
@@ -153,6 +155,7 @@
       }
     ]
   },
+  "generators": "./generators.json",
   "executors": "./executors.json",
   "builders": "./executors.json",
   "publishConfig": {

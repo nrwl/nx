@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -67,6 +66,3 @@ export async function expoApplicationGeneratorInternal(
 }
 
 export default expoApplicationGenerator;
-export const expoApplicationSchematic = convertNxGenerator(
-  expoApplicationGenerator
-);

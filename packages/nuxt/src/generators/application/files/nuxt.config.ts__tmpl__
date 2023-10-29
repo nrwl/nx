@@ -1,0 +1,9 @@
+import { NxNuxtModule } from '@nx/nuxt';
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  modules: [NxNuxtModule],
+  srcDir: 'src',
+  devtools: { enabled: true },
+  css: ['~/assets/css/styles.css'],
+});

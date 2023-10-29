@@ -6,7 +6,7 @@ import {
   toJS,
   Tree,
 } from '@nx/devkit';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
@@ -38,7 +38,9 @@ export async function applicationGenerator(
     })
   );
 
-  extractTsConfigBase(tree);
+  if (!options.rootProject) {
+    extractTsConfigBase(tree);
+  }
 
   createApplicationFiles(tree, options);
 
@@ -61,7 +63,12 @@ export async function applicationGenerator(
   tasks.push(await addVite(tree, options));
 
   if (options.unitTestRunner === 'jest')
-    tasks.push(await addJest(tree, options));
+    tasks.push(
+      await addJest(tree, {
+        name: options.name,
+        projectRoot: options.appProjectRoot,
+      })
+    );
 
   tasks.push(await addE2e(tree, options));
 

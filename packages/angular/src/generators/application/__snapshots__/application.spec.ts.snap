@@ -272,7 +272,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       },
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "apps/my-dir/my-app/**/*.ts",
@@ -350,7 +350,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       },
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "apps/my-dir/my-app-e2e/**/*.{js,ts}",
@@ -369,6 +369,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -383,9 +384,12 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   },
   "extends": "../../../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -512,7 +516,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       },
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "apps/my-app/**/*.ts",
@@ -590,7 +594,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       },
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "apps/my-app-e2e/**/*.{js,ts}",
@@ -609,6 +613,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -623,9 +628,12 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   },
   "extends": "../../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -874,6 +882,7 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -888,9 +897,12 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
   },
   "extends": "../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -963,7 +975,7 @@ exports[`app nested should create project configs 1`] = `
       },
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "my-dir/my-app/**/*.ts",
@@ -1041,7 +1053,7 @@ exports[`app nested should create project configs 2`] = `
       },
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "my-dir/my-app-e2e/**/*.{js,ts}",
@@ -1121,7 +1133,7 @@ exports[`app not nested should create project configs 1`] = `
       },
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "my-app/**/*.ts",
@@ -1199,7 +1211,7 @@ exports[`app not nested should create project configs 2`] = `
       },
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "options": {
         "lintFilePatterns": [
           "my-app-e2e/**/*.{js,ts}",
@@ -1218,6 +1230,7 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -1232,9 +1245,12 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
   },
   "extends": "../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;

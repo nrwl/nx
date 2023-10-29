@@ -27,11 +27,12 @@ describe('convertDirectiveToScam', () => {
       fileName: 'example.directive',
       filePath: 'apps/app1/src/app/example/example.directive.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -82,11 +83,12 @@ describe('convertDirectiveToScam', () => {
       fileName: 'example.directive',
       filePath: 'apps/app1/src/app/example/example.directive.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: false,
       inlineScam: false,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -131,11 +133,12 @@ describe('convertDirectiveToScam', () => {
       fileName: 'example.directive',
       filePath: 'apps/app1/src/app/example.directive.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: true,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -186,11 +189,12 @@ describe('convertDirectiveToScam', () => {
       fileName: 'example.directive',
       filePath: 'apps/app1/src/app/example.directive.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: false,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -236,11 +240,12 @@ describe('convertDirectiveToScam', () => {
       fileName: 'example.directive',
       filePath: 'apps/app1/src/app/random/example/example.directive.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT
@@ -292,11 +297,12 @@ describe('convertDirectiveToScam', () => {
       fileName: 'example.directive',
       filePath: 'apps/app1/src/app/random/example.directive.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: true,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleDirective',
     });
 
     // ASSERT

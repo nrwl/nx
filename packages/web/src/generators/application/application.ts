@@ -1,13 +1,11 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   getPackageManagerCommand,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -23,11 +21,12 @@ import {
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 import { join } from 'path';
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -199,9 +198,8 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   await addProject(host, options);
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
+    const { viteConfigurationGenerator, createOrEditViteConfig } =
+      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -221,13 +219,22 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(viteTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: options.unitTestRunner === 'vitest',
+        inSourceTests: options.inSourceTests,
+      },
+      false
+    );
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
-      '@nx/vite',
-      nxVersion
-    );
+    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
@@ -236,6 +243,16 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(vitestTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: true,
+        inSourceTests: options.inSourceTests,
+      },
+      true
+    );
   }
 
   if (
@@ -248,7 +265,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+    const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -264,16 +281,22 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.e2eTestRunner === 'cypress') {
-    const { cypressProjectGenerator } = ensurePackage<
+    const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
-    const cypressTask = await cypressProjectGenerator(host, {
+    addProjectConfiguration(host, options.e2eProjectName, {
+      root: options.e2eProjectRoot,
+      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+      projectType: 'application',
+      targets: {},
+      tags: [],
+      implicitDependencies: [options.projectName],
+    });
+    const cypressTask = await configurationGenerator(host, {
       ...options,
-      name: options.e2eProjectName,
-      directory: options.e2eProjectRoot,
-      // the name and root are already normalized, instruct the generator to use them as is
-      projectNameAndRootFormat: 'as-provided',
-      project: options.projectName,
+      project: options.e2eProjectName,
+      devServerTarget: `${options.projectName}:serve`,
+      directory: 'src',
       skipFormat: true,
     });
     tasks.push(cypressTask);
@@ -281,7 +304,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
       typeof import('@nx/playwright')
     >('@nx/playwright', nxVersion);
-
     addProjectConfiguration(host, options.e2eProjectName, {
       root: options.e2eProjectRoot,
       sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
@@ -364,17 +386,16 @@ async function normalizeOptions(
     callingGenerator: '@nx/web:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
 
-  const { npmScope } = getWorkspaceLayout(host);
+  const npmScope = getNpmScope(host);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  if (options.bundler === 'vite' && !options.unitTestRunner) {
+  if (options.bundler === 'vite' && options.unitTestRunner !== 'none') {
     options.unitTestRunner = 'vitest';
   }
 
@@ -398,4 +419,3 @@ async function normalizeOptions(
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

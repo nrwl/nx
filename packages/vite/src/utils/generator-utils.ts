@@ -483,7 +483,6 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  rollupOptionsExternalString?: string;
   rollupOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
@@ -806,7 +805,7 @@ function handleViteConfigFileExists(
     cache: {
       dir: `${offsetFromRoot}node_modules/.vitest`,
     },
-    environment: 'jsdom',
+    environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   };
 

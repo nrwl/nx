@@ -79,6 +79,14 @@ Type: `string`
 
 Base of the current branch (usually main)
 
+### batch
+
+Type: `boolean`
+
+Default: `false`
+
+Run task(s) in batches for executors which support batches
+
 ### configuration
 
 Type: `string`

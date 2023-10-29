@@ -12,7 +12,6 @@ import {
   reactDomVersion,
   reactVersion,
   sassVersion,
-  stylusVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 
@@ -33,9 +32,6 @@ export function installCommonDependencies(
         break;
       case 'less':
         devDependencies['less'] = lessVersion;
-        break;
-      case 'styl': // @TODO(17): deprecated, going to be removed in Nx 17
-        devDependencies['stylus'] = stylusVersion;
         break;
     }
   }

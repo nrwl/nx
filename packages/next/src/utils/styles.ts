@@ -2,10 +2,9 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 
-import { lessVersion, stylusVersion } from '@nx/react/src/utils/versions';
+import { lessVersion } from '@nx/react/src/utils/versions';
 import {
   cssInJsDependenciesBabel,
   cssInJsDependenciesSwc,
@@ -15,7 +14,6 @@ import {
   emotionServerVersion,
   lessLoader,
   sassVersion,
-  stylusLoader,
 } from './versions';
 
 const nextSpecificStyleDependenciesCommon = {
@@ -33,13 +31,6 @@ const nextSpecificStyleDependenciesCommon = {
       less: lessVersion,
       'less-loader': lessLoader,
     },
-  },
-  styl: {
-    dependencies: {
-      stylus: stylusVersion,
-      'stylus-loader': stylusLoader,
-    },
-    devDependencies: {},
   },
 };
 
@@ -88,25 +79,11 @@ export function addStyleDependencies(
     ? nextSpecificStyleDependenciesSwc[options.style]
     : nextSpecificStyleDependenciesBabel[options.style];
 
-  if (!extraDependencies) return () => {};
-
-  const installTask = addDependenciesToPackageJson(
-    host,
-    extraDependencies.dependencies,
-    extraDependencies.devDependencies
-  );
-
-  // @zeit/next-less & @zeit/next-stylus internal configuration is working only
-  // for specific CSS loader version, causing PNPM resolution to fail.
-  if (
-    host.exists('pnpm-lock.yaml') &&
-    (options.style === 'less' || options.style === 'styl')
-  ) {
-    updateJson(host, `package.json`, (json) => {
-      json.resolutions = { ...json.resolutions, 'css-loader': '1.0.1' };
-      return json;
-    });
-  }
-
-  return installTask;
+  return extraDependencies
+    ? addDependenciesToPackageJson(
+        host,
+        extraDependencies.dependencies,
+        extraDependencies.devDependencies
+      )
+    : () => {};
 }

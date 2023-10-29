@@ -62,7 +62,7 @@ Create a new Angular monorepo with the following command:
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
-Let's name the initial application `angular-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
+Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
 
 ```
 └─ angular-monorepo
@@ -150,7 +150,7 @@ Each target contains a configuration object that tells Nx how to run that target
   ...
   "targets": {
     "serve": {
-      "executor": "@nx/vite:dev-server",
+      "executor": "@angular-devkit/build-angular:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "angular-store:build"
@@ -173,7 +173,7 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the Angular app using Vite.
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
 Learn more about how to [run tasks with Nx](/core-features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.
@@ -404,7 +404,7 @@ export * from './lib/product-list/product-list.component';
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Configure it in the `app.config.ts`.
 
-```ts {% fileName="apps/angular-store/src/app/app.config.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.config.ts" highlightLines=[2,3,4,5,6,9] %}
 import { ApplicationConfig } from '@angular/core';
 import {
   provideRouter,
@@ -425,7 +425,7 @@ And in `app.component.html`:
 
 Then we can add the `ProductListComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
 
-```ts {% fileName="apps/angular-store/src/app/app.routes.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[10,11,12,13,14] %}
 import { Route } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
@@ -454,7 +454,7 @@ Let's apply the same for our `orders` library.
 
 In the end, your `app.routes.ts` should look similar to this:
 
-```ts {% fileName="apps/angular-store/src/app/app.routes.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[15,16,17,18,19] %}
 import { Route } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
@@ -479,7 +479,7 @@ export const appRoutes: Route[] = [
 
 Let's also show products in the `inventory` app.
 
-```ts {% fileName="apps/inventory/src/app/app.component.ts" %}
+```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,6] %}
 import { Component } from '@angular/core';
 import { ProductListComponent } from '@angular-monorepo/products';
 
@@ -921,7 +921,7 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 
 To test it, go to your `libs/products/src/lib/product-list/product-list.component.ts` file and import the `OrderListComponent` from the `orders` project:
 
-```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" %}
+```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" highlightLines=[4,5] %}
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 

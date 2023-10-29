@@ -6,22 +6,24 @@ import {
   runExecutor,
 } from '@nx/devkit';
 import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
+import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { WebDevServerOptions } from '@nx/webpack/src/executors/dev-server/schema';
-import { join } from 'path';
+import {
+  getModuleFederationConfig,
+  getRemotes,
+} from '@nx/webpack/src/utils/module-federation';
 import {
   combineAsyncIterables,
   createAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
-import * as chalk from 'chalk';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { fork } from 'child_process';
-import { existsSync } from 'fs';
-import { registerTsProject } from '@nx/js/src/internal';
 
 type ModuleFederationDevServerOptions = WebDevServerOptions & {
-  devRemotes?: string | string[];
+  devRemotes?: string[];
   skipRemotes?: string[];
+  static?: boolean;
+  isInitialHost?: boolean;
 };
 
 function getBuildOptions(buildTarget: string, context: ExecutorContext) {
@@ -34,161 +36,119 @@ function getBuildOptions(buildTarget: string, context: ExecutorContext) {
   };
 }
 
-function getModuleFederationConfig(
-  tsconfigPath: string,
-  workspaceRoot: string,
-  projectRoot: string
-) {
-  const moduleFederationConfigPathJS = join(
-    workspaceRoot,
-    projectRoot,
-    'module-federation.config.js'
-  );
-
-  const moduleFederationConfigPathTS = join(
-    workspaceRoot,
-    projectRoot,
-    'module-federation.config.ts'
-  );
-
-  let moduleFederationConfigPath = moduleFederationConfigPathJS;
-
-  // create a no-op so this can be called with issue
-  let cleanupTranspiler = () => {};
-  if (existsSync(moduleFederationConfigPathTS)) {
-    cleanupTranspiler = registerTsProject(join(workspaceRoot, tsconfigPath));
-    moduleFederationConfigPath = moduleFederationConfigPathTS;
-  }
-
-  try {
-    const config = require(moduleFederationConfigPath);
-    cleanupTranspiler();
-
-    return config.default || config;
-  } catch {
-    throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/concepts/more-concepts/faster-builds-with-module-federation`
-    );
-  }
-}
-
 export default async function* moduleFederationDevServer(
   options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
-  const nxBin = require.resolve('nx');
-  const currIter = devServerExecutor(options, context);
+  // Force Node to resolve to look for the nx binary that is inside node_modules
+  const nxBin = require.resolve('nx/bin/nx');
+  const currIter = options.static
+    ? fileServerExecutor(
+        {
+          ...options,
+          parallel: false,
+          withDeps: false,
+          spa: false,
+          cors: true,
+        },
+        context
+      )
+    : devServerExecutor(options, context);
+
   const p = context.projectsConfigurations.projects[context.projectName];
   const buildOptions = getBuildOptions(options.buildTarget, context);
+
+  if (!options.isInitialHost) {
+    return yield* currIter;
+  }
 
   const moduleFederationConfig = getModuleFederationConfig(
     buildOptions.tsConfig,
     context.root,
-    p.root
+    p.root,
+    'react'
   );
 
-  const remotesToSkip = new Set(
-    findMatchingProjects(options.skipRemotes, context.projectGraph.nodes) ?? []
-  );
-
-  if (remotesToSkip.size > 0) {
-    logger.info(
-      `Remotes not served automatically: ${[...remotesToSkip.values()].join(
-        ', '
-      )}`
-    );
-  }
-  const remotesNotInWorkspace: string[] = [];
-
-  const knownRemotes = (moduleFederationConfig.remotes ?? []).filter((r) => {
-    const validRemote = Array.isArray(r) ? r[0] : r;
-
-    if (remotesToSkip.has(validRemote)) {
-      return false;
-    } else if (!context.projectGraph.nodes[validRemote]) {
-      remotesNotInWorkspace.push(validRemote);
-      return false;
-    } else {
-      return true;
+  const remotes = getRemotes(
+    options.devRemotes,
+    options.skipRemotes,
+    moduleFederationConfig,
+    {
+      projectName: context.projectName,
+      projectGraph: context.projectGraph,
+      root: context.root,
     }
-  });
-
-  if (remotesNotInWorkspace.length > 0) {
-    logger.warn(
-      `Skipping serving ${remotesNotInWorkspace.join(
-        ', '
-      )} as they could not be found in the workspace. Ensure they are served correctly.`
-    );
-  }
-
-  const remotePorts = knownRemotes.map(
-    (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
 
-  const devServeApps = !options.devRemotes
-    ? []
-    : Array.isArray(options.devRemotes)
-    ? findMatchingProjects(options.devRemotes, context.projectGraph.nodes)
-    : findMatchingProjects([options.devRemotes], context.projectGraph.nodes);
-
-  logger.info(
-    `NX Starting module federation dev-server for ${chalk.bold(
-      context.projectName
-    )} with ${knownRemotes.length} remotes`
-  );
-
-  const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
   let isCollectingStaticRemoteOutput = true;
+  const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
 
-  for (const app of knownRemotes) {
-    const appName = Array.isArray(app) ? app[0] : app;
-    if (devServeApps.includes(appName)) {
-      devRemoteIters.push(
-        await runExecutor(
-          {
-            project: appName,
-            target: 'serve',
-            configuration: context.configurationName,
-          },
-          {
-            watch: true,
-          },
-          context
-        )
+  for (const app of remotes.devRemotes) {
+    const remoteProjectServeTarget =
+      context.projectGraph.nodes[app].data.targets['serve'];
+    const isUsingModuleFederationDevServerExecutor =
+      remoteProjectServeTarget.executor.includes(
+        'module-federation-dev-server'
       );
-    } else {
-      let outWithErr: null | string[] = [];
-      const staticProcess = fork(
-        nxBin,
-        [
-          'run',
-          `${appName}:serve-static${
-            context.configurationName ? `:${context.configurationName}` : ''
-          }`,
-        ],
+
+    devRemoteIters.push(
+      await runExecutor(
         {
-          cwd: context.root,
-          stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
-        }
+          project: app,
+          target: 'serve',
+          configuration: context.configurationName,
+        },
+        {
+          watch: true,
+          ...(isUsingModuleFederationDevServerExecutor
+            ? { isInitialHost: false }
+            : {}),
+        },
+        context
+      )
+    );
+  }
+  for (const app of remotes.staticRemotes) {
+    const remoteProjectServeTarget =
+      context.projectGraph.nodes[app].data.targets['serve-static'];
+    const isUsingModuleFederationDevServerExecutor =
+      remoteProjectServeTarget.executor.includes(
+        'module-federation-dev-server'
       );
-      staticProcess.stdout.on('data', (data) => {
-        if (isCollectingStaticRemoteOutput) {
-          outWithErr.push(data.toString());
-        } else {
-          outWithErr = null;
-          staticProcess.stdout.removeAllListeners('data');
-        }
-      });
-      staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
-      staticProcess.on('exit', (code) => {
-        if (code !== 0) {
-          logger.info(outWithErr.join(''));
-          throw new Error(`Remote failed to start. See above for errors.`);
-        }
-      });
-      process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
-      process.on('exit', () => staticProcess.kill('SIGTERM'));
-    }
+    let outWithErr: null | string[] = [];
+    const staticProcess = fork(
+      nxBin,
+      [
+        'run',
+        `${app}:serve-static${
+          context.configurationName ? `:${context.configurationName}` : ''
+        }`,
+        ...(isUsingModuleFederationDevServerExecutor
+          ? [`--isInitialHost=false`]
+          : []),
+      ],
+      {
+        cwd: context.root,
+        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      }
+    );
+    staticProcess.stdout.on('data', (data) => {
+      if (isCollectingStaticRemoteOutput) {
+        outWithErr.push(data.toString());
+      } else {
+        outWithErr = null;
+        staticProcess.stdout.removeAllListeners('data');
+      }
+    });
+    staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
+    staticProcess.on('exit', (code) => {
+      if (code !== 0) {
+        logger.info(outWithErr.join(''));
+        throw new Error(`Remote failed to start. See above for errors.`);
+      }
+    });
+    process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
+    process.on('exit', () => staticProcess.kill('SIGTERM'));
   }
 
   return yield* combineAsyncIterables(
@@ -196,13 +156,17 @@ export default async function* moduleFederationDevServer(
     ...devRemoteIters,
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
-        if (remotePorts.length === 0) {
+        if (!options.isInitialHost) {
+          done();
+          return;
+        }
+        if (remotes.remotePorts.length === 0) {
           done();
           return;
         }
         try {
           await Promise.all(
-            remotePorts.map((port) =>
+            remotes.remotePorts.map((port) =>
               // Allow 20 minutes for each remote to start, which is plenty of time but we can tweak it later if needed.
               // Most remotes should start in under 1 minute.
               waitForPortOpen(port, {

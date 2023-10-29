@@ -25,6 +25,7 @@ export async function cypressComponentConfigGenerator(
   const installTask = await baseCyCtConfig(tree, {
     project: options.project,
     skipFormat: true,
+    jsx: true,
   });
 
   const found = await addCTTargetWithBuildTarget(tree, {

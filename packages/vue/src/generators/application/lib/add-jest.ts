@@ -5,14 +5,12 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-
-import { NormalizedSchema } from '../schema';
 import { nxVersion, vueJest3Version } from '../../../utils/versions';
 import { setupJestProject } from '../../../utils/setup-jest';
 
 export async function addJest(
   tree: Tree,
-  options: NormalizedSchema
+  options: { name: string; projectRoot: string }
 ): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
@@ -28,7 +26,7 @@ export async function addJest(
     })
   );
 
-  setupJestProject(tree, options.appProjectRoot);
+  setupJestProject(tree, options.projectRoot);
 
   tasks.push(
     addDependenciesToPackageJson(

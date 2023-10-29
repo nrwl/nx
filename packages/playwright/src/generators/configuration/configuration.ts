@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -47,7 +46,7 @@ export async function configurationGenerator(
       js: options.js,
       directory: options.directory,
       setParserOptionsProject: options.setParserOptionsProject,
-      rootProject: projectConfig.root === '.',
+      rootProject: options.rootProject ?? projectConfig.root === '.',
     })
   );
 
@@ -101,6 +100,3 @@ Rename or remove the existing e2e target.`);
 }
 
 export default configurationGenerator;
-export const configurationSchematic = convertNxGenerator(
-  configurationGenerator
-);

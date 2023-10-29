@@ -5,11 +5,11 @@ describe(<%= componentName %>.name, () => {
 
   beforeEach(() => {
     TestBed.overrideComponent(<%= componentName %>, {
-      add: { 
+      add: {
         imports: [],
         providers: []
       }
-    }) 
+    })
   })
 
   it('renders', () => {

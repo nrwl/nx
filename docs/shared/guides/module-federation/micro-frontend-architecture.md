@@ -1,9 +1,13 @@
 # Micro Frontend Architecture
 
-Since version 14, Nx provides out-of-the-box [Module Federation](/concepts/more-concepts/faster-builds-with-module-federation) support to both React
-and Angular. The Micro Frontend (MFE) architecture builds on top of Module Federation by providing _independent deployability_.
+Since version 14, Nx provides
+out-of-the-box [Module Federation](/concepts/module-federation/faster-builds-with-module-federation) support to both
+React
+and Angular. The Micro Frontend (MFE) architecture builds on top of Module Federation by providing _independent
+deployability_.
 
-If you have not read the [Module Federation guide](/concepts/more-concepts/faster-builds-with-module-federation) yet, we recommend that you read it
+If you have not read the [Module Federation guide](/concepts/module-federation/faster-builds-with-module-federation)
+yet, we recommend that you read it
 before continuing with this MFE guide.
 
 ## When should I use micro frontend architecture?
@@ -17,9 +21,10 @@ of MFEs and decide whether it makes sense for your own teams.
   logic that breaks compatibility with remotes.
 
 If you are looking at optimizing builds and do not need independent deployments, we recommend reading our guide on
-[Faster Builds with Module Federation](/concepts/more-concepts/faster-builds-with-module-federation).
+[Faster Builds with Module Federation](/concepts/module-federation/faster-builds-with-module-federation).
 
-If you need to use MFEs, keep reading, and we'll examine the architecture and strategies to deal with shared libraries and
+If you need to use MFEs, keep reading, and we'll examine the architecture and strategies to deal with shared libraries
+and
 deployments.
 
 ## Architectural overview
@@ -29,7 +34,8 @@ With MFE architecture, a large application is split into:
 1. A single **Host** application that references external...
 2. **Remote** applications, which handle a single domain or feature.
 
-In a normal Module Federation setup, we [recommend setting up implicit dependencies](/concepts/more-concepts/faster-builds-with-module-federation#architectural-overview)
+In a normal Module Federation setup,
+we [recommend setting up implicit dependencies](/concepts/module-federation/faster-builds-with-module-federation#architectural-overview)
 from the host application to remote applications. However, in an MFE architecture you _do not_ want these dependencies
 to exist between host and remotes.
 

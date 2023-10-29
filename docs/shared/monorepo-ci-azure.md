@@ -141,7 +141,6 @@ jobs:
 
       - script: npm ci
 
-      - script: npx nx workspace-lint
       - script: npx nx format:check
 
       - script: npx nx affected --base=$(BASE_SHA) -t lint --parallel=3
@@ -149,9 +148,7 @@ jobs:
       - script: npx nx affected --base=$(BASE_SHA) -t build --parallel=3
 ```
 
-{% nx-cloud-section %}
-
-## Distributed CI with Nx Cloud
+## Distributed Task Execution with Nx Cloud
 
 Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
 
@@ -196,5 +193,3 @@ jobs:
 ```
 
 You can also use our [ci-workflow generator](/nx-api/workspace/generators/ci-workflow) to generate the pipeline file.
-
-{% /nx-cloud-section %}

@@ -49,9 +49,7 @@ pipeline {
 
 The `pr` and `main` jobs implement the CI workflow.
 
-{% nx-cloud-section %}
-
-## Distributed CI with Nx Cloud
+## Distributed Task Execution with Nx Cloud
 
 Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
 
@@ -116,5 +114,3 @@ pipeline {
     }
 }
 ```
-
-{% /nx-cloud-section %}

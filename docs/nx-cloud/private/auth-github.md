@@ -22,7 +22,12 @@ And create a new OAuth app:
 
 Give it a name, and a homepage URL. The authorization callback is the important bit. It needs to be in this form:
 
-`[your-nx-cloud-url]/auth/github/callback`
+```
+[your-nx-cloud-url]/auth-callback
+
+# for example
+https://my.nx-enterprise.url:8080/auth-callback
+```
 
 ![Step 5](/nx-cloud/private/images/github_auth_step_5.png)
 
@@ -60,16 +65,18 @@ see [Nx Cloud Helm Charts](https://github.com/nrwl/nx-cloud-helm) for more conte
 
 ### Not using Helm:
 
-Provide the following env variables to the `nx-cloud-api` container:
+Provide the following env variables to the `nx-cloud-frontend` container:
 
 - `GITHUB_AUTH_CLIENT_ID`
 - `GITHUB_AUTH_CLIENT_SECRET`
 
-> If you are running Nx Cloud as a single container, the two env vars should be provisioned for that container.
+{% callout title="Helm Chart Environment Variables" %}
+If you are using our Helm chart, you can find all the information you need about env variables in [the Helm chart repository](https://github.com/nrwl/nx-cloud-helm/blob/main/AUTH-GUIDE.md).
+{% /callout %}
 
 ## GitHub Enterprise
 
-If you are running an on-premise version of GitHub (Enterprise Server), you will need to configure one additional
+If you are running a self-hosted version of GitHub (Enterprise Server), you will need to configure one additional
 environment variable:
 
 `GITHUB_API_URL=https://custom-github-instance.com`
@@ -78,5 +85,5 @@ This will point all auth endpoints to your GitHub server (rather the public one)
 
 {% callout type="check" title="Good to know!" %}
 The above environment variable, also helps with setting up the GitHub app integration, so you can have Nx Cloud build
-stats directly on your pull request. See full set up instructions [here](/nx-cloud/set-up/github).
+stats directly on your pull request. See full set up instructions [here](/nx-cloud/recipes/source-control-integration/github).
 {% /callout %}

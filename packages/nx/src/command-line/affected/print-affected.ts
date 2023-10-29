@@ -1,4 +1,4 @@
-import { getCommandAsString, getOutputs } from '../../tasks-runner/utils';
+import { getCommandAsString } from '../../tasks-runner/utils';
 import * as yargs from 'yargs';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
@@ -95,7 +95,7 @@ async function createTasks(
     target: task.target,
     hash: task.hash,
     command: getCommandAsString(execCommand, task),
-    outputs: getOutputs(projectGraph.nodes, task),
+    outputs: task.outputs,
   }));
 }
 

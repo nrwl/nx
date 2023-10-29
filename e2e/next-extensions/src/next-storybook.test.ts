@@ -16,7 +16,8 @@ describe('Next.js Storybook', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should run a Next.js based Storybook setup', async () => {
+  // TODO (@mandarini): Re-enable this test
+  xit('should run a Next.js based Storybook setup', async () => {
     const appName = uniq('app');
 
     runCLI(`generate @nx/next:app ${appName} --no-interactive`);

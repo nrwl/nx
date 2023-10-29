@@ -877,7 +877,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         options: {
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
         },
@@ -903,7 +903,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.myCustomLintTarget).toStrictEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         options: {
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
         },
@@ -930,7 +930,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         options: {
           eslintConfig: 'apps/app1/.eslintrc.json',
           lintFilePatterns: ['apps/app1/**/*.ts', 'apps/app1/**/*.html'],
@@ -969,7 +969,7 @@ describe('app migrator', () => {
 
       const { targets } = readProjectConfiguration(tree, 'app1');
       expect(targets.lint).toStrictEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         options: {
           eslintConfig: 'apps/app1/.eslintrc.json',
           hasTypeAwareRules: true,
@@ -1618,9 +1618,9 @@ describe('app migrator', () => {
 
       await migrator.migrate();
 
-      const { tasksRunnerOptions } = readNxJson(tree);
+      const { targetDefaults } = readNxJson(tree);
       expect(
-        tasksRunnerOptions.default.options.cacheableOperations
+        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
       ).toStrictEqual([
         'build',
         'lint',
@@ -1654,9 +1654,9 @@ describe('app migrator', () => {
 
       await migrator.migrate();
 
-      const { tasksRunnerOptions } = readNxJson(tree);
+      const { targetDefaults } = readNxJson(tree);
       expect(
-        tasksRunnerOptions.default.options.cacheableOperations
+        Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
       ).toStrictEqual(['build', 'lint', 'test', 'e2e', 'myCustomTest']);
     });
   });

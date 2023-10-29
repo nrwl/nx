@@ -8,7 +8,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
@@ -20,7 +20,7 @@ describe('app', () => {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
     skipFormat: false,
-    name: 'myApp',
+    name: 'my-app',
     linter: Linter.EsLint,
     style: 'css',
     strict: true,
@@ -143,6 +143,7 @@ describe('app', () => {
         {
           "compilerOptions": {
             "allowJs": true,
+            "module": "commonjs",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -152,9 +153,14 @@ describe('app', () => {
           },
           "extends": "../tsconfig.base.json",
           "include": [
-            "src/**/*.ts",
-            "src/**/*.js",
+            "**/*.ts",
+            "**/*.js",
             "cypress.config.ts",
+            "**/*.cy.ts",
+            "**/*.cy.tsx",
+            "**/*.cy.js",
+            "**/*.cy.jsx",
+            "**/*.d.ts",
           ],
         }
       `);
@@ -463,7 +469,7 @@ describe('app', () => {
 
     const projectsConfigurations = getProjects(appTree);
     expect(projectsConfigurations.get('my-app').targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['my-app/**/*.{ts,tsx,js,jsx}'],
@@ -487,7 +493,7 @@ describe('app', () => {
       expect(projectsConfigurations.get('my-app').targets.lint)
         .toMatchInlineSnapshot(`
         {
-          "executor": "@nx/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "options": {
             "lintFilePatterns": [
               "my-app/**/*.{ts,tsx,js,jsx}",
@@ -570,7 +576,7 @@ describe('app', () => {
     const packageJson = readJson(appTree, '/package.json');
 
     expect(packageJson.devDependencies.eslint).toBeDefined();
-    expect(packageJson.devDependencies['@nx/linter']).toBeDefined();
+    expect(packageJson.devDependencies['@nx/eslint']).toBeDefined();
     expect(packageJson.devDependencies['@nx/eslint-plugin']).toBeDefined();
     expect(packageJson.devDependencies['eslint-plugin-react']).toBeDefined();
     expect(
@@ -641,10 +647,8 @@ describe('app', () => {
       expect(appTree.exists('my-app/src/app/app.spec.tsx')).toBeTruthy();
       expect(appTree.exists('my-app/src/app/app.css')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.styl')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.module.css')).toBeFalsy();
       expect(appTree.exists('my-app/src/app/app.module.scss')).toBeFalsy();
-      expect(appTree.exists('my-app/src/app/app.module.styl')).toBeFalsy();
 
       const content = appTree.read('my-app/src/app/app.tsx').toString();
       expect(content).not.toContain('styled-components');
@@ -653,10 +657,8 @@ describe('app', () => {
       expect(content).not.toContain('<StyledApp>');
 
       //for imports
-      expect(content).not.toContain('app.styl');
       expect(content).not.toContain('app.css');
       expect(content).not.toContain('app.scss');
-      expect(content).not.toContain('app.module.styl');
       expect(content).not.toContain('app.module.css');
       expect(content).not.toContain('app.module.scss');
     });
@@ -1070,7 +1072,6 @@ describe('app', () => {
       style     | pkg
       ${'less'} | ${'less'}
       ${'scss'} | ${'sass'}
-      ${'styl'} | ${'stylus'}
     `(
       'should add style preprocessor when vite is used',
       async ({ style, pkg }) => {

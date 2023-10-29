@@ -6,7 +6,7 @@
   "description": "Create a federated module, which can be loaded by a remote host.",
   "examples": [
     {
-      "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=my-remote-app",
+      "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=my-remote-app --remoteDirectory=apps/my-remote-app",
       "description": "Create a federated module from my-remote-app, that exposes my-cmp from ./src/component/my-cmp.ts as MyModule."
     }
   ],
@@ -25,13 +25,17 @@
     },
     "path": {
       "type": "string",
-      "description": "The path to locate the federated module.",
+      "description": "The path to locate the federated module. This path should be relative to the workspace root and the file should exist.",
       "x-prompt": "What is the path to the module to be federated?"
     },
     "remote": {
       "type": "string",
       "description": "The name of the remote.",
       "x-prompt": "What is/should the remote be named?"
+    },
+    "remoteDirectory": {
+      "description": "The directory of the new remote application if one needs to be created.",
+      "type": "string"
     },
     "projectNameAndRootFormat": {
       "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
@@ -41,46 +45,8 @@
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
-      "default": "css",
-      "alias": "s",
-      "x-prompt": {
-        "message": "Which stylesheet format would you like to use?",
-        "type": "list",
-        "items": [
-          {
-            "value": "css",
-            "label": "CSS"
-          },
-          {
-            "value": "scss",
-            "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS              [ http://lesscss.org                       ]"
-          },
-          {
-            "value": "styled-components",
-            "label": "styled-components [ https://styled-components.com            ]"
-          },
-          {
-            "value": "@emotion/styled",
-            "label": "emotion           [ https://emotion.sh                       ]"
-          },
-          {
-            "value": "styled-jsx",
-            "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
-          },
-          {
-            "value": "styl",
-            "label": "DEPRECATD: Stylus(.styl) [ http://stylus-lang.com            ]"
-          },
-          {
-            "value": "none",
-            "label": "None"
-          }
-        ]
-      }
+      "default": "none",
+      "alias": "s"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",

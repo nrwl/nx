@@ -90,4 +90,7 @@ pnpm install --global nx@latest
 
 The advantage of a global installation is that you don't have to prefix your commands with npx, yarn or pnpm. The global Nx installation hands off the process execution to the local Nx installation in your repository, which eliminates any issues with outdated globally installed packages.
 
-Learn more about [managing and troubleshooting a global Nx installation](/concepts/more-concepts/global-nx).
+## More Documentation
+
+- [Update Your Global Nx Installation](/recipes/installation/update-global-installation)
+- [Install Nx in a Non-Javascript Repo](/recipes/installation/install-non-javascript)

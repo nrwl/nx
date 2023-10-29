@@ -102,22 +102,7 @@ describe('setupSSR', () => {
       expect(packageJson.devDependencies[dep]).toEqual(version);
     }
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.tasksRunnerOptions).toMatchInlineSnapshot(`
-      {
-        "default": {
-          "options": {
-            "cacheableOperations": [
-              "build",
-              "lint",
-              "test",
-              "e2e",
-              "server",
-            ],
-          },
-          "runner": "nx/tasks-runners/default",
-        },
-      }
-    `);
+    expect(nxJson.targetDefaults.server.cache).toBe(true);
   });
 
   it('should use fileReplacements if they already exist', async () => {
@@ -219,22 +204,7 @@ describe('setupSSR', () => {
       expect(packageJson.devDependencies[dep]).toEqual(version);
     }
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.tasksRunnerOptions).toMatchInlineSnapshot(`
-      {
-        "default": {
-          "options": {
-            "cacheableOperations": [
-              "build",
-              "lint",
-              "test",
-              "e2e",
-              "server",
-            ],
-          },
-          "runner": "nx/tasks-runners/default",
-        },
-      }
-    `);
+    expect(nxJson.targetDefaults.server.cache).toEqual(true);
   });
 
   it('should add hydration correctly for NgModule apps', async () => {

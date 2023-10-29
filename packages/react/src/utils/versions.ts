@@ -8,8 +8,8 @@ export const reactDomVersion = '18.2.0';
 export const reactIsVersion = '18.2.0';
 export const swcLoaderVersion = '0.1.15';
 export const babelLoaderVersion = '^9.1.2';
-export const typesReactVersion = '18.2.24';
-export const typesReactDomVersion = '18.2.9';
+export const typesReactVersion = '18.2.33';
+export const typesReactDomVersion = '18.2.14';
 export const typesReactIsVersion = '18.2.2';
 
 export const typesNodeVersion = '18.14.2';
@@ -59,7 +59,6 @@ export const moduleFederationNodeVersion = '~0.9.9';
 // style preprocessors
 export const lessVersion = '3.12.2';
 export const sassVersion = '^1.55.0';
-export const stylusVersion = '^0.59.0';
 
 // rollup plugins (if needed)
 export const rollupPluginUrlVersion = '^7.0.0';

@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import {
   updateJson,
-  convertNxGenerator,
   generateFiles,
   logger,
   offsetFromRoot,
@@ -82,7 +81,7 @@ export async function customServerGenerator(
 
   project.targets['serve-custom-server'] = {
     executor: '@nx/js:node',
-    defaultConfiguration: 'development',
+    defaultConfiguration: 'production',
     options: {
       buildTarget: `${options.project}:build-custom-server`,
     },
@@ -102,17 +101,16 @@ export async function customServerGenerator(
     if (
       !json.tasksRunnerOptions?.default?.options?.cacheableOperations?.includes(
         'build-custom-server'
-      )
+      ) &&
+      json.tasksRunnerOptions?.default?.options?.cacheableOperations
     ) {
-      json.tasksRunnerOptions ??= {};
-      json.tasksRunnerOptions.default ??= { options: {} };
-      json.tasksRunnerOptions.default.options.cacheableOperations = [
-        ...json.tasksRunnerOptions.default.options.cacheableOperations,
-        'build-custom-server',
-      ];
+      json.tasksRunnerOptions.default.options.cacheableOperations.push(
+        'build-custom-server'
+      );
     }
+    json.targetDefaults ??= {};
+    json.targetDefaults['build-custom-server'] ??= {};
+    json.targetDefaults['build-custom-server'].cache ??= true;
     return json;
   });
 }
-
-export const customServerSchematic = convertNxGenerator(customServerGenerator);

@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -17,25 +16,39 @@ export type ControllerGeneratorOptions = NestGeneratorWithLanguageOption &
     skipImport?: boolean;
   };
 
-export function controllerGenerator(
+export async function controllerGenerator(
+  tree: Tree,
+  rawOptions: ControllerGeneratorOptions
+) {
+  await controllerGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function controllerGeneratorInternal(
   tree: Tree,
   rawOptions: ControllerGeneratorOptions
 ): Promise<any> {
-  const options = normalizeControllerOptions(tree, rawOptions);
+  const options = await normalizeControllerOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'controller', options);
 }
 
 export default controllerGenerator;
 
-export const controllerSchematic = convertNxGenerator(controllerGenerator);
-
-function normalizeControllerOptions(
+async function normalizeControllerOptions(
   tree: Tree,
   options: ControllerGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'controller',
+    '@nx/nest:controller',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     module: options.module,
     skipImport: options.skipImport,

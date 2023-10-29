@@ -59,11 +59,6 @@ export const schema = {
                 'LESS              [ http://lesscss.org                       ]',
             },
             {
-              value: 'styl',
-              label:
-                'DEPRECATED: Stylus(.styl) [ http://stylus-lang.com           ]',
-            },
-            {
               value: 'none',
               label: 'None',
             },

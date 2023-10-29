@@ -40,9 +40,9 @@ exports[`application generator should set up project correctly with given option
 `;
 
 exports[`application generator should set up project correctly with given options 2`] = `
-"import vue from '@vitejs/plugin-vue';
+"/// <reference types='vitest' />
 import { defineConfig } from 'vite';
-
+import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
@@ -58,7 +58,7 @@ export default defineConfig({
     host: 'localhost',
   },
 
-  plugins: [nxViteTsPaths(), vue()],
+  plugins: [vue(), nxViteTsPaths()],
 
   // Uncomment this if you are using workers.
   // worker: {
@@ -67,7 +67,9 @@ export default defineConfig({
 
   test: {
     globals: true,
-    cache: { dir: '../node_modules/.vitest' },
+    cache: {
+      dir: '../node_modules/.vitest',
+    },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   },
@@ -83,7 +85,7 @@ exports[`application generator should set up project correctly with given option
   "sourceRoot": "test/src",
   "targets": {
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["test/**/*.{ts,tsx,js,jsx,vue}"]
@@ -170,7 +172,9 @@ exports[`application generator should set up project correctly with given option
   "overrides": [
     {
       "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {}
+      "rules": {
+        "vue/multi-word-component-names": "off"
+      }
     }
   ]
 }

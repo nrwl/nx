@@ -68,6 +68,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // TODO: solve issues with pnpm and remove this fallback
     packageManager = packageManager === 'pnpm' ? 'yarn' : packageManager;
     project = runNgNew(packageManager);
+    packageInstall('nx', null, 'latest');
+    packageInstall('@nx/angular', null, 'latest');
   });
 
   afterEach(() => {
@@ -105,7 +107,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(packageJson.devDependencies['@nx/workspace']).not.toBeDefined();
 
     // run ng add
-    runNgAdd('@nx/angular', '--npm-scope projscope --default-base main');
+    runCLI('g @nx/angular:ng-add --default-base main');
 
     // check that prettier config exits and that files have been moved
     checkFilesExist(
@@ -142,14 +144,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       affected: {
         defaultBase: 'main',
       },
-      tasksRunnerOptions: {
-        default: {
-          options: {
-            cacheableOperations: ['build', 'test', 'e2e'],
-          },
-          runner: 'nx/tasks-runners/default',
-        },
-      },
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
         production: [
@@ -164,12 +158,15 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         build: {
           dependsOn: ['^build'],
           inputs: ['production', '^production'],
+          cache: true,
         },
         e2e: {
           inputs: ['default', '^production'],
+          cache: true,
         },
         test: {
           inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
+          cache: true,
         },
       },
     });
@@ -267,7 +264,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   it('should handle a workspace with cypress v9', () => {
     addCypress9();
 
-    runNgAdd('@nx/angular', '--npm-scope projscope --skip-install');
+    runCLI('g @nx/angular:ng-add --skip-install');
 
     const e2eProject = `${project}-e2e`;
     //check e2e project files
@@ -334,7 +331,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   it('should handle a workspace with cypress v10', () => {
     addCypress10();
 
-    runNgAdd('@nx/angular', '--npm-scope projscope --skip-install');
+    runCLI('g @nx/angular:ng-add --skip-install');
 
     const e2eProject = `${project}-e2e`;
     //check e2e project files
@@ -404,13 +401,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   it.skip('should handle a workspace with ESLint', () => {
     addEsLint();
 
-    runNgAdd('@nx/angular', '--npm-scope projscope');
+    runCLI('g @nx/angular:ng-add');
 
     checkFilesExist(`apps/${project}/.eslintrc.json`, `.eslintrc.json`);
 
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.targets.lint).toStrictEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       options: {
         lintFilePatterns: [
           `apps/${project}/src/**/*.ts`,
@@ -441,7 +438,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     runCommand(`ng g @schematics/angular:application ${app1} --no-interactive`);
     runCommand(`ng g @schematics/angular:library ${lib1} --no-interactive`);
 
-    runNgAdd('@nx/angular', '--npm-scope projscope');
+    runCLI('g @nx/angular:ng-add');
 
     // check angular.json does not exist
     checkFilesDoNotExist('angular.json');

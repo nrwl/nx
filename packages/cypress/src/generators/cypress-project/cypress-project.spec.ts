@@ -8,7 +8,7 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { cypressProjectGenerator } from './cypress-project';
 import { Schema } from './schema';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { cypressInitGenerator } from '../init/init';
 

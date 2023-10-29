@@ -124,13 +124,11 @@ export function calculateProjectDependencies(
               : dep,
             outputs: getOutputsForTargetAndConfiguration(
               {
-                overrides: {},
-                target: {
-                  project: projectName,
-                  target: targetName,
-                  configuration: configurationName,
-                },
+                project: projectName,
+                target: targetName,
+                configuration: configurationName,
               },
+              {},
               depNode
             ),
             node: depNode,
@@ -260,7 +258,11 @@ export function calculateDependenciesFromTaskGraph(
       return null;
     }
 
-    let outputs = getOutputsForTargetAndConfiguration(depTask, depProjectNode);
+    let outputs = getOutputsForTargetAndConfiguration(
+      depTask.target,
+      depTask.overrides,
+      depProjectNode
+    );
 
     if (outputs.length === 0) {
       nonBuildableDependencies.push(depTask.target.project);
@@ -558,13 +560,11 @@ export function updateBuildableProjectPackageJsonDependencies(
 ) {
   const outputs = getOutputsForTargetAndConfiguration(
     {
-      overrides: {},
-      target: {
-        project: projectName,
-        target: targetName,
-        configuration: configurationName,
-      },
+      project: projectName,
+      target: targetName,
+      configuration: configurationName,
     },
+    {},
     node
   );
 
@@ -598,13 +598,11 @@ export function updateBuildableProjectPackageJsonDependencies(
         if (entry.node.type === 'lib') {
           const outputs = getOutputsForTargetAndConfiguration(
             {
-              overrides: {},
-              target: {
-                project: projectName,
-                target: targetName,
-                configuration: configurationName,
-              },
+              project: projectName,
+              target: targetName,
+              configuration: configurationName,
             },
+            {},
             entry.node
           );
 

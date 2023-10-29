@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   getProjects,
   joinPathFragments,
   ProjectConfiguration,
@@ -21,7 +20,7 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
   // Need to determine libs vs packages directory base on the type of root project.
   for (const [, project] of projects) {
     if (project.root === '.') rootProject = project;
-    projectsToMove.push(project);
+    projectsToMove.unshift(project); // move the root project 1st
   }
 
   // Currently, Nx only handles apps+libs or packages. You cannot mix and match them.
@@ -52,5 +51,3 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
 }
 
 export default monorepoGenerator;
-
-export const monorepoSchematic = convertNxGenerator(monorepoGenerator);

@@ -20,11 +20,6 @@
       },
       "additionalProperties": false
     },
-    "npmScope": {
-      "type": "string",
-      "description": "NPM Scope that the workspace uses.",
-      "deprecated": "This is inferred from the package.json in the workspace root instead."
-    },
     "tasksRunnerOptions": {
       "type": "object",
       "additionalProperties": {
@@ -56,11 +51,6 @@
         "appsDir": {
           "type": "string",
           "description": "Default folder name for apps."
-        },
-        "projectNameAndRootFormat": {
-          "type": "string",
-          "description": "Default method of handling arguments for generating projects",
-          "enum": ["as-provided", "derived"]
         }
       },
       "additionalProperties": false
@@ -75,7 +65,7 @@
       "type": "array",
       "description": "Plugins for extending the project graph.",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/plugins"
       }
     },
     "defaultProject": {
@@ -90,6 +80,10 @@
       "type": "string",
       "description": "Specifies the url pointing to an instance of nx cloud. Used for remote caching and displaying run links."
     },
+    "nxCloudEncryptionKey": {
+      "type": "string",
+      "description": "Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud."
+    },
     "parallel": {
       "type": "number",
       "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
@@ -101,6 +95,86 @@
     "useDaemonProcess": {
       "type": "boolean",
       "description": "Specifies whether the daemon should be used for the default tasks runner."
+    },
+    "release": {
+      "type": "object",
+      "description": "Configuration for the nx release commands.",
+      "additionalProperties": false,
+      "properties": {
+        "groups": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "version": {
+                "$ref": "#/definitions/NxReleaseVersionConfiguration"
+              },
+              "changelog": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                  },
+                  {
+                    "type": "boolean",
+                    "enum": [false]
+                  }
+                ]
+              },
+              "releaseTagPattern": {
+                "type": "string"
+              }
+            },
+            "required": ["projects"]
+          }
+        },
+        "changelog": {
+          "type": "object",
+          "properties": {
+            "workspaceChangelog": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                },
+                {
+                  "type": "boolean",
+                  "enum": [false]
+                }
+              ]
+            },
+            "projectChangelogs": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                },
+                {
+                  "type": "boolean",
+                  "enum": [false]
+                }
+              ]
+            }
+          }
+        },
+        "version": {
+          "$ref": "#/definitions/NxReleaseVersionConfiguration"
+        },
+        "releaseTagPattern": {
+          "type": "string"
+        }
+      }
     }
   },
   "definitions": {
@@ -222,10 +296,6 @@
           "type": "string",
           "description": "The default package manager to use.",
           "enum": ["yarn", "pnpm", "npm"]
-        },
-        "defaultCollection": {
-          "type": "string",
-          "description": "The default generator collection to use."
         }
       }
     },
@@ -371,9 +441,95 @@
               }
             ]
           }
+        },
+        "cache": {
+          "type": "boolean",
+          "description": "Specifies if the given target should be cacheable"
         }
       },
       "additionalProperties": false
+    },
+    "plugins": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "A plugin module to load with default options"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "plugin": {
+              "type": "string",
+              "description": "The plugin module to load"
+            },
+            "options": {
+              "type": "object",
+              "description": "The options passed to the plugin when creating nodes and dependencies"
+            }
+          }
+        }
+      ]
+    },
+    "NxReleaseVersionConfiguration": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "type": "string"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "NxReleaseChangelogConfiguration": {
+      "type": "object",
+      "properties": {
+        "createRelease": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["github"]
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "entryWhenNoChanges": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "file": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "renderer": {
+          "type": "string"
+        },
+        "renderOptions": {
+          "$ref": "#/definitions/ChangelogRenderOptions"
+        }
+      }
+    },
+    "ChangelogRenderOptions": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

@@ -9,8 +9,8 @@ import {
 } from '@nx/devkit';
 
 import type { Linter as ESLint } from 'eslint';
-import { Linter } from '@nx/linter';
-import { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/eslint/schema';
+import { Linter } from '@nx/eslint';
+import { Schema as EsLintExecutorOptions } from '@nx/eslint/src/executors/lint/schema';
 
 import generator from './generator';
 import pluginGenerator from '../plugin/plugin';

@@ -99,7 +99,7 @@ const commonLoaders = [
 ];
 
 const CSS_MODULES_LOADER = {
-  test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+  test: /\.css$|\.scss$|\.sass$|\.less$/,
   oneOf: [
     {
       test: /\.module\.css$/,
@@ -127,15 +127,6 @@ const CSS_MODULES_LOADER = {
         ...commonLoaders,
         {
           loader: require.resolve('less-loader'),
-        },
-      ],
-    },
-    {
-      test: /\.module\.styl$/,
-      use: [
-        ...commonLoaders,
-        {
-          loader: require.resolve('stylus-loader'),
         },
       ],
     },

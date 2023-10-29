@@ -102,6 +102,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         },
         "targetDefaults": {
           "build": {
+            "cache": true,
             "dependsOn": [
               "^build",
             ],
@@ -110,18 +111,14 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               "^production",
             ],
           },
-        },
-        "tasksRunnerOptions": {
-          "default": {
-            "options": {
-              "cacheableOperations": [
-                "build",
-                "lint",
-                "test",
-                "e2e",
-              ],
-            },
-            "runner": "nx/tasks-runners/default",
+          "e2e": {
+            "cache": true,
+          },
+          "lint": {
+            "cache": true,
+          },
+          "test": {
+            "cache": true,
           },
         },
       }
@@ -154,6 +151,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         },
         "targetDefaults": {
           "build": {
+            "cache": true,
             "dependsOn": [
               "^build",
             ],
@@ -162,18 +160,14 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               "^production",
             ],
           },
-        },
-        "tasksRunnerOptions": {
-          "default": {
-            "options": {
-              "cacheableOperations": [
-                "build",
-                "lint",
-                "test",
-                "e2e",
-              ],
-            },
-            "runner": "nx/tasks-runners/default",
+          "e2e": {
+            "cache": true,
+          },
+          "lint": {
+            "cache": true,
+          },
+          "test": {
+            "cache": true,
           },
         },
       }
@@ -227,17 +221,21 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
         "extends": "nx/presets/npm.json",
-        "tasksRunnerOptions": {
-          "default": {
-            "options": {
-              "cacheableOperations": [
-                "build",
-                "lint",
-                "test",
-                "e2e",
-              ],
-            },
-            "runner": "nx/tasks-runners/default",
+        "targetDefaults": {
+          "build": {
+            "cache": true,
+            "dependsOn": [
+              "^build",
+            ],
+          },
+          "e2e": {
+            "cache": true,
+          },
+          "lint": {
+            "cache": true,
+          },
+          "test": {
+            "cache": true,
           },
         },
       }

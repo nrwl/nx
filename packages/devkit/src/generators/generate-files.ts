@@ -34,7 +34,7 @@ export function generateFiles(
   target: string,
   substitutions: { [k: string]: any }
 ): void {
-  const ejs = require('ejs');
+  const ejs: typeof import('ejs') = require('ejs');
 
   const files = allFilesInDir(srcFolder);
   if (files.length === 0) {
@@ -56,7 +56,9 @@ export function generateFiles(
       } else {
         const template = readFileSync(filePath, 'utf-8');
         try {
-          newContent = ejs.render(template, substitutions, {});
+          newContent = ejs.render(template, substitutions, {
+            filename: filePath,
+          });
         } catch (e) {
           logger.error(`Error in ${filePath.replace(`${tree.root}/`, '')}:`);
           throw e;

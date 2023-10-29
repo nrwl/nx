@@ -2,13 +2,13 @@
 
 Problem: A task is being executed when you expect it to be replayed from the cache.
 
-1. Check if your task is listed in `cacheableOperations` defined in `nx.json#tasksRunnerOptions`
+1. Check if your task is either marked with `"cache": true` in `nx.json#targetDefaults` or listed in `cacheableOperations` defined in `nx.json#tasksRunnerOptions`
 
 1. Check if the output of your task is changing the inputs of your task
 
    - Check the `inputs` and `namedInputs` defined in the project configuration and root `nx.json`. The `inputs` control whether a task will execute or replay from cache.
    - Check to see if there is an output file that is not being captured by the `outputs` for the task. The `outputs` property only controls what files are replayed from the cache, it doesn't dictate whether the cache is replayed, but an unaccounted output file could be modifying one of the inputs of the task.
-   - To check your input glob patterns file-by-file, you can get a list of all the files associated with each project by running: `nx graph --file=output.json`
+   - To check your input glob patterns file-by-file, you can get a list of all the files associated with each project by running `nx graph --file=output.json` or by clicking on a task in the task graph in the `nx graph` visualization.
 
 1. Use the Nx Cloud troubleshooting tools
    - Make sure your repo is [connected to Nx Cloud](/core-features/cache-task-results#distributed-computation-caching)

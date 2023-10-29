@@ -120,6 +120,7 @@ export function findPackageMetadataList(
   return sync(`${packagesDir}/*`, { ignore: [`${packagesDir}/cli`] })
     .map((folderPath: string): PackageData => {
       const folderName = folderPath.substring(packagesDir.length + 1);
+
       const relativeFolderPath = folderPath.replace(absoluteRoot, '');
       const packageJson = readJsonSync(
         join(folderPath, 'package.json'),

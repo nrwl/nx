@@ -91,13 +91,14 @@ export async function createOrUpdateGithubRelease(
 
 async function syncGithubRelease(
   githubRequestConfig: GithubRequestConfig,
-  release: { version: string; body: string },
+  release: { version: string; body: string; prerelease: boolean },
   existingGithubReleaseForVersion?: GithubRelease
 ) {
   const ghRelease: GithubRelease = {
     tag_name: release.version,
     name: release.version,
     body: release.body,
+    prerelease: release.prerelease,
   };
 
   try {

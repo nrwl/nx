@@ -140,37 +140,10 @@ function computeWorkspaceConfigHash(
   return hashArray(projectConfigurationStrings);
 }
 
-/**
- * Temporary work around to handle nested gitignores. The parcel file watcher doesn't handle them well,
- * so we need to filter them out here.
- *
- * TODO(Cammisuli): remove after 16.4 - Rust watcher handles nested gitignores
- */
-function filterUpdatedFiles(files: string[]) {
-  if (files.length === 0) {
-    return files;
-  }
-
-  try {
-    const quoted = files.map((f) => '"' + f + '"');
-    const ignored = execSync(`git check-ignore ${quoted.join(' ')}`, {
-      windowsHide: true,
-    })
-      .toString()
-      .split('\n');
-    return files.filter((f) => ignored.indexOf(f) === -1);
-  } catch (e) {
-    // none of the files were ignored
-    return files;
-  }
-}
-
 async function processCollectedUpdatedAndDeletedFiles() {
   try {
     performance.mark('hash-watched-changes-start');
-    const updatedFiles = filterUpdatedFiles([
-      ...collectedUpdatedFiles.values(),
-    ]);
+    const updatedFiles = [...collectedUpdatedFiles.values()];
     const deletedFiles = [...collectedDeletedFiles.values()];
     let updatedFileHashes = updateFilesInContext(updatedFiles, deletedFiles);
     performance.mark('hash-watched-changes-end');

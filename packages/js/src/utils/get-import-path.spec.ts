@@ -1,6 +1,6 @@
 import { getImportPath } from './get-import-path';
 import { Tree, writeJson } from '@nx/devkit';
-import { createTree } from '@nx/devkit/testing-pre16';
+import { createTree } from '@nx/devkit/testing';
 
 describe('getImportPath', () => {
   let tree: Tree;

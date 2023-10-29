@@ -87,21 +87,15 @@ export function PackageSchemaSubList({
             </p>
 
             {vm.type === 'document' ? (
-              <>
-                <DocumentList documents={vm.package.documents} />
-              </>
+              <DocumentList documents={vm.package.documents} />
             ) : null}
 
             {vm.type === 'executor' ? (
-              <>
-                <SchemaList files={vm.package.executors} type={'executor'} />
-              </>
+              <SchemaList files={vm.package.executors} type={'executor'} />
             ) : null}
 
             {vm.type === 'generator' ? (
-              <>
-                <SchemaList files={vm.package.generators} type={'generator'} />
-              </>
+              <SchemaList files={vm.package.generators} type={'generator'} />
             ) : null}
           </div>
         </div>

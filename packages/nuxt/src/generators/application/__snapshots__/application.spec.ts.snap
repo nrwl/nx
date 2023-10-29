@@ -1,0 +1,145 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`app generated files content - as-provided should add nuxt entries in .gitignore 1`] = `
+"
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache"
+`;
+
+exports[`app generated files content - as-provided should configure eslint correctly 1`] = `
+"{
+  "extends": ["@nuxt/eslint-config", "../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
+      "rules": {
+        "vue/multi-word-component-names": "off"
+      }
+    }
+  ]
+}
+"
+`;
+
+exports[`app generated files content - as-provided should configure nuxt correctly 1`] = `
+"import { NxNuxtModule } from '@nx/nuxt';
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  modules: [NxNuxtModule],
+  srcDir: 'src',
+  devtools: { enabled: true },
+  css: ['~/assets/css/styles.css'],
+});
+"
+`;
+
+exports[`app generated files content - as-provided should configure tsconfig and project.json correctly 1`] = `
+"{
+  "name": "my-app",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "my-app/src",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/{projectRoot}/.output",
+        "{workspaceRoot}/{projectRoot}/.nuxt"
+      ],
+      "options": {
+        "command": "npx nuxi dev --port=4200",
+        "cwd": "my-app"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{workspaceRoot}/{projectRoot}/.output",
+        "{workspaceRoot}/{projectRoot}/.nuxt"
+      ],
+      "options": {
+        "command": "npx nuxi build",
+        "cwd": "my-app"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["my-app/**/*.{ts,tsx,js,jsx,vue}"]
+      }
+    },
+    "test": {
+      "executor": "@nx/vite:test",
+      "outputs": ["{options.reportsDirectory}"],
+      "options": {
+        "passWithNoTests": true,
+        "reportsDirectory": "../coverage/my-app"
+      }
+    }
+  }
+}
+"
+`;
+
+exports[`app generated files content - as-provided should configure tsconfig and project.json correctly 2`] = `
+"{
+  "compilerOptions": {},
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./.nuxt/tsconfig.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ],
+  "extends": "../tsconfig.base.json"
+}
+"
+`;
+
+exports[`app generated files content - as-provided should create all new files in the correct location 1`] = `
+[
+  ".prettierrc",
+  "package.json",
+  "nx.json",
+  "tsconfig.base.json",
+  ".prettierignore",
+  "my-app/project.json",
+  "my-app/.npmrc",
+  "my-app/nuxt.config.ts",
+  "my-app/src/app.vue",
+  "my-app/src/assets/css/styles.css",
+  "my-app/src/components/NxWelcome.vue",
+  "my-app/src/pages/about.vue",
+  "my-app/src/pages/index.vue",
+  "my-app/src/public/.gitkeep",
+  "my-app/src/public/favicon.ico",
+  "my-app/src/server/api/greet.ts",
+  "my-app/src/server/tsconfig.json",
+  "my-app/tsconfig.json",
+  ".gitignore",
+  ".eslintrc.json",
+  ".eslintignore",
+  "my-app/.eslintrc.json",
+  "my-app/vite.config.ts",
+  "my-app/tsconfig.spec.json",
+  "my-app-e2e/project.json",
+  "my-app-e2e/src/e2e/app.cy.ts",
+  "my-app-e2e/src/support/app.po.ts",
+  "my-app-e2e/src/support/e2e.ts",
+  "my-app-e2e/src/fixtures/example.json",
+  "my-app-e2e/src/support/commands.ts",
+  "my-app-e2e/cypress.config.ts",
+  "my-app-e2e/tsconfig.json",
+  "my-app-e2e/.eslintrc.json",
+]
+`;

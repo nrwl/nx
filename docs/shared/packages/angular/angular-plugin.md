@@ -18,7 +18,9 @@ more [here](/recipes/angular/migration/angular).
 ## Setting up the Angular plugin
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/angular` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/angular` version that matches the version of `nx` in your repository. If the version
+numbers get out of sync, you can encounter some difficult to debug errors. You
+can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
 Adding the Angular plugin to an existing Nx workspace can be done with the following:
@@ -30,6 +32,10 @@ yarn add -D @nx/angular
 ```shell
 npm install -D @nx/angular
 ```
+
+{% callout type="note" title="Angular Tutorials" %}
+For a full tutorial experience, follow the [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial) or the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+{% /callout %}
 
 ## Using the Angular Plugin
 
@@ -95,8 +101,9 @@ nx g @nx/angular:service my-service
 
 ## More Documentation
 
-- [Angular Nx Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
+- [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial)
+- [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)
 - [Migrating from the Angular CLI](/recipes/angular/migration/angular)
-- [Setup Module Federation with Angular and Nx](/concepts/more-concepts/faster-builds-with-module-federation)
+- [Setup Module Federation with Angular and Nx](/concepts/module-federation/faster-builds-with-module-federation)
 - [Upgrading an AngularJS application to Angular](/recipes/angular/migration/angularjs)
 - [Using Tailwind CSS with Angular projects](/recipes/angular/using-tailwind-css-with-angular-projects)

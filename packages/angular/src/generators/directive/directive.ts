@@ -11,9 +11,7 @@ import type { Schema } from './schema';
 
 export async function directiveGenerator(tree: Tree, schema: Schema) {
   validateOptions(tree, schema);
-  const options = normalizeOptions(tree, schema);
-
-  const directiveNames = names(options.name);
+  const options = await normalizeOptions(tree, schema);
 
   generateFiles(
     tree,
@@ -21,8 +19,8 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
     options.directory,
     {
       selector: options.selector,
-      directiveClassName: directiveNames.className,
-      directiveFileName: directiveNames.fileName,
+      symbolName: options.symbolName,
+      fileName: options.fileName,
       standalone: options.standalone,
       tpl: '',
     }
@@ -31,23 +29,23 @@ export async function directiveGenerator(tree: Tree, schema: Schema) {
   if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
       options.directory,
-      `${directiveNames.fileName}.directive.spec.ts`
+      `${options.fileName}.spec.ts`
     );
 
     tree.delete(pathToSpecFile);
   }
 
   if (!options.skipImport && !options.standalone) {
-    const modulePath = findModule(tree, options.path, options.module);
+    const modulePath = findModule(tree, options.directory, options.module);
     addToNgModule(
       tree,
-      options.path,
+      options.directory,
       modulePath,
-      directiveNames.fileName,
-      `${directiveNames.className}Directive`,
-      `${directiveNames.fileName}.directive`,
+      options.name,
+      options.symbolName,
+      options.fileName,
       'declarations',
-      options.flat,
+      true,
       options.export
     );
   }

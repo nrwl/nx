@@ -19,7 +19,7 @@ Storybook helps you test your UIs. You can read more about testing with Storyboo
 
 ### Documentation
 
-Storybook helps you document your UI elements, or your design system, effectively and in an interactive way. You can read more in the [How-to document components](https://storybook.js.org/docs/react/writing-docs/introduction) documentation page. Essentially, you can use Storybook to publish a catalog of your components. A catalog that you can share with the design team, the developer team, the product team, anyone else in the product development process, or even the client. The components are isolated, interactive, and can be represented in all possible forms that they can take (e.g. for a button: enabled, disabled, active, etc). You can read more about publishing your Storybook in the [Publish Storybook](https://storybook.js.org/docs/react/sharing/publish-storybook) documentation page.
+Storybook helps you document your UI elements, or your design system, effectively and in an interactive way. You can read more in the [How to document components](https://storybook.js.org/docs/react/writing-docs/introduction) documentation page. Essentially, you can use Storybook to publish a catalog of your components. A catalog that you can share with the design team, the developer team, the product team, anyone else in the product development process, or even the client. The components are isolated, interactive, and can be represented in all possible forms that they can take (e.g. for a button: enabled, disabled, active, etc). You can read more about publishing your Storybook in the [Publish Storybook](https://storybook.js.org/docs/react/sharing/publish-storybook) documentation page.
 
 ## Nx and Storybook
 
@@ -39,41 +39,37 @@ If you are on a project using Angular, React or React Native, you can also gener
 
 If your project is not configured yet, check out one of these guides:
 
-- [Set up Storybook for React Projects](/recipes/storybook/overview-react)
+- [Set up Storybook for React (and Next.js) Projects](/recipes/storybook/overview-react)
 
 - [Set up Storybook for Angular Projects](/recipes/storybook/overview-angular)
 
+- [Set up Storybook for Vue Projects](/recipes/storybook/overview-vue)
+
 If your project is [already configured](/nx-api/storybook), you can use the `stories` generator:
 
-- [React stories generator](/nx-api/react/generators/stories)
-
-- [React Native stories generator](/nx-api/react-native/generators/stories)
+- [React (and Next.js) stories generator](/nx-api/react/generators/stories)
 
 - [Angular stories generator](/nx-api/angular/generators/stories)
 
+- [Vue stories generator](/nx-api/vue/generators/stories)
+
+- [React Native stories generator](/nx-api/react-native/generators/stories)
+
 The stories generator will read your inputs (if you’re using Angular), or your props (if you're using React), and will generate stories with the corresponding arguments/controls already prefilled.
 
-#### Cypress tests generation
+#### Storybook interaction tests
 
-Nx also generates Cypress tests for your components, that point to the corresponding component’s story. You can read more about how the Cypress tests are generated and how they look like in the [storybook-configuration generator documentation](/recipes/storybook/overview-react#cypress-tests-for-stories).
+[Storybook interaction tests](https://storybook.js.org/docs/react/writing-tests/interaction-testing) allow you to test user interactions within your Storybook stories. It enhances your [Storybook](https://storybook.js.org/) setup, ensuring that not only do your components look right, but they also work correctly when interacted with.
 
-Take a look at the generated code of the Cypress test file, specifically at the URL which Cypress visits:
-
-```javascript
-cy.visit(
-  '/iframe.html?id=buttoncomponent--primary&args=text:Click+me!;padding;style:default'
-);
-```
-
-Cypress visits the URL that hosts the story of the component we are testing, adding values to its controls (eg. `args=text:Click+me!`). Then, the test attempts to validate that the values are correctly applied.
+Nx will generate interaction tests for your stories. You can read more in our [Setting up Storybook Interaction Tests with Nx guide](/recipes/storybook/storybook-interaction-tests).
 
 ### CI/CD tools
 
 Now let’s see how Nx helps in the CI/CD journey, as well.
 
-#### Cypress testing
+#### Interaction tests in your CI
 
-When you are running the Cypress tests for a project, Cypress will start the Storybook server of that project. The Storybook server will fire up a Storybook instance, hosting all the components's stories for that project. The e2e tests will then run, which actually visit the stories and perform the tests there. Cypress will be configured to start and stop the Storybook server. The results will be cached, and they will go through the Nx graph, meaning that Nx will know if the tests need to be run again or not, depending on the affected status of your project.
+You can set up your interaction tests to run as part of your CI. You can read more in the [Storybook docs](https://storybook.js.org/docs/react/writing-tests/test-runner#set-up-ci-to-run-**tests**).
 
 #### Serve
 
@@ -97,7 +93,7 @@ Setting up Storybook on Nx reflects - and takes advantage of - the [mental model
 
 ##### Development and debugging
 
-In the process of setting up Storybook in your Nx workspace that we described above, you end up with one Storybook instance per project. That way, you can use your project’s Storybook targets to serve and build Storybook:
+In the process of setting up Storybook in your Nx workspace that we described above, you end up with one Storybook instance per project. That way, you can use your project’s Storybook targets to serve, test and build Storybook:
 
 ```shell
 nx storybook my-project
@@ -109,11 +105,13 @@ and
 nx build-storybook my-project
 ```
 
-This feature is extremely useful when developing locally. The containerized stories in your Storybook are the only ones that are built/served when you want to debug just one component, or just one library. You don’t have to wait for a huge Storybook containing all your stories in your repository to fire up. You just need to wait for the Storybook of a single project to start. This speeds up the process.
+and
 
-##### E2e tests with Cypress
+```shell
+nx test-storybook my-project
+```
 
-If you’re using Cypress, and you’re taking advantage of the generated Cypress tests that our Storybook generators generate, then your e2e tests are also going to be much faster. When you run your e2e tests for a particular project, Cypress is only going to start the specific Storybook instance, and it’s going to take much less time than having to start an all-including universal Storybook.
+This feature is extremely useful when developing locally. The containerized stories in your Storybook are the only ones that are built/served/tested when you want to debug just one component, or just one library. You don’t have to wait for a huge Storybook containing all your stories in your repository to fire up. You just need to wait for the Storybook of a single project to start. This speeds up the process.
 
 ##### Caching, affected, dependency management
 

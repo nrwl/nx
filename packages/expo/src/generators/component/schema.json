@@ -22,7 +22,7 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-prompt": "What is the name of the project for this component?"
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
     },
     "name": {
       "type": "string",
@@ -51,13 +51,19 @@
     },
     "directory": {
       "type": "string",
-      "description": "Create the component under this directory (can be nested).",
+      "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
       "x-priority": "important"
+    },
+    "nameAndDirectoryFormat": {
+      "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "flat": {
       "type": "boolean",
       "description": "Create component at the source root rather than its own directory.",
-      "default": false
+      "default": false,
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v18."
     },
     "export": {
       "type": "boolean",
@@ -70,7 +76,8 @@
       "type": "boolean",
       "description": "Use pascal case component file name (e.g. App.tsx).",
       "alias": "P",
-      "default": false
+      "default": false,
+      "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v18."
     },
     "classComponent": {
       "type": "boolean",
@@ -79,5 +86,5 @@
       "default": false
     }
   },
-  "required": ["name", "project"]
+  "required": ["name"]
 }

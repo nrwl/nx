@@ -53,7 +53,6 @@ export const allowedProjectExtensions = [
 export const allowedWorkspaceExtensions = [
   'implicitDependencies',
   'affected',
-  'npmScope',
   'tasksRunnerOptions',
   'workspaceLayout',
   'plugins',
@@ -69,6 +68,7 @@ export const allowedWorkspaceExtensions = [
   'release',
   'nxCloudAccessToken',
   'nxCloudUrl',
+  'nxCloudEncryptionKey',
   'parallel',
   'cacheDirectory',
   'useDaemonProcess',

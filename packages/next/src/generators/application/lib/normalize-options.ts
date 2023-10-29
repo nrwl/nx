@@ -1,6 +1,6 @@
 import { joinPathFragments, names, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { assertValidStyle } from '@nx/react/src/utils/assertion';
 import { Schema } from '../schema';
 
@@ -54,7 +54,7 @@ export async function normalizeOptions(
 
   const appDir = options.appDir ?? true;
 
-  const styledModule = /^(css|scss|less|styl)$/.test(options.style)
+  const styledModule = /^(css|scss|less)$/.test(options.style)
     ? null
     : options.style;
 

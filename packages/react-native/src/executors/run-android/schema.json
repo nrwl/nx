@@ -22,18 +22,6 @@
     }
   ],
   "properties": {
-    "variant": {
-      "type": "string",
-      "description": "Specify your app's build variant (e.g. `debug`, `release`).",
-      "default": "debug",
-      "examples": ["debug", "release"],
-      "x-deprecated": "Deprecated from @react-native-community/cli, use mode instead, e.g. mode=debug. Will be remove in Nx 17."
-    },
-    "jetifier": {
-      "type": "boolean",
-      "description": "Run Jetifier – the AndroidX transition tool. By default it runs before Gradle to ease working with libraries that don't support AndroidX yet.",
-      "x-deprecated": "Deprecated from @react-native-community/cli. Will be remove in Nx 17."
-    },
     "appId": {
       "type": "string",
       "description": "Specify an `applicationId` to launch after build. If not specified, `package` from `AndroidManifest.xml` will be used."
@@ -65,11 +53,6 @@
       "default": "debug",
       "examples": ["debug", "release"],
       "x-priority": "important"
-    },
-    "packager": {
-      "type": "boolean",
-      "description": "Launch packager while building",
-      "default": true
     },
     "port": {
       "type": "number",
@@ -106,12 +89,6 @@
     "interactive": {
       "type": "boolean",
       "description": "Explicitly select build type and flavour to use before running a build"
-    },
-    "sync": {
-      "type": "boolean",
-      "description": "Syncs npm dependencies to `package.json` (for React Native autolink).",
-      "x-deprecated": "Add sync-deps to dependsOn for this target in project.json instead",
-      "default": true
     },
     "resetCache": {
       "type": "boolean",

@@ -217,13 +217,15 @@ export function isTheFileAStory(tree: Tree, path: string): boolean {
       });
       const importSpecifiers = findNodes(importNode, [
         ts.SyntaxKind.ImportSpecifier,
+        ts.SyntaxKind.NamespaceImport,
       ]);
       importSpecifiers.forEach((importSpecifier: ts.ImportSpecifier) => {
         if (
           importSpecifier.getText() === 'Story' ||
           importSpecifier.getText() === 'Meta' ||
           importSpecifier.getText() === 'storiesOf' ||
-          importSpecifier.getText() === 'ComponentStory'
+          importSpecifier.getText() === 'ComponentStory' ||
+          importSpecifier.getText().includes('Storybook')
         ) {
           nodeContainsStoryImport = true;
         }
@@ -262,9 +264,10 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
 
 export function pleaseUpgrade(): string {
   return `
-    Storybook 6 is no longer maintained. Please upgrade to Storybook 7.
+    Storybook 6 is no longer maintained, and not supported in Nx. 
+    Please upgrade to Storybook 7.
 
     Here is a guide on how to upgrade:
-    https://nx.dev/packages/storybook/generators/migrate-7
+    https://nx.dev/nx-api/storybook/generators/migrate-7
     `;
 }

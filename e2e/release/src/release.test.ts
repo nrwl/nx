@@ -30,6 +30,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+        .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -122,10 +123,10 @@ describe('nx release', () => {
     const changelogOutput = runCLI(`release changelog 999.9.9`);
     expect(changelogOutput).toMatchInlineSnapshot(`
 
-      >  NX   Generating a CHANGELOG.md entry for v999.9.9
+      >  NX   Generating an entry in CHANGELOG.md for v999.9.9
 
 
-      + ## v999.9.9
+      + ## 999.9.9
       +
       +
       + ### 🚀 Features
@@ -140,7 +141,7 @@ describe('nx release', () => {
     `);
 
     expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
-      ## v999.9.9
+      ## 999.9.9
 
 
       ### 🚀 Features
@@ -544,7 +545,237 @@ describe('nx release', () => {
         .trim()
     ).toEqual('1000.0.0-next.0');
 
+    // Update custom nx release config to demonstrate project level changelogs
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          default: {
+            // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
+            projects: ['*', '!@proj/source'],
+            changelog: {
+              // This should be merged with and take priority over the projectChangelogs config at the root of the config
+              createRelease: 'github',
+            },
+          },
+        },
+        changelog: {
+          projectChangelogs: {
+            renderOptions: {
+              createRelease: false, // will be overridden by the group
+              // Customize the changelog renderer to not print the Thank You section this time (not overridden by the group)
+              includeAuthors: false,
+            },
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    // We need a valid git origin for the command to work when createRelease is set
+    await runCommandAsync(
+      `git remote add origin https://github.com/nrwl/fake-repo.git`
+    );
+
+    // Perform a dry-run this time to show that it works but also prevent making any requests to github within the test
+    const changelogDryRunOutput = runCLI(
+      `release changelog 1000.0.0-next.0 --dry-run`
+    );
+    expect(changelogDryRunOutput).toMatchInlineSnapshot(`
+
+      >  NX   Previewing an entry in CHANGELOG.md for v1000.0.0-next.0
+
+
+
+      + ## 1000.0.0-next.0
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature
+      +
+      + ### ❤️  Thank You
+      +
+      + - Test
+      +
+      ## 999.9.9
+
+
+
+
+      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for {project-name}@v1000.0.0-next.0
+
+
+      + ## 1000.0.0-next.0
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for {project-name}@v1000.0.0-next.0
+
+
+      + ## 1000.0.0-next.0
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for {project-name}@v1000.0.0-next.0
+
+
+      + ## 1000.0.0-next.0
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+    `);
+
     // port and process cleanup
     await killProcessAndPorts(process.pid, verdaccioPort);
+
+    // Add custom nx release config to control version resolution
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          default: {
+            // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
+            projects: ['*', '!@proj/source'],
+            releaseTagPattern: 'xx{version}',
+            version: {
+              generator: '@nx/js:release-version',
+              generatorOptions: {
+                // Resolve the latest version from the git tag
+                currentVersionResolver: 'git-tag',
+              },
+            },
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    // Add a git tag to the repo
+    await runCommandAsync(`git tag xx1100.0.0`);
+
+    const versionOutput3 = runCLI(`release version minor`);
+    expect(
+      versionOutput3.match(/Running release version for project: my-pkg-\d*/g)
+        .length
+    ).toEqual(3);
+    expect(
+      versionOutput3.match(
+        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
+      ).length
+    ).toEqual(3);
+
+    // It should resolve the current version from the git tag once...
+    expect(
+      versionOutput3.match(
+        new RegExp(
+          `Resolved the current version as 1100.0.0 from git tag "xx1100.0.0"`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    // ...and then reuse it twice
+    expect(
+      versionOutput3.match(
+        new RegExp(
+          `Using the current version 1100.0.0 already resolved from git tag "xx1100.0.0"`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
+    expect(
+      versionOutput3.match(
+        /New version 1100.1.0 written to my-pkg-\d*\/package.json/g
+      ).length
+    ).toEqual(3);
+
+    // Only one dependency relationship exists, so this log should only match once
+    expect(
+      versionOutput3.match(
+        /Applying new version 1100.1.0 to 1 package which depends on my-pkg-\d*/g
+      ).length
+    ).toEqual(1);
+
+    createFile(
+      `${pkg1}/my-file.txt`,
+      'update for conventional-commits testing'
+    );
+
+    // Add custom nx release config to control version resolution
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          default: {
+            // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
+            projects: ['*', '!@proj/source'],
+            releaseTagPattern: 'xx{version}',
+            version: {
+              generator: '@nx/js:release-version',
+              generatorOptions: {
+                specifierSource: 'conventional-commits',
+                currentVersionResolver: 'git-tag',
+              },
+            },
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    const versionOutput4 = runCLI(`release version`);
+
+    expect(
+      versionOutput4.match(/Running release version for project: my-pkg-\d*/g)
+        .length
+    ).toEqual(3);
+    expect(
+      versionOutput4.match(
+        /Reading data for package "@proj\/my-pkg-\d*" from my-pkg-\d*\/package.json/g
+      ).length
+    ).toEqual(3);
+
+    // It should resolve the current version from the git tag once...
+    expect(
+      versionOutput4.match(
+        new RegExp(
+          `Resolved the current version as 1100.0.0 from git tag "xx1100.0.0"`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    // ...and then reuse it twice
+    expect(
+      versionOutput4.match(
+        new RegExp(
+          `Using the current version 1100.0.0 already resolved from git tag "xx1100.0.0"`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
+    expect(versionOutput4.match(/Skipping versioning/g).length).toEqual(3);
+
+    await runCommandAsync(
+      `git add ${pkg1}/my-file.txt && git commit -m "feat!: add new file"`
+    );
+
+    const versionOutput5 = runCLI(`release version`);
+
+    expect(
+      versionOutput5.match(
+        /New version 1101.0.0 written to my-pkg-\d*\/package.json/g
+      ).length
+    ).toEqual(3);
   }, 500000);
 });

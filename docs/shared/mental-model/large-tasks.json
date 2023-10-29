@@ -439,7 +439,6 @@
               "outputPath": "build/packages/create-nx-workspace",
               "tsConfig": "packages/create-nx-workspace/tsconfig.lib.json",
               "main": "packages/create-nx-workspace/bin/create-nx-workspace.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/create-nx-workspace",
@@ -800,7 +799,6 @@
               "outputPath": "build/packages/create-nx-plugin",
               "tsConfig": "packages/create-nx-plugin/tsconfig.lib.json",
               "main": "packages/create-nx-plugin/bin/create-nx-plugin.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/create-nx-plugin",
@@ -1072,7 +1070,6 @@
               "outputPath": "build/packages/eslint-plugin-nx",
               "tsConfig": "packages/eslint-plugin-nx/tsconfig.lib.json",
               "main": "packages/eslint-plugin-nx/src/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/eslint-plugin-nx",
@@ -3020,7 +3017,6 @@
               "outputPath": "build/packages/react-native",
               "tsConfig": "packages/react-native/tsconfig.lib.json",
               "main": "packages/react-native/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 "packages/react-native/*.md",
                 {
@@ -3946,7 +3942,6 @@
               "outputPath": "build/packages/nx-plugin",
               "tsConfig": "packages/nx-plugin/tsconfig.lib.json",
               "main": "packages/nx-plugin/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/nx-plugin",
@@ -4525,7 +4520,6 @@
               "outputPath": "build/packages/storybook",
               "tsConfig": "packages/storybook/tsconfig.lib.json",
               "main": "packages/storybook/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/storybook",
@@ -5936,7 +5930,6 @@
               "tsConfig": "packages/workspace/tsconfig.lib.json",
               "packageJson": "packages/workspace/package.json",
               "main": "packages/workspace/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/workspace",
@@ -10422,7 +10415,6 @@
               "outputPath": "build/packages/angular",
               "tsConfig": "packages/angular/tsconfig.lib.json",
               "main": "packages/angular/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/angular",
@@ -10968,7 +10960,6 @@
               "outputPath": "build/packages/cypress",
               "tsConfig": "packages/cypress/tsconfig.lib.json",
               "main": "packages/cypress/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/cypress",
@@ -11243,7 +11234,6 @@
               "outputPath": "build/packages/esbuild",
               "tsConfig": "packages/esbuild/tsconfig.lib.json",
               "main": "packages/esbuild/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/esbuild",
@@ -11444,7 +11434,6 @@
               "outputPath": "build/packages/express",
               "tsConfig": "packages/express/tsconfig.lib.json",
               "main": "packages/express/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/express",
@@ -11980,7 +11969,6 @@
               "outputPath": "build/packages/webpack",
               "tsConfig": "packages/webpack/tsconfig.lib.json",
               "main": "packages/webpack/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/webpack",
@@ -12513,7 +12501,6 @@
               "outputPath": "build/packages/devkit",
               "tsConfig": "packages/devkit/tsconfig.lib.json",
               "main": "packages/devkit/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/devkit",
@@ -12922,7 +12909,6 @@
               "outputPath": "build/packages/linter",
               "tsConfig": "packages/linter/tsconfig.lib.json",
               "main": "packages/linter/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/linter",
@@ -13246,7 +13232,6 @@
               "outputPath": "build/packages/rollup",
               "tsConfig": "packages/rollup/tsconfig.lib.json",
               "main": "packages/rollup/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/rollup",
@@ -14048,7 +14033,6 @@
               "outputPath": "build/packages/detox",
               "tsConfig": "packages/detox/tsconfig.lib.json",
               "main": "packages/detox/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/detox",
@@ -15326,7 +15310,6 @@
               "outputPath": "build/packages/react",
               "tsConfig": "packages/react/tsconfig.lib.json",
               "main": "packages/react/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/react",
@@ -17268,7 +17251,6 @@
               "tsConfig": "packages/expo/tsconfig.lib.json",
               "packageJson": "packages/expo/package.json",
               "main": "packages/expo/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 "packages/expo/*.md",
                 {
@@ -17756,7 +17738,6 @@
               "outputPath": "build/packages/jest",
               "tsConfig": "packages/jest/tsconfig.lib.json",
               "main": "packages/jest/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/jest",
@@ -18339,7 +18320,6 @@
               "outputPath": "build/packages/nest",
               "tsConfig": "packages/nest/tsconfig.lib.json",
               "main": "packages/nest/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/nest",
@@ -19029,7 +19009,6 @@
               "outputPath": "build/packages/next",
               "tsConfig": "packages/next/tsconfig.lib.json",
               "main": "packages/next/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/next",
@@ -19399,7 +19378,6 @@
               "outputPath": "build/packages/node",
               "tsConfig": "packages/node/tsconfig.lib.json",
               "main": "packages/node/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/node",
@@ -19773,7 +19751,6 @@
               "outputPath": "build/packages/vite",
               "tsConfig": "packages/vite/tsconfig.lib.json",
               "main": "packages/vite/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/vite",
@@ -20740,7 +20717,6 @@
               "outputPath": "build/packages/cli",
               "tsConfig": "packages/cli/tsconfig.lib.json",
               "main": "packages/cli/bin/nx.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/cli",
@@ -20931,7 +20907,6 @@
               "outputPath": "build/packages/tao",
               "tsConfig": "packages/tao/tsconfig.lib.json",
               "main": "packages/tao/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/tao",
@@ -21470,7 +21445,6 @@
               "outputPath": "build/packages/web",
               "tsConfig": "packages/web/tsconfig.lib.json",
               "main": "packages/web/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/web",
@@ -22426,7 +22400,6 @@
               "outputPath": "build/packages/js",
               "tsConfig": "packages/js/tsconfig.lib.json",
               "main": "packages/js/src/index.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/js",
@@ -23825,7 +23798,6 @@
               "tsConfig": "packages/nx/tsconfig.lib.json",
               "packageJson": "packages/nx/package.json",
               "main": "packages/nx/bin/nx.ts",
-              "updateBuildableProjectDepsInPackageJson": false,
               "assets": [
                 {
                   "input": "packages/nx",
@@ -25024,10 +24996,6 @@
             "hash": "c602609d311a8f3b028cdde9d83a1bd860a53870"
           },
           {
-            "file": "docs/generated/cli/workspace-lint.md",
-            "hash": "c5bc40d3a8198ca5eebdcd851dff5e85d9ce3912"
-          },
-          {
             "file": "docs/generated/devkit/index.md",
             "hash": "0d2ed5a146246b4ead2e2ed41f1fccb36f744f2b"
           },
@@ -25462,10 +25430,6 @@
           {
             "file": "docs/nx-cloud/set-up/record-report.png",
             "hash": "53bc7135364d69e45ba9c9c03ae5dc369ff8770f"
-          },
-          {
-            "file": "docs/nx-cloud/set-up/record-workspace-lint.png",
-            "hash": "c5f64a0d41f8e206e0ba69f3aa256fd418dbb9c5"
           },
           {
             "file": "docs/packages.json",

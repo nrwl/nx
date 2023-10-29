@@ -1,11 +1,11 @@
 import {
   GeneratorCallback,
   Tree,
-  convertNxGenerator,
   formatFiles,
   logger,
   readJson,
   runTasksInSerial,
+  stripIndents,
 } from '@nx/devkit';
 import { Schema } from './schema';
 
@@ -15,21 +15,23 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
+  // Check if the file exists
+  if (!tree.exists(schema.path)) {
+    throw new Error(stripIndents`The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.
+    
+    Path: ${schema.path}`);
+  }
   const tasks: GeneratorCallback[] = [];
   // Check remote exists
   const remote = checkRemoteExists(tree, schema.remote);
-  const { projectName, projectRoot: remoteRoot } =
-    await determineProjectNameAndRootOptions(tree, {
-      name: schema.remote,
-      projectType: 'application',
-      projectNameAndRootFormat: schema.projectNameAndRootFormat,
-      callingGenerator: '@nx/react:federate-module',
-    });
+
+  let projectRoot, remoteName;
 
   if (!remote) {
     // create remote
     const remoteGenerator = await remoteGeneratorInternal(tree, {
       name: schema.remote,
+      directory: schema.remoteDirectory,
       e2eTestRunner: schema.e2eTestRunner,
       skipFormat: schema.skipFormat,
       linter: schema.linter,
@@ -40,10 +42,22 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
     });
 
     tasks.push(remoteGenerator);
-  }
 
-  const projectRoot = remote ? remote.root : remoteRoot;
-  const remoteName = remote ? remote.name : projectName;
+    const { projectName, projectRoot: remoteRoot } =
+      await determineProjectNameAndRootOptions(tree, {
+        name: schema.remote,
+        directory: schema.remoteDirectory,
+        projectType: 'application',
+        projectNameAndRootFormat: schema.projectNameAndRootFormat ?? 'derived',
+        callingGenerator: '@nx/react:federate-module',
+      });
+
+    projectRoot = remoteRoot;
+    remoteName = projectName;
+  } else {
+    projectRoot = remote.root;
+    remoteName = remote.name;
+  }
 
   // add path to exposes property
   addPathToExposes(tree, projectRoot, schema.name, schema.path);
@@ -73,7 +87,3 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
 }
 
 export default federateModuleGenerator;
-
-export const federateModuleSchematic = convertNxGenerator(
-  federateModuleGenerator
-);

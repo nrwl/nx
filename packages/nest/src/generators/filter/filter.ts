@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -14,25 +13,39 @@ import {
 export type FilterGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;
 
-export function filterGenerator(
+export async function filterGenerator(
+  tree: Tree,
+  rawOptions: FilterGeneratorOptions
+) {
+  await filterGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function filterGeneratorInternal(
   tree: Tree,
   rawOptions: FilterGeneratorOptions
 ): Promise<any> {
-  const options = normalizeFilterOptions(tree, rawOptions);
+  const options = await normalizeFilterOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'filter', options);
 }
 
 export default filterGenerator;
 
-export const filterSchematic = convertNxGenerator(filterGenerator);
-
-function normalizeFilterOptions(
+async function normalizeFilterOptions(
   tree: Tree,
   options: FilterGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'filter',
+    '@nx/nest:filter',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
   };

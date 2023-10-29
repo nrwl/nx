@@ -305,7 +305,6 @@ export function ProjectsSidebar(): JSX.Element {
           await projectGraphDataService.getProjectGraph(
             projectInfo.projectGraphUrl
           );
-
         projectGraphService.send({
           type: 'updateGraph',
           projects: response.projects,

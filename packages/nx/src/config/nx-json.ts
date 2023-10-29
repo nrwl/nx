@@ -1,9 +1,10 @@
-import { dirname, join } from 'path';
 import { existsSync } from 'fs';
+import { dirname, join } from 'path';
 
+import type { ChangelogRenderOptions } from '../../changelog-renderer';
 import { readJsonFile } from '../utils/fileutils';
-import { workspaceRoot } from '../utils/workspace-root';
 import { PackageManager } from '../utils/package-manager';
+import { workspaceRoot } from '../utils/workspace-root';
 import {
   InputDefinition,
   TargetConfiguration,
@@ -25,16 +26,7 @@ export interface NxAffectedConfig {
   defaultBase?: string;
 }
 
-export type TargetDefaults = Record<
-  string,
-  Partial<TargetConfiguration> & {
-    /**
-     * Determines if Nx is able to cache a given target.
-     * Currently only supported in `targetDefaults`.
-     */
-    cache?: boolean;
-  }
->;
+export type TargetDefaults = Record<string, Partial<TargetConfiguration>>;
 
 export type TargetDependencies = Record<
   string,
@@ -63,8 +55,53 @@ interface NxInstallationConfiguration {
  * **ALPHA**
  */
 interface NxReleaseVersionConfiguration {
-  generator: string;
+  generator?: string;
   generatorOptions?: Record<string, unknown>;
+}
+
+/**
+ * **ALPHA**
+ */
+export interface NxReleaseChangelogConfiguration {
+  /**
+   * Optionally create a release containing all relevant changes on a supported version control system, it
+   * is false by default.
+   *
+   * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
+   * "{projectName}@v{version}" to be used for those projects, even when versioning everything together.
+   */
+  createRelease?: 'github' | false;
+  /**
+   * This can either be set to a string value that will be written to the changelog file(s)
+   * at the workspace root and/or within project directories, or set to `false` to specify
+   * that no changelog entry should be made when there are no code changes.
+   *
+   * NOTE: The string value has a sensible default value and supports interpolation of
+   * {projectName} when generating for project level changelogs.
+   *
+   * E.g. for a project level changelog you could customize the message to something like:
+   * "entryWhenNoChanges": "There were no code changes for {projectName}"
+   */
+  entryWhenNoChanges?: string | false;
+  /**
+   * This is either a workspace path where the changelog markdown file will be created and read from,
+   * or set to false to disable file creation altogether (e.g. if only using Github releases).
+   *
+   * Interpolation of {projectName}, {projectRoot} and {workspaceRoot} is supported.
+   *
+   * The defaults are:
+   * - "{workspaceRoot}/CHANGELOG.md" at the workspace level
+   * - "{projectRoot}/CHANGELOG.md" at the project level
+   */
+  file?: string | false;
+  /**
+   * A path to a valid changelog renderer function used to transform commit messages and other metadata into
+   * the final changelog (usually in markdown format). Its output can be modified using the optional `renderOptions`.
+   *
+   * By default, the renderer is set to "nx/changelog-renderer" which nx provides out of the box.
+   */
+  renderer?: string;
+  renderOptions?: ChangelogRenderOptions;
 }
 
 /**
@@ -76,16 +113,47 @@ interface NxReleaseConfiguration {
    * if they were in a release group together.
    */
   groups?: Record<
-    string,
+    string, // group name
     {
+      /**
+       * Required list of one or more projects to include in the release group. Any single project can
+       * only be used in a maximum of one release group.
+       */
       projects: string[] | string;
       /**
-       * If no version config is provided for the group, we will assume that @nx/js:release-version
-       * is the desired generator implementation, allowing for terser config for the common case.
+       * Optionally override version configuration for this group.
        */
       version?: NxReleaseVersionConfiguration;
+      /**
+       * Optionally override project changelog configuration for this group.
+       */
+      changelog?: NxReleaseChangelogConfiguration | false;
+      /**
+       * Optionally override the git/release tag pattern to use for this group.
+       */
+      releaseTagPattern?: string;
     }
   >;
+  changelog?: {
+    workspaceChangelog?: NxReleaseChangelogConfiguration | false;
+    projectChangelogs?: NxReleaseChangelogConfiguration | false;
+  };
+  /**
+   * If no version config is provided, we will assume that @nx/js:release-version
+   * is the desired generator implementation, allowing for terser config for the common case.
+   */
+  version?: NxReleaseVersionConfiguration;
+  /**
+   * Optional override the git/release tag pattern to use. This field is the source of truth
+   * for changelog generation and release tagging, as well as for conventional-commits parsing.
+   *
+   * It supports interpolating the version as {version} and (if releasing independently or forcing
+   * project level version control system releases) the project name as {projectName} within the string.
+   *
+   * The default releaseTagPattern for unified releases is: "v{version}"
+   * The default releaseTagPattern for releases at the project level is: "{projectName}@v{version}"
+   */
+  releaseTagPattern?: string;
 }
 
 /**
@@ -112,11 +180,6 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   targetDefaults?: TargetDefaults;
   /**
-   * @deprecated This is inferred from the package.json in the workspace root. Please use {@link getNpmScope} instead.
-   * NPM Scope that the workspace uses
-   */
-  npmScope?: string;
-  /**
    * Default options for `nx affected`
    */
   affected?: NxAffectedConfig;
@@ -135,7 +198,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
       /**
        * Path to resolve the runner
        */
-      runner: string;
+      runner?: string;
       /**
        * Default options for the runner
        */
@@ -167,21 +230,17 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   cli?: {
     packageManager?: PackageManager;
 
-    /**
-     * @deprecated - defaultCollection is deprecated and will be removed
-     */
-    defaultCollection?: string;
     defaultProjectName?: string;
   };
   /**
    * Plugins for extending the project graph
    */
-  plugins?: string[];
+  plugins?: PluginConfiguration[];
 
   /**
    * Configuration for Nx Plugins
    */
-  pluginsConfig?: Record<string, unknown>;
+  pluginsConfig?: Record<string, Record<string, unknown>>;
 
   /**
    * Default project. When project isn't provided, the default project
@@ -214,6 +273,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
   nxCloudUrl?: string;
 
   /**
+   * Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud.
+   */
+  nxCloudEncryptionKey?: string;
+
+  /**
    * Specifies how many tasks can be run in parallel.
    */
   parallel?: number;
@@ -228,6 +292,10 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   useDaemonProcess?: boolean;
 }
+
+export type PluginConfiguration =
+  | string
+  | { plugin: string; options?: unknown };
 
 export function readNxJson(root: string = workspaceRoot): NxJsonConfiguration {
   const nxJson = join(root, 'nx.json');

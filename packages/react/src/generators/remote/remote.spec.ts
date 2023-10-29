@@ -1,6 +1,6 @@
 import { readJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import remote from './remote';
 import { getRootTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 

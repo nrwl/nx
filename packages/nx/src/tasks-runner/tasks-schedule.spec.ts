@@ -13,6 +13,7 @@ function createMockTask(id: string): Task {
       project,
       target,
     },
+    outputs: [],
     overrides: {},
   };
 }
@@ -144,11 +145,6 @@ describe('TasksSchedule', () => {
         await taskSchedule.scheduleNextTasks();
         expect(taskSchedule.nextTask()).toEqual(lib1Build);
         expect(taskSchedule.nextTask()).toEqual(app2Build);
-      });
-
-      it('should invoke lifeCycle.scheduleTask', async () => {
-        await taskSchedule.scheduleNextTasks();
-        expect(lifeCycle.scheduleTask).toHaveBeenCalled();
       });
 
       it('should not schedule any tasks that still have uncompleted dependencies', async () => {
@@ -356,11 +352,6 @@ describe('TasksSchedule', () => {
         expect(taskSchedule.nextTask()).toEqual(lib1Test);
         expect(taskSchedule.nextTask()).toEqual(app1Test);
         expect(taskSchedule.nextTask()).toEqual(app2Test);
-      });
-
-      it('should invoke lifeCycle.scheduleTask', async () => {
-        await taskSchedule.scheduleNextTasks();
-        expect(lifeCycle.scheduleTask).toHaveBeenCalled();
       });
 
       it('should run out of tasks when they are all complete', async () => {

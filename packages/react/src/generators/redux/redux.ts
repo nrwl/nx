@@ -9,7 +9,6 @@ import { NormalizedSchema, Schema } from './schema';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   getProjects,
@@ -21,11 +20,19 @@ import {
 } from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '@nx/js';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 let tsModule: typeof import('typescript');
 
 export async function reduxGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
+  return reduxGeneratorInternal(host, {
+    nameAndDirectoryFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function reduxGeneratorInternal(host: Tree, schema: Schema) {
+  const options = await normalizeOptions(host, schema);
   generateReduxFiles(host, options);
   addExportsToBarrel(host, options);
   const installTask = addReduxPackageDependencies(host);
@@ -41,7 +48,7 @@ function generateReduxFiles(host: Tree, options: NormalizedSchema) {
   generateFiles(
     host,
     joinPathFragments(__dirname, './files'),
-    options.filesPath,
+    options.directory,
     {
       ...options,
       tmpl: '',
@@ -142,12 +149,32 @@ function updateReducerConfiguration(host: Tree, options: NormalizedSchema) {
   host.write(options.appMainFilePath, changes);
 }
 
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
+async function normalizeOptions(
+  host: Tree,
+  options: Schema
+): Promise<NormalizedSchema> {
+  const {
+    artifactName: name,
+    directory,
+    fileName,
+    project: projectName,
+  } = await determineArtifactNameAndDirectoryOptions(host, {
+    artifactType: 'slice',
+    callingGenerator: '@nx/react:redux',
+    name: options.name,
+    directory: options.directory,
+    derivedDirectory: options.directory,
+    flat: true,
+    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    project: options.project,
+    fileExtension: 'tsx',
+  });
+
   let appProjectSourcePath: string;
   let appMainFilePath: string;
-  const extraNames = names(options.name);
+  const extraNames = names(name);
   const projects = getProjects(host);
-  const project = projects.get(options.project);
+  const project = projects.get(projectName);
   const { sourceRoot, projectType } = project;
 
   const tsConfigJson = readJson(host, getRootTsConfigPathInTree(host));
@@ -167,7 +194,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   // for it without needing to specify --appProject.
   options.appProject =
     options.appProject ||
-    (projectType === 'application' ? options.project : undefined);
+    (projectType === 'application' ? projectName : undefined);
   if (options.appProject) {
     const appConfig = projects.get(options.appProject);
     if (appConfig.projectType !== 'application') {
@@ -189,19 +216,15 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
   return {
     ...options,
     ...extraNames,
+    fileName,
     constantName: names(options.name).constantName.toUpperCase(),
-    directory: names(options.directory ?? '').fileName,
+    directory,
     projectType,
     projectSourcePath: sourceRoot,
     projectModulePath: modulePath,
     appProjectSourcePath,
     appMainFilePath,
-    filesPath: joinPathFragments(
-      sourceRoot,
-      projectType === 'application' ? 'app' : 'lib'
-    ),
   };
 }
 
 export default reduxGenerator;
-export const reduxSchematic = convertNxGenerator(reduxGenerator);

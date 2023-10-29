@@ -7,10 +7,6 @@ description: This is an overview page for the Storybook plugin in Nx. It explain
 
 This guide will briefly walk you through using Storybook within an Nx workspace.
 
-{% callout type="info" title="Storybook 7 by default" %}
-Starting with Nx 16, Storybook 7 is used by default to configure your projects.
-{% /callout %}
-
 ## Setting Up Storybook
 
 ### Add the Storybook plugin
@@ -86,7 +82,7 @@ nx g @nx/react-native:storybook-configuration my-react-native-project
 {% /tab %}
 {% /tabs %}
 
-These framework-specific generators will also **generate stories** for you.
+These framework-specific generators will also **generate stories** and interaction tests for you.
 
 If you are NOT using a framework-specific generator (for [Angular](/nx-api/angular/generators/storybook-configuration), [React](/nx-api/react/generators/storybook-configuration), [React Native](/nx-api/react-native/generators/storybook-configuration), [Vue](/nx-api/vue/generators/storybook-configuration)), in the field `uiFramework` you must choose one of the following Storybook frameworks:
 
@@ -113,11 +109,9 @@ Choosing one of these frameworks will have the following effects on your workspa
 
 2. Nx will generate a project-level `.storybook` folder (located under `libs/your-project/.storybook` or `apps/your-project/.storybook`) containing the essential configuration files for Storybook.
 
-3. Nx will create new `targets` in your project's `project.json`, called `storybook` and `build-storybook`, containing all the necessary configuration to serve and build Storybook.
+3. Nx will create new `targets` in your project's `project.json`, called `storybook`, `test-storybook` and `build-storybook`, containing all the necessary configuration to serve, test and build Storybook.
 
-4. Nx will generate a new Cypress e2e app for your project (if there isn't one already) to run against the Storybook instance.
-
-Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js or React Native: [`@nx/angular:storybook-configuration`](/nx-api/angular/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/nx-api/react/generators/storybook-configuration), [`@nx/react-native:storybook-configuration`](/nx-api/react-native/generators/storybook-configuration), as shown above.
+Make sure to **use the framework-specific generators** if your project is using Angular, React, Next.js, Vue, Nuxt, or React Native: [`@nx/angular:storybook-configuration`](/nx-api/angular/generators/storybook-configuration), [`@nx/react:storybook-configuration`](/nx-api/react/generators/storybook-configuration), [`@nx/react-native:storybook-configuration`](/nx-api/react-native/generators/storybook-configuration), [`@nx/vue:storybook-configuration`](/nx-api/vue/generators/storybook-configuration) as shown above.
 
 ### Running Storybook
 
@@ -147,6 +141,20 @@ or
 nx build-storybook project-name
 ```
 
+### Testing Storybook
+
+With the Storybook server running, you can test Storybook (run all the interaction tests) using this command:
+
+```shell
+nx run project-name:test-storybook
+```
+
+or
+
+```shell
+nx test-storybook project-name
+```
+
 ### Anatomy of the Storybook setup
 
 When running the Nx Storybook generator, it'll configure the Nx workspace to be able to run Storybook seamlessly. It'll create a project specific Storybook configuration.
@@ -171,17 +179,21 @@ To register a [Storybook addon](https://storybook.js.org/addons/) for all Storyb
 
 1. In your project's `.storybook/main.ts` file, in the `addons` array of the `module.exports` object, add the new addon:
 
-   ```typescript {% fileName="<project-path>/.storybook/main.js" %}
-   module.exports = {
-   stories: [...],
-   ...,
-   addons: [..., '@storybook/addon-essentials'],
-   };
-   ```
+```typescript {% fileName="<project-path>/.storybook/main.ts" %}
+import type { StorybookConfig } from '@storybook/react-vite';
+
+const config: StorybookConfig = {
+  ...
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions', ...],
+  ...
+};
+
+export default config;
+```
 
 2. If a decorator is required, in each project's `<project-path>/.storybook/preview.ts`, you can export an array called `decorators`.
 
-   ```typescript {% fileName="<project-path>/.storybook/preview.js" %}
+   ```typescript {% fileName="<project-path>/.storybook/preview.ts" %}
    import someDecorator from 'some-storybook-addon';
    export const decorators = [someDecorator];
    ```

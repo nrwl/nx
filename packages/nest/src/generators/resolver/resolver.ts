@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -14,25 +13,39 @@ import {
 export type ResolverGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;
 
-export function resolverGenerator(
+export async function resolverGenerator(
+  tree: Tree,
+  rawOptions: ResolverGeneratorOptions
+) {
+  await resolverGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function resolverGeneratorInternal(
   tree: Tree,
   rawOptions: ResolverGeneratorOptions
 ): Promise<any> {
-  const options = normalizeResolverOptions(tree, rawOptions);
+  const options = await normalizeResolverOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'resolver', options);
 }
 
 export default resolverGenerator;
 
-export const resolverSchematic = convertNxGenerator(resolverGenerator);
-
-function normalizeResolverOptions(
+async function normalizeResolverOptions(
   tree: Tree,
   options: ResolverGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'resolver',
+    '@nx/nest:resolver',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
   };

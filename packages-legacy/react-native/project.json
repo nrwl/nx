@@ -5,6 +5,7 @@
   "projectType": "library",
   "targets": {
     "build": {
+      "outputs": ["{workspaceRoot}/build/packages/{projectName}/README.md"],
       "command": "node ./scripts/copy-readme.js react-native-legacy"
     },
     "build-base": {

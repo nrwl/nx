@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -20,7 +19,7 @@ import {
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { join } from 'path';
 import { major } from 'semver';
 import { addLinterToCyProject } from '../../utils/add-linter';
@@ -266,6 +265,3 @@ async function normalizeOptions(
 }
 
 export default cypressProjectGenerator;
-export const cypressProjectSchematic = convertNxGenerator(
-  cypressProjectGenerator
-);

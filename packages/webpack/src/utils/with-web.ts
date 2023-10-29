@@ -205,7 +205,7 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
         use: [
           ...getCommonLoadersForCssModules(mergedOptions, includePaths),
           {
-            loader: require.resolve('stylus-loader'),
+            loader: join(__dirname, 'webpack/deprecated-stylus-loader.js'),
             options: {
               stylusOptions: {
                 include: includePaths,
@@ -265,7 +265,7 @@ export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
         use: [
           ...getCommonLoadersForGlobalCss(mergedOptions, includePaths),
           {
-            loader: require.resolve('stylus-loader'),
+            loader: join(__dirname, 'webpack/deprecated-stylus-loader.js'),
             options: {
               sourceMap: !!mergedOptions.sourceMap,
               stylusOptions: {

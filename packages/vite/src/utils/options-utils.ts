@@ -12,7 +12,6 @@ import {
   InlineConfig,
   PluginOption,
   PreviewOptions,
-  searchForWorkspaceRoot,
   ServerOptions,
 } from 'vite';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
@@ -109,10 +108,14 @@ export function getViteSharedConfig(
 /**
  * Builds the options for the vite dev server.
  */
-export function getViteServerOptions(
+export async function getViteServerOptions(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
-): ServerOptions {
+): Promise<ServerOptions> {
+  // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
+  const { searchForWorkspaceRoot } = await (Function(
+    'return import("vite")'
+  )() as Promise<typeof import('vite')>);
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const serverOptions: ServerOptions = {
@@ -152,8 +155,13 @@ export function getViteBuildOptions(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
+  const outputPath = joinPathFragments(
+    'dist',
+    projectRoot != '.' ? projectRoot : context.projectName
+  );
+
   return {
-    outDir: relative(projectRoot, options.outputPath),
+    outDir: relative(projectRoot, options.outputPath ?? outputPath),
     emptyOutDir: options.emptyOutDir,
     reportCompressedSize: true,
     cssCodeSplit: options.cssCodeSplit,

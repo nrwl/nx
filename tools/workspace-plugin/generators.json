@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "remove-migrations": {
+      "factory": "./src/generators/remove-migrations/generator",
+      "schema": "./src/generators/remove-migrations/schema.json",
+      "description": "remove-migrations generator"
+    }
+  }
+}

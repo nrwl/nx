@@ -1,5 +1,5 @@
 import { Tree } from 'nx/src/generators/tree';
-import { Linter, lintProjectGenerator } from '@nx/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
@@ -10,8 +10,8 @@ import { extraEslintDependencies } from './lint';
 import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
-} from '@nx/linter/src/generators/utils/eslint-file';
-import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+} from '@nx/eslint/src/generators/utils/eslint-file';
+import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 
 export async function addLinting(
   host: Tree,
@@ -72,7 +72,7 @@ export async function addLinting(
   }
 }
 
-function editEslintConfigFiles(
+export function editEslintConfigFiles(
   tree: Tree,
   projectRoot: string,
   rootProject?: boolean
@@ -93,7 +93,7 @@ function editEslintConfigFiles(
         json.overrides = [
           {
             files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: {},
+            rules: { 'vue/multi-word-component-names': 'off' },
           },
         ];
       }
@@ -115,7 +115,7 @@ function editEslintConfigFiles(
         json.overrides = [
           {
             files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: {},
+            rules: { 'vue/multi-word-component-names': 'off' },
           },
         ];
       }

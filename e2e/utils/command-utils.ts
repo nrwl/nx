@@ -229,7 +229,10 @@ export function runCommandAsync(
 
 export function runCommandUntil(
   command: string,
-  criteria: (output: string) => boolean
+  criteria: (output: string) => boolean,
+  opts: RunCmdOpts = {
+    env: undefined,
+  }
 ): Promise<ChildProcess> {
   const pm = getPackageManagerCommand();
   const p = exec(`${pm.runNx} ${command}`, {
@@ -238,6 +241,7 @@ export function runCommandUntil(
     env: {
       CI: 'true',
       ...getStrippedEnvironmentVariables(),
+      ...opts.env,
       FORCE_COLOR: 'false',
     },
   });

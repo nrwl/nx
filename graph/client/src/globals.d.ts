@@ -1,6 +1,7 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
+  ExpandedTaskInputsReponse,
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
@@ -15,6 +16,7 @@ export declare global {
     localMode: 'serve' | 'build';
     projectGraphResponse?: ProjectGraphClientResponse;
     taskGraphResponse?: TaskGraphClientResponse;
+    expandedTaskInputsResponse?: ExpandedTaskInputsReponse;
     environment: 'dev' | 'watch' | 'release' | 'nx-console';
     appConfig: AppConfig;
     useXstateInspect: boolean;

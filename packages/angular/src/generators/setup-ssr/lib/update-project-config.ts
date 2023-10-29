@@ -87,6 +87,10 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     ];
     updateNxJson(tree, nxJson);
   }
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults.server ??= {};
+  nxJson.targetDefaults.server.cache ??= true;
+  updateNxJson(tree, nxJson);
 }
 
 function getServerOptions(

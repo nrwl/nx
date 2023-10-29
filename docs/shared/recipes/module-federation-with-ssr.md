@@ -18,7 +18,7 @@ Run the following command with the options listed to create an empty workspace.
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
-{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
+{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/ci-with-nx" /%}
 
 ### Install your framework plugin
 
@@ -137,5 +137,5 @@ To serve the `store` application and watch for changes on the `checkout` applica
 
 To learn more about Module Federation, we have some resources you might find useful:
 
-- [Guide: Faster Builds with Module Federation](/concepts/more-concepts/faster-builds-with-module-federation)
+- [Guide: Faster Builds with Module Federation](/concepts/module-federation/faster-builds-with-module-federation)
 - [Video: Speed up your Angular serve and build times with Module Federation and Nx](https://www.youtube.com/watch?v=JkcaGzhRjkc)

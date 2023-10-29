@@ -120,7 +120,7 @@ const angularV1Json = (appName: string) => `{
           }
         },
         "lint": {
-          "builder": "@nx/linter:eslint",
+          "builder": "@nx/eslint:lint",
           "options": {
             "lintFilePatterns": [
               "${appName}/src/**/*.ts",
@@ -130,7 +130,7 @@ const angularV1Json = (appName: string) => `{
         },
         "test": {
           "builder": "@nx/jest:jest",
-          "outputs": ["coverage${appName}"],
+          "outputs": ["{workspaceRoot}/coverage${appName}"],
           "options": {
             "jestConfig": "${appName}/jest.config.ts",
             "passWithNoTests": true
@@ -158,7 +158,7 @@ const angularV1Json = (appName: string) => `{
           }
         },
         "lint": {
-          "builder": "@nx/linter:eslint",
+          "builder": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["${appName}-e2e/**/*.{js,ts}"]

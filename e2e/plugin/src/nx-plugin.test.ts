@@ -16,14 +16,17 @@ import {
 } from '@nx/e2e/utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
-import { ASYNC_GENERATOR_EXECUTOR_CONTENTS } from './nx-plugin.fixtures';
+import {
+  ASYNC_GENERATOR_EXECUTOR_CONTENTS,
+  NX_PLUGIN_V2_CONTENTS,
+} from './nx-plugin.fixtures';
 import { join } from 'path';
 
 describe('Nx Plugin', () => {
-  let npmScope: string;
+  let workspaceName: string;
 
   beforeAll(() => {
-    npmScope = newProject();
+    workspaceName = newProject();
   });
 
   afterAll(() => cleanupProject());
@@ -75,7 +78,7 @@ describe('Nx Plugin', () => {
       generators: expect.objectContaining({
         [`update-${version}`]: {
           version,
-          description: `update-${version}`,
+          description: `Migration for v1.0.0`,
           implementation: `./src/migrations/update-${version}/update-${version}`,
         },
       }),
@@ -263,7 +266,7 @@ describe('Nx Plugin', () => {
       runCLI(`generate @nx/plugin:plugin ${plugin} --linter=eslint`);
     });
 
-    it('should be able to infer projects and targets', async () => {
+    it('should be able to infer projects and targets (v1)', async () => {
       // Setup project inference + target inference
       updateFile(
         `libs/${plugin}/src/index.ts`,
@@ -289,7 +292,7 @@ describe('Nx Plugin', () => {
       // Register plugin in nx.json (required for inference)
       updateFile(`nx.json`, (nxJson) => {
         const nx = JSON.parse(nxJson);
-        nx.plugins = [`@${npmScope}/${plugin}`];
+        nx.plugins = [`@${workspaceName}/${plugin}`];
         return JSON.stringify(nx, null, 2);
       });
 
@@ -301,6 +304,36 @@ describe('Nx Plugin', () => {
       expect(runCLI(`build ${inferredProject}`)).toContain(
         'custom registered target'
       );
+    });
+
+    it('should be able to infer projects and targets (v2)', async () => {
+      // Setup project inference + target inference
+      updateFile(`libs/${plugin}/src/index.ts`, NX_PLUGIN_V2_CONTENTS);
+
+      // Register plugin in nx.json (required for inference)
+      updateFile(`nx.json`, (nxJson) => {
+        const nx = JSON.parse(nxJson);
+        nx.plugins = [
+          {
+            plugin: `@${workspaceName}/${plugin}`,
+            options: { inferredTags: ['my-tag'] },
+          },
+        ];
+        return JSON.stringify(nx, null, 2);
+      });
+
+      // Create project that should be inferred by Nx
+      const inferredProject = uniq('inferred');
+      createFile(`libs/${inferredProject}/my-project-file`);
+
+      // Attempt to use inferred project w/ Nx
+      expect(runCLI(`build ${inferredProject}`)).toContain(
+        'custom registered target'
+      );
+      const configuration = JSON.parse(
+        runCLI(`show project ${inferredProject} --json`)
+      );
+      expect(configuration.tags).toEqual(['my-tag']);
     });
 
     it('should be able to use local generators and executors', async () => {
@@ -318,13 +351,13 @@ describe('Nx Plugin', () => {
       );
 
       runCLI(
-        `generate @${npmScope}/${plugin}:${generator} --name ${generatedProject}`
+        `generate @${workspaceName}/${plugin}:${generator} --name ${generatedProject}`
       );
 
       updateFile(`libs/${generatedProject}/project.json`, (f) => {
         const project: ProjectConfiguration = JSON.parse(f);
         project.targets['execute'] = {
-          executor: `@${npmScope}/${plugin}:${executor}`,
+          executor: `@${workspaceName}/${plugin}:${executor}`,
         };
         return JSON.stringify(project, null, 2);
       });
@@ -350,33 +383,13 @@ describe('Nx Plugin', () => {
         );
 
         runCLI(
-          `generate @${npmScope}/${plugin}:${generator} --name ${uniq('test')}`
+          `generate @${workspaceName}/${plugin}:${generator} --name ${uniq(
+            'test'
+          )}`
         );
       }).not.toThrow();
       updateFile('package.json', JSON.stringify(oldPackageJson, null, 2));
       runCommand(getPackageManagerCommand().install);
-    });
-  });
-
-  describe('workspace-generator', () => {
-    let custom: string;
-
-    it('should work with generate wrapper', () => {
-      custom = uniq('custom');
-      const project = uniq('generated-project');
-      runCLI(`g @nx/plugin:plugin workspace-plugin --no-interactive`);
-      runCLI(
-        `g @nx/plugin:generator ${custom} --project workspace-plugin --no-interactive`
-      );
-      runCLI(
-        `workspace-generator ${custom} --name ${project} --no-interactive`
-      );
-      expect(() => {
-        checkFilesExist(
-          `libs/${project}/src/index.ts`,
-          `libs/${project}/project.json`
-        );
-      });
     });
   });
 

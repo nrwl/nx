@@ -20,4 +20,6 @@ export interface Schema {
   devRemotes?: string[];
   skipRemotes?: string[];
   pathToManifestFile?: string;
+  static?: boolean;
+  isInitialHost?: boolean;
 }

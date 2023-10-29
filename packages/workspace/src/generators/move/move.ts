@@ -1,5 +1,4 @@
 import {
-  convertNxGenerator,
   formatFiles,
   readProjectConfiguration,
   removeProjectConfiguration,
@@ -71,5 +70,3 @@ export async function moveGeneratorInternal(tree: Tree, rawSchema: Schema) {
 }
 
 export default moveGenerator;
-
-export const moveSchematic = convertNxGenerator(moveGenerator);
