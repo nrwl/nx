@@ -1,4 +1,5 @@
 import {
+  cleanupProject,
   createFile,
   newProject,
   runCLI,
@@ -14,6 +15,8 @@ describe('NextJs Component Testing', () => {
     });
   });
 
+  afterAll(() => cleanupProject());
+
   it('should test a NextJs app', () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
@@ -25,6 +28,28 @@ describe('NextJs Component Testing', () => {
     addTailwindToApp(appName);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
+  });
+
+  it('should test a NextJs app using babel compiler', () => {
+    const appName = uniq('next-app');
+    createAppWithCt(appName);
+    addBabelSupport(`apps/${appName}`);
+    if (runE2ETests()) {
+      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
+  });
+
+  it('should test a NextJs lib using babel compiler', async () => {
+    const libName = uniq('next-lib');
+    createLibWithCt(libName, false);
+    addBabelSupport(`libs/${libName}`);
+    if (runE2ETests()) {
+      expect(runCLI(`component-test ${libName} --no-watch`)).toContain(
         'All specs passed!'
       );
     }
@@ -63,6 +88,21 @@ describe('NextJs Component Testing', () => {
     }
   });
 });
+
+function addBabelSupport(path: string) {
+  updateFile(`${path}/cypress.config.ts`, (content) => {
+    // apply babel compiler
+    return content.replace(
+      'nxComponentTestingPreset(__filename)',
+      'nxComponentTestingPreset(__filename, {compiler: "babel"})'
+    );
+  });
+
+  createFile(
+    `${path}/.babelrc`,
+    JSON.stringify({ presets: ['next/babel'], plugins: ['istanbul'] })
+  );
+}
 
 function createAppWithCt(appName: string) {
   runCLI(`generate @nx/next:app ${appName} --no-interactive --appDir=false`);
