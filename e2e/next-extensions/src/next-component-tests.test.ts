@@ -98,6 +98,7 @@ function addBabelSupport(path: string) {
     );
   });
 
+  //  added needed .babelrc file with defaults
   createFile(
     `${path}/.babelrc`,
     JSON.stringify({ presets: ['next/babel'], plugins: ['istanbul'] })
