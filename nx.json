@@ -70,7 +70,8 @@
       "options": {
         "outputPath": "build/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
-        "main": "{projectRoot}/index.ts"
+        "main": "{projectRoot}/index.ts",
+        "batch": true
       },
       "outputs": ["{options.outputPath}"],
       "cache": true
