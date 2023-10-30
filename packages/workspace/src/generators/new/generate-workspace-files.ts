@@ -105,6 +105,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.VueStandalone ||
+    options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
     options.preset === Preset.TsStandalone
@@ -160,6 +161,7 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.VueStandalone ||
+    options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone
   ) {

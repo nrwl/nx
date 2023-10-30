@@ -38,6 +38,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             Preset.ReactStandalone,
             Preset.VueMonorepo,
             Preset.VueStandalone,
+            Preset.Nuxt,
+            Preset.NuxtStandalone,
             Preset.AngularMonorepo,
             Preset.AngularStandalone,
             Preset.Nest,

@@ -1,9 +1,13 @@
-import { NxNuxtModule } from '@nx/nuxt';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: [NxNuxtModule],
   srcDir: 'src',
   devtools: { enabled: true },
   css: ['~/assets/css/styles.css'],
+  vite: {
+    plugins: [
+      nxViteTsPaths()
+    ],
+  }
 });

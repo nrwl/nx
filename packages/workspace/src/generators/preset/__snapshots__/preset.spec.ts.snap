@@ -36,6 +36,20 @@ exports[`preset should create files (preset = angular-monorepo) 3`] = `
 ]
 `;
 
+exports[`preset should create files (preset = nuxt-standalone) 1`] = `
+{
+  "executor": "nx:run-commands",
+  "options": {
+    "command": "npx nuxi dev --port=4200",
+    "cwd": ".",
+  },
+  "outputs": [
+    "{workspaceRoot}/{projectRoot}/.output",
+    "{workspaceRoot}/{projectRoot}/.nuxt",
+  ],
+}
+`;
+
 exports[`preset should create files (preset = react-standalone bundler = vite) 1`] = `
 {
   "configurations": {
