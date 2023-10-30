@@ -1,5 +1,5 @@
+import { updateDotenvFiles } from '../../generators/internal-utils/update-dotenv-files';
 import { Tree } from '../../generators/tree';
-import { getProjects } from '../../generators/utils/project-configuration';
 
 /**
  * This function escapes dollar sign in env variables
@@ -12,41 +12,10 @@ import { getProjects } from '../../generators/utils/project-configuration';
  * @param tree
  */
 export default function escapeDollarSignEnvVariables(tree: Tree) {
-  const envFiles = ['.env', '.local.env', '.env.local'];
-  for (const [_, configuration] of getProjects(tree).entries()) {
-    envFiles.push(
-      `${configuration.root}/.env`,
-      `${configuration.root}/.local.env`,
-      `${configuration.root}/.env.local`
-    );
-    for (const targetName in configuration.targets) {
-      const task = configuration.targets[targetName];
-      envFiles.push(
-        `.env.${targetName}`,
-        `.${targetName}.env`,
-        `${configuration.root}/.env.${targetName}`,
-        `${configuration.root}/.${targetName}.env`
-      );
-
-      if (task.configurations) {
-        for (const configurationName in task.configurations) {
-          envFiles.push(
-            `.env.${targetName}.${configurationName}`,
-            `.${targetName}.${configurationName}.env`,
-            `.env.${configurationName}`,
-            `.${configurationName}.env`,
-            `${configuration.root}/.env.${targetName}.${configurationName}`,
-            `${configuration.root}/.${targetName}.${configurationName}.env`,
-            `${configuration.root}/.env.${configurationName}`,
-            `${configuration.root}/.${configurationName}.env`
-          );
-        }
-      }
-    }
-  }
-  for (const envFile of new Set(envFiles)) {
-    parseEnvFile(tree, envFile);
-  }
+  updateDotenvFiles(tree, (contents, path) => {
+    console.log('Updating: ' + path);
+    return parseEnvFile(contents);
+  });
 }
 
 /**
@@ -55,11 +24,7 @@ export default function escapeDollarSignEnvVariables(tree: Tree) {
  * @param envFilePath
  * @returns
  */
-function parseEnvFile(tree: Tree, envFilePath: string) {
-  if (!tree.exists(envFilePath)) {
-    return;
-  }
-  let envFileContent = tree.read(envFilePath, 'utf-8');
+function parseEnvFile(envFileContent: string) {
   envFileContent = envFileContent
     .split('\n')
     .map((line) => {
@@ -77,5 +42,5 @@ function parseEnvFile(tree: Tree, envFilePath: string) {
       return line;
     })
     .join('\n');
-  tree.write(envFilePath, envFileContent);
+  return envFileContent;
 }

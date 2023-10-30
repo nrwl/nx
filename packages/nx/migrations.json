@@ -76,6 +76,11 @@
       "version": "17.0.0-rc.1",
       "description": "Migration for v17.0.0-rc.1",
       "implementation": "./src/migrations/update-17-0-0/rm-default-collection-npm-scope"
+    },
+    "update-17.0.3-escape-dotenv-comments": {
+      "version": "17.0.3",
+      "description": "Escapes properties in .env files that resemble comments",
+      "implementation": "./src/migrations/update-17-0-3/escape-dotenv-comments"
     }
   }
 }
