@@ -18,6 +18,10 @@
       "type": "string",
       "description": "The output path for the bundle."
     },
+    "outputFileName": {
+      "type": "string",
+      "description": "The main output entry file"
+    },
     "tsConfig": {
       "type": "string",
       "description": "The tsconfig file to build the project."
@@ -89,6 +93,10 @@
       "type": "string",
       "description": "Mode to run the build in.",
       "enum": ["development", "production", "none"]
+    },
+    "generatePackageJson": {
+      "type": "boolean",
+      "description": "Generates a `package.json` and pruned lock file with the project's `node_module` dependencies populated for installing in a container. If a `package.json` exists in the project's directory, it will be reused with dependencies populated."
     }
   },
   "required": ["target", "main", "outputPath", "tsConfig", "rspackConfig"],

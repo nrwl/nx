@@ -5,6 +5,7 @@ export interface RspackExecutorSchema {
   tsConfig: string;
   typeCheck?: boolean;
   outputPath: string;
+  outputFileName?: string;
   indexHtml?: string;
   mode?: Mode;
   watch?: boolean;
@@ -15,6 +16,7 @@ export interface RspackExecutorSchema {
   assets?: any[];
   extractLicenses?: boolean;
   fileReplacements?: FileReplacement[];
+  generatePackageJson?: boolean;
 }
 
 export interface FileReplacement {
