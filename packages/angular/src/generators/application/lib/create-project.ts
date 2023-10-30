@@ -1,6 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { addProjectConfiguration } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
@@ -8,6 +9,10 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
     options.bundler === 'webpack'
       ? '@angular-devkit/build-angular:browser'
       : '@angular-devkit/build-angular:browser-esbuild';
+
+  const { major } = getInstalledAngularVersionInfo(tree);
+  const buildTargetOptionName = major >= 17 ? 'buildTarget' : 'browserTarget';
+
   const project: AngularProjectConfiguration = {
     name: options.name,
     projectType: 'application',
@@ -73,10 +78,10 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
           : undefined,
         configurations: {
           production: {
-            browserTarget: `${options.name}:build:production`,
+            [buildTargetOptionName]: `${options.name}:build:production`,
           },
           development: {
-            browserTarget: `${options.name}:build:development`,
+            [buildTargetOptionName]: `${options.name}:build:development`,
           },
         },
         defaultConfiguration: 'development',
@@ -84,7 +89,7 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
       'extract-i18n': {
         executor: '@angular-devkit/build-angular:extract-i18n',
         options: {
-          browserTarget: `${options.name}:build`,
+          [buildTargetOptionName]: `${options.name}:build`,
         },
       },
     },
