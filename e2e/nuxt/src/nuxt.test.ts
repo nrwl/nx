@@ -32,7 +32,7 @@ describe('Nuxt Plugin', () => {
 
   it('should build storybook for app', () => {
     runCLI(
-      `generate @nx/vue:storybook-configuration ${app} --generateStories --no-interactive`
+      `generate @nx/nuxt:storybook-configuration ${app} --generateStories --no-interactive`
     );
     runCLI(`run ${app}:build-storybook --verbose`);
     checkFilesExist(`dist/storybook/${app}/index.html`);

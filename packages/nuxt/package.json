@@ -28,17 +28,11 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "defu": "^6.1.2",
-    "fs-extra": "^11.1.0",
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
-    "@nx/vue": "file:../vue",
-    "@nx/cypress": "file:../cypress",
-    "@nx/playwright": "file:../playwright",
-    "@nuxt/kit": "^3.7.4",
-    "@nuxt/schema": "^3.7.4"
+    "@nx/vue": "file:../vue"
   },
   "publishConfig": {
     "access": "public"

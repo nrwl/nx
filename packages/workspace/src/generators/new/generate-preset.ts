@@ -132,6 +132,18 @@ function getPresetDependencies({
         },
       };
 
+    case Preset.Nuxt:
+    case Preset.NuxtStandalone:
+      return {
+        dependencies: {},
+        dev: {
+          '@nx/nuxt': nxVersion,
+          '@nx/cypress': e2eTestRunner === 'cypress' ? nxVersion : undefined,
+          '@nx/playwright':
+            e2eTestRunner === 'playwright' ? nxVersion : undefined,
+        },
+      };
+
     case Preset.ReactMonorepo:
     case Preset.ReactStandalone:
       return {
