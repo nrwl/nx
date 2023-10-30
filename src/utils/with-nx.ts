@@ -1,9 +1,15 @@
-import { Configuration, ExternalItem, RspackPluginInstance, ResolveAlias } from '@rspack/core';
+import {
+  Configuration,
+  ExternalItem,
+  ResolveAlias,
+  RspackPluginInstance,
+} from '@rspack/core';
+import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as path from 'path';
+import { GeneratePackageJsonPlugin } from '../plugins/generate-package-json-plugin';
 import { getCopyPatterns } from './get-copy-patterns';
 import { SharedConfigContext } from './model';
 import { normalizeAssets } from './normalize-assets';
-import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 
 export function withNx(_opts = {}) {
   return function makeConfig(
@@ -37,10 +43,25 @@ export function withNx(_opts = {}) {
       );
     }
 
-    options.fileReplacements.forEach(item => {
+    if (options.generatePackageJson) {
+      const mainOutputFile =
+        options.main.split('/').pop().split('.')[0] + '.js';
+
+      plugins.push(
+        new GeneratePackageJsonPlugin(
+          {
+            tsConfig: options.tsConfig,
+            outputFileName: options.outputFileName ?? mainOutputFile,
+          },
+          context
+        )
+      );
+    }
+
+    options.fileReplacements.forEach((item) => {
       alias[item.replace] = item.with;
-    })
-     
+    });
+
     const externals: ExternalItem = {};
     let externalsType: Configuration['externalsType'];
     if (options.target === 'node') {
