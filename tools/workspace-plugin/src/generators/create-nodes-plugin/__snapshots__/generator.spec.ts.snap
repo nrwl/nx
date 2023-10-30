@@ -6,7 +6,7 @@ exports[`create-nodes-plugin/generator generator should run successfully 1`] = `
   CreateNodesContext,
   TargetConfiguration,
 } from '@nx/devkit';
-import { basename, dirname, extname, join, resolve } from "path";
+import { basename, dirname, extname, join, resolve } from 'path';
 import { registerTsProject } from '@nx/js/src/internal';
 
 import { getRootTsConfigPath } from '@nx/js';
@@ -45,7 +45,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
             configFilePath,
             projectRoot,
             options,
-            context,
+            context
           ),
         },
       },
@@ -57,12 +57,9 @@ function buildEslintTargets(
   configFilePath: string,
   projectRoot: string,
   options: EslintPluginOptions,
-  context: CreateNodesContext,
+  context: CreateNodesContext
 ) {
-  const eslintConfig = getEslintConfig(
-    configFilePath,
-    context
-  );
+  const eslintConfig = getEslintConfig(configFilePath, context);
 
   const targetDefaults = readTargetDefaultsForTarget(
     options.targetName,
@@ -72,10 +69,7 @@ function buildEslintTargets(
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const targets: Record<
-    string,
-    TargetConfiguration<ExecutorOptions>
-  > = {};
+  const targets: Record<string, TargetConfiguration<ExecutorOptions>> = {};
 
   const baseTargetConfig: TargetConfiguration<ExecutorOptions> = {
     executor: 'executorName',
@@ -92,9 +86,7 @@ function buildEslintTargets(
       targetDefaults?.inputs ?? 'production' in namedInputs
         ? ['default', '^production']
         : ['default', '^default'],
-    outputs:
-      targetDefaults?.outputs ??
-      getOutputs(projectRoot),
+    outputs: targetDefaults?.outputs ?? getOutputs(projectRoot),
     options: {
       ...baseTargetConfig.options,
     },
@@ -129,9 +121,7 @@ function getEslintConfig(
   return module.default ?? module;
 }
 
-function getOutputs(
-  projectRoot: string,
-): string[] {
+function getOutputs(projectRoot: string): string[] {
   function getOutput(path: string): string {
     if (path.startsWith('..')) {
       return join('{workspaceRoot}', join(projectRoot, path));
@@ -179,7 +169,7 @@ describe('@nx/eslint/plugin', () => {
   });
 
   it('should create nodes', () => {
-    mockEslintConfig({})
+    mockEslintConfig({});
     const nodes = createNodesFunction(
       'TODO',
       {
@@ -192,10 +182,7 @@ describe('@nx/eslint/plugin', () => {
   });
 });
 
-
-function mockEslintConfig(
-  config: any
-) {
+function mockEslintConfig(config: any) {
   jest.mock(
     'TODO',
     () => ({
@@ -205,6 +192,33 @@ function mockEslintConfig(
       virtual: true,
     }
   );
+}
+"
+`;
+
+exports[`create-nodes-plugin/generator generator should run successfully 3`] = `
+"import { formatFiles, getProjects, Tree } from '@nx/devkit';
+import { createNodes } from '../../plugins/plugin';
+
+import { createProjectRootMappingsFromProjectConfigurations } from 'nx/src/project-graph/utils/find-project-for-path';
+import { replaceProjectConfigurationsWithPlugin } from '@nx/devkit/src/utils/replace-project-configuration-with-plugin';
+
+export default async function update(tree: Tree) {
+  const proj = Object.fromEntries(getProjects(tree).entries());
+
+  const rootMappings = createProjectRootMappingsFromProjectConfigurations(proj);
+
+  replaceProjectConfigurationsWithPlugin(
+    tree,
+    rootMappings,
+    '@nx/eslint/plugin',
+    createNodes,
+    {
+      targetName: 'TODO',
+    }
+  );
+
+  await formatFiles(tree);
 }
 "
 `;
