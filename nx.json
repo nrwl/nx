@@ -198,7 +198,7 @@
     }
   },
   "plugins": ["@monodon/rust"],
-  "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
+  "nxCloudAccessToken": "MzljMjczYzEtZWE2Ny00MDIxLTlhNzYtNzBjYzQyNjMxMTQ0fHJlYWQtd3JpdGU=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
   "cacheDirectory": "/tmp/nx-cache"
