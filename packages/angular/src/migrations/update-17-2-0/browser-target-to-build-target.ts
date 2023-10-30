@@ -1,10 +1,9 @@
 import {
   formatFiles,
-  readJson,
+  readNxJson,
   readProjectConfiguration,
+  updateNxJson,
   updateProjectConfiguration,
-  writeJson,
-  type NxJsonConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
@@ -34,7 +33,7 @@ export default async function (tree: Tree) {
     });
 
     // update options from nx.json target defaults
-    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+    const nxJson = readNxJson(tree);
     if (!nxJson.targetDefaults) {
       return;
     }
@@ -58,7 +57,7 @@ export default async function (tree: Tree) {
       });
     }
 
-    writeJson(tree, 'nx.json', nxJson);
+    updateNxJson(tree, nxJson);
   });
 
   await formatFiles(tree);
