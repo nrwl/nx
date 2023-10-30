@@ -3,6 +3,7 @@ import {
   readJsonFile,
   stripIndents,
   type ExecutorContext,
+  logger,
 } from '@nx/devkit';
 import { join } from 'path';
 import type { NormalizedExecutorOptions } from '../../../utils/schema';
@@ -55,11 +56,12 @@ function generateTaskProjectTsConfig(
   );
 
   if (!taskWithTscExecutor) {
-    throw new Error(
-      stripIndents`The "@nx/js:tsc" batch executor requires all dependencies to use the "@nx/js:tsc" executor.
+    logger.warn(
+      stripIndents`The "@nx/js:tsc" batch executor prefers all dependencies to use the "@nx/js:tsc" executor.
         None of the following tasks in the "${project}" project use the "@nx/js:tsc" executor:
         ${tasksInProject.map((t) => `- ${t}`).join('\n')}`
     );
+    return;
   }
 
   const projectReferences = [];
@@ -75,7 +77,9 @@ function generateTaskProjectTsConfig(
         context,
         taskInMemoryTsConfigMap
       );
-      projectReferences.push(tsConfigPath);
+      if (tsConfigPath) {
+        projectReferences.push(tsConfigPath);
+      }
     }
   }
 

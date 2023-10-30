@@ -13,5 +13,5 @@
     "**/__fixtures__/**/*.*",
     "./src/internal-testing-utils/**/*.ts"
   ],
-  "include": ["**/*.ts"]
+  "include": ["**/*.ts", "**/*.json"]
 }

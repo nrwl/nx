@@ -13,7 +13,7 @@
       "outputs": ["{workspaceRoot}/coverage/packages/vite"]
     },
     "build-base": {
-      "executor": "@nx/js:swc",
+      "executor": "@nx/js:tsc",
       "options": {
         "outputPath": "build/packages/vite",
         "tsConfig": "packages/vite/tsconfig.lib.json",
