@@ -473,7 +473,7 @@ Each of these libraries
 {% video-link link="https://youtu.be/ZAO0yXupIIE?t=976" /%}
 
 All libraries that we generate automatically have aliases created in the root-level `tsconfig.base.json`.
- <br />
+
 Could be genereated in a such way:
 ```
   "@myngapp/orders": ["modules/orders/src/index.ts"],
