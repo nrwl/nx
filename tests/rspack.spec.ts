@@ -123,5 +123,24 @@ describe('rspack e2e', () => {
 
     result = await runNxCommandAsync(`e2e ${app2}-e2e`);
     expect(result.stdout).toContain('Successfully ran target e2e');
+
+    // Generate a Nest app and verify build output
+    const app3 = uniq('app3');
+    await runNxCommandAsync(
+      `generate @nx/rspack:app ${app3} --framework=nest --unitTestRunner=jest`
+    );
+    checkFilesExist(`${app3}/project.json`);
+
+    result = await runNxCommandAsync(`build ${app3}`);
+    expect(result.stdout).toContain('Successfully ran target build');
+    // Make sure expected files are present.
+    expect(listFiles(`dist/${app3}`)).toHaveLength(3);
+
+    result = await runNxCommandAsync(
+      `build ${app3} --generatePackageJson=true`
+    );
+    expect(result.stdout).toContain('Successfully ran target build');
+    // Make sure expected files are present.
+    expect(listFiles(`dist/${app3}`)).toHaveLength(5);
   }, 200_000);
 });
