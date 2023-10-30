@@ -1,15 +1,14 @@
-export interface Schema {
-  browserTarget: string;
-  port: number;
-  host: string;
+interface BaseSchema {
+  port?: number;
+  host?: string;
   proxyConfig?: string;
-  ssl: boolean;
+  ssl?: boolean;
   sslKey?: string;
   sslCert?: string;
   headers?: Record<string, string>;
-  open: boolean;
+  open?: boolean;
   verbose?: boolean;
-  liveReload: boolean;
+  liveReload?: boolean;
   publicHost?: string;
   allowedHosts?: string[];
   servePath?: string;
@@ -23,3 +22,19 @@ export interface Schema {
   static?: boolean;
   isInitialHost?: boolean;
 }
+
+export type SchemaWithBrowserTarget = BaseSchema & {
+  browserTarget: string;
+};
+
+export type SchemaWithBuildTarget = BaseSchema & {
+  buildTarget: string;
+};
+
+export type Schema = SchemaWithBrowserTarget | SchemaWithBuildTarget;
+
+export type NormalizedSchema = SchemaWithBuildTarget & {
+  liveReload: boolean;
+  open: boolean;
+  ssl: boolean;
+};
