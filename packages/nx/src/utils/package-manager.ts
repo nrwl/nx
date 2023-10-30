@@ -22,6 +22,7 @@ export interface PackageManagerCommands {
   addDev: string;
   rm: string;
   exec: string;
+  dlx: string;
   list: string;
   run: (script: string, args: string) => string;
 }
@@ -74,13 +75,14 @@ export function getPackageManagerCommand(
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
         rm: 'yarn remove',
         exec: 'yarn',
+        dlx: useBerry ? 'yarn dlx' : 'yarn',
         run: (script: string, args: string) => `yarn ${script} ${args}`,
         list: useBerry ? 'yarn info --name-only' : 'yarn list',
       };
     },
     pnpm: () => {
       const pnpmVersion = getPackageManagerVersion('pnpm', root);
-      const useExec = gte(pnpmVersion, '6.13.0');
+      const modernPnpm = gte(pnpmVersion, '6.13.0');
       const includeDoubleDashBeforeArgs = lt(pnpmVersion, '7.0.0');
       const isPnpmWorkspace = existsSync(join(root, 'pnpm-workspace.yaml'));
 
@@ -90,7 +92,8 @@ export function getPackageManagerCommand(
         add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
         addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
         rm: 'pnpm rm',
-        exec: useExec ? 'pnpm exec' : 'pnpx',
+        exec: modernPnpm ? 'pnpm exec' : 'pnpx',
+        dlx: modernPnpm ? 'pnpm dlx' : 'pnpx',
         run: (script: string, args: string) =>
           includeDoubleDashBeforeArgs
             ? `pnpm run ${script} -- ${args}`
@@ -109,6 +112,7 @@ export function getPackageManagerCommand(
         addDev: 'npm install -D',
         rm: 'npm rm',
         exec: 'npx',
+        dlx: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
       };
