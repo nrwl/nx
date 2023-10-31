@@ -4853,9 +4853,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "workspace-layout",
-            "path": "/deprecated/workspace-layout",
-            "id": "workspace-layout",
+            "name": "As Provided vs. Derived",
+            "path": "/deprecated/as-provided-vs-derived",
+            "id": "as-provided-vs-derived",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4993,9 +4993,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "workspace-layout",
-        "path": "/deprecated/workspace-layout",
-        "id": "workspace-layout",
+        "name": "As Provided vs. Derived",
+        "path": "/deprecated/as-provided-vs-derived",
+        "id": "as-provided-vs-derived",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

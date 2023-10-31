@@ -99,7 +99,6 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         'plugin:@nrwl/typescript',
         'plugin:@nrwl/javascript',
       ]);
-      console.warn('Flat eslint config is not supported yet for migration');
       tree.write(projectEslintPath, config);
     } else {
       updateJson(tree, projectEslintPath, (json) => {
