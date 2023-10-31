@@ -16,7 +16,10 @@ sortObjectByKeys =
 export async function formatFiles(tree: Tree): Promise<void> {
   let prettier: typeof Prettier;
   try {
-    prettier = await import('prettier');
+    // tsc doesn't like dynamic imports.
+    prettier = await new Function(`return import('prettier');`)().then((m) =>
+      m.default ? m.default : m
+    );
   } catch {}
 
   sortTsConfig(tree);
