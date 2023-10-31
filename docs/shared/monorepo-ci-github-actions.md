@@ -2,7 +2,7 @@
 
 Below is an example of a GitHub setup for an Nx workspace - building and testing only what is affected. For more details on how the action is used, head over to the [official docs](https://github.com/marketplace/actions/nx-set-shas).
 
-```yaml
+```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
 on:
   push:
@@ -36,7 +36,7 @@ To understand why knowing the last successful build is important for the affecte
 
 Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution). Use this [reusable GitHub workflow](https://github.com/nrwl/ci) to quickly set up DTE for your organization.
 
-```yaml
+```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
 on:
   push:
@@ -70,7 +70,7 @@ Our [reusable GitHub workflow](https://github.com/nrwl/ci) represents a good set
 
 If the reusable workflow above doesn't satisfy your needs you should create a custom workflow. This is what the GitHub workflow above roughly encapsulates:
 
-```yaml
+```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
 on:
   push:
