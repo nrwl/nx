@@ -114,7 +114,7 @@ export function normalizeProjectTargets(
     );
 
     if (defaults) {
-      targets[target] = mergeTargetConfigurations(project, target, defaults);
+      targets[target] = mergeTargetConfigurations(targets[target], defaults);
     }
 
     targets[target].options = resolveNxTokensInOptions(

@@ -19,6 +19,10 @@ const knownLocations = [
   'pages/styles.css',
   'pages/styles.scss',
   'pages/styles.less',
+
+  'app/global.css',
+  'app/global.scss',
+  'app/global.less',
 ];
 
 export function addTailwindStyleImports(

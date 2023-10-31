@@ -1934,7 +1934,7 @@
         "type": "generator"
       },
       {
-        "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nrwl/nx-plugin`.",
+        "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nx/plugin`.",
         "file": "generated/packages/plugin/generators/preset.json",
         "hidden": true,
         "name": "preset",
