@@ -81,6 +81,9 @@ export async function lintWorkspaceRulesProjectGenerator(
     tree,
     join(workspaceLintPluginDir, 'tsconfig.spec.json'),
     (json) => {
+      json.compilerOptions ??= {};
+      json.compilerOptions.module = 'node16';
+
       if (json.include) {
         json.include = json.include.map((v) => {
           if (v.startsWith('src/**')) {
@@ -103,16 +106,6 @@ export async function lintWorkspaceRulesProjectGenerator(
 
   // Add swc dependencies
   addSwcRegisterDependencies(tree);
-
-  // Add extra config to the jest.config.ts file to allow ESLint 8 exports mapping to work with jest
-  addPropertyToJestConfig(
-    tree,
-    joinPathFragments(WORKSPACE_PLUGIN_DIR, 'jest.config.ts'),
-    'moduleNameMapper',
-    {
-      '@eslint/eslintrc': '@eslint/eslintrc/dist/eslintrc-universal.cjs',
-    }
-  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);

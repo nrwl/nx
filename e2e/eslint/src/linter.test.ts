@@ -22,7 +22,7 @@ import * as ts from 'typescript';
  * compatibility with TS < 4.8 due to the API change in TS4.8.
  * This helper allows for support of TS <= 4.8.
  */
-import { getModifiers } from '@typescript-eslint/type-utils';
+// import { getModifiers } from '@typescript-eslint/type-utils';
 
 describe('Linter', () => {
   describe('Integrated', () => {
@@ -494,7 +494,7 @@ describe('Linter', () => {
           `libs/${mylib}/src/lib/${mylib}.ts`,
           (content) =>
             `import { names } from '@nx/devkit';\n\n` +
-            content.replace(/return .*;/, `return names(${mylib}).className;`)
+            content.replace(/=> .*;/, `=> names(${mylib}).className;`)
         );
 
         // output should now report missing dependency
@@ -847,7 +847,7 @@ function updateGeneratedRuleImplementation(
         ) {
           return ts.factory.updateMethodDeclaration(
             node,
-            getModifiers(node),
+            node.modifiers,
             node.asteriskToken,
             node.name,
             node.questionToken,
