@@ -13,6 +13,7 @@ import {
   getPackageJson,
   getProductionDependencies,
 } from '../utils/package-json-utils';
+import type { RuleModule } from '@typescript-eslint/utils/ts-eslint';
 
 export type Options = [
   {
@@ -353,4 +354,16 @@ export default createESLintRule<Options, MessageIds>({
       },
     };
   },
-}) as any;
+}) as RuleModule<
+  MessageIds,
+  Options,
+  {
+    'JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i]': (
+      node
+    ) => void;
+    'JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty': (
+      node
+    ) => void;
+    'JSONExpressionStatement > JSONObjectExpression': (node) => void;
+  }
+>;

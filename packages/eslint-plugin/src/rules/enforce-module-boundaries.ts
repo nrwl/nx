@@ -43,6 +43,7 @@ import {
 } from '../utils/ast-utils';
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
+import type { RuleModule } from '@typescript-eslint/utils/ts-eslint';
 
 type Options = [
   {
@@ -712,4 +713,13 @@ export default createESLintRule<Options, MessageIds>({
       },
     };
   },
-}) as any;
+}) as RuleModule<
+  MessageIds,
+  Options,
+  {
+    ImportDeclaration: (node) => void;
+    ImportExpression: (node) => void;
+    ExportAllDeclaration: (node) => void;
+    ExportNamedDeclaration: (node) => void;
+  }
+>;
