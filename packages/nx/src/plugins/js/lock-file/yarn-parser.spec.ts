@@ -1612,6 +1612,69 @@ nx-cloud@latest:
         )).default
       );
     });
+
+    it('should prune cdn packages', () => {
+      const lockFile = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/yarn.lock'
+      )).default;
+
+      const cdnPackageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/cdn/package.json'
+      ));
+      const packageJson = require(joinPathFragments(
+        __dirname,
+        '__fixtures__/pruning/package.json'
+      ));
+
+      const hash = uniq('mock-hash');
+      const externalNodes = getYarnLockfileNodes(lockFile, hash, packageJson);
+      const pg = {
+        nodes: {},
+        dependencies: {},
+        externalNodes,
+      };
+      const ctx: CreateDependenciesContext = {
+        projects: {},
+        externalNodes,
+        fileMap: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        filesToProcess: {
+          nonProjectFiles: [],
+          projectFileMap: {},
+        },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/virtual',
+      };
+      const dependencies = getYarnLockfileDependencies(lockFile, hash, ctx);
+
+      const builder = new ProjectGraphBuilder(pg);
+      for (const dep of dependencies) {
+        builder.addDependency(
+          dep.source,
+          dep.target,
+          dep.type,
+          'sourceFile' in dep ? dep.sourceFile : null
+        );
+      }
+      const graph = builder.getUpdatedProjectGraph();
+
+      const prunedGraph = pruneProjectGraph(graph, cdnPackageJson);
+      const result = stringifyYarnLockfile(
+        prunedGraph,
+        lockFile,
+        cdnPackageJson
+      );
+      expect(result).toEqual(
+        require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/cdn/yarn.lock'
+        )).default
+      );
+    });
   });
 
   describe('workspaces', () => {

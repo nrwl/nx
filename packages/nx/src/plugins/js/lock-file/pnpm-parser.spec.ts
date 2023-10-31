@@ -747,6 +747,25 @@ describe('pnpm LockFile utility', () => {
           )).default
         );
       });
+
+      it('should prune cdn packages', () => {
+        const cdnPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/cdn/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, cdnPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          cdnPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/cdn/pnpm-lock.yaml'
+          )).default
+        );
+      });
     });
 
     describe('v6.0', () => {
@@ -829,6 +848,25 @@ describe('pnpm LockFile utility', () => {
           require(joinPathFragments(
             __dirname,
             '__fixtures__/pruning/devkit-yargs/pnpm-lock-v6.yaml'
+          )).default
+        );
+      });
+
+      it('should prune cdn packages', () => {
+        const cdnPackageJson = require(joinPathFragments(
+          __dirname,
+          '__fixtures__/pruning/cdn/package.json'
+        ));
+        const prunedGraph = pruneProjectGraph(graph, cdnPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFile,
+          cdnPackageJson
+        );
+        expect(result).toEqual(
+          require(joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/cdn/pnpm-lock-v6.yaml'
           )).default
         );
       });

@@ -1,0 +1,8 @@
+{
+  "name": "test",
+  "version": "0.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "test-cdn-package": "https://cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz"
+  }
+}

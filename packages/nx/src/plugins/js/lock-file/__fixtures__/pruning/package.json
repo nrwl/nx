@@ -7,6 +7,7 @@
     "@nrwl/workspace": "15.4.5",
     "nx": "15.4.5",
     "prettier": "^2.6.2",
+    "test-cdn-package": "https://cdn.test.com/test-cdn-package-0.8.6/test-cdn-package-0.8.6.tgz",
     "typescript": "~4.8.2"
   }
 }
