@@ -11,6 +11,7 @@ import {
   markRootPackageJsonAsNxProject,
   printFinalMessage,
   runInstall,
+  updateGitIgnore,
 } from './utils';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
@@ -72,6 +73,7 @@ export async function addNxToNpmRepo(options: Options) {
 
   const pmc = getPackageManagerCommand();
 
+  updateGitIgnore(repoRoot);
   addDepsToPackageJson(repoRoot);
   markRootPackageJsonAsNxProject(
     repoRoot,
