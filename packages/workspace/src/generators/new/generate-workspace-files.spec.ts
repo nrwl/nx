@@ -117,9 +117,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
           "lint": {
             "cache": true,
           },
-          "test": {
-            "cache": true,
-          },
         },
       }
     `);
@@ -164,9 +161,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "cache": true,
           },
           "lint": {
-            "cache": true,
-          },
-          "test": {
             "cache": true,
           },
         },
@@ -232,9 +226,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "cache": true,
           },
           "lint": {
-            "cache": true,
-          },
-          "test": {
             "cache": true,
           },
         },
