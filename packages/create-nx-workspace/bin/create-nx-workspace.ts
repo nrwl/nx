@@ -60,6 +60,7 @@ interface AngularArguments extends BaseArguments {
   routing: boolean;
   standaloneApi: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
+  bundler: 'webpack' | 'esbuild';
 }
 
 interface VueArguments extends BaseArguments {
@@ -679,6 +680,7 @@ async function determineAngularOptions(
   let style: string;
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+  let bundler: undefined | 'webpack' | 'esbuild' = undefined;
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
@@ -701,6 +703,30 @@ async function determineAngularOptions(
       preset = Preset.AngularMonorepo;
       appName = await determineAppName(parsedArgs);
     }
+  }
+
+  if (parsedArgs.bundler) {
+    bundler = parsedArgs.bundler;
+  } else {
+    const reply = await enquirer.prompt<{ bundler: 'esbuild' | 'webpack' }>([
+      {
+        name: 'bundler',
+        message: `Which bundler would you like to use?`,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'esbuild',
+            message: 'esbuild [ https://esbuild.github.io/ ]',
+          },
+          {
+            name: 'webpack',
+            message: 'Webpack [ https://webpack.js.org/ ]',
+          },
+        ],
+        initial: 'esbuild' as any,
+      },
+    ]);
+    bundler = reply.bundler;
   }
 
   if (parsedArgs.style) {
@@ -733,7 +759,15 @@ async function determineAngularOptions(
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
-  return { preset, style, appName, standaloneApi, routing, e2eTestRunner };
+  return {
+    preset,
+    style,
+    appName,
+    standaloneApi,
+    routing,
+    e2eTestRunner,
+    bundler,
+  };
 }
 
 async function determineNodeOptions(

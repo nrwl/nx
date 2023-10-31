@@ -20,6 +20,7 @@ describe('setupSSR', () => {
     await generateTestApplication(tree, {
       name: 'app1',
       standalone: false,
+      bundler: 'webpack',
     });
 
     // ACT
@@ -118,6 +119,7 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
+      bundler: 'webpack',
     });
 
     tree.write('app1/src/environments/environment.ts', '');
@@ -146,6 +148,7 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
+      bundler: 'webpack',
     });
 
     // ACT

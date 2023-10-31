@@ -657,7 +657,7 @@ describe('app migrator', () => {
       expect(sourceRoot).toBe('apps/app1/src');
     });
 
-    it('should update build target', async () => {
+    it('should update build target correctly when using webpack', async () => {
       const project = addProject('app1', {
         root: '',
         sourceRoot: 'src',
@@ -716,6 +716,92 @@ describe('app migrator', () => {
             ],
           },
           development: {},
+        },
+        defaultConfiguration: 'production',
+      });
+    });
+
+    it('should update build target correctly when using esbuild', async () => {
+      const project = addProject('app1', {
+        root: '',
+        sourceRoot: 'src',
+        architect: {
+          build: {
+            builder: '@angular-devkit/build-angular:application',
+            options: {
+              outputPath: 'dist/app1',
+              index: 'src/index.html',
+              browser: 'src/main.ts',
+              polyfills: ['src/polyfills.ts'],
+              tsConfig: 'tsconfig.app.json',
+              assets: ['src/favicon.ico', 'src/assets'],
+              styles: ['src/styles.css'],
+              scripts: [],
+            },
+            configurations: {
+              production: {
+                budgets: [
+                  {
+                    type: 'initial',
+                    maximumWarning: '500kb',
+                    maximumError: '1mb',
+                  },
+                  {
+                    type: 'anyComponentStyle',
+                    maximumWarning: '2kb',
+                    maximumError: '4kb',
+                  },
+                ],
+                outputHashing: 'all',
+              },
+              development: {
+                optimization: false,
+                extractLicenses: false,
+                sourceMap: true,
+              },
+            },
+            defaultConfiguration: 'production',
+          },
+        },
+      });
+      const migrator = new AppMigrator(tree, {}, project);
+
+      await migrator.migrate();
+
+      const { targets } = readProjectConfiguration(tree, 'app1');
+      expect(targets.build).toStrictEqual({
+        executor: '@angular-devkit/build-angular:application',
+        options: {
+          outputPath: 'dist/apps/app1',
+          index: 'apps/app1/src/index.html',
+          browser: 'apps/app1/src/main.ts',
+          polyfills: ['apps/app1/src/polyfills.ts'],
+          tsConfig: 'apps/app1/tsconfig.app.json',
+          assets: ['apps/app1/src/favicon.ico', 'apps/app1/src/assets'],
+          styles: ['apps/app1/src/styles.css'],
+          scripts: [],
+        },
+        configurations: {
+          production: {
+            budgets: [
+              {
+                type: 'initial',
+                maximumWarning: '500kb',
+                maximumError: '1mb',
+              },
+              {
+                type: 'anyComponentStyle',
+                maximumWarning: '2kb',
+                maximumError: '4kb',
+              },
+            ],
+            outputHashing: 'all',
+          },
+          development: {
+            optimization: false,
+            extractLicenses: false,
+            sourceMap: true,
+          },
         },
         defaultConfiguration: 'production',
       });
