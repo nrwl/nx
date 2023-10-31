@@ -39,7 +39,8 @@ export default async function run(
     ? joinPathFragments(options.cacheLocation, projectName)
     : undefined;
 
-  const { printConfig, ...normalizedOptions } = options;
+  const { printConfig, errorOnUnmatchedPattern, ...normalizedOptions } =
+    options;
 
   /**
    * Until ESLint v9 is released and the new so called flat config is the default
@@ -119,7 +120,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     throw err;
   }
 
-  if (lintResults.length === 0) {
+  if (lintResults.length === 0 && errorOnUnmatchedPattern) {
     const ignoredPatterns = (
       await Promise.all(
         normalizedOptions.lintFilePatterns.map(async (pattern) =>
