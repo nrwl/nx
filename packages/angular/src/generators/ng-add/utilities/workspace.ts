@@ -50,9 +50,7 @@ export function createNxJson(
   const targets = getWorkspaceCommonTargets(tree);
 
   writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-    affected: {
-      defaultBase: options.defaultBase ?? deduceDefaultBase(),
-    },
+    defaultBase: options.defaultBase ?? deduceDefaultBase(),
     namedInputs: {
       sharedGlobals: [],
       default: ['{projectRoot}/**/*', 'sharedGlobals'],

@@ -89,6 +89,11 @@
       "description": "Updates .env to disabled adding plugins when generating projects in an existing Nx workspace",
       "implementation": "./src/migrations/update-18-0-0/disable-crystal-for-existing-workspaces",
       "x-repair-skip": true
+    },
+    "move-default-base-to-nx-json-root": {
+      "version": "18.1.0-beta.3",
+      "description": "Moves affected.defaultBase to defaultBase in `nx.json`",
+      "implementation": "./src/migrations/update-17-2-0/move-default-base"
     }
   }
 }

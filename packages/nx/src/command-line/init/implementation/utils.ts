@@ -58,8 +58,7 @@ export function createNxJsonFile(
     delete nxJson.targetDefaults;
   }
 
-  nxJson.affected ??= {};
-  nxJson.affected.defaultBase ??= deduceDefaultBase();
+  nxJson.defaultBase ??= deduceDefaultBase();
   writeJsonFile(nxJsonPath, nxJson);
 }
 

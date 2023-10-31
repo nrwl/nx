@@ -64,9 +64,7 @@ function createNxJson(
 ) {
   const nxJson: NxJsonConfiguration & { $schema: string } = {
     $schema: './node_modules/nx/schemas/nx-schema.json',
-    affected: {
-      defaultBase,
-    },
+    defaultBase,
     targetDefaults:
       process.env.NX_ADD_PLUGINS === 'false'
         ? {
@@ -82,7 +80,7 @@ function createNxJson(
   };
 
   if (defaultBase === 'main') {
-    delete nxJson.affected;
+    delete nxJson.defaultBase;
   }
   if (preset !== Preset.NPM) {
     nxJson.namedInputs = {
