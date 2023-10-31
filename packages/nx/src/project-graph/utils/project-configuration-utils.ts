@@ -1,3 +1,4 @@
+import { writeFileSync } from 'fs';
 import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
@@ -11,15 +12,29 @@ import { output } from '../../utils/output';
 
 import minimatch = require('minimatch');
 
+export type SourceInformation = [string, string];
+
 export function mergeProjectConfigurationIntoRootMap(
   projectRootMap: Map<string, ProjectConfiguration>,
-  project: ProjectConfiguration
+  project: ProjectConfiguration,
+  projectConfigSourceMaps?: Record<string, Record<string, SourceInformation>>,
+  sourceInformation?: SourceInformation
 ): void {
-  const matchingProject = projectRootMap.get(project.root);
+  if (projectConfigSourceMaps && !projectConfigSourceMaps[project.root]) {
+    projectConfigSourceMaps[project.root] = {};
+  }
+  const sourceMap = projectConfigSourceMaps?.[project.root];
+
+  let matchingProject = projectRootMap.get(project.root);
 
   if (!matchingProject) {
-    projectRootMap.set(project.root, project);
-    return;
+    projectRootMap.set(project.root, {
+      root: project.root,
+    });
+    matchingProject = projectRootMap.get(project.root);
+    if (sourceMap) {
+      sourceMap[`root`] = sourceInformation;
+    }
   }
 
   // This handles top level properties that are overwritten.
@@ -32,54 +47,100 @@ export function mergeProjectConfigurationIntoRootMap(
     ...project,
   };
 
-  // The next blocks handle properties that should be themselves merged (e.g. targets, tags, and implicit dependencies)
-  if (project.tags && matchingProject.tags) {
-    updatedProjectConfiguration.tags = Array.from(
-      new Set(matchingProject.tags.concat(project.tags))
-    );
-  }
-
-  if (project.implicitDependencies && matchingProject.implicitDependencies) {
-    updatedProjectConfiguration.implicitDependencies =
-      matchingProject.implicitDependencies.concat(project.implicitDependencies);
-  }
-
-  if (project.generators && matchingProject.generators) {
-    // Start with generators config in new project.
-    updatedProjectConfiguration.generators = { ...project.generators };
-
-    // For each generator that was already defined, shallow merge the options.
-    // Project contains the new info, so it has higher priority.
-    for (const generator in matchingProject.generators) {
-      updatedProjectConfiguration.generators[generator] = {
-        ...matchingProject.generators[generator],
-        ...project.generators[generator],
-      };
+  if (sourceMap) {
+    for (const property in project) {
+      sourceMap[`${property}`] = sourceInformation;
     }
   }
 
-  if (project.namedInputs && matchingProject.namedInputs) {
+  // The next blocks handle properties that should be themselves merged (e.g. targets, tags, and implicit dependencies)
+  if (project.tags) {
+    updatedProjectConfiguration.tags = Array.from(
+      new Set((matchingProject.tags ?? []).concat(project.tags))
+    );
+
+    if (sourceMap) {
+      project.tags.forEach((tag) => {
+        sourceMap[`tags.${tag}`] = sourceInformation;
+      });
+    }
+  }
+
+  if (project.implicitDependencies) {
+    updatedProjectConfiguration.implicitDependencies = (
+      matchingProject.implicitDependencies ?? []
+    ).concat(project.implicitDependencies);
+
+    if (sourceMap) {
+      project.implicitDependencies.forEach((implicitDependency) => {
+        sourceMap[`implicitDependencies.${implicitDependency}`] =
+          sourceInformation;
+      });
+    }
+  }
+
+  if (project.generators) {
+    // Start with generators config in new project.
+    updatedProjectConfiguration.generators = { ...project.generators };
+
+    if (sourceMap) {
+      for (const generator in project.generators) {
+        sourceMap[`generators.${generator}`] = sourceInformation;
+        for (const property in project.generators[generator]) {
+          sourceMap[`generators.${generator}.${property}`] = sourceInformation;
+        }
+      }
+    }
+
+    if (matchingProject.generators) {
+      // For each generator that was already defined, shallow merge the options.
+      // Project contains the new info, so it has higher priority.
+      for (const generator in matchingProject.generators) {
+        updatedProjectConfiguration.generators[generator] = {
+          ...matchingProject.generators[generator],
+          ...project.generators[generator],
+        };
+
+        if (sourceMap) {
+          for (const property in project.generators[generator]) {
+            sourceMap[`generators.${generator}.${property}`] =
+              sourceInformation;
+          }
+        }
+      }
+    }
+  }
+
+  if (project.namedInputs) {
     updatedProjectConfiguration.namedInputs = {
       ...matchingProject.namedInputs,
       ...project.namedInputs,
     };
+
+    if (sourceMap) {
+      for (const namedInput in project.namedInputs) {
+        sourceMap[`namedInputs.${namedInput}`] = sourceInformation;
+      }
+    }
   }
 
-  if (project.targets && matchingProject.targets) {
+  if (project.targets) {
     updatedProjectConfiguration.targets = {
       ...matchingProject.targets,
       ...project.targets,
     };
-    for (const target in matchingProject.targets) {
-      if (target in matchingProject.targets && target in project.targets) {
-        // If the target is defined in both places, merge the options
-        // Project contains the new info, so it has higher priority.
-        // Options from matchingProject are used as defaults.
-        updatedProjectConfiguration.targets[target] = mergeTargetConfigurations(
-          project.targets[target],
-          matchingProject.targets[target]
-        );
+
+    for (const target in project.targets) {
+      if (sourceMap) {
+        sourceMap[`targets.${target}`] = sourceInformation;
       }
+      updatedProjectConfiguration.targets[target] = mergeTargetConfigurations(
+        project.targets[target],
+        matchingProject.targets?.[target],
+        sourceMap,
+        sourceInformation,
+        `targets.${target}`
+      );
     }
   }
 
@@ -89,10 +150,17 @@ export function mergeProjectConfigurationIntoRootMap(
   );
 }
 
+type CreateNodesResultWithMetadata = {
+  result: CreateNodesResult | Promise<CreateNodesResult>;
+  pluginName: string;
+  file: string;
+};
+
 type ConfigurationResult = {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
   rootMap: Record<string, string>;
+  sourceMaps: Record<string, Record<string, SourceInformation>>;
 };
 
 /**
@@ -130,7 +198,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   root: string = workspaceRoot,
   skipAsync: boolean = false
 ): ConfigurationResult | Promise<ConfigurationResult> {
-  const results: Array<CreateNodesResult | Promise<CreateNodesResult>> = [];
+  const results: Array<CreateNodesResultWithMetadata> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const { plugin, options } of plugins) {
@@ -140,12 +208,14 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     }
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
-        results.push(
-          createNodes(file, options, {
+        results.push({
+          result: createNodes(file, options, {
             nxJsonConfiguration: nxJson,
             workspaceRoot: root,
-          })
-        );
+          }),
+          pluginName: plugin.name,
+          file,
+        });
       }
     }
   }
@@ -156,13 +226,17 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
 }
 
 function combineSyncConfigurationResults(
-  results: (CreateNodesResult | Promise<CreateNodesResult>)[]
+  resultsWithMetadata: CreateNodesResultWithMetadata[]
 ): ConfigurationResult {
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  const projectRootSourceMaps: Record<
+    string,
+    Record<string, SourceInformation>
+  > = {};
 
   let warned = false;
-  for (const result of results) {
+  for (const { result, pluginName, file } of resultsWithMetadata) {
     if (typeof result === 'object' && 'then' in result) {
       if (!warned) {
         output.warn({
@@ -179,10 +253,15 @@ function combineSyncConfigurationResults(
     const { projects: projectNodes, externalNodes: pluginExternalNodes } =
       result;
     for (const node in projectNodes) {
-      mergeProjectConfigurationIntoRootMap(projectRootMap, {
-        root: node,
-        ...projectNodes[node],
-      });
+      mergeProjectConfigurationIntoRootMap(
+        projectRootMap,
+        {
+          root: node,
+          ...projectNodes[node],
+        },
+        projectRootSourceMaps,
+        [pluginName, file]
+      );
     }
     Object.assign(externalNodes, pluginExternalNodes);
   }
@@ -193,13 +272,24 @@ function combineSyncConfigurationResults(
     projects: readProjectConfigurationsFromRootMap(projectRootMap),
     externalNodes,
     rootMap,
+    sourceMaps: projectRootSourceMaps,
   };
 }
 
 function combineAsyncConfigurationResults(
-  results: Array<CreateNodesResult | Promise<CreateNodesResult>>
+  results: Array<CreateNodesResultWithMetadata>
 ): Promise<ConfigurationResult> {
-  return Promise.all(results).then((r) => combineSyncConfigurationResults(r));
+  return Promise.all(
+    results.map((resultWithMetadata) =>
+      typeof resultWithMetadata.result === 'object' &&
+      'then' in resultWithMetadata.result
+        ? resultWithMetadata.result.then((resolvedResult) => ({
+            ...resultWithMetadata,
+            result: resolvedResult,
+          }))
+        : resultWithMetadata
+    )
+  ).then((r) => combineSyncConfigurationResults(r));
 }
 
 export function readProjectConfigurationsFromRootMap(
@@ -241,36 +331,83 @@ export function readProjectConfigurationsFromRootMap(
 }
 
 /**
- * Merges two configurations for a target.
+ * Merges two targets.
  *
  * Most properties from `target` will overwrite any properties from `baseTarget`.
  * Options and configurations are treated differently - they are merged together if the executor definition is compatible.
  *
- * @param target The configuration for the target with higher priority
- * @param baseTarget The configuration for the target that should be overwritten.
+ * @param target The target definition with higher priority
+ * @param baseTarget The target definition that should be overwritten. Can be undefined, in which case the target is returned as-is.
+ * @param projectConfigSourceMap The source map to be filled with metadata about where each property came from
+ * @param sourceInformation The metadata about where the new target was defined
+ * @param targetIdentifier The identifier for the target to merge, used for source map
  * @returns A merged target configuration
  */
 export function mergeTargetConfigurations(
   target: TargetConfiguration,
-  baseTarget: TargetConfiguration
+  baseTarget?: TargetConfiguration,
+  projectConfigSourceMap?: Record<string, SourceInformation>,
+  sourceInformation?: SourceInformation,
+  targetIdentifier?: string
 ): TargetConfiguration {
   const {
     configurations: defaultConfigurations,
     options: defaultOptions,
     ...defaults
-  } = baseTarget;
+  } = baseTarget ?? {};
+
+  // Target is "compatible", e.g. executor is defined only once or is the same
+  // in both places. This means that it is likely safe to merge
+  const isCompatible = isCompatibleTarget(defaults, target);
+
+  if (!isCompatible && projectConfigSourceMap) {
+    // if the target is not compatible, we will simply override the options
+    // we have to delete old entries from the source map
+    for (const key in projectConfigSourceMap) {
+      if (key.startsWith(`${targetIdentifier}`)) {
+        delete projectConfigSourceMap[key];
+      }
+    }
+  }
+
+  // merge top level properties if they're compatible
   const result = {
-    ...defaults,
+    ...(isCompatible ? defaults : {}),
     ...target,
   };
 
-  // Target is "compatible", e.g. executor is defined only once or is the same
-  // in both places. This means that it is likely safe to merge options
-  if (isCompatibleTarget(defaults, target)) {
-    result.options = { ...defaultOptions, ...target?.options };
+  // record top level properties in source map
+  if (projectConfigSourceMap) {
+    projectConfigSourceMap[targetIdentifier] = sourceInformation;
+
+    // record root level target properties to source map
+    for (const targetProperty in target) {
+      const targetPropertyId = `${targetIdentifier}.${targetProperty}`;
+      projectConfigSourceMap[targetPropertyId] = sourceInformation;
+    }
+  }
+
+  // merge options if there are any
+  // if the targets aren't compatible, we simply discard the old options during the merge
+  if (target.options || defaultOptions) {
+    result.options = mergeOptions(
+      target.options,
+      isCompatible ? defaultOptions : undefined,
+      projectConfigSourceMap,
+      sourceInformation,
+      targetIdentifier
+    );
+  }
+
+  // merge configurations if there are any
+  // if the targets aren't compatible, we simply discard the old configurations during the merge
+  if (target.configurations || defaultConfigurations) {
     result.configurations = mergeConfigurations(
-      defaultConfigurations,
-      target.configurations
+      target.configurations,
+      isCompatible ? defaultConfigurations : undefined,
+      projectConfigSourceMap,
+      sourceInformation,
+      targetIdentifier
     );
   }
   return result as TargetConfiguration;
@@ -288,21 +425,63 @@ function isCompatibleTarget(a: TargetConfiguration, b: TargetConfiguration) {
 }
 
 function mergeConfigurations<T extends Object>(
-  defaultConfigurations: Record<string, T>,
-  projectDefinedConfigurations: Record<string, T>
-): Record<string, T> {
-  const result: Record<string, T> = {};
+  newConfigurations: Record<string, T> | undefined,
+  baseConfigurations: Record<string, T> | undefined,
+  projectConfigSourceMap?: Record<string, SourceInformation>,
+  sourceInformation?: SourceInformation,
+  targetIdentifier?: string
+): Record<string, T> | undefined {
+  const mergedConfigurations = {};
+
   const configurations = new Set([
-    ...Object.keys(defaultConfigurations ?? {}),
-    ...Object.keys(projectDefinedConfigurations ?? {}),
+    ...Object.keys(baseConfigurations ?? {}),
+    ...Object.keys(newConfigurations ?? {}),
   ]);
   for (const configuration of configurations) {
-    result[configuration] = {
-      ...(defaultConfigurations?.[configuration] ?? ({} as T)),
-      ...(projectDefinedConfigurations?.[configuration] ?? ({} as T)),
+    mergedConfigurations[configuration] = {
+      ...(baseConfigurations?.[configuration] ?? {}),
+      ...(newConfigurations?.[configuration] ?? {}),
     };
   }
-  return result;
+
+  // record new configurations & configuration properties in source map
+  if (projectConfigSourceMap) {
+    for (const newConfiguration in newConfigurations) {
+      projectConfigSourceMap[
+        `${targetIdentifier}.configurations.${newConfiguration}`
+      ] = sourceInformation;
+      for (const configurationProperty in newConfigurations[newConfiguration]) {
+        projectConfigSourceMap[
+          `${targetIdentifier}.configurations.${newConfiguration}.${configurationProperty}`
+        ] = sourceInformation;
+      }
+    }
+  }
+
+  return mergedConfigurations;
+}
+
+function mergeOptions(
+  newOptions: Record<string, any> | undefined,
+  baseOptions: Record<string, any> | undefined,
+  projectConfigSourceMap?: Record<string, SourceInformation>,
+  sourceInformation?: SourceInformation,
+  targetIdentifier?: string
+): Record<string, any> | undefined {
+  const mergedOptions = {
+    ...(baseOptions ?? {}),
+    ...(newOptions ?? {}),
+  };
+
+  // record new options & option properties in source map
+  if (projectConfigSourceMap) {
+    for (const newOption in newOptions) {
+      projectConfigSourceMap[`${targetIdentifier}.options.${newOption}`] =
+        sourceInformation;
+    }
+  }
+
+  return mergedOptions;
 }
 
 export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(
