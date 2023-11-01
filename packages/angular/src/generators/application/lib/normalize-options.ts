@@ -51,14 +51,15 @@ export async function normalizeOptions(
     e2eTestRunner: E2eTestRunner.Cypress,
     linter: Linter.EsLint,
     strict: true,
-    bundler: options.bundler ?? 'webpack',
     standalone: true,
     ...options,
     prefix,
     name: appProjectName,
     appProjectRoot,
+    appProjectSourceRoot: `${appProjectRoot}/src`,
     e2eProjectRoot,
     e2eProjectName,
     parsedTags,
+    bundler: options.bundler ?? 'esbuild',
   };
 }

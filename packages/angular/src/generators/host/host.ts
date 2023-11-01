@@ -55,6 +55,7 @@ export async function hostInternal(tree: Tree, schema: Schema) {
     routing: true,
     port: 4200,
     skipFormat: true,
+    bundler: 'webpack',
   });
 
   const skipE2E =

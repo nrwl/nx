@@ -28,7 +28,7 @@ describe('Angular Projects', () => {
   beforeAll(() => {
     proj = newProject();
     runCLI(
-      `generate @nx/angular:app ${app1} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
       `generate @nx/angular:lib ${lib1} --no-standalone --add-module-spec --project-name-and-root-format=as-provided --no-interactive`
@@ -52,7 +52,7 @@ describe('Angular Projects', () => {
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
-      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
 
     const esbuildApp = uniq('esbuild-app');
@@ -90,7 +90,7 @@ describe('Angular Projects', () => {
     );
     checkFilesExist(`dist/${app1}/main.js`);
     checkFilesExist(`dist/my-dir/${standaloneApp}/main.js`);
-    checkFilesExist(`dist/my-dir/${esbuildApp}/main.js`);
+    checkFilesExist(`dist/my-dir/${esbuildApp}/browser/main.js`);
     // This is a loose requirement because there are a lot of
     // influences external from this project that affect this.
     const es2015BundleSize = getSize(tmpProjPath(`dist/${app1}/main.js`));
@@ -299,6 +299,9 @@ describe('Angular Projects', () => {
       config.targets.build.executor = '@nx/angular:browser-esbuild';
       config.targets.build.options = {
         ...config.targets.build.options,
+        outputPath: `dist/${esbuildApp}`,
+        main: config.targets.build.options.browser,
+        browser: undefined,
         buildLibsFromSource: false,
       };
       return config;

@@ -32,6 +32,7 @@ describe('create-nx-workspace', () => {
       standaloneApi: false,
       routing: false,
       e2eTestRunner: 'none',
+      bundler: 'webpack',
     });
 
     checkFilesExist('package.json');
@@ -52,6 +53,7 @@ describe('create-nx-workspace', () => {
       standaloneApi: true,
       routing: true,
       e2eTestRunner: 'none',
+      bundler: 'webpack',
     });
 
     checkFilesExist('package.json');
@@ -144,6 +146,7 @@ describe('create-nx-workspace', () => {
       standaloneApi: false,
       routing: true,
       e2eTestRunner: 'none',
+      bundler: 'webpack',
     });
     expectCodeIsFormatted();
   });
@@ -163,6 +166,7 @@ describe('create-nx-workspace', () => {
         standaloneApi: false,
         routing: false,
         e2eTestRunner: 'none',
+        bundler: 'webpack',
       })
     ).toThrow();
   });

@@ -35,7 +35,8 @@ export function normalizeOptions(
     project.sourceRoot,
     'app/app.config.ts'
   );
-  const appMainPath = project.targets.build.options.main;
+  const appMainPath =
+    project.targets.build.options.main ?? project.targets.build.options.browser;
 
   /** If NgModule App
    * -> Use App Module

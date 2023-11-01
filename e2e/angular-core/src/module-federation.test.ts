@@ -157,10 +157,10 @@ describe('Angular Module Federation', () => {
 
     // generate apps
     runCLI(
-      `generate @nx/angular:application ${app1} --routing --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:application ${app1} --routing --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:application ${app2} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:application ${app2} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
 
     // convert apps
