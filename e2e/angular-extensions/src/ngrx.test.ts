@@ -43,7 +43,7 @@ describe('Angular Package', () => {
         `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts --facade`
       );
 
-      expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
+      expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       // TODO: remove this condition
       if (getSelectedPackageManager() !== 'pnpm') {
@@ -80,7 +80,7 @@ describe('Angular Package', () => {
         `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );
 
-      expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
+      expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       // TODO: remove this condition
       if (getSelectedPackageManager() !== 'pnpm') {
@@ -117,7 +117,7 @@ describe('Angular Package', () => {
         `generate @nx/angular:ngrx flights --module=${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );
 
-      expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
+      expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       // TODO: remove this condition
       if (getSelectedPackageManager() !== 'pnpm') {
