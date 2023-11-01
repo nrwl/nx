@@ -17,13 +17,6 @@ import {
 } from '@nx/e2e/utils';
 import * as ts from 'typescript';
 
-/**
- * Importing this helper from @typescript-eslint/type-utils to ensure
- * compatibility with TS < 4.8 due to the API change in TS4.8.
- * This helper allows for support of TS <= 4.8.
- */
-// import { getModifiers } from '@typescript-eslint/type-utils';
-
 describe('Linter', () => {
   describe('Integrated', () => {
     const myapp = uniq('myapp');
