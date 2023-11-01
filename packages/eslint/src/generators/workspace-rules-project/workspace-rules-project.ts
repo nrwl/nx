@@ -1,12 +1,14 @@
 import {
+  addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
   formatFiles,
   generateFiles,
-  joinPathFragments,
+  GeneratorCallback,
   offsetFromRoot,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateJson,
   updateNxJson,
@@ -14,7 +16,7 @@ import {
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { join } from 'path';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, typescriptESLintVersion } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
@@ -29,9 +31,11 @@ export async function lintWorkspaceRulesProjectGenerator(
   tree: Tree,
   options: LintWorkspaceRulesProjectGeneratorOptions = {}
 ) {
-  const { addPropertyToJestConfig, configurationGenerator } = ensurePackage<
-    typeof import('@nx/jest')
-  >('@nx/jest', nxVersion);
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
+    '@nx/jest',
+    nxVersion
+  );
+  const tasks: GeneratorCallback[] = [];
 
   // Noop if the workspace rules project already exists
   try {
@@ -68,14 +72,16 @@ export async function lintWorkspaceRulesProjectGenerator(
   }
 
   // Add jest to the project and return installation task
-  const installTask = await configurationGenerator(tree, {
-    project: WORKSPACE_RULES_PROJECT_NAME,
-    supportTsx: false,
-    skipSerializers: true,
-    setupFile: 'none',
-    compiler: 'tsc',
-    skipFormat: true,
-  });
+  tasks.push(
+    await configurationGenerator(tree, {
+      project: WORKSPACE_RULES_PROJECT_NAME,
+      supportTsx: false,
+      skipSerializers: true,
+      setupFile: 'none',
+      compiler: 'tsc',
+      skipFormat: true,
+    })
+  );
 
   updateJson(
     tree,
@@ -105,11 +111,21 @@ export async function lintWorkspaceRulesProjectGenerator(
   );
 
   // Add swc dependencies
-  addSwcRegisterDependencies(tree);
+  tasks.push(addSwcRegisterDependencies(tree));
+
+  tasks.push(
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@typescript-eslint/utils': typescriptESLintVersion,
+      }
+    )
+  );
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
