@@ -22,4 +22,5 @@ export interface Schema {
   pathToManifestFile?: string;
   static?: boolean;
   isInitialHost?: boolean;
+  parallel?: number;
 }
