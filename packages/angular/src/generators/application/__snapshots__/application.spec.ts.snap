@@ -219,12 +219,9 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "build": {
       "configurations": {
         "development": {
-          "buildOptimizer": false,
           "extractLicenses": false,
-          "namedChunks": true,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true,
         },
         "production": {
           "budgets": [
@@ -243,14 +240,14 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
           "apps/my-dir/my-app/src/favicon.ico",
           "apps/my-dir/my-app/src/assets",
         ],
+        "browser": "apps/my-dir/my-app/src/main.ts",
         "index": "apps/my-dir/my-app/src/index.html",
-        "main": "apps/my-dir/my-app/src/main.ts",
         "outputPath": "dist/apps/my-dir/my-app",
         "polyfills": [
           "zone.js",
@@ -463,12 +460,9 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "build": {
       "configurations": {
         "development": {
-          "buildOptimizer": false,
           "extractLicenses": false,
-          "namedChunks": true,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true,
         },
         "production": {
           "budgets": [
@@ -487,14 +481,14 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
           "apps/my-app/src/favicon.ico",
           "apps/my-app/src/assets",
         ],
+        "browser": "apps/my-app/src/main.ts",
         "index": "apps/my-app/src/index.html",
-        "main": "apps/my-app/src/main.ts",
         "outputPath": "dist/apps/my-app",
         "polyfills": [
           "zone.js",
@@ -936,12 +930,9 @@ exports[`app nested should create project configs 1`] = `
     "build": {
       "configurations": {
         "development": {
-          "buildOptimizer": false,
           "extractLicenses": false,
-          "namedChunks": true,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true,
         },
         "production": {
           "budgets": [
@@ -960,14 +951,14 @@ exports[`app nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
           "my-dir/my-app/src/favicon.ico",
           "my-dir/my-app/src/assets",
         ],
+        "browser": "my-dir/my-app/src/main.ts",
         "index": "my-dir/my-app/src/index.html",
-        "main": "my-dir/my-app/src/main.ts",
         "outputPath": "dist/my-dir/my-app",
         "polyfills": [
           "zone.js",
@@ -1094,12 +1085,9 @@ exports[`app not nested should create project configs 1`] = `
     "build": {
       "configurations": {
         "development": {
-          "buildOptimizer": false,
           "extractLicenses": false,
-          "namedChunks": true,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true,
         },
         "production": {
           "budgets": [
@@ -1118,14 +1106,14 @@ exports[`app not nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
           "my-app/src/favicon.ico",
           "my-app/src/assets",
         ],
+        "browser": "my-app/src/main.ts",
         "index": "my-app/src/index.html",
-        "main": "my-app/src/main.ts",
         "outputPath": "dist/my-app",
         "polyfills": [
           "zone.js",
