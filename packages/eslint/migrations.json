@@ -30,7 +30,7 @@
     },
     "update-typescript-eslint": {
       "version": "17.1.0-beta.1",
-      "description": "Migration for v17.1.0-beta.1",
+      "description": "Updates for @typescript-utils/utils v6.9.1+",
       "implementation": "./src/migrations/update-17-1-0/update-typescript-eslint"
     }
   },
