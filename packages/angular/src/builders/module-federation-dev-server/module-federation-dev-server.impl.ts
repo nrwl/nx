@@ -142,7 +142,10 @@ export function executeModuleFederationDevServerBuilder(
       }
     );
     staticProcess.stdout.on('data', (data) => {
-      if (data.toString().includes('Successfully ran target build')) {
+      const ANSII_CODE_REGEX =
+        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+      const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
+      if (stdoutString.includes('Successfully ran target build')) {
         staticProcess.stdout.removeAllListeners('data');
         logger.info(`NX Built ${remotes.staticRemotes.length} static remotes`);
         res();
