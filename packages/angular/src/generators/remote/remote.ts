@@ -49,6 +49,7 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     routing: true,
     port,
     skipFormat: true,
+    bundler: 'webpack',
   });
 
   const skipE2E =

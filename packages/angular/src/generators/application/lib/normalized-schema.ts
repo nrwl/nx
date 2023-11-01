@@ -8,6 +8,7 @@ export interface NormalizedSchema extends Schema {
   e2eTestRunner: E2eTestRunner;
   prefix: string;
   appProjectRoot: string;
+  appProjectSourceRoot: string;
   e2eProjectName: string;
   e2eProjectRoot: string;
   parsedTags: string[];

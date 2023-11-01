@@ -204,7 +204,8 @@ If the port is in use, try using a different port value or passing --port='cypre
   for await (const output of await runExecutor<{
     success: boolean;
     baseUrl?: string;
-    info?: { port: number; baseUrl?: string };
+    port?: string;
+    info?: { port?: number; baseUrl?: string };
   }>(parsedDevServerTarget, overrides, context)) {
     if (!output.success && !opts.watch)
       throw new Error('Could not compile application files');
@@ -212,9 +213,9 @@ If the port is in use, try using a different port value or passing --port='cypre
       !opts.baseUrl &&
       !output.baseUrl &&
       !output.info?.baseUrl &&
-      output.info?.port
+      (output.port || output.info?.port)
     ) {
-      output.baseUrl = `http://localhost:${output.info.port}`;
+      output.baseUrl = `http://localhost:${output.port ?? output.info?.port}`;
     }
     yield {
       baseUrl: opts.baseUrl || output.baseUrl || output.info?.baseUrl,

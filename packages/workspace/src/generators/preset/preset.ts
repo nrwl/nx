@@ -31,6 +31,7 @@ async function createPreset(tree: Tree, options: Schema) {
       standalone: options.standaloneApi,
       routing: options.routing,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      bundler: options.bundler,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
