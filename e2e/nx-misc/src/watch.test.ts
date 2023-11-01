@@ -1,28 +1,23 @@
 import {
   cleanupProject,
+  getStrippedEnvironmentVariables,
+  isVerboseE2ERun,
   newProject,
   runCLI,
-  uniq,
   tmpProjPath,
-  getStrippedEnvironmentVariables,
+  uniq,
   updateJson,
-  isVerboseE2ERun,
-  readFile,
 } from '@nx/e2e/utils';
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { writeFileSync, mkdtempSync } from 'fs';
-import { tmpdir } from 'os';
-
-let cacheDirectory = mkdtempSync(join(tmpdir(), 'daemon'));
-console.log('cache directory', cacheDirectory);
+import { writeFileSync } from 'fs';
 
 async function writeFileForWatcher(path: string, content: string) {
   const e2ePath = join(tmpProjPath(), path);
 
   console.log(`writing to: ${e2ePath}`);
   writeFileSync(e2ePath, content);
-  await wait(10);
+  await wait(150);
 }
 
 describe('Nx Watch', () => {
@@ -34,19 +29,9 @@ describe('Nx Watch', () => {
     runCLI(`generate @nx/js:lib ${proj1}`);
     runCLI(`generate @nx/js:lib ${proj2}`);
     runCLI(`generate @nx/js:lib ${proj3}`);
-    runCLI('daemon --start', {
-      env: {
-        NX_DAEMON: 'true',
-        NX_NATIVE_LOGGING: 'nx',
-        NX_PROJECT_GRAPH_CACHE_DIRECTORY: cacheDirectory,
-      },
-    });
   });
 
   afterEach(() => {
-    let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
-    const testName = expect.getState().currentTestName;
-    console.log(`${testName} daemon log: \n${daemonLog}`);
     runCLI('reset');
   });
 
@@ -165,32 +150,35 @@ async function wait(timeout = 200) {
 async function runWatch(command: string) {
   const runCommand = `npx -c 'nx watch --verbose ${command}'`;
   isVerboseE2ERun() && console.log(runCommand);
-  return new Promise<(timeout?: number) => Promise<string[]>>((resolve) => {
-    const p = spawn(runCommand, {
-      cwd: tmpProjPath(),
-      env: {
-        CI: 'true',
-        ...getStrippedEnvironmentVariables(),
-        FORCE_COLOR: 'false',
-      },
-      shell: true,
-      stdio: 'pipe',
-    });
+  return new Promise<(timeout?: number) => Promise<string[]>>(
+    async (resolve) => {
+      const p = spawn(runCommand, {
+        cwd: tmpProjPath(),
+        env: {
+          ...getStrippedEnvironmentVariables(),
+          FORCE_COLOR: 'false',
+        },
+        shell: true,
+        stdio: 'pipe',
+      });
 
-    let output = '';
-    p.stdout?.on('data', (data) => {
-      output += data;
-      const s = data.toString().trim();
-      isVerboseE2ERun() && console.log(s);
-      if (s.includes('watch process waiting')) {
-        resolve(async (timeout = 6000) => {
-          await wait(timeout);
-          p.kill();
-          return output
-            .split('\n')
-            .filter((line) => line.length > 0 && !line.includes('NX'));
-        });
-      }
-    });
-  });
+      let output = '';
+      p.stdout?.on('data', (data) => {
+        output += data;
+        const s = data.toString().trim();
+        isVerboseE2ERun() && console.log(s);
+        if (s.includes('watch process waiting')) {
+          wait(1000).then(() => {
+            resolve(async (timeout = 6000) => {
+              await wait(timeout);
+              p.kill();
+              return output
+                .split('\n')
+                .filter((line) => line.length > 0 && !line.includes('NX'));
+            });
+          });
+        }
+      });
+    }
+  );
 }
