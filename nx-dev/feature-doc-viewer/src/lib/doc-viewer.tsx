@@ -9,7 +9,7 @@ import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import { cx } from '@nx/nx-dev/ui-primitives';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
 
 export function DocViewer({
@@ -50,6 +50,7 @@ export function DocViewer({
       }
     ).node,
     tableOfContent: collectHeadings(treeNode),
+    hasExperimentalEmbed: experimentConfig[document.id] !== undefined,
   };
 
   return (
@@ -84,8 +85,21 @@ export function DocViewer({
         }}
       />
 
-      <div className="mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl">
-        <div id="content-wrapper" className="w-full flex-auto flex-col">
+      <div
+        className={
+          vm.hasExperimentalEmbed
+            ? 'w-full flex flex-row place-content-center grow px-4 sm:px-6 lg:px-8 min-w-1000'
+            : 'mx-auto w-full grow items-stretch px-4 sm:px-6 lg:px-8 2xl:max-w-6xl'
+        }
+      >
+        <div
+          id="content-wrapper"
+          className={
+            vm.hasExperimentalEmbed
+              ? 'w-full flex-shrink 2xl:max-w-6xl'
+              : 'w-full'
+          }
+        >
           <div className="mb-6 pt-8">
             <Breadcrumbs path={router.asPath} />
           </div>
@@ -102,25 +116,26 @@ export function DocViewer({
               >
                 {vm.content}
               </div>
-              {!hideTableOfContent && (
-                <div
-                  className={cx(
-                    'fixed top-36 right-[max(2rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block'
-                  )}
-                >
-                  <TableOfContents
-                    elementRef={ref}
-                    path={router.basePath}
-                    headings={vm.tableOfContent}
-                  >
-                    {widgetData.githubStarsCount > 0 && (
-                      <GitHubStarWidget
-                        starsCount={widgetData.githubStarsCount}
-                      />
+              {!hideTableOfContent &&
+                !experimentConfig[vm.tableOfContent[0].id] && (
+                  <div
+                    className={cx(
+                      'fixed top-36 right-[max(2rem,calc(50%-55rem))] z-20 hidden w-60 overflow-y-auto bg-white py-10 text-sm dark:bg-slate-900 xl:block'
                     )}
-                  </TableOfContents>
-                </div>
-              )}
+                  >
+                    <TableOfContents
+                      elementRef={ref}
+                      path={router.basePath}
+                      headings={vm.tableOfContent}
+                    >
+                      {widgetData.githubStarsCount > 0 && (
+                        <GitHubStarWidget
+                          starsCount={widgetData.githubStarsCount}
+                        />
+                      )}
+                    </TableOfContents>
+                  </div>
+                )}
             </div>
             {/*RELATED CONTENT*/}
             <div
@@ -166,8 +181,90 @@ export function DocViewer({
             </div>
           </div>
         </div>
+        {experimentConfig[vm.tableOfContent[0].id] && (
+          <YouTubeEmbedExperiment id={vm.tableOfContent[0].id} />
+        )}
       </div>
       <Footer />
     </>
+  );
+}
+
+// YT embed experiment
+interface VideoData {
+  title: string;
+  embedUrl: `https://www.youtube.com/embed/${string}`;
+}
+
+// Hard-coding in escape from page TOC for yt experiment
+const experimentConfig: Record<string, VideoData[]> = {
+  'project-configuration': [
+    {
+      title: 'Two Places To Define Tasks',
+      embedUrl: 'https://www.youtube.com/embed/_oFHSXxa77E',
+    },
+    {
+      title: 'Nx w/ Non-JS Languages?',
+      embedUrl: 'https://www.youtube.com/embed/VnIDJYqipdY',
+    },
+    {
+      title: 'Running Many Tasks at Once',
+      embedUrl: 'https://www.youtube.com/embed/-lyN72D13uc',
+    },
+  ],
+};
+
+function YouTubeEmbedExperiment({ id }: { id: string }) {
+  const [vidConfig, setVidConfig] = useState(experimentConfig[id][0]);
+  return (
+    <div
+      className={cx(
+        'flex-none w-240 z-20 hidden overflow-y-auto bg-white pl-5 pt-20 text-sm dark:bg-slate-900 xl:flex flex-col items-center'
+      )}
+    >
+      <h2 className="text-3xl text-center pb-4">Recommended Watch:</h2>
+      <iframe
+        width="240"
+        height="480"
+        src={`${vidConfig.embedUrl}?autoplay=1&loop=1`}
+        title="Two Places to Define Tasks | Nx Workspaces"
+        frameBorder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+      ></iframe>
+      {experimentConfig[id].length > 1 && (
+        <>
+          <h3 className="text-2xl text-center py-4">
+            Other Recommended Videos:
+          </h3>
+          <ul className="flex flex-col">
+            {[...experimentConfig[id]]
+              .filter(({ embedUrl }) => embedUrl !== vidConfig.embedUrl)
+              .map((config) => {
+                const ytUrlPath = config.embedUrl.split('/');
+                const ytId = ytUrlPath[ytUrlPath.length - 1];
+                const imgUrl = `https://img.youtube.com/vi/${ytId}/0.jpg`;
+                return (
+                  <button
+                    key={config.embedUrl}
+                    onClick={() => setVidConfig(config)}
+                    className="my-2"
+                  >
+                    <li>
+                      <label>{config.title}</label>
+                      <img
+                        src={imgUrl}
+                        alt={`Another recommendation: ${config.title}`}
+                        width="200"
+                        height="400"
+                      />
+                    </li>
+                  </button>
+                );
+              })}
+          </ul>
+        </>
+      )}
+    </div>
   );
 }
