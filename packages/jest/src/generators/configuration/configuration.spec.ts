@@ -84,13 +84,6 @@ describe('jestProject', () => {
       outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
         jestConfig: 'libs/lib1/jest.config.ts',
-        passWithNoTests: true,
-      },
-      configurations: {
-        ci: {
-          ci: true,
-          codeCoverage: true,
-        },
       },
     });
   });

@@ -44,7 +44,7 @@ Your intent is your intent. However, the commands you write and run are based on
 
 ## Project Generators
 
-As of Nx 16.8.0, generating a project will prompt you to choose how Nx will calculate where the project should be located. For now, you can choose between `as-provided` and `derived` but `as-provided` will be the only option in Nx 18.
+As of Nx 16.8.0, generating a project will prompt you to choose how Nx will calculate where the project should be located. For now, you can choose between `as-provided` and `derived` but `as-provided` will be the only option in Nx 18. The CLI flag to choose between the two algorithms for project generators is `--projectNameAndRootFormat`.
 
 ### Generate Paths and Names `as-provided`
 
@@ -83,7 +83,7 @@ If you accidentally generate a project in the wrong folder, use the [move genera
 
 ## Code Generators
 
-As of Nx 17, code generators such as `component`, `service`, and others will prompt you to choose whether or not Nx will derive the location based on your options or not. In Nx 18, Nx will take the generator options as provided. The following flags are deprecated and will be removed in Nx 18: `--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`.
+As of Nx 17, code generators such as `component`, `service`, and others will prompt you to choose whether or not Nx will derive the location based on your options or not. In Nx 18, Nx will take the generator options as provided. The following flags are deprecated and will be removed in Nx 18: `--project`, `--flat`, `--pascalCaseFiles`, `--pascalCaseDirectory`, `--fileName`. The CLI flag to choose between the two algorithms for code generators is `--nameAndDirectoryFormat`.
 
 ### Generate Paths and Names `as-provided`
 
