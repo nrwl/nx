@@ -4,8 +4,6 @@ import { AST } from 'jsonc-eslint-parser';
 import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
 import { normalizePath, workspaceRoot } from '@nx/devkit';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
-
-import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import {
@@ -14,6 +12,7 @@ import {
   getProductionDependencies,
 } from '../utils/package-json-utils';
 import type { RuleModule } from '@typescript-eslint/utils/ts-eslint';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 export type Options = [
   {
@@ -35,7 +34,7 @@ export type MessageIds =
 
 export const RULE_NAME = 'dependency-checks';
 
-export default createESLintRule<Options, MessageIds>({
+export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
     type: 'suggestion',
@@ -354,16 +353,4 @@ export default createESLintRule<Options, MessageIds>({
       },
     };
   },
-}) as RuleModule<
-  MessageIds,
-  Options,
-  {
-    'JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i]': (
-      node
-    ) => void;
-    'JSONExpressionStatement > JSONObjectExpression > JSONProperty[key.value=/^(peer|optional)?dependencies$/i] > JSONObjectExpression > JSONProperty': (
-      node
-    ) => void;
-    'JSONExpressionStatement > JSONObjectExpression': (node) => void;
-  }
->;
+});

@@ -8,15 +8,16 @@ import {
 import { isRelativePath } from 'nx/src/utils/fileutils';
 import {
   checkCircularPath,
-  findFilesWithDynamicImports,
   findFilesInCircularPath,
+  findFilesWithDynamicImports,
 } from '../utils/graph-utils';
 import {
+  appIsMFERemote,
   DepConstraint,
   findConstraintsFor,
   findDependenciesWithTags,
-  findProjectUsingImport,
   findProject,
+  findProjectUsingImport,
   findTransitiveExternalDependencies,
   getSourceFilePath,
   getTargetProjectBasedOnRelativeImport,
@@ -27,12 +28,11 @@ import {
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
   isAngularSecondaryEntrypoint,
+  isComboDepConstraint,
   isDirectDependency,
   matchImportWithWildcard,
   onlyLoadChildren,
   stringifyTags,
-  isComboDepConstraint,
-  appIsMFERemote,
 } from '../utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { basename, dirname, relative } from 'path';
@@ -41,9 +41,9 @@ import {
   getBarrelEntryPointProjectNode,
   getRelativeImportPath,
 } from '../utils/ast-utils';
-import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import type { RuleModule } from '@typescript-eslint/utils/ts-eslint';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 type Options = [
   {
@@ -74,7 +74,7 @@ export type MessageIds =
   | 'notTagsConstraintViolation';
 export const RULE_NAME = 'enforce-module-boundaries';
 
-export default createESLintRule<Options, MessageIds>({
+export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
     type: 'suggestion',
@@ -713,13 +713,4 @@ export default createESLintRule<Options, MessageIds>({
       },
     };
   },
-}) as RuleModule<
-  MessageIds,
-  Options,
-  {
-    ImportDeclaration: (node) => void;
-    ImportExpression: (node) => void;
-    ExportAllDeclaration: (node) => void;
-    ExportNamedDeclaration: (node) => void;
-  }
->;
+});
