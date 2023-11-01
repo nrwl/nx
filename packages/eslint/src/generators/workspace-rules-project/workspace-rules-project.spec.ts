@@ -81,16 +81,9 @@ describe('@nx/eslint:workspace-rules-project', () => {
         "sourceRoot": "tools/eslint-rules",
         "targets": {
           "test": {
-            "configurations": {
-              "ci": {
-                "ci": true,
-                "codeCoverage": true,
-              },
-            },
             "executor": "@nx/jest:jest",
             "options": {
               "jestConfig": "tools/eslint-rules/jest.config.ts",
-              "passWithNoTests": true,
             },
             "outputs": [
               "{workspaceRoot}/coverage/{projectRoot}",
